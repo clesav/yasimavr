@@ -1,0 +1,145 @@
+# YAML configuration file for atmega328 variant
+#
+# Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+#
+# This file is part of yasim-avr.
+#
+# yasim-avr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# yasim-avr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
+
+---
+name: atmega328
+
+aliases:
+   - atmega328p
+
+architecture: AVR
+
+memory:
+    data:
+        REGEND: 0x01F
+        IOSTART: 0x020
+        IOEND:  0x0FF
+        RAMSTART: 0x100
+        RAMEND: 0x8FF
+    flash:
+        FLASHEND: 0x7FFF
+    eeprom:
+        EEPROMEND: 0x3FF
+
+core:
+    extended_addressing: no
+    clear_GIE_on_int: yes
+    
+access:
+    big_endian_on_write: yes
+    big_endian_on_read: no
+
+pins: [ PB0, PB1, PB2, PB3, PB4, PB5, PB6, PB7,
+        PC0, PC1, PC2, PC3, PC4, PC5,
+        PD0, PD1, PD2, PD3, PD4, PD5 , PD6, PD7,
+        ADC6, ADC7 ]
+
+interrupts:
+    vector_size: 4
+    
+    vectors:
+        - RESET
+        - INT0
+        - INT1
+        - PCINT0
+        - PCINT1
+        - PCINT2
+        - WDT
+        - TIMER2_COMPA
+        - TIMER2_COMPB
+        - TIMER2_OVF
+        - TIMER1_CAPT
+        - TIMER1_COMPA
+        - TIMER1_COMPB
+        - TIMER1_OVF
+        - TIMER0_COMPA
+        - TIMER0_COMPB
+        - TIMER0_OVF
+        - SPI_STC
+        - USART_RX
+        - USART_UDRE
+        - USART_TX
+        - ADC
+        - EE_READY
+        - ANALOG_COMP
+        - TWI
+        - SPM_READY
+        
+    sleep_mask:
+        Idle:         [ 0xFF, 0xFF, 0xFF, 0x03 ]
+        ADC:          [ 0xFF, 0x03, 0xE0, 0x03 ]
+        PowerDown:    [ 0x7F, 0x00, 0x00, 0x01 ]
+        PowerSave:    [ 0xFF, 0x03, 0x00, 0x01 ]
+        Standby:      [ 0x7F, 0x00, 0x00, 0x01 ]
+        ExtStandby:   [ 0xFF, 0x03, 0x00, 0x01 ]
+    
+peripherals:
+    CPU:
+        file: mega48-88-168-328_controllers.yml
+
+    CPUINT:
+        file: mega48-88-168-328_controllers.yml
+
+    RSTCTRL:
+        file: mega48-88-168-328_controllers.yml
+
+    SLPCTRL:
+        file: mega48-88-168-328_controllers.yml
+    
+    MISC:
+        file: mega48-88-168-328_controllers.yml
+
+    PORTB:
+        class: PORT
+        file: mega48-88-168-328_interfaces.yml
+        base: 0x03
+
+    PORTC:
+        class: PORT
+        file: mega48-88-168-328_interfaces.yml
+        base: 0x06
+
+    PORTD:
+        class: PORT
+        file: mega48-88-168-328_interfaces.yml
+        base: 0x09
+
+    EXTINT:
+        file: mega48-88-168-328_interfaces.yml
+
+    TC0:
+        file: mega48-88-168-328_timers.yml
+    
+    TC1:
+        file: mega48-88-168-328_timers.yml
+    
+    TC2:
+        file: mega48-88-168-328_timers.yml
+    
+    WDT:
+        file: mega48-88-168-328_timers.yml
+    
+    ADC:
+        file: mega48-88-168-328_analog.yml
+    
+    VREF:
+        file: mega48-88-168-328_analog.yml
+    
+    USART:
+        file: mega48-88-168-328_interfaces.yml

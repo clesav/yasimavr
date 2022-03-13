@@ -1,0 +1,224 @@
+# YAML configuration file for atmega4809 variant
+#
+# Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+#
+# This file is part of yasim-avr.
+#
+# yasim-avr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# yasim-avr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
+
+---
+name: atmega4809
+
+architecture: Mega0
+
+memory:
+    data:
+        IOEND:  0x13FF
+        EEPROMSTART: 0x1400
+        EEPROMEND: 0x14FF
+        RAMSTART: 0x2800
+        RAMEND: 0x3FFF
+        FLASHSTART: 0x4000
+        FLASHEND: 0xFFFF
+    flash:
+        FLASHEND: 0x7FFF
+    eeprom:
+        EEPROMEND: 0xFF
+
+core:
+    extended_addressing: no
+    clear_GIE_on_int: no
+
+access:
+    big_endian_on_write: yes
+    big_endian_on_read: yes
+
+pins: [ PA0, PA1, PA2, PA3, PA4, PA5, PA6, PA7,
+        PB0, PB1, PB2, PB3, PB4, PB5,
+        PC0, PC1, PC2, PC3, PC4, PC5, PC6, PC7,
+        PD0, PD1, PD2, PD3, PD4, PD5, PD6, PD7,
+        PE0, PE1, PE2, PE3,
+        PF0, PF1, PF2, PF3, PF4, PF5, PF6 ]
+
+interrupts:
+    vector_size: 4
+    
+    vectors:
+        - RESET
+        - CRCSCAN
+        - BOD
+        - RTC_CNT
+        - RTC_PIT
+        - CCL
+        - PORTA
+        - TCA0_OVF
+        - TCA0_HUNF
+        - TCA0_CMP0
+        - TCA0_CMP1
+        - TCA0_CMP2
+        - TCB0
+        - TCB1
+        - TWI0_TWIS
+        - TWI0_TWIM
+        - SPI0
+        - USART0_RXC
+        - USART0_DRE
+        - USART0_TXC
+        - PORTD
+        - AC0
+        - ADC0_RESRDY
+        - ADC0_WCOMP
+        - PORTC
+        - TCB2
+        - USART1_RXC
+        - USART1_DRE
+        - USART1_TXC
+        - PORTF
+        - NVMCTRL_EE
+        - USART2_RXC
+        - USART2_DRE
+        - USART2_TXC
+        - PORTB
+        - PORTE
+        - TCB3
+        - USART3_RXC
+        - USART3_DRE
+        - USART3_TXC
+    
+    sleep_mask:
+        Idle:       [ 0xFF, 0xFF, 0xFF, 0xFF, 0xFF ]
+        Standby:    [ 0x7D, 0x70, 0x2B, 0xA7, 0x3C ]
+        PowerDown:  [ 0x75, 0x40, 0x10, 0x21, 0x0C ]
+
+peripherals:
+    CPU:
+        file: Mega0-Mega1_controllers.yml
+
+    CPUINT:
+        file: Mega0-Mega1_controllers.yml
+        base: 0x0110
+
+    SLPCTRL:
+        file: Mega0-Mega1_controllers.yml
+        base: 0x0050
+        
+    RSTCTRL:
+        file: Mega0-Mega1_controllers.yml
+        base: 0x0040
+    
+    MISC:
+        file: Mega0-Mega1_controllers.yml
+        config:
+            dev_id: 0x00123456
+
+    PORTA:
+        class: PORT
+        file: Mega0-Mega1_interfaces.yml
+        base: 0x0400
+        config:
+            reg_base_port: 0x0400
+            reg_base_vport: 0x0000
+            iv_port: PORTA
+        
+    PORTB:
+        class: PORT
+        file: Mega0-Mega1_interfaces.yml
+        base: 0x0420
+        config:
+            reg_base_port: 0x0420
+            reg_base_vport: 0x0004
+            iv_port: PORTB
+
+    PORTC:
+        class: PORT
+        file: Mega0-Mega1_interfaces.yml
+        base: 0x0440
+        config:
+            reg_base_port: 0x0440
+            reg_base_vport: 0x0008
+            iv_port: PORTC
+
+    PORTD:
+        class: PORT
+        file: Mega0-Mega1_interfaces.yml
+        base: 0x0460
+        config:
+            reg_base_port: 0x0460
+            reg_base_vport: 0x000C
+            iv_port: PORTD
+
+    PORTE:
+        class: PORT
+        file: Mega0-Mega1_interfaces.yml
+        base: 0x0480
+        config:
+            reg_base_port: 0x0480
+            reg_base_vport: 0x0010
+            iv_port: PORTE
+
+    PORTF:
+        class: PORT
+        file: Mega0-Mega1_interfaces.yml
+        base: 0x04A0
+        config:
+            reg_base_port: 0x04A0
+            reg_base_vport: 0x0014
+            iv_port: PORTF
+
+    TCA0:
+        class: TCA_SINGLE
+        file: Mega0-Mega1_timers.yml
+        base: 0x0A00
+        config:
+            iv_ovf: TCA0_OVF
+            ivs_cmp: [ TCA0_CMP0, TCA0_CMP1, TCA0_CMP2 ]
+    
+    TCB0:
+        class: TCB
+        file: Mega0-Mega1_timers.yml
+        base: 0x0A80
+        config:
+            iv_capt: TCB0
+    
+    TCB1:
+        class: TCB
+        file: Mega0-Mega1_timers.yml
+        base: 0x0A90
+        config:
+            iv_capt: TCB1
+    
+    TCB2:
+        class: TCB
+        file: Mega0-Mega1_timers.yml
+        base: 0x0AA0
+        config:
+            iv_capt: TCB2
+            
+    TCB3:
+        class: TCB
+        file: Mega0-Mega1_timers.yml
+        base: 0x0AB0
+        config:
+            iv_capt: TCB3
+        
+    RTC:
+        file: Mega0-Mega1_timers.yml
+        base: 0x0140
+        config:
+            iv_rtc: RTC_CNT
+            iv_pit: RTC_PIT
+        
+    # WDT: not ready
+        # file: Mega0-Mega1_timers.yml
+        # base: 0x0100

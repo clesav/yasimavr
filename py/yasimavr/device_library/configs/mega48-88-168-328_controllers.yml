@@ -1,0 +1,113 @@
+# YAML configuration file for atmega48-88-168-328 variants
+#
+# Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+#
+# This file is part of yasim-avr.
+#
+# yasim-avr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# yasim-avr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
+
+---
+#========================================================================================
+SLPCTRL:
+    registers:
+        - name: SMCR
+          address: 0x33
+          fields:
+            SE: { kind: BIT, pos: 0, one: on, zero: off }
+            SM:
+                kind: ENUM
+                LSB: 1
+                MSB: 3
+                values: [ IDLE, ADC, PDOWN, PSAVE, "", "", STBY, EXTSTBY ]
+
+        - name: MCUCR
+          address: 0x35
+          fields:
+            BODSE: { kind: BIT, pos: 5 }
+            BODS: { kind: BIT, pos: 6 }
+
+        - name: PRR
+          address: 0x64
+          fields:
+            PRADC: { kind: BIT, pos: 0 }
+            PRUSART0: { kind: BIT, pos: 1 }
+            PRSPI: { kind: BIT, pos: 2 }
+            PRTIM1: { kind: BIT, pos: 3 }
+            PRTIM0: { kind: BIT, pos: 5 }
+            PRTIM2: { kind: BIT, pos: 6 }
+            PRTWI: { kind: BIT, pos: 7 }
+    
+    config:
+        modes:
+            0b000: Idle
+            0b001: ADC
+            0b010: PowerDown
+            0b011: PowerSave
+            0b110: Standby
+            0b111: ExtStandby
+        rb_mode: [ SMCR, SM ]
+        rb_enable: [ SMCR, SE ]
+
+#========================================================================================
+RSTCTRL:
+    registers:
+        - name: MCUSR
+          address: 0x34
+          fields:
+            PORF: { kind: BIT, pos: 0 }
+            EXTRF: { kind: BIT, pos: 1 }
+            BORF: { kind: BIT, pos: 2 }
+            WDRF: { kind: BIT, pos: 3 }
+
+#========================================================================================
+CPUINT:
+    registers:
+        - name: MCUCR
+          address: 0x35
+          fields:
+            IVCE: { kind: BIT, pos: 0 }
+            IVSEL: { kind: BIT, pos: 1 }
+
+#========================================================================================
+CPU:
+    registers:
+        - name: SP
+          address: 0x3D
+          size: 2
+
+        - name: SREG
+          address: 0x3F
+          fields:
+            C: { kind: BIT, pos: 0 }
+            Z: { kind: BIT, pos: 1 }
+            N: { kind: BIT, pos: 2 }
+            V: { kind: BIT, pos: 3 }
+            S: { kind: BIT, pos: 4 }
+            H: { kind: BIT, pos: 5 }
+            T: { kind: BIT, pos: 6 }
+            I: { kind: BIT, pos: 7 }
+
+        - name: GPIOR0
+          address: 0x1E
+
+        - name: GPIOR1
+          address: 0x2A
+
+        - name: GPIOR2
+          address: 0x2B
+
+#========================================================================================
+MISC:
+    config:
+        gpior: [ CPU.GPIOR0, CPU.GPIOR1, CPU.GPIOR2 ]

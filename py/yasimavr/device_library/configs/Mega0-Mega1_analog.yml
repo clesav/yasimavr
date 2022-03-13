@@ -1,0 +1,172 @@
+# YAML configuration file for atmega0 and atmega1 series
+#
+# Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+#
+# This file is part of yasim-avr.
+#
+# yasim-avr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# yasim-avr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
+
+---
+#========================================================================================
+ADC:
+    registers:
+        - name: CTRLA
+          offset: 0x00
+          fields:
+            ENABLE: { kind: BIT, pos: 0, one: on, zero: off }
+            FREERUN: { kind: BIT, pos: 1, one: on, zero: off }
+            RESSEL: { kind: BIT, pos: 2, one: 8-bits, zero: 10-bits }
+            RUNSTBY: { kind: BIT, pos: 7, one: on, zero: off}
+	    
+        - name: CTRLB
+          offset: 0x01
+          fields:
+            SAMPNUM:
+                kind: ENUM
+                LSB: 0
+                MSB: 2
+                values: [ Disabled, Acc2, Acc4, Acc8, Acc16, Acc32, Acc64 ]
+
+        - name: CTRLC
+          offset: 0x02
+          fields:
+            PRESC:
+                kind: ENUM
+                LSB: 0
+                MSB: 2
+                values: [ Div2,Div4, Div8, Div16,
+                          Div32, Div64, Div128, Div256 ]
+            REFSEL:
+                kind: ENUM
+                LSB: 4
+                MSB: 5
+                values: [ INT, VDD, VREFA ]
+            
+            SAMPCAP: { kind: BIT, pos: 6, supported: no }
+
+        - name: CTRLD
+          offset: 0x03
+          fields:
+            SAMPDLY:
+                kind: INT
+                LSB: 0
+                MSB: 3
+                unit: samples
+            ASDV: { kind: BIT, pos: 4, one: ASVON, zero: ASVOFF, supported: no }
+            INITDLY:
+                kind: ENUM
+                LSB: 5
+                MSB: 7
+                values: [ Dly0, Dly16, Dly32, Dly64, Dly128, Dly256 ]
+                
+        - name: CTRLE
+          offset: 0x04
+          fields:
+            WINCM:
+                kind: ENUM
+                LSB: 0
+                MSB: 2
+                values: [ NONE, BELOW, ABOVE, INSIDE, OUTSIDE ]
+
+        - name: SAMPCTRL
+          offset: 0x05
+          fields:
+            SAMPLEN:
+                kind: INT
+                LSB: 0
+                MSB: 4
+                unit: samples
+        
+	    
+        - name: MUXPOS
+          offset: 0x06
+          fields:
+            MUXPOS:
+                kind: ENUM
+                LSB: 0
+                MSB: 4
+                values: [AIN0, AIN1, AIN2, AIN3, AIN4, AIN5, AIN6, AIN7,
+                         AIN8 AIN9, AIN10, AIN11, AIN12, AIN13, AIN14, AIN15]
+                values2: { 0x1C: DACREF0, 0x1E: TEMPSENSE, 0x1F: GND }
+
+        - name: COMMAND
+          offset: 0x08
+          fields:
+            STCONV: { kind: BIT, pos: 0 }
+	    
+        - name: EVCTRL
+          offset: 0x09
+          fields:
+            STARTEI: { kind: BIT, pos: 0 }
+	    
+        - name: INTCTRL
+          offset: 0x0A
+          fields:
+            RESRDY: { kind: BIT, pos: 0 }
+            WCOMP: { kind: BIT, pos: 1 }
+	    
+        - name: INTFLAGS
+          offset: 0x0B
+          fields:
+            RESRDY: { kind: BIT, pos: 0 }
+            WCOMP: { kind: BIT, pos: 1 }
+	    
+        - name: DBGCTRL
+          offset: 0x0C
+          supported: no
+	    
+        - name: TEMP
+          offset: 0x0D
+          kind: INT
+	    
+        - name: RES
+          offset: 0x10
+          size: 2
+          kind: INT
+	    
+        - name: WINLT
+          offset: 0x12
+          size: 2
+          kind: INT
+	    
+        - name: WINHT
+          offset: 0x14
+          size: 2
+          kind: INT
+	    
+        - name: CALIB
+          offset: 0x16
+          supported: no
+
+#========================================================================================
+VREF:
+    registers:
+        - name: CTRLA
+          offset: 0x00
+          fields:
+            AC0REFSEL:
+                kind: ENUM
+                LSB: 0
+                MSB: 2
+                values: [ 0V55, 1V1, 2V5, 4V3, 1V5 , null, null, AVDD ]
+            ADC0REFSEL:
+                kind: ENUM
+                LSB: 4
+                MSB: 6
+                values: [ 0V55, 1V1, 2V5, 4V3, 1V5 ]
+        - name: CTRLB
+          offset: 0x01
+          supported: no
+
+#========================================================================================

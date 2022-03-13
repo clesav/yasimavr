@@ -1,0 +1,145 @@
+# YAML configuration file for atmega0 and atmega1 series
+#
+# Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+#
+# This file is part of yasim-avr.
+#
+# yasim-avr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# yasim-avr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
+
+---
+#========================================================================================
+SLPCTRL:
+    registers:
+        - name: CTRLA
+          offset: 0x00
+          fields:
+            SEN: { kind: BIT, pos: 0, one: on, zero: off }
+            SMODE:
+                kind: ENUM
+                LSB: 1
+                MSB: 2
+                values: [ IDLE, STANDBY, PDOWN ]
+    
+    config:
+        modes:
+            0x00: Idle
+            0x01: Standby
+            0x02: PowerDown
+        rb_mode: [ CTRLA, SMODE ]
+        rb_enable: [ CTRLA, SEN ]
+
+#========================================================================================
+RSTCTRL:
+    registers:
+        - name: RSTFR
+          offset: 0x00
+          fields:
+            PORF: { kind: BIT, pos: 0 }
+            BORF: { kind: BIT, pos: 1 }
+            EXTRF: { kind: BIT, pos: 2 }
+            WDRF: { kind: BIT, pos: 3 }
+            SWRF: { kind: BIT, pos: 4 }
+            UPDIRF: { kind: BIT, pos: 5, supported: no }
+        
+        - name: SWRR
+          offset: 0x01
+          fields:
+            SWRE: { kind: BIT, pos: 0 }
+
+#========================================================================================
+CPUINT:
+    registers:
+        - name: CTRLA
+          offset: 0x00
+          protected: CCP
+          fields:
+            LVL0RR: { kind: BIT, pos: 0 }
+            CVT: { kind: BIT, pos: 5 }
+            IVSEL: { kind: BIT, pos: 6 }
+        
+        - name: STATUS
+          offset: 0x01
+          readonly: yes
+          fields:
+            LVL0EX: { kind: BIT, pos: 0 }
+            LVL1EX: { kind: BIT, pos: 1 }
+            NMIEX: { kind: BIT, pos: 7 }
+        
+        - name: LVL0PRI
+          offset: 0x02
+          kind: INT
+        
+        - name: LVL1VEC
+          offset: 0x03
+          kind: INT        
+
+#========================================================================================
+CPU:
+    registers:
+        - name: CCP
+          address: 0x0034
+        
+        - name: SP
+          address: 0x003D
+          size: 2
+        
+        - name: SREG
+          address: 0x003F
+          fields:
+            C: { kind: BIT, pos: 0 }
+            Z: { kind: BIT, pos: 1 }
+            N: { kind: BIT, pos: 2 }
+            V: { kind: BIT, pos: 3 }
+            S: { kind: BIT, pos: 4 }
+            H: { kind: BIT, pos: 5 }
+            T: { kind: BIT, pos: 6 }
+            I: { kind: BIT, pos: 7 }
+
+#========================================================================================      
+MISC:
+    registers:
+        - name: GPIOR0
+          address: 0x001C
+        
+        - name: GPIOR1
+          address: 0x001D
+        
+        - name: GPIOR2
+          address: 0x001E
+        
+        - name: GPIOR3
+          address: 0x001F
+        
+        - name: REVID
+          address: 0x0F01
+        
+        - name: DEVID
+          address: 0x1100
+          readonly: true
+          kind: ARRAY
+          size: 3
+        
+        - name: SERNUM
+          address: 0x1103
+          readonly: true
+          kind: ARRAY
+          size: 10
+    
+    config:
+        reg_base_gpior: 0x1C
+        gpior_count: 4
+        reg_base_sigrow: 0x1100
+        reg_revid: 0x0F01
+
+#========================================================================================

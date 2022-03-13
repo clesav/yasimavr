@@ -1,0 +1,305 @@
+# YAML configuration file for atmega48-88-168-328 variants
+#
+# Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+#
+# This file is part of yasim-avr.
+#
+# yasim-avr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# yasim-avr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
+
+---
+#========================================================================================
+TC0:
+    registers:
+        - name: TCCR0A
+          address: 0x24
+          fields:
+            WGM:
+               kind: ENUM
+               LSB: 0
+               MSB: 1
+            COMB:
+                kind: ENUM
+                LSB: 4
+                MSB: 5
+            COMA:
+                kind: ENUM
+                LSB: 6
+                MSB: 7
+        
+        - name: TCCR0B
+          address: 0x25
+          fields:
+            CS:
+                kind: ENUM
+                LSB: 0
+                MSB: 2
+                values: [ Disabled, NODIV, DIV8, DIV64, DIV256, DIV1024, T0_FALL, T0_RISE ]
+            WGM2: { kind: BIT, pos: 3 }
+            FOCB: { kind: BIT, pos: 6 }
+            FOCA: { kind: BIT, pos: 7 }
+        
+        - name: TCNT0
+          address: 0x26
+          kind: INT
+
+        - name: OCR0A
+          address: 0x27
+          kind: INT
+            
+        - name: OCR0B
+          address: 0x28
+          kind: INT
+          
+        - name: TIMSK0
+          address: 0x4E
+          fields:
+            TOIE: { kind: BIT, pos: 0 }
+            OCIEA: { kind: BIT, pos: 1 }
+            OCIEB: { kind: BIT, pos: 2 }
+            
+        - name: TIFR0
+          address: 0x15
+          fields:
+            TOV: { kind: BIT, pos: 0 }
+            OCFA: { kind: BIT, pos: 1 }
+            OCFB: { kind: BIT, pos: 2 }
+
+    config:
+        is_16bits: no
+        clocks:     #format: [ 'enum value', 'clock mode', 'prescaler factor' ]
+            - [ 0b000, ClockDisabled, 0 ]
+            - [ 0b001, INT_IO_CLOCK, 1 ]
+            - [ 0b010, INT_IO_CLOCK, 8 ]
+            - [ 0b011, INT_IO_CLOCK, 64 ]
+            - [ 0b100, INT_IO_CLOCK, 256 ]
+            - [ 0b101, INT_IO_CLOCK, 1024 ]
+        modes:      #format: [ 'enum value', 'timer mode' ]
+            - [ 0b0000, MODE_NORMAL ]
+            - [ 0b0100, MODE_CTC ]
+        rb_clock: [ TCCR0B, CS ]
+        rb_mode: [ TCCR0A, WGM ]
+        rb_mode_ext: [ TCCR0B, WGM2 ]
+        reg_cnt: TCNT0
+        reg_ocra: OCR0A
+        reg_ocrb: OCR0B
+        reg_int_enable: TIMSK0
+        reg_int_flag: TIFR0
+        int_ovf: [ TIMER0_OVF, 0 ]
+        int_ocra: [ TIMER0_COMPA, 1 ]
+        int_ocrb: [ TIMER0_COMPB, 2 ]
+    
+#========================================================================================
+TC1:
+    registers:
+        - name: TCCR1A
+          address: 0x60
+          fields:
+            WGM:
+               kind: ENUM
+               LSB: 0
+               MSB: 1
+            COMB:
+                kind: ENUM
+                LSB: 4
+                MSB: 5
+            COMA:
+                kind: ENUM
+                LSB: 6
+                MSB: 7
+        
+        
+        - name: TCCR1B
+          address: 0x61
+          fields:
+            CS:
+                kind: ENUM
+                LSB: 0
+                MSB: 2
+                values: [ Disabled, NODIV, DIV8, DIV64, DIV256, DIV1024, T1_FALL, T1_RISE ]
+            WGM2: { kind: BIT, pos: 3 }
+            WGM3: { kind: BIT, pos: 4 }
+            ICES: { kind: BIT, pos: 6 }
+            ICNC: { kind: BIT, pos: 7 }
+        
+        
+        - name: TCCR1C
+          address: 0x62
+          fields:
+            FOCB: { kind: BIT, pos: 6 }
+            FOCA: { kind: BIT, pos: 7 }
+        
+        - name: TCNT1
+          address: 0x64
+          size: 2
+          kind: INT
+          
+        - name: OCR1A
+          address: 0x68
+          size: 2
+          kind: INT
+            
+        - name: OCR1B
+          address: 0x6A
+          size: 2
+          kind: INT
+                      
+        - name: ICR1
+          address: 0x66
+          size: 2
+          kind: INT
+          
+        - name: TIMSK1
+          address: 0x4F
+          fields:
+            TOIE: { kind: BIT, pos: 0 }
+            OCIEA: { kind: BIT, pos: 1 }
+            OCIEB: { kind: BIT, pos: 2 }
+            ICIE: { kind: BIT, pos: 5 }
+            
+        - name: TIFR1
+          address: 0x16
+          fields:
+            TOV: { kind: BIT, pos: 0 }
+            OCFA: { kind: BIT, pos: 1 }
+            OCFB: { kind: BIT, pos: 2 }
+            ICF: { kind: BIT, pos: 5 }
+    
+    config:
+        is_16bits: yes
+        clocks:
+            - [ 0b000, ClockDisabled, 0 ]
+            - [ 0b001, INT_IO_CLOCK, 1 ]
+            - [ 0b010, INT_IO_CLOCK, 8 ]
+            - [ 0b011, INT_IO_CLOCK, 64 ]
+            - [ 0b100, INT_IO_CLOCK, 256 ]
+            - [ 0b101, INT_IO_CLOCK, 1024 ]
+        modes:
+            - [ 0b0000, MODE_NORMAL ]
+            - [ 0b0100, MODE_CTC ]
+        rb_clock: [ TCCR1B, CS ]
+        rb_mode: [ TCCR1A, WGM ]
+        rb_mode_ext: [ TCCR1B, WGM2 ]
+        reg_cnt: TCNT1
+        reg_ocra: OCR1A
+        reg_ocrb: OCR1B
+        reg_int_enable: TIMSK1
+        reg_int_flag: TIFR1
+        int_ovf: [ TIMER1_OVF, 0 ]
+        int_ocra: [ TIMER1_COMPA, 1 ]
+        int_ocrb: [ TIMER1_COMPB, 2 ]
+        
+#========================================================================================
+TC2:
+    registers:
+        - name: TCCR2A
+          address: 0x90
+          fields:
+            WGM:
+               kind: ENUM
+               LSB: 0
+               MSB: 1
+            COMB:
+                kind: ENUM
+                LSB: 4
+                MSB: 5
+            COMA:
+                kind: ENUM
+                LSB: 6
+                MSB: 7
+        
+        
+        - name: TCCR2B
+          address: 0x91
+          fields:
+            CS:
+                kind: ENUM
+                LSB: 0
+                MSB: 2
+                values: [ Disabled, NODIV, DIV8, DIV32, DIV64, DIV128, DIV256, DIV1024 ]
+            WGM2: { kind: BIT, pos: 3 }
+            FOCB: { kind: BIT, pos: 6 }
+            FOCA: { kind: BIT, pos: 7 }
+        
+        - name: TCNT2
+          address: 0x92
+          kind: INT
+          
+        - name: OCR2A
+          address: 0x93
+          kind: INT
+            
+        - name: OCR2B
+          address: 0x94
+          kind: INT
+          
+        - name: TIMSK2
+          address: 0x50
+          fields:
+            TOIE: { kind: BIT, pos: 0 }
+            OCIEA: { kind: BIT, pos: 1 }
+            OCIEB: { kind: BIT, pos: 2 }
+            
+        - name: TIFR2
+          address: 0x17
+          fields:
+            TOV: { kind: BIT, pos: 0 }
+            OCFA: { kind: BIT, pos: 1 }
+            OCFB: { kind: BIT, pos: 2 }
+        
+        - name: ASSR
+          address: 0x96
+          supported: no
+
+    config:
+        is_16bits: no
+        clocks:
+            - [ 0b000, ClockDisabled, 0 ]
+            - [ 0b001, INT_IO_CLOCK, 1 ]
+            - [ 0b010, INT_IO_CLOCK, 8 ]
+            - [ 0b011, INT_IO_CLOCK, 64 ]
+            - [ 0b100, INT_IO_CLOCK, 256 ]
+            - [ 0b101, INT_IO_CLOCK, 1024 ]
+        modes:
+            - [ 0b0000, MODE_NORMAL ]
+            - [ 0b0100, MODE_CTC ]
+        rb_clock: [ TCCR2B, CS ]
+        rb_mode: [ TCCR2A, WGM ]
+        rb_mode_ext: [ TCCR2B, WGM2 ]
+        reg_cnt: TCNT2
+        reg_ocra: OCR2A
+        reg_ocrb: OCR2B
+        reg_int_enable: TIMSK2
+        reg_int_flag: TIFR2
+        int_ovf: [ TIMER2_OVF, 0 ]
+        int_ocra: [ TIMER2_COMPA, 1 ]
+        int_ocrb: [ TIMER2_COMPB, 2 ]
+        
+#========================================================================================
+WDT:
+    registers:
+        - name: WDTCSR
+          address: 0x40
+          fields:
+            WDP:
+                kind: ENUM
+                LSB: 0
+                MSB: 2
+                values: [ 2K, 4K, 8K, 16K, 32K, 64K, 128K, 256K, 512K, 1024K ]
+            WDE: { kind: BIT, pos: 3 }
+            WDCE: { kind: BIT, pos: 4 }
+            WDP3: { kind: BIT, pos: 5 }
+            WDIE: { kind: BIT, pos: 6 }
+            WDIF: { kind: BIT, pos: 7 }
+
+#========================================================================================

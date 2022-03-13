@@ -1,0 +1,122 @@
+# YAML configuration file for atmega48-88-168-328 variants
+#
+# Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+#
+# This file is part of yasim-avr.
+#
+# yasim-avr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# yasim-avr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
+
+---
+#========================================================================================
+ADC:
+    registers:
+        - name: ADMUX
+          address: 0x7C
+          fields:
+            MUX:
+                kind: ENUM
+                LSB: 0
+                MSB: 3
+                values:
+                    - [ ADC0, ADC1, ADC2, ADC3, ADC4, ADC5, ADC6, ADC7, TEMP ]
+                    - { 0xE: 1V1, 0xF:GND }
+            ADLAR: { kind: BIT, pos: 5, one: left, zero: right }
+            REFS:
+                kind: ENUM
+                LSB: 6
+                MSB: 7
+                values: [ AREF, AVCC, "", 1V1 ]
+
+        - name: ADCSRA
+          address: 0x7A
+          fields:
+            ADPS:
+                kind: ENUM
+                LSB: 0
+                MSB: 2
+                values: [ DIV2, DIV2, DIV4, DIV8, DIV16, DIV32, DIV64, DIV128 ]
+            ADIE: { kind: BIT, pos: 3 }
+            ADIF: { kind: BIT, pos: 4 }
+            ADATE: { kind: BIT, pos: 5 }
+            ADSC: { kind: BIT, pos: 6 }
+            ADEN: { kind: BIT, pos: 7 }
+
+        - name: ADC
+          address: 0x78
+          size: 2
+          readonly: true
+          
+        - name: ADCSRB
+          address: 0x7B
+          fields:
+            ADTS:
+                kind: ENUM
+                LSB: 0
+                MSB: 2
+                values: [ Free, AC, ExtInt0, TC0_CMPA, TC0_OVF, TC1_CMPB, TC1_OVF, TC1_CAPT ]
+            ACME: { kind: BIT, pos: 6 }
+
+        - name: DIDR
+          address: 0x7E
+          fields:
+            ADC0D: { kind: BIT, pos: 0 }
+            ADC1D: { kind: BIT, pos: 1 }
+            ADC2D: { kind: BIT, pos: 2 }
+            ADC3D: { kind: BIT, pos: 3 }
+            ADC4D: { kind: BIT, pos: 4 }
+            ADC5D: { kind: BIT, pos: 5 }
+
+    config:
+        channels:
+            0x00: [ ADC_SingleEnded, PC0 ]
+            0x01: [ ADC_SingleEnded, PC1 ]
+            0x02: [ ADC_SingleEnded, PC2 ]
+            0x03: [ ADC_SingleEnded, PC3 ]
+            0x04: [ ADC_SingleEnded, PC4 ]
+            0x05: [ ADC_SingleEnded, PC5 ]
+            0x06: [ ADC_SingleEnded, ADC6 ]
+            0x07: [ ADC_SingleEnded, ADC7 ]
+        references:
+            0: Source_Ext_AREF
+            1: Source_Ext_AVCC
+            3: Source_Internal
+        clk_ps_factors: [ 2, 2, 4, 8, 16, 32, 128 ]
+        triggers:
+            0b000: FreeRunning
+            0b001: AComp
+            0b010: ExtInt0
+            0b011: Timer0_CompA
+            0b100: Timer0_OVF
+            0b101: Timer1_CompB
+            0b110: Timer1_OVF
+        reg_datal: ADCL
+        reg_datah: ADCH
+        rb_chan_mux: [ ADMUX, MUX ]
+        rb_ref_mux: [ ADMUX, REFS ]
+        rb_enable: [ ADCSRA, ADEN ]
+        rb_start: [ ADCSRA, ADSC ]
+        rb_auto_trig: [ ADCSRA, ADATE ]
+        rb_int_enable: [ ADCSRA, ADIE ]
+        rb_int_flag: [ ADCSRA, ADIF ]
+        rb_prescaler: [ ADCSRA, ADPS ]
+        rb_trig_mux: [ ADCSRB, ADTS ]
+        rb_left_adj: [ ADMUX, ADLAR ]
+        int_vector: ADC
+        temp_cal_25C: 0.0
+        temp_cal_coef: 1.0
+
+#========================================================================================
+VREF:
+    config:
+        bandgap : 1.1
