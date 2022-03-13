@@ -43,13 +43,13 @@ public:
 	
 	SIP_PYBUFFER flash /NoSetter/ {
 		%GetCode
-			sipPy = export_to_pybuffer(sipCpp->flash, sipCpp->flashsize);
+			sipPy = export_to_pybuffer(sipAPI_core, sipCpp->flash, sipCpp->flashsize);
 		%End
 	};
 	
 	void set_flash(SIP_PYBUFFER);
 	%MethodCode
-		sipCpp->flashsize = import_from_pybuffer(&(sipCpp->flash), a0);
+		sipCpp->flashsize = import_from_pybuffer(sipAPI_core, &(sipCpp->flash), a0);
 	%End
 	
 	uint32_t flashsize /NoSetter/;
@@ -59,13 +59,13 @@ public:
 	
 	SIP_PYBUFFER eeprom /NoSetter/ {
 		%GetCode
-			sipPy = export_to_pybuffer(sipCpp->eeprom, sipCpp->eesize);
+			sipPy = export_to_pybuffer(sipAPI_core, sipCpp->eeprom, sipCpp->eesize);
 		%End
 	};
 	
 	void set_eeprom(SIP_PYBUFFER);
 	%MethodCode
-		sipCpp->eesize = import_from_pybuffer(&(sipCpp->eeprom), a0);
+		sipCpp->eesize = import_from_pybuffer(sipAPI_core, &(sipCpp->eeprom), a0);
 	%End
 	
 	uint32_t eesize /NoSetter/;

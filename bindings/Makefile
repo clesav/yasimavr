@@ -32,28 +32,28 @@ sipdirs: FORCE
 siplib: sipdirs
 	cd src && python generate_siplib.py
 	cd siplib/sip && python setup.py build --build-lib "."
-	copy /y siplib\sip\yasimavr\_sip*.pyd Release
-	copy /y siplib\sip\yasimavr\_sip*.pyd Debug
+	copy /y siplib\sip\yasimavr\lib\_sip*.pyd Release
+	copy /y siplib\sip\yasimavr\lib\_sip*.pyd Debug
 
 bindings: siplib
 	$(COPY_FILE) src\pyproject.Release.toml sipgen\pyproject.toml
 	cd sipgen && sip-build
-	$(COPY_FILE) sipgen\gen\core\yasimavr\core.pyd Release
+	$(COPY_FILE) sipgen\gen\core\yasimavr\lib\core.pyd Release
 	$(COPY_FILE) sipgen\gen\core\core.pyi Release
-	$(COPY_FILE) sipgen\gen\arch_avr\yasimavr\arch_avr.pyd Release
+	$(COPY_FILE) sipgen\gen\arch_avr\yasimavr\lib\arch_avr.pyd Release
 	$(COPY_FILE) sipgen\gen\arch_avr\arch_avr.pyi Release
-	$(COPY_FILE) sipgen\gen\arch_m0\yasimavr\arch_m0.pyd Release
+	$(COPY_FILE) sipgen\gen\arch_m0\yasimavr\lib\arch_m0.pyd Release
 	$(COPY_FILE) sipgen\gen\arch_m0\arch_m0.pyi Release
 
 bindings-debug: siplib
 	$(COPY_FILE) src\pyproject.Debug.toml sipgen\pyproject.toml
 	$(COPY_FILE) src\project.py sipgen
 	cd sipgen && sip-build --tracing --gdb
-	$(COPY_FILE) sipgen\gen\core\yasimavr\core.pyd Debug
+	$(COPY_FILE) sipgen\gen\core\yasimavr\lib\core.pyd Debug
 	$(COPY_FILE) sipgen\gen\core\core.pyi Debug
-	$(COPY_FILE) sipgen\gen\arch_avr\yasimavr\arch_avr.pyd Debug
+	$(COPY_FILE) sipgen\gen\arch_avr\yasimavr\lib\arch_avr.pyd Debug
 	$(COPY_FILE) sipgen\gen\arch_avr\arch_avr.pyi Debug
-	$(COPY_FILE) sipgen\gen\arch_m0\yasimavr\arch_m0.pyd Debug
+	$(COPY_FILE) sipgen\gen\arch_m0\yasimavr\lib\arch_m0.pyd Debug
 	$(COPY_FILE) sipgen\gen\arch_m0\arch_m0.pyi Debug
 
 clean: FORCE

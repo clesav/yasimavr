@@ -31,7 +31,7 @@ sip-file = "../src/lib_core/yasimavr-core.sip"
 include-dirs = ["../../lib_core/src",
 				"../src"]
 sources = ["../src/utils/buffer_utils.c"]
-libraries = ["yasimavr_cored"]
+libraries = ["yasimavr_core"]
 library-dirs = ["../../lib_core/Debug"]
 pep484-pyi = true
 protected-is-public = false
@@ -43,8 +43,8 @@ include-dirs = ["../../lib_core/src",
 				"../../lib_arch_avr/src",
 				"../src"]
 sources = ["../src/utils/buffer_utils.c"]
-libraries = ["yasimavr_cored",
-			 "yasimavr_arch_avrd"]
+libraries = ["yasimavr_core",
+			 "yasimavr_arch_avr"]
 library-dirs = ["../../lib_core/Debug",
 				"../../lib_arch_avr/Debug"]
 pep484-pyi = true
@@ -56,8 +56,8 @@ sip-file = "../src/lib_arch_m0/yasimavr-arch-m0.sip"
 include-dirs = ["../../lib_core/src",
 				"../../lib_arch_m0/src",
 				"../src"]
-libraries = ["yasimavr_cored",
-			 "yasimavr_arch_m0d"]
+libraries = ["yasimavr_core",
+			 "yasimavr_arch_m0"]
 library-dirs = ["../../lib_core/Debug",
 				"../../lib_arch_m0/Debug"]
 pep484-pyi = true
@@ -66,7 +66,7 @@ protected-is-public = false
 
 [tool.sip.project]
 name = "yasimavr"
-sip-module = "yasimavr._sip"
+sip-module = "yasimavr.lib._sip"
 builder-factory = "project.py"
 build-dir = "./gen"
 verbose = true

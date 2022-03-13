@@ -30,12 +30,19 @@
 extern "C" {
 #endif
 
-void set_sip_api(const sipAPIDef* api);
+uint32_t import_from_pybuffer(const sipAPIDef* sipAPI,
+							  uint8_t **data,
+							  PyObject* exporter);
 
-uint32_t import_from_pybuffer(uint8_t **data, PyObject* exporter);
-PyObject* export_to_pybuffer(uint8_t *data, uint32_t len);
+PyObject* export_to_pybuffer(const sipAPIDef* sipAPI,
+							 uint8_t *data,
+							 uint32_t len);
 
-int import_from_fixedlen_sequence(void *data, const char *format, Py_ssize_t len, PyObject* obj);
+int import_from_fixedlen_sequence(const sipAPIDef* sipAPI,
+								  void *data,
+								  const char *format,
+								  Py_ssize_t len,
+								  PyObject* obj);
 
 #ifdef __cplusplus
 }

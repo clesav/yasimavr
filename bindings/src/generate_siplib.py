@@ -28,7 +28,7 @@ sys.argv = [sys.argv[0],
             '--sdist',
             '--sip-h',
             '--target-dir', '../siplib',
-            'yasimavr._sip']
+            'yasimavr.lib._sip']
 module_main()
 
 #shutil.copyfile('siplib-makefile', '../siplib/Makefile')
@@ -38,7 +38,7 @@ abi_major_version = sip_abi_version.split('.')[0]
 module_version = sipmod.abi_version.get_sip_module_version(abi_major_version)
 print(module_version)
 
-sdist_name = 'yasimavr__sip-' + module_version
+sdist_name = 'yasimavr_lib__sip-' + module_version
 
 old_pwd = os.getcwd()
 os.chdir('../siplib')

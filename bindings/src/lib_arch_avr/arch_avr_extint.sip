@@ -33,7 +33,7 @@ struct AVR_ArchAVR_ExtIntConfig {
 			sipPy = sipConvertToArray(sipCpp->extint_pins, "I", EXTINT_PIN_COUNT, 0);
 		%End
 		%SetCode
-			sipErr = import_from_fixedlen_sequence(sipCpp->extint_pins, "I", EXTINT_PIN_COUNT, sipPy);
+			sipErr = import_from_fixedlen_sequence(sipAPI_arch_avr, sipCpp->extint_pins, "I", EXTINT_PIN_COUNT, sipPy);
 		%End
 	};
 	
@@ -43,7 +43,7 @@ struct AVR_ArchAVR_ExtIntConfig {
 			sipPy = sipConvertToArray(sipCpp->pcint_pins, "I", PCINT_PIN_COUNT, 0);
 		%End
         %SetCode
-            sipErr = import_from_fixedlen_sequence(sipCpp->pcint_pins, "I", PCINT_PIN_COUNT, sipPy);
+            sipErr = import_from_fixedlen_sequence(sipAPI_arch_avr, sipCpp->pcint_pins, "I", PCINT_PIN_COUNT, sipPy);
         %End
 	};
 	
@@ -59,7 +59,7 @@ struct AVR_ArchAVR_ExtIntConfig {
 			sipPy = sipConvertToArray(sipCpp->reg_pcint_mask, "H", PCINT_BANK_COUNT, 0);
 		%End
         %SetCode
-            sipErr = import_from_fixedlen_sequence(sipCpp->reg_pcint_mask, "H", PCINT_BANK_COUNT, sipPy);
+            sipErr = import_from_fixedlen_sequence(sipAPI_arch_avr, sipCpp->reg_pcint_mask, "H", PCINT_BANK_COUNT, sipPy);
         %End
 	};
 	
@@ -69,7 +69,7 @@ struct AVR_ArchAVR_ExtIntConfig {
 			sipPy = sipConvertToArray(sipCpp->extint_vector, "h", EXTINT_PIN_COUNT, 0);
 		%End
         %SetCode
-            sipErr = import_from_fixedlen_sequence(sipCpp->extint_vector, "h", EXTINT_PIN_COUNT, sipPy);
+            sipErr = import_from_fixedlen_sequence(sipAPI_arch_avr, sipCpp->extint_vector, "h", EXTINT_PIN_COUNT, sipPy);
         %End
     };
     
@@ -79,7 +79,7 @@ struct AVR_ArchAVR_ExtIntConfig {
 			sipPy = sipConvertToArray(sipCpp->pcint_vector, "h", PCINT_BANK_COUNT, 0);
 		%End
         %SetCode
-            sipErr = import_from_fixedlen_sequence(sipCpp->pcint_vector, "h", PCINT_BANK_COUNT, sipPy);
+            sipErr = import_from_fixedlen_sequence(sipAPI_arch_avr, sipCpp->pcint_vector, "h", PCINT_BANK_COUNT, sipPy);
         %End
     };
 

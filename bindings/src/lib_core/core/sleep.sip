@@ -50,7 +50,7 @@ struct AVR_SleepConfig {
 				sipPy = sipConvertToArray(sipCpp->int_mask, "B", 16, 0);
 			%End
             %SetCode
-                sipErr = import_from_fixedlen_sequence(sipCpp->int_mask, "B", 16, sipPy);
+                sipErr = import_from_fixedlen_sequence(sipAPI_core, sipCpp->int_mask, "B", 16, sipPy);
             %End
         };
 		

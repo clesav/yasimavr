@@ -21,14 +21,10 @@
 
 #include "buffer_utils.h"
 
-static const sipAPIDef* sipAPI = NULL;
 
-void set_sip_api(const sipAPIDef* api)
-{
-	sipAPI = api;
-}
-
-uint32_t import_from_pybuffer(uint8_t **buf, PyObject* exporter)
+uint32_t import_from_pybuffer(const sipAPIDef* sipAPI,
+							  uint8_t **buf,
+							  PyObject* exporter)
 {
 	Py_buffer buffer;
 	uint32_t len;
@@ -42,7 +38,9 @@ uint32_t import_from_pybuffer(uint8_t **buf, PyObject* exporter)
 	return len;
 }
 
-PyObject* export_to_pybuffer(uint8_t *data, uint32_t len)
+PyObject* export_to_pybuffer(const sipAPIDef* sipAPI,
+							 uint8_t *data,
+							 uint32_t len)
 {
 	if (len > 0) {
 		void* buf = sipAPI->api_malloc(len);
@@ -54,7 +52,11 @@ PyObject* export_to_pybuffer(uint8_t *data, uint32_t len)
 	}
 }
 
-int import_from_fixedlen_sequence(void *data, const char *format, Py_ssize_t len, PyObject* obj)
+int import_from_fixedlen_sequence(const sipAPIDef* sipAPI,
+								  void *data,
+								  const char *format,
+								  Py_ssize_t len,
+								  PyObject* obj)
 {
 	if (!PySequence_Check(obj) || (PySequence_Size(obj) != len)) {
 		PyErr_Format(PyExc_TypeError, "obj must be a sequence of length %d", len);

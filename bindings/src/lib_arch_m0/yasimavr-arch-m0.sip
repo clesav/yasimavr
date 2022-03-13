@@ -21,7 +21,7 @@
  
 //=======================================================================================
 
-%Module(name=yasimavr.arch_m0)
+%Module(name=yasimavr.lib.arch_m0)
 
 %Import ../lib_core/yasimavr-core.sip
 

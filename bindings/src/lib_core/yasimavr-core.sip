@@ -21,19 +21,12 @@
  
 //=======================================================================================
 
-%Module(name=yasimavr.core)
+%Module(name=yasimavr.lib.core)
 
 %License "GPLv3 (see LICENSE file)"
 
 %DefaultEncoding(name = "UTF-8")
 
-%ModuleHeaderCode
-#include "utils\buffer_utils.h"
-%End
-
-%InitialisationCode
-set_sip_api(sipAPI_core);
-%End
 
 typedef long long				int64_t;
 typedef unsigned int			uint32_t;

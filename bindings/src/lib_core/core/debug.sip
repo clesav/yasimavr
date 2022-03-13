@@ -79,7 +79,7 @@ public:
     	if (a1) {
     		uint8_t* buf = (uint8_t*) sipMalloc(a1);
     		uint32_t rlen = sipCpp->read_flash(a0, buf, a1);
-    		PyObject* pybuf = export_to_pybuffer(buf, rlen);
+    		PyObject* pybuf = export_to_pybuffer(sipAPI_core, buf, rlen);
     		sipRes = PyBytes_FromObject(pybuf);
     		sipFree(buf);
     		Py_DECREF(pybuf);
@@ -101,7 +101,7 @@ public:
     	if (a1) {
     		uint8_t* buf = (uint8_t*) sipMalloc(a1);
     		sipCpp->read_data(a0, buf, a1);
-    		PyObject* pybuf = export_to_pybuffer(buf, a1);
+    		PyObject* pybuf = export_to_pybuffer(sipAPI_core, buf, a1);
     		sipRes = PyBytes_FromObject(pybuf);
     		sipFree(buf);
     		Py_DECREF(pybuf);
