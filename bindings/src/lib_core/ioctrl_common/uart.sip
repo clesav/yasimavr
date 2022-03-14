@@ -32,15 +32,6 @@ const uint16_t CTLREQ_UART_ENDPOINT = AVR_CTLREQ_UART_ENDPOINT;
 const uint16_t CTLREQ_UART_ENDPOINT;
 
 
-enum UART_SignalIndex /BaseType=IntEnum/ {
-	UART_Data_Frame,
-	UART_Data_String,
-	UART_TX_Start,
-	UART_TX_Complete,
-	UART_RX_Start,
-	UART_RX_Complete,
-};
-
 struct UART_EndPoint {
 %TypeHeaderCode
 #include "ioctrl_common/sim_uart.h"
@@ -59,12 +50,21 @@ class AVR_IO_UART : public AVR_SignalHook /NoDefaultCtors/ {
 
 public:
 
+	enum SignalId /BaseType=IntEnum/ {
+		Signal_Data_Frame		/PyName=Data_Frame/,
+		Signal_Data_String		/PyName=Data_String/,
+		Signal_TX_Start			/PyName=TX_Start/,
+		Signal_TX_Complete		/PyName=TX_Complete/,
+		Signal_RX_Start			/PyName=RX_Start/,
+		Signal_RX_Complete		/PyName=RX_Complete/,
+	};
+
 	AVR_IO_UART();
 	virtual ~AVR_IO_UART();
 
 	void init(AVR_CycleManager&, AVR_DeviceLogger&);
 	void reset();
-    
+
 	AVR_Signal& signal();
 	void set_frame_delay(cycle_count_t);
 	void set_tx_buffer_limit(unsigned int);

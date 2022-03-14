@@ -156,15 +156,15 @@ void AVR_ArchAVR_USART::raised(const signal_data_t& data, uint16_t id)
 {
 	//If a frame emission is started, it means the TX buffer is empty
 	//so raise the TXE (DRE) flag
-	if (data.index == UART_TX_Start)
+	if (data.sigid == AVR_IO_UART::Signal_TX_Start)
 		m_txe_intflag.set_flag();
 
 	//If a frame is successfully emitted, raise the TXC flag
-	else if (data.index == UART_TX_Complete && data.u)
+	else if (data.sigid == AVR_IO_UART::Signal_TX_Complete && data.u)
 		m_txc_intflag.set_flag();
 
 	//If a frame is successfully received, raise the RXC flag
-	else if (data.index == UART_RX_Complete && data.u)
+	else if (data.sigid == AVR_IO_UART::Signal_RX_Complete && data.u)
 		m_rxc_intflag.set_flag();
 }
 

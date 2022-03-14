@@ -29,6 +29,8 @@ import io
 
 import yasimavr.lib.core as _corelib
 
+_UART_SignalId = _corelib.AVR_IO_UART.SignalId
+
 
 class UartIO(io.RawIOBase):
     
@@ -39,7 +41,7 @@ class UartIO(io.RawIOBase):
             self.queue = collections.deque()
         
         def raised(self, data, _):
-            if data.index == _corelib.UART_SignalIndex.UART_Data_Frame:
+            if data.sigid == _UART_SignalId.Data_Frame:
                 self.queue.append(data.u)
     
     def __init__(self, device, portnum):
@@ -62,9 +64,9 @@ class UartIO(io.RawIOBase):
     
     def write(self, data):
         if isinstance(data, int):
-            self._tx_signal.raise_(0, _corelib.UART_SignalIndex.UART_Data_Frame, data);
+            self._tx_signal.raise_(_UART_SignalId.Data_Frame, 0, data);
         elif isinstance(data, (bytes, bytearray)):
-            sigdata = _corelib.signal_data_t(0, _corelib.UART_SignalIndex.UART_Data_String, data)
+            sigdata = _corelib.signal_data_t(_UART_SignalId.Data_String, 0, data)
             self._tx_signal.raise_(sigdata)
         else:
             raise TypeError()
@@ -94,5 +96,3 @@ class UartIO(io.RawIOBase):
             self._tx_hook.queue.clear()
         
         super(UartIO, self).close()
-        
-            

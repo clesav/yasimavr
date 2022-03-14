@@ -102,7 +102,7 @@ void AVR_IO_UART::reset()
 	//Reset the TX part
 	//Raise the signal to inform that the TX is canceled
 	if (tx_in_progress())
-		m_signal.raise_u(UART_TX_Complete, 0, 0);
+		m_signal.raise_u(Signal_TX_Complete, 0, 0);
 
 	m_tx_buffer.clear();
 	m_tx_collision = false;
@@ -111,7 +111,7 @@ void AVR_IO_UART::reset()
 	//Reset the RX part
 	//Raise the signal to inform that the RX is canceled
 	if (rx_in_progress())
-		m_signal.raise_u(UART_RX_Complete, 0, 0);
+		m_signal.raise_u(Signal_RX_Complete, 0, 0);
 
 	m_rx_enabled = false;
 	m_rx_buffer.clear();
@@ -150,7 +150,7 @@ void AVR_IO_UART::push_tx(uint8_t frame)
 
 	if (!tx) {
 		DEBUG_LOG(*m_logger, "UART TX start: 0x%02x ('%c')", frame, frame);
-		m_signal.raise_u(UART_TX_Start, 0, frame);
+		m_signal.raise_u(Signal_TX_Start, 0, frame);
 		m_cycle_manager->add_cycle_timer(m_tx_timer, m_cycle_manager->cycle() + m_delay);
 	}
 }
@@ -168,13 +168,13 @@ cycle_count_t AVR_IO_UART::tx_timer_next(cycle_count_t when)
 
 	DEBUG_LOG(*m_logger, "UART TX complete", "");
 
-	m_signal.raise_u(UART_Data_Frame, 0, frame);
-	m_signal.raise_u(UART_TX_Complete, 0, 1);
+	m_signal.raise_u(Signal_Data_Frame, 0, frame);
+	m_signal.raise_u(Signal_TX_Complete, 0, 1);
 
 	if (m_tx_buffer.size()) {
 		uint8_t next_frame = m_tx_buffer.front();
 		DEBUG_LOG(*m_logger, "UART TX start: 0x%02x ('%c')", next_frame, next_frame);
-		m_signal.raise_u(UART_TX_Start, 0, next_frame);
+		m_signal.raise_u(Signal_TX_Start, 0, next_frame);
 		return when + m_delay;
 	} else {
 		return 0;
@@ -202,7 +202,7 @@ void AVR_IO_UART::set_rx_enabled(bool enabled)
 	//and flush the front part of the FIFO
 	if (!enabled) {
 		if (rx_in_progress()) {
-			m_signal.raise_u(UART_RX_Complete, 0, 0);
+			m_signal.raise_u(Signal_RX_Complete, 0, 0);
 			m_cycle_manager->remove_cycle_timer(m_rx_timer);
 		}
 
@@ -243,7 +243,7 @@ void AVR_IO_UART::start_rx()
 
 	//Raise a signal for the next frame to be actually received by
 	//the device. It's in the front slot of the back part of the RX FIFO
-	m_signal.raise_u(UART_RX_Start, 0, m_rx_buffer[m_rx_count]);
+	m_signal.raise_u(Signal_RX_Start, 0, m_rx_buffer[m_rx_count]);
 }
 
 cycle_count_t AVR_IO_UART::rx_timer_next(cycle_count_t when)
@@ -253,14 +253,14 @@ cycle_count_t AVR_IO_UART::rx_timer_next(cycle_count_t when)
 	if (m_rx_enabled) {
 		++m_rx_count;
 		//Signal that we received a frame and kept it
-		m_signal.raise_u(UART_RX_Complete, 0, 1);
+		m_signal.raise_u(Signal_RX_Complete, 0, 1);
 	} else {
 		//if disabled, m_rx_count = 0 so the front FIFO is empty
 		//and the front slot has the frame just received.
 		//We discard it.
 		m_rx_buffer.pop_front();
 		//Signal that we received a frame but discarded it
-		m_signal.raise_u(UART_RX_Complete, 0, 0);
+		m_signal.raise_u(Signal_RX_Complete, 0, 0);
 	}
 
 	//Do we have further frames to receive ?
@@ -290,11 +290,11 @@ void AVR_IO_UART::add_rx_frame(uint8_t frame)
  */
 void AVR_IO_UART::raised(const signal_data_t& data, uint16_t id)
 {
-	if (data.index == UART_Data_Frame) {
+	if (data.sigid == Signal_Data_Frame) {
 		DEBUG_LOG(*m_logger, "UART RX frame received", "");
 		add_rx_frame(data.u);
 	}
-	else if (data.index == UART_Data_String) {
+	else if (data.sigid == Signal_Data_String) {
 		DEBUG_LOG(*m_logger, "UART RX string received", "");
 		for (size_t i = 0; i < strlen(data.s); ++i)
 			add_rx_frame(data.s[i]);

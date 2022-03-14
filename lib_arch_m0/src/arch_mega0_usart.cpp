@@ -172,17 +172,17 @@ void AVR_ArchMega0_USART::ioreg_write_handler(reg_addr_t addr, const ioreg_write
 
 void AVR_ArchMega0_USART::raised(const signal_data_t& data, uint16_t id)
 {
-	if (data.index == UART_TX_Start)
+	if (data.sigid == AVR_IO_UART::Signal_TX_Start)
 		//Notification that the pending frame has been pushed to the shift register
 		//to be emitted. The TX buffer is now empty so raise the DRE interrupt.
 		m_txe_intflag.set_flag();
 
-	else if (data.index == UART_TX_Complete && data.u)
+	else if (data.sigid == AVR_IO_UART::Signal_TX_Complete && data.u)
 		//Notification that the frame in the shift register has been emitted
 		//Raise the TXC interrupt.
 		m_txc_intflag.set_flag();
 
-	else if (data.index == UART_RX_Complete && data.u)
+	else if (data.sigid == AVR_IO_UART::Signal_RX_Complete && data.u)
 		//Raise the RX completion flag
 		m_rxc_intflag.set_flag();
 }
@@ -195,4 +195,3 @@ void AVR_ArchMega0_USART::update_framerate()
 	uint32_t delay = (brr >> 2);
 	m_uart.set_frame_delay(delay);
 }
-

@@ -39,18 +39,6 @@
 //The data.p is set to the UART_EndPoint structure to connect to.
 #define AVR_CTLREQ_UART_ENDPOINT		1
 
-/*
- * Signal indexes definitions
-*/
-enum UART_SignalIndex {
-	UART_Data_Frame,		//TX and RX : the data is a single frame in data.u
-	UART_Data_String,		//RX only: the data is a c-style string in data.s
-	UART_TX_Start,
-	UART_TX_Complete,
-	UART_RX_Start,
-	UART_RX_Complete,
-};
-
 
 /*
  * Structure exchanged with CTLREQ_UART_ENDPOINT
@@ -94,6 +82,29 @@ struct UART_EndPoint {
 class DLL_EXPORT AVR_IO_UART : public AVR_SignalHook {
 
 public:
+
+	//Signal definitions
+	enum SignalId {
+		//Signal raised in TX and RX when the data is a single frame.
+		//The frame is stored in the lowest byte of data.u.
+		Signal_Data_Frame,
+		//Signal raised when receiving a c-style string, pointed by data.s.
+		Signal_Data_String,
+		//Signal raised at the start of a frame transmission.
+		//The lowest byte of data.u contains the frame.
+		Signal_TX_Start,
+		//Signal raised at the end of a frame transmission.
+		//data.u contains 1 if the transmission completed successfully or 0
+		//if it was interrupted.
+		Signal_TX_Complete,
+		//Signal raised at the start of a frame reception.
+		//The lowest byte of data.u contains the frame.
+		Signal_RX_Start,
+		//Signal raised at the end of a frame reception.
+		//data.u contains 1 if the frame is received successfully or 0
+		//if it was discarded. (for example because the buffer was full)
+		Signal_RX_Complete,
+	};
 
 	AVR_IO_UART();
 	virtual ~AVR_IO_UART();
