@@ -36,7 +36,7 @@ TC0:
                 kind: ENUM
                 LSB: 6
                 MSB: 7
-        
+
         - name: TCCR0B
           address: 0x25
           fields:
@@ -48,7 +48,7 @@ TC0:
             WGM2: { kind: BIT, pos: 3 }
             FOCB: { kind: BIT, pos: 6 }
             FOCA: { kind: BIT, pos: 7 }
-        
+
         - name: TCNT0
           address: 0x26
           kind: INT
@@ -56,18 +56,18 @@ TC0:
         - name: OCR0A
           address: 0x27
           kind: INT
-            
+
         - name: OCR0B
           address: 0x28
           kind: INT
-          
+
         - name: TIMSK0
           address: 0x4E
           fields:
             TOIE: { kind: BIT, pos: 0 }
             OCIEA: { kind: BIT, pos: 1 }
             OCIEB: { kind: BIT, pos: 2 }
-            
+
         - name: TIFR0
           address: 0x15
           fields:
@@ -98,7 +98,7 @@ TC0:
         int_ovf: [ TIMER0_OVF, 0 ]
         int_ocra: [ TIMER0_COMPA, 1 ]
         int_ocrb: [ TIMER0_COMPB, 2 ]
-    
+
 #========================================================================================
 TC1:
     registers:
@@ -117,8 +117,8 @@ TC1:
                 kind: ENUM
                 LSB: 6
                 MSB: 7
-        
-        
+
+
         - name: TCCR1B
           address: 0x61
           fields:
@@ -131,34 +131,34 @@ TC1:
             WGM3: { kind: BIT, pos: 4 }
             ICES: { kind: BIT, pos: 6 }
             ICNC: { kind: BIT, pos: 7 }
-        
-        
+
+
         - name: TCCR1C
           address: 0x62
           fields:
             FOCB: { kind: BIT, pos: 6 }
             FOCA: { kind: BIT, pos: 7 }
-        
+
         - name: TCNT1
           address: 0x64
           size: 2
           kind: INT
-          
+
         - name: OCR1A
           address: 0x68
           size: 2
           kind: INT
-            
+
         - name: OCR1B
           address: 0x6A
           size: 2
           kind: INT
-                      
+
         - name: ICR1
           address: 0x66
           size: 2
           kind: INT
-          
+
         - name: TIMSK1
           address: 0x4F
           fields:
@@ -166,7 +166,7 @@ TC1:
             OCIEA: { kind: BIT, pos: 1 }
             OCIEB: { kind: BIT, pos: 2 }
             ICIE: { kind: BIT, pos: 5 }
-            
+
         - name: TIFR1
           address: 0x16
           fields:
@@ -174,7 +174,7 @@ TC1:
             OCFA: { kind: BIT, pos: 1 }
             OCFB: { kind: BIT, pos: 2 }
             ICF: { kind: BIT, pos: 5 }
-    
+
     config:
         is_16bits: yes
         clocks:
@@ -198,7 +198,7 @@ TC1:
         int_ovf: [ TIMER1_OVF, 0 ]
         int_ocra: [ TIMER1_COMPA, 1 ]
         int_ocrb: [ TIMER1_COMPB, 2 ]
-        
+
 #========================================================================================
 TC2:
     registers:
@@ -217,8 +217,8 @@ TC2:
                 kind: ENUM
                 LSB: 6
                 MSB: 7
-        
-        
+
+
         - name: TCCR2B
           address: 0x91
           fields:
@@ -230,33 +230,33 @@ TC2:
             WGM2: { kind: BIT, pos: 3 }
             FOCB: { kind: BIT, pos: 6 }
             FOCA: { kind: BIT, pos: 7 }
-        
+
         - name: TCNT2
           address: 0x92
           kind: INT
-          
+
         - name: OCR2A
           address: 0x93
           kind: INT
-            
+
         - name: OCR2B
           address: 0x94
           kind: INT
-          
+
         - name: TIMSK2
           address: 0x50
           fields:
             TOIE: { kind: BIT, pos: 0 }
             OCIEA: { kind: BIT, pos: 1 }
             OCIEB: { kind: BIT, pos: 2 }
-            
+
         - name: TIFR2
           address: 0x17
           fields:
             TOV: { kind: BIT, pos: 0 }
             OCFA: { kind: BIT, pos: 1 }
             OCFB: { kind: BIT, pos: 2 }
-        
+
         - name: ASSR
           address: 0x96
           supported: no
@@ -284,7 +284,7 @@ TC2:
         int_ovf: [ TIMER2_OVF, 0 ]
         int_ocra: [ TIMER2_COMPA, 1 ]
         int_ocrb: [ TIMER2_COMPB, 2 ]
-        
+
 #========================================================================================
 WDT:
     registers:

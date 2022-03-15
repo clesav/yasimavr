@@ -53,7 +53,7 @@ pins: [ PA0, PA1, PA2, PA3, PA4, PA5, PA6, PA7,
 
 interrupts:
     vector_size: 4
-    
+
     vectors:
         - RESET
         - CRCSCAN
@@ -95,7 +95,7 @@ interrupts:
         - USART3_RXC
         - USART3_DRE
         - USART3_TXC
-    
+
     sleep_mask:
         Idle:       [ 0xFF, 0xFF, 0xFF, 0xFF, 0xFF ]
         Standby:    [ 0x7D, 0x70, 0x2B, 0xA7, 0x3C ]
@@ -112,11 +112,11 @@ peripherals:
     SLPCTRL:
         file: Mega0-Mega1_controllers.yml
         base: 0x0050
-        
+
     RSTCTRL:
         file: Mega0-Mega1_controllers.yml
         base: 0x0040
-    
+
     MISC:
         file: Mega0-Mega1_controllers.yml
         config:
@@ -130,7 +130,7 @@ peripherals:
             reg_base_port: 0x0400
             reg_base_vport: 0x0000
             iv_port: PORTA
-        
+
     PORTB:
         class: PORT
         file: Mega0-Mega1_interfaces.yml
@@ -183,42 +183,42 @@ peripherals:
         config:
             iv_ovf: TCA0_OVF
             ivs_cmp: [ TCA0_CMP0, TCA0_CMP1, TCA0_CMP2 ]
-    
+
     TCB0:
         class: TCB
         file: Mega0-Mega1_timers.yml
         base: 0x0A80
         config:
             iv_capt: TCB0
-    
+
     TCB1:
         class: TCB
         file: Mega0-Mega1_timers.yml
         base: 0x0A90
         config:
             iv_capt: TCB1
-    
+
     TCB2:
         class: TCB
         file: Mega0-Mega1_timers.yml
         base: 0x0AA0
         config:
             iv_capt: TCB2
-            
+
     TCB3:
         class: TCB
         file: Mega0-Mega1_timers.yml
         base: 0x0AB0
         config:
             iv_capt: TCB3
-        
+
     RTC:
         file: Mega0-Mega1_timers.yml
         base: 0x0140
         config:
             iv_rtc: RTC_CNT
             iv_pit: RTC_PIT
-        
+
     # WDT: not ready
         # file: Mega0-Mega1_timers.yml
         # base: 0x0100

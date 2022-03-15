@@ -30,7 +30,7 @@ TCA_SINGLE:
                 LSB: 1
                 MSB: 3
                 values: [ DIV1, DIV2, DIV4, DIV8, DIV16, DIV64, DIV256, DIV1024 ]
-        
+
         - name: CTRLB
           offset: 0x01
           fields:
@@ -43,7 +43,7 @@ TCA_SINGLE:
             CMP0EN: { kind: BIT, pos: 4 }
             CMP1EN: { kind: BIT, pos: 5 }
             CMP2EN: { kind: BIT, pos: 6 }
-        
+
         - name: CTRLC
           offset: 0x02
           fields:
@@ -55,7 +55,7 @@ TCA_SINGLE:
           offset: 0x03
           fields:
             SPLITM: { kind: BIT, pos: 0 }
-            
+
         - name: CTRLECLR
           offset: 0x04
           fields:
@@ -66,7 +66,7 @@ TCA_SINGLE:
                 LSB: 2
                 MSB: 3
                 values: [ NONE, UPDATE, RESTART, RESET ]
-                
+
         - name: CTRLESET
           offset: 0x05
           fields:
@@ -77,7 +77,7 @@ TCA_SINGLE:
                 LSB: 2
                 MSB: 3
                 values: [ NONE, UPDATE, RESTART, RESET ]
-                
+
         - name: CTRLFCLR
           offset: 0x06
           fields:
@@ -85,7 +85,7 @@ TCA_SINGLE:
             CMP0BV: { kind: BIT, pos: 1 }
             CMP1BV: { kind: BIT, pos: 2 }
             CMP2BV: { kind: BIT, pos: 3 }
-            
+
         - name: CTRLFSET
           offset: 0x07
           fields:
@@ -97,7 +97,7 @@ TCA_SINGLE:
         - name: EVCTRL
           offset: 0x09
           supported: no
-          
+
         - name: INTCTRL
           offset: 0x0A
           fields:
@@ -105,7 +105,7 @@ TCA_SINGLE:
             CMP0: { kind: BIT, pos: 4 }
             CMP1: { kind: BIT, pos: 5 }
             CMP2: { kind: BIT, pos: 6 }
-            
+
         - name: INTFLAGS
           offset: 0x0B
           fields:
@@ -113,29 +113,29 @@ TCA_SINGLE:
             CMP0: { kind: BIT, pos: 4 }
             CMP1: { kind: BIT, pos: 5 }
             CMP2: { kind: BIT, pos: 6 }
-            
+
         - name: DBGCTRL
           offset: 0x0E
           supported: no
-          
+
         - name: TEMP
           offset: 0x0F
-          
+
         - name: CNT
           offset: 0x20
           size: 2
           kind: INT
-          
+
         - name: PER
           offset: 0x26
           size: 2
           kind: INT
-           
+
         - name: CMP0
           offset: 0x28
           size: 2
           kind: INT
-          
+
         - name: CMP1
           offset: 0x2A
           size: 2
@@ -145,17 +145,17 @@ TCA_SINGLE:
           offset: 0x2C
           size: 2
           kind: INT
-                    
+
         - name: PERBUF
           offset: 0x36
           size: 2
           kind: INT
-           
+
         - name: CMP0BUF
           offset: 0x38
           size: 2
           kind: INT
-          
+
         - name: CMP1BUF
           offset: 0x3A
           size: 2
@@ -178,7 +178,7 @@ TCA_SPLIT:
                 LSB: 1
                 MSB: 3
                 values: [ DIV1, DIV2, DIV4, DIV8, DIV16, DIV64, DIV256, DIV1024 ]
-        
+
         - name: CTRLB
           offset: 0x01
           fields:
@@ -188,7 +188,7 @@ TCA_SPLIT:
             HCMP0EN: { kind: BIT, pos: 4 }
             HCMP1EN: { kind: BIT, pos: 5 }
             HCMP2EN: { kind: BIT, pos: 6 }
-        
+
         - name: CTRLC
           offset: 0x02
           fields:
@@ -203,7 +203,7 @@ TCA_SPLIT:
           offset: 0x03
           fields:
             SPLITM: { kind: BIT, pos: 0 }
-            
+
         - name: CTRLECLR
           offset: 0x04
           fields:
@@ -217,7 +217,7 @@ TCA_SPLIT:
                 LSB: 2
                 MSB: 3
                 values: [ NONE, UPDATE, RESTART, RESET ]
-                
+
         - name: CTRLESET
           offset: 0x05
           fields:
@@ -231,12 +231,12 @@ TCA_SPLIT:
                 LSB: 2
                 MSB: 3
                 values: [ NONE, UPDATE, RESTART, RESET ]
-                
+
         - name: CTRLFCLR
           offset: 0x06
           fields:
             PERBV: { kind: BIT, pos: 0 }
-          
+
         - name: INTCTRL
           offset: 0x0A
           fields:
@@ -245,7 +245,7 @@ TCA_SPLIT:
             LCMP0: { kind: BIT, pos: 4 }
             LCMP1: { kind: BIT, pos: 5 }
             LCMP2: { kind: BIT, pos: 6 }
-            
+
         - name: INTFLAGS
           offset: 0x0B
           fields:
@@ -254,15 +254,15 @@ TCA_SPLIT:
             LCMP0: { kind: BIT, pos: 4 }
             LCMP1: { kind: BIT, pos: 5 }
             LCMP2: { kind: BIT, pos: 6 }
-            
+
         - name: DBGCTRL
           offset: 0x0E
           supported: no
-          
+
         - name: LCNT
           offset: 0x20
           kind: INT
-          
+
         - name: HCNT
           offset: 0x21
           kind: INT
@@ -270,15 +270,15 @@ TCA_SPLIT:
         - name: LPER
           offset: 0x26
           kind: INT
-        
+
         - name: HPER
           offset: 0x27
           kind: INT
-        
+
         - name: LCMP0
           offset: 0x28
           kind: INT
-          
+
         - name: HCMP0
           offset: 0x29
           kind: INT
@@ -286,15 +286,15 @@ TCA_SPLIT:
         - name: LCMP1
           offset: 0x2A
           kind: INT
-          
+
         - name: HCMP1
           offset: 0x2B
           kind: INT
-          
+
         - name: LCMP2
           offset: 0x2C
           kind: INT
-          
+
         - name: HCMP2
           offset: 0x2D
           kind: INT
@@ -313,7 +313,7 @@ TCB:
                 values: [ DIV1, DIV2, TCA ]
             SYNCUPD: { kind: BIT, pos: 4 }
             RUNSTDBY: { kind: BIT, pos: 6 }
-        
+
         - name: CTRLB
           offset: 0x01
           fields:
@@ -325,21 +325,21 @@ TCB:
             CCMPEN: { kind: BIT, pos: 4 }
             CCMPINIT: { kind: BIT, pos: 5 }
             ASYNC: { kind: BIT, pos: 6 }
-        
+
         - name: EVVTRL
           offset: 0x04
           supported: no
-          
+
         - name: INTCTRL
           offset: 0x05
           fields:
             CAPT: { kind: BIT, pos: 0 }
-            
+
         - name: INTFLAGS
           offset: 0x06
           fields:
             CAPT: { kind: BIT, pos: 0 }
-            
+
         - name: STATUS
           offset: 0x07
           readonly: yes
@@ -349,20 +349,20 @@ TCB:
         - name: DBGCTRL
           offset: 0x08
           supported: no
-          
+
         - name: TEMP
           offset: 0x09
-          
+
         - name: CNT
           offset: 0x0A
           size: 2
           kind: INT
-          
+
         - name: CCMP
           offset: 0x0C
           size: 2
           kind: INT
-          
+
 #========================================================================================
 RTC:
     registers:
@@ -380,7 +380,7 @@ RTC:
                           DIV256, DIV512, DIV1024, DIV2048,
                           DIV4096, DIV8192, DIV16384, DIV32768 ]
             RUNSTDBY: { kind: BIT, pos: 7 }
-        
+
         - name: STATUS
           offset: 0x01
           readonly: yes
@@ -389,31 +389,31 @@ RTC:
             CNTBUSY: { kind: BIT, pos: 1 }
             PERBUSY: { kind: BIT, pos: 2 }
             CMPBUSY: { kind: BIT, pos: 3 }
-        
+
         - name: INTCTRL
           offset: 0x02
           fields:
             OVF: { kind: BIT, pos: 0 }
             CMP: { kind: BIT, pos: 1 }
-        
+
         - name: INTFLAGS
           offset: 0x03
           fields:
             OVF: { kind: BIT, pos: 0 }
             CMP: { kind: BIT, pos: 1 }
-            
+
         - name: TEMP
           offset: 0x04
           kind: INT
-          
+
         - name: DBGCTRL
           offset: 0x05
           supported: no
-        
+
         - name: CALIB
           offset: 0x06
           supported: no
-        
+
         - name: CLKSEL
           offset: 0x07
           fields:
@@ -422,22 +422,22 @@ RTC:
                 LSB: 0
                 MSB: 1
                 values: [ INT32K, INT1K, TOSC32K, EXTCLK ]
-            
+
         - name: CNT
           offset: 0x08
           size: 2
           kind: INT
-          
+
         - name: PER
           offset: 0x0A
           size: 2
           kind: INT
-        
+
         - name: CMP
           offset: 0x0C
           size: 2
           kind: INT
-        
+
         - name: PITCTRLA
           offset: 0x10
           fields:
@@ -461,7 +461,7 @@ RTC:
           offset: 0x12
           fields:
             PI: { kind: BIT, pos: 0 }
-        
+
         - name: PITINTFLAGS
           offset: 0x13
           fields:
@@ -470,12 +470,12 @@ RTC:
         - name: DBGCTRL
           offset: 0x15
           supported: no
-    
+
     config:
         clocks:
             - [ 0x01, Clock_32kHz ]
             - [ 0x02, Clock_1kHz ]
-          
+
 #========================================================================================
 WDT:
     registers:
@@ -497,7 +497,7 @@ WDT:
                 values: [ OFF, 8CLK, 16CLK, 32CLK,
                           64CLK, 128CLK, 256CLK, 512CLK,
                           1KCLK, 2KCLK, 4KCLK, 8KCLK ]
-        
+
         - name: STATUS
           offset: 0x01
           protected: CCP

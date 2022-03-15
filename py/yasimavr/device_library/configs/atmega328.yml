@@ -40,7 +40,7 @@ memory:
 core:
     extended_addressing: no
     clear_GIE_on_int: yes
-    
+
 access:
     big_endian_on_write: yes
     big_endian_on_read: no
@@ -52,7 +52,7 @@ pins: [ PB0, PB1, PB2, PB3, PB4, PB5, PB6, PB7,
 
 interrupts:
     vector_size: 4
-    
+
     vectors:
         - RESET
         - INT0
@@ -80,7 +80,7 @@ interrupts:
         - ANALOG_COMP
         - TWI
         - SPM_READY
-        
+
     sleep_mask:
         Idle:         [ 0xFF, 0xFF, 0xFF, 0x03 ]
         ADC:          [ 0xFF, 0x03, 0xE0, 0x03 ]
@@ -88,7 +88,7 @@ interrupts:
         PowerSave:    [ 0xFF, 0x03, 0x00, 0x01 ]
         Standby:      [ 0x7F, 0x00, 0x00, 0x01 ]
         ExtStandby:   [ 0xFF, 0x03, 0x00, 0x01 ]
-    
+
 peripherals:
     CPU:
         file: mega48-88-168-328_controllers.yml
@@ -101,7 +101,7 @@ peripherals:
 
     SLPCTRL:
         file: mega48-88-168-328_controllers.yml
-    
+
     MISC:
         file: mega48-88-168-328_controllers.yml
 
@@ -125,21 +125,21 @@ peripherals:
 
     TC0:
         file: mega48-88-168-328_timers.yml
-    
+
     TC1:
         file: mega48-88-168-328_timers.yml
-    
+
     TC2:
         file: mega48-88-168-328_timers.yml
-    
+
     WDT:
         file: mega48-88-168-328_timers.yml
-    
+
     ADC:
         file: mega48-88-168-328_analog.yml
-    
+
     VREF:
         file: mega48-88-168-328_analog.yml
-    
+
     USART:
         file: mega48-88-168-328_interfaces.yml

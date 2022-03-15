@@ -47,7 +47,7 @@ SLPCTRL:
             PRTIM0: { kind: BIT, pos: 5 }
             PRTIM2: { kind: BIT, pos: 6 }
             PRTWI: { kind: BIT, pos: 7 }
-    
+
     config:
         modes:
             0b000: Idle

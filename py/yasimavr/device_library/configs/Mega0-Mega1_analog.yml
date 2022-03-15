@@ -28,7 +28,7 @@ ADC:
             FREERUN: { kind: BIT, pos: 1, one: on, zero: off }
             RESSEL: { kind: BIT, pos: 2, one: 8-bits, zero: 10-bits }
             RUNSTBY: { kind: BIT, pos: 7, one: on, zero: off}
-	    
+
         - name: CTRLB
           offset: 0x01
           fields:
@@ -52,7 +52,7 @@ ADC:
                 LSB: 4
                 MSB: 5
                 values: [ INT, VDD, VREFA ]
-            
+
             SAMPCAP: { kind: BIT, pos: 6, supported: no }
 
         - name: CTRLD
@@ -69,7 +69,7 @@ ADC:
                 LSB: 5
                 MSB: 7
                 values: [ Dly0, Dly16, Dly32, Dly64, Dly128, Dly256 ]
-                
+
         - name: CTRLE
           offset: 0x04
           fields:
@@ -87,8 +87,8 @@ ADC:
                 LSB: 0
                 MSB: 4
                 unit: samples
-        
-	    
+
+
         - name: MUXPOS
           offset: 0x06
           fields:
@@ -104,47 +104,47 @@ ADC:
           offset: 0x08
           fields:
             STCONV: { kind: BIT, pos: 0 }
-	    
+
         - name: EVCTRL
           offset: 0x09
           fields:
             STARTEI: { kind: BIT, pos: 0 }
-	    
+
         - name: INTCTRL
           offset: 0x0A
           fields:
             RESRDY: { kind: BIT, pos: 0 }
             WCOMP: { kind: BIT, pos: 1 }
-	    
+
         - name: INTFLAGS
           offset: 0x0B
           fields:
             RESRDY: { kind: BIT, pos: 0 }
             WCOMP: { kind: BIT, pos: 1 }
-	    
+
         - name: DBGCTRL
           offset: 0x0C
           supported: no
-	    
+
         - name: TEMP
           offset: 0x0D
           kind: INT
-	    
+
         - name: RES
           offset: 0x10
           size: 2
           kind: INT
-	    
+
         - name: WINLT
           offset: 0x12
           size: 2
           kind: INT
-	    
+
         - name: WINHT
           offset: 0x14
           size: 2
           kind: INT
-	    
+
         - name: CALIB
           offset: 0x16
           supported: no

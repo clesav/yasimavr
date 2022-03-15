@@ -25,7 +25,7 @@ PORT:
           address: 0x35
           fields:
             PUD: { kind: BIT, pos: 4 }
-        
+
         - name: PORT
           offset: 0x02
 
@@ -51,7 +51,7 @@ EXTINT:
                 LSB: 2
                 MSB: 3
                 values: [ LOW, TOGGLE, FALLING, RISING ]
-        
+
         - name: EIMSK
           address: 0x1D
           fields:
@@ -77,7 +77,7 @@ EXTINT:
             PCIF0: { kind: BIT, pos: 0, one: enabled, zero: disabled }
             PCIF1: { kind: BIT, pos: 1, one: enabled, zero: disabled }
             PCIF2: { kind: BIT, pos: 2, one: enabled, zero: disabled }
-            
+
         - name: PCMSK0
           address: 0x4B
           fields:
@@ -89,7 +89,7 @@ EXTINT:
             PCINT5: { kind: BIT, pos: 5, one: enabled, zero: disabled }
             PCINT6: { kind: BIT, pos: 6, one: enabled, zero: disabled }
             PCINT7: { kind: BIT, pos: 7, one: enabled, zero: disabled }
-            
+
         - name: PCMSK1
           address: 0x4C
           fields:
@@ -100,7 +100,7 @@ EXTINT:
             PCINT12: { kind: BIT, pos: 4, one: enabled, zero: disabled }
             PCINT13: { kind: BIT, pos: 5, one: enabled, zero: disabled }
             PCINT14: { kind: BIT, pos: 6, one: enabled, zero: disabled }
-                        
+
         - name: PCMSK2
           address: 0x4D
           fields:
@@ -112,7 +112,7 @@ EXTINT:
             PCINT21: { kind: BIT, pos: 5, one: enabled, zero: disabled }
             PCINT22: { kind: BIT, pos: 6, one: enabled, zero: disabled }
             PCINT23: { kind: BIT, pos: 7, one: enabled, zero: disabled }
-            
+
     config:
         extint_pins: [ PD2, PD3 ]
         pcint_pins: [ PB0, PB1, PB2, PB3, PB4, PB5, PB6, PB7,
@@ -132,7 +132,7 @@ USART:
     registers:
         - name: UDR
           address: 0xA6
-            
+
         - name: UCSRA
           address: 0xA0
           fields:
@@ -144,7 +144,7 @@ USART:
             UDRE: { kind: BIT, pos: 5, readonly: yes }
             TXC: { kind: BIT, pos: 6 }
             RXC: { kind: BIT, pos: 7, readonly: yes }
-        
+
         - name: UCSRB
           address: 0xA1
           fields:
@@ -156,7 +156,7 @@ USART:
             UDRIE: { kind: BIT, pos: 5 }
             TXCIE: { kind: BIT, pos: 6 }
             RXCIE: { kind: BIT, pos: 7 }
-        
+
         - name: UCSRC
           address: 0xA2
           fields:
@@ -165,21 +165,21 @@ USART:
                 kind:  ENUM
                 LSB: 1
                 MSB: 2
-            
+
             USBS: { kind: BIT, pos: 3, one: "1-bit", zero: "2-bits" }
-            
+
             UPM:
                 kind:  ENUM
                 LSB: 4
                 MSB: 5
                 values: [ Disabled, "", Even, Odd ]
-            
+
             UMSEL:
                 kind:  ENUM
                 LSB: 6
                 MSB: 7
                 values: [ Async, Sync, "", Master SPI ]
-            
+
         - name: UBRR
           address: 0xA4
           size: 2
@@ -221,7 +221,7 @@ SPI:
             CLK2X: { kind: BIT, pos: 4, one: 2X, zero: 1X }
             MASTER: { kind: BIT, pos: 5, one: master, zero: slave }
             DORD: { kind: BIT, pos: 6, one: "LSB first", zero: "MSB first" }
-        
+
         - name: CTRLB
           offset: 0x01
           fields:
@@ -230,11 +230,11 @@ SPI:
                 LSB: 0
                 MSB: 1
                 values: [ MODE0, MODE1, MODE2, MODE3 ]
-                
+
             SSD: { kind: BIT, pos: 2, one: disable, zero: enable }
             BUFWR: { kind: BIT, pos: 6 }
             BUFEN: { kind: BIT, pos: 7 }
-            
+
         - name: INTCTRL
           offset: 0x02
           fields:
@@ -243,19 +243,19 @@ SPI:
             DREIE: { kind: BIT, pos: 5 }
             TXCIE: { kind: BIT, pos: 6 }
             RXCIE: { kind: BIT, pos: 7 }
-        
+
         - name: INTFLAGS
           offset: 0x03
           fields:
             WRCOL: { kind: BIT, pos: 6 }
             IF: { kind: BIT, pos: 7 }
-            
+
             BUFOVF: { kind: BIT, pos: 0 }
             SSIF: { kind: BIT, pos: 4 }
             DREIF: { kind: BIT, pos: 5 }
             TXCIF: { kind: BIT, pos: 6 }
             RXCIF: { kind: BIT, pos: 7 }
-            
+
         - name: DATA
           offset: 0x04
 
@@ -272,7 +272,7 @@ TWI:
                 MSB: 3
                 values: [ OFF, 50ns, 300ns, 500ns ]
             SDASETUP: { kind: BIT, pos: 4, one: 8CYC, zero: 4CYC }
-        
+
         - name: DUALCTRL
           offset: 0x01
           fields:
@@ -283,11 +283,11 @@ TWI:
                 LSB: 2
                 MSB: 3
                 values: [ OFF, 50ns, 300ns, 500ns ]
-            
+
         - name: DBGCTRL
           offset: 0x02
           supported: no
-        
+
         - name: MCTRLA
           offset: 0x03
           fields:
@@ -301,7 +301,7 @@ TWI:
             QCEN: { kind: BIT, pos: 4, one: enabled, zero: disabled }
             WIEN: { kind: BIT, pos: 6, one: enabled, zero: disabled }
             RIEN: { kind: BIT, pos: 7, one: enabled, zero: disabled }
-        
+
         - name: MCTRLB
           offset: 0x04
           fields:
@@ -312,7 +312,7 @@ TWI:
                 values: [ NOACT, REPSTART, RECVTRANS, STOP ]
             ACKACT: { kind: BIT, pos: 2, one: nack, zero: ack }
             FLUSH: { kind: BIT, pos: 3 }
-        
+
         - name: MSTATUS
           offset: 0x05
           fields:
@@ -327,19 +327,19 @@ TWI:
             CLKHOLD: { kind: BIT, pos: 5 }
             WIF: { kind: BIT, pos: 6 }
             RIF: { kind: BIT, pos: 7 }
-            
+
         - name: MBAUD
           offset: 0x06
           fields:
             BAUD:
                 kind: INT
-        
+
         - name: MADDR
           offset: 0x07
           fields:
             ADDR:
                 kind: RAW
-          
+
         - name: MDATA
           offset: 0x08
           fields:
@@ -355,7 +355,7 @@ TWI:
             PIEN: { kind: BIT, pos: 4, one: enabled, zero: disabled }
             APIEN: { kind: BIT, pos: 6, one: enabled, zero: disabled }
             DIEN: { kind: BIT, pos: 7, one: enabled, zero: disabled }
-        
+
         - name: SCTRLB
           offset: 0x0A
           fields:
@@ -365,7 +365,7 @@ TWI:
                 MSB: 1
                 values: { 0:NOACT, 2:COMPTRANS, 3:RESPONSE }
             ACKACT: { kind: BIT, pos: 2, one: nack, zero: ack }
-            
+
         - name: SSTATUS
           offset: 0x0B
           fields:
@@ -377,19 +377,19 @@ TWI:
             CLKHOLD: { kind: BIT, pos: 5 }
             APIF: { kind: BIT, pos: 6 }
             DIF: { kind: BIT, pos: 7 }
-            
+
         - name: SADDR
           offset: 0x0C
           fields:
             ADDR:
                 kind: RAW
-          
+
         - name: SDATA
           offset: 0x0D
           fields:
             DATA:
                 kind: RAW
-          
+
         - name: SADDRMASK
           offset: 0x0E
           fields:

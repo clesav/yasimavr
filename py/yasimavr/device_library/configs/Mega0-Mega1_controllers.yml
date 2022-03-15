@@ -30,7 +30,7 @@ SLPCTRL:
                 LSB: 1
                 MSB: 2
                 values: [ IDLE, STANDBY, PDOWN ]
-    
+
     config:
         modes:
             0x00: Idle
@@ -51,7 +51,7 @@ RSTCTRL:
             WDRF: { kind: BIT, pos: 3 }
             SWRF: { kind: BIT, pos: 4 }
             UPDIRF: { kind: BIT, pos: 5, supported: no }
-        
+
         - name: SWRR
           offset: 0x01
           fields:
@@ -67,7 +67,7 @@ CPUINT:
             LVL0RR: { kind: BIT, pos: 0 }
             CVT: { kind: BIT, pos: 5 }
             IVSEL: { kind: BIT, pos: 6 }
-        
+
         - name: STATUS
           offset: 0x01
           readonly: yes
@@ -75,25 +75,25 @@ CPUINT:
             LVL0EX: { kind: BIT, pos: 0 }
             LVL1EX: { kind: BIT, pos: 1 }
             NMIEX: { kind: BIT, pos: 7 }
-        
+
         - name: LVL0PRI
           offset: 0x02
           kind: INT
-        
+
         - name: LVL1VEC
           offset: 0x03
-          kind: INT        
+          kind: INT
 
 #========================================================================================
 CPU:
     registers:
         - name: CCP
           address: 0x0034
-        
+
         - name: SP
           address: 0x003D
           size: 2
-        
+
         - name: SREG
           address: 0x003F
           fields:
@@ -106,36 +106,36 @@ CPU:
             T: { kind: BIT, pos: 6 }
             I: { kind: BIT, pos: 7 }
 
-#========================================================================================      
+#========================================================================================
 MISC:
     registers:
         - name: GPIOR0
           address: 0x001C
-        
+
         - name: GPIOR1
           address: 0x001D
-        
+
         - name: GPIOR2
           address: 0x001E
-        
+
         - name: GPIOR3
           address: 0x001F
-        
+
         - name: REVID
           address: 0x0F01
-        
+
         - name: DEVID
           address: 0x1100
           readonly: true
           kind: ARRAY
           size: 3
-        
+
         - name: SERNUM
           address: 0x1103
           readonly: true
           kind: ARRAY
           size: 10
-    
+
     config:
         reg_base_gpior: 0x1C
         gpior_count: 4
