@@ -38,16 +38,38 @@ class yasimavr_project(Project):
         options = super().get_options()
         
         gdb_opt = Option('gdb',
-						 option_type=bool,
-               			 help='enable debug for the compiler',
-               			 metavar='ENABLE',
-           		  	   	 default=False)
+                         option_type=bool,
+                         help='enable debug for the compiler',
+                         metavar='ENABLE',
+                         default=False)
         options.append(gdb_opt)
+        
+        line_opt = Option('no_line_directive',
+                          option_type=bool,
+                          help='remove the line directives from the generated code',
+                          metavar='DISABLE',
+                          default=False)
+        options.append(line_opt)
         
         return options
 
 class yasimavr_builder(DistutilsBuilder):
 
     def _build_extension_module(self, buildable):
-    	buildable.debug = self.project.gdb
-    	super()._build_extension_module(buildable)
+        buildable.debug = self.project.gdb
+        
+        if self.project.no_line_directive:
+            for fp_src in buildable.sources:
+                if not os.path.basename(fp_src).startswith('sip'): continue
+                
+                lines = open(fp_src).readlines()
+                new_lines = [line
+                             for line in lines
+                             if not line.startswith('#line ')]
+                
+                f = open(fp_src, 'w')
+                for line in new_lines:
+                    f.write(line)
+                f.close()
+        
+        super()._build_extension_module(buildable)
