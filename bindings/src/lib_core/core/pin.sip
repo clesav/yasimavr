@@ -45,11 +45,11 @@ public:
     virtual ~AVR_Pin();
     
 	void set_external_state(AVR_Pin::State state);
-	void set_external_analog_value(float v);
-    uint32_t id() const /PyName=pin_id/;
+	void set_external_analog_value(double v);
+    uint32_t id() const;
 	AVR_Pin::State state() const;
 	AVR_Pin::State digital_state() const;
-	float analog_value() const;
+	double analog_value() const;
 	
 	AVR_Signal& signal();
     

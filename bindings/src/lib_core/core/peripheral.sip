@@ -1,5 +1,5 @@
 /*
- * ioctl.sip
+ * peripheral.sip
  *
  *	Copyright 2021 Clement Savergne <csavergne@yahoo.com>
 
@@ -164,7 +164,7 @@ void fill_datareq_with_pyobj(ctlreq_data_t* datareq, PyObject* obj)
 		fill_datareq_with_pyobj(sipCpp, a0);
 	%End
 	
-	SIP_PYOBJECT p(SIP_PYTYPE pytype = SIP_NULLPTR);
+	SIP_PYOBJECT ptr(SIP_PYTYPE pytype = SIP_NULLPTR);
 	%MethodCode
 		if (sipCpp->p == SIP_NULLPTR) {
 			Py_INCREF(Py_None);

@@ -320,8 +320,9 @@ typedef std::vector<const char*> StringVector;
 	PyObject* l = PyList_New(sipCpp->size());
 	if (!l) return 0;
 	
-	for (size_t i = 0; i < sipCpp->size(); i++) {
-		PyObject* tobj = PyUnicode_FromString((*sipCpp)[i]);
+	for (size_t i = 0; i < sipCpp->size(); ++i) {
+		const char* s = (*sipCpp)[i];
+		PyObject* tobj = PyUnicode_FromString(s);
 		
 		if (!tobj) {
 			Py_DECREF(l);
@@ -338,8 +339,17 @@ typedef std::vector<const char*> StringVector;
 	PyObject *item;
 
     if (!sipIsErr) {
-        Py_XDECREF(iter);
-        return (iter && !PyUnicode_Check(sipPy));
+    	if (!iter)
+    		return 0;
+
+    	int ok = 1;
+    	while (ok && (item = PyIter_Next(iter)) != NULL) {
+    		ok &= (PyBytes_Check(item) || PyUnicode_Check(item));
+    		Py_DECREF(item);
+    	}
+
+        Py_DECREF(iter);
+        return ok;
     }
 
     if (!iter) {
@@ -349,13 +359,18 @@ typedef std::vector<const char*> StringVector;
 
     std::vector<const char*>* v = new std::vector<const char*>;
 	while ((item = PyIter_Next(iter)) != NULL) {
-        const char* s = PyUnicode_AsUTF8(item);
-		if (PyErr_Occurred()) {
-			Py_DECREF(item);
-			break;
+		const char* py_str;
+		if (PyUnicode_Check(item))
+			py_str = PyUnicode_AsUTF8(item);
+		else
+			py_str = PyBytes_AsString(item);
+		
+		if (!PyErr_Occurred()) {
+			char* c_str = (char*) malloc(strlen(py_str) + 1);
+			strcpy(c_str, py_str);
+			v->push_back(c_str);
 		}
 		
-		v->push_back(s);
 		Py_DECREF(item);
 	}
 	
@@ -365,13 +380,26 @@ typedef std::vector<const char*> StringVector;
 		*sipIsErr = 1;
 	
 	if (*sipIsErr) {
+		//In case of error, do a heap tidy up
+		for (auto s : *v)
+			free(const_cast<char*>(s));
 		delete v;
+		//Nothing to return
 		return 0;
 	} else {
+		//Optimize the size of the vector
 		v->shrink_to_fit();
+		//Return the instance
 		*sipCppPtr = v;
-        return sipGetState(sipTransferObj);
+		//The instance is not temporary (the C string items aren't)
+        return sipGetState(sipTransferObj) & ~SIP_TEMPORARY;
 	}
+%End
+
+%ReleaseCode
+	for (auto s : *sipCpp)
+		free(const_cast<char*>(s));
+	delete sipCpp;
 %End
 };
 

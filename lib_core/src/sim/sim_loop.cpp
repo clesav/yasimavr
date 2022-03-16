@@ -71,7 +71,9 @@ cycle_count_t AVR_AbstractSimLoop::Hook::next(cycle_count_t when)
 AVR_AbstractSimLoop::AVR_AbstractSimLoop(AVR_Device& device)
 :m_device(device)
 ,m_state(State_Running)
-{}
+{
+	m_device.init(m_cycle_manager);
+}
 
 AVR_AbstractSimLoop::~AVR_AbstractSimLoop()
 {}
