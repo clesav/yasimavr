@@ -125,6 +125,7 @@ protected:
 	virtual void packet_ended(TWI_Packet& packet) = 0;
 	//Called by the bus to signal that the bus is acquired
 	virtual void bus_acquired() = 0;
+	//Called by the bus to signal that the bus is released
 	virtual void bus_released() = 0;
 
 private:
@@ -236,6 +237,7 @@ public:
 	};
 
 	enum Component {
+		Cpt_Any,
 		Cpt_Master,
 		Cpt_Slave,
 	};
@@ -300,15 +302,19 @@ public:
 
 	void set_master_enabled(bool enabled);
 	void set_bit_delay(cycle_count_t delay);
-	bool start_transaction(uint8_t remote_addr, bool rw);
-	void stop_transaction();
+	bool start_transfer();
+	void end_transfer();
+	bool send_address(uint8_t remote_addr, bool rw);
+	
+	//(Master only) sends a byte of data to the slave.
+	//Returns true if the data could actually be sent, false otherwise.
 	bool start_master_tx(uint8_t data);
 	
 	//(Master only) sends a ReadRequest packet to the slave
 	//Returns true if the packet could actually be sent, false otherwise
 	bool start_master_rx();
 	
-	//Function used when the slave is expecting a ACK/NACK response
+	//Used when the slave is expecting a ACK/NACK response
 	//after a ReadData packet
 	//ack: true=ACK, false=NACK
 	void set_master_ack(bool ack);
@@ -316,9 +322,12 @@ public:
 	//Enable/disable the slave component
 	void set_slave_enabled(bool enabled);
 	
-	//Function to send a byte to the master in a ReadData packet
-	//Returns true if the data has actually been sent, false otherwise
+	//(Slave only) Sends a byte of data to the master.
+	//Returns true if the data could actually been sent, false otherwise
 	bool start_slave_tx(uint8_t data);
+	
+	//(Slave only) Indicates to the master that the slave is ready to receive
+	//data. Returns True if the operation was legal, false otherwise.
 	bool start_slave_rx();
 	
 	//Function used when the master is expected a ACK/NACK response
@@ -338,8 +347,8 @@ protected:
 
 private:
 
-	class MasterTimer;
-	friend class MasterTimer;
+	class Timer;
+	friend class Timer;
 
 	AVR_CycleManager* m_cycle_manager;
 	AVR_DeviceLogger* m_logger;
@@ -347,7 +356,7 @@ private:
 	AVR_Signal m_signal;
 	signal_data_t m_deferred_sigdata;
 	bool m_has_deferred_raise;
-	
+	Timer* m_timer;
 	bool m_timer_updating;
 	cycle_count_t m_timer_next_when;
 
@@ -357,7 +366,6 @@ private:
 
 	State m_mst_state;
 	cycle_count_t m_bitdelay;
-	MasterTimer* m_mst_timer;
 
 	State m_slv_state;
 	bool m_slv_hold;
@@ -366,7 +374,7 @@ private:
 	void set_slave_state(State newstate);
 
 	void start_timer(cycle_count_t delay);
-	cycle_count_t master_timer_next(cycle_count_t when);
+	cycle_count_t timer_next(cycle_count_t when);
 	void defer_signal_raise(uint16_t sigid, uint32_t index, uint32_t u);
 
 };

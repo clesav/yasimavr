@@ -21,7 +21,7 @@
 
 //=======================================================================================
 
-#include "sim_twi.hpp"
+#include "sim_twi.h"
 
 
 //=======================================================================================
@@ -44,6 +44,12 @@ static void fill_address_packet(TWI_Packet& packet, uint8_t a, bool rw_)
 	packet.data = 0;
 	packet.ack = TWI_Packet::Nack;
 	packet.hold = 0;
+}
+
+static void fill_addr_ack_packet(TWI_Packet& packet, bool ack)
+{
+	packet.cmd = TWI_Packet::Cmd_AddrAck;
+	packet.ack = ack ? TWI_Packet::Ack : TWI_Packet::Nack;
 }
 
 static void fill_write_req_packet(TWI_Packet& packet, uint8_t d)
@@ -154,6 +160,7 @@ void TWI_Bus::remove_endpoint(TWI_Endpoint& endpoint)
 		for (auto it = m_endpoints.begin(); it != m_endpoints.end(); ++it) {
 			if (*it == &endpoint) {
 				m_endpoints.erase(it);
+				endpoint.m_bus = nullptr;
 				break;
 			}
 		}
@@ -180,7 +187,7 @@ bool TWI_Bus::acquire(TWI_Endpoint* endpoint)
 
 void TWI_Bus::release(TWI_Endpoint* endpoint)
 {
-	if (m_master == endpoint) {
+	if (endpoint == m_master) {
 		m_master = nullptr;
 		m_slave = nullptr;
 		m_signal.raise(Signal_Stop, 0, endpoint);
@@ -254,7 +261,8 @@ void TWI_Bus::end_packet(TWI_Endpoint& src, TWI_Packet& packet)
 
 		case TWI_Packet::Cmd_Address: {
 
-			//Forward the packet to every endpoint on the bus
+			//Forward the packet to every endpoint on the bus,
+			//including the source, in case it wants to do a loopback
 			m_expected_ack = m_endpoints.size();
 			m_slave = nullptr;
 			for (auto endpoint : m_endpoints) {
@@ -296,7 +304,7 @@ void TWI_Bus::end_packet(TWI_Endpoint& src, TWI_Packet& packet)
 			break;
 
 		case TWI_Packet::Cmd_Data:
-			m_master->packet_ended(packet);
+			m_slave->packet_ended(packet);
 			break;
 	}
 
@@ -307,15 +315,15 @@ void TWI_Bus::end_packet(TWI_Endpoint& src, TWI_Packet& packet)
 
 //=======================================================================================
 
-class AVR_IO_TWI::MasterTimer : public AVR_CycleTimer {
+class AVR_IO_TWI::Timer : public AVR_CycleTimer {
 
 public:
 
-	MasterTimer(AVR_IO_TWI& ctl) : m_ctl(ctl) {}
+	Timer(AVR_IO_TWI& ctl) : m_ctl(ctl) {}
 
 	virtual cycle_count_t next(cycle_count_t when) override
 	{
-		return m_ctl.master_timer_next(when);
+		return m_ctl.timer_next(when);
 	}
 
 private:
@@ -352,17 +360,18 @@ AVR_IO_TWI::AVR_IO_TWI()
 ,m_has_deferred_raise(false)
 ,m_timer_updating(false)
 ,m_timer_next_when(0)
+,m_tx_data(0)
 ,m_mst_state(State_Disabled)
 ,m_bitdelay(1)
 ,m_slv_state(State_Disabled)
 ,m_slv_hold(false)
 {
-	m_mst_timer = new MasterTimer(*this);
+	m_timer = new Timer(*this);
 }
 
 AVR_IO_TWI::~AVR_IO_TWI()
 {
-	delete m_mst_timer;
+	delete m_timer;
 }
 
 void AVR_IO_TWI::init(AVR_CycleManager& cycle_manager, AVR_DeviceLogger& logger)
@@ -383,10 +392,10 @@ void AVR_IO_TWI::reset()
 	
 	m_mst_state = State_Disabled;
 	m_bitdelay = 1;
-	m_cycle_manager->remove_cycle_timer(m_mst_timer);
+	m_cycle_manager->remove_cycle_timer(m_timer);
 	
 	m_slv_state = State_Disabled;
-	m_slv_hold = true;
+	m_slv_hold = false;
 }
 
 //=======================================================================================
@@ -396,11 +405,15 @@ void AVR_IO_TWI::reset()
 
 void AVR_IO_TWI::set_master_enabled(bool enabled)
 {
-	if (m_mst_state && !enabled) {
+	if (m_mst_state != State_Disabled && !enabled) {
+		if (State_Active(m_mst_state))
+			release_bus();
+		
+		m_cycle_manager->remove_cycle_timer(m_timer);
+		
 		set_master_state(State_Disabled);
-		m_cycle_manager->remove_cycle_timer(m_mst_timer);
 	}
-	else if (enabled && !m_mst_state) {
+	else if (m_mst_state == State_Disabled && enabled && bus()) {
 		set_master_state(State_Idle);
 	}
 }
@@ -416,24 +429,29 @@ void AVR_IO_TWI::set_bit_delay(cycle_count_t delay)
 	m_bitdelay = delay;
 }
 
-bool AVR_IO_TWI::start_transaction(uint8_t remote_addr, bool rw)
-{
-	//Illegal to be here if not idle or not already owning the bus
-	if (m_mst_state != State_Idle && (!State_Active(m_mst_state) || State_Busy(m_mst_state)))
+bool AVR_IO_TWI::start_transfer()
+{ 
+	//Illegal to be here if not idle
+	if (m_mst_state != State_Idle)
 		return false;
 
-	//If we're idle, acquire the bus ownership
-	cycle_count_t delay;
-	if (m_mst_state == State_Idle) {
-		if (!acquire_bus()) {
-			set_master_state(State_Waiting);
-			return false;
-		}
-		delay = 1;
-		m_signal.raise_u(Signal_BusStateChange, 0, Bus_Owned);
+	//try to acquire the bus ownership
+	if (acquire_bus()) {
+		DEBUG_LOG(*m_logger, "Ownership of bus acquired", "");
+		set_master_state(State_Addr);
+		m_signal.raise_u(Signal_BusStateChange, Cpt_Any, Bus_Owned);
+		return true;
 	} else {
-		delay = 0;
+		set_master_state(State_Waiting);
+		m_signal.raise_u(Signal_BusStateChange, Cpt_Any, Bus_Busy);
+		return false;
 	}
+}
+
+bool AVR_IO_TWI::send_address(uint8_t remote_addr, bool rw)
+{
+	if (!State_Active(m_mst_state) || State_Busy(m_mst_state))
+		return false;
 	
 	set_master_state(State_Addr_Busy);
 	
@@ -441,16 +459,16 @@ bool AVR_IO_TWI::start_transaction(uint8_t remote_addr, bool rw)
 	fill_address_packet(m_current_packet, remote_addr, rw);
 	send_packet(m_current_packet);
 	
-	start_timer(m_bitdelay * (delay + 9));
+	start_timer(m_bitdelay * 9); //ADDR (7 bits) + RW + ACK
 	
 	return true;
 }
 
-void AVR_IO_TWI::stop_transaction()
+void AVR_IO_TWI::end_transfer()
 {
 	if (State_Active(m_mst_state) && !State_Busy(m_mst_state)) {
 		set_master_state(State_Idle);
-		m_signal.raise_u(Signal_BusStateChange, 0, Bus_Idle);
+		m_signal.raise_u(Signal_BusStateChange, Cpt_Any, Bus_Idle);
 		release_bus();
 	}
 }
@@ -471,7 +489,7 @@ bool AVR_IO_TWI::start_master_tx(uint8_t data)
 		set_master_state(State_TX_Req);
 	} else {
 		set_master_state(State_TX_Busy);
-		start_timer(m_bitdelay * 9);
+		start_timer(m_bitdelay * 9); //DATA (8 bits) + ACK
 	}
 	
 	return true;
@@ -493,7 +511,7 @@ bool AVR_IO_TWI::start_master_rx()
 		//If hold is clear, the slave will put the data in the
 		//ReadRequest packet when end_packet is called
 		set_master_state(State_RX_Busy);
-		start_timer(m_bitdelay * 9);
+		start_timer(m_bitdelay * 9); //DATA (8 bits) + ACK
 	}
 	
 	return true;
@@ -518,10 +536,10 @@ void AVR_IO_TWI::start_timer(cycle_count_t delay)
 	if (m_timer_updating)
 		m_timer_next_when = m_cycle_manager->cycle() + delay;
 	else
-		m_cycle_manager->add_cycle_timer(m_mst_timer, m_cycle_manager->cycle() + delay);
+		m_cycle_manager->add_cycle_timer(m_timer, m_cycle_manager->cycle() + delay);
 }
 
-cycle_count_t AVR_IO_TWI::master_timer_next(cycle_count_t when)
+cycle_count_t AVR_IO_TWI::timer_next(cycle_count_t when)
 {
 	m_timer_updating = true;
 	m_timer_next_when = 0;
@@ -531,6 +549,7 @@ cycle_count_t AVR_IO_TWI::master_timer_next(cycle_count_t when)
 	//is to avoid TWI_Bus callbacks directly calling TWI_Bus functions as it
 	//may lead to infinite loops or deadlocks
 	if (m_has_deferred_raise) {
+		DEBUG_LOG(*m_logger, "Deferred signal raise, id=%d", m_deferred_sigdata.sigid);
 		m_signal.raise(m_deferred_sigdata);
 		m_has_deferred_raise = false;
 	}
@@ -589,7 +608,8 @@ cycle_count_t AVR_IO_TWI::master_timer_next(cycle_count_t when)
 
 void AVR_IO_TWI::defer_signal_raise(uint16_t sigid, uint32_t index, uint32_t u)
 {
-	m_deferred_sigdata = { .sigid = sigid, .index = index, .u = u };
+	signal_data_t sig = { .sigid = sigid, .index = index, .data = u };
+	m_deferred_sigdata = sig;
 	m_has_deferred_raise = true;
 	start_timer(1);
 }
@@ -601,11 +621,32 @@ void AVR_IO_TWI::defer_signal_raise(uint16_t sigid, uint32_t index, uint32_t u)
 
 void AVR_IO_TWI::set_slave_enabled(bool enabled)
 {
-	if (m_slv_state && !enabled)
+	if (m_slv_state != State_Disabled && !enabled) {
+		TWI_Packet packet = m_current_packet;
+		
+		if (m_slv_state == State_TX_Req) {
+			fill_read_packet(packet, 0xFF);
+			send_packet(packet);
+		}
+		else if (m_slv_state == State_RX_Req) {
+			fill_write_packet(packet);
+			send_packet(packet);
+		}
+		else if (m_slv_state == State_RX_Ack) {
+			packet.cmd = TWI_Packet::Cmd_DataAck;
+			packet.ack = TWI_Packet::Nack;
+			send_packet(packet);
+		}
+		else if (m_slv_state == State_Addr_Busy && m_slv_hold) {
+			fill_addr_ack_packet(packet, false);
+			send_packet(packet);
+		}
+		
 		set_slave_state(State_Disabled);
-	
-	else if (enabled && !m_slv_state)
+	}
+	else if (m_slv_state == State_Disabled && enabled) {
 		set_slave_state(State_Idle);
+	}
 }
 
 void AVR_IO_TWI::set_slave_state(State new_state)
@@ -622,9 +663,11 @@ bool AVR_IO_TWI::start_slave_tx(uint8_t data)
 		return true;
 	}
 	else if (m_slv_state == State_TX_Req) {
+		m_tx_data = data;
 		m_slv_hold = false;
-		fill_read_packet(m_current_packet, data);
-		send_packet(m_current_packet);
+		TWI_Packet packet = m_current_packet;
+		fill_read_packet(packet, data);
+		send_packet(packet);
 		set_slave_state(State_TX_Busy);
 		return true;
 	}
@@ -641,8 +684,9 @@ bool AVR_IO_TWI::start_slave_rx()
 	}
 	else if (m_slv_state == State_RX_Req) {
 		m_slv_hold = false;
-		fill_write_packet(m_current_packet);
-		send_packet(m_current_packet);
+		TWI_Packet packet = m_current_packet;
+		fill_write_packet(packet);
+		send_packet(packet);
 		set_slave_state(State_RX_Busy);
 		return true;
 	}
@@ -670,7 +714,7 @@ void AVR_IO_TWI::set_slave_ack(bool ack)
 		
 	}
 
-	else if (m_slv_state == State_RX_Busy) {
+	else if (m_slv_state == State_RX_Ack) {
 
 		//In RX_Busy state, the master is expecting an ACK/NACK after a Data Write
 		TWI_Packet packet = m_current_packet;
@@ -680,8 +724,13 @@ void AVR_IO_TWI::set_slave_ack(bool ack)
 		
 		//If acked, transit to RX state to wait for the next Data Write
 		//if nacked, transit to Addr state to wait for a bus release or a new Address packet
-		set_slave_state(ack ? State_RX : State_Addr);
-
+		if (ack) {
+			set_slave_state(State_RX);
+			m_slv_hold = true;
+		} else {
+			set_slave_state(State_Addr);
+		}
+		
 	}
 }
 
@@ -692,6 +741,8 @@ void AVR_IO_TWI::set_slave_ack(bool ack)
 
 void AVR_IO_TWI::packet(TWI_Packet& packet)
 {
+	DEBUG_LOG(*m_logger, "Packet received Command=%d", packet.cmd);
+
 	switch(packet.cmd) {
 
 		//Received a address packet (slave side)
@@ -757,7 +808,7 @@ void AVR_IO_TWI::packet(TWI_Packet& packet)
 		//Received a Data Ack packet (master or slave side)
 		case TWI_Packet::Cmd_DataAck: {
 
-			if (m_mst_state == State_TX_Busy) {
+			if (m_mst_state == State_TX_Ack) {
 				//If the slave replied ACK, it's expecting another byte.
 				//If it replied NACK, the transfer will end
 				if (packet.ack == TWI_Packet::Ack)
@@ -768,16 +819,17 @@ void AVR_IO_TWI::packet(TWI_Packet& packet)
 				defer_signal_raise(Signal_TxComplete, Cpt_Master, packet.ack);
 			}
 			
-			if (m_slv_state == State_TX_Busy) {
+			if (m_slv_state == State_TX_Ack) {
 				//If the master replied ACK, it's expecting another byte.
 				//If it replied NACK, the transfer will end
-				if (packet.ack == TWI_Packet::Ack)
+				if (packet.ack == TWI_Packet::Ack) {
 					set_slave_state(State_TX);
-				else
-					set_slave_state(State_Waiting);
+					m_slv_hold = true;
+				} else {
+					set_slave_state(State_Addr);
+				}
 
 				defer_signal_raise(Signal_TxComplete, Cpt_Slave, packet.ack);
-				m_slv_hold = true;
 			}
 
 		} break;
@@ -788,19 +840,24 @@ void AVR_IO_TWI::packet(TWI_Packet& packet)
 
 void AVR_IO_TWI::packet_ended(TWI_Packet& packet)
 {
-	//Upon receiving a packet end for an address, hold the bus and
-	//send the address to the higher layer to match it and provide
-	//a ACK/NACK status via 'set_slave_ack'
+	DEBUG_LOG(*m_logger, "Packet ended, Command=%d", packet.cmd);
+
+	//Upon receiving a packet end for an address (slave only),
+	//hold the bus and send the address to the higher layer to
+	//match it and provide a ACK/NACK status via 'set_slave_ack'
 	if (packet.cmd == TWI_Packet::Cmd_Address) {
 		if (m_slv_state == State_Addr_Busy) {
 			packet.hold = 1;
 			uint8_t u = (packet.addr << 1) | packet.rw;
-			defer_signal_raise(Signal_Address, Cpt_Slave, u);
 			m_slv_hold = true;
+			defer_signal_raise(Signal_Address, Cpt_Slave, u);
 		}
 	}
 	
 	//End of a Data or 'long' DataRequest packet. (slave only)
+	//A Data packet is always long
+	//If the Datarequest packet is long, it's because the hold flag
+	//wasn't set in "packet()"
 	else if (packet.cmd == TWI_Packet::Cmd_DataRequest ||
 			 packet.cmd == TWI_Packet::Cmd_Data) {
 		
@@ -808,11 +865,11 @@ void AVR_IO_TWI::packet_ended(TWI_Packet& packet)
 		//indicates if the master can already ACK/NACK the data.
 		if (m_slv_state == State_TX_Busy) {
 			packet.data = m_tx_data;
-			m_slv_hold = true;
 			if (packet.hold) {
 				set_slave_state(State_TX_Ack);
 			} else {
 				set_slave_state(State_TX);
+				m_slv_hold = true;
 				defer_signal_raise(Signal_TxComplete, Cpt_Slave, packet.ack);
 			}
 		}
@@ -831,19 +888,23 @@ void AVR_IO_TWI::packet_ended(TWI_Packet& packet)
 
 void AVR_IO_TWI::bus_acquired()
 {
+	DEBUG_LOG(*m_logger, "Bus acquired", "");
+
 	if (m_mst_state == State_Idle) {
 		set_master_state(State_Waiting);
-		defer_signal_raise(Signal_BusStateChange, 0, Bus_Busy);
+		defer_signal_raise(Signal_BusStateChange, Cpt_Any, Bus_Busy);
 	}
 }
 
 void AVR_IO_TWI::bus_released()
 {
-	if (m_mst_state == State_Waiting)
+	DEBUG_LOG(*m_logger, "Bus released", "");
+
+	defer_signal_raise(Signal_BusStateChange, Cpt_Any, Bus_Idle);
+	
+	if (m_mst_state > State_Idle)
 		set_master_state(State_Idle);
 
-	if (m_slv_state == State_Waiting || State_Active(m_slv_state))
+	if (m_slv_state > State_Idle)
 		set_slave_state(State_Idle);
-	
-	defer_signal_raise(Signal_BusStateChange, 0, Bus_Idle);
 }
