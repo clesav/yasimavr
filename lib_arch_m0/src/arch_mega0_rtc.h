@@ -99,8 +99,8 @@ private:
     friend class TimerHook;
     TimerHook* m_timer_hook;
 
-    void rtc_hook_raised(const signal_data_t& data);
-	void pit_hook_raised(const signal_data_t& data);
+    void rtc_hook_raised(const signal_data_t& sigdata);
+	void pit_hook_raised(const signal_data_t& sigdata);
 
 	void configure_timers();
 

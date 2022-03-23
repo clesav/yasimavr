@@ -589,7 +589,8 @@ cycle_count_t AVR_IO_TWI::master_timer_next(cycle_count_t when)
 
 void AVR_IO_TWI::defer_signal_raise(uint16_t sigid, uint32_t index, uint32_t u)
 {
-	m_deferred_sigdata = { .sigid = sigid, .index = index, .u = u };
+	signal_data_t sigdata = { .sigid = sigid, .index = index, .data = u };
+	m_deferred_sigdata = sigdata;
 	m_has_deferred_raise = true;
 	start_timer(1);
 }

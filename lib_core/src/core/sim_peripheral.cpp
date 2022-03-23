@@ -95,7 +95,7 @@ bool AVR_Peripheral::register_interrupt(int_vect_t vector, AVR_InterruptHandler*
 		return true;
 	}
 	else if (vector > 0 && m_device) {
-		ctlreq_data_t d = { .index = vector, .data = handler };
+		ctlreq_data_t d = { .data = handler, .index = vector };
 		return m_device->ctlreq(AVR_IOCTL_INTR, AVR_CTLREQ_INTR_REGISTER, &d);
 	}
 	else {

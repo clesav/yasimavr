@@ -94,14 +94,14 @@ void AVR_ArchMega0_USART::reset()
 	update_framerate();
 }
 
-bool AVR_ArchMega0_USART::ctlreq(uint16_t req, ctlreq_data_t *data)
+bool AVR_ArchMega0_USART::ctlreq(uint16_t req, ctlreq_data_t* data)
 {
 	if (req == AVR_CTLREQ_GET_SIGNAL) {
-		data->p = &m_uart.signal();
+		data->data = &m_uart.signal();
 		return true;
 	}
 	else if (req == AVR_CTLREQ_UART_ENDPOINT) {
-		data->p = &m_endpoint;
+		data->data = &m_endpoint;
 		return true;
 	}
 
@@ -170,19 +170,19 @@ void AVR_ArchMega0_USART::ioreg_write_handler(reg_addr_t addr, const ioreg_write
 	}
 }
 
-void AVR_ArchMega0_USART::raised(const signal_data_t& data, uint16_t id)
+void AVR_ArchMega0_USART::raised(const signal_data_t& sigdata, uint16_t __unused)
 {
-	if (data.sigid == AVR_IO_UART::Signal_TX_Start)
+	if (sigdata.sigid == AVR_IO_UART::Signal_TX_Start)
 		//Notification that the pending frame has been pushed to the shift register
 		//to be emitted. The TX buffer is now empty so raise the DRE interrupt.
 		m_txe_intflag.set_flag();
 
-	else if (data.sigid == AVR_IO_UART::Signal_TX_Complete && data.u)
+	else if (sigdata.sigid == AVR_IO_UART::Signal_TX_Complete && sigdata.data.as_uint())
 		//Notification that the frame in the shift register has been emitted
 		//Raise the TXC interrupt.
 		m_txc_intflag.set_flag();
 
-	else if (data.sigid == AVR_IO_UART::Signal_RX_Complete && data.u)
+	else if (sigdata.sigid == AVR_IO_UART::Signal_RX_Complete && sigdata.data.as_uint())
 		//Raise the RX completion flag
 		m_rxc_intflag.set_flag();
 }

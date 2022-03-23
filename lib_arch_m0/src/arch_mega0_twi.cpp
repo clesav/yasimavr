@@ -96,14 +96,14 @@ void AVR_ArchMega0_TWI::reset()
 	m_has_slave_rx_data = false;
 }
 
-bool AVR_ArchMega0_TWI::ctlreq(uint16_t req, ctlreq_data_t *data)
+bool AVR_ArchMega0_TWI::ctlreq(uint16_t req, ctlreq_data_t* data)
 {
 	if (req == AVR_CTLREQ_GET_SIGNAL) {
-		data->p = &m_twi.signal();
+		data->data = &m_twi.signal();
 		return true;
 	}
 	else if (req == AVR_CTLREQ_TWI_ENDPOINT) {
-		data->p = &m_twi;
+		data->data = &m_twi;
 		return true;
 	}
 
@@ -274,7 +274,7 @@ void AVR_ArchMega0_TWI::raised(const signal_data_t& sigdata, uint16_t hooktag)
 		
 		case AVR_IO_TWI::Signal_BusStateChange: {
 			uint8_t bus_state;
-			switch(sigdata.u) {
+			switch(sigdata.data.as_uint()) {
 				case AVR_IO_TWI::Bus_Idle: {
 					bus_state = TWI_BUSSTATE_IDLE_gc;
 					//If we had written an address, but the bus was busy,
@@ -312,13 +312,13 @@ void AVR_ArchMega0_TWI::raised(const signal_data_t& sigdata, uint16_t hooktag)
 		case AVR_IO_TWI::Signal_Address: { //slave side only
 		
 			//Test the address with the match logic and set the ACK/NACK response
-			bool match = address_match(sigdata.u);
+			bool match = address_match(sigdata.data.as_uint());
 			m_twi.set_slave_ack(match);
 			//If it's a match, store the raw address byte in the data register
 			//and update the status flags
 			if (match) {
-				WRITE_IOREG(SDATA, sigdata.u);
-				WRITE_IOREG_B(SSTATUS, TWI_DIR, sigdata.u & 1);
+				WRITE_IOREG(SDATA, sigdata.data.as_uint());
+				WRITE_IOREG_B(SSTATUS, TWI_DIR, sigdata.data.as_uint() & 1);
 				SET_IOREG(SSTATUS, TWI_AP);
 				SET_IOREG(SSTATUS, TWI_CLKHOLD);
 				m_intflag_slave.set_flag(TWI_APIF_bm);
@@ -328,7 +328,7 @@ void AVR_ArchMega0_TWI::raised(const signal_data_t& sigdata, uint16_t hooktag)
 		
 		case AVR_IO_TWI::Signal_AddrAck: { //Master side only
 			
-			if (sigdata.u) {
+			if (sigdata.data.as_uint()) {
 				//the address has been ACK'ed
 				CLEAR_IOREG(MSTATUS, TWI_RXACK);
 				//If it's a READ operation, continue by reading the first byte
@@ -352,14 +352,14 @@ void AVR_ArchMega0_TWI::raised(const signal_data_t& sigdata, uint16_t hooktag)
 			if (sigdata.index == AVR_IO_TWI::Cpt_Master) {
 				
 				//Update the status flags and raise the interrupt
-				WRITE_IOREG_B(MSTATUS, TWI_RXACK, !sigdata.u);
+				WRITE_IOREG_B(MSTATUS, TWI_RXACK, !sigdata.data.as_uint());
 				SET_IOREG(MSTATUS, TWI_CLKHOLD);
 				m_intflag_master.set_flag(TWI_WIF_bm);
 				
 			} else { //slave
 			
 				//Update the status flags and raise the interrupt
-				WRITE_IOREG_B(SSTATUS, TWI_RXACK, !sigdata.u);
+				WRITE_IOREG_B(SSTATUS, TWI_RXACK, !sigdata.data.as_uint());
 				SET_IOREG(SSTATUS, TWI_CLKHOLD);
 				m_intflag_slave.set_flag(TWI_DIF_bm);
 				
@@ -371,7 +371,7 @@ void AVR_ArchMega0_TWI::raised(const signal_data_t& sigdata, uint16_t hooktag)
 			if (sigdata.index == AVR_IO_TWI::Cpt_Master) {
 				
 				//Saves the received byte in the data register
-				WRITE_IOREG(MDATA, sigdata.u);
+				WRITE_IOREG(MDATA, sigdata.data.as_uint());
 				m_has_master_rx_data = true;
 				//Update the status flags and raise the interrupt
 				SET_IOREG(MSTATUS, TWI_CLKHOLD);
@@ -380,7 +380,7 @@ void AVR_ArchMega0_TWI::raised(const signal_data_t& sigdata, uint16_t hooktag)
 			} else { //slave
 			
 				//Saves the received byte in the data register
-				WRITE_IOREG(SDATA, sigdata.u);
+				WRITE_IOREG(SDATA, sigdata.data.as_uint());
 				m_has_slave_rx_data = true;
 				//Update the status flags and raise the interrupt
 				SET_IOREG(SSTATUS, TWI_CLKHOLD);

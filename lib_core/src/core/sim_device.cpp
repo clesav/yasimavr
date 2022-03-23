@@ -262,7 +262,7 @@ bool AVR_Device::load_firmware(const AVR_Firmware& firmware)
 	//Send the power supply voltage from the firmware to the VREF controller (if it exists)
 	bool analog_ok = false;
 	if (firmware.vcc > 0.0) {
-		ctlreq_data_t reqdata = { .index = AVR_IO_VREF::Source_Ext_VCC, .data = firmware.vcc };
+		ctlreq_data_t reqdata = { .data = firmware.vcc, .index = AVR_IO_VREF::Source_Ext_VCC, };
 		analog_ok = ctlreq(AVR_IOCTL_VREF, AVR_CTLREQ_VREF_SET, &reqdata);
 		if (analog_ok) {
 			//Send the analog voltage reference from the firmware to the VREF controller
@@ -373,7 +373,7 @@ bool AVR_Device::core_ctlreq(uint16_t req, ctlreq_data_t* reqdata)
 		if (test_option(Option_InfiniteLoopDetect) && !m_core.m_sreg[SREG_I]) {
 			//The device cannot get out of sleep or infinite loop if GIE=0.
 			//If the detect option is enabled, we exit the sim loop.
-			if ((AVR_SleepMode) reqdata->u == AVR_SleepMode::Pseudo)
+			if ((AVR_SleepMode) reqdata->data.as_uint() == AVR_SleepMode::Pseudo)
 				WARNING_LOG(*m_logger, "Device in infinite loop with GIE=0, stopping.", "");
 			else
 				WARNING_LOG(*m_logger, "Device going to sleep with GIE=0, stopping.", "");
@@ -384,7 +384,7 @@ bool AVR_Device::core_ctlreq(uint16_t req, ctlreq_data_t* reqdata)
 		} else {
 
 			m_state = State_Sleeping;
-			m_sleep_mode = (AVR_SleepMode) reqdata->u;
+			m_sleep_mode = (AVR_SleepMode) reqdata->data.as_uint();
 
 			if (m_sleep_mode == AVR_SleepMode::Pseudo)
 				DEBUG_LOG(*m_logger, "Device going to pseudo sleep", "");
@@ -428,14 +428,14 @@ bool AVR_Device::core_ctlreq(uint16_t req, ctlreq_data_t* reqdata)
 	}
 	
 	else if (req == AVR_CTLREQ_CORE_RESET) {
-		m_reset_flags |= reqdata->u;
+		m_reset_flags |= reqdata->data.as_uint();
 		m_state = State_Reset;
 		WARNING_LOG(*m_logger, "MCU reset triggered, Flags = 0x%02x", m_reset_flags);
 		return true;
 	}
 	
 	else if (req == AVR_CTLREQ_CORE_RESET_FLAG) {
-		reqdata->u = m_reset_flags;
+		reqdata->data = m_reset_flags;
 		return true;
 	}
 

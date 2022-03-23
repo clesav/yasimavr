@@ -75,7 +75,7 @@ bool AVR_InterruptController::ctlreq(uint16_t req, ctlreq_data_t* data)
 		}
 		else {
 			m_interrupts[vector].state = IntrState_Idle;
-			AVR_InterruptHandler* t = reinterpret_cast<AVR_InterruptHandler*>(data->p);
+			AVR_InterruptHandler* t = reinterpret_cast<AVR_InterruptHandler*>(data->data.as_ptr());
 			t->m_intctl = this;
 		}
 
@@ -219,7 +219,7 @@ bool AVR_InterruptFlag::init(AVR_Device& device,
 	m_vector = vector;
 	bool vector_ok;
 	if (vector > 0) {
-		ctlreq_data_t d = { .index = m_vector, .data = this };
+		ctlreq_data_t d = { .data = this, .index = m_vector };
 		vector_ok = device.ctlreq(AVR_IOCTL_INTR, AVR_CTLREQ_INTR_REGISTER, &d);
 	}
 	else if (vector < 0) {

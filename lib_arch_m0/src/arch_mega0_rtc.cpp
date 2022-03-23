@@ -57,11 +57,11 @@ public:
 
 	TimerHook(AVR_ArchMega0_RTC& ctl) : m_ctl(ctl) {}
 
-	virtual void raised(const signal_data_t& data, uint16_t sigid) override {
-		if (sigid)
-			m_ctl.pit_hook_raised(data);
+	virtual void raised(const signal_data_t& sigdata, uint16_t hooktag) override {
+		if (hooktag)
+			m_ctl.pit_hook_raised(sigdata);
 		else
-			m_ctl.rtc_hook_raised(data);
+			m_ctl.rtc_hook_raised(sigdata);
 	}
 
 private:
@@ -357,10 +357,10 @@ void AVR_ArchMega0_RTC::sleep(bool on, AVR_SleepMode mode)
 /*
  *  Callbacks for the prescaled timers
  */
-void AVR_ArchMega0_RTC::rtc_hook_raised(const signal_data_t& data)
+void AVR_ArchMega0_RTC::rtc_hook_raised(const signal_data_t& sigdata)
 {
-	m_rtc_cnt += data.u;
-	if (!data.index) return;
+	m_rtc_cnt += sigdata.data.as_uint();
+	if (!sigdata.index) return;
 
 	if (m_next_rtc_event_type & TimerEventPer) {
 		m_rtc_cnt = 0;
@@ -376,10 +376,10 @@ void AVR_ArchMega0_RTC::rtc_hook_raised(const signal_data_t& data)
 	m_rtc_timer.set_timer_delay(rtc_delay());
 }
 
-void AVR_ArchMega0_RTC::pit_hook_raised(const signal_data_t& data)
+void AVR_ArchMega0_RTC::pit_hook_raised(const signal_data_t& sigdata)
 {
-	m_pit_cnt += data.u;
-	if (!data.index) return;
+	m_pit_cnt += sigdata.data.as_uint();
+	if (!sigdata.index) return;
 	
 	m_pit_cnt = 0;
 	if (m_pit_intflag.set_flag(RTC_PI_bm))

@@ -117,16 +117,16 @@ void AVR_ArchMega0_ADC::reset()
 	m_timer.reset();
 }
 
-bool AVR_ArchMega0_ADC::ctlreq(uint16_t req, ctlreq_data_t *data)
+bool AVR_ArchMega0_ADC::ctlreq(uint16_t req, ctlreq_data_t* data)
 {
 	if (req == AVR_CTLREQ_GET_SIGNAL) {
 		if (!m_signal)
 			m_signal = new AVR_Signal;
-		data->p = m_signal;
+		data->data = m_signal;
 		return true;
 	}
 	else if (req == AVR_CTLREQ_ADC_SET_TEMP) {
-		m_temperature = data->d;
+		m_temperature = data->data.as_double();
 		return true;
 	}
 	return false;
@@ -243,7 +243,7 @@ void AVR_ArchMega0_ADC::read_analog_value()
 	ctlreq_data_t reqdata = { .index = ref_config->source };
 	if (!device()->ctlreq(AVR_IOCTL_VREF, AVR_CTLREQ_ADC_GET_VREF, &reqdata))
 		_crash("ADC: Unable to obtain the voltage reference");
-	vref = reqdata.d;
+	vref = reqdata.data.as_double();
 
 	//Obtain the raw analog value depending on the channel mux configuration
 	//The raw value is in the interval [0.0; 1.0] (or [-1.0; +1.0] for bipolar)
@@ -269,7 +269,7 @@ void AVR_ArchMega0_ADC::read_analog_value()
 			ctlreq_data_t reqdata = { .index = AVR_IO_VREF::Source_Internal };
 			if (!device()->ctlreq(AVR_IOCTL_VREF, AVR_CTLREQ_ADC_GET_VREF, &reqdata))
 				_crash("ADC: Unable to obtain the band gap voltage value");
-			raw_value = reqdata.d;
+			raw_value = reqdata.data.as_double();
 		} break;
 
 		case ADC_Temperature: {
@@ -279,7 +279,7 @@ void AVR_ArchMega0_ADC::read_analog_value()
 			ctlreq_data_t reqdata = { .index = AVR_IO_VREF::Source_Ext_VCC };
 			if (!device()->ctlreq(AVR_IOCTL_VREF, AVR_CTLREQ_ADC_GET_VREF, &reqdata))
 				_crash("ADC: Unable to obtain the VCC voltage value");
-			raw_value = temp_volt / reqdata.d;
+			raw_value = temp_volt / reqdata.data.as_double();
 		} break;
 
 		case ADC_Zero:

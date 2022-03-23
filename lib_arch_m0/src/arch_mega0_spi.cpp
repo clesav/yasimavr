@@ -83,20 +83,20 @@ void AVR_ArchMega0_SPI::reset()
 	m_pin_selected = false;
 }
 
-bool AVR_ArchMega0_SPI::ctlreq(uint16_t req, ctlreq_data_t *data)
+bool AVR_ArchMega0_SPI::ctlreq(uint16_t req, ctlreq_data_t* data)
 {
 	if (req == AVR_CTLREQ_GET_SIGNAL) {
-		data->p = &m_spi.signal();
+		data->data = &m_spi.signal();
 		return true;
 	}
 	else if (req == AVR_CTLREQ_SPI_ADD_CLIENT) {
-		AVR_SPI_Client* client = reinterpret_cast<AVR_SPI_Client*>(data->p);
+		AVR_SPI_Client* client = reinterpret_cast<AVR_SPI_Client*>(data->data.as_ptr());
 		if (client)
 			m_spi.add_client(client);
 		return true;
 	}
 	else if (req == AVR_CTLREQ_SPI_CLIENT) {
-		data->p = &m_spi;
+		data->data = &m_spi;
 		return true;
 	}
 
@@ -152,7 +152,7 @@ void AVR_ArchMega0_SPI::raised(const signal_data_t& sigdata, uint16_t hooktag)
 			m_intflag.set_flag();
 	}
 	else if (hooktag == HOOKTAG_PIN) {
-		m_pin_selected = (sigdata.u == AVR_Pin::State_Low);
+		m_pin_selected = (sigdata.data.as_uint() == AVR_Pin::State_Low);
 		m_spi.set_selected(m_pin_selected && TEST_IOREG(CTRLA, SPI_ENABLE));
 	}
 }
