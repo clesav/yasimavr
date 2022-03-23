@@ -186,16 +186,17 @@ void AVR_ArchMega0_ResetCtrl::reset()
 	//register RSTFR accordingly
 	ctlreq_data_t reqdata;
 	if (device()->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_RESET_FLAG, &reqdata)) {
-		if (reqdata.u & AVR_Device::Reset_BOD)
+		unsigned int flags = reqdata.data.as_uint();
+		if (flags & AVR_Device::Reset_BOD)
 			m_rst_flags |= RSTCTRL_BORF_bm;
-		if (reqdata.u & AVR_Device::Reset_WDT)
+		if (flags & AVR_Device::Reset_WDT)
 			m_rst_flags |= RSTCTRL_WDRF_bm;
-		if (reqdata.u & AVR_Device::Reset_Ext)
+		if (flags & AVR_Device::Reset_Ext)
 			m_rst_flags |= RSTCTRL_EXTRF_bm;
-		if (reqdata.u & AVR_Device::Reset_SW)
+		if (flags & AVR_Device::Reset_SW)
 			m_rst_flags |= RSTCTRL_SWRF_bm;
 		//On a Power On reset, all the other reset flag bits must be cleared
-		if (reqdata.u & AVR_Device::Reset_PowerOn)
+		if (flags & AVR_Device::Reset_PowerOn)
 			m_rst_flags = RSTCTRL_PORF_bm;
 
 		write_ioreg(RST_REG_ADDR(RSTFR), m_rst_flags);
@@ -212,7 +213,7 @@ void AVR_ArchMega0_ResetCtrl::ioreg_write_handler(reg_addr_t addr, const ioreg_w
 	else if (addr == RST_REG_ADDR(SWRR)){
 		//Writing a '1' to SWRE bit triggers a software reset
 		if (data.value & RSTCTRL_SWRE_bm) {
-			ctlreq_data_t reqdata = { .u = AVR_Device::Reset_SW };
+			ctlreq_data_t reqdata = { .data = AVR_Device::Reset_SW };
 			device()->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_RESET, &reqdata);
 		}
 	}
@@ -260,11 +261,12 @@ void AVR_ArchMega0_MiscRegCtrl::reset()
 	write_ioreg(SIGROW_REG_ADDR(DEVICEID2), (m_config.dev_id >> 16) & 0xFF);
 }
 
-bool AVR_ArchMega0_MiscRegCtrl::ctlreq(uint16_t req, ctlreq_data_t *data)
+bool AVR_ArchMega0_MiscRegCtrl::ctlreq(uint16_t req, ctlreq_data_t* data)
 {
+	uint8_t* p = (uint8_t*) data->data.as_ptr();
 	if (req == AVR_CTLREQ_SET_SERID) {
 		for (int i = 0; i < 10; ++i)
-			write_ioreg(SIGROW_REG_ADDR(SERNUM0) + i, *((uint8_t*)(data->p) + i));
+			write_ioreg(SIGROW_REG_ADDR(SERNUM0) + i, p[i]);
 
 		return true;
 	}

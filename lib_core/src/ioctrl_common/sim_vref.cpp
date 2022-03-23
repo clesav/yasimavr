@@ -58,11 +58,11 @@ bool AVR_IO_VREF::ctlreq(uint16_t req, ctlreq_data_t* data)
 
 	else if (req == AVR_CTLREQ_VREF_SET) {
 		if (data->index == Source_Ext_VCC) {
-			m_vcc = data->d;
+			m_vcc = data->data.as_double();
 			if (m_vcc < 0.0) m_vcc = 0.0;
 		}
 		else if (data->index == Source_Ext_AREF) {
-			m_aref = data->d;
+			m_aref = data->data.as_double();
 			if (m_aref > 1.0) m_aref = 1.0;
 			if (m_aref < 0.0) m_aref = 0.0;
 		}

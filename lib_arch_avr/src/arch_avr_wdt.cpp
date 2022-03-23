@@ -52,9 +52,9 @@ void AVR_ArchAVR_WDT::reset()
 {
 	//Check if the watchdog reset flag is set. If it is, WDE is forced to 1
 	//and the watchdog timer is activated with default delay settings.
-	ctlreq_data_t rd;
-	if (device()->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_RESET_FLAG, &rd)) {
-		if (rd.u & AVR_Device::Reset_WDT) {
+	ctlreq_data_t reqdata;
+	if (device()->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_RESET_FLAG, &reqdata)) {
+		if (reqdata.data.as_uint() & AVR_Device::Reset_WDT) {
 			set_ioreg(m_config.reg_wdt, m_config.bm_reset_enable);
 			configure_timer(true, 0);
 		}

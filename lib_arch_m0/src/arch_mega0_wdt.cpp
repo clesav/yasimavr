@@ -69,6 +69,6 @@ void AVR_ArchMega0_WDT::timeout()
 	//Trigger the reset. Don't call reset() because we want the current
 	//cycle to complete beforehand. The state of the device would be
 	//inconsistent otherwise.
-	ctlreq_data_t reqdata = { .u = AVR_Device::Reset_WDT };
+	ctlreq_data_t reqdata = { .data = AVR_Device::Reset_WDT };
 	device()->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_RESET, &reqdata);
 }

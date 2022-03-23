@@ -78,7 +78,7 @@ bool AVR_ArchMega0_TimerB::init(AVR_Device& device)
 							 DEF_REGBIT_B(INTCTRL, TCB_CAPT),
 							 m_config.iv_capt);
 
-	ctlreq_data_t d = { .index = 0, .p = this };
+	ctlreq_data_t d = { .data = this, .index = 0 };
 	status &= device.ctlreq(AVR_IOCTL_TIMER('A', '0'), AVR_CTLREQ_TCA_REGISTER_TCB, &d);
 
 	m_timer.init(device.cycle_manager(), device.logger());
@@ -220,10 +220,11 @@ bool AVR_ArchMega0_TimerB::synched_mode_enabled() const
 	return (m_clk_mode == TCB_CLKSEL_CLKTCA_gc);
 }
 
-void AVR_ArchMega0_TimerB::raised(const signal_data_t& data, uint16_t sigid)
+void AVR_ArchMega0_TimerB::raised(const signal_data_t& sigdata, uint16_t __unused)
 {
-	m_cnt += data.u;
-	if (!data.index) return;
+	m_cnt += sigdata.data.as_uint();
+
+	if (!sigdata.index) return;
 
 	//From this point onwards, we know we have an 'event' to process.
 	

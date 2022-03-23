@@ -127,14 +127,14 @@ void AVR_ArchMega0_TimerA::reset()
 	m_timer.reset();
 }
 
-bool AVR_ArchMega0_TimerA::ctlreq(uint16_t req, ctlreq_data_t *data)
+bool AVR_ArchMega0_TimerA::ctlreq(uint16_t req, ctlreq_data_t* data)
 {
 	if (req == AVR_CTLREQ_GET_SIGNAL) {
 		//data->p = &m_intflag_signal;
 		//return true;
 	}
 	else if (req == AVR_CTLREQ_TCA_REGISTER_TCB) {
-		AVR_ArchMega0_TimerB* t = reinterpret_cast<AVR_ArchMega0_TimerB*>(data->p);
+		AVR_ArchMega0_TimerB* t = reinterpret_cast<AVR_ArchMega0_TimerB*>(data->data.as_ptr());
 		m_synched_timers.push_back(t);
 		return true;
 	}
@@ -354,11 +354,11 @@ uint32_t AVR_ArchMega0_TimerA::delay_to_event()
 	return (uint32_t)ticks_to_next_event;
 }
 
-void AVR_ArchMega0_TimerA::raised(const signal_data_t& data, uint16_t sigid)
+void AVR_ArchMega0_TimerA::raised(const signal_data_t& sigdata, uint16_t __unused)
 {
-	m_cnt += data.u;
+	m_cnt += sigdata.data.as_uint();
 
-	if (!data.index) return;
+	if (!sigdata.index) return;
 
 	DEBUG_LOG(device()->logger(), "%s processing events %02x", name().c_str(), m_next_event_type);
 
