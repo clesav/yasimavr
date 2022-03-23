@@ -148,3 +148,92 @@ uint32_t str_to_id(const std::string& s)
 {
 	return str_to_id(s.c_str());
 }
+
+
+//=======================================================================================
+
+vardata_t::vardata_t() : m_type(Invalid) {}
+vardata_t::vardata_t(void* p_) : m_type(Pointer), p(p_) {}
+vardata_t::vardata_t(const char* s_) : m_type(String), s(s_) {}
+vardata_t::vardata_t(double d_) : m_type(Double), d(d_) {}
+vardata_t::vardata_t(unsigned int u_) : m_type(Uinteger), u(u_) {}
+vardata_t::vardata_t(int i_) : m_type(Integer), i(i_) {}
+vardata_t::vardata_t(const vardata_t& v) { *this = v; }
+
+void* vardata_t::as_ptr() const
+{
+	return (m_type == Pointer) ? p : nullptr;
+}
+
+const char* vardata_t::as_str() const
+{
+	return (m_type == String) ? s : "";
+}
+
+double vardata_t::as_double() const
+{
+	return (m_type == Double) ? d : 0;
+}
+
+unsigned int vardata_t::as_uint() const
+{
+	return (m_type == Uinteger) ? u : 0;
+}
+
+int vardata_t::as_int() const
+{
+	return (m_type == Integer) ? i : 0;
+}
+
+vardata_t& vardata_t::operator=(void* p_)
+{
+	m_type = Pointer;
+	p = p_;
+	return *this;
+}
+
+vardata_t& vardata_t::operator=(const char* s_)
+{
+	m_type = String;
+	s = s_;
+	return *this;
+}
+
+vardata_t& vardata_t::operator=(double d_)
+{
+	m_type = Double;
+	d = d_;
+	return *this;
+}
+
+vardata_t& vardata_t::operator=(unsigned int u_)
+{
+	m_type = Uinteger;
+	u = u_;
+	return *this;
+}
+
+vardata_t& vardata_t::operator=(int i_)
+{
+	m_type = Integer;
+	i = i_;
+	return *this;
+}
+
+vardata_t& vardata_t::operator=(const vardata_t& v)
+{
+	m_type = v.m_type;
+	switch (m_type) {
+	case Pointer:
+		p = v.p; break;
+	case String:
+		s = v.s; break;
+	case Double:
+		d = v.d; break;
+	case Uinteger:
+		u = v.u; break;
+	case Integer:
+		i = v.i; break;
+	}
+	return *this;
+}

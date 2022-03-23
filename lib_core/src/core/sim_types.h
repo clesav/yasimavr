@@ -150,4 +150,60 @@ uint32_t str_to_id(const std::string& s);
 	(((_d) << 24)|((_c) << 16)|((_b) << 8)|((_a)))
 
 
+//=======================================================================================
+
+class vardata_t {
+
+public:
+
+	enum Type {
+		Invalid,
+		Pointer,
+		Double,
+		Uinteger,
+		Integer,
+		String
+	};
+
+	vardata_t();
+	vardata_t(void* p);
+	vardata_t(const char* s);
+	vardata_t(double d);
+	vardata_t(unsigned int u);
+	vardata_t(int i);
+	vardata_t(const vardata_t& v);
+
+	inline Type type() const
+	{
+		return m_type;
+	}
+
+	void* as_ptr() const;
+	const char* as_str() const;
+	double as_double() const;
+	unsigned int as_uint() const;
+	int as_int() const;
+
+	vardata_t& operator=(void* p);
+	vardata_t& operator=(const char* s);
+	vardata_t& operator=(double d);
+	vardata_t& operator=(unsigned int u);
+	vardata_t& operator=(int i);
+	vardata_t& operator=(const vardata_t& v);
+
+private:
+
+	Type m_type;
+
+	union {
+		void* p;
+		double d;
+		uint32_t u;
+		int32_t i;
+		const char* s;
+	};
+
+};
+
+
 #endif //__YASIMAVR_TYPES_H__

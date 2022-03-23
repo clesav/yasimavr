@@ -72,25 +72,25 @@ void AVR_Signal::raise(const signal_data_t& value)
 
 void AVR_Signal::raise_u(uint16_t sigid, uint32_t index, uint32_t u)
 {
-	signal_data_t sigdata = { .sigid = sigid, .index = index, .u = u };
+	signal_data_t sigdata = { .sigid = sigid, .index = index, .data = u };
 	raise(sigdata);
 }
 
 void AVR_Signal::raise_d(uint16_t sigid, uint32_t index, double d)
 {
-	signal_data_t sigdata = { .sigid = sigid, .index = index, .d = d };
+	signal_data_t sigdata = { .sigid = sigid, .index = index, .data = d };
 	raise(sigdata);
 }
 
 void AVR_Signal::raise(uint16_t sigid, uint32_t index, void* p)
 {
-	signal_data_t sigdata = { .sigid = sigid, .index = index, .p = p };
+	signal_data_t sigdata = { .sigid = sigid, .index = index, .data = p };
 	raise(sigdata);
 }
 
 void AVR_Signal::raise(uint16_t sigid, uint32_t index, const char* s)
 {
-	signal_data_t sigdata = { .sigid = sigid, .index = index, .s = s };
+	signal_data_t sigdata = { .sigid = sigid, .index = index, .data = s };
 	raise(sigdata);
 }
 

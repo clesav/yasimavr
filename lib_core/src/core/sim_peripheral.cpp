@@ -54,7 +54,7 @@ bool AVR_Peripheral::init(AVR_Device& device)
 void AVR_Peripheral::reset()
 {}
 
-bool AVR_Peripheral::ctlreq(uint16_t req, ctlreq_data_t *data)
+bool AVR_Peripheral::ctlreq(uint16_t req, ctlreq_data_t* data)
 {
     return false;
 }
@@ -95,7 +95,7 @@ bool AVR_Peripheral::register_interrupt(int_vect_t vector, AVR_InterruptHandler*
 		return true;
 	}
 	else if (vector > 0 && m_device) {
-		ctlreq_data_t d = { .index = vector, .p = handler };
+		ctlreq_data_t d = { .index = vector, .data = handler };
 		return m_device->ctlreq(AVR_IOCTL_INTR, AVR_CTLREQ_INTR_REGISTER, &d);
 	}
 	else {
@@ -109,7 +109,7 @@ AVR_Signal* AVR_Peripheral::get_signal(uint32_t ctl_id, uint16_t index) const
 		ctlreq_data_t d = { .index = index };
 		bool status = m_device->ctlreq(ctl_id, AVR_CTLREQ_GET_SIGNAL, &d);
 		if (status)
-			return reinterpret_cast<AVR_Signal*>(d.p);
+			return reinterpret_cast<AVR_Signal*>(d.data.as_ptr());
 	}
 	return nullptr;
 }

@@ -45,7 +45,7 @@ public:
 	//Callback that resets and disable the timer
 	virtual void reset() override;
 	//Callbacks to react to the request AVR_CTLREQ_WATCHDOG_RESET.
-	virtual bool ctlreq(uint16_t req, ctlreq_data_t *data) override;
+	virtual bool ctlreq(uint16_t req, ctlreq_data_t* data) override;
 
 protected:
 

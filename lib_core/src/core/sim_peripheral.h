@@ -103,13 +103,8 @@ enum class AVR_SleepMode;
 
 
 struct ctlreq_data_t {
+	vardata_t data;
 	uint32_t index;
-	union {
-		void* p;
-		double d;
-		uint32_t u;
-		const char* s;
-	};
 };
 
 
@@ -160,7 +155,7 @@ public:
 
     //Callback method called for a CTL request. The method must return true if the request has
     //been processed
-    virtual bool ctlreq(uint16_t req, ctlreq_data_t *data);
+    virtual bool ctlreq(uint16_t req, ctlreq_data_t* data);
 
     //Callback method called when the CPU is reading a I/O register allocated by this peripheral.
     //The value has not been read yet so the module can modify it before the CPU gets it.

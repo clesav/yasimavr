@@ -73,7 +73,7 @@ public:
 
 	virtual bool init(AVR_Device& device) override;
 	virtual void reset() override;
-	virtual bool ctlreq(uint16_t req, ctlreq_data_t *data) override;
+	virtual bool ctlreq(uint16_t req, ctlreq_data_t* data) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
     virtual void interrupt_ack_handler(int_vect_t vector) override;
 

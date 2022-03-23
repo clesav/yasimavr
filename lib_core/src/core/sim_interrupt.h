@@ -77,7 +77,7 @@ public:
 
 	//===== Override of IO_CTL virtual methods =====
 	virtual void reset() override;
-	virtual bool ctlreq(uint16_t req, ctlreq_data_t *data) override;
+	virtual bool ctlreq(uint16_t req, ctlreq_data_t* data) override;
 	virtual void sleep(bool on, AVR_SleepMode mode) override;
 
 	//===== Interface API for the CPU =====

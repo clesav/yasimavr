@@ -55,10 +55,10 @@ void AVR_InterruptController::reset()
 	m_irq_vector = AVR_INTERRUPT_NONE;
 }
 
-bool AVR_InterruptController::ctlreq(uint16_t req, ctlreq_data_t *data)
+bool AVR_InterruptController::ctlreq(uint16_t req, ctlreq_data_t* data)
 {
 	if (req == AVR_CTLREQ_GET_SIGNAL) {
-		data->p = &m_signal;
+		data->data = &m_signal;
 		return true;
 	}
 	else if (req == AVR_CTLREQ_INTR_REGISTER) {
@@ -219,7 +219,7 @@ bool AVR_InterruptFlag::init(AVR_Device& device,
 	m_vector = vector;
 	bool vector_ok;
 	if (vector > 0) {
-		ctlreq_data_t d = { .index = m_vector, .p = this };
+		ctlreq_data_t d = { .index = m_vector, .data = this };
 		vector_ok = device.ctlreq(AVR_IOCTL_INTR, AVR_CTLREQ_INTR_REGISTER, &d);
 	}
 	else if (vector < 0) {

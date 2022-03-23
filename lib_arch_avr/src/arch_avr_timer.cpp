@@ -108,10 +108,10 @@ void AVR_ArchAVR_Timer::reset()
 	m_timer.set_prescaler(m_clk_ps_max, 1);
 }
 
-bool AVR_ArchAVR_Timer::ctlreq(uint16_t req, ctlreq_data_t *data)
+bool AVR_ArchAVR_Timer::ctlreq(uint16_t req, ctlreq_data_t* data)
 {
 	if (req == AVR_CTLREQ_GET_SIGNAL) {
-		data->p = &m_intflag_signal;
+		data->data = &m_intflag_signal;
 		return true;
 	}
 	return false;
@@ -265,13 +265,13 @@ uint32_t AVR_ArchAVR_Timer::delay_to_event()
 }
 
 
-void AVR_ArchAVR_Timer::raised(const signal_data_t& data, uint16_t sigid)
+void AVR_ArchAVR_Timer::raised(const signal_data_t& sigdata, uint16_t __unused)
 {
 	DEBUG_LOG(device()->logger(), "Updating counters of %s", name().c_str());
 
-	m_cnt += data.u;
+	m_cnt += sigdata.data.as_uint();
 
-	if (!data.index) return;
+	if (!sigdata.index) return;
 
 	if (m_next_event_type & TimerEventCompA) {
 		DEBUG_LOG(device()->logger(), "Timer %s triggering interrupt OCRA", name().c_str());

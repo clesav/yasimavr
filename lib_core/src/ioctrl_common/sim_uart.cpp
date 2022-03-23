@@ -288,15 +288,16 @@ void AVR_IO_UART::add_rx_frame(uint8_t frame)
  * Reimplementation of AVR_Signal::Hook to receive
  * data
  */
-void AVR_IO_UART::raised(const signal_data_t& data, uint16_t id)
+void AVR_IO_UART::raised(const signal_data_t& sigdata, uint16_t id)
 {
-	if (data.sigid == Signal_Data_Frame) {
+	if (sigdata.sigid == Signal_Data_Frame) {
 		DEBUG_LOG(*m_logger, "UART RX frame received", "");
-		add_rx_frame(data.u);
+		add_rx_frame(sigdata.data.as_uint());
 	}
-	else if (data.sigid == Signal_Data_String) {
+	else if (sigdata.sigid == Signal_Data_String) {
 		DEBUG_LOG(*m_logger, "UART RX string received", "");
-		for (size_t i = 0; i < strlen(data.s); ++i)
-			add_rx_frame(data.s[i]);
+		const char* s = sigdata.data.as_str();
+		for (size_t i = 0; i < strlen(s); ++i)
+			add_rx_frame(s[i]);
 	}
 }

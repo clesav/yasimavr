@@ -93,7 +93,7 @@ public:
 	AVR_SleepController(const AVR_SleepConfig& config);
 
 	virtual bool init(AVR_Device& device) override;
-	virtual bool ctlreq(uint16_t req, ctlreq_data_t *data) override;
+	virtual bool ctlreq(uint16_t req, ctlreq_data_t* data) override;
 	virtual void raised(const signal_data_t& data, uint16_t __unused) override;
 
 private:

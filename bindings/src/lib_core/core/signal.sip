@@ -21,94 +21,15 @@
  
 //=======================================================================================
 
-%ModuleHeaderCode
-//#include "core/sim_signal.h"
-
-// #ifdef __cplusplus
-// extern "C" {
-// #endif
-// void fill_sigdata_with_pyobj(signal_data_t* sigdata, PyObject* obj);
-// #ifdef __cplusplus
-// }
-// #endif
-
-//typedef AVR_Signal::Hook AVR_SignalHook;
-
-%End
-
 struct signal_data_t {
 %TypeHeaderCode
 #include "core/sim_signal.h"
 %End
 
-%TypeCode
-void fill_sigdata_with_pyobj(signal_data_t* sigdata, PyObject* obj)
-{
-	 if (PyFloat_Check(obj))
-		sigdata->d = PyFloat_AsDouble(obj);
-	else if (PyLong_Check(obj)) {
-        long long v = PyLong_AsLongLong(obj);
-        if (v >= 0)
-            sigdata->u = (unsigned long) v;
-        else
-            sigdata->i = (long) v;
-    }
-	else if (PyUnicode_Check(obj))
-		sigdata->s = PyUnicode_AsUTF8(obj);
-	else if (PyBytes_Check(obj))
-		sigdata->s = PyBytes_AsString(obj);
-	else {
-		int iserr = 0;
-		const sipTypeDef *sipType = sipTypeFromPyTypeObject((PyTypeObject*)(obj->ob_type));
-		if (sipType)
-			sigdata->p = sipConvertToType(obj, sipType, Py_None, 0, SIP_NULLPTR, &iserr);
-		else
-			sigdata->p = obj;
-	}
-}
-%End
-
 	uint16_t sigid;
 	uint32_t index;
-	
-	//void* p;
-	double d /NoSetter/;
-	uint32_t u /NoSetter/;
-	int32_t i /NoSetter/;
-	const char* s /NoSetter, Encoding="None"/;
-    
-    signal_data_t(uint16_t sigid, uint32_t index, SIP_PYOBJECT data);
-	%MethodCode
-		sipCpp = new signal_data_t();
-		sipCpp->sigid = a0;
-		sipCpp->index = a1;
-		fill_sigdata_with_pyobj(sipCpp, a2);
-	%End
-    
-    void set_data(SIP_PYOBJECT data);
-	%MethodCode
-		fill_sigdata_with_pyobj(sipCpp, a0);
-	%End
-    
-	SIP_PYOBJECT p(SIP_PYTYPE pytype = SIP_NULLPTR);
-	%MethodCode
-		if (sipCpp->p == SIP_NULLPTR) {
-			Py_INCREF(Py_None);
-			sipRes = Py_None;
-		}
-		else if (a0 == SIP_NULLPTR) {
-            sipRes = sipConvertFromVoidPtr(sipCpp->p);
-        }
-        else{
-			const sipTypeDef *sipType = sipTypeFromPyTypeObject((PyTypeObject*)a0);
-			if (sipType) {
-				sipRes = sipConvertFromType(sipCpp->p, sipType, SIP_NULLPTR);
-			} else {
-				Py_INCREF(Py_None);
-				sipRes = Py_None;
-			}
-        }
-	%End
+	vardata_t data;
+
 };
 
 
@@ -129,7 +50,7 @@ class AVR_Signal {
 %TypeHeaderCode
 #include "core/sim_signal.h"
 
-extern void fill_sigdata_with_pyobj(signal_data_t* sigdata, PyObject* obj); 
+extern void fill_vardata_with_pyobj(vardata_t* d, PyObject* obj); 
 %End
 
 public:
@@ -149,7 +70,7 @@ public:
 		signal_data_t sigdata;
 		sigdata.sigid = a0;
 		sigdata.index = a1;
-		fill_sigdata_with_pyobj(&sigdata, a2);
+		fill_vardata_with_pyobj(&sigdata.data, a2);
 		sipCpp->raise(sigdata);
 	%End
     

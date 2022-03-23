@@ -99,10 +99,10 @@ void AVR_ArchAVR_ExtInt::reset()
 		m_pcint_pin_value[i] = 0;
 }
 
-bool AVR_ArchAVR_ExtInt::ctlreq(uint16_t req, ctlreq_data_t *data)
+bool AVR_ArchAVR_ExtInt::ctlreq(uint16_t req, ctlreq_data_t* data)
 {
 	if (req == AVR_CTLREQ_GET_SIGNAL) {
-		data->p = &m_signal;
+		data->data = &m_signal;
 		return true;
 	}
 	return false;
@@ -170,7 +170,7 @@ void AVR_ArchAVR_ExtInt::raised(const signal_data_t& sigdata, uint16_t hooktag)
 {
 	if (sigdata.sigid != AVR_Pin::Signal_DigitalStateChange) return;
 
-	bool pin_level = (sigdata.u == AVR_Pin::State_High);
+	bool pin_level = (sigdata.data.as_uint() == AVR_Pin::State_High);
 	uint8_t pin_num = hooktag & 0x00FF;
 	bool is_pc = (hooktag & 0x0100);
 

@@ -84,14 +84,14 @@ void AVR_ArchAVR_USART::reset()
 	update_framerate();
 }
 
-bool AVR_ArchAVR_USART::ctlreq(uint16_t req, ctlreq_data_t *data)
+bool AVR_ArchAVR_USART::ctlreq(uint16_t req, ctlreq_data_t* data)
 {
 	if (req == AVR_CTLREQ_GET_SIGNAL) {
-		data->p = &m_uart.signal();
+		data->data = &m_uart.signal();
 		return true;
 	}
 	else if (req == AVR_CTLREQ_UART_ENDPOINT) {
-		data->p = &m_endpoint;
+		data->data = &m_endpoint;
 		return true;
 	}
 
@@ -152,19 +152,19 @@ void AVR_ArchAVR_USART::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t
 
 }
 
-void AVR_ArchAVR_USART::raised(const signal_data_t& data, uint16_t id)
+void AVR_ArchAVR_USART::raised(const signal_data_t& sigdata, uint16_t __unused)
 {
 	//If a frame emission is started, it means the TX buffer is empty
 	//so raise the TXE (DRE) flag
-	if (data.sigid == AVR_IO_UART::Signal_TX_Start)
+	if (sigdata.sigid == AVR_IO_UART::Signal_TX_Start)
 		m_txe_intflag.set_flag();
 
 	//If a frame is successfully emitted, raise the TXC flag
-	else if (data.sigid == AVR_IO_UART::Signal_TX_Complete && data.u)
+	else if (sigdata.sigid == AVR_IO_UART::Signal_TX_Complete && sigdata.data.as_uint())
 		m_txc_intflag.set_flag();
 
 	//If a frame is successfully received, raise the RXC flag
-	else if (data.sigid == AVR_IO_UART::Signal_RX_Complete && data.u)
+	else if (sigdata.sigid == AVR_IO_UART::Signal_RX_Complete && sigdata.data.as_uint())
 		m_rxc_intflag.set_flag();
 }
 

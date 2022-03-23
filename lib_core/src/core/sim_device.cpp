@@ -262,12 +262,12 @@ bool AVR_Device::load_firmware(const AVR_Firmware& firmware)
 	//Send the power supply voltage from the firmware to the VREF controller (if it exists)
 	bool analog_ok = false;
 	if (firmware.vcc > 0.0) {
-		ctlreq_data_t reqdata = { .index = AVR_IO_VREF::Source_Ext_VCC, .d = firmware.vcc };
+		ctlreq_data_t reqdata = { .index = AVR_IO_VREF::Source_Ext_VCC, .data = firmware.vcc };
 		analog_ok = ctlreq(AVR_IOCTL_VREF, AVR_CTLREQ_VREF_SET, &reqdata);
 		if (analog_ok) {
 			//Send the analog voltage reference from the firmware to the VREF controller
 			reqdata.index = AVR_IO_VREF::Source_Ext_AREF;
-			reqdata.d = firmware.aref;
+			reqdata.data = firmware.aref;
 			ctlreq(AVR_IOCTL_VREF, AVR_CTLREQ_VREF_SET, &reqdata);
 		} else {
 			ERROR_LOG(*m_logger, "Firmware load: Unable to set VCC, analog features are unusable.", "");
@@ -314,7 +314,7 @@ void AVR_Device::attach_peripheral(AVR_Peripheral* ctl)
 	m_peripherals.push_back(ctl);
 }
 
-bool AVR_Device::ctlreq(uint32_t id, uint16_t req, ctlreq_data_t *reqdata)
+bool AVR_Device::ctlreq(uint32_t id, uint16_t req, ctlreq_data_t* reqdata)
 {
 	if (id == AVR_IOCTL_CORE) {
 		return core_ctlreq(req, reqdata);
@@ -359,7 +359,7 @@ void AVR_Device::add_ioreg_handler(regbit_t rb, AVR_IO_RegHandler *handler, bool
 	}
 }
 
-bool AVR_Device::core_ctlreq(uint16_t req, ctlreq_data_t *reqdata)
+bool AVR_Device::core_ctlreq(uint16_t req, ctlreq_data_t* reqdata)
 {
 	if (req == AVR_CTLREQ_CORE_BREAK) {
 		if (m_core.m_debug_probe) {

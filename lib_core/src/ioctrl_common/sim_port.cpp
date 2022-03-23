@@ -73,10 +73,10 @@ void AVR_IO_Port::reset()
 /*
  * The one supported request is 0 (get signal)
  */
-bool AVR_IO_Port::ctlreq(uint16_t req, ctlreq_data_t *data)
+bool AVR_IO_Port::ctlreq(uint16_t req, ctlreq_data_t* data)
 {
 	if (req == AVR_CTLREQ_GET_SIGNAL) {
-		data->p = &m_signal;
+		data->data = &m_signal;
 		return true;
 	}
 	return false;
@@ -97,7 +97,7 @@ void AVR_IO_Port::set_pin_internal_state(uint8_t num, AVR_Pin::State state)
 void AVR_IO_Port::raised(const signal_data_t& sigdata, uint16_t hooktag)
 {
 	if (sigdata.sigid == AVR_Pin::Signal_DigitalStateChange) {
-		AVR_Pin::State pin_state = (AVR_Pin::State) sigdata.u;
+		AVR_Pin::State pin_state = (AVR_Pin::State) sigdata.data.as_uint();
 		uint8_t pin_num = hooktag;
 		pin_state_changed(pin_num, pin_state);
 	}

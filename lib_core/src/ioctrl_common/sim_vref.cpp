@@ -34,7 +34,7 @@ AVR_IO_VREF::AVR_IO_VREF()
 AVR_IO_VREF::~AVR_IO_VREF()
 {}
 
-bool AVR_IO_VREF::ctlreq(uint16_t req, ctlreq_data_t *data)
+bool AVR_IO_VREF::ctlreq(uint16_t req, ctlreq_data_t* data)
 {
 	if (req == AVR_CTLREQ_ADC_GET_VREF || req == AVR_CTLREQ_ACP_GET_VREF) {
 		if (m_vcc == 0.0) {
@@ -43,13 +43,13 @@ bool AVR_IO_VREF::ctlreq(uint16_t req, ctlreq_data_t *data)
 		}
 
 		if (data->index == Source_Ext_VCC)
-			data->d = m_vcc;
+			data->data = m_vcc;
 		else if (data->index == Source_Ext_AVCC)
-			data->d = 1.0;
+			data->data = 1.0;
 		else if (data->index == Source_Ext_AREF)
-			data->d = m_aref;
+			data->data = m_aref;
 		else if (data->index == Source_Internal)
-			data->d = get_reference(req == AVR_CTLREQ_ADC_GET_VREF ? User_ADC : User_ACP) / m_vcc;
+			data->data = get_reference(req == AVR_CTLREQ_ADC_GET_VREF ? User_ADC : User_ACP) / m_vcc;
 		else
 			return false;
 

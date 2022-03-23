@@ -126,7 +126,7 @@ void AVR_ArchAVR_WDT::timeout()
 	//cycle to complete beforehand. The state of the device would be
 	//inconsistent otherwise.
 	else {
-		ctlreq_data_t reqdata = { .u = AVR_Device::Reset_WDT };
+		ctlreq_data_t reqdata = { .data = AVR_Device::Reset_WDT };
 		device()->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_RESET, &reqdata);
 	}
 }

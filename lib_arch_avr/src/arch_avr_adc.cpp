@@ -96,16 +96,16 @@ void AVR_ArchAVR_ADC::reset()
 	m_timer.reset();
 }
 
-bool AVR_ArchAVR_ADC::ctlreq(uint16_t req, ctlreq_data_t *data)
+bool AVR_ArchAVR_ADC::ctlreq(uint16_t req, ctlreq_data_t* data)
 {
 	if (req == AVR_CTLREQ_GET_SIGNAL) {
 		if (!m_signal)
 			m_signal = new AVR_Signal;
-		data->p = m_signal;
+		data->data = m_signal;
 		return true;
 	}
 	else if (req == AVR_CTLREQ_ADC_SET_TEMP) {
-		m_temperature = data->d;
+		m_temperature = data->data;
 		return true;
 	}
 	return false;
@@ -465,7 +465,7 @@ void AVR_ArchAVR_ADC::trigger_raised(const signal_data_t& data, uint16_t sigid)
 	//as trigger.
 	//For ExtInt0, the signal is raised for any EXTINT but we can filter by index
 	if (trig_type != CFG::ExtInt0 || data.index == 0)
-		m_trigger_state[sigid] = data.u;
+		m_trigger_state[sigid] = data.data.as_uint();
 
 	//No need to process further if:
 	// - the signal raised is not the selected trigger, or

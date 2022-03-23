@@ -37,13 +37,7 @@ struct signal_data_t {
 	
 	uint16_t sigid;
 	uint32_t index;
-	union {
-		void* p;
-		double d;
-		uint32_t u;
-		int32_t i;
-		const char* s;
-	};
+	vardata_t data;
 
 };
 

@@ -124,64 +124,8 @@ struct ctlreq_data_t {
 #include "core/sim_peripheral.h"
 %End
 
-%TypeCode
-void fill_datareq_with_pyobj(ctlreq_data_t* datareq, PyObject* obj)
-{
-	 if (PyFloat_Check(obj))
-		datareq->d = PyFloat_AsDouble(obj);
-	else if (PyLong_Check(obj))
-		datareq->u = PyLong_AsUnsignedLong(obj);
-	else if (PyUnicode_Check(obj))
-		datareq->s = PyUnicode_AsUTF8(obj);
-	else if (PyBytes_Check(obj))
-		datareq->s = PyBytes_AsString(obj);
-	else {
-		int iserr = 0;
-		const sipTypeDef *sipType = sipTypeFromPyTypeObject((PyTypeObject*)(obj->ob_type));
-		if (sipType)
-			datareq->p = sipConvertToType(obj, sipType, Py_None, 0, SIP_NULLPTR, &iserr);
-		else
-			datareq->p = obj;
-	}
-}
-%End
-
+	vardata_t data;
 	uint32_t index;
-	//void* p;
-	double d /NoSetter/;
-	uint32_t u /NoSetter/;
-	const char* s /NoSetter/;
-	
-	ctlreq_data_t(uint32_t index, SIP_PYOBJECT data);
-	%MethodCode
-		sipCpp = new ctlreq_data_t();
-		sipCpp->index = a0;
-		fill_datareq_with_pyobj(sipCpp, a1);
-	%End
-	
-	void set_data(SIP_PYOBJECT data);
-	%MethodCode
-		fill_datareq_with_pyobj(sipCpp, a0);
-	%End
-	
-	SIP_PYOBJECT ptr(SIP_PYTYPE pytype = SIP_NULLPTR);
-	%MethodCode
-		if (sipCpp->p == SIP_NULLPTR) {
-			Py_INCREF(Py_None);
-			sipRes = Py_None;
-		}
-		else if (a0) {
-			const sipTypeDef *sipType = sipTypeFromPyTypeObject((PyTypeObject*)a0);
-			if (sipType) {
-				sipRes = sipConvertFromType(sipCpp->p, sipType, SIP_NULLPTR);
-			} else {
-				Py_INCREF(Py_None);
-				sipRes = Py_None;
-			}
-		} else {
-			sipRes = sipConvertFromVoidPtr(sipCpp->p);
-		}
-	%End
 
 };
 

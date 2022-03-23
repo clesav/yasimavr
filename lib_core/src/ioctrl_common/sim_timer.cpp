@@ -137,17 +137,17 @@ void AVR_PrescaledTimer::update(cycle_count_t when)
 
 			//Raise the signal to inform the parent peripheral of ticks to consume
 			//Decrement the delay by the number of ticks
-			signal_data_t sig_data;
+			signal_data_t sigdata;
 			if (timeout) {
-				sig_data.index = 1;
-				sig_data.u = m_delay;
+				sigdata.index = 1;
+				sigdata.data = m_delay;
 				m_delay = 0;
 			} else {
-				sig_data.index = 0;
-				sig_data.u = ticks;
+				sigdata.index = 0;
+				sigdata.data = ticks;
 				m_delay -= ticks;
 			}
-			m_signal.raise(sig_data);
+			m_signal.raise(sigdata);
 
 		}
 
