@@ -25,16 +25,27 @@
 #ifndef __YASIMAVR_MEGA0_ADC_H__
 #define __YASIMAVR_MEGA0_ADC_H__
 
-#include "core/sim_peripheral.h"
-#include "core/sim_cycle_timer.h"
 #include "core/sim_interrupt.h"
-#include "core/sim_types.h"
 #include "ioctrl_common/sim_adc.h"
 #include "ioctrl_common/sim_timer.h"
 #include "ioctrl_common/sim_vref.h"
 
 
 //=======================================================================================
+/*
+ * Implementation of a ADC for the Mega-0/Mega-1 series
+ * Unsupported features:
+ *		- Free running (TODO)
+ *		- Sample Capacitance Selection
+ *		- Automatic Sampling Delay Variation
+ *      - Event Control
+ *		- Debug Run Override
+ *		- Duty Cycle calibration
+ *
+ * Note: Without the event control system, only the software can manually start a conversion.
+ * As a workaround, a conversion can be triggered externally by the simulation environment
+ * by using the request AVR_CTLREQ_ADC_FORCE_TRIGGER.
+ */
 
 struct AVR_ArchMega0_ADC_Config {
 	
@@ -42,7 +53,7 @@ struct AVR_ArchMega0_ADC_Config {
 		AVR_IO_VREF::Source source;
 	};
 	
-	std::vector<ADC_channel_config_t> channels;
+	std::vector<AVR_IO_ADC::channel_config_t> channels;
 	std::vector<reference_config_t> references;
 	std::vector<uint16_t> clk_ps_factors;
 	uint16_t clk_ps_max;
@@ -53,17 +64,17 @@ struct AVR_ArchMega0_ADC_Config {
 	int_vect_t iv_resready;
 	int_vect_t iv_wincmp;
 
-	float temp_cal_25C;				//Temperature sensor value in V at +25°C
-	float temp_cal_coef;			//Temperature sensor linear coef in V/°C
+	double temp_cal_25C;			//Temperature sensor value in V at +25 degC
+	double temp_cal_coef;			//Temperature sensor linear coef in V/degC
 };
 
-class DLL_EXPORT AVR_ArchMega0_ADC : public AVR_Peripheral,
+class DLL_EXPORT AVR_ArchMega0_ADC : public AVR_IO_ADC,
+									 public AVR_Peripheral,
 									 public AVR_SignalHook {
 
 public:
 
 	AVR_ArchMega0_ADC(const AVR_ArchMega0_ADC_Config& config);
-	virtual ~AVR_ArchMega0_ADC();
 
 	virtual bool init(AVR_Device& device) override;
 	virtual void reset() override;
@@ -87,7 +98,7 @@ private:
     State m_state;
     bool m_first;
     AVR_PrescaledTimer m_timer;
-    float m_temperature;
+    double m_temperature;
     uint8_t m_latched_ch_mux;
     uint8_t m_latched_ref_mux;
     uint8_t m_accum_counter;
@@ -96,7 +107,7 @@ private:
     uint16_t m_win_hithres;
 	AVR_InterruptFlag m_res_intflag;
 	AVR_InterruptFlag m_cmp_intflag;
-    AVR_Signal* m_signal;
+    AVR_Signal m_signal;
 
     void start_conversion_cycle();
     void read_analog_value();

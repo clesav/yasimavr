@@ -37,15 +37,15 @@ class DLL_EXPORT AVR_ArchAVR_VREF : public AVR_IO_VREF {
 
 public:
 
-	AVR_ArchAVR_VREF(float band_gap);
+	AVR_ArchAVR_VREF(double band_gap);
 
 protected:
 
-	virtual float get_reference(User user) const override;
+	virtual double get_reference(User user) const override;
 
 private:
 
-	float m_band_gap;
+	double m_band_gap;
 
 };
 

@@ -30,7 +30,7 @@ struct AVR_ArchMega0_ADC_Config {
 		AVR_IO_VREF::Source source;
 	};
 	
-	std::vector<ADC_channel_config_t> channels;
+	std::vector<AVR_IO_ADC::channel_config_t> channels;
 	std::vector<AVR_ArchMega0_ADC_Config::reference_config_t> references;
 	UnsignedInt16Vector clk_ps_factors;
 	uint16_t clk_ps_max;
@@ -41,13 +41,14 @@ struct AVR_ArchMega0_ADC_Config {
 	int_vect_t iv_resready;
 	int_vect_t iv_wincmp;
 
-	float temp_cal_25C;
-	float temp_cal_coef;
+	double temp_cal_25C;
+	double temp_cal_coef;
 
 };
 
 
-class AVR_ArchMega0_ADC : public AVR_Peripheral,
+class AVR_ArchMega0_ADC : public AVR_IO_ADC,
+						  public AVR_Peripheral,
 				   		  public AVR_SignalHook
 				   		  /NoDefaultCtors/
 {
@@ -58,7 +59,6 @@ class AVR_ArchMega0_ADC : public AVR_Peripheral,
 public:
 
 	AVR_ArchMega0_ADC(const AVR_ArchMega0_ADC_Config&);
-	virtual ~AVR_ArchMega0_ADC();
 
 	virtual bool init(AVR_Device&);
 	virtual void reset();

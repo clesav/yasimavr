@@ -23,12 +23,8 @@
 
 
 #include "arch_mega0_adc.h"
-
-#include <core/sim_peripheral.h>
-
 #include "arch_mega0_io.h"
 #include "arch_mega0_io_utils.h"
-#include "core/sim_device.h"
 #include "core/sim_sleep.h"
 
 
@@ -59,20 +55,13 @@ AVR_ArchMega0_ADC::AVR_ArchMega0_ADC(const CFG& config)
 ,m_win_hithres(0)
 ,m_res_intflag(false)
 ,m_cmp_intflag(false)
-,m_signal(NULL)
 {}
-
-AVR_ArchMega0_ADC::~AVR_ArchMega0_ADC()
-{
-	if (m_signal)
-		delete m_signal;
-}
 
 bool AVR_ArchMega0_ADC::init(AVR_Device& device)
 {
 	bool status = AVR_Peripheral::init(device);
 
-	add_ioreg(REG_ADDR(CTRLA), ADC_RUNSTBY_bm | ADC_RESSEL_bm | ADC_FREERUN_bm | ADC_ENABLE_bm);
+	add_ioreg(REG_ADDR(CTRLA), ADC_RUNSTBY_bm | ADC_RESSEL_bm | ADC_ENABLE_bm);
 	add_ioreg(REG_ADDR(CTRLB), ADC_SAMPNUM_gm);
 	add_ioreg(REG_ADDR(CTRLC), ADC_PRESC_gm | ADC_REFSEL_gm | ADC_SAMPCAP_bm);
 	add_ioreg(REG_ADDR(CTRLD), ADC_INITDLY_gm | ADC_SAMPDLY_gm); //ASDV not implemented
@@ -120,13 +109,16 @@ void AVR_ArchMega0_ADC::reset()
 bool AVR_ArchMega0_ADC::ctlreq(uint16_t req, ctlreq_data_t* data)
 {
 	if (req == AVR_CTLREQ_GET_SIGNAL) {
-		if (!m_signal)
-			m_signal = new AVR_Signal;
-		data->data = m_signal;
+		data->data = &m_signal;
 		return true;
 	}
 	else if (req == AVR_CTLREQ_ADC_SET_TEMP) {
 		m_temperature = data->data.as_double();
+		return true;
+	}
+	else if (req == AVR_CTLREQ_ADC_FORCE_TRIGGER) {
+		if (m_state == ADC_Idle)
+			start_conversion_cycle();
 		return true;
 	}
 	return false;
@@ -211,8 +203,7 @@ void AVR_ArchMega0_ADC::start_conversion_cycle()
 	m_timer.set_timer_delay(ps_start_ticks);
 
 	//Raise the signal
-	if (m_signal)
-		m_signal->raise_u(ADC_ConversionStarted, m_latched_ch_mux, 0);
+	m_signal.raise_u(Signal_ConversionStarted, m_latched_ch_mux, 0);
 }
 
 /*
@@ -229,13 +220,13 @@ void AVR_ArchMega0_ADC::read_analog_value()
 	DEBUG_LOG(device()->logger(), "ADC reading analog value", "");
 
 	//Find the channel mux configuration
-	int index = find_reg_config<ADC_channel_config_t>(m_config.channels, m_latched_ch_mux);
+	int index = find_reg_config<channel_config_t>(m_config.channels, m_latched_ch_mux);
 	if (index == -1)
 		_crash("ADC: Invalid channel configuration");
 	auto ch_config = &(m_config.channels[index]);
 
 	//Find the reference voltage mux configuration and request the value from the VREF peripheral
-	float vref = 0.0;
+	double vref = 0.0;
 	index = find_reg_config<CFG::reference_config_t>(m_config.references, m_latched_ref_mux);
 	if(index == -1)
 		_crash("ADC: Invalid reference configuration");
@@ -251,13 +242,13 @@ void AVR_ArchMega0_ADC::read_analog_value()
 	double raw_value;
 	switch(ch_config->type) {
 		
-		case ADC_SingleEnded: {
+		case Channel_SingleEnded: {
 			AVR_Pin* p = device()->find_pin(ch_config->pin_p);
 			if (!p) _crash("ADC: Invalid pin configuration");
 			raw_value = p->analog_value();
 		} break;
 
-		case ADC_Differential: {
+		case Channel_Differential: {
 			AVR_Pin* p = device()->find_pin(ch_config->pin_p);
 			if (!p) _crash("ADC: Invalid pin configuration");
 			AVR_Pin* n = device()->find_pin(ch_config->pin_n);
@@ -265,14 +256,14 @@ void AVR_ArchMega0_ADC::read_analog_value()
 			raw_value = p->analog_value() - n->analog_value();
 		} break;
 
-		case ADC_BandGap: {
+		case Channel_BandGap: {
 			ctlreq_data_t reqdata = { .index = AVR_IO_VREF::Source_Internal };
 			if (!device()->ctlreq(AVR_IOCTL_VREF, AVR_CTLREQ_ADC_GET_VREF, &reqdata))
 				_crash("ADC: Unable to obtain the band gap voltage value");
 			raw_value = reqdata.data.as_double();
 		} break;
 
-		case ADC_Temperature: {
+		case Channel_Temperature: {
 			double temp_volt = m_config.temp_cal_coef * (m_temperature - 25.0) + m_config.temp_cal_25C;
 			//The temperature measure obtained is in absolute voltage values.
 			//We need to make it relative to VCC
@@ -282,7 +273,7 @@ void AVR_ArchMega0_ADC::read_analog_value()
 			raw_value = temp_volt / reqdata.data.as_double();
 		} break;
 
-		case ADC_Zero:
+		case Channel_Zero:
 		default:
 			raw_value = 0.0;
 	}
@@ -340,8 +331,7 @@ void AVR_ArchMega0_ADC::raised(const signal_data_t& data, uint16_t sigid)
 	else if (m_state == ADC_PendingConversion) {
 
 		//Raise the signal
-		if (m_signal)
-			m_signal->raise_u(ADC_AboutToSample, m_latched_ch_mux, 0);
+		m_signal.raise_u(Signal_AboutToSample, m_latched_ch_mux, 0);
 
 		//Do the sampling
 		read_analog_value();
@@ -356,8 +346,7 @@ void AVR_ArchMega0_ADC::raised(const signal_data_t& data, uint16_t sigid)
 	else if (m_state == ADC_PendingRaise) {
 
 		//Raise the signal
-		if (m_signal)
-			m_signal->raise_u(ADC_ConversionComplete, m_latched_ch_mux, 0);
+		m_signal.raise_u(Signal_ConversionComplete, m_latched_ch_mux, 0);
 
 		//If we need to accumulate more samples, we return to PendingConversion state
 		//and recall the cycle timer after the sampling delay
@@ -366,6 +355,12 @@ void AVR_ArchMega0_ADC::raised(const signal_data_t& data, uint16_t sigid)
 			m_timer.set_timer_delay(2 + READ_IOREG_F(CTRLD, ADC_SAMPDLY));
 			return;
 		}
+
+		DEBUG_LOG(device()->logger(), "ADC conversion complete", "");
+
+		//Store the result
+		WRITE_IOREG(RESL, m_result & 0xFF);
+		WRITE_IOREG(RESH, (m_result >> 8) & 0xFF);
 
 		m_state = ADC_Idle;
 

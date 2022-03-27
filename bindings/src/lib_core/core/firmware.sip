@@ -36,8 +36,8 @@ public:
 	};
 	
 	uint32_t frequency;
-	float vcc;
-	float aref;
+	double vcc;
+	double aref;
 
 	flash_addr_t flashbase;
 	

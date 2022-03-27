@@ -44,7 +44,7 @@ public:
 
 protected:
 
-	virtual float get_reference(User user) const override;
+	virtual double get_reference(User user) const override;
 
 private:
 

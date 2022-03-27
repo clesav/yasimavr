@@ -26,11 +26,11 @@
 
 //=======================================================================================
 
-AVR_ArchAVR_VREF::AVR_ArchAVR_VREF(float band_gap)
+AVR_ArchAVR_VREF::AVR_ArchAVR_VREF(double band_gap)
 :m_band_gap(band_gap)
 {}
 
-float AVR_ArchAVR_VREF::get_reference(User user) const
+double AVR_ArchAVR_VREF::get_reference(User user) const
 {
 	return m_band_gap;
 }

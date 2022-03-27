@@ -24,10 +24,10 @@ ADC:
         - name: CTRLA
           offset: 0x00
           fields:
-            ENABLE: { kind: BIT, pos: 0, one: on, zero: off }
-            FREERUN: { kind: BIT, pos: 1, one: on, zero: off }
+            ENABLE: { kind: BIT, pos: 0, one: enabled, zero: disabled }
+            FREERUN: { kind: BIT, pos: 1, one: enabled, zero: disabled, supported: no }
             RESSEL: { kind: BIT, pos: 2, one: 8-bits, zero: 10-bits }
-            RUNSTBY: { kind: BIT, pos: 7, one: on, zero: off}
+            RUNSTBY: { kind: BIT, pos: 7, one: enabled, zero: disabled }
 
         - name: CTRLB
           offset: 0x01
@@ -36,7 +36,7 @@ ADC:
                 kind: ENUM
                 LSB: 0
                 MSB: 2
-                values: [ Disabled, Acc2, Acc4, Acc8, Acc16, Acc32, Acc64 ]
+                values: [ Disabled, ACC2, ACC4, ACC8, ACC16, ACC32, ACC64 ]
 
         - name: CTRLC
           offset: 0x02
@@ -45,8 +45,8 @@ ADC:
                 kind: ENUM
                 LSB: 0
                 MSB: 2
-                values: [ Div2,Div4, Div8, Div16,
-                          Div32, Div64, Div128, Div256 ]
+                values: [ DIV2, DIV4, DIV8, DIV16,
+                          DIV32, DIV64, DIV128, DIV256 ]
             REFSEL:
                 kind: ENUM
                 LSB: 4
@@ -68,7 +68,7 @@ ADC:
                 kind: ENUM
                 LSB: 5
                 MSB: 7
-                values: [ Dly0, Dly16, Dly32, Dly64, Dly128, Dly256 ]
+                values: [ DLY0, DLY16, DLY32, DLY64, DLY128, DLY256 ]
 
         - name: CTRLE
           offset: 0x04
@@ -88,7 +88,6 @@ ADC:
                 MSB: 4
                 unit: samples
 
-
         - name: MUXPOS
           offset: 0x06
           fields:
@@ -97,7 +96,7 @@ ADC:
                 LSB: 0
                 MSB: 4
                 values: [AIN0, AIN1, AIN2, AIN3, AIN4, AIN5, AIN6, AIN7,
-                         AIN8 AIN9, AIN10, AIN11, AIN12, AIN13, AIN14, AIN15]
+                         AIN8, AIN9, AIN10, AIN11, AIN12, AIN13, AIN14, AIN15]
                 values2: { 0x1C: DACREF0, 0x1E: TEMPSENSE, 0x1F: GND }
 
         - name: COMMAND
@@ -148,6 +147,20 @@ ADC:
         - name: CALIB
           offset: 0x16
           supported: no
+    
+    config:
+        references:
+            0 : Internal
+            1 : Ext_AVCC
+            2 : Ext_AREF
+        clk_ps_factors: [ 2, 4, 8, 16, 32, 64, 128, 256 ]
+        clk_ps_max: 256
+        init_delays: [0, 16, 32, 64, 128, 256 ]
+        iv_resready: ADC0_RESRDY
+        iv_wincmp: ADC0_WCOMP
+        #arbitrary values below
+        temp_cal_25C: 0.3
+        temp_cal_coef: 0.0011
 
 #========================================================================================
 VREF:

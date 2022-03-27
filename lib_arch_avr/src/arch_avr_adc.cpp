@@ -23,9 +23,7 @@
 
 
 #include "arch_avr_adc.h"
-#include "arch_avr_extint.h"
 #include "arch_avr_timer.h"
-#include "core/sim_device.h"
 #include "core/sim_sleep.h"
 
 
@@ -210,7 +208,7 @@ void AVR_ArchAVR_ADC::start_conversion_cycle()
 
 	//Raise the signal
 	if (m_signal)
-		m_signal->raise_u(0, m_latched_ch_mux, ADC_ConversionStarted);
+		m_signal->raise_u(0, m_latched_ch_mux, Signal_ConversionStarted);
 }
 
 /*
@@ -227,13 +225,13 @@ void AVR_ArchAVR_ADC::read_analog_value()
 	DEBUG_LOG(device()->logger(), "ADC reading analog value", "");
 
 	//Find the channel mux configuration
-	int index = find_reg_config<ADC_channel_config_t>(m_config.channels, m_latched_ch_mux);
+	int index = find_reg_config<channel_config_t>(m_config.channels, m_latched_ch_mux);
 	if (index == -1)
 		_crash("ADC: Invalid channel configuration");
 	auto ch_config = &(m_config.channels[index]);
 
 	//Find the reference voltage mux configuration and request the value from the VREF peripheral
-	float vref = 0.0;
+	double vref = 0.0;
 	index = find_reg_config<CFG::reference_config_t>(m_config.references, m_latched_ref_mux);
 	if(index == -1)
 		_crash("ADC: Invalid reference configuration");
@@ -250,13 +248,13 @@ void AVR_ArchAVR_ADC::read_analog_value()
 	bool bipolar = false;
 	switch(ch_config->type) {
 		
-		case ADC_SingleEnded: {
+		case Channel_SingleEnded: {
 			AVR_Pin* p = device()->find_pin(ch_config->pin_p);
 			if (!p) _crash("ADC: Invalid pin configuration");
 			raw_value = p->analog_value();
 		} break;
 
-		case ADC_Differential: {
+		case Channel_Differential: {
 			AVR_Pin* p = device()->find_pin(ch_config->pin_p);
 			if (!p) _crash("ADC: Invalid pin configuration");
 			AVR_Pin* n = device()->find_pin(ch_config->pin_n);
@@ -265,14 +263,14 @@ void AVR_ArchAVR_ADC::read_analog_value()
 			bipolar = test_ioreg(m_config.rb_bipolar);
 		} break;
 
-		case ADC_BandGap: {
+		case Channel_BandGap: {
 			ctlreq_data_t reqdata = { .index = AVR_IO_VREF::Source_Internal };
 			if (!device()->ctlreq(AVR_IOCTL_VREF, AVR_CTLREQ_ADC_GET_VREF, &reqdata))
 				_crash("ADC: Unable to obtain the band gap voltage value");
 			raw_value = reqdata.data.as_double();
 		} break;
 
-		case ADC_Temperature: {
+		case Channel_Temperature: {
 			double temp_volt = m_config.temp_cal_coef * (m_temperature - 25.0) + m_config.temp_cal_25C;
 			//The temperature measure obtained is in absolute voltage values.
 			//We need to make it relative to VCC
@@ -282,7 +280,7 @@ void AVR_ArchAVR_ADC::read_analog_value()
 			raw_value = temp_volt / reqdata.data.as_double();
 		} break;
 
-		case ADC_Zero:
+		case Channel_Zero:
 		default:
 			raw_value = 0.0;
 	}
@@ -308,7 +306,7 @@ void AVR_ArchAVR_ADC::timer_raised()
 	if (m_state == ADC_PendingConversion) {
 		//Raise the signal
 		if (m_signal)
-			m_signal->raise_u(ADC_AboutToSample, m_latched_ch_mux, 0);
+			m_signal->raise_u(Signal_AboutToSample, m_latched_ch_mux, 0);
 
 		read_analog_value();
 
@@ -324,7 +322,7 @@ void AVR_ArchAVR_ADC::timer_raised()
 
 		//Raise the signal
 		if (m_signal)
-			m_signal->raise_u(ADC_ConversionComplete, m_latched_ch_mux, 0);
+			m_signal->raise_u(Signal_ConversionComplete, m_latched_ch_mux, 0);
 
 		//Store the converted value in the data register according to the adjusting
 		write_digital_value();

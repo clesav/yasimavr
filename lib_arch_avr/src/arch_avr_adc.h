@@ -24,7 +24,6 @@
 #ifndef __YASIMAVR_AVR_ADC_H__
 #define __YASIMAVR_AVR_ADC_H__
 
-#include "core/sim_peripheral.h"
 #include "core/sim_interrupt.h"
 #include "ioctrl_common/sim_adc.h"
 #include "ioctrl_common/sim_timer.h"
@@ -55,7 +54,7 @@ struct AVR_ArchAVR_ADC_Config {
 		TriggerType trig_type;
 	};
 	
-	std::vector<ADC_channel_config_t> channels;
+	std::vector<AVR_IO_ADC::channel_config_t> channels;
 	std::vector<reference_config_t> references;
 	std::vector<uint16_t> clk_ps_factors;
 	std::vector<trigger_config_t> triggers;
@@ -77,12 +76,13 @@ struct AVR_ArchAVR_ADC_Config {
 
 	int_vect_t int_vector;
 
-	float temp_cal_25C;				//Temperature sensor value in V at +25°C
-	float temp_cal_coef;			//Temperature sensor linear coef in V/°C
+	double temp_cal_25C;			//Temperature sensor value in V at +25°C
+	double temp_cal_coef;			//Temperature sensor linear coef in V/°C
 };
 
 
-class DLL_EXPORT AVR_ArchAVR_ADC : public AVR_Peripheral,
+class DLL_EXPORT AVR_ArchAVR_ADC : public AVR_IO_ADC,
+								   public AVR_Peripheral,
 								   public AVR_SignalHook {
 
 public:
@@ -124,7 +124,7 @@ private:
     std::vector<bool> m_trigger_state;
 
 	//Simulated device temperature value in deg Celsius
-    float m_temperature;
+    double m_temperature;
 
 	//Configuration values for the channel and reference latched at the start of a conversion
     uint8_t m_latched_ch_mux;

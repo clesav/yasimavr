@@ -45,10 +45,10 @@ class AVR_IO_VREF : public AVR_Peripheral /Abstract/ {
 public:
 
 	enum Source {
-		Source_Ext_VCC,
-		Source_Ext_AVCC,
-		Source_Ext_AREF,
-		Source_Internal
+		Source_Ext_VCC			/PyName=Ext_VCC/,
+		Source_Ext_AVCC			/PyName=Ext_AVCC/,
+		Source_Ext_AREF			/PyName=Ext_AREF/,
+		Source_Internal			/PyName=Internal/,
 	};
 
 	enum User {
@@ -63,9 +63,9 @@ public:
 
 protected:
 
-	virtual float get_reference(AVR_IO_VREF::User user) const = 0;
+	virtual double get_reference(AVR_IO_VREF::User user) const = 0;
 	
-	float vcc() const;
-	float aref() const;
+	double vcc() const;
+	double aref() const;
 
 };

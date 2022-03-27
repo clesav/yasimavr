@@ -26,38 +26,46 @@
 #include "ioctrl_common/sim_adc.h"
 
 const uint16_t CTLREQ_ADC_SET_TEMP = AVR_CTLREQ_ADC_SET_TEMP;
+const uint16_t CTLREQ_ADC_FORCE_TRIGGER= AVR_CTLREQ_ADC_FORCE_TRIGGER;
 
 %End
 
 const uint16_t CTLREQ_ADC_SET_TEMP;
+const uint16_t CTLREQ_ADC_FORCE_TRIGGER;
 
 
 //=======================================================================================
 
-enum ADC_Channel {
-	ADC_SingleEnded,
-	ADC_Differential,
-	ADC_Zero,
-	ADC_BandGap,
-	ADC_Temperature,
-	ADC_AcompRef
-};
-
-
-struct ADC_channel_config_t : base_reg_config_t {
+class AVR_IO_ADC {
 %TypeHeaderCode
 #include "ioctrl_common/sim_adc.h"
 %End
 
-	ADC_Channel type;
-	uint32_t pin_p;
-	uint32_t pin_n;
+public:
 
-};
+	enum Channel {
+		Channel_SingleEnded		/PyName=SingleEnded/,
+		Channel_Differential	/PyName=Differential/,
+		Channel_Zero			/PyName=Zero/,
+		Channel_BandGap			/PyName=BandGap/,
+		Channel_Temperature		/PyName=Temperature/,
+		Channel_AcompRef		/PyName=AcompRef/,
+	};
 
 
-enum ADC_SignalPhase /BaseType=IntEnum/ {
-	ADC_ConversionStarted,
-	ADC_AboutToSample,
-	ADC_ConversionComplete
+	struct channel_config_t : base_reg_config_t {
+
+		AVR_IO_ADC::Channel type;
+		uint32_t pin_p;
+		uint32_t pin_n;
+
+	};
+
+
+	enum SignalId /BaseType=IntEnum/ {
+		Signal_ConversionStarted	/PyName=ConversionStarted/,
+		Signal_AboutToSample		/PyName=AboutToSample/,
+		Signal_ConversionComplete	/PyName=ConversionComplete/,
+	};
+	
 };

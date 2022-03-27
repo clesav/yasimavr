@@ -36,16 +36,14 @@ def get_core_config(dev_desc):
     
     cfg.attributes = get_core_attributes(dev_desc)
     
-    cfg.iostart, cfg.ioend = dev_desc.mem_files['data'].segments['io']
-    cfg.ramstart, cfg.ramend = dev_desc.mem_files['data'].segments['sram']
-    cfg.flashstart_ds, cfg.flashend_ds = dev_desc.mem_files['data'].segments['flash']
-    cfg.eepromstart_ds, cfg.eepromend_ds = dev_desc.mem_files['data'].segments['eeprom']
+    cfg.iostart, cfg.ioend = dev_desc.mem_spaces['data'].segments['io']
+    cfg.ramstart, cfg.ramend = dev_desc.mem_spaces['data'].segments['sram']
+    cfg.flashstart_ds, cfg.flashend_ds = dev_desc.mem_spaces['data'].segments['flash']
+    cfg.eepromstart_ds, cfg.eepromend_ds = dev_desc.mem_spaces['data'].segments['eeprom']
     
-    cfg.dataend = dev_desc.mem_files['data'].end
-    
-    cfg.flashend = dev_desc.mem_files['flash'].end
-    
-    cfg.eepromend = dev_desc.mem_files['eeprom'].end
+    cfg.dataend = dev_desc.mem_spaces['data'].memend
+    cfg.flashend = dev_desc.mem_spaces['flash'].memend
+    cfg.eepromend = dev_desc.mem_spaces['eeprom'].memend
     
     cfg.eind = dev_desc.peripherals['CPU'].reg_address('EIND', 0)
     cfg.rampz = dev_desc.peripherals['CPU'].reg_address('RAMPZ', 0)
@@ -167,3 +165,50 @@ _RTC_ConfigBuilder = _PeripheralConfigBuilder(_archlib.AVR_ArchMega0_RTC_Config,
 
 def get_rtc_config(per_desc):
     return _RTC_ConfigBuilder(per_desc)
+
+#========================================================================================
+#ADC management configuration
+
+def _adc_convertor(cfg, attr, yml_val, per_desc):
+    if attr == 'channels':
+        py_chans = []
+        for reg_value, item in yml_val.items():
+            chan_cfg = _corelib.AVR_IO_ADC.channel_config_t()
+            chan_cfg.reg_value = reg_value
+            if isinstance(item, list):
+                chan_type = item[0]
+                if len(item) >= 2:
+                    chan_cfg.pin_p = _corelib.str_to_id(item[1])
+                if len(item) >= 3:
+                    chan_cfg.pin_n = _corelib.str_to_id(item[2])
+            else:
+                chan_type = item
+            
+            chan_cfg.type = _corelib.AVR_IO_ADC.Channel[chan_type]
+            py_chans.append(chan_cfg)
+            
+        cfg.channels = py_chans
+    
+    elif attr == 'references':
+        py_refs = []
+        for reg_value, item in yml_val.items():
+            ref_cfg = _archlib.AVR_ArchMega0_ADC_Config.reference_config_t()
+            ref_cfg.reg_value = reg_value
+            ref_cfg.source = _corelib.AVR_IO_VREF.Source[item]
+            py_refs.append(ref_cfg)
+        
+        cfg.references = py_refs
+    
+    elif attr == 'clk_ps_factors':
+        cfg.clk_ps_factors = yml_val
+    
+    elif attr == 'init_delays':
+        cfg.init_delays = yml_val
+    
+    else:
+        raise Exception('Converter not implemented for ' + attr)
+
+_ADC_ConfigBuilder = _PeripheralConfigBuilder(_archlib.AVR_ArchMega0_ADC_Config, _adc_convertor)
+
+def get_adc_config(per_desc):
+    return _ADC_ConfigBuilder(per_desc)

@@ -85,24 +85,24 @@ public:
 protected:
 
 	//Sub-classes reimplement this to provide the reference values (in volts, absolute)
-	virtual float get_reference(User user) const = 0;
+	virtual double get_reference(User user) const = 0;
 
-	float vcc() const;
-	float aref() const;
+	double vcc() const;
+	double aref() const;
 
 private:
 
-	float m_vcc;
-	float m_aref;
+	double m_vcc;
+	double m_aref;
 
 };
 
-inline float AVR_IO_VREF::vcc() const
+inline double AVR_IO_VREF::vcc() const
 {
 	return m_vcc;
 }
 
-inline float AVR_IO_VREF::aref() const
+inline double AVR_IO_VREF::aref() const
 {
 	return m_aref;
 }

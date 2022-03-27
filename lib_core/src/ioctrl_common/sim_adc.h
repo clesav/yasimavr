@@ -33,6 +33,7 @@
  * CTLREQ definitions
 */
 #define AVR_CTLREQ_ADC_SET_TEMP			1
+#define AVR_CTLREQ_ADC_FORCE_TRIGGER	2
 
 
 //=======================================================================================
@@ -40,25 +41,31 @@
  * Configuration enumerations and structures
 */
 
-enum ADC_Channel {
-	ADC_SingleEnded,
-	ADC_Differential,
-	ADC_Zero,
-	ADC_BandGap,
-	ADC_Temperature,
-	ADC_AcompRef
-};
+class AVR_IO_ADC {
 
-struct ADC_channel_config_t : base_reg_config_t {
-	ADC_Channel type;
-	uint32_t pin_p;
-	uint32_t pin_n;
-};
+public:
 
-enum ADC_SignalPhase {
-	ADC_ConversionStarted,
-	ADC_AboutToSample,
-	ADC_ConversionComplete
+	enum Channel {
+		Channel_SingleEnded,
+		Channel_Differential,
+		Channel_Zero,
+		Channel_BandGap,
+		Channel_Temperature,
+		Channel_AcompRef
+	};
+
+	struct channel_config_t : base_reg_config_t {
+		Channel type;
+		uint32_t pin_p;
+		uint32_t pin_n;
+	};
+
+	enum SignalId {
+		Signal_ConversionStarted,
+		Signal_AboutToSample,
+		Signal_ConversionComplete,
+	};
+
 };
 
 #endif //__YASIMAVR_IO_ADC_H__

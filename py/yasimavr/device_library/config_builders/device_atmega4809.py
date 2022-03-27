@@ -21,17 +21,17 @@
 This module initialises a ATmega4809
 '''
 
-import ..lib.core as _corelib
-import ..lib.arch_m0 as _archlib
-from ..descriptors import load_descriptor
-from .convertors_mega0 import *
+from ...lib import core as _corelib
+from ...lib import arch_m0 as _archlib
+from ..descriptors import DeviceDescriptor
+from .convertors_m0 import *
 
 DEV_NAME = 'atmega4809'
 
 #========================================================================================
 #Configuration structures
 
-_desc = load_descriptor(DEV_NAME)
+_desc = DeviceDescriptor(DEV_NAME)
 
 core_config = get_core_config(_desc)
 device_config = get_dev_config(_desc, core_config)
@@ -50,6 +50,10 @@ port_configs = [(s, get_port_config(_desc.peripherals['PORT' + s]))
 tca_config = get_tca_config(_desc.peripherals['TCA0'])
 tcb_configs = [get_tcb_config(_desc.peripherals['TCB' + str(n)])
                for n in range(4)]
+#ADC
+adc_config = get_adc_config(_desc.peripherals['ADC'])
+#VREF
+vref_base = _desc.peripherals['VREF'].reg_base
                
 del _desc
 
@@ -75,6 +79,9 @@ class dev_atmega4809(_archlib.AVR_ArchMega0_Device):
         self.attach_peripheral(_archlib.AVR_ArchMega0_TimerA(tca_config))
         for n, cfg in enumerate(tcb_configs):
             self.attach_peripheral(_archlib.AVR_ArchMega0_TimerB(n, cfg))
+        
+        self.attach_peripheral(_archlib.AVR_ArchMega0_ADC(adc_config))
+        self.attach_peripheral(_archlib.AVR_ArchMega0_VREF(vref_base))
 
 
 DEV_CLASS = dev_atmega4809

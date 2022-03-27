@@ -46,7 +46,7 @@ public:
 
 protected:
 
-	virtual float get_reference(AVR_IO_VREF::User) const;
+	virtual double get_reference(AVR_IO_VREF::User) const;
 	
 };
 

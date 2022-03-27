@@ -46,7 +46,7 @@ struct AVR_ArchAVR_ADC_Config {
 		AVR_ArchAVR_ADC_Config::TriggerType trig_type;
 	};
 
-	std::vector<ADC_channel_config_t> channels;
+	std::vector<AVR_IO_ADC::channel_config_t> channels;
 	std::vector<AVR_ArchAVR_ADC_Config::reference_config_t> references;
 	UnsignedInt16Vector clk_ps_factors;
 	std::vector<AVR_ArchAVR_ADC_Config::trigger_config_t> triggers;
@@ -68,12 +68,13 @@ struct AVR_ArchAVR_ADC_Config {
 
 	int_vect_t int_vector;
 
-	float temp_cal_25C;
-	float temp_cal_coef;
+	double temp_cal_25C;
+	double temp_cal_coef;
 };
 
 
-class AVR_ArchAVR_ADC : public AVR_Peripheral,
+class AVR_ArchAVR_ADC : public AVR_IO_ADC,
+						public AVR_Peripheral,
 				   		public AVR_SignalHook
 				   		/NoDefaultCtors/ {
 %TypeHeaderCode

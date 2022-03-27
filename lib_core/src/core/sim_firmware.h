@@ -39,8 +39,8 @@ public:
 
 	std::string			variant;
 	uint32_t			frequency;
-	float				vcc;
-	float				aref;
+	double				vcc;
+	double				aref;
 
 	flash_addr_t		flashbase;
 	uint8_t*			flash;

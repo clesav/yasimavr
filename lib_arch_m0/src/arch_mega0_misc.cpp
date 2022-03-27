@@ -45,7 +45,7 @@ bool AVR_ArchMega0_VREF::init(AVR_Device& device)
 	return status;
 }
 
-float AVR_ArchMega0_VREF::get_reference(User user) const
+double AVR_ArchMega0_VREF::get_reference(User user) const
 {
 	bitmask_t bm;
 	if (user == User_ADC)

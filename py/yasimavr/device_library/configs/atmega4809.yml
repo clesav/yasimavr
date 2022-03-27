@@ -222,3 +222,33 @@ peripherals:
     # WDT: not ready
         # file: Mega0-Mega1_timers.yml
         # base: 0x0100
+    
+    VREF:
+        file: Mega0-Mega1_analog.yml
+        base: 0x00A0
+    
+    ADC:
+        file: Mega0-Mega1_analog.yml
+        base: 0x0600
+        config:
+            channels:
+                0x00 : [ SingleEnded, PD0 ]
+                0x01 : [ SingleEnded, PD1 ]
+                0x02 : [ SingleEnded, PD2 ]
+                0x03 : [ SingleEnded, PD3 ]
+                0x04 : [ SingleEnded, PD4 ]
+                0x05 : [ SingleEnded, PD5 ]
+                0x06 : [ SingleEnded, PD6 ]
+                0x07 : [ SingleEnded, PD7 ]
+                0x08 : [ SingleEnded, PE0 ]
+                0x09 : [ SingleEnded, PE1 ]
+                0x0A : [ SingleEnded, PE2 ]
+                0x0B : [ SingleEnded, PE3 ]
+                0x0C : [ SingleEnded, PF2 ]
+                0x0D : [ SingleEnded, PF3 ]
+                0x0E : [ SingleEnded, PF4 ]
+                0x0F : [ SingleEnded, PF5 ]
+                0x1C : AcompRef
+                0x1E : Temperature
+                0x1F : Zero
+

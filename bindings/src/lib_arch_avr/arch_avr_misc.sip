@@ -28,11 +28,11 @@ class AVR_ArchAVR_VREF : public AVR_IO_VREF {
 
 public:
 
-	AVR_ArchAVR_VREF(float);
+	AVR_ArchAVR_VREF(double);
 
 protected:
 
-	virtual float get_reference(AVR_IO_VREF::User user) const;
+	virtual double get_reference(AVR_IO_VREF::User user) const;
 };
 
 
