@@ -68,6 +68,11 @@ class _FieldAccessor:
         rv = self._reg.read()
         shift, bitmask = self._field.shift_mask()
         return (rv >> shift) & bitmask
+    
+    def __str__(self):
+        return '%s.%s [%s]' % (self._reg.name, self._field.name, str(self.read()))
+    
+    __repr__ = __str__
 
 
 class BitFieldAccessor(_FieldAccessor):
@@ -173,8 +178,10 @@ class RegisterAccessor:
         return '%s.%s' % (self._per.name, self._reg.name)
     
     def __str__(self):
-        pattern = '%%s[0x%%0%dx]' % (self._reg.size * 2)
+        pattern = '%%s [0x%%0%dx]' % (self._reg.size * 2)
         return pattern % (self.name, self.read())
+    
+    __repr__ = __str__
     
     def __int__(self):
         return self.read()

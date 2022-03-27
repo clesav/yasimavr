@@ -37,7 +37,7 @@ class AVR_IO_Port;
  * It is resolved into a single electrical state. In case of conflict, the SHORTED state is
  * set.
  */
-class DLL_EXPORT AVR_Pin {
+class DLL_EXPORT AVR_Pin : public AVR_SignalHook {
 
 public:
 
@@ -84,6 +84,9 @@ public:
 	double analog_value() const;
 	//Signal raised for state/value changes
 	AVR_Signal& signal();
+	
+	//Implementation of the AVR_SignalHook interface to receive changes
+	virtual void raised(const signal_data_t& sigdata, uint16_t hootag) override;
 
 private:
 

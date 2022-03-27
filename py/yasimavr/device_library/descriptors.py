@@ -87,7 +87,8 @@ class InterruptMapDescriptor:
 class RegisterFieldDescriptor:
     '''Descriptor class for a field of a I/O register'''
     
-    def __init__(self, field_config, reg_size):
+    def __init__(self, field_name, field_config, reg_size):
+        self.name = field_name
         self.kind = str(field_config.get('kind', 'RAW'))
         
         if self.kind == 'BIT':
@@ -153,7 +154,7 @@ class RegisterDescriptor:
         
         self.fields = {}
         for field_name, field_config in dict(reg_config.get('fields', {})).items():
-            self.fields[field_name] = RegisterFieldDescriptor(field_config, self.size)
+            self.fields[field_name] = RegisterFieldDescriptor(field_name, field_config, self.size)
         
         self.readonly = bool(reg_config.get('readonly', False))
         self.supported = bool(reg_config.get('supported', True))

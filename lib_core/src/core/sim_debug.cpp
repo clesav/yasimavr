@@ -26,6 +26,14 @@
 #include "sim_core.h"
 #include <cstring>
 
+#define ADJUST_ADDR_LEN(addr, len, end) \
+	if ((addr) > (end))                    \
+		(addr) = (end);                    \
+	if (!(end))                            \
+		(len) = 0;                         \
+	else if ((len) > ((end) + 1 - (addr))) \
+		(len) = ((end) + 1 - (addr));
+
 
 //=======================================================================================
 
@@ -33,8 +41,18 @@ AVR_DeviceDebugProbe::AVR_DeviceDebugProbe()
 :m_device(nullptr)
 {}
 
-AVR_DeviceDebugProbe::~AVR_DeviceDebugProbe()
+void AVR_DeviceDebugProbe::attach(AVR_Device& device)
 {
+	if (m_device) return;
+	
+	m_device = &device;
+	device.core().dbg_set_debug_probe(this);
+}
+
+void AVR_DeviceDebugProbe::detach()
+{
+	if (!m_device) return;
+	
 	//Destroys all the breakpoints
 	for (auto it = m_breakpoints.begin(); it != m_breakpoints.end(); ++it) {
 		breakpoint_t* bp = it->second;
@@ -49,20 +67,8 @@ AVR_DeviceDebugProbe::~AVR_DeviceDebugProbe()
 		delete wp;
 	}
 	m_watchpoints.clear();
-
-	detach();
-}
-
-void AVR_DeviceDebugProbe::attach(AVR_Device& device)
-{
-	m_device = &device;
-	device.core().dbg_set_debug_probe(this);
-}
-
-void AVR_DeviceDebugProbe::detach()
-{
-	if (m_device)
-		m_device->core().dbg_set_debug_probe(nullptr);
+	
+	m_device->core().dbg_set_debug_probe(nullptr);
 	m_device = nullptr;
 }
 
@@ -150,21 +156,17 @@ uint8_t AVR_DeviceDebugProbe::read_ioreg(reg_addr_t addr)
 void AVR_DeviceDebugProbe::write_flash(flash_addr_t addr, uint8_t* buf, uint32_t len)
 {
 	AVR_Core& core = m_device->core();
-
-	if ((addr + len) > core.config().flashend)
-		len = core.config().flashend - addr + 1;
+	
+	ADJUST_ADDR_LEN(addr, len, core.config().flashend);
 
 	memcpy(core.m_flash + addr, buf, len);
 }
 
 uint32_t AVR_DeviceDebugProbe::read_flash(flash_addr_t addr, uint8_t* buf, uint32_t len)
 {
-	memset(buf, 0xFF, len);
-
 	AVR_Core& core = m_device->core();
 
-	if ((addr + len) > core.config().flashend)
-		len = core.config().flashend - addr + 1;
+	ADJUST_ADDR_LEN(addr, len, core.config().flashend);
 
 	memcpy(buf, core.m_flash + addr, len);
 

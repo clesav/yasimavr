@@ -176,3 +176,11 @@ AVR_Pin::State AVR_Pin::digital_state() const
 			return m_analog_value > 0.5 ? State_High : State_Low;
 	}
 }
+
+void AVR_Pin::raised(const signal_data_t& sigdata, uint16_t __unused)
+{
+	if (sigdata.sigid == Signal_DigitalStateChange)
+		set_external_state((State) sigdata.data.as_uint());
+	else if (sigdata.sigid == Signal_AnalogValueChange)
+		set_external_analog_value(sigdata.data.as_double());
+}

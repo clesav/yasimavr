@@ -48,12 +48,15 @@ public:
 	};
 
 	AVR_DeviceDebugProbe();
-    ~AVR_DeviceDebugProbe();
     
     AVR_Device* device() const;
 
+	//Attaches the probe to a device, allowing access to its internals
     void attach(AVR_Device& device);
+	//Detaches the probe from the device. it MUST be called before
+	//destruction.
     void detach();
+	
     bool attached() const;
 
     void reset_device();
