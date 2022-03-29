@@ -78,15 +78,15 @@ bool AVR_ArchAVR_Timer::init(AVR_Device& device)
 	add_ioreg(m_config.reg_int_enable, int_bitmask);
 	add_ioreg(m_config.reg_int_flag, int_bitmask);
 
-	m_intflag_ovf.init(device,
+	status &= m_intflag_ovf.init(device,
 				   	   regbit_t(m_config.reg_int_enable, m_config.int_ovf.bit),
 					   regbit_t(m_config.reg_int_flag, m_config.int_ovf.bit),
 					   m_config.int_ovf.vector);
-	m_intflag_ocra.init(device,
+	status &= m_intflag_ocra.init(device,
 				   		regbit_t(m_config.reg_int_enable, m_config.int_ocra.bit),
 					    regbit_t(m_config.reg_int_flag, m_config.int_ocra.bit),
 					    m_config.int_ocra.vector);
-	m_intflag_ocrb.init(device,
+	status &= m_intflag_ocrb.init(device,
 				   		regbit_t(m_config.reg_int_enable, m_config.int_ocrb.bit),
 					    regbit_t(m_config.reg_int_flag, m_config.int_ocrb.bit),
 					    m_config.int_ocrb.vector);
@@ -121,11 +121,11 @@ void AVR_ArchAVR_Timer::ioreg_read_handler(reg_addr_t addr)
 {
 	//reading of interrupt flags
 	if (addr == m_config.reg_int_flag)
-		m_timer.update(device()->cycle());
+		m_timer.update();
 
 	//8 or 16 bits reading of CNTx
 	else if (addr == m_config.reg_cnt) {
-		m_timer.update(device()->cycle());
+		m_timer.update();
 		write_ioreg(m_config.reg_cnt, m_cnt & 0x00FF);
 		if (m_config.is_16bits)
 			m_temp = m_cnt >> 8;
@@ -273,13 +273,18 @@ void AVR_ArchAVR_Timer::raised(const signal_data_t& sigdata, uint16_t __unused)
 
 	if (!sigdata.index) return;
 
+	//Find the timer mode currently selected
+	uint8_t mode_reg = read_ioreg(m_config.rb_mode) |
+					 (read_ioreg(m_config.rb_mode_ext) << m_config.rb_mode.bitcount());
+	int mode_index = find_reg_config<AVR_ArchAVR_TimerConfig::mode_config_t>(m_config.modes, mode_reg);
+	AVR_ArchAVR_TimerConfig::Mode timer_mode = m_config.modes[mode_index].mode;
+
 	if (m_next_event_type & TimerEventCompA) {
 		DEBUG_LOG(device()->logger(), "Timer %s triggering interrupt OCRA", name().c_str());
 
 		if (m_intflag_ocra.set_flag())
 			m_intflag_signal.raise_u(Signal_CompA, 0, 1);
 
-		uint8_t timer_mode = mode();
 		if (timer_mode == AVR_ArchAVR_TimerConfig::MODE_CTC)
 			m_cnt = 0;
 	}

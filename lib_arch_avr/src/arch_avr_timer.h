@@ -141,11 +141,6 @@ private:
 
     uint32_t delay_to_event();
 
-    inline uint8_t mode() const
-    {
-    	return read_ioreg(m_config.rb_mode) | (read_ioreg(m_config.rb_mode_ext) << m_config.rb_mode.bitcount());
-    }
-
 };
 
 #endif //__YASIMAVR_AVR_TIMER_H__

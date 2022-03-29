@@ -147,12 +147,12 @@ void AVR_ArchMega0_RTC::ioreg_read_handler(reg_addr_t addr)
 
 	//16-bits reading of CNT
 	if (reg_ofs == REG_OFS(CNTL)) {
-		m_rtc_timer.update(device()->cycle());
+		m_rtc_timer.update();
 		write_ioreg(REG_ADDR(CNTL), m_rtc_cnt & 0x00FF);
 		write_ioreg(REG_ADDR(TEMP), m_rtc_cnt >> 8);
 	}
 	else if (reg_ofs == REG_OFS(CNTH)) {
-		m_rtc_timer.update(device()->cycle());
+		m_rtc_timer.update();
 		write_ioreg(REG_ADDR(CNTH), m_rtc_cnt >> 8);
 	}
 
@@ -215,7 +215,7 @@ void AVR_ArchMega0_RTC::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t
 	}
 	else if (reg_ofs == REG_OFS(PERH)) {
 		uint8_t temp = read_ioreg(REG_ADDR(TEMP));
-		m_rtc_timer.update(device()->cycle());
+		m_rtc_timer.update();
 		m_rtc_per = temp | (data.value << 8);
 		do_rtc_reschedule = true;
 	}
@@ -226,7 +226,7 @@ void AVR_ArchMega0_RTC::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t
 	}
 	else if (reg_ofs == REG_OFS(CMPH)) {
 		uint8_t temp = read_ioreg(REG_ADDR(TEMP));
-		m_rtc_timer.update(device()->cycle());
+		m_rtc_timer.update();
 		m_rtc_cmp = temp | (data.value << 8);
 		do_rtc_reschedule = true;
 	}

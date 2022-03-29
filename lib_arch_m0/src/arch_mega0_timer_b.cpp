@@ -52,8 +52,8 @@ AVR_ArchMega0_TimerB::AVR_ArchMega0_TimerB(int num, const AVR_ArchMega0_TimerB_C
 ,m_clk_mode(TIMER_CLOCK_DISABLED)
 ,m_cnt(0)
 ,m_ccmp(0)
-,m_next_event_type(0)
 ,m_intflag(false)
+,m_next_event_type(0)
 {}
 
 bool AVR_ArchMega0_TimerB::init(AVR_Device& device)
@@ -74,12 +74,9 @@ bool AVR_ArchMega0_TimerB::init(AVR_Device& device)
 	add_ioreg(REG_ADDR(CCMPH));
 	
 	status &= m_intflag.init(device,
-							 DEF_REGBIT_B(INTFLAGS, TCB_CAPT),
 							 DEF_REGBIT_B(INTCTRL, TCB_CAPT),
+							 DEF_REGBIT_B(INTFLAGS, TCB_CAPT),
 							 m_config.iv_capt);
-
-	ctlreq_data_t d = { .data = this, .index = 0 };
-	status &= device.ctlreq(AVR_IOCTL_TIMER('A', '0'), AVR_CTLREQ_TCA_REGISTER_TCB, &d);
 
 	m_timer.init(device.cycle_manager(), device.logger());
 	m_timer.signal().connect_hook(this);
@@ -103,7 +100,7 @@ void AVR_ArchMega0_TimerB::ioreg_read_handler(reg_addr_t addr)
 
 	//16-bits reading of CNT
 	if (reg_ofs == REG_OFS(CNTL)) {
-		m_timer.update(device()->cycle());
+		m_timer.update();
 		write_ioreg(REG_ADDR(CNTL), m_cnt & 0x00FF);
 		write_ioreg(REG_ADDR(TEMP), m_cnt >> 8);
 	}
@@ -141,13 +138,21 @@ void AVR_ArchMega0_TimerB::ioreg_write_handler(reg_addr_t addr, const ioreg_writ
 			DEBUG_LOG(device()->logger(), "Timer %s disabled", name().c_str());
 		}
 
+		//Check if we need to chain or de-chain the TCB timer from TCA
+		bool is_chained = (old_clk_mode == TCB_CLKSEL_CLKTCA_gc);
+		bool to_chain = (m_clk_mode == TCB_CLKSEL_CLKTCA_gc);
+		if (to_chain != is_chained) {
+			ctlreq_data_t d = { .data = &m_timer, .index = (uint32_t)(to_chain ? 1 : 0) };
+			device()->ctlreq(AVR_IOCTL_TIMER('A', '0'), AVR_CTLREQ_TCA_REGISTER_TCB, &d);
+		}
+
 		//If the TCB clock mode has changed, reconfigure the timer prescaler
 		if (m_clk_mode != old_clk_mode) {
-			if (m_clk_mode == TCB_CLKSEL_CLKDIV1_gc)
+			if (m_clk_mode == TCB_CLKSEL_CLKDIV1_gc || m_clk_mode == TCB_CLKSEL_CLKTCA_gc)
 				m_timer.set_prescaler(2, 1);
 			else if (m_clk_mode == TCB_CLKSEL_CLKDIV2_gc)
 				m_timer.set_prescaler(2, 2);
-			else //disabled or TCB_CLKSEL_CLKTCA_gc
+			else //disabled
 				m_timer.set_prescaler(2, 0);
 		}
 	}
@@ -215,11 +220,6 @@ uint32_t AVR_ArchMega0_TimerB::delay_to_event()
 	return ticks_to_next_event;
 }
 
-bool AVR_ArchMega0_TimerB::synched_mode_enabled() const
-{
-	return (m_clk_mode == TCB_CLKSEL_CLKTCA_gc);
-}
-
 void AVR_ArchMega0_TimerB::raised(const signal_data_t& sigdata, uint16_t __unused)
 {
 	m_cnt += sigdata.data.as_uint();
@@ -230,9 +230,6 @@ void AVR_ArchMega0_TimerB::raised(const signal_data_t& sigdata, uint16_t __unuse
 	
 	if (m_next_event_type & TimerEventComp) {
 		m_intflag.set_flag();
-		//if (m_intflag.trigger(TCB_CAPT_bm))
-		//	m_intflag_signal.raise_u(0, 1);
-
 		m_cnt = 0;
 	}
 

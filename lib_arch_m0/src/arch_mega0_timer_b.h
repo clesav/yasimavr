@@ -53,6 +53,7 @@ class DLL_EXPORT AVR_ArchMega0_TimerB : public AVR_Peripheral, public AVR_Signal
 public:
 
 	AVR_ArchMega0_TimerB(int num, const AVR_ArchMega0_TimerB_Config& config);
+	virtual ~AVR_ArchMega0_TimerB() {}
 
 	//Override of AVR_Peripheral callbacks
 	virtual bool init(AVR_Device& device) override;
@@ -62,10 +63,6 @@ public:
     virtual void sleep(bool on, AVR_SleepMode mode) override;
     //Override of Hook callback
     virtual void raised(const signal_data_t& data, uint16_t sigid) override;
-
-    //this is public but should only be used by TCA
-    uint32_t delay_to_event();
-    bool synched_mode_enabled() const;
 
 private:
 
@@ -83,6 +80,8 @@ private:
     //***** Timer management *****
 	AVR_PrescaledTimer m_timer;
     uint8_t m_next_event_type;
+
+    uint32_t delay_to_event();
 
 };
 

@@ -39,9 +39,6 @@ class AVR_ArchMega0_TimerB;
 //Request for a Timer type B to register with the timer type A. this is necessary
 //for the TCB to use the same "clock" as the TCA.
 #define AVR_CTLREQ_TCA_REGISTER_TCB			1
-//Request for the TCB to force a counter update of the TCA. This is necessary when
-//the TCB is synched to the TCA clock and its registers are modified
-#define AVR_CTLREQ_TCA_FORCE_UPDATE			2
 
 
 //Defines the number of comparison channels supported by the TCA

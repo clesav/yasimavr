@@ -49,11 +49,11 @@ AVR_ArchMega0_TimerA::AVR_ArchMega0_TimerA(const AVR_ArchMega0_TimerA_Config& co
 ,m_perbuf(0)
 ,m_next_event_type(0)
 ,m_ovf_intflag(false)
-,m_cmp_intflags({
+,m_cmp_intflags{
 	AVR_InterruptFlag(false),
 	AVR_InterruptFlag(false),
 	AVR_InterruptFlag(false),
-})
+}
 {}
 
 bool AVR_ArchMega0_TimerA::init(AVR_Device& device)
@@ -129,17 +129,12 @@ void AVR_ArchMega0_TimerA::reset()
 
 bool AVR_ArchMega0_TimerA::ctlreq(uint16_t req, ctlreq_data_t* data)
 {
-	if (req == AVR_CTLREQ_GET_SIGNAL) {
-		//data->p = &m_intflag_signal;
-		//return true;
-	}
-	else if (req == AVR_CTLREQ_TCA_REGISTER_TCB) {
-		AVR_ArchMega0_TimerB* t = reinterpret_cast<AVR_ArchMega0_TimerB*>(data->data.as_ptr());
-		m_synched_timers.push_back(t);
-		return true;
-	}
-	else if (req == AVR_CTLREQ_TCA_FORCE_UPDATE) {
-		m_timer.update(device()->cycle());
+	if (req == AVR_CTLREQ_TCA_REGISTER_TCB) {
+		AVR_PrescaledTimer* t = reinterpret_cast<AVR_PrescaledTimer*>(data->data.as_ptr());
+		if (data->index)
+			m_timer.register_chained_timer(*t);
+		else
+			m_timer.unregister_chained_timer(*t);
 		return true;
 	}
 	return false;
@@ -151,7 +146,7 @@ void AVR_ArchMega0_TimerA::ioreg_read_handler(reg_addr_t addr)
 
 	//16-bits reading of CNT
 	if (reg_ofs == REG_OFS(CNTL)) {
-		m_timer.update(device()->cycle());
+		m_timer.update();
 		write_ioreg(addr, m_cnt & 0x00FF);
 		write_ioreg(REG_ADDR(TEMP), m_cnt >> 8);
 	}
@@ -333,14 +328,6 @@ uint32_t AVR_ArchMega0_TimerA::delay_to_event()
 			ticks_to_next_event = t;
 	}
 
-	for (auto timer : m_synched_timers) {
-		if (timer->synched_mode_enabled()) {
-			uint32_t d = timer->delay_to_event();
-			if (d > 1 && d < (uint32_t)ticks_to_next_event)
-				ticks_to_next_event = d;
-		}
-	}
-
 	m_next_event_type = 0;
 
 	if (ticks_to_next_event == ticks_to_per)
@@ -372,7 +359,7 @@ void AVR_ArchMega0_TimerA::raised(const signal_data_t& sigdata, uint16_t __unuse
 		if (m_next_event_type & (TimerEventComp0 << i))
 			m_cmp_intflags[i].set_flag();
 	}
-	
+
 	//Reconfigure the timer delay to the next event
 	m_timer.set_timer_delay(delay_to_event());
 }

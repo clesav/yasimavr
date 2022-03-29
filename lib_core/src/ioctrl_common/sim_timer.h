@@ -45,12 +45,15 @@
  *   - When 'update()' is called, and enough clock cycles have passed, resulting in at least one tick.
  *  If the nb of ticks is enough to reach the set delay, the signal data index is set to 1.
  *  Otherwise, data.index is set to 0 and data.u is set to the available tick count.
+ *  Timers can be daisy-chained, so that the prescaler output of a timer feeds into the
+ *  prescaler of another.
  */
 class AVR_PrescaledTimer : public AVR_CycleTimer {
 
 public:
 
 	AVR_PrescaledTimer();
+	virtual ~AVR_PrescaledTimer();
 
 	//Initialise the timer, must be called once during initialisation phases
 	void init(AVR_CycleManager& cycle_manager, AVR_DeviceLogger& logger);
@@ -75,13 +78,16 @@ public:
 	void set_paused(bool paused);
 	//Update the timer to catchup with the 'when' cycle
 	//Ticks may be generated and the signal may be raised if enough cycles have passed
-	void update(cycle_count_t when);
+	void update(cycle_count_t when = INVALID_CYCLE);
 
 	//Callback override from AVR_CycleTimer
 	virtual cycle_count_t next(cycle_count_t when) override;
 
 	//Returns the signal that is raised with ticks
 	AVR_Signal& signal();
+
+	void register_chained_timer(AVR_PrescaledTimer& timer);
+	void unregister_chained_timer(AVR_PrescaledTimer& timer);
 
 private:
 
@@ -102,8 +108,17 @@ private:
     cycle_count_t m_update_cycle;		//Cycle number of the last update
     AVR_Signal m_signal;				//Signal raised for processing ticks
 
+    //***** Timer chain management *****
+    std::vector<AVR_PrescaledTimer*> m_chained_timers;
+    AVR_PrescaledTimer* m_parent_timer;
+
     void reschedule();
+    void update_timer(cycle_count_t when);
+    void process_cycles(cycle_count_t cycles);
+
     cycle_count_t calculate_when(cycle_count_t when);
+    cycle_count_t calculate_delay();
+    cycle_count_t convert_ticks_to_cycles(cycle_count_t ticks);
 
 };
 

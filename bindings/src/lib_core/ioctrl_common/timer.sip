@@ -29,6 +29,7 @@ class AVR_PrescaledTimer : public AVR_CycleTimer {
 public:
 	
 	AVR_PrescaledTimer();
+	virtual ~AVR_PrescaledTimer();
 	
 	void init(AVR_CycleManager&, AVR_DeviceLogger&);
 	void reset();
@@ -37,10 +38,13 @@ public:
 	void set_paused(bool);
 	void set_timer_delay(uint32_t);
 	uint32_t timer_delay() const;
-	void update(cycle_count_t);
+	void update(cycle_count_t = -1);
 
 	virtual cycle_count_t next(cycle_count_t);
 
 	AVR_Signal& signal();
+	
+	void register_chained_timer(AVR_PrescaledTimer&);
+	void unregister_chained_timer(AVR_PrescaledTimer&);
 
 };
