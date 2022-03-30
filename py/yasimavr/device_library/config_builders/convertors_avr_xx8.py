@@ -148,6 +148,7 @@ def _timer_convertor(cfg, attr, yml_val, per_desc):
 			mode_cfg = _archlib.AVR_ArchAVR_TimerConfig.mode_config_t()
 			mode_cfg.reg_value = mode_opt[0]
 			mode_cfg.mode = _archlib.AVR_ArchAVR_TimerConfig.Mode[mode_opt[1]]
+			py_modes.append(mode_cfg)
 		cfg.modes = py_modes
 	
 	elif attr == 'int_ovf':
@@ -178,9 +179,9 @@ def _adc_convertor(cfg, attr, yml_val, per_desc):
 	if attr == 'channels':
 		py_channels = []
 		for reg_value, item in yml_val.items():
-			chan_cfg = _corelib.ADC_channel_config_t()
+			chan_cfg = _corelib.AVR_IO_ADC.channel_config_t()
 			chan_cfg.reg_value = reg_value
-			chan_cfg.type = _corelib.ADC_Channel[item[0]]
+			chan_cfg.type = _corelib.AVR_IO_ADC.Channel[item[0]]
 			chan_cfg.pin_p = _corelib.str_to_id(item[1])
 			chan_cfg.pin_n = _corelib.str_to_id(item[2]) if len(item) > 2 else 0
 			py_channels.append(chan_cfg)

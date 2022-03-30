@@ -56,6 +56,7 @@ extern void fill_vardata_with_pyobj(vardata_t* d, PyObject* obj);
 public:
 
     AVR_Signal();
+	~AVR_Signal();
     
     void connect_hook(AVR_SignalHook*, uint16_t = 0);
     void disconnect_hook(AVR_SignalHook*);

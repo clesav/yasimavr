@@ -45,29 +45,6 @@ const char* StateNames[4] = { "Run", "Step", "Stop", "Done" };
 
 //=======================================================================================
 
-AVR_AbstractSimLoop::Hook::Hook(AVR_AbstractSimLoop& simloop)
-:m_simloop(simloop)
-{}
-
-AVR_AbstractSimLoop::Hook::Hook(AVR_AbstractSimLoop& simloop, cycle_count_t when)
-:m_simloop(simloop)
-{
-	m_simloop.m_device.add_cycle_timer(this, when);
-}
-
-cycle_count_t AVR_AbstractSimLoop::Hook::next(cycle_count_t when)
-{
-	bool stop = false;
-	cycle_count_t next_when = next(when, &stop);
-	if (stop)
-		m_simloop.m_state = State_Stopped;
-
-	return next_when;
-}
-
-
-//=======================================================================================
-
 AVR_AbstractSimLoop::AVR_AbstractSimLoop(AVR_Device& device)
 :m_device(device)
 ,m_state(State_Running)
@@ -78,7 +55,7 @@ AVR_AbstractSimLoop::AVR_AbstractSimLoop(AVR_Device& device)
 AVR_AbstractSimLoop::~AVR_AbstractSimLoop()
 {}
 
-void AVR_AbstractSimLoop::run_device(cycle_count_t cycle_limit)
+cycle_count_t AVR_AbstractSimLoop::run_device(cycle_count_t cycle_limit)
 {
 	cycle_count_t cycle_delta = m_device.exec_cycle();
 
@@ -90,21 +67,27 @@ void AVR_AbstractSimLoop::run_device(cycle_count_t cycle_limit)
 
 		cycle_count_t next_timer_cycle = m_device.cycle_manager().next_when();
 
-		if (next_timer_cycle == INVALID_CYCLE || next_timer_cycle >= cycle_limit)
+		if (next_timer_cycle == INVALID_CYCLE || next_timer_cycle >= cycle_limit) {
 			m_state = State_Stopped;
+			WARNING_LOG(m_device.logger(), "SIMLOOP: Nothing to process further, stopping.", "");
+		}
 
 		else if (next_timer_cycle > m_cycle_manager.cycle())
 			cycle_delta = next_timer_cycle - m_cycle_manager.cycle();
 
 	}
 
-	else if (dev_state >= AVR_Device::State_Done)
+	else if (dev_state >= AVR_Device::State_Done) {
 		m_state = State_Done;
+		WARNING_LOG(m_device.logger(), "SIMLOOP: Device is done, stopping definitely", "");
+	}
 
-	else if (dev_state >= AVR_Device::State_Stopped)
+	else if (dev_state >= AVR_Device::State_Stopped) {
 		m_state = State_Stopped;
+		WARNING_LOG(m_device.logger(), "SIMLOOP: Device stopped, stopping", "");
+	}
 
-	m_cycle_manager.increment_cycle(cycle_delta);
+	return cycle_delta;
 }
 
 
@@ -142,31 +125,33 @@ void AVR_SimLoop::run(cycle_count_t nbcycles)
 
 	while (m_cycle_manager.cycle() < final_cycle) {
 
-		run_device(final_cycle);
+		cycle_count_t cycle_delta = run_device(final_cycle);
 
 		if (m_state >= State_Stopped)
 			break;
 
 		if (!m_fast_mode) {
-			int64_t sim_deadline_us = ((m_cycle_manager.cycle() - cycle_start) * 1000000L) / m_device.frequency();
+			//If not in realtime mode, check the simulated clock (given by number of cycles
+			//since the start of the loop divided by the clock frequency). It's then compared
+			//to the system clock elapsed and if it's ahead by more than a threshold,
+			//pause the loop for the time delta
+			int64_t sim_deadline_us = ((m_cycle_manager.cycle() + cycle_delta - cycle_start) *
+										1000000L) / m_device.frequency();
 			int64_t curr_time_us = get_timestamp_usecs(clock_start);
 			int64_t sleep_time_us = sim_deadline_us - curr_time_us;
-			//DEBUG_LOG(m_device.logger(), "LOOP : Sim T=%dus, CPU T=%dus, Sleep T=%dus", sim_deadline_us, curr_time_us, sleep_time_us);
 			if (sleep_time_us > MIN_SLEEP_THRESHOLD) {
 				//WARNING_LOG(m_device.logger(), "LOOP : Sleeping %dus", sleep_time_us);
 				usleep(sleep_time_us);
 			}
 		}
+
+		m_cycle_manager.increment_cycle(cycle_delta);
+
 	}
 
 	if (m_state < State_Done)
 		m_state = State_Stopped;
 
-}
-
-void AVR_SimLoop::set_fast_mode(bool fast)
-{
-	m_fast_mode = fast;
 }
 
 
@@ -176,19 +161,46 @@ AVR_AsyncSimLoop::AVR_AsyncSimLoop(AVR_Device& device)
 :AVR_AbstractSimLoop(device)
 ,m_cycling_enabled(false)
 ,m_cycle_wait(false)
+,m_fast_mode(false)
 {}
+
+void AVR_AsyncSimLoop::set_fast_mode(bool fast)
+{
+	m_fast_mode = fast;
+}
 
 void AVR_AsyncSimLoop::run()
 {
 	if (m_state == State_Done) return;
 
+	if (!m_fast_mode && device().frequency() == 0) {
+		ERROR_LOG(m_device.logger(), "Cannot run in realtime mode, MCU frequency not set.", "");
+		m_state = State_Done;
+		return;
+	}
+
+	if (m_device.state() < AVR_Device::State_Running) {
+		ERROR_LOG(m_device.logger(), "Device not initialised or firmware not loaded", "");
+		m_state = State_Done;
+		return;
+	}
+
+	//Start the loop in stopped state
 	set_state(State_Stopped);
 
+	//Mutex used for the condition variables
 	std::unique_lock<std::mutex> cv_lock(m_cycle_mutex);
 	cv_lock.unlock();
 
+	//Time baseline. Note that it's initialised by the synchronisation part
+	cycle_count_t cycle_start;
+	std::chrono::time_point<std::chrono::steady_clock> clock_start;
+
 	while (true) {
 
+		//Synchronisation part
+		//If m_cycling_enabled is cleared (by start_transaction) or
+		//the simulation is stopped, enter a wait loop
 		cv_lock.lock();
 
 		while (!m_cycling_enabled || m_state == State_Stopped) {
@@ -196,15 +208,75 @@ void AVR_AsyncSimLoop::run()
 			m_sync_cv.notify_all();
 			m_cycle_cv.wait(cv_lock);
 			m_cycle_wait = false;
+
+			//The time base is messed up by the pause so re-baseline it
+			cycle_start = m_cycle_manager.cycle();
+			clock_start = std::chrono::steady_clock::now();
 		}
 
 		cv_lock.unlock();
 
+		//If the device can actually run
 		if (m_state == State_Running || m_state == State_Step) {
-			run_device(LLONG_MAX);
 
-			if (m_state == State_Step)
+			//Run the device for one instruction and obtain the number of cycles
+			//it lasted
+			cycle_count_t cycle_delta = run_device(LLONG_MAX);
+
+			if (m_state == State_Step) {
 				set_state(State_Stopped);
+			}
+			else if (!m_fast_mode) {
+				//If not in realtime mode, check the simulated clock (given by number of cycles
+				//since the start of the loop divided by the clock frequency). It's then compared
+				//to the system clock elapsed and if it's ahead by more than a threshold,
+				//pause the loop for a catch-up sleep
+				int64_t sim_deadline_us = ((m_cycle_manager.cycle() + cycle_delta - cycle_start)
+										   * 1000000L) / m_device.frequency();
+				int64_t curr_time_us = get_timestamp_usecs(clock_start);
+				int64_t sleep_time_us = sim_deadline_us - curr_time_us;
+				if (sleep_time_us > MIN_SLEEP_THRESHOLD) {
+					DEBUG_LOG(m_device.logger(), "LOOP : Sleeping %dus", sleep_time_us);
+
+					//usleep is not used here but rather cond_var.wait_for() so that
+					//a transaction may interrupt a catch-up sleep
+
+					cv_lock.lock();
+					std::chrono::microseconds t_us(sleep_time_us);
+
+					if (m_cycle_cv.wait_for(cv_lock, t_us) == std::cv_status::no_timeout) {
+						//Arriving here means the catch-up sleep has been interrupted
+
+						//Try to estimate which cycle number we end up in.
+						//It's calculated by looking at the total time spent since the start and
+						//deriving a corresponding cycle number. The *real* cycle delta is then the
+						//difference between this estimated cycle number and the cycle number we were
+						//at the start of the sleep (it is the current value stored in the cycle manager)
+						std::chrono::time_point<std::chrono::steady_clock> clock_t1 = std::chrono::steady_clock::now();
+						int64_t time_delta_us = std::chrono::duration_cast<std::chrono::microseconds>(clock_t1 - clock_start).count();
+						cycle_count_t cycle_corrected = cycle_start + time_delta_us * m_device.frequency() / 1000000L;
+						cycle_count_t cycle_delta_corrected = cycle_corrected - m_cycle_manager.cycle();
+
+						//Constrain the corrected value to ensure the delta is at least 1 and at most
+						//the initial delta minus 1
+						//The "at least 1" is because cycle numbers should always increment
+						//The "minus 1" is because it gives a chance for whatever signal interrupted
+						//the sleep to trigger changes before whatever was scheduled to happen at the
+						//end of the sleep actually happen.
+						if (cycle_delta_corrected < 0)
+							cycle_delta_corrected = 1;
+						if (cycle_delta_corrected >= cycle_delta)
+							cycle_delta_corrected = cycle_delta - 1;
+
+						cycle_delta = cycle_delta_corrected;
+					}
+
+					cv_lock.unlock();
+				}
+			}
+
+			m_cycle_manager.increment_cycle(cycle_delta);
+
 		}
 
 		else if (m_state == State_Done) {
@@ -214,6 +286,7 @@ void AVR_AsyncSimLoop::run()
 			//The unlocking is done by the destructor of 'cv_lock' on leaving run()
 			break;
 		}
+
 	}
 }
 
@@ -221,6 +294,7 @@ bool AVR_AsyncSimLoop::start_transaction()
 {
 	std::unique_lock<std::mutex> lock(m_cycle_mutex);
 	m_cycling_enabled = false;
+	m_cycle_cv.notify_all();
 	while (!m_cycle_wait && m_state != State_Done)
 		m_sync_cv.wait(lock);
 	return m_state != State_Done;

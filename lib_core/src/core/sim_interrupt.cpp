@@ -76,6 +76,7 @@ bool AVR_InterruptController::ctlreq(uint16_t req, ctlreq_data_t* data)
 		else {
 			m_interrupts[vector].state = IntrState_Idle;
 			AVR_InterruptHandler* t = reinterpret_cast<AVR_InterruptHandler*>(data->data.as_ptr());
+			m_interrupts[vector].handler = t;
 			t->m_intctl = this;
 		}
 
@@ -283,56 +284,6 @@ bool AVR_InterruptFlag::clear_flag(uint8_t mask)
 		return false;
 	}
 }
-
-//bool AVR_InterruptFlag::trigger(uint8_t mask)
-//{
-//	//Boolean set if the flag was already raised before this function call
-//	bool was_set = m_rb_flag.extract(m_flag_reg->value());
-//	//Set the register flags as per the mask in argument
-//	m_flag_reg->set(m_rb_flag.set_to(m_flag_reg->value(), mask));
-//	//The trigger condition is if the flag field goes from zero to non-zero
-//	bool triggered = m_rb_flag.extract(m_flag_reg->value()) && !was_set;
-//	//if triggered and the interrupt is enabled, raise the interrupt
-//	if (triggered && m_rb_enable.extract(m_enable_reg->value()))
-//		raise_interrupt(m_vector);
-//
-//	return triggered;
-//}
-
-//bool AVR_InterruptFlag::trigger_if_set(uint8_t mask)
-//{
-//	//Boolean set if the flag is set
-//	bool is_set = m_rb_flag.extract(m_flag_reg->value()) & mask;
-//	bool triggered = is_set && m_rb_enable.extract(m_enable_reg->value());
-//	//if set, raise the interrupt
-//	if (triggered)
-//		raise_interrupt(m_vector);
-//	return triggered;
-//}
-
-//bool AVR_InterruptFlag::cancel(uint8_t mask)
-//{
-//	//Boolean set if the flag was raised before this function call
-//	bool was_set = m_rb_flag.extract(m_flag_reg->value());
-//	//Clear the flag bit(s) as per the mask in argument
-//	m_flag_reg->set(m_rb_flag.clear_from(m_flag_reg->value(), mask));
-//	//Boolean set if the flag field goes from non-zero to zero
-//	bool cleared = !m_rb_flag.extract(m_flag_reg->value()) && was_set;
-//	//If cleared, cancel the interrupt
-//	if (cleared && m_rb_enable.extract(m_enable_reg->value()))
-//		cancel_interrupt(m_vector);
-//
-//	return cleared;
-//}
-
-//bool AVR_InterruptFlag::cancel_if_clear(uint8_t mask)
-//{
-//	bool is_clear = !(m_rb_flag.extract(m_flag_reg->value()) & mask);
-//	bool canceled = is_clear && m_rb_enable.extract(m_enable_reg->value());
-//	if (canceled)
-//		cancel_interrupt(m_vector);
-//	return canceled;
-//}
 
 void AVR_InterruptFlag::interrupt_ack_handler(int_vect_t vector)
 {

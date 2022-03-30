@@ -79,18 +79,18 @@ ADC:
 
     config:
         channels:
-            0x00: [ ADC_SingleEnded, PC0 ]
-            0x01: [ ADC_SingleEnded, PC1 ]
-            0x02: [ ADC_SingleEnded, PC2 ]
-            0x03: [ ADC_SingleEnded, PC3 ]
-            0x04: [ ADC_SingleEnded, PC4 ]
-            0x05: [ ADC_SingleEnded, PC5 ]
-            0x06: [ ADC_SingleEnded, ADC6 ]
-            0x07: [ ADC_SingleEnded, ADC7 ]
+            0x00: [ SingleEnded, PC0 ]
+            0x01: [ SingleEnded, PC1 ]
+            0x02: [ SingleEnded, PC2 ]
+            0x03: [ SingleEnded, PC3 ]
+            0x04: [ SingleEnded, PC4 ]
+            0x05: [ SingleEnded, PC5 ]
+            0x06: [ SingleEnded, ADC6 ]
+            0x07: [ SingleEnded, ADC7 ]
         references:
-            0: Source_Ext_AREF
-            1: Source_Ext_AVCC
-            3: Source_Internal
+            0: Ext_AREF
+            1: Ext_AVCC
+            3: Internal
         clk_ps_factors: [ 2, 2, 4, 8, 16, 32, 128 ]
         triggers:
             0b000: FreeRunning

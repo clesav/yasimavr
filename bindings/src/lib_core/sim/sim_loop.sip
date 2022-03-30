@@ -30,21 +30,10 @@ class AVR_AbstractSimLoop /NoDefaultCtors, Abstract/ {
 public:
 
     enum State {
-		State_Running,
-		State_Step,
-		State_Stopped,
-		State_Done
-    };
-
-    class Hook : public AVR_CycleTimer /Abstract/ {
-
-    public:
-
-    	Hook(AVR_AbstractSimLoop&);
-    	Hook(AVR_AbstractSimLoop&, cycle_count_t);
-
-    	cycle_count_t next(cycle_count_t when, bool* /Out/) = 0;
-
+		State_Running		/PyName=Running/,
+		State_Step			/PyName=Step/,
+		State_Stopped		/PyName=Stopped/,
+		State_Done			/PyName=Done/,
     };
 
     AVR_AbstractSimLoop(AVR_Device&);
@@ -81,6 +70,8 @@ public:
 
 	AVR_AsyncSimLoop(AVR_Device&);
 
+	void set_fast_mode(bool);
+	
 	void run() /ReleaseGIL/;
 
 	bool start_transaction() /ReleaseGIL/;
@@ -90,5 +81,20 @@ public:
 	void loop_step();
 	void loop_pause();
 	void loop_kill();
+	
+    SIP_PYOBJECT __enter__();
+	%MethodCode
+		Py_BEGIN_ALLOW_THREADS
+		sipCpp->start_transaction();
+		Py_END_ALLOW_THREADS
+        // Just return a reference to self.
+        sipRes = sipSelf;
+        Py_INCREF(sipRes);
+	%End
+
+    void __exit__(SIP_PYOBJECT, SIP_PYOBJECT, SIP_PYOBJECT);
+	%MethodCode
+        sipCpp->end_transaction();
+	%End
 
 };

@@ -22,14 +22,14 @@
 //=======================================================================================
 
 
-class AVR_Pin /NoDefaultCtors/ {
+class AVR_Pin : public AVR_SignalHook /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "core/sim_pin.h"
 %End
 
 public:
 
-	enum State {
+	enum State /BaseType=IntEnum/ {
 		State_Floating  /PyName=Floating/,
 		State_PullUp    /PyName=PullUp/,
 		State_PullDown  /PyName=PullDown/,
@@ -39,10 +39,14 @@ public:
 		State_Shorted   /PyName=Shorted/,
 	};
 	
+	enum SignalId /BaseType=IntEnum/ {
+		Signal_DigitalStateChange	/PyName=DigitalStateChange/,
+		Signal_AnalogValueChange	/PyName=AnalogValueChange/,
+	};
+	
 	static const char* StateName(AVR_Pin::State state);
 
     AVR_Pin(uint32_t);
-    virtual ~AVR_Pin();
     
 	void set_external_state(AVR_Pin::State state);
 	void set_external_analog_value(double v);
@@ -52,5 +56,7 @@ public:
 	double analog_value() const;
 	
 	AVR_Signal& signal();
+	
+	virtual void raised(const signal_data_t&, uint16_t);
     
 };

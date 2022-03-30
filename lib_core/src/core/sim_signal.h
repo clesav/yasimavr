@@ -47,13 +47,21 @@ struct signal_data_t {
  * Generic hook class to connect to a signal in order to receive notifications
  * To be used, reimplement raised() to use the data from the signal
  */
+class AVR_Signal;
+
 class AVR_SignalHook {
 
 public:
 
-	virtual ~AVR_SignalHook() {};
+	virtual ~AVR_SignalHook();
 
 	virtual void raised(const signal_data_t& data, uint16_t hooktag) = 0;
+
+private:
+
+	friend class AVR_Signal;
+
+	std::vector<AVR_Signal*> m_signals;
 
 };
 
@@ -69,6 +77,7 @@ class DLL_EXPORT AVR_Signal {
 public:
 
 	AVR_Signal();
+	~AVR_Signal();
 
 	////The hooktag is an arbitrary value that only has a meaning
 	//for the hook and is passed though by the signal when calling
@@ -99,16 +108,15 @@ private:
 	//Stores a copy of the last data used to raise the signal
     signal_data_t m_data;
 
-    struct HookSlot_t {
+    struct hook_slot_t {
     	AVR_SignalHook* hook;
     	uint16_t tag;
     };
 
-    std::vector<HookSlot_t> m_hooks;
+    std::vector<hook_slot_t> m_hooks;
 
     int hook_index(const AVR_SignalHook* hook) const;
-
-    friend class AVR_SignalHook;
+    int signal_index(const AVR_SignalHook* hook) const;
 
 };
 
