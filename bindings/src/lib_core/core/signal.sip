@@ -76,3 +76,56 @@ public:
 	%End
     
 };
+
+
+class AVR_CallableSignalHook : public AVR_SignalHook /NoDefaultCtors/ {
+%TypeHeaderCode
+#include "core/sim_signal.h"
+%End
+
+%TypeCode
+class AVR_CallableSignalHook : public AVR_SignalHook {
+
+public:
+	
+	AVR_CallableSignalHook(PyObject* callback)
+	:m_callback(callback)
+	{
+		Py_INCREF(m_callback);
+	}
+	
+	virtual ~AVR_CallableSignalHook()
+	{
+		Py_DECREF(m_callback);
+	}
+	
+	virtual void raised(const signal_data_t& sigdata, uint16_t hooktag) override final
+	{
+		//Ensure the GIL is held for the callback
+		PyGILState_STATE pystate = PyGILState_Ensure();
+		//Wrap the sigdata argument into a Python object using the SIP API
+		signal_data_t s = sigdata;
+		PyObject* pysigdata = sipConvertFromType(&s, sipType_signal_data_t, SIP_NULLPTR);
+		//Call the callback
+        PyObject* res = PyObject_CallFunction(m_callback, "OH", pysigdata, hooktag);
+		//Reference cleanup
+		Py_XDECREF(res);
+		Py_DECREF(pysigdata);
+		//Release the GIL
+		PyGILState_Release(pystate);
+	}
+
+private:
+
+	PyObject* m_callback;
+	
+};
+%End
+
+public:
+	
+	AVR_CallableSignalHook(SIP_PYCALLABLE);
+	virtual ~AVR_CallableSignalHook();
+	virtual void raised(const signal_data_t&, uint16_t) final;
+
+};

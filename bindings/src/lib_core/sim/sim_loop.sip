@@ -32,6 +32,7 @@ public:
     enum State {
 		State_Running		/PyName=Running/,
 		State_Step			/PyName=Step/,
+		State_Standby		/PyName=Standby/,
 		State_Stopped		/PyName=Stopped/,
 		State_Done			/PyName=Done/,
     };
@@ -87,7 +88,7 @@ public:
 		Py_BEGIN_ALLOW_THREADS
 		sipCpp->start_transaction();
 		Py_END_ALLOW_THREADS
-        // Just return a reference to self.
+        
         sipRes = sipSelf;
         Py_INCREF(sipRes);
 	%End

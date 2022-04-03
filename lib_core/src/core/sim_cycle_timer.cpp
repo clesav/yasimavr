@@ -178,11 +178,11 @@ void AVR_CycleManager::process_cycle_timers()
 cycle_count_t AVR_CycleManager::next_when() const
 {
 	if (m_timer_slots.empty())
-		return -1;
+		return INVALID_CYCLE;
 
 	TimerSlot* slot = m_timer_slots.front();
 	if (slot->paused)
-		return -1;
+		return INVALID_CYCLE;
 	else
 		return slot->when;
 }

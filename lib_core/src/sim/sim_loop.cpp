@@ -31,16 +31,13 @@
 
 #define MIN_SLEEP_THRESHOLD		200
 
-typedef std::chrono::time_point<std::chrono::steady_clock> time_pt;
+typedef std::chrono::time_point<std::chrono::steady_clock> time_point;
 
-static uint64_t get_timestamp_usecs(time_pt origin)
+static uint64_t get_timestamp_usecs(time_point origin)
 {
-	const time_pt stamp = std::chrono::steady_clock::now();
+	const time_point stamp = std::chrono::steady_clock::now();
 	return std::chrono::duration_cast<std::chrono::microseconds>(stamp - origin).count();
 }
-
-
-const char* StateNames[4] = { "Run", "Step", "Stop", "Done" };
 
 
 //=======================================================================================
@@ -67,7 +64,14 @@ cycle_count_t AVR_AbstractSimLoop::run_device(cycle_count_t cycle_limit)
 
 		cycle_count_t next_timer_cycle = m_device.cycle_manager().next_when();
 
-		if (next_timer_cycle == INVALID_CYCLE || next_timer_cycle >= cycle_limit) {
+		if (next_timer_cycle == INVALID_CYCLE) {
+			//If the device is sleeping and nothing is scheduled to wake it up,
+			//the loop enters standby mode.
+			m_state = State_Standby;
+			cycle_delta = 1;
+			WARNING_LOG(m_device.logger(), "SIMLOOP: Nothing scheduled yet to wake-up the device, going in standby.", "");
+		}
+		else if (next_timer_cycle >= cycle_limit) {
 			m_state = State_Stopped;
 			WARNING_LOG(m_device.logger(), "SIMLOOP: Nothing to process further, stopping.", "");
 		}
@@ -101,8 +105,6 @@ AVR_SimLoop::AVR_SimLoop(AVR_Device& device)
 
 void AVR_SimLoop::run(cycle_count_t nbcycles)
 {
-	#define CYCLE_PER_TICK (m_device.frequency() / CLOCKS_PER_SEC)
-
 	if (m_state == State_Done) return;
 
 	if (!m_fast_mode && device().frequency() == 0) {
@@ -119,7 +121,7 @@ void AVR_SimLoop::run(cycle_count_t nbcycles)
 
 	m_state = State_Running;
 
-	const time_pt clock_start = std::chrono::steady_clock::now();
+	const time_point clock_start = std::chrono::steady_clock::now();
 	const cycle_count_t cycle_start = m_cycle_manager.cycle();
 	cycle_count_t final_cycle = nbcycles ? (cycle_start + nbcycles) : LLONG_MAX;
 
@@ -127,7 +129,7 @@ void AVR_SimLoop::run(cycle_count_t nbcycles)
 
 		cycle_count_t cycle_delta = run_device(final_cycle);
 
-		if (m_state >= State_Stopped)
+		if (m_state > State_Running)
 			break;
 
 		if (!m_fast_mode) {
@@ -203,7 +205,7 @@ void AVR_AsyncSimLoop::run()
 		//the simulation is stopped, enter a wait loop
 		cv_lock.lock();
 
-		while (!m_cycling_enabled || m_state == State_Stopped) {
+		while (!m_cycling_enabled || m_state == State_Standby || m_state == State_Stopped) {
 			m_cycle_wait = true;
 			m_sync_cv.notify_all();
 			m_cycle_cv.wait(cv_lock);
@@ -226,7 +228,8 @@ void AVR_AsyncSimLoop::run()
 			if (m_state == State_Step) {
 				set_state(State_Stopped);
 			}
-			else if (!m_fast_mode) {
+			
+			else if (m_state == State_Running && !m_fast_mode) {
 				//If not in realtime mode, check the simulated clock (given by number of cycles
 				//since the start of the loop divided by the clock frequency). It's then compared
 				//to the system clock elapsed and if it's ahead by more than a threshold,
@@ -252,7 +255,7 @@ void AVR_AsyncSimLoop::run()
 						//deriving a corresponding cycle number. The *real* cycle delta is then the
 						//difference between this estimated cycle number and the cycle number we were
 						//at the start of the sleep (it is the current value stored in the cycle manager)
-						std::chrono::time_point<std::chrono::steady_clock> clock_t1 = std::chrono::steady_clock::now();
+						time_point clock_t1 = std::chrono::steady_clock::now();
 						int64_t time_delta_us = std::chrono::duration_cast<std::chrono::microseconds>(clock_t1 - clock_start).count();
 						cycle_count_t cycle_corrected = cycle_start + time_delta_us * m_device.frequency() / 1000000L;
 						cycle_count_t cycle_delta_corrected = cycle_corrected - m_cycle_manager.cycle();
@@ -263,7 +266,7 @@ void AVR_AsyncSimLoop::run()
 						//The "minus 1" is because it gives a chance for whatever signal interrupted
 						//the sleep to trigger changes before whatever was scheduled to happen at the
 						//end of the sleep actually happen.
-						if (cycle_delta_corrected < 0)
+						if (cycle_delta_corrected < 1)
 							cycle_delta_corrected = 1;
 						if (cycle_delta_corrected >= cycle_delta)
 							cycle_delta_corrected = cycle_delta - 1;
@@ -293,16 +296,33 @@ void AVR_AsyncSimLoop::run()
 bool AVR_AsyncSimLoop::start_transaction()
 {
 	std::unique_lock<std::mutex> lock(m_cycle_mutex);
+
+	//In case the transaction allows the device to wake-up from
+	//unlimited sleep, or at least schedule timer, wake up the loop
+	//If nothing is scheduled, the loop will go back in standby at the next
+	//cycle
+	if (m_state == State_Standby)
+		m_state = State_Running;
+
+	//Setting this flag will block the simloop
 	m_cycling_enabled = false;
+
+	//This notify ensures the simloop wakes up from a catchup sleep
 	m_cycle_cv.notify_all();
+
+	//Wait until the simloop reaches the synchronisation part or leaves the loop
 	while (!m_cycle_wait && m_state != State_Done)
 		m_sync_cv.wait(lock);
+
+	//Returns a indication whether the loop left or keeps running
 	return m_state != State_Done;
 }
 
 void AVR_AsyncSimLoop::end_transaction()
 {
 	std::unique_lock<std::mutex> lock(m_cycle_mutex);
+
+	//Reset the simloop block and notify it
 	m_cycling_enabled = true;
 	m_cycle_cv.notify_all();
 }

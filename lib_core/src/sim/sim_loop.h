@@ -43,6 +43,7 @@ public:
     enum State {
 		State_Running,
 		State_Step,
+		State_Standby,
 		State_Stopped,
 		State_Done
     };
