@@ -168,7 +168,7 @@ cycle_count_t AVR_IO_UART::tx_timer_next(cycle_count_t when)
 
 	DEBUG_LOG(*m_logger, "UART TX complete", "");
 
-	m_signal.raise_u(Signal_Data_Frame, 0, frame);
+	m_signal.raise_u(Signal_DataFrame, 0, frame);
 	m_signal.raise_u(Signal_TX_Complete, 0, 1);
 
 	if (m_tx_buffer.size()) {
@@ -290,11 +290,11 @@ void AVR_IO_UART::add_rx_frame(uint8_t frame)
  */
 void AVR_IO_UART::raised(const signal_data_t& sigdata, uint16_t id)
 {
-	if (sigdata.sigid == Signal_Data_Frame) {
+	if (sigdata.sigid == Signal_DataFrame) {
 		DEBUG_LOG(*m_logger, "UART RX frame received", "");
 		add_rx_frame(sigdata.data.as_uint());
 	}
-	else if (sigdata.sigid == Signal_Data_String) {
+	else if (sigdata.sigid == Signal_DataString) {
 		DEBUG_LOG(*m_logger, "UART RX string received", "");
 		const char* s = sigdata.data.as_str();
 		for (size_t i = 0; i < strlen(s); ++i)

@@ -54,6 +54,9 @@ tcb_configs = [get_tcb_config(_desc.peripherals['TCB' + str(n)])
 adc_config = get_adc_config(_desc.peripherals['ADC'])
 #VREF
 vref_base = _desc.peripherals['VREF'].reg_base
+#USART
+usart_configs = [get_usart_config(_desc.peripherals['USART' + str(n)])
+                 for n in range(4)]
                
 del _desc
 
@@ -80,8 +83,13 @@ class dev_atmega4809(_archlib.AVR_ArchMega0_Device):
         for n, cfg in enumerate(tcb_configs):
             self.attach_peripheral(_archlib.AVR_ArchMega0_TimerB(n, cfg))
         
+        #ADC, VREF
         self.attach_peripheral(_archlib.AVR_ArchMega0_ADC(adc_config))
         self.attach_peripheral(_archlib.AVR_ArchMega0_VREF(vref_base))
+        
+        #USARTs
+        for n, cfg in enumerate(usart_configs):
+            self.attach_peripheral(_archlib.AVR_ArchMega0_USART(n, cfg))
 
 
 DEV_CLASS = dev_atmega4809

@@ -40,19 +40,6 @@ class DLL_EXPORT AVR_IO_Port : public AVR_Peripheral, public AVR_SignalHook {
 
 public:
 
-	//Enum of signal indexes
-	enum SignalIndex {
-		Index_Pin0,
-		Index_Pin1,
-		Index_Pin2,
-		Index_Pin3,
-		Index_Pin4,
-		Index_Pin5,
-		Index_Pin6,
-		Index_Pin7,
-		Index_All
-	};
-
 	//Constructor of the port. The name is the upper case letter identifying the port.
 	AVR_IO_Port(char name);
 
@@ -78,6 +65,7 @@ private:
     uint8_t m_pinmask;
 	AVR_Signal m_signal;
 	std::vector<AVR_Pin*> m_pins;
+	uint8_t m_port_value;
 
 };
 

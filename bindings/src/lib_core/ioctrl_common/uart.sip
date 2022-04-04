@@ -51,8 +51,8 @@ class AVR_IO_UART : public AVR_SignalHook /NoDefaultCtors/ {
 public:
 
 	enum SignalId /BaseType=IntEnum/ {
-		Signal_Data_Frame		/PyName=Data_Frame/,
-		Signal_Data_String		/PyName=Data_String/,
+		Signal_DataFrame		/PyName=DataFrame/,
+		Signal_DataString		/PyName=DataString/,
 		Signal_TX_Start			/PyName=TX_Start/,
 		Signal_TX_Complete		/PyName=TX_Complete/,
 		Signal_RX_Start			/PyName=RX_Start/,

@@ -212,3 +212,29 @@ _ADC_ConfigBuilder = _PeripheralConfigBuilder(_archlib.AVR_ArchMega0_ADC_Config,
 
 def get_adc_config(per_desc):
     return _ADC_ConfigBuilder(per_desc)
+
+#========================================================================================
+#USART management configuration
+
+_USART_ConfigBuilder = _PeripheralConfigBuilder(_archlib.AVR_ArchMega0_USART_Config)
+
+def get_usart_config(per_desc):
+    return _USART_ConfigBuilder(per_desc)
+
+#========================================================================================
+#SPI management configuration
+
+def _spi_convertor(cfg, attr, yml_val, per_desc):
+    if attr == 'pin_select':
+        if yml_val is None:
+            cfg.pin_select = 0
+        else:
+            cfg.pin_select = _corelib.str_to_id(yml_val)
+    
+    else:
+        raise Exception('Converter not implemented for ' + attr)
+
+_SPI_ConfigBuilder = _PeripheralConfigBuilder(_archlib.AVR_ArchMega0_SPI_Config, _spi_convertor)
+
+def get_spi_config(per_desc):
+    return _SPI_ConfigBuilder(per_desc)

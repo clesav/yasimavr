@@ -118,6 +118,10 @@ class RegisterFieldDescriptor:
             self.LSB = int(field_config.get('LSB', 0))
             self.MSB = int(field_config.get('MSB', reg_size - 1))
             self.unit = str(field_config.get('unit', ''))
+        
+        elif self.kind == 'RAW':
+            self.LSB = int(field_config.get('LSB', 0))
+            self.MSB = int(field_config.get('MSB', reg_size - 1))
                     
         else:
             raise DeviceConfigException('Field kind unknown: ' + self.kind)

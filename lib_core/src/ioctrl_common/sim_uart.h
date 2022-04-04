@@ -87,9 +87,9 @@ public:
 	enum SignalId {
 		//Signal raised in TX and RX when the data is a single frame.
 		//The frame is stored in the lowest byte of data.u.
-		Signal_Data_Frame,
+		Signal_DataFrame,
 		//Signal raised when receiving a c-style string, pointed by data.s.
-		Signal_Data_String,
+		Signal_DataString,
 		//Signal raised at the start of a frame transmission.
 		//The lowest byte of data.u contains the frame.
 		Signal_TX_Start,

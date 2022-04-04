@@ -27,11 +27,13 @@
 
 const uint16_t CTLREQ_SPI_ADD_CLIENT = AVR_CTLREQ_SPI_ADD_CLIENT;
 const uint16_t CTLREQ_SPI_CLIENT = AVR_CTLREQ_SPI_CLIENT;
+const uint16_t CTLREQ_SPI_SELECT = AVR_CTLREQ_SPI_SELECT;
 
 %End
 
 const uint16_t CTLREQ_SPI_ADD_CLIENT;
 const uint16_t CTLREQ_SPI_CLIENT;
+const uint16_t CTLREQ_SPI_SELECT;
 
 
 class AVR_SPI_Client {
@@ -57,7 +59,7 @@ class AVR_IO_SPI : public AVR_SPI_Client, public AVR_CycleTimer /NoDefaultCtors/
 
 public:
 
-	enum SignalId {
+	enum SignalId /BaseType=IntEnum/ {
 		Signal_HostTfrStart			/PyName=HostTfrStart/,
 		Signal_HostTfrComplete		/PyName=HostTfrComplete/,
 		Signal_ClientTfrStart		/PyName=ClientTfrStart/,

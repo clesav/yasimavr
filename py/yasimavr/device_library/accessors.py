@@ -121,6 +121,13 @@ class IntFieldAccessor(_FieldAccessor):
     def __eq__(self, other):
         return other == self.read_raw()
 
+class RawFieldAccessor(IntFieldAccessor):
+    '''Accessor class for a field of a I/O register consisting of
+    an raw value. It identical to INT except it's printed in hexadecimal.
+    '''
+    
+    def __str__(self):
+        return '%s.%s [%s]' % (self._reg.name, self._field.name, hex(self.read()))
 
 class EnumFieldAccessor(_FieldAccessor):
     '''Accessor class for a field of a I/O register consisting of
@@ -255,6 +262,8 @@ class RegisterAccessor:
             return BitFieldAccessor(self, field_descriptor)
         elif k == 'INT':
             return IntFieldAccessor(self, field_descriptor)
+        elif k == 'RAW':
+            return RawFieldAccessor(self, field_descriptor)
         elif k == 'ENUM':
             return EnumFieldAccessor(self, field_descriptor)
         else:

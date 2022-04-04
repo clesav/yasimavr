@@ -29,18 +29,6 @@ class AVR_IO_Port : public AVR_Peripheral, public AVR_SignalHook /NoDefaultCtors
 
 public:
 
-	enum SignalIndex /BaseType=IntEnum/ {
-		Index_Pin0 /PyName=Pin0/,
-		Index_Pin1 /PyName=Pin1/,
-		Index_Pin2 /PyName=Pin2/,
-		Index_Pin3 /PyName=Pin3/,
-		Index_Pin4 /PyName=Pin4/,
-		Index_Pin5 /PyName=Pin5/,
-		Index_Pin6 /PyName=Pin6/,
-		Index_Pin7 /PyName=Pin7/,
-		Index_All  /PyName=All/
-	};
-
 	AVR_IO_Port(char name);
 
 	virtual bool init(AVR_Device&);

@@ -99,6 +99,11 @@ bool AVR_ArchMega0_SPI::ctlreq(uint16_t req, ctlreq_data_t* data)
 		data->data = &m_spi;
 		return true;
 	}
+	else if (req == AVR_CTLREQ_SPI_SELECT) {
+		m_pin_selected = (data->data.as_uint() > 0);
+		m_spi.set_selected(m_pin_selected && TEST_IOREG(CTRLA, SPI_ENABLE));
+		return true;
+	}
 
 	return false;
 }

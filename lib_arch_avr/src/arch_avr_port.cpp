@@ -108,9 +108,7 @@ void AVR_ArchAVR_Port::pin_state_changed(uint8_t num, AVR_Pin::State state)
 	AVR_IO_Port::pin_state_changed(num, state);
 	//The SHORTED case is taken care of by AVR_IO_Port
 	if (state != AVR_Pin::State_Shorted) {
-		bool curr_value = test_ioreg(m_config.reg_pin, num);
-		bool new_value = (state == AVR_Pin::State_High ? 1 : 0);
-		if (new_value ^ curr_value)
-			write_ioreg(m_config.reg_pin, num, new_value);
+		bool new_value = (state == AVR_Pin::State_High) ? 1 : 0;
+		write_ioreg(m_config.reg_pin, num, new_value);
 	}
 }

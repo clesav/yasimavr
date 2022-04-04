@@ -32,6 +32,7 @@ AVR_IO_Port::AVR_IO_Port(char name)
 ,m_name(name)
 ,m_pins(8)
 ,m_pinmask(0)
+,m_port_value(0)
 {}
 
 /*
@@ -68,6 +69,9 @@ void AVR_IO_Port::reset()
 			m_pins[i]->set_internal_state(AVR_Pin::State_Floating);
 		pinmask >>= 1;
 	}
+
+	m_port_value = 0;
+	m_signal.raise_u(0, 0, m_port_value);
 }
 
 /*
@@ -90,7 +94,7 @@ void AVR_IO_Port::set_pin_internal_state(uint8_t num, AVR_Pin::State state)
 	if (num < 8 && ((m_pinmask >> num) & 1)) {
 		DEBUG_LOG(device()->logger(), "PORT%c pin %d set to %s", m_name, num, AVR_Pin::StateName(state));
 		m_pins[num]->set_internal_state(state);
-		m_signal.raise_u(0, num, state);
+		//m_signal.raise_u(0, num, state);
 	}
 }
 
@@ -112,5 +116,13 @@ void AVR_IO_Port::pin_state_changed(uint8_t num, AVR_Pin::State state)
 	if (state == AVR_Pin::State_Shorted) {
 		ctlreq_data_t d = { .index = m_pins[num]->id() };
 		device()->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_SHORTING, &d);
+		return;
 	}
+
+	if (state == AVR_Pin::State_High)
+		m_port_value |= 1 << num;
+	else
+		m_port_value &= ~(1 << num);
+
+	m_signal.raise_u(0, 0, m_port_value);
 }
