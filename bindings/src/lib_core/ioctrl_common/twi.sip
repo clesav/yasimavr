@@ -23,7 +23,7 @@
 
 %ModuleCode
 
-#include "ioctrl_common/sim_twi.hpp"
+#include "ioctrl_common/sim_twi.h"
 
 const uint16_t CTLREQ_TWI_ENDPOINT = AVR_CTLREQ_TWI_ENDPOINT;
 
@@ -33,7 +33,7 @@ const uint16_t CTLREQ_TWI_ENDPOINT;
 
 class TWI_Packet {
 %TypeHeaderCode
-#include "ioctrl_common/sim_twi.hpp"
+#include "ioctrl_common/sim_twi.h"
 %End
 
 public:
@@ -68,7 +68,7 @@ public:
 
 class TWI_Endpoint {
 %TypeHeaderCode
-#include "ioctrl_common/sim_twi.hpp"
+#include "ioctrl_common/sim_twi.h"
 %End
 
 public:
@@ -95,7 +95,7 @@ protected:
 
 class TWI_Bus {
 %TypeHeaderCode
-#include "ioctrl_common/sim_twi.hpp"
+#include "ioctrl_common/sim_twi.h"
 %End
 
 public:
@@ -121,7 +121,7 @@ public:
 
 class AVR_IO_TWI : public TWI_Endpoint /NoDefaultCtors/ {
 %TypeHeaderCode
-#include "ioctrl_common/sim_twi.hpp"
+#include "ioctrl_common/sim_twi.h"
 %End
 
 public:

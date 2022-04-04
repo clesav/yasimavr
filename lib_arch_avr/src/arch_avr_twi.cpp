@@ -117,14 +117,14 @@ void AVR_ArchAVR_TWI::reset()
 	write_ioreg(m_config.rb_addr, 0x7F);
 }
 
-bool AVR_ArchAVR_TWI::ctlreq(uint16_t req, ctlreq_data_t *data)
+bool AVR_ArchAVR_TWI::ctlreq(uint16_t req, ctlreq_data_t* data)
 {
 	if (req == AVR_CTLREQ_GET_SIGNAL) {
-		data->p = &m_twi.signal();
+		data->data = &m_twi.signal();
 		return true;
 	}
 	else if (req == AVR_CTLREQ_TWI_ENDPOINT) {
-		data->p = &m_twi;
+		data->data = &m_twi;
 		return true;
 	}
 

@@ -96,14 +96,14 @@ void AVR_ArchMega0_TWI::reset()
 	m_has_slave_rx_data = false;
 }
 
-bool AVR_ArchMega0_TWI::ctlreq(uint16_t req, ctlreq_data_t *data)
+bool AVR_ArchMega0_TWI::ctlreq(uint16_t req, ctlreq_data_t* data)
 {
 	if (req == AVR_CTLREQ_GET_SIGNAL) {
-		data->p = &m_twi.signal();
+		data->data = &m_twi.signal();
 		return true;
 	}
 	else if (req == AVR_CTLREQ_TWI_ENDPOINT) {
-		data->p = &m_twi;
+		data->data = &m_twi;
 		return true;
 	}
 
