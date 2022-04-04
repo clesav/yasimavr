@@ -23,7 +23,7 @@
 
 %ModuleCode
 
-#include "ioctrl_common/sim_twi.hpp"
+#include "ioctrl_common/sim_twi.h"
 
 const uint16_t CTLREQ_TWI_ENDPOINT = AVR_CTLREQ_TWI_ENDPOINT;
 
@@ -33,7 +33,7 @@ const uint16_t CTLREQ_TWI_ENDPOINT;
 
 class TWI_Packet {
 %TypeHeaderCode
-#include "ioctrl_common/sim_twi.hpp"
+#include "ioctrl_common/sim_twi.h"
 %End
 
 public:
@@ -68,7 +68,7 @@ public:
 
 class TWI_Endpoint {
 %TypeHeaderCode
-#include "ioctrl_common/sim_twi.hpp"
+#include "ioctrl_common/sim_twi.h"
 %End
 
 public:
@@ -95,12 +95,12 @@ protected:
 
 class TWI_Bus {
 %TypeHeaderCode
-#include "ioctrl_common/sim_twi.hpp"
+#include "ioctrl_common/sim_twi.h"
 %End
 
 public:
 
-	enum SignalId {
+	enum SignalId /BaseType=IntEnum/ {
 		Signal_Start        /PyName=Start/,
 		Signal_Address      /PyName=Address/,
 		Signal_Data         /PyName=Data/,
@@ -121,7 +121,7 @@ public:
 
 class AVR_IO_TWI : public TWI_Endpoint /NoDefaultCtors/ {
 %TypeHeaderCode
-#include "ioctrl_common/sim_twi.hpp"
+#include "ioctrl_common/sim_twi.h"
 %End
 
 public:
@@ -136,6 +136,7 @@ public:
 	};
 
 	enum Component /BaseType=IntEnum/ {
+		Cpt_Any					/PyName=Any/,
 		Cpt_Master              /PyName=Master/,
 		Cpt_Slave               /PyName=Slave/,
 	};
@@ -176,8 +177,9 @@ public:
     
 	void set_master_enabled(bool);
 	void set_bit_delay(cycle_count_t);
-	bool start_transaction(uint8_t, bool);
-	void stop_transaction();
+	bool start_transfer();
+	void end_transfer();
+	bool send_address(uint8_t, bool);
 	bool start_master_tx(uint8_t);
 	bool start_master_rx();
 	void set_master_ack(bool);

@@ -1,5 +1,5 @@
 /*
- * arch_mega0_twi.h
+ * arch_avr_twi.h
  *
  *	Copyright 2021 Clement Savergne <csavergne@yahoo.com>
 
@@ -21,8 +21,8 @@
 
 //=======================================================================================
 
-#ifndef __YASIMAVR_MEGA0_TWI_H__
-#define __YASIMAVR_MEGA0_TWI_H__
+#ifndef __YASIMAVR_AVR_TWI_H__
+#define __YASIMAVR_AVR_TWI_H__
 
 
 #include "core/sim_interrupt.h"
@@ -31,7 +31,7 @@
 
 //=======================================================================================
 /*
- * Implementation of a TWI for the Mega-0/Mega-1 series
+ * Implementation of a TWI for the AVR series
  * Features:
  *  - Host/client mode
  *  - data order, phase and polarity settings have no effect
@@ -40,44 +40,55 @@
  *  for supported CTLREQs, see sim_spi.h
  */
  
-struct AVR_ArchMega0_TWI_Config {
+struct AVR_ArchAVR_TWI_Config {
+	
+	std::vector<unsigned int> ps_factors;
 
-	reg_addr_t reg_base;
-	int_vect_t iv_master;
-	int_vect_t iv_slave;
+	reg_addr_t	reg_ctrl;
+	bitmask_t	bm_enable;
+	bitmask_t 	bm_start;
+	bitmask_t 	bm_stop;
+	bitmask_t 	bm_int_enable;
+	bitmask_t 	bm_int_flag;
+	bitmask_t	bm_ack_enable;
+	
+	reg_addr_t 	reg_bitrate;
+	regbit_t 	rb_status;
+	regbit_t 	rb_prescaler;
+	reg_addr_t 	reg_data;
+	regbit_t 	rb_addr;
+	regbit_t 	rb_gencall_enable;
+	regbit_t 	rb_addr_mask;
+	int_vect_t 	iv_twi;
 
 };
 
-class DLL_EXPORT AVR_ArchMega0_TWI : public AVR_Peripheral, public AVR_SignalHook {
+class DLL_EXPORT AVR_ArchAVR_TWI : public AVR_Peripheral, public AVR_SignalHook {
 
 public:
 
-	AVR_ArchMega0_TWI(uint8_t num, const AVR_ArchMega0_TWI_Config& config);
+	AVR_ArchAVR_TWI(uint8_t num, const AVR_ArchAVR_TWI_Config& config);
 
 	virtual bool init(AVR_Device& device) override;
 	virtual void reset() override;
-	virtual bool ctlreq(uint16_t req, ctlreq_data_t* data) override;
-	virtual void ioreg_read_handler(reg_addr_t addr) override;
+	virtual bool ctlreq(uint16_t req, ctlreq_data_t *data) override;
 	virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
 	virtual void raised(const signal_data_t& sigdata, uint16_t hooktag) override;
 
 private:
 
-	const AVR_ArchMega0_TWI_Config& m_config;
+	const AVR_ArchAVR_TWI_Config& m_config;
 
 	AVR_IO_TWI m_twi;
-	bool m_has_address;
-	bool m_has_master_rx_data;
-	bool m_has_slave_rx_data;
+	bool m_gencall;
+	bool m_rx;
 
-	AVR_InterruptFlag m_intflag_master;
-	AVR_InterruptFlag m_intflag_slave;
+	AVR_InterruptFlag m_intflag;
 	
-	void set_master_enabled(bool enabled);
-	void clear_master_status();
-	void clear_slave_status();
+	void set_intflag(uint8_t status);
+	void clear_intflag();
 	bool address_match(uint8_t address);
 
 };
 
-#endif //__YASIMAVR_MEGA0_TWI_H__
+#endif //__YASIMAVR_AVR_TWI_H__
