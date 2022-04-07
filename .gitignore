@@ -35,3 +35,8 @@
 *.pyc
 *.pyd
 *.pyi
+
+# Compiled firmware
+*.asm
+*.elf
+*.hex
