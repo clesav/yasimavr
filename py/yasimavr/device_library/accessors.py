@@ -184,6 +184,10 @@ class RegisterAccessor:
     def name(self):
         return '%s.%s' % (self._per.name, self._reg.name)
     
+    @property
+    def address(self):
+        return self._addr
+    
     def __str__(self):
         pattern = '%%s [0x%%0%dx]' % (self._reg.size * 2)
         return pattern % (self.name, self.read())

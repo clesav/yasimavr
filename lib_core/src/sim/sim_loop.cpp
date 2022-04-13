@@ -151,8 +151,10 @@ void AVR_SimLoop::run(cycle_count_t nbcycles)
 
 	}
 
-	if (m_state < State_Done)
+	if (m_state < State_Done) {
 		m_state = State_Stopped;
+		m_cycle_manager.increment_cycle(final_cycle - m_cycle_manager.cycle());
+	}
 
 }
 
@@ -329,17 +331,20 @@ void AVR_AsyncSimLoop::end_transaction()
 
 void AVR_AsyncSimLoop::loop_continue()
 {
-	set_state(State_Running);
+	if (m_state < State_Done)
+		set_state(State_Running);
 }
 
 void AVR_AsyncSimLoop::loop_step()
 {
-	set_state(State_Step);
+	if (m_state == State_Stopped)
+		set_state(State_Step);
 }
 
 void AVR_AsyncSimLoop::loop_pause()
 {
-	set_state(State_Stopped);
+	if (m_state < State_Done)
+		set_state(State_Stopped);
 }
 
 void AVR_AsyncSimLoop::loop_kill()
