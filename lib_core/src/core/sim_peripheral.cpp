@@ -117,17 +117,21 @@ AVR_Signal* AVR_Peripheral::get_signal(uint32_t ctl_id, uint16_t index) const
 
 //=======================================================================================
 
-AVR_DummyController::AVR_DummyController(uint32_t id, reg_addr_t base_reg, int size)
+AVR_DummyController::AVR_DummyController(uint32_t id, const std::vector<dummy_register_t>& regs)
 :AVR_Peripheral(id)
-,m_base(base_reg)
-,m_size(size)
+,m_registers(regs)
 {}
 
 bool AVR_DummyController::init(AVR_Device& device)
 {
 	bool status = AVR_Peripheral::init(device);
-	for (int i=0; i < m_size; i++) {
-		add_ioreg(m_base + i);
-	}
+	for (dummy_register_t r : m_registers)
+		add_ioreg(r.reg);
 	return status;
+}
+
+void AVR_DummyController::reset()
+{
+	for (dummy_register_t r : m_registers)
+		write_ioreg(r.reg, r.reset);
 }

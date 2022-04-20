@@ -1,7 +1,7 @@
 /*
- * yasimavr-arch-m0.sip
+ * arch_mega0_spi.sip
  *
- *	Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *	Copyright 2022 Clement Savergne <csavergne@yahoo.com>
 
  	This file is part of yasim-avr.
 
@@ -21,24 +21,32 @@
  
 //=======================================================================================
 
-%Module(name=yasimavr.lib.arch_m0)
+struct AVR_ArchMega0_SPI_Config {
+%TypeHeaderCode
+#include "arch_mega0_spi.h"
+%End
 
-%Import ../lib_core/yasimavr-core.sip
+	reg_addr_t reg_base;
+	uint32_t pin_select;
+	int_vect_t iv_spi;
 
-%License "GPLv3 (see LICENSE file)"
+};
 
-%DefaultEncoding(name = "UTF-8")
 
-//=======================================================================================
+class AVR_ArchMega0_SPI : public AVR_Peripheral, public AVR_SignalHook /NoDefaultCtors/ {
+%TypeHeaderCode
+#include "arch_mega0_spi.h"
+%End
 
-%Include arch_mega0_adc.sip
-%Include arch_mega0_device.sip
-%Include arch_mega0_misc.sip
-%Include arch_mega0_port.sip
-%Include arch_mega0_rtc.sip
-%Include arch_mega0_spi.sip
-%Include arch_mega0_timer_a.sip
-%Include arch_mega0_timer_b.sip
-%Include arch_mega0_twi.sip
-%Include arch_mega0_usart.sip
-%Include arch_mega0_wdt.sip
+public:
+
+	AVR_ArchMega0_SPI(uint8_t num, const AVR_ArchMega0_SPI_Config&);
+
+	virtual bool init(AVR_Device&);
+	virtual void reset();
+	virtual bool ctlreq(uint16_t, ctlreq_data_t*);
+	virtual void ioreg_read_handler(reg_addr_t);
+	virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
+	virtual void raised(const signal_data_t&, uint16_t);
+
+};

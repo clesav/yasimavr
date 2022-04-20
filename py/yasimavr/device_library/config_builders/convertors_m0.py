@@ -166,6 +166,7 @@ _RTC_ConfigBuilder = _PeripheralConfigBuilder(_archlib.AVR_ArchMega0_RTC_Config,
 def get_rtc_config(per_desc):
     return _RTC_ConfigBuilder(per_desc)
 
+
 #========================================================================================
 #ADC management configuration
 
@@ -213,6 +214,7 @@ _ADC_ConfigBuilder = _PeripheralConfigBuilder(_archlib.AVR_ArchMega0_ADC_Config,
 def get_adc_config(per_desc):
     return _ADC_ConfigBuilder(per_desc)
 
+
 #========================================================================================
 #USART management configuration
 
@@ -238,3 +240,11 @@ _SPI_ConfigBuilder = _PeripheralConfigBuilder(_archlib.AVR_ArchMega0_SPI_Config,
 
 def get_spi_config(per_desc):
     return _SPI_ConfigBuilder(per_desc)
+
+#========================================================================================
+#TWI management configuration
+
+_TWI_ConfigBuilder = _PeripheralConfigBuilder(_archlib.AVR_ArchMega0_TWI_Config)
+
+def get_twi_config(per_desc):
+    return _TWI_ConfigBuilder(per_desc)

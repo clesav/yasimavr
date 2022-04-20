@@ -71,8 +71,13 @@ bool AVR_ArchMega0_SPI::init(AVR_Device& device)
 	m_spi.set_rx_buffer_limit(2);
 	m_spi.signal().connect_hook(this, HOOKTAG_SPI);
 	
-	m_pin_select = device.find_pin(m_config.pin_select);
-	m_pin_select->signal().connect_hook(this, HOOKTAG_PIN);
+	if (m_config.pin_select) {
+		m_pin_select = device.find_pin(m_config.pin_select);
+		if (!m_pin_select)
+			m_pin_select->signal().connect_hook(this, HOOKTAG_PIN);
+		else
+			status = false;
+	}
 
 	return status;
 }

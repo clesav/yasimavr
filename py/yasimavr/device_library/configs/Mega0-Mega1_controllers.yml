@@ -107,6 +107,75 @@ CPU:
             I: { kind: BIT, pos: 7 }
 
 #========================================================================================
+CLKCTRL:
+    registers:
+        - name: MCLKCTRLA
+          offset: 0x00
+          fields:
+            CLKSEL:
+                kind: ENUM
+                LSB: 0
+                MSB: 1
+                values: [ OSC20M, OSCULP32K, XOSC32K, EXTCLK ]
+            CLKOUT: { kind: BIT, pos: 7, one: enabled, zero: disabled }
+
+        - name: MCLKCTRLB
+          offset: 0x01
+          fields:
+            PEN: { kind: BIT, pos: 0, one: enabled, zero: disabled }
+            PDIV:
+                kind: ENUM
+                LSB: 1
+                MSB: 4
+                values: [ 2, 4, 8, 16, 32, 64, 6, 10, 12, 24, 48 ]
+
+        - name: MCLKLOCK
+          offset: 0x02
+          fields:
+            LOCKEN: { kind: BIT, pos: 0, one: locked, zero: unlocked }
+
+        - name: MCLKSTATUS
+          offset: 0x03
+          fields:
+            SOSC: { kind: BIT, pos: 0, one: stable, zero: unstable, readonly: yes }
+            OSC20MS: { kind: BIT, pos: 4, one: stable, zero: unstable, readonly: yes }
+            OSC32KS: { kind: BIT, pos: 5, one: stable, zero: unstable, readonly: yes }
+            XOSC32KS: { kind: BIT, pos: 6, one: stable, zero: unstable, readonly: yes }
+            EXTS: { kind: BIT, pos: 7, one: started, zero: not started, readonly: yes }
+
+        - name: OSC20MCTRLA
+          offset: 0x10
+          fields:
+            RUNSTDBY: { kind: BIT, pos: 1}
+
+        - name: OSC20MCALIBA
+          offset: 0x11
+          fields:
+            CAL20M:
+                kind: INT
+                LSB: 0
+                MSB: 6
+
+        - name: OSC20MCALIBB
+          offset: 0x12
+          fields:
+            TEMPCAL20M:
+                kind: INT
+                LSB: 0
+                MSB: 3
+            LOCK: { kind: BIT, pos: 7, one: locked, zero: unlocked, readonly: yes }
+
+    config:
+        regs:
+            - MCLKCTRLA
+            - [ MCLKCTRLB, 0x11 ]
+            - MCLKLOCK
+            - MCLKSTATUS
+            - OSC20MCTRLA
+            - OSC20MCALIBA
+            - OSC20MCALIBB
+
+#========================================================================================
 MISC:
     registers:
         - name: GPIOR0
@@ -141,5 +210,3 @@ MISC:
         gpior_count: 4
         reg_base_sigrow: 0x1100
         reg_revid: 0x0F01
-
-#========================================================================================

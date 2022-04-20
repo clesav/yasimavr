@@ -165,40 +165,13 @@ class _PeripheralConfigBuilder:
                 return None
         
         elif attr.startswith('rb_') or isinstance(default_val, _corelib.regbit_t):
-            return self._convert_regbit(yml_val, per_desc)
+            return convert_regbit(yml_val, per_desc)
             
         elif isinstance(default_val, (int, float)):
             return yml_val
         
         else:
             return None
-
-
-    def _convert_regbit(self, rb_desc, per_desc):
-        if isinstance(rb_desc, str):
-            reg_name = rb_desc
-            field_names = []
-        else:
-            reg_name, sf = rb_desc
-            field_names = [ fn.strip() for fn in sf.split('|') ]
-        
-        reg = per_desc.class_descriptor.registers[reg_name]
-        
-        if field_names:
-            fields = [ reg.fields[fn] for fn in field_names ]
-        else:
-            fields = reg.fields.values()
-        
-        bit = 7
-        mask = 0
-        for f in fields:
-            b, m = f.shift_mask()
-            bit = min(bit, b)
-            mask |= m << b
-        
-        rb = _corelib.regbit_t(per_desc.reg_address(reg_name), bit, mask)
-        
-        return rb
 
 #========================================================================================
 
@@ -214,3 +187,49 @@ def get_core_attributes(dev_desc):
             result |= _corelib.AVR_CoreConfiguration.Attributes[lib_flag_name]
     
     return result
+
+def convert_regbit(rb_desc, per_desc):
+    if isinstance(rb_desc, str):
+        reg_name = rb_desc
+        field_names = []
+    else:
+        reg_name, sf = rb_desc
+        field_names = [ fn.strip() for fn in sf.split('|') ]
+    
+    reg = per_desc.class_descriptor.registers[reg_name]
+    
+    if field_names:
+        fields = [ reg.fields[fn] for fn in field_names ]
+    else:
+        fields = reg.fields.values()
+    
+    bit = 7
+    mask = 0
+    for f in fields:
+        b, m = f.shift_mask()
+        bit = min(bit, b)
+        mask |= m << b
+    
+    rb = _corelib.regbit_t(per_desc.reg_address(reg_name), bit, mask)
+    
+    return rb
+
+
+def convert_dummy_controller_config(per_desc):
+    yml_cfg = dict(per_desc.class_descriptor.config)
+    
+    py_regs = []
+    for yml_item in yml_cfg['regs']:
+        reg_cfg = _corelib.AVR_DummyController.dummy_register_t()
+        if isinstance(yml_item, list):
+            reg_name, reg_reset = yml_item
+        else:
+            reg_name = yml_item
+            reg_reset = 0
+        
+        reg_cfg.reg = convert_regbit(reg_name, per_desc)
+        reg_cfg.reset = reg_reset
+        
+        py_regs.append(reg_cfg)
+    
+    return py_regs

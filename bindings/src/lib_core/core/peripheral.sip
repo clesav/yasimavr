@@ -203,8 +203,14 @@ class AVR_DummyController : public AVR_Peripheral /NoDefaultCtors/ {
 
 public:
 
-	AVR_DummyController(uint32_t, reg_addr_t, int);
+	struct dummy_register_t {
+		regbit_t reg;
+		uint8_t reset;
+	};
+
+	AVR_DummyController(uint32_t, std::vector<AVR_DummyController::dummy_register_t>);
 
 	virtual bool init(AVR_Device&);
+	virtual void reset();
 
 };

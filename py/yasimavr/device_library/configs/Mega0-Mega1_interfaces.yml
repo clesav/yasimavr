@@ -485,3 +485,57 @@ TWI:
                 MSB: 7
 
 #========================================================================================
+PORTMUX:
+    registers:
+        - name: EVSYSROUTEA
+          offset: 0x00
+          supported: no
+
+        - name: CCLROUTEA
+          offset: 0x01
+          supported: no
+
+        - name: USARTROUTEA
+          offset: 0x02
+          fields:
+            USART0:
+                kind: ENUM
+                LSB: 0
+                MSB: 1
+                values: { 0: DEFAULT, 1: ALT1, 3: NONE }
+            USART1:
+                kind: ENUM
+                LSB: 2
+                MSB: 3
+                values: { 0: DEFAULT, 1: ALT1, 3: NONE }
+            USART2:
+                kind: ENUM
+                LSB: 4
+                MSB: 5
+                values: { 0: DEFAULT, 1: ALT1, 3: NONE }
+            USART3:
+                kind: ENUM
+                LSB: 6
+                MSB: 7
+                values: { 0: DEFAULT, 1: ALT1, 3: NONE }
+
+        - name: TWISPIROUTEA
+          offset: 0x03
+          fields:
+            SPI0:
+                kind: ENUM
+                LSB: 0
+                MSB: 1
+                values: { 0: DEFAULT, 1: ALT1, 2: ALT2, 3: NONE }
+            TWI0:
+                kind: ENUM
+                LSB: 4
+                MSB: 5
+                values: { 0: DEFAULT, 1: ALT1, 2: ALT2 }
+    
+    config:
+        regs:
+            - EVSYSROUTEA
+            - CCLROUTEA
+            - USARTROUTEA
+            - TWISPIROUTEA

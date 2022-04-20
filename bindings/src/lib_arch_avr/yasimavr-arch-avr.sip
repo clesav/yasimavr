@@ -36,6 +36,8 @@
 %Include arch_avr_extint.sip
 %Include arch_avr_misc.sip
 %Include arch_avr_port.sip
+%Include arch_avr_spi.sip
 %Include arch_avr_timer.sip
+%Include arch_avr_twi.sip
 %Include arch_avr_usart.sip
 %Include arch_avr_wdt.sip

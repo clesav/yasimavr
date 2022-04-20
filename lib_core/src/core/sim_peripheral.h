@@ -324,14 +324,19 @@ class DLL_EXPORT AVR_DummyController : public AVR_Peripheral {
 
 public:
 
-	AVR_DummyController(uint32_t id, reg_addr_t base_reg, int size);
+	struct dummy_register_t {
+		regbit_t reg;
+		uint8_t reset;
+	};
+
+	AVR_DummyController(uint32_t id, const std::vector<dummy_register_t>& regs);
 
 	virtual bool init(AVR_Device& device) override;
+	virtual void reset() override;
 
 private:
 
-	const reg_addr_t m_base;
-	const int m_size;
+	const std::vector<dummy_register_t> m_registers;
 
 };
 

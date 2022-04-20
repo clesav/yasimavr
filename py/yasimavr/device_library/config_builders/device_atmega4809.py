@@ -24,6 +24,7 @@ This module initialises a ATmega4809
 from ...lib import core as _corelib
 from ...lib import arch_m0 as _archlib
 from ..descriptors import DeviceDescriptor
+from .configbuilder import convert_dummy_controller_config
 from .convertors_m0 import *
 
 DEV_NAME = 'atmega4809'
@@ -41,6 +42,8 @@ cpuint_config = get_cpuint_config(_desc.peripherals['CPUINT'])
 sleep_config = get_sleep_config(_desc.peripherals['SLPCTRL'])
 #Reset controller
 rstctrl_base = _desc.peripherals['RSTCTRL'].reg_base
+#Clock controller
+clkctrl_dummy_regs = convert_dummy_controller_config(_desc.peripherals['CLKCTRL'])
 #Misc registers
 misc_config = get_misc_config(_desc.peripherals['MISC'])
 #Ports
@@ -57,6 +60,12 @@ vref_base = _desc.peripherals['VREF'].reg_base
 #USART
 usart_configs = [get_usart_config(_desc.peripherals['USART' + str(n)])
                  for n in range(4)]
+#SPI
+spi_config = get_spi_config(_desc.peripherals['SPI0'])
+#TWI
+twi_config = get_twi_config(_desc.peripherals['TWI0'])
+#PORTMUX
+portmux_dummy_regs = convert_dummy_controller_config(_desc.peripherals['PORTMUX'])
                
 del _desc
 
@@ -72,6 +81,8 @@ class dev_atmega4809(_archlib.AVR_ArchMega0_Device):
         self.attach_peripheral(_archlib.AVR_ArchMega0_IntCtrl(cpuint_config))
         self.attach_peripheral(_corelib.AVR_SleepController(sleep_config))
         self.attach_peripheral(_archlib.AVR_ArchMega0_ResetCtrl(rstctrl_base))
+        self.attach_peripheral(_corelib.AVR_DummyController(_corelib.IOCTL_CLOCK,
+                                                            clkctrl_dummy_regs))
         self.attach_peripheral(_archlib.AVR_ArchMega0_MiscRegCtrl(misc_config))
         
         #Ports
@@ -90,7 +101,16 @@ class dev_atmega4809(_archlib.AVR_ArchMega0_Device):
         #USARTs
         for n, cfg in enumerate(usart_configs):
             self.attach_peripheral(_archlib.AVR_ArchMega0_USART(n, cfg))
-
+        
+        #SPI0
+        self.attach_peripheral(_archlib.AVR_ArchMega0_SPI(0, spi_config))
+        
+        #TWI0
+        self.attach_peripheral(_archlib.AVR_ArchMega0_TWI(0, twi_config))
+        
+        #PORTMUX
+        self.attach_peripheral(_corelib.AVR_DummyController(_corelib.IOCTL_PORTMUX,
+                                                            portmux_dummy_regs))
 
 DEV_CLASS = dev_atmega4809
 
