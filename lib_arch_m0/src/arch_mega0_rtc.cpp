@@ -98,7 +98,7 @@ bool AVR_ArchMega0_RTC::init(AVR_Device& device)
 	bool status = AVR_Peripheral::init(device);
 
 	add_ioreg(REG_ADDR(CTRLA), RTC_RUNSTDBY_bm | RTC_PRESCALER_gm | RTC_RTCEN_bm);
-	//STATUS not supported
+	add_ioreg(REG_ADDR(STATUS), RTC_CTRLABUSY_bm, true);
 	add_ioreg(REG_ADDR(INTCTRL), RTC_CMP_bm | RTC_OVF_bm);
 	add_ioreg(REG_ADDR(INTFLAGS), RTC_CMP_bm | RTC_OVF_bm);
 	add_ioreg(REG_ADDR(TEMP));
@@ -112,7 +112,7 @@ bool AVR_ArchMega0_RTC::init(AVR_Device& device)
 	add_ioreg(REG_ADDR(CMPL));
 	add_ioreg(REG_ADDR(CMPH));
 	add_ioreg(REG_ADDR(PITCTRLA), RTC_PERIOD_gm | RTC_PITEN_bm);
-	add_ioreg(REG_ADDR(STATUS), RTC_CTRLBUSY_bm);
+	add_ioreg(REG_ADDR(PITSTATUS), RTC_CTRLBUSY_bm, true);
 	add_ioreg(REG_ADDR(PITINTCTRL), RTC_PI_bm);
 	add_ioreg(REG_ADDR(PITINTFLAGS), RTC_PI_bm);
 	//PITDBGCTRL not supported
@@ -126,6 +126,9 @@ bool AVR_ArchMega0_RTC::init(AVR_Device& device)
 								 DEF_REGBIT_B(PITINTFLAGS, RTC_PI),
 								 m_config.iv_pit);
 
+	m_rtc_timer.init(device.cycle_manager(), device.logger());
+	m_pit_timer.init(device.cycle_manager(), device.logger());
+
 	return status;
 }
 
@@ -133,7 +136,9 @@ void AVR_ArchMega0_RTC::reset()
 {
 	m_clk_mode = RTC_Disabled;
 	m_rtc_cnt = 0;
-	m_rtc_per = 0;
+	m_rtc_per = 0xFFFF;
+	write_ioreg(REG_ADDR(PERL), 0xFF);
+	write_ioreg(REG_ADDR(PERH), 0xFF);
 	m_rtc_cmp = 0;
 	m_pit_cnt = 0;
 	m_next_rtc_event_type = 0;
@@ -152,8 +157,7 @@ void AVR_ArchMega0_RTC::ioreg_read_handler(reg_addr_t addr)
 		write_ioreg(REG_ADDR(TEMP), m_rtc_cnt >> 8);
 	}
 	else if (reg_ofs == REG_OFS(CNTH)) {
-		m_rtc_timer.update();
-		write_ioreg(REG_ADDR(CNTH), m_rtc_cnt >> 8);
+		write_ioreg(REG_ADDR(CNTH), read_ioreg(REG_ADDR(TEMP)));
 	}
 
 	//16-bits reading of PER
@@ -162,7 +166,7 @@ void AVR_ArchMega0_RTC::ioreg_read_handler(reg_addr_t addr)
 		write_ioreg(REG_ADDR(TEMP), m_rtc_per >> 8);
 	}
 	else if (reg_ofs == REG_OFS(PERH)) {
-		write_ioreg(REG_ADDR(PERH), m_rtc_per >> 8);
+		write_ioreg(REG_ADDR(PERH), read_ioreg(REG_ADDR(TEMP)));
 	}
 
 	//16-bits reading of CMP
@@ -171,7 +175,7 @@ void AVR_ArchMega0_RTC::ioreg_read_handler(reg_addr_t addr)
 		write_ioreg(REG_ADDR(TEMP), m_rtc_cmp >> 8);
 	}
 	else if (reg_ofs == REG_OFS(CMPH)) {
-		write_ioreg(REG_ADDR(CMPH), m_rtc_cmp >> 8);
+		write_ioreg(REG_ADDR(CMPH), read_ioreg(REG_ADDR(TEMP)));
 	}
 }
 
@@ -196,6 +200,10 @@ void AVR_ArchMega0_RTC::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t
 		else
 			m_clk_mode &= ~PIT_Enabled;
 		
+		do_reconfigure = (data.value != data.old);
+	}
+
+	else if (reg_ofs== REG_OFS(CLKSEL)) {
 		do_reconfigure = (data.value != data.old);
 	}
 
@@ -244,11 +252,15 @@ void AVR_ArchMega0_RTC::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t
 		m_rtc_intflag.clear_flag(bm.extract(data.value));
 	}
 
+	else if (reg_ofs == REG_OFS(PITINTCTRL)) {
+		m_pit_intflag.update_from_ioreg();
+	}
+
 	//If we're writing a 1 to the PIT interrupt flag bit, it clears the bit
 	//and cancel the interrupt
 	else if (reg_ofs == REG_OFS(PITINTFLAGS)) {
 		bitmask_t bm = bitmask_t(0, RTC_PI_bm);
-		write_ioreg(addr, 0);
+		write_ioreg(addr, bm.clear_from(data.value));
 		m_pit_intflag.clear_flag();
 	}
 
@@ -272,6 +284,10 @@ void AVR_ArchMega0_RTC::configure_timers()
 			clk_factor = device()->frequency() / 32768;
 		else if (clk_src == CFG::Clock_1kHz)
 			clk_factor = device()->frequency() / 1024;
+		else {
+			device()->crash(CRASH_INVALID_CONFIG, "Invalid RTC clock source");
+			return;
+		}
 
 		//Read and configure the prescaler factor
 		const uint32_t ps_max = PRESCALER_MAX * clk_factor;
@@ -295,29 +311,39 @@ void AVR_ArchMega0_RTC::configure_timers()
  * Defines the types of 'event' that can be triggered by the counter
  */
 enum TimerEventType {
-	TimerEventPer		= 0x01,
-	TimerEventCmp		= 0x02,
+	TimerEventMax		= 0x01,
+	TimerEventPer		= 0x02,
+	TimerEventCmp		= 0x04,
 };
 
 /*
  * Calculates the delay in prescaler ticks and the type of the next timer/counter event
  * for the RTC part
  */
+
 uint32_t AVR_ArchMega0_RTC::rtc_delay()
 {
-	int ticks_to_per = (int)m_rtc_per - (int)m_rtc_cnt + 1;
-	if (ticks_to_per < 1) ticks_to_per = 1;
-	int ticks_to_next_event = ticks_to_per;
+	int ticks_to_max = AVR_PrescaledTimer::ticks_to_event(m_rtc_cnt, 0x10000, 0x10000);
+	int ticks_to_next_event = ticks_to_max;
 
-	int ticks_to_cmp = (int)m_rtc_cmp - (int)m_rtc_cnt + 1;
-	if (ticks_to_cmp > 0 && ticks_to_cmp < ticks_to_next_event)
+	int ticks_to_per = AVR_PrescaledTimer::ticks_to_event(m_rtc_cnt, m_rtc_per, 0x10000);
+	if (ticks_to_per < ticks_to_next_event)
+		ticks_to_next_event = ticks_to_per;
+
+	int ticks_to_cmp = AVR_PrescaledTimer::ticks_to_event(m_rtc_cnt, m_rtc_cmp, 0x10000);
+	if (ticks_to_cmp < ticks_to_next_event)
 		ticks_to_next_event = ticks_to_cmp;
 
 	m_next_rtc_event_type = 0;
+	if (ticks_to_next_event == ticks_to_max)
+		m_next_rtc_event_type |= TimerEventMax;
 	if (ticks_to_next_event == ticks_to_per)
 		m_next_rtc_event_type |= TimerEventPer;
 	if (ticks_to_next_event == ticks_to_cmp)
 		m_next_rtc_event_type |= TimerEventCmp;
+
+	DEBUG_LOG(device()->logger(), "Next event for %s (RTC) : 0x%x in %d cycles",
+			  name().c_str(), m_next_rtc_event_type, ticks_to_next_event);
 
 	return ticks_to_next_event;
 }
@@ -330,15 +356,12 @@ uint32_t AVR_ArchMega0_RTC::pit_delay()
 	uint8_t period_index = READ_IOREG_F(PITCTRLA, RTC_PERIOD);
 	if (period_index == 0 || period_index == 0xFF) return 0;
 	
-	int period = 1 << (period_index + 3); //1 is DIV/4, 2 is DIV/8, etc
+	int period = 1 << (period_index + 1); //1 is DIV/4, 2 is DIV/8, etc
 	
-	int ticks_to_per = period - (int)m_rtc_cnt + 1;
-	
-	while (ticks_to_per < 0)
-		ticks_to_per += period;
-	
-	if (ticks_to_per == 0)
-		ticks_to_per = 1;
+	int ticks_to_per = AVR_PrescaledTimer::ticks_to_event(m_pit_cnt, period - 1, period);
+
+	DEBUG_LOG(device()->logger(), "Next event for %s (PIT) in %d cycles",
+			  name().c_str(), ticks_to_per);
 
 	return ticks_to_per;
 }
@@ -361,6 +384,10 @@ void AVR_ArchMega0_RTC::rtc_hook_raised(const signal_data_t& sigdata)
 {
 	m_rtc_cnt += sigdata.data.as_uint();
 	if (!sigdata.index) return;
+
+	if (m_next_rtc_event_type & TimerEventMax) {
+		m_rtc_cnt = 0;
+	}
 
 	if (m_next_rtc_event_type & TimerEventPer) {
 		m_rtc_cnt = 0;

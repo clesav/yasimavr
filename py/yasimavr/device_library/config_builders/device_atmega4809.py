@@ -53,6 +53,8 @@ port_configs = [(s, get_port_config(_desc.peripherals['PORT' + s]))
 tca_config = get_tca_config(_desc.peripherals['TCA0'])
 tcb_configs = [get_tcb_config(_desc.peripherals['TCB' + str(n)])
                for n in range(4)]
+#RTC
+rtc_config = get_rtc_config(_desc.peripherals['RTC'])
 #ADC
 adc_config = get_adc_config(_desc.peripherals['ADC'])
 #VREF
@@ -93,6 +95,9 @@ class dev_atmega4809(_archlib.AVR_ArchMega0_Device):
         self.attach_peripheral(_archlib.AVR_ArchMega0_TimerA(tca_config))
         for n, cfg in enumerate(tcb_configs):
             self.attach_peripheral(_archlib.AVR_ArchMega0_TimerB(n, cfg))
+        
+        #RTC
+        self.attach_peripheral(_archlib.AVR_ArchMega0_RTC(rtc_config))
         
         #ADC, VREF
         self.attach_peripheral(_archlib.AVR_ArchMega0_ADC(adc_config))

@@ -46,5 +46,7 @@ public:
 	
 	void register_chained_timer(AVR_PrescaledTimer&);
 	void unregister_chained_timer(AVR_PrescaledTimer&);
+	
+	static int ticks_to_event(int, int, int);
 
 };

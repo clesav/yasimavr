@@ -89,6 +89,8 @@ public:
 	void register_chained_timer(AVR_PrescaledTimer& timer);
 	void unregister_chained_timer(AVR_PrescaledTimer& timer);
 
+	static int ticks_to_event(int counter, int event, int wrap);
+
 private:
 
 	AVR_CycleManager* m_cycle_manager;

@@ -145,6 +145,9 @@ void AVR_PrescaledTimer::update_timer(cycle_count_t when)
 
 void AVR_PrescaledTimer::process_cycles(cycle_count_t cycles)
 {
+	if (m_ps_factor && !m_paused)
+		DEBUG_LOG(*m_logger, "Prescaled timer processing cycles dt=%d", cycles);
+
 	//This part generates the prescaler ticks corresponding to the update interval
 	//If ticks occurred in the interval, we check if there's enough to trigger the timeout
 	//If so, we raise the signal so that the peripheral handles the event.
@@ -152,7 +155,6 @@ void AVR_PrescaledTimer::process_cycles(cycle_count_t cycles)
 	//We loop by consuming the clock cycles we're catching up with and which generated the ticks
 	//We exit the loop once there are not enough clock cycles to generate any tick, or we've
 	//been disabled in the signal hook
-	DEBUG_LOG(*m_logger, "Prescaled timer processing cycles dt=%d", cycles);
 	while (m_ps_factor && !m_paused) {
 		//Calculate the nb of prescaler ticks that occurred in the update interval
 		cycle_count_t ticks = (cycles + m_ps_counter % m_ps_factor) / m_ps_factor;
@@ -282,4 +284,12 @@ void AVR_PrescaledTimer::unregister_chained_timer(AVR_PrescaledTimer& timer)
 	}
 
 	if (!m_updating) reschedule();
+}
+
+int AVR_PrescaledTimer::ticks_to_event(int counter, int event, int wrap)
+{
+	int ticks = event - counter + 1;
+	if (ticks <= 0)
+		ticks += wrap;
+	return ticks;
 }

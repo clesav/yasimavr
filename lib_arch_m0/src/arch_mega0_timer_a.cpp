@@ -313,18 +313,18 @@ enum TimerEventType {
  */
 uint32_t AVR_ArchMega0_TimerA::delay_to_event()
 {
-	int ticks_to_max = 0x10000 - (int)m_cnt;
+	int ticks_to_max = AVR_PrescaledTimer::ticks_to_event(m_cnt, 0x10000, 0x10000);
 	int ticks_to_next_event = ticks_to_max;
 
-	int ticks_to_per = (int)m_per - (int)m_cnt + 1;
-	if (ticks_to_per > 1 && ticks_to_per < ticks_to_next_event)
+	int ticks_to_per = AVR_PrescaledTimer::ticks_to_event(m_cnt, m_per, 0x10000);
+	if (ticks_to_per < ticks_to_next_event)
 		ticks_to_next_event = ticks_to_per;
 
 	int ticks_to_comp[3];
 	for (int i = 0; i < AVR_TCA_CMP_CHANNEL_COUNT; ++i) {
-		int t = (int)m_cmp[i] - (int)m_cnt + 1;
+		int t = AVR_PrescaledTimer::ticks_to_event(m_cnt, m_cmp[i], 0x10000);
 		ticks_to_comp[i] = t;
-		if (t > 1 && t < ticks_to_next_event)
+		if (t < ticks_to_next_event)
 			ticks_to_next_event = t;
 	}
 

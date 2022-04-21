@@ -155,6 +155,8 @@ void AVR_ArchMega0_TimerB::ioreg_write_handler(reg_addr_t addr, const ioreg_writ
 			else //disabled
 				m_timer.set_prescaler(2, 0);
 		}
+
+		do_reschedule = true;
 	}
 
 	//16-bits writing to CNT
@@ -204,11 +206,11 @@ enum TimerEventType {
  */
 uint32_t AVR_ArchMega0_TimerB::delay_to_event()
 {
-	int ticks_to_max = 0x10000 - (int)m_cnt;
-	int ticks_to_comp = (int)m_ccmp - (int)m_cnt + 1;
-
+	int ticks_to_max = AVR_PrescaledTimer::ticks_to_event(m_cnt, 0x10000, 0x10000);
 	int ticks_to_next_event = ticks_to_max;
-	if (ticks_to_comp > 0 && ticks_to_comp < ticks_to_next_event)
+
+	int ticks_to_comp = AVR_PrescaledTimer::ticks_to_event(m_cnt, m_ccmp, 0x10000);
+	if (ticks_to_comp < ticks_to_next_event)
 		ticks_to_next_event = ticks_to_comp;
 
 	m_next_event_type = 0;
