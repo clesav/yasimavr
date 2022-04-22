@@ -86,15 +86,16 @@ class AVR_Device /NoDefaultCtors/ {
 public:
 
     enum State {
-    	State_Limbo         /PyName=Limbo/,
-    	State_Ready         /PyName=Ready/,
+		State_Limbo         /PyName=Limbo/,
+		State_Ready         /PyName=Ready/,
 		State_Running       /PyName=Running/,
 		State_Sleeping      /PyName=Sleeping/,
 		State_Reset         /PyName=Reset/,
 		State_Stopped       /PyName=Stopped/,
+		State_Break         /PyName=Break/,
 		State_Done          /PyName=Done/,
 		State_Crashed       /PyName=Crashed/,
-        State_Destroying    /PyName=Destroying/,
+		State_Destroying    /PyName=Destroying/,
     };
     
    	enum ResetFlag {

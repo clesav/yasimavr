@@ -110,10 +110,14 @@ void AVR_IO_Console::reset()
 void AVR_IO_Console::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
 	if (addr == m_reg_console) {
-		m_buf += (char) data.value;
 		if (data.value == '\n') {
+			char s[20];
+			sprintf(s, "[%llu] ", device()->cycle());
+			m_buf.insert(0, s);
 			device()->logger().log(AVR_DeviceLogger::LOG_OUTPUT, m_buf.c_str());
 			m_buf.clear();
+		} else {
+			m_buf += (char) data.value;
 		}
 	}
 }
@@ -241,16 +245,10 @@ bool AVR_Device::load_firmware(const AVR_Firmware& firmware)
 
 	DEBUG_LOG(*m_logger, "Loading %d bytes of flash", firmware.flashsize);
 
-	uint32_t flashend = firmware.flashbase + firmware.flashsize - 1;
-	if (flashend > m_core.m_config.flashend) {
-		ERROR_LOG(*m_logger, "Firmware load: Firmware flash too big (%d > %d)",
-				  flashend, m_core.m_config.flashend);
+	if (!firmware.load_flash(m_core.m_flash, m_core.m_flash_tag, m_core.m_config.flashend)) {
+		ERROR_LOG(*m_logger, "Firmware load: The flash does not fit", "");
 		return false;
 	}
-	std::memcpy(m_core.m_flash + firmware.flashbase, firmware.flash, firmware.flashsize);
-
-	m_core.m_codeend = firmware.flashsize + firmware.flashbase - firmware.datasize;
-	m_core.m_programend = firmware.flashsize + firmware.flashbase;
 
 	//Stores the frequency. Compulsory.
 	if (!firmware.frequency) {

@@ -230,8 +230,8 @@ static bool _is_instruction_32_bits(uint16_t opcode)
 cycle_count_t AVR_Core::run_instruction()
 {
 	
-	if (m_pc >= m_config.flashend) {
-		m_device->crash(CRASH_PC_OVERFLOW, "PC over flashend");
+	if (m_pc > m_programend) {
+		m_device->crash(CRASH_PC_OVERFLOW, "PC over programend");
 		return 0;
 	}
 
@@ -513,6 +513,7 @@ cycle_count_t AVR_Core::run_instruction()
 				}	break;
 				case 0x9598: { // BREAK -- 1001 0101 1001 1000
 					TRACE_OP("break");
+					new_pc -= 2;
 					//The break instruction is handled at device level. If it is handled,
 					//we don't progress the PC until the original opcode is restored
 					m_device->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_BREAK, nullptr);
@@ -949,17 +950,11 @@ cycle_count_t AVR_Core::run_instruction()
 
 		case 0xf000: {
 			switch (opcode & 0xfe00) {
-				case 0xf100: {	/* simavr special opcodes */
-					if (opcode == 0xf1f1) { // AVR_OVERFLOW_OPCODE
-						m_device->crash(CRASH_PC_OVERFLOW, "reaching the overflow opcode");
-						return 0;
-					}
-				}	break;
 				case 0xf000:
 				case 0xf200:
 				case 0xf400:
 				case 0xf600: {	// BRXC/BRXS -- All the SREG branches -- 1111 0Boo oooo osss
-					int16_t k = ((int16_t)(opcode << 6)) >> 8; // offset in bytes
+					int16_t k = (((int16_t)(opcode << 6)) >> 8) & 0xFFFE; // offset in bytes
 					uint8_t flag = opcode & 7;
 					int set = (opcode & 0x0400) == 0;		// this bit means BRXC otherwise BRXS
 					int branch = (m_sreg[flag] && set) || (!m_sreg[flag] && !set);

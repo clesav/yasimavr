@@ -29,6 +29,26 @@ struct AVR_Firmware {
 
 public:
 
+	struct Block {
+	
+		size_t size /NoSetter/;
+		size_t base;
+		
+		//uint8_t* buf;
+		SIP_PYBUFFER buf /NoSetter/ {
+		%GetCode
+			sipPy = export_to_pybuffer(sipAPI_core, sipCpp->buf, sipCpp->size);
+		%End
+		};
+		
+		Block(size_t base, SIP_PYBUFFER data);
+		%MethodCode
+			sipCpp->base = a0;
+			sipCpp->size = import_from_pybuffer(sipAPI_core, &(sipCpp->buf), a1);
+		%End
+		
+	};
+
 	char* variant /NoSetter/ {
 		%GetCode
 			sipPy = PyUnicode_FromString(sipCpp->variant.c_str());
@@ -38,43 +58,33 @@ public:
 	uint32_t frequency;
 	double vcc;
 	double aref;
-
-	flash_addr_t flashbase;
 	
-	SIP_PYBUFFER flash /NoSetter/ {
-		%GetCode
-			sipPy = export_to_pybuffer(sipAPI_core, sipCpp->flash, sipCpp->flashsize);
-		%End
-	};
-	
-	void set_flash(SIP_PYBUFFER);
-	%MethodCode
-		sipCpp->flashsize = import_from_pybuffer(sipAPI_core, &(sipCpp->flash), a0);
-	%End
-	
+	std::vector<AVR_Firmware::Block> flashblocks;
 	uint32_t flashsize /NoSetter/;
 	uint32_t datasize;
 	uint32_t bsssize;
 	
-	
-	SIP_PYBUFFER eeprom /NoSetter/ {
-		%GetCode
-			sipPy = export_to_pybuffer(sipAPI_core, sipCpp->eeprom, sipCpp->eesize);
-		%End
-	};
-	
-	void set_eeprom(SIP_PYBUFFER);
-	%MethodCode
-		sipCpp->eesize = import_from_pybuffer(sipAPI_core, &(sipCpp->eeprom), a0);
-	%End
-	
-	uint32_t eesize /NoSetter/;
-	
-	reg_addr_t			console_register;
+	reg_addr_t console_register;
 	
 	AVR_Firmware();
 	~AVR_Firmware();
 	
 	static AVR_Firmware* read_elf(const char*);
+	
+	SIP_PYTUPLE load_flash(flash_addr_t flashend) const
+		[bool (uint8_t*, uint8_t*, flash_addr_t)];
+	%MethodCode
+		uint8_t* flash_buf = (uint8_t*) sipMalloc(a0 + 1);
+		uint8_t* tag_buf = (uint8_t*) sipMalloc(a0 + 1);
+		bool res = sipCpp->load_flash(flash_buf, tag_buf, a0);
+		if (res) {
+			sipRes = Py_BuildValue("y#,y#", flash_buf, a0 + 1, tag_buf, a0 + 1);
+		} else {
+			sipRes = Py_None;
+			Py_INCREF(sipRes);
+		}
+		sipFree(flash_buf);
+		sipFree(tag_buf);
+	%End
 
 };

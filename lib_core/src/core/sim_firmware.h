@@ -26,32 +26,32 @@
 
 #include "sim_types.h"
 #include <string>
-
+#include <vector>
 
 //=======================================================================================
 /*
  * AVR_Firmware contains the information of a firmware loaded from a ELF file.
-  * the ELF format decoding relies on the library libelf
+ * the ELF format decoding relies on the library libelf
  */
 class DLL_EXPORT AVR_Firmware {
 
 public:
 
+	struct Block {
+		size_t size;
+		size_t base;
+		uint8_t* buf;
+	};
+
 	std::string			variant;
-	uint32_t			frequency;
+	unsigned int		frequency;
 	double				vcc;
 	double				aref;
 
-	flash_addr_t		flashbase;
-	uint8_t*			flash;
-	uint32_t			flashsize;
-	uint32_t			datasize;
-	uint32_t			bsssize;
-	uint8_t*			eeprom;
-	uint32_t			eesize;
-//	uint8_t*			fuse;
-//	uint32_t			fusesize;
-//	uint8_t*			lockbits;
+	std::vector<Block>	flashblocks;
+	flash_addr_t		flashsize;
+	mem_addr_t			datasize;
+	mem_addr_t			bsssize;
 
 	reg_addr_t			console_register;
 
@@ -59,6 +59,8 @@ public:
 	~AVR_Firmware();
 
 	static AVR_Firmware* read_elf(const std::string& filename);
+
+	bool load_flash(uint8_t* flash, uint8_t* tag, flash_addr_t flashend) const;
 
 };
 

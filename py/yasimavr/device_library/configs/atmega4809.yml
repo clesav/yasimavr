@@ -32,7 +32,7 @@ memory:
         FLASHSTART: 0x4000
         FLASHEND: 0xFFFF
     flash:
-        FLASHEND: 0x7FFF
+        FLASHEND: 0xBFFF
     eeprom:
         EEPROMEND: 0xFF
 

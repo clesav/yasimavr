@@ -23,7 +23,6 @@
 
 #include "sim_firmware.h"
 #include "sim_device.h"
-//#include "../fw_support/avr_mcu_section.h"
 #include <libelf.h>
 #include <gelf.h>
 #include <stdio.h>
@@ -37,82 +36,30 @@ AVR_Firmware::AVR_Firmware()
 ,frequency(0)
 ,vcc(0.0)
 ,aref(0.0)
-,flashbase(0)
-,flash(nullptr)
 ,flashsize(0)
 ,datasize(0)
 ,bsssize(0)
-,eeprom(nullptr)
-,eesize(0)
-//,fuse(nullptr)
-//,fusesize(0)
-//,lockbits(nullptr)
 ,console_register(0)
 {}
 
 AVR_Firmware::~AVR_Firmware()
 {
-	if (flash)
-		free(flash);
-	if (eeprom)
-		free(eeprom);
-//	if (fuse)
-//		free(fuse);
-//	if (lockbits)
-//		free(lockbits);
+	for (auto block: flashblocks)
+		if (block.size)
+			free(block.buf);
 }
 
-static void elf_copy_section(const char *name, Elf_Data *data, uint8_t **dest, uint32_t *destsize)
+static Elf32_Phdr* elf_find_phdr(Elf32_Phdr* phdr_table, size_t phdr_count, GElf_Shdr* shdr)
 {
-	*dest = (uint8_t*) malloc(data->d_size);
-	if (*dest) {
-		memcpy(*dest, data->d_buf, data->d_size);
-		if (destsize)
-			*destsize = data->d_size;
+	for (size_t i = 0; i < phdr_count; ++i) {
+		Elf32_Phdr* phdr = phdr_table + i;
+		if (phdr->p_type != PT_LOAD) continue;
+		if (shdr->sh_offset < phdr->p_offset) continue;
+		if ((shdr->sh_offset + shdr->sh_size) > (phdr->p_offset + phdr->p_filesz)) continue;
+		return phdr;
 	}
+	return nullptr;
 }
-
-//static void elf_parse_mmcu_section(AVR_Firmware* firmware, uint8_t *src, uint32_t size)
-//{
-//	while (size) {
-//		uint8_t tag = *src++;
-//		uint8_t ts = *src++;
-//		unsigned int next = (size > 2 + ts) ? 2 + ts : size;
-//		switch (tag) {
-//			case AVR_MMCU_TAG_FREQUENCY:
-//				firmware->frequency = src[0] | (src[1] << 8) | (src[2] << 16) | (src[3] << 24);
-//				break;
-//			case AVR_MMCU_TAG_NAME:
-//				firmware->variant = (char*) src;
-//				break;
-//			case AVR_MMCU_TAG_VCC: {
-//				uint32_t v = src[0] | (src[1] << 8) | (src[2] << 16) | (src[3] << 24);
-//				firmware->vcc = v / 1000.0;
-//			} break;
-//			case AVR_MMCU_TAG_AREF: {
-//				uint32_t v = src[0] | (src[1] << 8) | (src[2] << 16) | (src[3] << 24);
-//				firmware->aref = v / 1000.0;
-//			} break;
-//			case AVR_MMCU_TAG_PORT_EXTERNAL_PULL: {
-//				/*for (int i = 0; i < 8; i++)
-//					if (!firmware->external_state[i].port) {
-//						firmware->external_state[i].port = src[2];
-//						firmware->external_state[i].mask = src[1];
-//						firmware->external_state[i].value = src[0];
-//						break;
-//					}*/
-//			} break;
-//			case AVR_MMCU_TAG_SIMAVR_COMMAND: {
-//				//firmware->command_register_addr = src[0] | (src[1] << 8);
-//			}	break;
-//			case AVR_MMCU_TAG_SIMAVR_CONSOLE: {
-//				firmware->console_register = src[0] | (src[1] << 8);
-//			}	break;
-//		}
-//		size -= next;
-//		src += next - 2; // already incremented
-//	}
-//}
 
 AVR_Firmware* AVR_Firmware::read_elf(const std::string& filename)
 {
@@ -133,72 +80,88 @@ AVR_Firmware* AVR_Firmware::read_elf(const std::string& filename)
 
 	AVR_Firmware *firmware = new AVR_Firmware();
 	int fd = fileno(file);
-	Elf_Data *data_data = nullptr;
-	Elf_Data *data_text = nullptr;
-	Elf_Data *data_ee = nullptr;
-//	Elf_Data *data_fuse = nullptr;
-//	Elf_Data *data_lockbits = nullptr;
 
 	/* this is actually mandatory !! otherwise elf_begin() fails */
 	if (elf_version(EV_CURRENT) == EV_NONE) {
 			/* library out of date - recover from error */
 	}
-	// Iterate through section headers again this time well stop when we find symbols
+
 	elf = elf_begin(fd, ELF_C_READ, nullptr);
 
-	Elf_Scn *scn = nullptr;                   /* Section Descriptor */
+	//Obtain the Program Header table pointer and size
+	size_t phdr_count;
+	elf_getphdrnum(elf, &phdr_count);
+	Elf32_Phdr* phdr_table = elf32_getphdr(elf);
 
+	//Iterate through all sections
+	Elf_Scn* scn = nullptr;
 	while ((scn = elf_nextscn(elf, scn)) != nullptr) {
-		GElf_Shdr shdr;                 /* Section Header */
+		//Get the section header and its name
+		GElf_Shdr shdr;
 		gelf_getshdr(scn, &shdr);
 		char * name = elf_strptr(elf, elf_header.e_shstrndx, shdr.sh_name);
 
-		if (!std::strcmp(name, ".text"))
-			data_text = elf_getdata(scn, nullptr);
-		else if (!strcmp(name, ".data"))
-			data_data = elf_getdata(scn, nullptr);
-		else if (!strcmp(name, ".eeprom"))
-			data_ee = elf_getdata(scn, nullptr);
-//		else if (!strcmp(name, ".fuse"))
-//			data_fuse = elf_getdata(scn, nullptr);
-//		else if (!strcmp(name, ".lock"))
-//			data_lockbits = elf_getdata(scn, nullptr);
-		else if (!strcmp(name, ".bss")) {
-			Elf_Data *s = elf_getdata(scn, nullptr);
+		//For bss and data sections, store the size only
+		if (!strcmp(name, ".bss")) {
+			Elf_Data* s = elf_getdata(scn, nullptr);
 			firmware->bsssize = s->d_size;
 		}
-//		else if (!strcmp(name, ".mmcu")) {
-//			Elf_Data *s = elf_getdata(scn, nullptr);
-//			elf_parse_mmcu_section(firmware, (uint8_t*) s->d_buf, s->d_size);
-//		//	avr->frequency = f_cpu;
-//		}
-	}
+		else if (!strcmp(name, ".data")) {
+			Elf_Data* s = elf_getdata(scn, nullptr);
+			firmware->datasize = s->d_size;
+		}
 
-	uint32_t offset = 0;
-	firmware->flashsize = (data_text ? data_text->d_size : 0) + (data_data ? data_data->d_size : 0);
-	firmware->flash = (uint8_t*) malloc(firmware->flashsize);
+		//The rest of the loop is to retrieve the binary data of the section.
+		//Only if it's a loadable non-empty section.
+		if (((shdr.sh_flags & SHF_ALLOC) == 0) || (shdr.sh_type != SHT_PROGBITS))
+			continue;
+		if (shdr.sh_size == 0)
+			continue;
 
-	// using unsigned int for output, since there is no AVR with 4GB
-	if (data_text) {
-		memcpy(firmware->flash + offset, data_text->d_buf, data_text->d_size);
-		offset += data_text->d_size;
-	}
-	if (data_data) {
-		memcpy(firmware->flash + offset, data_data->d_buf, data_data->d_size);
-		offset += data_data->d_size;
-		firmware->datasize = data_data->d_size;
-	}
-	if (data_ee)
-		elf_copy_section(".eeprom", data_ee, &firmware->eeprom, &firmware->eesize);
+		//Find the Program Header segment containing this section
+		Elf32_Phdr* phdr = elf_find_phdr(phdr_table, phdr_count, &shdr);
+		if (!phdr) continue;
 
-//	if (data_fuse)
-//		elf_copy_section(".fuse", data_fuse, &firmware->fuse, &firmware->fusesize);
-//
-//	if (data_lockbits)
-//		elf_copy_section(".lock", data_lockbits, &firmware->lockbits, nullptr);
+		Elf_Data* scn_data = elf_getdata(scn, nullptr);
+
+		//Load Memory Address calculation
+		unsigned int lma = phdr->p_paddr + shdr.sh_offset - phdr->p_offset;
+
+		//Create the memory block
+		Block b = { .size = scn_data->d_size, .base = lma, .buf = nullptr };
+		if (scn_data->d_size) {
+			b.buf = (uint8_t*) malloc(scn_data->d_size);
+			memcpy(b.buf, scn_data->d_buf, scn_data->d_size);
+		}
+
+		//Add the block to the proper memory category (Flash, etc...)
+		if (!strcmp(name, ".text") || !strcmp(name, ".rodata")) {
+			firmware->flashblocks.push_back(b);
+			firmware->flashsize += scn_data->d_size;
+		}
+		//TODO: add EEPROM, fuses, SIGROW, etc...
+	}
 
 	elf_end(elf);
 	fclose(file);
+
 	AVR_StandardLogger.log(AVR_DeviceLogger::LOG_DEBUG, "Firmware read from ELF file '%s'", filename.c_str());
+
 	return firmware;
+}
+
+bool AVR_Firmware::load_flash(uint8_t* flash, uint8_t* tag, flash_addr_t flashend) const
+{
+	for (auto block : flashblocks) {
+		if (block.size) {
+
+			if (block.base + block.size > flashend + 1)
+				return false;
+
+			memcpy(flash + block.base, block.buf, block.size);
+			memset(tag + block.base, 1, block.size);
+		}
+	}
+
+	return true;
 }

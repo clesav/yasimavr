@@ -186,7 +186,7 @@ class GDB_Stub:
     def __send_reply(self, reply):
         print('<<<', reply)
         sys.stdout.flush()
-		
+        
         if isinstance(reply, str):
             reply = reply.encode('ascii')
         
@@ -201,7 +201,7 @@ class GDB_Stub:
     def __decode_command(self, cmdline):
         print('>>>', cmdline)
         sys.stdout.flush()
-		
+        
         cmd = cmdline[0]
         cmdargs = cmdline[1:]
         if cmd == 'q':

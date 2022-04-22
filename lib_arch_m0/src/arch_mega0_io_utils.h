@@ -34,23 +34,20 @@
 #define DEF_BITMASK_F(field) \
 	bitmask_t(field ## _gp, field ## _gm)
 
-
 #define DEF_BITMASK_B(bit) \
 	bitmask_t(bit ## _bp, bit ## _bm)
 	
-
 #define DEF_REGBIT_F(addr, field) \
 	regbit_t(REG_ADDR(addr), field ## _gp, field ## _gm)
-
 
 #define DEF_REGBIT_B(addr, bit) \
 	regbit_t(REG_ADDR(addr), bit ## _bp, bit ## _bm)
 
 #define EXTRACT_F(reg, field) \
-	(((reg) && field ## _gm) >> field ## _gp)
+	(((reg) & field ## _gm) >> field ## _gp)
 
 #define EXTRACT_B(reg, bit) \
-	(((reg) && bit ## _bm) >> bit ## _bp)
+	(((reg) & bit ## _bm) >> bit ## _bp)
 
 #define READ_IOREG(reg) \
 	read_ioreg(REG_ADDR(reg))

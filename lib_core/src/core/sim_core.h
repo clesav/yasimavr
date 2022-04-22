@@ -125,10 +125,9 @@ protected:
 	//Pointers to the array representing the device memories.
     uint8_t* m_sram;
     uint8_t* m_flash;
-	//Top boundary of the code in flash
-    flash_addr_t m_codeend;
-    //Top boundary of the program (code+data) in flash
-    flash_addr_t m_programend;
+    uint8_t* m_flash_tag;
+    //Top programmed address of the flash in bytes (for PC overflow checks)
+    const flash_addr_t m_programend;
 	//PC variable, expressed in 8-bits (unlike the actual device PC)
     flash_addr_t m_pc;
 	//Counter to inhibit interrupts for a given number of instructions

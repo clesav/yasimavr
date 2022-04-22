@@ -186,7 +186,7 @@ void AVR_ArchMega0_ResetCtrl::reset()
 	//register RSTFR accordingly
 	ctlreq_data_t reqdata;
 	if (device()->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_RESET_FLAG, &reqdata)) {
-		unsigned int flags = reqdata.data.as_uint();
+		int flags = reqdata.data.as_int();
 		if (flags & AVR_Device::Reset_BOD)
 			m_rst_flags |= RSTCTRL_BORF_bm;
 		if (flags & AVR_Device::Reset_WDT)

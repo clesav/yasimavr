@@ -34,7 +34,6 @@
 AVR_Core::AVR_Core(const AVR_CoreConfiguration& config)
 :m_config(config)
 ,m_device(nullptr)
-,m_codeend(m_config.flashend)
 ,m_programend(m_config.flashend)
 ,m_pc(0)
 ,m_instruction_counter(0)
@@ -48,11 +47,11 @@ AVR_Core::AVR_Core(const AVR_CoreConfiguration& config)
 	std::memset(m_sram, 0x00, sram_size);
 
 	//Allocate the flash sector in RAM
-	size_t sim_flash_size = m_config.flashend * 2 + 4;
-	m_flash = (uint8_t*) malloc(sim_flash_size);
-	std::memset(m_flash, 0xff, sim_flash_size);
-	m_flash[sim_flash_size - 2] = AVR_OVERFLOW_OPCODE >> 8;
-	m_flash[sim_flash_size - 1] = AVR_OVERFLOW_OPCODE & 0xFF;
+	size_t flash_size = m_config.flashend + 1;
+	m_flash = (uint8_t*) malloc(flash_size);
+	std::memset(m_flash, 0xff, flash_size);
+	m_flash_tag = (uint8_t*) malloc(flash_size);
+	std::memset(m_flash_tag, 0, flash_size);
 
 	//Allocate the I/O registers in RAM
 	//We don't actually allocate any register until the peripherals ask for it
@@ -78,6 +77,7 @@ AVR_Core::~AVR_Core()
 {
 	free(m_sram);
 	free(m_flash);
+	free(m_flash_tag);
 
 	uint16_t ioreg_size = m_config.ioend - m_config.iostart + 1;
 	for (uint16_t i = 0; i < ioreg_size; ++i) {
@@ -284,8 +284,8 @@ uint8_t AVR_Core::cpu_read_flash(flash_addr_t pgm_addr)
 		return 0;
 	}
 
-	if (pgm_addr > m_programend) {
-		WARNING_LOG(m_device->logger(), "CPU reading out of bounds flash: 0x%04x", pgm_addr);
+	if (!m_flash_tag[pgm_addr]) {
+		WARNING_LOG(m_device->logger(), "CPU reading an unprogrammed flash address: 0x%04x", pgm_addr);
 		if (!m_device->test_option(AVR_Device::Option_IgnoreBadCpuLPM)) {
 			m_device->crash(CRASH_FLASH_ADDR_OVERFLOW, "Invalid flash address");
 		}
