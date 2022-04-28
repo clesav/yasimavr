@@ -84,7 +84,7 @@ void AVR_IO_SPI::set_frame_delay(cycle_count_t delay)
 /*
  * Set the TX buffer limit and trim the buffer if necessary
  */
-void AVR_IO_SPI::set_tx_buffer_limit(unsigned int limit)
+void AVR_IO_SPI::set_tx_buffer_limit(size_t limit)
 {
 	m_tx_limit = limit;
 	while (limit > 0 && m_tx_buffer.size() > limit)
@@ -94,7 +94,7 @@ void AVR_IO_SPI::set_tx_buffer_limit(unsigned int limit)
 /*
  * Set the RX buffer limit and trim the buffer if necessary
  */
-void AVR_IO_SPI::set_rx_buffer_limit(unsigned int limit)
+void AVR_IO_SPI::set_rx_buffer_limit(size_t limit)
 {
 	m_rx_limit = limit;
 	while (limit > 0 && m_rx_buffer.size() > limit)
@@ -113,7 +113,7 @@ void AVR_IO_SPI::push_tx(uint8_t frame)
 	m_tx_buffer.push_back(frame);
 
 	if (m_is_host && !m_tfr_in_progress)
-		start_transfer();
+		start_transfer_as_host();
 }
 
 /*
@@ -126,6 +126,7 @@ void AVR_IO_SPI::cancel_tx()
 	if (m_is_host && m_tfr_in_progress) {
 		m_signal.raise_u(Signal_HostTfrComplete, 0, 0);
 		m_tfr_in_progress = false;
+		m_rx_buffer.pop_back();
 		m_cycle_manager->remove_cycle_timer(this);
 
 		if (m_selected_client) {
@@ -147,7 +148,7 @@ uint8_t AVR_IO_SPI::pop_rx()
 	}
 }
 
-void AVR_IO_SPI::start_transfer()
+void AVR_IO_SPI::start_transfer_as_host()
 {
 	uint8_t mosi_frame = m_tx_buffer.front();
 	m_tx_buffer.pop_front();
@@ -186,14 +187,16 @@ void AVR_IO_SPI::start_transfer()
 
 cycle_count_t AVR_IO_SPI::next(cycle_count_t when)
 {
-	m_selected_client->end_transfer(true);
-	m_selected_client = nullptr;
+	if (m_selected_client) {
+		m_selected_client->end_transfer(true);
+		m_selected_client = nullptr;
+	}
 
 	m_signal.raise_u(Signal_HostTfrComplete, 0, 1);
 
 	//Is there another transfer to do ?
 	if (m_tx_buffer.size()) {
-		start_transfer();
+		start_transfer_as_host();
 		return when + m_delay;
 	} else {
 		m_tfr_in_progress = false;

@@ -36,6 +36,9 @@
  *  - Host/client mode
  *  - data order, phase and polarity settings have no effect
  *  - write collision flag not supported
+ *  - buffer mode not supported
+ *  - multi-host mode not supported
+ *  - Slave Select has no effect in host mode (the SSD setting has no effect)
  *
  *  for supported CTLREQs, see sim_spi.h
  */

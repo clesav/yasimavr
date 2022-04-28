@@ -75,11 +75,12 @@ public:
 	void set_frame_delay(cycle_count_t);
 	void add_client(AVR_SPI_Client*);
 	void set_selected(bool);
-	void set_tx_buffer_limit(unsigned int);
-	void set_rx_buffer_limit(unsigned int);
+	void set_tx_buffer_limit(size_t);
 	void push_tx(uint8_t);
 	void cancel_tx();
-	unsigned int rx_available() const;
+	void set_rx_buffer_limit(size_t);
+	bool tfr_in_progress() const;
+	size_t rx_available() const;
 	uint8_t pop_rx();
 	virtual cycle_count_t next(cycle_count_t);
 	virtual bool selected() const;

@@ -95,7 +95,7 @@ public:
 	void set_selected(bool selected);
 
 	//Set the TX buffer size, 0 means unlimited
-	void set_tx_buffer_limit(unsigned int limit);
+	void set_tx_buffer_limit(size_t limit);
 
 	//Push a 8-bits frame to be emitted by the interface.
 	//In host mode, if no transfer is already ongoing, one will
@@ -108,13 +108,13 @@ public:
 	void cancel_tx();
 
 	//Set the RX buffer size, 0 means unlimited
-	void set_rx_buffer_limit(unsigned int limit);
+	void set_rx_buffer_limit(size_t limit);
 	
 	//Indicates if a transfer is in progress (host or client mode)
 	bool tfr_in_progress() const;
 
 	//Count of frames in the RX buffer
-	unsigned int rx_available() const;
+	size_t rx_available() const;
 	
 	//Pop a frame from the RX buffer, return 0 if there aren't any
 	uint8_t pop_rx();
@@ -140,14 +140,14 @@ private:
 	uint8_t m_shift_reg;
 
 	std::deque<uint8_t> m_tx_buffer;
-	unsigned int m_tx_limit;
+	size_t m_tx_limit;
 
 	std::deque<uint8_t> m_rx_buffer;
-	unsigned int m_rx_limit;
+	size_t m_rx_limit;
 
 	AVR_Signal m_signal;
 
-	void start_transfer();
+	void start_transfer_as_host();
 
 };
 
@@ -156,9 +156,11 @@ inline AVR_Signal& AVR_IO_SPI::signal()
 	return m_signal;
 }
 
-inline unsigned int AVR_IO_SPI::rx_available() const
+inline size_t AVR_IO_SPI::rx_available() const
 {
-	return m_rx_buffer.size();
+	size_t n = m_rx_buffer.size();
+	if (m_tfr_in_progress) --n;
+	return n;
 }
 
 inline bool AVR_IO_SPI::tfr_in_progress() const
