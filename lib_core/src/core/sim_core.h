@@ -110,7 +110,8 @@ public:
     uint8_t ioctl_read_ioreg(reg_addr_t addr);
     void ioctl_write_ioreg(regbit_t rb, uint8_t value);
 	
-	void start_interrupt_inhibit(uint8_t delay, bool inhib_interrupts);
+	void start_interrupt_inhibit(unsigned int count);
+	//AVR_Signal& int_inhib_signal();
 
 protected:
 
@@ -131,11 +132,9 @@ protected:
 	//PC variable, expressed in 8-bits (unlike the actual device PC)
     flash_addr_t m_pc;
 	//Counter to inhibit interrupts for a given number of instructions
-    uint8_t m_instruction_counter;
-	//Flag indicating that interrupts are inhibited, regardless of GIE state
-	bool m_interrupt_inhibit;
+    unsigned int m_int_inhib_counter;
 	//Signal that is raised when the interrupt counter reaches zero
-	AVR_Signal m_intr_cnt_signal;
+	//AVR_Signal m_int_inhib_signal;
 	//Pointer to the generic debug probe
 	AVR_DeviceDebugProbe* m_debug_probe;
 
@@ -200,6 +199,11 @@ inline const AVR_CoreConfiguration& AVR_Core::config() const
 {
 	return m_config;
 }
+
+//inline AVR_Signal& AVR_Core::int_inhib_signal()
+//{
+//	return m_int_inhib_signal;
+//}
 
 bool data_space_map(mem_addr_t addr, mem_addr_t len,
 				  	mem_addr_t blockstart, mem_addr_t blockend,

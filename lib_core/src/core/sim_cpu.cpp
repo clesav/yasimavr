@@ -506,6 +506,9 @@ cycle_count_t AVR_Core::run_instruction()
 				get_sreg_bit(opcode);
 				m_sreg[b] = opcode & 0x0080 ? 0 : 1;
 				TRACE_OP("%s%c", opcode & 0x0080 ? "cl" : "se", sreg_flag_names[b]);
+				//On SEI, ensure the following instruction is executed before any interrupt is processed
+				if (b == SREG_I && (opcode & 0x0080))
+					start_interrupt_inhibit(1);
 			} else switch (opcode) {
 				case 0x9588: { // SLEEP -- 1001 0101 1000 1000
 					TRACE_OP("sleep");

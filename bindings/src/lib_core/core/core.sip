@@ -82,7 +82,7 @@ public:
     uint8_t ioctl_read_ioreg(const reg_addr_t);
     void ioctl_write_ioreg(const regbit_t, uint8_t);
     
-    void start_interrupt_inhibit(uint8_t, bool);
+    void start_interrupt_inhibit(unsigned int);
     
 protected:
 

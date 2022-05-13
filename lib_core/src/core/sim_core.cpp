@@ -36,8 +36,7 @@ AVR_Core::AVR_Core(const AVR_CoreConfiguration& config)
 ,m_device(nullptr)
 ,m_programend(m_config.flashend)
 ,m_pc(0)
-,m_instruction_counter(0)
-,m_interrupt_inhibit(true)
+,m_int_inhib_counter(0)
 ,m_debug_probe(nullptr)
 ,m_intrctl(nullptr)
 {
@@ -109,15 +108,15 @@ void AVR_Core::reset()
 	std::memset(m_sreg, 0, 8);
 	//Normally this is also done by properly compiled firmware code but just following the HW datasheet here
 	write_sp(m_config.ramend);
-	
-	start_interrupt_inhibit(1, true);
+	//Ensures at least one instruction is executed before interrupts are processed
+	m_int_inhib_counter = 1;
 }
 
 int AVR_Core::exec_cycle()
 {
 	//Check if we have a interrupt request and if we can handle it
 	int_vect_t irq_vector;
-	if ((irq_vector = m_intrctl->cpu_get_irq()) != AVR_INTERRUPT_NONE && m_sreg[SREG_I] && !m_interrupt_inhibit) {
+	if ((irq_vector = m_intrctl->cpu_get_irq()) != AVR_INTERRUPT_NONE && m_sreg[SREG_I] && !m_int_inhib_counter) {
 		//Acknowledge the vector with the Interrupt Controller
 		m_intrctl->cpu_ack_irq();
 		//Push the current PC to the stack and jump to the vector table entry
@@ -127,19 +126,17 @@ int AVR_Core::exec_cycle()
 		if (m_config.attributes & AVR_CoreConfiguration::ClearGIEOnInt)
 			m_sreg[SREG_I] = 0;
 	}
-
-	//Executes one instruction and returns the number of clock cycles spent
-	int cycles = run_instruction();
 	
 	//Decrement the instruction counter if used.
 	//If it drops to 0, reactivate the interrupts and raise the signal
-	if (m_instruction_counter) {
-		m_instruction_counter--;
-		if (!m_instruction_counter) {
-			m_interrupt_inhibit = false;
-			m_intr_cnt_signal.raise();
-		}
+	if (m_int_inhib_counter) {
+		m_int_inhib_counter--;
+		//if (!m_int_inhib_counter)
+		//	m_int_inhib_signal.raise();
 	}
+	
+	//Executes one instruction and returns the number of clock cycles spent
+	int cycles = run_instruction();
 
 	return cycles;
 }
@@ -153,14 +150,13 @@ void AVR_Core::exec_reti()
 	m_intrctl->cpu_reti();
 	//Ensures at least one instruction is executed before the next
 	//interrupt
-	start_interrupt_inhibit(1, true);
+	start_interrupt_inhibit(1);
 }
 
-void AVR_Core::start_interrupt_inhibit(uint8_t delay, bool inhib_interrupts)
+void AVR_Core::start_interrupt_inhibit(unsigned int count)
 {
-	if (m_instruction_counter < delay)
-		m_instruction_counter = delay;
-	m_interrupt_inhibit = inhib_interrupts;
+	if (m_int_inhib_counter < count)
+		m_int_inhib_counter = count;
 }
 
 
