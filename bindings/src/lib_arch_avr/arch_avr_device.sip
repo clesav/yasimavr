@@ -41,6 +41,10 @@ class AVR_ArchAVR_Core : public AVR_Core /NoDefaultCtors/ {
 
 public:
 
+	enum AVR_ArchAVR_NVM /BaseType=IntEnum/ {
+		NVM_EEPROM			/PyName=EEPROM/,
+	};
+
 	AVR_ArchAVR_Core(const AVR_ArchAVR_CoreConfig&);
     virtual ~AVR_ArchAVR_Core();
 

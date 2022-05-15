@@ -24,7 +24,7 @@ architecture: Mega0
 
 memory:
     data:
-        IOEND:  0x13FF
+        IOEND: 0x13FF
         EEPROMSTART: 0x1400
         EEPROMEND: 0x14FF
         RAMSTART: 0x2800
@@ -35,10 +35,18 @@ memory:
         FLASHEND: 0xBFFF
     eeprom:
         EEPROMEND: 0xFF
+    userrow:
+        USERROWEND: 0x3F
 
 core:
     extended_addressing: no
     clear_GIE_on_int: no
+
+fuses:
+    size: 11
+    factory_values: [ 0x00, 0x00, 0x02, 0x00, 0x00,
+                      0xC0, 0x07, 0x00, 0x00, 0x00,
+                      0xC5 ]
 
 access:
     big_endian_on_write: yes
@@ -124,7 +132,7 @@ peripherals:
     MISC:
         file: Mega0-Mega1_controllers.yml
         config:
-            dev_id: 0x00123456
+            dev_id: 0x0051961E
 
     PORTA:
         class: PORT
@@ -311,3 +319,11 @@ peripherals:
     PORTMUX:
        file: Mega0-Mega1_interfaces.yml
        base: 0x05E0
+    
+    FUSES:
+        file: Mega0-Mega1_controllers.yml
+        base: 0x1280
+    
+    USERROW:
+        file: Mega0-Mega1_controllers.yml
+        base: 0x1300

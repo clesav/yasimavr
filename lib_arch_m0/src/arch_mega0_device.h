@@ -34,10 +34,13 @@
 
 struct AVR_ArchMega0_CoreConfig : AVR_CoreConfiguration {
 
-	uint16_t	flashstart_ds;		//first address of the flash in the data space
-	uint16_t	flashend_ds;		//last address of the flash in the data space
-	uint16_t	eepromstart_ds;		//first address of the eeprom in the data space
-	uint16_t	eepromend_ds;		//last address of the eeprom in the data space
+	mem_addr_t				flashstart_ds;		//first address of the flash in the data space
+	mem_addr_t				flashend_ds;		//last address of the flash in the data space
+	
+	mem_addr_t				eepromstart_ds;		//first address of the eeprom in the data space
+	mem_addr_t				eepromend_ds;		//last address of the eeprom in the data space
+
+	mem_addr_t				userrowend;
 
 };
 
@@ -53,18 +56,25 @@ class DLL_EXPORT AVR_ArchMega0_Core : public AVR_Core {
 
 public:
 
+	enum AVR_ArchMega0_NVM {
+		NVM_EEPROM = NVM_ArchDefined,
+		NVM_USERROW = NVM_ArchDefined + 1,
+	};
+
 	AVR_ArchMega0_Core(const AVR_ArchMega0_CoreConfig& variant);
-    virtual ~AVR_ArchMega0_Core();
 
 protected:
-
-    uint8_t *m_eeprom;
 
     virtual uint8_t cpu_read_data(mem_addr_t data_addr) override;
     virtual void cpu_write_data(mem_addr_t data_addr, uint8_t value) override;
 
     virtual void dbg_read_data(mem_addr_t start, uint8_t* buf, mem_addr_t len) override;
     virtual void dbg_write_data(mem_addr_t start, uint8_t* buf, mem_addr_t len) override;
+	
+private:
+
+	AVR_NonVolatileMemory m_eeprom;
+	AVR_NonVolatileMemory m_userrow;
 	
 friend class AVR_ArchMega0_Device;
 
@@ -78,7 +88,13 @@ class DLL_EXPORT AVR_ArchMega0_Device : public AVR_Device {
 public:
 
 	AVR_ArchMega0_Device(const AVR_ArchMega0_DeviceConfig& config);
-	virtual ~AVR_ArchMega0_Device() {};
+	
+protected:
+
+	virtual bool core_ctlreq(uint16_t req, ctlreq_data_t* reqdata) override;
+
+	//Override to load the EEPROM and the USERROW
+	virtual bool program(const AVR_Firmware& firmware) override;
 
 private:
 

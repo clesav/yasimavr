@@ -26,10 +26,11 @@ struct AVR_ArchMega0_CoreConfig : public AVR_CoreConfiguration {
 #include "arch_mega0_device.h"
 %End
 
-	uint16_t	flashstart_ds;
-	uint16_t	flashend_ds;
-	uint16_t	eepromstart_ds;
-	uint16_t	eepromend_ds;
+	mem_addr_t				flashstart_ds;
+	mem_addr_t				flashend_ds;
+	mem_addr_t				eepromstart_ds;
+	mem_addr_t				eepromend_ds;
+	mem_addr_t				userrowend;
 
 };
 
@@ -47,8 +48,12 @@ class AVR_ArchMega0_Core : public AVR_Core /NoDefaultCtors/ {
 
 public:
 
+	enum AVR_ArchMega0_NVM /BaseType=IntEnum/ {
+		NVM_EEPROM		/PyName=EEPROM/,
+		NVM_USERROW		/PyName=USERROW/,
+	};
+
 	AVR_ArchMega0_Core(const AVR_ArchMega0_CoreConfig&);
-    virtual ~AVR_ArchMega0_Core();
 
 protected:
 	
@@ -66,6 +71,5 @@ class AVR_ArchMega0_Device : public AVR_Device /NoDefaultCtors/ {
 public:
 
 	AVR_ArchMega0_Device(const AVR_ArchMega0_DeviceConfig&);
-	//virtual ~AVR_ArchMega0_Device();
 
 };

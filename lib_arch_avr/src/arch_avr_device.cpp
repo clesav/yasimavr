@@ -22,19 +22,23 @@
 //=======================================================================================
 
 #include "arch_avr_device.h"
-#include <cstring>
 #include "core/sim_debug.h"
+#include "core/sim_peripheral.h"
+#include "core/sim_firmware.h"
+#include <cstring>
 
 
 //=======================================================================================
 
 AVR_ArchAVR_Core::AVR_ArchAVR_Core(const AVR_ArchAVR_CoreConfig& config)
 :AVR_Core(config)
+,m_eeprom(config.eepromend ? (config.eepromend + 1) : 0)
 {}
 
 uint8_t AVR_ArchAVR_Core::cpu_read_data(mem_addr_t data_addr)
 {
-	uint8_t value;
+	uint8_t value = 0;
+	
 	if (data_addr < 32) {
 		value = m_regs[data_addr];
 	}
@@ -44,9 +48,9 @@ uint8_t AVR_ArchAVR_Core::cpu_read_data(mem_addr_t data_addr)
 	else if (data_addr >= m_config.ramstart && data_addr <= m_config.ramend) {
 		value = m_sram[data_addr - m_config.ramstart];
 	}
-	else  {
-		//TODO: log warning or crash
-		value = 0;
+	else if (!m_device->test_option(AVR_Device::Option_IgnoreBadCpuIO)) {
+		ERROR_LOG(m_device->logger(), "CPU reading an invalid data address: 0x%04x", data_addr);
+		m_device->crash(CRASH_BAD_CPU_IO, "Bad data address");
 	}
 
 	if (m_debug_probe)
@@ -66,8 +70,9 @@ void AVR_ArchAVR_Core::cpu_write_data(mem_addr_t data_addr, uint8_t value)
 	else if (data_addr >= m_config.ramstart && data_addr <= m_config.ramend) {
 		m_sram[data_addr - m_config.ramstart] = value;
 	}
-	else {
-		//TODO: log warning or crash
+	else if (!m_device->test_option(AVR_Device::Option_IgnoreBadCpuIO)) {
+		ERROR_LOG(m_device->logger(), "CPU writing an invalid data address: 0x%04x", data_addr);
+		m_device->crash(CRASH_BAD_CPU_IO, "Bad data address");
 	}
 
 	if (m_debug_probe)
@@ -119,3 +124,33 @@ AVR_ArchAVR_Device::AVR_ArchAVR_Device(const AVR_ArchAVR_DeviceConfig& config)
 ,m_core_impl(*(config.core))
 {}
 
+bool AVR_ArchAVR_Device::core_ctlreq(uint16_t req, ctlreq_data_t* reqdata)
+{
+	if (req == AVR_CTLREQ_CORE_NVM) {
+		if (reqdata->index == AVR_ArchAVR_Core::NVM_EEPROM)
+			reqdata->data = &(m_core_impl.m_eeprom);
+		else
+			return AVR_Device::core_ctlreq(req, reqdata);
+		
+		return true;
+	} else {
+		return AVR_Device::core_ctlreq(req, reqdata);
+	}
+}
+
+bool AVR_ArchAVR_Device::program(const AVR_Firmware& firmware)
+{
+	if (!AVR_Device::program(firmware))
+		return false;
+	
+	if (firmware.has_memory("eeprom")) {
+		if (firmware.load_memory("eeprom", m_core_impl.m_eeprom)) {
+			DEBUG_LOG(logger(), "Firmware load: EEPROM loaded", "");
+		} else {
+			ERROR_LOG(logger(), "Firmware load: Error loading the EEPROM", "");
+			return false;
+		}
+	}
+	
+	return true;
+}

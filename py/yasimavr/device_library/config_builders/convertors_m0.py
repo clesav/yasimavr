@@ -37,18 +37,22 @@ def get_core_config(dev_desc):
     cfg.attributes = get_core_attributes(dev_desc)
     
     cfg.iostart, cfg.ioend = dev_desc.mem_spaces['data'].segments['io']
-    cfg.ramstart, cfg.ramend = dev_desc.mem_spaces['data'].segments['sram']
+    cfg.ramstart, cfg.ramend = dev_desc.mem_spaces['data'].segments['ram']
     cfg.flashstart_ds, cfg.flashend_ds = dev_desc.mem_spaces['data'].segments['flash']
     cfg.eepromstart_ds, cfg.eepromend_ds = dev_desc.mem_spaces['data'].segments['eeprom']
     
     cfg.dataend = dev_desc.mem_spaces['data'].memend
     cfg.flashend = dev_desc.mem_spaces['flash'].memend
     cfg.eepromend = dev_desc.mem_spaces['eeprom'].memend
+    cfg.userrowend = dev_desc.mem_spaces['userrow'].memend
     
     cfg.eind = dev_desc.peripherals['CPU'].reg_address('EIND', 0)
     cfg.rampz = dev_desc.peripherals['CPU'].reg_address('RAMPZ', 0)
     
     cfg.vector_size = dev_desc.interrupt_map.vector_size
+    
+    cfg.fusesize = dev_desc.fuses['size']
+    cfg.fuses = bytes(dev_desc.fuses['factory_values'])
     
     return cfg
 

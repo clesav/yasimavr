@@ -1,7 +1,7 @@
 /*
- * config.sip
+ * arch_mega0_nvm.sip
  *
- *	Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *	Copyright 2022 Clement Savergne <csavergne@yahoo.com>
 
  	This file is part of yasim-avr.
 
@@ -21,40 +21,32 @@
  
 //=======================================================================================
 
-struct AVR_CoreConfiguration {
+
+class AVR_ArchMega0_USERROW : public AVR_Peripheral /NoDefaultCtors/ {
 %TypeHeaderCode
-#include "core/sim_config.h"
+#include "arch_mega0_nvm.h"
 %End
 
-	enum Attributes /BaseType=IntFlag/ {
-		ExtendedAddressing = 0x01,
-		ClearGIEOnInt = 0x02
-	};
+public:
 
-	uint32_t 			attributes;
-	uint8_t				vector_size;
-    uint16_t			iostart;
-	uint16_t            ioend;
-	uint32_t			ramstart;
-	uint32_t            ramend;
-	uint32_t			dataend;
-	uint32_t            flashend;
-	uint32_t            eepromend;
-	reg_addr_t		    rampz;
-	reg_addr_t		    eind;
-	mem_addr_t			fusesize;
-	UnsignedInt8Vector	fuses;
+	AVR_ArchMega0_USERROW(reg_addr_t base);
 
-	//uint8_t			signature[3];
-	//uint8_t			lockbits;
+	virtual bool init(AVR_Device&);
+	virtual void ioreg_read_handler(reg_addr_t);
 
 };
 
 
-struct AVR_DeviceConfiguration {
+class AVR_ArchMega0_Fuses : public AVR_Peripheral /NoDefaultCtors/ {
+%TypeHeaderCode
+#include "arch_mega0_nvm.h"
+%End
 
-	const char*						name;
-	const AVR_CoreConfiguration*	core;
-	StringVector					pins;
+public:
+
+	AVR_ArchMega0_Fuses(reg_addr_t base);
+
+	virtual bool init(AVR_Device&);
+	virtual void ioreg_read_handler(reg_addr_t);
 
 };

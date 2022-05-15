@@ -72,6 +72,12 @@ class AVR_Core /Abstract/ {
 
 public:
 
+	enum AVR_NVM /BaseType=IntEnum/ {
+		NVM_Flash			/PyName=Flash/,
+		NVM_Fuses			/PyName=Fuses/,
+		NVM_ArchDefined		/PyName=ArchDefined/,
+	};
+
 	AVR_Core(const AVR_CoreConfiguration&);
 	virtual ~AVR_Core();
 	

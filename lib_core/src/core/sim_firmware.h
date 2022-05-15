@@ -25,43 +25,87 @@
 #define __YASIMAVR_FIRMWARE_H__
 
 #include "sim_types.h"
+#include "sim_memory.h"
 #include <string>
+#include <map>
 #include <vector>
 
 //=======================================================================================
 /*
  * AVR_Firmware contains the information of a firmware loaded from a ELF file.
- * the ELF format decoding relies on the library libelf
+ * the ELF format decoding relies on the library libelf.
+ * The data from the ELF is split is the various memory areas of the device.
+ * Each memory area can avec several blocks of data (e.g. flash has .text, .rodata, ...)
+ * placed at different, not necessarily contiguous addresses.
+ * The currently supported memory areas :
+ *    [area name]           [ELF section(s)]            [LMA origin]
+ *  - "flash"               .text, .data, .rodata       0
+ *  - "eeprom"              .eeprom                     0x810000
+ *  - "fuse"                .fuse                       0x820000
+ *  - "lock"                .lock                       0x830000
+ *  - "signature"           .signature                  0x840000
+ *  - "user_signatures"     .user_signatures            0x850000
  */
 class DLL_EXPORT AVR_Firmware {
 
 public:
 
 	struct Block {
-		size_t size;
+		
+		mem_block_t mem_block;
 		size_t base;
-		uint8_t* buf;
+
 	};
 
-	std::string			variant;
-	unsigned int		frequency;
-	double				vcc;
-	double				aref;
+	//These attributes can be assigned freely
+	std::string					variant;
+	unsigned int				frequency;
+	double						vcc;
+	double						aref;
 
-	std::vector<Block>	flashblocks;
-	flash_addr_t		flashsize;
-	mem_addr_t			datasize;
-	mem_addr_t			bsssize;
-
-	reg_addr_t			console_register;
+	reg_addr_t					console_register;
 
 	AVR_Firmware();
 	~AVR_Firmware();
 
+	//Reads a ELF file and returns a new firmware object
 	static AVR_Firmware* read_elf(const std::string& filename);
+	
+	//Add a data block to a memory
+	void add_block(const std::string& name, const mem_block_t& block, size_t base = 0);
+	
+	bool has_memory(const std::string& name) const;
+	
+	std::vector<Block> blocks(const std::string& name) const;
 
-	bool load_flash(uint8_t* flash, uint8_t* tag, flash_addr_t flashend) const;
+	bool load_memory(const std::string& name, AVR_NonVolatileMemory& memory) const;
+	
+	flash_addr_t flashsize() const;
+	mem_addr_t datasize() const;
+	mem_addr_t bsssize() const;
+
+private:
+
+	std::map<std::string, std::vector<Block>> m_blocks;
+	flash_addr_t m_flashsize;
+	mem_addr_t m_datasize;
+	mem_addr_t m_bsssize;
 
 };
+
+inline flash_addr_t AVR_Firmware::flashsize() const
+{
+	return m_flashsize;
+}
+
+inline mem_addr_t AVR_Firmware::datasize() const
+{
+	return m_datasize;
+}
+
+inline mem_addr_t AVR_Firmware::bsssize() const
+{
+	return m_bsssize;
+}
 
 #endif //__YASIMAVR_FIRMWARE_H__

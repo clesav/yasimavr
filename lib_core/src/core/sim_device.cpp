@@ -243,12 +243,8 @@ bool AVR_Device::load_firmware(const AVR_Firmware& firmware)
 		return false;
 	}
 
-	DEBUG_LOG(*m_logger, "Loading %d bytes of flash", firmware.flashsize);
-
-	if (!firmware.load_flash(m_core.m_flash, m_core.m_flash_tag, m_core.m_config.flashend)) {
-		ERROR_LOG(*m_logger, "Firmware load: The flash does not fit", "");
+	if (!program(firmware))
 		return false;
-	}
 
 	//Stores the frequency. Compulsory.
 	if (!firmware.frequency) {
@@ -279,6 +275,31 @@ bool AVR_Device::load_firmware(const AVR_Firmware& firmware)
 
 	m_state = State_Running;
 
+	return true;
+}
+
+bool AVR_Device::program(const AVR_Firmware& firmware)
+{
+	if (!firmware.has_memory("flash")) {
+		ERROR_LOG(*m_logger, "Firmware load: No program to load", "");
+		return false;
+	}
+	else if (firmware.load_memory("flash", m_core.m_flash)) {
+		DEBUG_LOG(*m_logger, "Loaded %d bytes of flash", firmware.flashsize());
+	} else {
+		ERROR_LOG(*m_logger, "Firmware load: The flash does not fit", "");
+		return false;
+	}
+	
+	if (firmware.has_memory("fuse")) {
+		if (!firmware.load_memory("fuse", m_core.m_fuses)) {
+			DEBUG_LOG(*m_logger, "Firmware load: fuses loaded", "");
+		} else {
+			ERROR_LOG(*m_logger, "Firmware load: Error programming the fuses", "");
+			return false;
+		}
+	}
+	
 	return true;
 }
 
@@ -434,6 +455,15 @@ bool AVR_Device::core_ctlreq(uint16_t req, ctlreq_data_t* reqdata)
 	
 	else if (req == AVR_CTLREQ_CORE_RESET_FLAG) {
 		reqdata->data = m_reset_flags;
+		return true;
+	}
+	
+	else if (req == AVR_CTLREQ_CORE_NVM) {
+		reqdata->data = (void*) nullptr;
+		if (reqdata->index == AVR_Core::NVM_Flash)
+			reqdata->data = &(m_core.m_flash);
+		else if (reqdata->index == AVR_Core::NVM_Fuses)
+			reqdata->data = &(m_core.m_fuses);
 		return true;
 	}
 

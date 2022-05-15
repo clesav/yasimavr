@@ -46,6 +46,7 @@ typedef unsigned char			uint8_t /PyInt/;
 %Include core/device.sip
 %Include core/firmware.sip
 %Include core/interrupt.sip
+%Include core/memory.sip
 %Include core/peripheral.sip
 %Include core/ioreg.sip
 %Include core/pin.sip

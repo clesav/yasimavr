@@ -23,6 +23,7 @@
 
 #include "arch_mega0_device.h"
 #include "core/sim_debug.h"
+#include "core/sim_firmware.h"
 #include <cstring>
 
 
@@ -30,24 +31,14 @@
 
 AVR_ArchMega0_Core::AVR_ArchMega0_Core(const AVR_ArchMega0_CoreConfig& config)
 :AVR_Core(config)
-,m_eeprom(NULL)
-{
-	//Allocate the EEPROM in RAM
-	if (config.eepromend > 0) {
-		m_eeprom = (uint8_t*) malloc(config.eepromend + 1);
-	}
-}
-
-AVR_ArchMega0_Core::~AVR_ArchMega0_Core()
-{
-	if (m_eeprom)
-		free(m_eeprom);
-}
+,m_eeprom(config.eepromend ? (config.eepromend + 1) : 0)
+,m_userrow(config.userrowend ? (config.userrowend + 1) : 0)
+{}
 
 uint8_t AVR_ArchMega0_Core::cpu_read_data(mem_addr_t data_addr)
 {
 	const AVR_ArchMega0_CoreConfig& cfg = reinterpret_cast<const AVR_ArchMega0_CoreConfig&>(m_config);
-	uint8_t value;
+	uint8_t value = 0;
 
 	if (data_addr <= cfg.ioend) {
 		value = cpu_read_ioreg(data_addr);
@@ -61,9 +52,9 @@ uint8_t AVR_ArchMega0_Core::cpu_read_data(mem_addr_t data_addr)
 	else if (data_addr >= cfg.flashstart_ds && data_addr <= cfg.flashend_ds) {
 		value = cpu_read_flash(data_addr - cfg.flashstart_ds);
 	}
-	else {
-		//TODO: log warning or crash
-		value = 0;
+	else if (!m_device->test_option(AVR_Device::Option_IgnoreBadCpuIO)) {
+		ERROR_LOG(m_device->logger(), "CPU reading an invalid data address: 0x%04x", data_addr);
+		m_device->crash(CRASH_BAD_CPU_IO, "Bad data address");
 	}
 
 	if (m_debug_probe)
@@ -82,8 +73,9 @@ void AVR_ArchMega0_Core::cpu_write_data(mem_addr_t data_addr, uint8_t value)
 	else if (data_addr >= cfg.ramstart && data_addr <= cfg.ramend) {
 		m_sram[data_addr - cfg.ramstart] = value;
 	}
-	else {
-		//TODO: log warning or crash
+	else if (!m_device->test_option(AVR_Device::Option_IgnoreBadCpuIO)) {
+		ERROR_LOG(m_device->logger(), "CPU writing an invalid data address: 0x%04x", data_addr);
+		m_device->crash(CRASH_BAD_CPU_IO, "Bad data address");
 	}
 
 	if (m_debug_probe)
@@ -106,12 +98,16 @@ void AVR_ArchMega0_Core::dbg_read_data(mem_addr_t addr, uint8_t* buf, mem_addr_t
 
 	if (data_space_map(addr, len, cfg.ramstart, cfg.ramend, &bufofs, &blockofs, &n))
 		std::memcpy(buf + bufofs, m_sram + blockofs, n);
+	
+	if (data_space_map(addr, len, cfg.flashstart_ds, cfg.flashend_ds, &bufofs, &blockofs, &n)) {
+		mem_block_t b = m_flash.block(blockofs, n);
+		std::memcpy(buf + bufofs, b.buf, b.size);
+	}
 
-	if (data_space_map(addr, len, cfg.eepromstart_ds, cfg.eepromend_ds, &bufofs, &blockofs, &n))
-		std::memcpy(buf + bufofs, m_eeprom + blockofs, n);
-
-	if (data_space_map(addr, len, cfg.flashstart_ds, cfg.flashend_ds, &bufofs, &blockofs, &n))
-		std::memcpy(buf + bufofs, m_flash + blockofs, n);
+	if (data_space_map(addr, len, cfg.eepromstart_ds, cfg.eepromend_ds, &bufofs, &blockofs, &n)) {
+		mem_block_t b = m_eeprom.block(blockofs, n);
+		std::memcpy(buf + bufofs, b.buf, n);
+	}
 }
 
 void AVR_ArchMega0_Core::dbg_write_data(mem_addr_t addr, uint8_t* buf, mem_addr_t len)
@@ -129,11 +125,15 @@ void AVR_ArchMega0_Core::dbg_write_data(mem_addr_t addr, uint8_t* buf, mem_addr_
 	if (data_space_map(addr, len, cfg.ramstart, cfg.ramend, &bufofs, &blockofs, &n))
 		std::memcpy(m_sram + blockofs, buf + bufofs, n);
 
-	if (data_space_map(addr, len, cfg.eepromstart_ds, cfg.eepromend_ds, &bufofs, &blockofs, &n))
-		std::memcpy(m_eeprom + blockofs, buf + bufofs, n);
-
-	if (data_space_map(addr, len, cfg.flashstart_ds, cfg.flashend_ds, &bufofs, &blockofs, &n))
-		std::memcpy(m_flash + blockofs, buf + bufofs, n);
+	if (data_space_map(addr, len, cfg.flashstart_ds, cfg.flashend_ds, &bufofs, &blockofs, &n)) {
+		mem_block_t b = { .size = n, .buf = buf + bufofs };
+		m_flash.program(b, blockofs);
+	}
+	
+	if (data_space_map(addr, len, cfg.eepromstart_ds, cfg.eepromend_ds, &bufofs, &blockofs, &n)) {
+		mem_block_t b = { .size = n, .buf = buf + bufofs };
+		m_eeprom.program(b, blockofs);
+	}
 }
 
 
@@ -143,3 +143,45 @@ AVR_ArchMega0_Device::AVR_ArchMega0_Device(const AVR_ArchMega0_DeviceConfig& con
 :AVR_Device(m_core_impl, config)
 ,m_core_impl(*reinterpret_cast<const AVR_ArchMega0_CoreConfig*>(config.core))
 {}
+
+bool AVR_ArchMega0_Device::core_ctlreq(uint16_t req, ctlreq_data_t* reqdata)
+{
+	if (req == AVR_CTLREQ_CORE_NVM) {
+		if (reqdata->index == AVR_ArchMega0_Core::NVM_EEPROM)
+			reqdata->data = &(m_core_impl.m_eeprom);
+		else if (reqdata->index == AVR_ArchMega0_Core::NVM_USERROW)
+			reqdata->data = &(m_core_impl.m_userrow);
+		else
+			return AVR_Device::core_ctlreq(req, reqdata);
+		
+		return true;
+	} else {
+		return AVR_Device::core_ctlreq(req, reqdata);
+	}
+}
+
+bool AVR_ArchMega0_Device::program(const AVR_Firmware& firmware)
+{
+	if (!AVR_Device::program(firmware))
+		return false;
+	
+	if (firmware.has_memory("eeprom")) {
+		if (firmware.load_memory("eeprom", m_core_impl.m_eeprom)) {
+			DEBUG_LOG(logger(), "Firmware load: EEPROM loaded", "");
+		} else {
+			ERROR_LOG(logger(), "Firmware load: Error loading the EEPROM", "");
+			return false;
+		}
+	}
+	
+	if (firmware.has_memory("user_signatures")) {
+		if (firmware.load_memory("user_signatures", m_core_impl.m_userrow)) {
+			DEBUG_LOG(logger(), "Firmware load: USERROW loaded", "");
+		} else {
+			ERROR_LOG(logger(), "Firmware load: Error loading the USERROW", "");
+			return false;
+		}
+	}
+	
+	return true;
+}
