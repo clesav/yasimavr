@@ -27,6 +27,7 @@
 #include "sim_types.h"
 #include "sim_pin.h"
 #include "sim_config.h"
+#include "sim_memory.h"
 #include <vector>
 #include <string>
 #include <map>
@@ -93,6 +94,12 @@ class DLL_EXPORT AVR_Core {
 
 public:
 
+	enum AVR_NVM {
+		NVM_Flash,
+		NVM_Fuses,
+		NVM_ArchDefined,
+	};
+
     AVR_Core(const AVR_CoreConfiguration& config);
     virtual ~AVR_Core();
     
@@ -123,10 +130,12 @@ protected:
     uint8_t m_regs[32];
 	//array of the I/O registers
     AVR_IO_Register** m_ioregs;
-	//Pointers to the array representing the device memories.
+	//Pointer to the array representing the device memories.
     uint8_t* m_sram;
-    uint8_t* m_flash;
-    uint8_t* m_flash_tag;
+	//Non-volatile memory model for the flash.
+    AVR_NonVolatileMemory m_flash;
+	//Non-volatile memory model for the fuse bits.
+	AVR_NonVolatileMemory m_fuses;
     //Top programmed address of the flash in bytes (for PC overflow checks)
     const flash_addr_t m_programend;
 	//PC variable, expressed in 8-bits (unlike the actual device PC)

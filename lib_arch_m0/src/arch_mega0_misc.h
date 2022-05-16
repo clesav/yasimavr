@@ -125,7 +125,7 @@ private:
 
 #define MCU_REVID						0xFF
 
-#define AVR_CTLREQ_SET_SERID			1
+#define AVR_CTLREQ_WRITE_SIGROW			1
 
 
 struct AVR_ArchMega0_Misc_Config {
@@ -146,15 +146,18 @@ class DLL_EXPORT AVR_ArchMega0_MiscRegCtrl : public AVR_Peripheral {
 public:
 
 	AVR_ArchMega0_MiscRegCtrl(const AVR_ArchMega0_Misc_Config& config);
-
+	virtual ~AVR_ArchMega0_MiscRegCtrl();
+	
 	virtual bool init(AVR_Device& device) override;
 	virtual void reset() override;
 	virtual bool ctlreq(uint16_t req, ctlreq_data_t* data) override;
+	virtual void ioreg_read_handler(reg_addr_t addr) override;
 	virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
 
 private:
 
 	const AVR_ArchMega0_Misc_Config& m_config;
+	uint8_t* m_sigrow;
 
 };
 

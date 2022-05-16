@@ -34,6 +34,7 @@
 %Include arch_mega0_adc.sip
 %Include arch_mega0_device.sip
 %Include arch_mega0_misc.sip
+%Include arch_mega0_nvm.sip
 %Include arch_mega0_port.sip
 %Include arch_mega0_rtc.sip
 %Include arch_mega0_spi.sip

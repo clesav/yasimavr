@@ -25,11 +25,11 @@
 
 #include "arch_mega0_misc.h"
 
-const uint32_t CTLREQ_SET_SERID = AVR_CTLREQ_SET_SERID;
+const uint16_t CTLREQ_WRITE_SIGROW = AVR_CTLREQ_WRITE_SIGROW;
 
 %End
 
-const uint32_t CTLREQ_SET_SERID;
+const uint16_t CTLREQ_WRITE_SIGROW;
 
 
 //=======================================================================================
@@ -125,10 +125,12 @@ class AVR_ArchMega0_MiscRegCtrl : public AVR_Peripheral /NoDefaultCtors/ {
 public:
 
 	AVR_ArchMega0_MiscRegCtrl(const AVR_ArchMega0_Misc_Config&);
+	virtual ~AVR_ArchMega0_MiscRegCtrl();
 
 	virtual bool init(AVR_Device&);
 	virtual void reset();
 	virtual bool ctlreq(uint16_t, ctlreq_data_t*);
+	virtual void ioreg_read_handler(reg_addr_t);
 	virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
 
 };

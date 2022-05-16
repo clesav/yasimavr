@@ -41,21 +41,21 @@ struct AVR_CoreConfiguration {
 		ClearGIEOnInt = 0x02
 	};
 
-	uint32_t 			attributes;		//OR'ed value of CoreAttributes flags
-	uint8_t				vector_size;	//Size in 16-bits words of individual interrupt vectors
-    uint16_t			iostart;		//first address of the IO register file in the data space
-	uint16_t            ioend;			//last address of the IO register file in the data space
-	uint32_t			ramstart;		//first address of the SRAM in the data space
-	uint32_t            ramend;			//last address of the SRAM in the data space
-	uint32_t			dataend;		//last address of the data space
-	uint32_t            flashend;		//last address of the flash in the code space
-	uint32_t            eepromend;		//last address of the EEPROM in the eeprom space
+	uint32_t 				attributes;		//OR'ed value of CoreAttributes flags
+	uint8_t					vector_size;	//Size in 16-bits words of individual interrupt vectors
+	mem_addr_t				iostart;		//first address of the IO register file in the data space
+	mem_addr_t				ioend;			//last address of the IO register file in the data space
+	mem_addr_t				ramstart;		//first address of the SRAM in the data space
+	mem_addr_t				ramend;			//last address of the SRAM in the data space
+	mem_addr_t				dataend;		//last address of the data space
+	flash_addr_t			flashend;		//last address of the flash in the code space
+	mem_addr_t				eepromend;		//last address of the EEPROM in the eeprom space
 	//Registers for extended addressing (on >64Kb variants)
-	reg_addr_t		    rampz;
-	reg_addr_t		    eind;
+	reg_addr_t				rampz;
+	reg_addr_t				eind;
 
-	//uint8_t				fuse[3];		//Fuse bytes default values
-	//uint8_t				lockbits;		//Lock bits default values
+	mem_addr_t				fusesize;
+	std::vector<uint8_t>	fuses;			//Fuse bytes factory values
 
 };
 

@@ -28,7 +28,7 @@
 #include "core/sim_device.h"
 #include "core/sim_interrupt.h"
 #include "core/sim_types.h"
-
+#include "core/sim_memory.h"
 
 //=======================================================================================
 //Variant configuration structure. Nothing to add compared to generic ones
@@ -47,6 +47,10 @@ class DLL_EXPORT AVR_ArchAVR_Core : public AVR_Core {
 
 public:
 
+	enum AVR_ArchAVR_NVM {
+		NVM_EEPROM = NVM_ArchDefined,
+	};
+
 	AVR_ArchAVR_Core(const AVR_ArchAVR_CoreConfig& config);
 
 protected:
@@ -56,6 +60,12 @@ protected:
 
     virtual void dbg_read_data(mem_addr_t start, uint8_t* buf, mem_addr_t len) override;
     virtual void dbg_write_data(mem_addr_t start, uint8_t* buf, mem_addr_t len) override;
+	
+private:
+
+	AVR_NonVolatileMemory m_eeprom;
+	
+friend class AVR_ArchAVR_Device;
 
 };
 
@@ -69,6 +79,13 @@ class DLL_EXPORT AVR_ArchAVR_Device : public AVR_Device {
 public:
 
 	AVR_ArchAVR_Device(const AVR_ArchAVR_DeviceConfig& config);
+	
+protected:
+
+	virtual bool core_ctlreq(uint16_t req, ctlreq_data_t* reqdata) override;
+
+	//Override to load the EEPROM
+	virtual bool program(const AVR_Firmware& firmware) override;
 
 private:
 

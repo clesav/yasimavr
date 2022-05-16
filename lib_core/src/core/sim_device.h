@@ -190,6 +190,11 @@ public:
 protected:
 
     virtual bool core_ctlreq(uint16_t req, ctlreq_data_t* reqdata);
+	
+    //Loads the various memory area using the firmware data.
+    //The basic implementation loads only the flash and the fuses, the rest
+    //is the responsibility of architecture-specific implementations.
+	virtual bool program(const AVR_Firmware& firmware);
 
 private:
 

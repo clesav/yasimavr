@@ -68,6 +68,10 @@ spi_config = get_spi_config(_desc.peripherals['SPI0'])
 twi_config = get_twi_config(_desc.peripherals['TWI0'])
 #PORTMUX
 portmux_dummy_regs = convert_dummy_controller_config(_desc.peripherals['PORTMUX'])
+#FUSES
+fuses_base = _desc.peripherals['FUSES'].reg_base
+#USERROW
+userrow_base = _desc.peripherals['USERROW'].reg_base
                
 del _desc
 
@@ -116,6 +120,12 @@ class dev_atmega4809(_archlib.AVR_ArchMega0_Device):
         #PORTMUX
         self.attach_peripheral(_corelib.AVR_DummyController(_corelib.IOCTL_PORTMUX,
                                                             portmux_dummy_regs))
+        
+        #FUSES
+        self.attach_peripheral(_archlib.AVR_ArchMega0_Fuses(fuses_base))
+        
+        #USERROW
+        self.attach_peripheral(_archlib.AVR_ArchMega0_USERROW(userrow_base))
 
 DEV_CLASS = dev_atmega4809
 

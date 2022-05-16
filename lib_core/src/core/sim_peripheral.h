@@ -87,6 +87,9 @@ enum class AVR_SleepMode;
 #define AVR_CTLREQ_CORE_RESET		6
 //Request send to the core to query the latest cause of reset. data.u is set to the ResetFlag enum value
 #define AVR_CTLREQ_CORE_RESET_FLAG	7
+//Request sent to the core to query the pointer to a NVM block
+//	data.index indicates which block with one of the AVR_NVM enum values
+#define AVR_CTLREQ_CORE_NVM			8
 
 
 //Request sent by the CPU to the watchdog when executing a WDR instruction, no data provided

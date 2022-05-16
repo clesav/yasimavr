@@ -25,6 +25,7 @@
 #include "arch_mega0_io.h"
 #include "arch_mega0_io_utils.h"
 #include "core/sim_device.h"
+#include <cstring>
 
 
 #define VREF_REG_ADDR(reg) \
@@ -225,11 +226,21 @@ void AVR_ArchMega0_ResetCtrl::ioreg_write_handler(reg_addr_t addr, const ioreg_w
 #define SIGROW_REG_ADDR(reg) \
 	(m_config.reg_base_sigrow + offsetof(SIGROW_t, reg))
 
+#define SIGROW_MEM_OFS		3
+#define SIGROW_MEM_SIZE		(sizeof(SIGROW_t) - SIGROW_MEM_OFS)
 
 AVR_ArchMega0_MiscRegCtrl::AVR_ArchMega0_MiscRegCtrl(const AVR_ArchMega0_Misc_Config& config)
 :AVR_Peripheral(AVR_ID('M', 'I', 'S', 'C'))
 ,m_config(config)
-{}
+{
+	m_sigrow = (uint8_t*) malloc(SIGROW_MEM_SIZE);
+	memset(m_sigrow, 0x00, SIGROW_MEM_SIZE);
+}
+
+AVR_ArchMega0_MiscRegCtrl::~AVR_ArchMega0_MiscRegCtrl()
+{
+	free(m_sigrow);
+}
 
 bool AVR_ArchMega0_MiscRegCtrl::init(AVR_Device& device)
 {
@@ -249,6 +260,17 @@ bool AVR_ArchMega0_MiscRegCtrl::init(AVR_Device& device)
 
 	for (int i = 0; i < 10; ++i)
 		add_ioreg(SIGROW_REG_ADDR(SERNUM0) + i, 0xFF, true);
+	
+	add_ioreg(SIGROW_REG_ADDR(OSCCAL16M0), 0x7F, true);
+	add_ioreg(SIGROW_REG_ADDR(OSCCAL20M1), 0x0F, true);
+	add_ioreg(SIGROW_REG_ADDR(OSCCAL16M0), 0x7F, true);
+	add_ioreg(SIGROW_REG_ADDR(OSCCAL20M1), 0x0F, true);
+	add_ioreg(SIGROW_REG_ADDR(TEMPSENSE0), 0xFF, true);
+	add_ioreg(SIGROW_REG_ADDR(TEMPSENSE1), 0xFF, true);
+	add_ioreg(SIGROW_REG_ADDR(OSC16ERR3V), 0xFF, true);
+	add_ioreg(SIGROW_REG_ADDR(OSC16ERR5V), 0xFF, true);
+	add_ioreg(SIGROW_REG_ADDR(OSC20ERR3V), 0xFF, true);
+	add_ioreg(SIGROW_REG_ADDR(OSC20ERR5V), 0xFF, true);
 
 	return status;
 }
@@ -263,14 +285,22 @@ void AVR_ArchMega0_MiscRegCtrl::reset()
 
 bool AVR_ArchMega0_MiscRegCtrl::ctlreq(uint16_t req, ctlreq_data_t* data)
 {
-	uint8_t* p = (uint8_t*) data->data.as_ptr();
-	if (req == AVR_CTLREQ_SET_SERID) {
-		for (int i = 0; i < 10; ++i)
-			write_ioreg(SIGROW_REG_ADDR(SERNUM0) + i, p[i]);
-
+	if (req == AVR_CTLREQ_WRITE_SIGROW) {
+		memcpy(m_sigrow, data->data.as_ptr(), SIGROW_MEM_SIZE);
 		return true;
 	}
 	return false;
+}
+
+void AVR_ArchMega0_MiscRegCtrl::ioreg_read_handler(reg_addr_t addr)
+{
+	if (addr >= m_config.reg_base_sigrow &&
+		addr < (m_config.reg_base_sigrow + sizeof(SIGROW_t))) {
+			
+		reg_addr_t reg_ofs = addr - m_config.reg_base_sigrow;
+		if (reg_ofs >= SIGROW_MEM_OFS)
+			write_ioreg(addr, m_sigrow[reg_ofs - SIGROW_MEM_OFS]);
+	}
 }
 
 void AVR_ArchMega0_MiscRegCtrl::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)

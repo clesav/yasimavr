@@ -205,8 +205,161 @@ MISC:
           kind: ARRAY
           size: 10
 
+        - name: OSCCAL16M0
+          address: 0x1118
+          readonly: true
+          fields:
+            OSCCAL16M:
+                kind: INT
+                LSB: 0
+                MSB: 6
+
+        - name: OSCCAL16M1
+          address: 0x1119
+          readonly: true
+          fields:
+            OSCCAL16MTCAL:
+                kind: INT
+                LSB: 0
+                MSB: 3
+
+        - name: OSCCAL20M0
+          address: 0x111A
+          readonly: true
+          fields:
+            OSCCAL20M:
+                kind: INT
+                LSB: 0
+                MSB: 6
+
+        - name: OSCCAL20M1
+          address: 0x111B
+          readonly: true
+          fields:
+            OSCCAL20MTCAL:
+                kind: INT
+                LSB: 0
+                MSB: 3
+
+        - name: TEMPSENSE0
+          address: 0x111A
+          readonly: true
+          kind: INT
+
+        - name: TEMPSENSE1
+          address: 0x111B
+          readonly: true
+          kind: INT
+
+        - name: OSC16ERR3V
+          address: 0x1122
+          readonly: true
+          kind: INT
+
+        - name: OSC16ERR5V
+          address: 0x1123
+          readonly: true
+          kind: INT
+
+        - name: OSC20ERR3V
+          address: 0x1124
+          readonly: true
+          kind: INT
+
+        - name: OSC20ERR5V
+          address: 0x1125
+          readonly: true
+          kind: INT
+
     config:
         reg_base_gpior: 0x1C
         gpior_count: 4
         reg_base_sigrow: 0x1100
         reg_revid: 0x0F01
+
+#========================================================================================
+FUSES:
+    registers:
+        - name: WDTCFG
+          offset: 0x00
+          readonly: true
+          fields:
+            PERIOD:
+                kind: ENUM
+                LSB: 0
+                MSB: 3
+                values: [ OFF, 8CLK, 16CLK, 32CLK,
+                          64CLK, 128CLK, 256CLK, 512CLK,
+                          1KCLK, 2KCLK, 4KCLK, 8KCLK ]
+            WINDOW:
+                kind: ENUM
+                LSB: 4
+                MSB: 7
+                values: [ OFF, 8CLK, 16CLK, 32CLK,
+                          64CLK, 128CLK, 256CLK, 512CLK,
+                          1KCLK, 2KCLK, 4KCLK, 8KCLK ]
+
+        - name: BODCFG
+          offset: 0x01
+          readonly: yes
+          supported: no
+
+        - name: OSCCFG
+          offset: 0x02
+          readonly: yes
+          fields:
+            FREQSEL:
+                kind: ENUM
+                LSB: 0
+                MSB: 1
+                values: { 1: 16MHz, 2: 20MHz }
+            OSCLOCK: { kind: BIT, pos: 7, one: locked, zero: unlocked }
+
+        - name: SYSCFG0
+          offset: 0x05
+          readonly: yes
+          fields:
+            EESAVE: { kind: BIT, pos: 0, supported: no }
+            RSTPINCFG: { kind: BIT, pos: 3, supported: no }
+            CRCSRC:
+                kind: ENUM
+                LSB: 6
+                MSG: 7
+                supported: no
+
+        - name: SYSCFG1
+          offset: 0x06
+          readonly: yes
+          fields:
+            SUT:
+                kind: ENUM
+                LSB: 0
+                MSG: 2
+                supported: no
+
+        - name: APPEND
+          offset: 0x07
+          readonly: yes
+          supported: no
+          kind: INT
+
+        - name: BOOTEND
+          offset: 0x08
+          readonly: yes
+          supported: no
+          kind: INT
+
+        - name: LOCKBIT
+          offset: 0x0A
+          readonly: yes
+          supported: no
+          kind: INT
+
+#========================================================================================
+USERROW:
+    registers:
+        - name: USERROW
+          offset: 0x00
+          readonly: true
+          kind: ARRAY
+          size: 64

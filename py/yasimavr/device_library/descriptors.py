@@ -55,24 +55,25 @@ MemorySegmentDescriptor = collections.namedtuple('_MemorySegmentDescriptor', ['s
 class MemorySpaceDescriptor:
     '''Descriptor class for a memory space'''
     
-    _SEGMENTS = [('flash', 'FLASH'),
-                 ('sram', 'RAM'),
-                 ('eeprom', 'EEPROM'),
-                 ('io', 'IO'),
-                 ('register', 'REG')]
-    
     def __init__(self, name, mem_config):
         self.name = name
         self.segments = {}
         memend = 0
-        for segname, segmarker in self._SEGMENTS:
-            if (segmarker + 'END') in mem_config:
-                segstart = int(mem_config.get(segmarker + 'START', 0))
-                segend = int(mem_config[segmarker + 'END'])
+        
+        mem_config_lc = {k.lower(): v for k, v in mem_config.items()}
+        for segmarker in mem_config_lc:
+            if segmarker.endswith('end') and segmarker != 'memend':
+                segend = int(mem_config_lc[segmarker])
+                
+                segstartmarker = segmarker.replace('end', 'start')
+                segstart = int(mem_config_lc.get(segstartmarker, 0))
+                
+                segname = segmarker.replace('end', '').lower()
                 self.segments[segname] = MemorySegmentDescriptor(segstart, segend)
+                
                 memend = max(memend, segend)
         
-        self.memend = int(mem_config.get('MEMEND', memend))
+        self.memend = int(mem_config.get('memend', memend))
 
 
 class InterruptMapDescriptor:
@@ -283,6 +284,8 @@ class DeviceDescriptor:
             self.mem_spaces[name] = MemorySpaceDescriptor(name, f)
         
         self.core_attributes = dict(yml_cfg['core'])
+        
+        self.fuses = dict(yml_cfg['fuses'])
         
         self.access_config = dict(yml_cfg.get('access', {}))
         

@@ -1023,14 +1023,14 @@ void AVR_Core::dbg_insert_breakpoint(breakpoint_t& bp)
 	uint32_t curr_opcode = get_flash16le(bp.addr);
 	bp.instr_len = _is_instruction_32_bits(curr_opcode) ? 4 : 2;
 	//Backup the program instruction
-	memcpy(bp.instr, m_flash + bp.addr, bp.instr_len);
+	m_flash.copy_into(bp.instr, bp.addr, bp.instr_len);
 	//Replace the program instruction by a break
-	m_flash[bp.addr] = AVR_BREAK_OPCODE & 0xFF;
-	m_flash[bp.addr + 1] = AVR_BREAK_OPCODE >> 8;
+	m_flash.write(AVR_BREAK_OPCODE & 0xFF, bp.addr);
+	m_flash.write(AVR_BREAK_OPCODE >> 8, bp.addr + 1);
 }
 
 void AVR_Core::dbg_remove_breakpoint(breakpoint_t& bp)
 {
 	//Restore the original instruction in flash
-	memcpy(m_flash + bp.addr, bp.instr, bp.instr_len);
+	m_flash.write(bp.instr, bp.addr, bp.instr_len);
 }
