@@ -128,7 +128,10 @@ void AVR_ArchMega0_USART::ioreg_write_handler(reg_addr_t addr, const ioreg_write
 	if (reg_ofs == REG_OFS(TXDATAL)) {
 		if (TEST_IOREG(CTRLB, USART_TXEN)) {
 			m_uart.push_tx(data.value);
-			m_txe_intflag.clear_flag();
+			if (m_uart.tx_pending())
+				m_txe_intflag.clear_flag();
+
+			DEBUG_LOG(device()->logger(), "%s : data pushed: 0x%02x", name().c_str(), data.value);
 		}
 	}
 
@@ -172,26 +175,34 @@ void AVR_ArchMega0_USART::ioreg_write_handler(reg_addr_t addr, const ioreg_write
 
 void AVR_ArchMega0_USART::raised(const signal_data_t& sigdata, uint16_t __unused)
 {
-	if (sigdata.sigid == AVR_IO_UART::Signal_TX_Start)
+	if (sigdata.sigid == AVR_IO_UART::Signal_TX_Start) {
 		//Notification that the pending frame has been pushed to the shift register
 		//to be emitted. The TX buffer is now empty so raise the DRE interrupt.
 		m_txe_intflag.set_flag();
+		DEBUG_LOG(device()->logger(), "%s : TX started, raising DRE", name().c_str());
+	}
 
-	else if (sigdata.sigid == AVR_IO_UART::Signal_TX_Complete && sigdata.data.as_uint())
+	else if (sigdata.sigid == AVR_IO_UART::Signal_TX_Complete && sigdata.data.as_uint()) {
 		//Notification that the frame in the shift register has been emitted
 		//Raise the TXC interrupt.
 		m_txc_intflag.set_flag();
+		DEBUG_LOG(device()->logger(), "%s : TX complete, raising TXC", name().c_str());
+	}
 
-	else if (sigdata.sigid == AVR_IO_UART::Signal_RX_Complete && sigdata.data.as_uint())
+	else if (sigdata.sigid == AVR_IO_UART::Signal_RX_Complete && sigdata.data.as_uint()) {
 		//Raise the RX completion flag
 		m_rxc_intflag.set_flag();
+		DEBUG_LOG(device()->logger(), "%s : TX complete, raising RXC", name().c_str());
+	}
 }
 
 void AVR_ArchMega0_USART::update_framerate()
 {
 	//From datasheet (normal speed mode) : (Fbaud = Fclk * 64 / (16 * reg_baud))
-	//Expressed in delay rather than frequency: Tbaud / Tclk = reg_baud / 4
+	//Expressed in delay rather than frequency: bit_delay = Tbaud / Tclk = reg_baud / 4
+	//With 10 bits per frame (8 data, 1 start, 1 stop) : frame_delay = 10 * reg_baud / 4
 	uint16_t brr = (read_ioreg(REG_ADDR(BAUD) + 1) << 8) | read_ioreg(REG_ADDR(BAUD));
-	uint32_t delay = (brr >> 2);
+	if (brr < 64) brr = 64;
+	cycle_count_t delay = 10 * brr / 4;
 	m_uart.set_frame_delay(delay);
 }
