@@ -35,7 +35,7 @@ const uint32_t IOCTL_PORTMUX    = AVR_IOCTL_PORTMUX;
 const uint32_t IOCTL_ADC        = AVR_IOCTL_ADC;
 const uint32_t IOCTL_ACOMP      = AVR_IOCTL_ACOMP;
 const uint32_t IOCTL_EEPROM     = AVR_IOCTL_EEPROM;
-const uint32_t IOCTL_FLASH      = AVR_IOCTL_FLASH;
+const uint32_t IOCTL_NVM        = AVR_IOCTL_NVM;
 const uint32_t IOCTL_VREF       = AVR_IOCTL_VREF;
 const uint32_t IOCTL_EXTINT     = AVR_IOCTL_EXTINT;
 const uint32_t IOCTL_RST        = AVR_IOCTL_RST;
@@ -75,8 +75,10 @@ const uint16_t CTLREQ_CORE_SHORTING    = AVR_CTLREQ_CORE_SHORTING;
 const uint16_t CTLREQ_CORE_CRASH       = AVR_CTLREQ_CORE_CRASH;
 const uint16_t CTLREQ_CORE_RESET       = AVR_CTLREQ_CORE_RESET;
 const uint16_t CTLREQ_CORE_RESET_FLAG  = AVR_CTLREQ_CORE_RESET_FLAG;
+const uint16_t CTLREQ_CORE_NVM_PTR	   = AVR_CTLREQ_CORE_NVM_PTR;
+const uint16_t CTLREQ_CORE_HALT        = AVR_CTLREQ_CORE_HALT;
 const uint16_t CTLREQ_WATCHDOG_RESET   = AVR_CTLREQ_WATCHDOG_RESET;
-const uint16_t CTLREQ_FLASH_SPM        = AVR_CTLREQ_FLASH_SPM;
+const uint16_t CTLREQ_NVM_WRITE        = AVR_CTLREQ_NVM_WRITE;
 const uint16_t CTLREQ_SLEEP_CALL       = AVR_CTLREQ_SLEEP_CALL;
 const uint16_t CTLREQ_SLEEP_PSEUDO     = AVR_CTLREQ_SLEEP_PSEUDO;
 
@@ -91,7 +93,7 @@ const uint32_t IOCTL_PORTMUX;
 const uint32_t IOCTL_ADC;
 const uint32_t IOCTL_ACOMP;
 const uint32_t IOCTL_EEPROM;
-const uint32_t IOCTL_FLASH;
+const uint32_t IOCTL_NVM;
 const uint32_t IOCTL_VREF;
 const uint32_t IOCTL_EXTINT;
 const uint32_t IOCTL_RST;
@@ -111,10 +113,23 @@ const uint16_t CTLREQ_CORE_SHORTING;
 const uint16_t CTLREQ_CORE_CRASH;
 const uint16_t CTLREQ_CORE_RESET;
 const uint16_t CTLREQ_CORE_RESET_FLAG;
+const uint16_t CTLREQ_CORE_NVM_PTR;
+const uint16_t CTLREQ_CORE_HALT;
 const uint16_t CTLREQ_WATCHDOG_RESET;
-const uint16_t CTLREQ_FLASH_SPM;
+const uint16_t CTLREQ_NVM_WRITE;
 const uint16_t CTLREQ_SLEEP_CALL;
 const uint16_t CTLREQ_SLEEP_PSEUDO;
+
+struct NVM_request_t {
+%TypeHeaderCode
+#include "core/sim_peripheral.h"
+%End
+
+	mem_addr_t addr;
+	uint16_t data;
+	flash_addr_t instr;
+
+};
 
 
 //=======================================================================================

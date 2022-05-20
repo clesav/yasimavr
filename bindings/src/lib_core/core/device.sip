@@ -90,6 +90,7 @@ public:
 		State_Ready         /PyName=Ready/,
 		State_Running       /PyName=Running/,
 		State_Sleeping      /PyName=Sleeping/,
+		State_Halted		/PyName=Halted/,
 		State_Reset         /PyName=Reset/,
 		State_Stopped       /PyName=Stopped/,
 		State_Break         /PyName=Break/,

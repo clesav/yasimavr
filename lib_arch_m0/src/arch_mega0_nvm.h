@@ -75,6 +75,97 @@ private:
 	const reg_addr_t m_reg_base;
 	AVR_NonVolatileMemory* m_fuses;
 
+
+//=======================================================================================
+/*
+ * Implementation of a NVM controller for Mega0/Mega1 series
+ * Features:
+ *  - xxxxx
+ *
+ *  CTLREQs supported:
+ *   - xxxxx
+ */
+
+struct AVR_ArchMega0_NVM_Config {
+
+	reg_addr_t reg_base;
+	
+	mem_addr_t flash_page_size;
+	//EEPROM page size is assumed to be half the flash page size
+	
+	unsigned int buffer_erase_delay;		//Page buffer erase delay in cycles
+	//All the delays below are expressed in microseconds
+	unsigned int flash_write_delay;			//Flash page write operation delay
+	unsigned int flash_erase_delay;			//Flash page erase operation delay
+	unsigned int flash_erase_write_delay;	//Flash combined erase/write delay
+	unsigned int eeprom_write_delay;		//EEPROM write operation delay
+	unsigned int eeprom_erase_delay;		//EEPROM erase operation delay
+	unsigned int eeprom_erase_write_delay;	//EEPROM combined erase/write delay
+	unsigned int chip_erase_delay;			//Chip erase delay in microseconds
+
+	int_vect_t iv_eeready;
+
+};
+
+class DLL_EXPORT AVR_ArchMega0_NVM : public AVR_Peripheral {
+
+public:
+
+	AVR_ArchMega0_NVM(const AVR_ArchMega0_NVM_Config& config);
+	virtual ~AVR_ArchMega0_NVM();
+
+	virtual bool init(AVR_Device& device) override;
+	virtual void reset() override;
+	virtual bool ctlreq(uint16_t req, ctlreq_data_t* data) override;
+	virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
+
+private:
+
+	class Timer;
+	friend class Timer;
+	
+	enum Command {
+		Cmd_Idle,
+		Cmd_PageWrite,
+		Cmd_PageErase,
+		Cmd_PageEraseWrite,
+		Cmd_BufferErase,
+		Cmd_ChipErase,
+		Cmd_EEPROMErase,
+	};
+	
+	enum Block {
+		Block_Invalid,
+		Block_Flash,
+		Block_EEPROM,
+		Block_UserRow
+	};
+	
+	enum State {
+		State_Idle,
+		State_Executing,
+		State_Halting
+	};
+
+	const AVR_ArchMega0_NVM_Config& m_config;
+	State m_state;
+	uint8_t* m_flash;
+	uint8_t* m_buffer;
+	uint8_t* m_bufset;
+	Block m_block;
+	mem_addr_t m_page;
+	Timer* m_timer;
+	
+	uint8_t* m_eeprom;
+	AVR_InterruptFlag m_ee_intflag;
+	
+	void clear_buffer();
+	void write_nvm(int block_index, const NVM_request_t& nvm_req);
+	void execute_command(NVM_Command cmd);
+	cycle_count_t execute_flash_command(Command cmd);
+	cycle_count_t execute_eeprom_command(Command cmd);
+	void timer_next(cycle_count_t when);
+
 };
 
 #endif //__YASIMAVR_MEGA0_NVM_H__

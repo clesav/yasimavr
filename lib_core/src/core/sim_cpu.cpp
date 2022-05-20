@@ -519,15 +519,30 @@ cycle_count_t AVR_Core::run_instruction()
 					new_pc -= 2;
 					//The break instruction is handled at device level. If it is handled,
 					//we don't progress the PC until the original opcode is restored
-					m_device->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_BREAK, nullptr);
+					m_device->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_BREAK);
 				}	break;
 				case 0x95a8: { // WDR -- Watchdog Reset -- 1001 0101 1010 1000
 					//STATE("wdr\n");
 					m_device->ctlreq(AVR_IOCTL_WTDG, AVR_CTLREQ_WATCHDOG_RESET);
 				}	break;
-				case 0x95e8: { // SPM -- Store Program Memory -- 1001 0101 1110 1000
-					//STATE("spm\n");
-					m_device->ctlreq(AVR_IOCTL_FLASH, AVR_CTLREQ_FLASH_SPM);
+				case 0x95e8:	// SPM -- Store Program Memory -- 1001 0101 1110 1000
+				case 0x95f8: {  // SPM -- Store Program Memory -- 1001 0101 1111 1000 (Z post-increment)
+					bool op = opcode & 0x0010;
+					uint32_t z = get_r16le(R_Z);
+					if (use_extended_addressing())
+						z |= cpu_read_ioreg(m_config.rampz) << 16;
+					uint16_t w = (CPU_READ_GPREG(1) << 8) | CPU_READ_GPREG(0);
+					NVM_request_t nvm_req = { .addr = z, .data = w, .instr = m_pc };
+					TRACE_OP("spm Z[%04x]%s %02x", z, (op ? "+" : ""), w);
+					
+					if (op) {
+						z++;
+						cpu_write_ioreg(m_config.rampz, z >> 16);
+						set_r16le(R_ZL, z);
+					}
+					
+					ctlreq_data_t d = { .index = 0, .p = &nvm_req };
+					m_device->ctlreq(AVR_IOCTL_NVM, AVR_CTLREQ_NVM_WRITE, &d);
 				}	break;
 				case 0x9409:   // IJMP -- Indirect jump -- 1001 0100 0000 1001
 				case 0x9419: { // EIJMP -- Indirect jump -- 1001 0100 0001 1001   bit 4 is "extended"

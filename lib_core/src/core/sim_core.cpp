@@ -70,6 +70,15 @@ AVR_Core::AVR_Core(const AVR_CoreConfiguration& config)
 		if (m_config.eind)
 			m_ioregs[m_config.eind] = new AVR_IO_Register(true);
 	}
+
+	//Allocate the EEPROM sector in RAM
+	size_t sim_eeprom_size = m_config.eepromend + 1;
+	if (sim_eeprom_size > 1) {
+		m_eeprom = (uint8_t*) malloc(sim_eeprom_size);
+		std::memset(m_eeprom, 0xff, sim_eeprom_size);
+	} else {
+		m_eeprom = nullptr;
+	}
 }
 
 AVR_Core::~AVR_Core()
@@ -81,6 +90,9 @@ AVR_Core::~AVR_Core()
 		if (m_ioregs[i]) delete m_ioregs[i];
 	}
 	free(m_ioregs);
+
+	if (m_eeprom)
+		free(m_eeprom);
 }
 
 bool AVR_Core::init(AVR_Device& d)
