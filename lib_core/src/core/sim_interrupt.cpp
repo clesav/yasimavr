@@ -236,10 +236,12 @@ bool AVR_InterruptFlag::init(AVR_Device& device,
 
 int AVR_InterruptFlag::update_from_ioreg()
 {
-	bool enable = m_rb_enable.extract(m_enable_reg->value());
-	bool flag = m_rb_flag.extract(m_flag_reg->value());
+	uint8_t en_mask = m_rb_enable.extract(m_enable_reg->value());
+	uint8_t fl_mask = m_rb_flag.extract(m_flag_reg->value());
+	bool raised = en_mask & fl_mask;
+
 	if (m_raised) {
-		if (!enable || !flag) {
+		if (!raised) {
 			cancel_interrupt(m_vector);
 			m_raised = false;
 			return -1;
@@ -247,7 +249,7 @@ int AVR_InterruptFlag::update_from_ioreg()
 			return 0;
 		}
 	} else {
-		if (enable && flag) {
+		if (raised) {
 			raise_interrupt(m_vector);
 			m_raised = true;
 			return 1;
