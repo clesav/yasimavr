@@ -1,6 +1,6 @@
 # YAML configuration file for atmega0 and atmega1 series
 #
-# Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2022 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -224,7 +224,7 @@ USART:
             ODME: { kind: BIT, pos: 3 }
             SFDEN: { kind: BIT, pos: 4 }
             TXEN: { kind: BIT, pos: 6 }
-            RXEN: { kind: BIT, pos: 2 }
+            RXEN: { kind: BIT, pos: 7 }
 
         - name: CTRLC
           offset: 0x07

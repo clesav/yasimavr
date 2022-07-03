@@ -281,7 +281,7 @@ void AVR_IO_UART::add_rx_frame(uint8_t frame)
 
 	if (!timer_running) {
 		start_rx();
-		m_cycle_manager->add_cycle_timer(m_rx_timer, m_delay);
+		m_cycle_manager->add_cycle_timer(m_rx_timer, m_cycle_manager->cycle() + m_delay);
 	}
 }
 

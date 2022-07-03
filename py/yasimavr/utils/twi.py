@@ -53,10 +53,10 @@ class TWI_Slave(_corelib.TWI_Endpoint):
         return 0
     
     
-    #Generic handler for an address match
+    #Generic handler for an address and read/write match
     #May be reimplemented for more complex address match behaviours
     #Return True for ACK or False for NACK
-    def match_address(self, address):
+    def match_address(self, address, rw):
         return address == self._address
     
     
@@ -93,7 +93,7 @@ class TWI_Slave(_corelib.TWI_Endpoint):
     def packet_ended(self, packet):
         if packet.cmd == _corelib.TWI_Packet.Cmd.Address:
             try:
-                self._active = self.match_address(packet.addr) 
+                self._active = self.match_address(packet.addr, packet.rw) 
             except Exception:
                 self._active = False
             

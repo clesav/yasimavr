@@ -54,7 +54,7 @@ bool AVR_ArchMega0_USART::init(AVR_Device& device)
 	add_ioreg(REG_ADDR(TXDATAL), USART_DATA_gm);
 	add_ioreg(REG_ADDR(TXDATAH), USART_DATA8_bm);
 	add_ioreg(REG_ADDR(STATUS), USART_RXCIF_bm | USART_DREIF_bm, true); // R/O part
-	add_ioreg(REG_ADDR(STATUS), USART_TXCIF_bm); // R/W part
+	add_ioreg(REG_ADDR(STATUS), USART_TXCIF_bm | USART_RXSIF_bm); // R/W part
 	add_ioreg(REG_ADDR(CTRLA));
 	add_ioreg(REG_ADDR(CTRLB));
 	add_ioreg(REG_ADDR(CTRLC));
@@ -136,8 +136,6 @@ void AVR_ArchMega0_USART::ioreg_write_handler(reg_addr_t addr, const ioreg_write
 	}
 
 	else if (reg_ofs == REG_OFS(STATUS)) {
-		//The whole register is made of write-one-to-clear bits
-		write_ioreg(REG_ADDR(STATUS), data.old);
 		//Writing one to RXSIF clears the bit and cancels the interrupt
 		if (data.value & USART_RXSIF_bm)
 			m_rxc_intflag.clear_flag(USART_RXSIF_bm);
@@ -225,9 +223,9 @@ void AVR_ArchMega0_USART::sleep(bool on, AVR_SleepMode mode)
 {
 	if (mode > AVR_SleepMode::Standby || (mode == AVR_SleepMode::Standby && !TEST_IOREG(CTRLB, USART_SFDEN))) {
 		if (on)
-			DEBUG_LOG(device()->logger(), "USART pausing", "");
+			DEBUG_LOG(device()->logger(), "%s: pausing", name().c_str());
 		else
-			DEBUG_LOG(device()->logger(), "USART resuming", "");
+			DEBUG_LOG(device()->logger(), "%s: resuming", name().c_str());
 		
 		m_uart.set_paused(on);
 	}
