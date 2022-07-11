@@ -301,6 +301,13 @@ void AVR_IO_UART::raised(const signal_data_t& sigdata, uint16_t id)
 		for (size_t i = 0; i < strlen(s); ++i)
 			add_rx_frame(s[i]);
 	}
+	else if (sigdata.sigid == Signal_DataBytes) {
+		DEBUG_LOG(*m_logger, "UART RX bytes received", "");
+		const uint8_t* frames = sigdata.data.as_bytes();
+		size_t frame_count = sigdata.data.size();
+		for (size_t i = 0; i < frame_count; i++)
+			add_rx_frame(frames[i]);
+	}
 }
 
 //=======================================================================================

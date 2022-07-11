@@ -1,7 +1,7 @@
 /*
  * sim_types.h
  *
- *	Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *	Copyright 2022 Clement Savergne <csavergne@yahoo.com>
 
  	This file is part of yasim-avr.
 
@@ -162,7 +162,8 @@ public:
 		Double,
 		Uinteger,
 		Integer,
-		String
+		String,
+		Bytes
 	};
 
 	vardata_t();
@@ -171,6 +172,7 @@ public:
 	vardata_t(double d);
 	vardata_t(unsigned int u);
 	vardata_t(int i);
+	vardata_t(uint8_t* b_, size_t sz);
 	vardata_t(const vardata_t& v);
 
 	inline Type type() const
@@ -183,6 +185,9 @@ public:
 	double as_double() const;
 	unsigned int as_uint() const;
 	int as_int() const;
+
+	const uint8_t* as_bytes() const;
+	size_t size() const;
 
 	vardata_t& operator=(void* p);
 	vardata_t& operator=(const char* s);
@@ -202,6 +207,8 @@ private:
 		int32_t i;
 		const char* s;
 	};
+
+	size_t m_size = 0;
 
 };
 

@@ -90,6 +90,8 @@ public:
 		Signal_DataFrame,
 		//Signal raised when receiving a c-style string, pointed by data.s.
 		Signal_DataString,
+		//Signal raised when receiving an array of frames, pointed by data.b.
+		Signal_DataBytes,
 		//Signal raised at the start of a frame transmission.
 		//The lowest byte of data.u contains the frame.
 		Signal_TX_Start,

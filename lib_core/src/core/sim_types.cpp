@@ -1,7 +1,7 @@
 /*
  * sim_types.cpp
  *
- *	Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *	Copyright 2022 Clement Savergne <csavergne@yahoo.com>
 
  	This file is part of yasim-avr.
 
@@ -158,6 +158,7 @@ vardata_t::vardata_t(const char* s_) : m_type(String), s(s_) {}
 vardata_t::vardata_t(double d_) : m_type(Double), d(d_) {}
 vardata_t::vardata_t(unsigned int u_) : m_type(Uinteger), u(u_) {}
 vardata_t::vardata_t(int i_) : m_type(Integer), i(i_) {}
+vardata_t::vardata_t(uint8_t* b_, size_t sz) : m_type(Bytes), p(b_), m_size(sz) {}
 vardata_t::vardata_t(const vardata_t& v) { *this = v; }
 
 void* vardata_t::as_ptr() const
@@ -183,6 +184,16 @@ unsigned int vardata_t::as_uint() const
 int vardata_t::as_int() const
 {
 	return (m_type == Integer) ? i : 0;
+}
+
+const uint8_t* vardata_t::as_bytes() const
+{
+	return (m_type == Bytes) ? (const uint8_t*) p : nullptr;
+}
+
+size_t vardata_t::size() const
+{
+	return m_size;
 }
 
 vardata_t& vardata_t::operator=(void* p_)
@@ -234,6 +245,10 @@ vardata_t& vardata_t::operator=(const vardata_t& v)
 		u = v.u; break;
 	case Integer:
 		i = v.i; break;
+	case Bytes:
+		p = v.p;
+		m_size = v.m_size;
+		break;
 	}
 	return *this;
 }
