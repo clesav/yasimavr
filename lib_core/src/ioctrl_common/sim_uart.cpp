@@ -1,7 +1,7 @@
 /*
  * sim_uart.cpp
  *
- *	Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *	Copyright 2022 Clement Savergne <csavergne@yahoo.com>
 
  	This file is part of yasim-avr.
 
@@ -78,6 +78,7 @@ AVR_IO_UART::AVR_IO_UART()
 ,m_rx_count(0)
 ,m_rx_limit(0)
 ,m_rx_overflow(false)
+,m_paused(false)
 {
 	m_rx_timer = new RxTimer(*this);
 	m_tx_timer = new TxTimer(*this);
@@ -117,6 +118,7 @@ void AVR_IO_UART::reset()
 	m_rx_buffer.clear();
 	m_rx_count = 0;
 	m_rx_overflow = false;
+	m_paused = false;
 	m_cycle_manager->remove_cycle_timer(m_rx_timer);
 }
 
@@ -171,7 +173,7 @@ cycle_count_t AVR_IO_UART::tx_timer_next(cycle_count_t when)
 	m_signal.raise_u(Signal_DataFrame, 0, frame);
 	m_signal.raise_u(Signal_TX_Complete, 0, 1);
 
-	if (m_tx_buffer.size()) {
+	if (m_tx_buffer.size() && !m_paused) {
 		uint8_t next_frame = m_tx_buffer.front();
 		DEBUG_LOG(*m_logger, "UART TX start: 0x%02x ('%c')", next_frame, next_frame);
 		m_signal.raise_u(Signal_TX_Start, 0, next_frame);
@@ -250,15 +252,14 @@ cycle_count_t AVR_IO_UART::rx_timer_next(cycle_count_t when)
 {
 	DEBUG_LOG(*m_logger, "UART RX complete", "");
 
-	if (m_rx_enabled) {
+	if (m_rx_enabled && !m_paused) {
 		++m_rx_count;
 		//Signal that we received a frame and kept it
 		m_signal.raise_u(Signal_RX_Complete, 0, 1);
 	} else {
-		//if disabled, m_rx_count = 0 so the front FIFO is empty
-		//and the front slot has the frame just received.
-		//We discard it.
-		m_rx_buffer.pop_front();
+		//if disabled or paused, discard the frame just received,
+		//which is in the front slot of the back part of the FIFO
+		m_rx_buffer.erase(m_rx_buffer.begin() + m_rx_count);
 		//Signal that we received a frame but discarded it
 		m_signal.raise_u(Signal_RX_Complete, 0, 0);
 	}
@@ -280,7 +281,7 @@ void AVR_IO_UART::add_rx_frame(uint8_t frame)
 
 	if (!timer_running) {
 		start_rx();
-		m_cycle_manager->add_cycle_timer(m_rx_timer, m_delay);
+		m_cycle_manager->add_cycle_timer(m_rx_timer, m_cycle_manager->cycle() + m_delay);
 	}
 }
 
@@ -300,4 +301,20 @@ void AVR_IO_UART::raised(const signal_data_t& sigdata, uint16_t id)
 		for (size_t i = 0; i < strlen(s); ++i)
 			add_rx_frame(s[i]);
 	}
+}
+
+//=======================================================================================
+//Pause management
+
+void AVR_IO_UART::set_paused(bool paused)
+{
+	//If going out of pause and there are TX frames pending, resume the transmission
+	if (m_paused && !paused && m_tx_buffer.size()) {
+		uint8_t next_frame = m_tx_buffer.front();
+		DEBUG_LOG(*m_logger, "UART TX start: 0x%02x ('%c')", next_frame, next_frame);
+		m_signal.raise_u(Signal_TX_Start, 0, next_frame);
+		m_cycle_manager->add_cycle_timer(m_tx_timer, m_cycle_manager->cycle() + m_delay);
+	}
+	
+	m_paused = paused;
 }

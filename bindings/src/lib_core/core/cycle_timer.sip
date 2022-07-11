@@ -1,7 +1,7 @@
 /*
  * cycle_timer.sip
  *
- *	Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *	Copyright 2022 Clement Savergne <csavergne@yahoo.com>
 
  	This file is part of yasim-avr.
 
@@ -21,7 +21,7 @@
  
 //=======================================================================================
 
-class AVR_CycleTimer /Abstract/ {
+class AVR_CycleTimer {
 %TypeHeaderCode
 #include "core/sim_cycle_timer.h"
 %End

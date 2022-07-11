@@ -1,7 +1,7 @@
 /*
  * arch_mega0_usart.h
  *
- *	Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *	Copyright 2022 Clement Savergne <csavergne@yahoo.com>
 
  	This file is part of yasim-avr.
 
@@ -36,7 +36,8 @@
  *  - stop bits and parity settings have no effect
  *  - synchronous, SPI MPCM modes are not supported
  *  - one-wire / RS485 and IRCOM modes not supported
- *  - RXC, TXC, UDRE interrupts are supported
+ *  - RXC, RXS, TXC, UDRE interrupts are supported
+ *  - Start-of-Frame detection is supported
  *  - Error flags are not supported
  *  - Auto-baud not supported
  *
@@ -68,6 +69,7 @@ public:
 	virtual bool ctlreq(uint16_t req, ctlreq_data_t* data) override;
 	virtual void ioreg_read_handler(reg_addr_t addr) override;
 	virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
+	virtual void sleep(bool on, AVR_SleepMode mode) override;
 	virtual void raised(const signal_data_t& data, uint16_t id) override;
 
 private:
