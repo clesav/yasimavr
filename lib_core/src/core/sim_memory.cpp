@@ -38,7 +38,9 @@ AVR_NonVolatileMemory::AVR_NonVolatileMemory(const size_t size)
 {
 	if (size) {
 		m_memory = (unsigned char*) malloc(m_size);
+		memset(m_memory, 0xFF, m_size);
 		m_tag = (unsigned char*) malloc(m_size);
+		memset(m_tag, 0, m_size);
 	} else {
 		m_memory = m_tag = nullptr;
 	}
@@ -136,9 +138,8 @@ size_t AVR_NonVolatileMemory::dbg_read(unsigned char* buf, size_t base, size_t l
 
 void AVR_NonVolatileMemory::dbg_write(unsigned char v, size_t pos)
 {
-	if (pos < m_size) return;
-
-	m_memory[pos] = v;
+	if (pos < m_size)
+		m_memory[pos] = v;
 }
 
 void AVR_NonVolatileMemory::dbg_write(unsigned char* buf, size_t base, size_t len)

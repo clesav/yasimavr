@@ -45,7 +45,7 @@ rstctrl_base = _desc.peripherals['RSTCTRL'].reg_base
 #Clock controller
 clkctrl_dummy_regs = convert_dummy_controller_config(_desc.peripherals['CLKCTRL'])
 #NVM controller
-nvmctrl_config = _get_nvmctrl_config(_desc.peripherals['NVMCTRL'])
+nvmctrl_config = get_nvmctrl_config(_desc.peripherals['NVMCTRL'])
 #Misc registers
 misc_config = get_misc_config(_desc.peripherals['MISC'])
 #Ports

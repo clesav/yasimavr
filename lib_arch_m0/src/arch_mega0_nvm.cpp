@@ -279,6 +279,9 @@ void AVR_ArchMega0_NVM::write_nvm(const NVM_request_t& nvm_req)
 
 	//Storing the page number
 	m_page = nvm_req.addr / page_size;
+
+	DEBUG_LOG(device()->logger(), "NVM: buffer write addr=%04x, index=%d, page=%d, value=%02x",
+			nvm_req.addr, m_mem_index, m_page, nvm_req.data);
 }
 
 void AVR_ArchMega0_NVM::execute_command(Command cmd)

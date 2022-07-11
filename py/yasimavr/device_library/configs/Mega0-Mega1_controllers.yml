@@ -221,6 +221,13 @@ NVMCTRL:
           size: 2
           kind: INT
           supported: no
+          
+    config:
+       buffer_erase_delay: 7
+       page_write_delay: 2000
+       page_erase_delay: 2000
+       chip_erase_delay: 4000
+       eeprom_erase_delay: 4000
 
 #========================================================================================
 MISC:

@@ -80,10 +80,12 @@ private:
 /*
  * Implementation of a NVM controller for Mega0/Mega1 series
  * Features:
- *  - xxxxx
+ *  - supports all commands except WFU(Write FUse)
+ *  - the Configuration Change Protection for SPM is not supported (has no effect)
+ *  - None of the Write Protection mechanisms (boot lock, boot/app/data section) is supported
  *
  *  CTLREQs supported:
- *   - xxxxx
+ *   - internally, AVR_CTLREQ_NVM_WRITE is supported to receive NVM write to the page buffer
  */
 
 struct AVR_ArchMega0_NVM_Config {

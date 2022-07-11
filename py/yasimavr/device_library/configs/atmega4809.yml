@@ -132,6 +132,9 @@ peripherals:
     NVMCTRL:
         file: Mega0-Mega1_controllers.yml
         base: 0x1000
+        config:
+           flash_page_size: 128
+           iv_eeready: NVMCTRL_EE
 
     MISC:
         file: Mega0-Mega1_controllers.yml
