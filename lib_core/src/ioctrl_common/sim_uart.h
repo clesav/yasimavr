@@ -1,7 +1,7 @@
 /*
  * sim_uart.h
  *
- *	Copyright 2022 Clement Savergne <csavergne@yahoo.com>
+ *	Copyright 2021 Clement Savergne <csavergne@yahoo.com>
 
  	This file is part of yasim-avr.
 
@@ -154,12 +154,6 @@ public:
 	//Return/clear the RX overflow flag
 	bool has_rx_overflow() const;
 	void clear_rx_overflow();
-	
-	//Enable/disable the pause mode.
-	//If pause is enabled, any ongoing communication will complete as normal, and
-	//further TX frames won't be emitted (but remain in the FIFO). Further RX frames
-	//will be ignored but the frames already in the RX FIFO are kept.
-	void set_paused(bool enabled);
 
 protected:
 
@@ -206,9 +200,6 @@ private:
 	bool m_rx_overflow;
 	//Cycle timer to simulate the delay to receive a frame
 	RxTimer* m_rx_timer;
-	
-	//Pause flag for both RX and TX
-	bool m_paused;
 
 	void add_rx_frame(uint8_t frame);
 	void start_rx();

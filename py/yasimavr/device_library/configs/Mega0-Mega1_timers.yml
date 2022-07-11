@@ -483,14 +483,14 @@ WDT:
           offset: 0x00
           protected: CCP
           fields:
-            PERIOD:
+            WINDOW:
                 kind: ENUM
                 LSB: 0
                 MSB: 3
                 values: [ OFF, 8CLK, 16CLK, 32CLK,
                           64CLK, 128CLK, 256CLK, 512CLK,
                           1KCLK, 2KCLK, 4KCLK, 8KCLK ]
-            WINDOW:
+            PERIOD:
                 kind: ENUM
                 LSB: 4
                 MSB: 7

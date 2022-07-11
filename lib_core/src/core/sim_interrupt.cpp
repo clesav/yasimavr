@@ -236,10 +236,10 @@ bool AVR_InterruptFlag::init(AVR_Device& device,
 
 int AVR_InterruptFlag::update_from_ioreg()
 {
-	bool raised = flag_raised();
-
+	bool enable = m_rb_enable.extract(m_enable_reg->value());
+	bool flag = m_rb_flag.extract(m_flag_reg->value());
 	if (m_raised) {
-		if (!raised) {
+		if (!enable || !flag) {
 			cancel_interrupt(m_vector);
 			m_raised = false;
 			return -1;
@@ -247,7 +247,7 @@ int AVR_InterruptFlag::update_from_ioreg()
 			return 0;
 		}
 	} else {
-		if (raised) {
+		if (enable && flag) {
 			raise_interrupt(m_vector);
 			m_raised = true;
 			return 1;
@@ -261,8 +261,8 @@ bool AVR_InterruptFlag::set_flag(uint8_t mask)
 {
 	uint8_t new_flag_reg = m_rb_flag.set_to(m_flag_reg->value(), mask);
 	m_flag_reg->set(new_flag_reg);
-
-	if (!m_raised && flag_raised()) {
+	bool flag_is_raised = m_rb_flag.extract(new_flag_reg);
+	if (!m_raised && flag_is_raised && m_rb_enable.extract(m_enable_reg->value())) {
 		raise_interrupt(m_vector);
 		m_raised = true;
 		return true;
@@ -275,21 +275,14 @@ bool AVR_InterruptFlag::clear_flag(uint8_t mask)
 {
 	uint8_t new_flag_reg = m_rb_flag.clear_from(m_flag_reg->value(), mask);
 	m_flag_reg->set(new_flag_reg);
-
-	if (m_raised && !flag_raised()) {
+	bool flag_is_raised = m_rb_flag.extract(new_flag_reg);
+	if (m_raised && !flag_is_raised) {
 		cancel_interrupt(m_vector);
 		m_raised = false;
 		return true;
 	} else {
 		return false;
 	}
-}
-
-bool AVR_InterruptFlag::flag_raised() const
-{
-	uint8_t en_mask = m_rb_enable.extract(m_enable_reg->value());
-	uint8_t fl_mask = m_rb_flag.extract(m_flag_reg->value());
-	return !!(en_mask & fl_mask);
 }
 
 void AVR_InterruptFlag::interrupt_ack_handler(int_vect_t vector)

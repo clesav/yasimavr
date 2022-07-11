@@ -1,7 +1,7 @@
 /*
  * arch_mega0_port.cpp
  *
- *	Copyright 2022 Clement Savergne <csavergne@yahoo.com>
+ *	Copyright 2021 Clement Savergne <csavergne@yahoo.com>
 
  	This file is part of yasim-avr.
 
@@ -76,12 +76,6 @@ bool AVR_ArchMega0_Port::init(AVR_Device& device)
 	add_ioreg(PORT_REG_ADDR(PIN6CTRL), PORT_ISC_gm | PORT_PULLUPEN_bm);
 	add_ioreg(PORT_REG_ADDR(PIN7CTRL), PORT_ISC_gm | PORT_PULLUPEN_bm);
 
-	//Virtual port registers
-	add_ioreg(VPORT_REG_ADDR(DIR));
-	add_ioreg(VPORT_REG_ADDR(OUT));
-	add_ioreg(VPORT_REG_ADDR(IN));
-	add_ioreg(VPORT_REG_ADDR(INTFLAGS));
-
 	register_interrupt(m_config.iv_port, this);
 
 	return status;
@@ -96,14 +90,8 @@ void AVR_ArchMega0_Port::reset()
 
 void AVR_ArchMega0_Port::ioreg_read_handler(reg_addr_t addr)
 {
-	if (addr == VPORT_REG_ADDR(DIR))
-		write_ioreg(addr, read_ioreg(PORT_REG_ADDR(DIR)));
-	else if (addr == VPORT_REG_ADDR(OUT))
-		write_ioreg(addr, read_ioreg(PORT_REG_ADDR(OUT)));
-	else if (addr == VPORT_REG_ADDR(IN))
+	if (addr == VPORT_REG_ADDR(IN))
 		write_ioreg(addr, read_ioreg(PORT_REG_ADDR(IN)));
-	else if (addr == VPORT_REG_ADDR(INTFLAGS))
-		write_ioreg(addr, read_ioreg(PORT_REG_ADDR(INTFLAGS)));
 }
 
 void AVR_ArchMega0_Port::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)

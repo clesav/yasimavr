@@ -41,7 +41,7 @@ class UartIO(io.RawIOBase):
             self.queue = collections.deque()
         
         def raised(self, data, _):
-            if data.sigid == _UART_SignalId.DataFrame:
+            if data.sigid == _UART_SignalId.Data_Frame:
                 self.queue.append(data.u)
     
     def __init__(self, device, portnum):
@@ -53,7 +53,7 @@ class UartIO(io.RawIOBase):
         if not ok:
             raise ValueError('Endpoint of UART port ' + portnum + ' not found')
         
-        self._endpoint = reqdata.data.as_ptr(_corelib.UART_EndPoint)
+        self._endpoint = reqdata.ptr(_corelib.UART_EndPoint)
         
         #Create the signal hook and connect to the endpoint
         self._tx_hook = self._TxHook()
@@ -64,9 +64,10 @@ class UartIO(io.RawIOBase):
     
     def write(self, data):
         if isinstance(data, int):
-            self._tx_signal.raise_(_UART_SignalId.DataFrame, 0, data)
+            self._tx_signal.raise_(_UART_SignalId.Data_Frame, 0, data);
         elif isinstance(data, (bytes, bytearray)):
-            self._tx_signal.raise_(_UART_SignalId.DataString, 0, bytes(data))
+            sigdata = _corelib.signal_data_t(_UART_SignalId.Data_String, 0, data)
+            self._tx_signal.raise_(sigdata)
         else:
             raise TypeError()
     

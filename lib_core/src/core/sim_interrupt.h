@@ -220,8 +220,6 @@ private:
 	AVR_IO_Register* m_flag_reg;
 	AVR_IO_Register* m_enable_reg;
 
-	bool flag_raised() const;
-
 };
 
 inline bool AVR_InterruptFlag::raised() const

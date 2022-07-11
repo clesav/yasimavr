@@ -1,7 +1,7 @@
 /*
  * arch_mega0_usart.cpp
  *
- *	Copyright 2022 Clement Savergne <csavergne@yahoo.com>
+ *	Copyright 2021 Clement Savergne <csavergne@yahoo.com>
 
  	This file is part of yasim-avr.
 
@@ -24,7 +24,7 @@
 #include "arch_mega0_usart.h"
 #include "arch_mega0_io.h"
 #include "arch_mega0_io_utils.h"
-#include "core/sim_sleep.h"
+
 
 //=======================================================================================
 
@@ -50,14 +50,14 @@ bool AVR_ArchMega0_USART::init(AVR_Device& device)
 	bool status = AVR_Peripheral::init(device);
 
 	add_ioreg(REG_ADDR(RXDATAL), USART_DATA_gm, true);
-	add_ioreg(REG_ADDR(RXDATAH), 0, true);
+	add_ioreg(REG_ADDR(RXDATAH), USART_RXCIF_bm, true);
 	add_ioreg(REG_ADDR(TXDATAL), USART_DATA_gm);
-	add_ioreg(REG_ADDR(TXDATAH), USART_DATA8_bm);
+	//TXDATAH not implemented
 	add_ioreg(REG_ADDR(STATUS), USART_RXCIF_bm | USART_DREIF_bm, true); // R/O part
-	add_ioreg(REG_ADDR(STATUS), USART_TXCIF_bm | USART_RXSIF_bm); // R/W part
-	add_ioreg(REG_ADDR(CTRLA));
-	add_ioreg(REG_ADDR(CTRLB));
-	add_ioreg(REG_ADDR(CTRLC));
+	add_ioreg(REG_ADDR(STATUS), USART_TXCIF_bm); // R/W part
+	add_ioreg(REG_ADDR(CTRLA), USART_RXCIE_bm | USART_TXCIE_bm | USART_DREIE_bm);
+	add_ioreg(REG_ADDR(CTRLB), USART_RXEN_bm | USART_TXEN_bm | USART_RXMODE_gm);
+	add_ioreg(REG_ADDR(CTRLC), 0);
 	add_ioreg(REG_ADDR(BAUDL));
 	add_ioreg(REG_ADDR(BAUDH));
 	//CTRLD not implemented
@@ -67,8 +67,8 @@ bool AVR_ArchMega0_USART::init(AVR_Device& device)
 	//RXPLCTRL not implemented
 
 	status &= m_rxc_intflag.init(device,
-								 regbit_t(REG_ADDR(CTRLA), 0, USART_RXCIE_bm | USART_RXSIE_bm),
-								 regbit_t(REG_ADDR(STATUS), 0, USART_RXCIF_bm | USART_RXSIF_bm),
+								 DEF_REGBIT_B(CTRLA, USART_RXCIE),
+								 DEF_REGBIT_B(STATUS, USART_RXCIF),
 								 m_config.iv_rxc);
 	status &= m_txc_intflag.init(device,
 							     DEF_REGBIT_B(CTRLA, USART_TXCIE),
@@ -116,7 +116,7 @@ void AVR_ArchMega0_USART::ioreg_read_handler(reg_addr_t addr)
 		uint8_t frame = m_uart.pop_rx();
 		write_ioreg(REG_ADDR(RXDATAL), frame);
 		if (!m_uart.rx_available())
-			m_rxc_intflag.clear_flag(USART_RXCIF_bm);
+			m_rxc_intflag.clear_flag();
 	}
 }
 
@@ -136,9 +136,8 @@ void AVR_ArchMega0_USART::ioreg_write_handler(reg_addr_t addr, const ioreg_write
 	}
 
 	else if (reg_ofs == REG_OFS(STATUS)) {
-		//Writing one to RXSIF clears the bit and cancels the interrupt
-		if (data.value & USART_RXSIF_bm)
-			m_rxc_intflag.clear_flag(USART_RXSIF_bm);
+		//The whole register is made of write-one-to-clear bits
+		write_ioreg(REG_ADDR(STATUS), data.old);
 		//Writing one to TXCIF clears the bit and cancels the interrupt
 		if (data.value & USART_TXCIF_bm)
 			m_txc_intflag.clear_flag();
@@ -163,7 +162,7 @@ void AVR_ArchMega0_USART::ioreg_write_handler(reg_addr_t addr, const ioreg_write
 		}
 		else if (data.negedge & USART_RXEN_bm) {
 			m_uart.set_rx_enabled(false);
-			m_rxc_intflag.clear_flag(USART_RXCIF_bm);
+			m_rxc_intflag.clear_flag();
 		}
 
 		update_framerate();
@@ -190,18 +189,10 @@ void AVR_ArchMega0_USART::raised(const signal_data_t& sigdata, uint16_t __unused
 		DEBUG_LOG(device()->logger(), "%s : TX complete, raising TXC", name().c_str());
 	}
 
-	else if (sigdata.sigid == AVR_IO_UART::Signal_RX_Start) {
-		//If the Start-of-Frame detection is enabled, raise the RXS flag
-		if (TEST_IOREG(CTRLB, USART_SFDEN) && device()->sleep_mode() == AVR_SleepMode::Standby) {
-			m_rxc_intflag.set_flag(USART_RXSIF_bm);
-			DEBUG_LOG(device()->logger(), "%s : RX start, raising RXS", name().c_str());
-		}
-	}
-
 	else if (sigdata.sigid == AVR_IO_UART::Signal_RX_Complete && sigdata.data.as_uint()) {
 		//Raise the RX completion flag
-		m_rxc_intflag.set_flag(USART_RXCIF_bm);
-		DEBUG_LOG(device()->logger(), "%s : RX complete, raising RXC", name().c_str());
+		m_rxc_intflag.set_flag();
+		DEBUG_LOG(device()->logger(), "%s : TX complete, raising RXC", name().c_str());
 	}
 }
 
@@ -214,19 +205,4 @@ void AVR_ArchMega0_USART::update_framerate()
 	if (brr < 64) brr = 64;
 	cycle_count_t delay = 10 * brr / 4;
 	m_uart.set_frame_delay(delay);
-}
-
-/*
-* The USART is paused for modes above Standby and in Standby if the Start-Frame Detection feature is not enabled
-*/
-void AVR_ArchMega0_USART::sleep(bool on, AVR_SleepMode mode)
-{
-	if (mode > AVR_SleepMode::Standby || (mode == AVR_SleepMode::Standby && !TEST_IOREG(CTRLB, USART_SFDEN))) {
-		if (on)
-			DEBUG_LOG(device()->logger(), "%s: pausing", name().c_str());
-		else
-			DEBUG_LOG(device()->logger(), "%s: resuming", name().c_str());
-		
-		m_uart.set_paused(on);
-	}
 }

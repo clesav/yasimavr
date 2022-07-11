@@ -1,7 +1,7 @@
 /*
  * arch_mega0_usart.sip
  *
- *	Copyright 2022 Clement Savergne <csavergne@yahoo.com>
+ *	Copyright 2021 Clement Savergne <csavergne@yahoo.com>
 
  	This file is part of yasim-avr.
 
@@ -49,7 +49,6 @@ public:
 	virtual bool ctlreq(uint16_t, ctlreq_data_t*);
 	virtual void ioreg_read_handler(reg_addr_t);
 	virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
-	virtual void sleep(bool, AVR_SleepMode);
 	virtual void raised(const signal_data_t&, uint16_t);
 
 };

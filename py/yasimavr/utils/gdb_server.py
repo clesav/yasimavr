@@ -120,16 +120,6 @@ class GDB_Stub:
         self._socket = None
         
         self._simloopthread = None
-        self._simloopjointhread = None
-    
-    
-    def set_simloop(self, simloop):
-        if self._ownloop: return
-        self._probe.detach()
-        self._simloop = simloop
-        self._device = simloop.device()
-        self._probe = AVR_DeviceDebugProbe()
-        self._probe.attach(self._device)
     
     
     def start(self):
@@ -175,7 +165,6 @@ class GDB_Stub:
         while i < len(packet):
             if packet[i] == '+' or packet[i] == '-':
                 i += 1
-            
             elif packet[i] == '$':
                 try:
                     j = packet.index('#', i)
@@ -187,14 +176,6 @@ class GDB_Stub:
                 self.__decode_command(packet[i+1:j])
                 
                 i = j + 3 #Skip the checksum
-            
-            elif ord(packet[i]) == 0x03:
-                print('GDB >>> Stub : BREAK')
-                sys.stdout.flush()
-                
-                self.__handle_cmd_break()
-                i += 1 
-            
             else:
                 self._socket.send(b'-')
                 i = len(packet)
@@ -203,7 +184,7 @@ class GDB_Stub:
     
     
     def __send_reply(self, reply):
-        print('GDB <<< Stub : ', reply)
+        print('<<<', reply)
         sys.stdout.flush()
         
         if isinstance(reply, str):
@@ -217,28 +198,8 @@ class GDB_Stub:
         self._socket.send(packet)
     
     
-    def __start_simloop_join_thread(self):
-        if not self._simloopjointhread:
-            self._simloopjointhread = threading.Thread(target=self.__run_simloop_join_thread)
-            self._simloopjointhread.start() 
-    
-    
-    def __run_simloop_join_thread(self):
-        #Wait until the simloop stop
-        while self._simloop.state() not in (AVR_AsyncSimLoop.State.Stopped,
-                                            AVR_AsyncSimLoop.State.Done):
-            time.sleep(0.001)
-        
-        if self._simloop.state() == AVR_AsyncSimLoop.State.Done:
-            self.__send_reply('W01')
-        else:
-            self.__send_reply('S05')
-        
-        self._simloopjointhread = None
-    
-    
     def __decode_command(self, cmdline):
-        print('GDB >>> Stub : ', cmdline)
+        print('>>>', cmdline)
         sys.stdout.flush()
         
         cmd = cmdline[0]
@@ -265,10 +226,6 @@ class GDB_Stub:
             self.__handle_cmd_continue()
         elif cmd == 's':
             self.__handle_cmd_step()
-        elif cmd == 'k':
-            self.__handle_cmd_kill()
-        elif cmd == 'D':
-            self.__handle_cmd_detach()
         elif cmd == 'Z':
             self.__handle_cmd_insert_breakpoints(cmdargs)
         elif cmd == 'z':
@@ -333,10 +290,16 @@ class GDB_Stub:
     
     
     def __handle_cmd_status(self):
-        if self._simloop.state() == AVR_AsyncSimLoop.State.Done:
-            self.__send_reply('X01')
-        else:
-            self.__send_reply('S05')
+        with self._simloop:
+            sreg = self._probe.read_sreg()
+            sp = self._probe.read_sp()
+            pc = self._probe.read_pc()
+        
+        status = 'S0520:%s;21:%s;22:%s;' % (
+                    int_to_hex(sreg, 1),
+                    int_to_hex(sp, 2),
+                    int_to_hex(pc, 4))
+        self.__send_reply(status)
     
     
     def __handle_cmd_set_thread(self, cmdargs):
@@ -479,7 +442,14 @@ class GDB_Stub:
             self._probe.set_device_state(AVR_Device.State.Running)
             self._simloop.loop_continue()
         
-        self.__start_simloop_join_thread()
+        #Wait until the simloop stops
+        while self._simloop.state() == AVR_AsyncSimLoop.State.Running:
+            time.sleep(0.001)
+        
+        if self._simloop.state() == AVR_AsyncSimLoop.State.Done:
+            self.__send_reply('W01')
+        else:
+            self.__send_reply('S02')
     
     
     def __handle_cmd_step(self):
@@ -487,23 +457,15 @@ class GDB_Stub:
             self._probe.set_device_state(AVR_Device.State.Running)
             self._simloop.loop_step()
         
-        self.__start_simloop_join_thread()
+        #Wait until the simloop stops
+        while self._simloop.state() == AVR_AsyncSimLoop.State.Running:
+            time.sleep(0.001)
+        
+        if self._simloop.state() == AVR_AsyncSimLoop.State.Done:
+            self.__send_reply('W01')
+        else:
+            self.__send_reply('S02')
 
-    
-    def __handle_cmd_kill(self):
-        with self._simloop:
-            self._simloop.loop_kill()
-        self.__send_reply('OK')
-    
-    
-    def __handle_cmd_break(self):
-        with self._simloop:
-            self._simloop.loop_pause()
-    
-    
-    def __handle_cmd_detach(self):
-        self.__send_reply('OK')
-    
     
     def __handle_cmd_insert_breakpoints(self, cmdargs):
         args = cmdargs.split(',')
