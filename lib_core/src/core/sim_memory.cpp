@@ -38,7 +38,9 @@ AVR_NonVolatileMemory::AVR_NonVolatileMemory(const size_t size)
 {
 	if (size) {
 		m_memory = (unsigned char*) malloc(m_size);
+		memset(m_memory, 0xFF, m_size);
 		m_tag = (unsigned char*) malloc(m_size);
+		memset(m_tag, 0, m_size);
 	} else {
 		m_memory = m_tag = nullptr;
 	}
@@ -63,8 +65,22 @@ void AVR_NonVolatileMemory::erase(size_t base, size_t len)
 
 	ADJUST_BASE_LEN(base, len, m_size);
 
-	memset(m_memory, 0xFF, m_size);
-	memset(m_tag, 0, m_size);
+	memset(m_memory + base, 0xFF, len);
+	memset(m_tag + base, 0, len);
+}
+
+void AVR_NonVolatileMemory::erase(unsigned char* buf, size_t pos, size_t len)
+{
+	if (!m_size || !len) return;
+	
+	ADJUST_BASE_LEN(pos, len, m_size);
+	
+	for (size_t i = 0; i < len; ++i) {
+		if (buf[i]) {
+			m_memory[pos + i] = 0xFF;
+			m_tag[pos + i] = 0;
+		}
+	}
 }
 
 bool AVR_NonVolatileMemory::program(const mem_block_t& mem_block, size_t base)
@@ -101,24 +117,59 @@ mem_block_t AVR_NonVolatileMemory::block(size_t base, size_t size) const
 	return b;
 }
 
-void AVR_NonVolatileMemory::copy_into(unsigned char* buf, size_t base, size_t len) const
+int AVR_NonVolatileMemory::dbg_read(size_t pos) const
 {
-	if (len && m_size) {
-		ADJUST_BASE_LEN(base, len, m_size);
-		memcpy(buf, m_memory + base, len);
-	}
+	if (pos < m_size)
+		return m_memory[pos];
+	else
+		return -1;
 }
 
-void AVR_NonVolatileMemory::write(unsigned char v, size_t pos)
+size_t AVR_NonVolatileMemory::dbg_read(unsigned char* buf, size_t base, size_t len) const
+{
+	if (!m_size || !len) return 0;
+
+	ADJUST_BASE_LEN(base, len, m_size);
+
+	memcpy(buf, m_memory + base, len);
+	
+	return len;
+}
+
+void AVR_NonVolatileMemory::dbg_write(unsigned char v, size_t pos)
 {
 	if (pos < m_size)
 		m_memory[pos] = v;
 }
 
-void AVR_NonVolatileMemory::write(unsigned char* buf, size_t base, size_t len)
+void AVR_NonVolatileMemory::dbg_write(unsigned char* buf, size_t base, size_t len)
 {
-	if (len && m_size) {
-		ADJUST_BASE_LEN(base, len, m_size);
-		memcpy(m_memory + base, buf, len);
+	if (!m_size || !len) return;
+
+	ADJUST_BASE_LEN(base, len, m_size);
+
+	memcpy(m_memory + base, buf, len);
+}
+
+void AVR_NonVolatileMemory::spm_write(unsigned char v, size_t pos)
+{
+	if (pos < m_size) {
+		m_memory[pos] &= v;
+		m_tag[pos] = 1;
+	}
+}
+
+void AVR_NonVolatileMemory::spm_write(unsigned char* buf, unsigned char* bufset,
+								  	  size_t base, size_t len)
+{
+	if (!m_size || !len) return;
+	
+	ADJUST_BASE_LEN(base, len, m_size);
+	
+	for (size_t i = 0; i < len; ++i) {
+		if (!bufset || bufset[i]) {
+			m_memory[base + i] &= buf[i];
+			m_tag[base + i] = 1;
+		}
 	}
 }

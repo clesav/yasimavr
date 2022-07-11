@@ -98,11 +98,12 @@ public:
 		State_Ready			= 0x10,
 		State_Running 		= 0x21,
 		State_Sleeping		= 0x31,
-		State_Reset			= 0x40,
-		State_Stopped		= 0x50,
-		State_Break			= 0x60,
-		State_Done			= 0x70,
-		State_Crashed		= 0x80,
+		State_Halted		= 0x41,
+		State_Reset			= 0x50,
+		State_Stopped		= 0x60,
+		State_Break			= 0x70,
+		State_Done			= 0x80,
+		State_Crashed		= 0x90,
 		State_Destroying	= 0xFF,
     };
 	

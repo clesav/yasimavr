@@ -519,15 +519,30 @@ cycle_count_t AVR_Core::run_instruction()
 					new_pc -= 2;
 					//The break instruction is handled at device level. If it is handled,
 					//we don't progress the PC until the original opcode is restored
-					m_device->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_BREAK, nullptr);
+					m_device->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_BREAK);
 				}	break;
 				case 0x95a8: { // WDR -- Watchdog Reset -- 1001 0101 1010 1000
 					//STATE("wdr\n");
 					m_device->ctlreq(AVR_IOCTL_WTDG, AVR_CTLREQ_WATCHDOG_RESET);
 				}	break;
-				case 0x95e8: { // SPM -- Store Program Memory -- 1001 0101 1110 1000
-					//STATE("spm\n");
-					m_device->ctlreq(AVR_IOCTL_FLASH, AVR_CTLREQ_FLASH_SPM);
+				case 0x95e8:	// SPM -- Store Program Memory -- 1001 0101 1110 1000
+				case 0x95f8: {  // SPM -- Store Program Memory -- 1001 0101 1111 1000 (Z post-increment)
+					bool op = opcode & 0x0010;
+					uint32_t z = get_r16le(R_Z);
+					if (use_extended_addressing())
+						z |= cpu_read_ioreg(m_config.rampz) << 16;
+					uint16_t w = (CPU_READ_GPREG(1) << 8) | CPU_READ_GPREG(0);
+					NVM_request_t nvm_req = { .nvm = -1, .addr = z, .data = w, .instr = m_pc };
+					TRACE_OP("spm Z[%04x]%s %02x", z, (op ? "+" : ""), w);
+					
+					if (op) {
+						z += 2;
+						cpu_write_ioreg(m_config.rampz, z >> 16);
+						set_r16le(R_ZL, z);
+					}
+					
+					ctlreq_data_t d = { .data = &nvm_req };
+					m_device->ctlreq(AVR_IOCTL_NVM, AVR_CTLREQ_NVM_WRITE, &d);
 				}	break;
 				case 0x9409:   // IJMP -- Indirect jump -- 1001 0100 0000 1001
 				case 0x9419: { // EIJMP -- Indirect jump -- 1001 0100 0001 1001   bit 4 is "extended"
@@ -1023,14 +1038,14 @@ void AVR_Core::dbg_insert_breakpoint(breakpoint_t& bp)
 	uint32_t curr_opcode = get_flash16le(bp.addr);
 	bp.instr_len = _is_instruction_32_bits(curr_opcode) ? 4 : 2;
 	//Backup the program instruction
-	m_flash.copy_into(bp.instr, bp.addr, bp.instr_len);
+	m_flash.dbg_read(bp.instr, bp.addr, bp.instr_len);
 	//Replace the program instruction by a break
-	m_flash.write(AVR_BREAK_OPCODE & 0xFF, bp.addr);
-	m_flash.write(AVR_BREAK_OPCODE >> 8, bp.addr + 1);
+	m_flash.dbg_write(AVR_BREAK_OPCODE & 0xFF, bp.addr);
+	m_flash.dbg_write(AVR_BREAK_OPCODE >> 8, bp.addr + 1);
 }
 
 void AVR_Core::dbg_remove_breakpoint(breakpoint_t& bp)
 {
 	//Restore the original instruction in flash
-	m_flash.write(bp.instr, bp.addr, bp.instr_len);
+	m_flash.dbg_write(bp.instr, bp.addr, bp.instr_len);
 }

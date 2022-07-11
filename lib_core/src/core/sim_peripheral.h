@@ -1,7 +1,7 @@
 /*
  * sim_peripheral.h
  *
- *	Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *	Copyright 2022 Clement Savergne <csavergne@yahoo.com>
 
  	This file is part of yasim-avr.
 
@@ -52,7 +52,7 @@ enum class AVR_SleepMode;
 #define AVR_IOCTL_ACOMP				AVR_ID('A', 'C', 'P', ' ')  	//Analog comparator
 #define AVR_IOCTL_TIMER(t, n)		AVR_ID('T', 'C', (t), (n)) 		//Timer/counter
 #define AVR_IOCTL_EEPROM			AVR_ID('E', 'P', 'R', 'M') 		//EEPROM controller
-#define AVR_IOCTL_FLASH				AVR_ID('F', 'L', 'S', 'H') 		//Self-programming controller
+#define AVR_IOCTL_NVM				AVR_ID('N', 'V', 'M', ' ') 		//Non-Volative Memory controller
 #define AVR_IOCTL_VREF				AVR_ID('V', 'R', 'E', 'F')		//Voltage reference controller
 #define AVR_IOCTL_EXTINT			AVR_ID('E', 'I', 'N', 'T')		//External Interrupt controller
 #define AVR_IOCTL_RST				AVR_ID('R', 'S', 'T', ' ')		//Reset controller
@@ -83,21 +83,32 @@ enum class AVR_SleepMode;
 #define AVR_CTLREQ_CORE_SHORTING	4
 //Request sent to the core to crash. data.index is the reason code, data.p is the optional reason string
 #define AVR_CTLREQ_CORE_CRASH		5
-//Request send to the core to trigger a MCU reset. data.u is the corresponding ResetFlag enum value
+//Request sent to the core to trigger a MCU reset. data.u is the corresponding ResetFlag enum value
 #define AVR_CTLREQ_CORE_RESET		6
-//Request send to the core to query the latest cause of reset. data.u is set to the ResetFlag enum value
+//Request sent to the core to query the latest cause of reset. data.u is set to the ResetFlag enum value
 #define AVR_CTLREQ_CORE_RESET_FLAG	7
 //Request sent to the core to query the pointer to a NVM block
 //	data.index indicates which block with one of the AVR_NVM enum values
 #define AVR_CTLREQ_CORE_NVM			8
-
+//Request to halt the CPU, used during a SPM instruction.
+//a non-zero data.u enables the halt, data.u == 0 disables the halt
+#define AVR_CTLREQ_CORE_HALT		9
 
 //Request sent by the CPU to the watchdog when executing a WDR instruction, no data provided
 #define AVR_CTLREQ_WATCHDOG_RESET	1
 
+//Request sent by the CPU to the NVM controller when executing a SPM instruction
+//	data.p points to a NVM_request_t structure filled with the instruction information
+#define AVR_CTLREQ_NVM_WRITE		1
 
-//Request sent by the CPU to the self-programming controller when executing a SPM instruction, no data provided
-#define AVR_CTLREQ_FLASH_SPM		1
+//Structure used for AVR_CTLREQ_NVM_WRITE requests
+struct NVM_request_t {
+	int nvm;				//Memory block being written : -1 if unknown/irrelevant,
+							//otherwise one of AVR_NVM enumeration values
+	mem_addr_t addr;		//Address to write (in the appropriate block address space)
+	uint16_t data;			//Value to write to the NVM
+	flash_addr_t instr;		//Write instruction address (future use for access control)
+};
 
 //Request sent by the CPU to the Sleep Controller when executing a SLEEP instruction, no data provided
 #define AVR_CTLREQ_SLEEP_CALL		1

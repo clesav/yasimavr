@@ -1,6 +1,6 @@
 # convertors_m0.py
 #
-# Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2022 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -103,6 +103,14 @@ _SleepConfigBuilder = _PeripheralConfigBuilder(_corelib.AVR_SleepConfig, _slpctr
 def get_sleep_config(per_desc):
     return _SleepConfigBuilder(per_desc)
 
+
+#========================================================================================
+#NVM controller configuration
+
+_NVMCtrlConfigBuilder = _PeripheralConfigBuilder(_archlib.AVR_ArchMega0_NVM_Config)
+
+def get_nvmctrl_config(per_desc):
+    return _NVMCtrlConfigBuilder(per_desc)
 
 #========================================================================================
 #Misc controller configuration

@@ -21,7 +21,6 @@
  
 //=======================================================================================
 
-
 class AVR_ArchMega0_USERROW : public AVR_Peripheral /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_mega0_nvm.h"
@@ -32,8 +31,7 @@ public:
 	AVR_ArchMega0_USERROW(reg_addr_t base);
 
 	virtual bool init(AVR_Device&);
-	virtual void ioreg_read_handler(reg_addr_t);
-
+	virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
 };
 
 
@@ -47,6 +45,45 @@ public:
 	AVR_ArchMega0_Fuses(reg_addr_t base);
 
 	virtual bool init(AVR_Device&);
-	virtual void ioreg_read_handler(reg_addr_t);
+
+};
+
+
+struct AVR_ArchMega0_NVM_Config {
+%TypeHeaderCode
+#include "arch_mega0_nvm.h"
+%End
+
+	reg_addr_t reg_base;
+	
+	mem_addr_t flash_page_size;
+	
+	unsigned int buffer_erase_delay;
+
+	unsigned int page_write_delay;
+	unsigned int page_erase_delay;
+
+	unsigned int chip_erase_delay;
+	unsigned int eeprom_erase_delay;
+
+	int_vect_t iv_eeready;
+
+};
+
+
+class AVR_ArchMega0_NVM : public AVR_Peripheral /NoDefaultCtors/ {
+%TypeHeaderCode
+#include "arch_mega0_nvm.h"
+%End
+
+public:
+
+	AVR_ArchMega0_NVM(const AVR_ArchMega0_NVM_Config&);
+	virtual ~AVR_ArchMega0_NVM();
+
+	virtual bool init(AVR_Device&);
+	virtual void reset();
+	virtual bool ctlreq(uint16_t, ctlreq_data_t*);
+	virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
 
 };

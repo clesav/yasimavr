@@ -22,35 +22,40 @@
 #include "buffer_utils.h"
 
 
-uint32_t import_from_pybuffer(const sipAPIDef* sipAPI,
-							  uint8_t **buf,
-							  PyObject* exporter)
+uint32_t import_from_pybuffer(const sipAPIDef* sipAPI, uint8_t **buf, PyObject* exporter)
 {
 	Py_buffer buffer;
 	uint32_t len;
+
 	if (*buf != NULL)
 		sipAPI->api_free(*buf);
+
 	PyObject_GetBuffer(exporter, &buffer, PyBUF_SIMPLE);
-	*buf = (uint8_t*) sipAPI->api_malloc(buffer.len);
-	PyBuffer_ToContiguous(*buf, &buffer, buffer.len, 'C');
 	len = buffer.len;
+
+	if (len) {
+		*buf = (uint8_t*) sipAPI->api_malloc(len);
+		PyBuffer_ToContiguous(*buf, &buffer, len, 'C');
+	} else {
+		*buf = NULL;
+	}
+
 	PyBuffer_Release(&buffer);
 	return len;
 }
 
-PyObject* export_to_pybuffer(const sipAPIDef* sipAPI,
-							 uint8_t *data,
-							 uint32_t len)
+
+PyObject* export_to_pybuffer(const sipAPIDef* sipAPI, uint8_t *data, uint32_t len)
 {
-	if (len > 0) {
+	if (len > 0 && data) {
 		void* buf = sipAPI->api_malloc(len);
 		memcpy(buf, data, len);
 		return sipAPI->api_convert_to_array(buf, "B", len, SIP_OWNS_MEMORY);
 	} else {
-		Py_INCREF(Py_None);
-		return Py_None;
+		return PyBytes_FromString("");
 	}
 }
+
 
 int import_from_fixedlen_sequence(const sipAPIDef* sipAPI,
 								  void *data,

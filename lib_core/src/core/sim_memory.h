@@ -53,18 +53,31 @@ public:
 
 	unsigned char operator[](size_t pos) const;
 
-	void erase();
-	void erase(size_t base, size_t size);
-
-	bool program(const mem_block_t& mem_block, size_t base = 0);
-
 	mem_block_t block() const;
 	mem_block_t block(size_t base, size_t size) const;
-	
-	void copy_into(unsigned char* buf, size_t pos, size_t len) const;
 
-	void write(unsigned char v, size_t pos);
-	void write(unsigned char* buf, size_t pos, size_t len);
+	//Programs the NVM, this is designed for loading up the memory
+	//and the program at the start of a simulation
+	bool program(const mem_block_t& mem_block, size_t base = 0);
+	
+	//Erases the whole memory
+	void erase();
+	//Erases a block in the memory
+	void erase(size_t base, size_t size);
+	//Erases the memory based on a bufset
+	void erase(unsigned char* buf, size_t pos, size_t len);
+
+	//Reads/writes the NVM by single byte or block. This is designed for
+	//the debug probe and breakpoint mechanisms
+	int dbg_read(size_t pos) const;
+	size_t dbg_read(unsigned char* buf, size_t base, size_t len) const;
+	void dbg_write(unsigned char v, size_t pos);
+	void dbg_write(unsigned char* buf, size_t base, size_t len);
+
+	//Writes the NVM by single byte or block. This is designed for
+	//the self-programming mechanisms
+	void spm_write(unsigned char v, size_t pos);
+	void spm_write(unsigned char* buf, unsigned char* bufset, size_t base, size_t len);
 
 private:
 

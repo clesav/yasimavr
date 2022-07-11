@@ -30,14 +30,29 @@
 extern "C" {
 #endif
 
+/*
+ * Helper that imports an block of bytes from a Python object
+ * supporting the buffer protocol (see Python docs for what that means)
+ * into an C array.
+ * buf is a pointer to a array pointer, that is allocated/freed on demand
+ */
 uint32_t import_from_pybuffer(const sipAPIDef* sipAPI,
 							  uint8_t **data,
 							  PyObject* exporter);
 
+/*
+ * Helper that exports a block of bytes in memory to a Python buffer exporter
+ * If len ==0 or data is NULL, an empty Python bytes object is returned
+ * otherwise a SIP array object is created
+ */
 PyObject* export_to_pybuffer(const sipAPIDef* sipAPI,
 							 uint8_t *data,
 							 uint32_t len);
 
+/*
+ * Helper function for importing data from a fixed-length
+ * Python object that supports the Sequence protocol
+ */
 int import_from_fixedlen_sequence(const sipAPIDef* sipAPI,
 								  void *data,
 								  const char *format,
