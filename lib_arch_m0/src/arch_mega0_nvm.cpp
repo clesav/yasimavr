@@ -28,26 +28,6 @@
 #include "core/sim_device.h"
 #include "cstring"
 
-//=======================================================================================
-
-class AVR_ArchMega0_NVM::Timer : public AVR_CycleTimer {
-
-public:
-
-	Timer(AVR_ArchMega0_NVM& ctl) : m_ctl(ctl) {}
-
-	virtual cycle_count_t next(cycle_count_t when) override
-	{
-		m_ctl.timer_next(when);
-		return 0;
-	}
-
-private:
-
-	AVR_ArchMega0_NVM& m_ctl;
-
-};
-
 
 //=======================================================================================
 
@@ -67,14 +47,31 @@ bool AVR_ArchMega0_USERROW::init(AVR_Device& device)
 		return false;
 	m_userrow = reinterpret_cast<AVR_NonVolatileMemory*>(req.data.as_ptr());
 
-	//Allocate a register in read-only access for each byte of the userrow block
-	for (unsigned int i = 0; i < sizeof(USERROW_t); ++i)
-		add_ioreg(m_reg_base + i, 0xFF, true);
+	//Allocate a register for each byte of the userrow block
+	//And initialise it with the value contained in the userrow block
+	for (size_t i = 0; i < sizeof(USERROW_t); ++i) {
+		add_ioreg(m_reg_base + i);
+		write_ioreg(m_reg_base + i, (*m_userrow)[i]);
+	}
+	
+	return status;
 }
 
-void AVR_ArchMega0_USERROW::ioreg_read_handler(reg_addr_t addr)
+void AVR_ArchMega0_USERROW::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
-	write_ioreg(addr, (*m_userrow)[addr - m_reg_base]);
+	//Send a NVM write request with the new data value
+	NVM_request_t nvm_req = {
+		.nvm = AVR_ArchMega0_Core::NVM_USERROW,
+		.addr = (mem_addr_t) addr - m_reg_base, //translate the address into userrow space
+		.data = data.value,
+		//.instr = device()->core()->program_counter(), //TODO:
+	};
+	ctlreq_data_t d = { .data = &nvm_req };
+	device()->ctlreq(AVR_IOCTL_NVM, AVR_CTLREQ_NVM_WRITE, &d);
+	//The write operation is only effective by a command to the NVM controller
+	//Meanwhile, reading the register after a write actually returns the NVM block value
+	//not yet overwritten. Here this value is in data.old and must be restored into the register.
+	write_ioreg(addr, data.old);
 }
 
 
@@ -97,15 +94,12 @@ bool AVR_ArchMega0_Fuses::init(AVR_Device& device)
 	m_fuses = reinterpret_cast<AVR_NonVolatileMemory*>(req.data.as_ptr());
 
 	//Allocate a register in read-only access for each fuse
-	for (unsigned int i = 0; i < sizeof(FUSE_t); ++i)
+	for (unsigned int i = 0; i < sizeof(FUSE_t); ++i) {
 		add_ioreg(m_reg_base + i, 0xFF, true);
+		write_ioreg(m_reg_base + i, (*m_fuses)[i]);
+	}
 
 	return status;
-}
-
-void AVR_ArchMega0_Fuses::ioreg_read_handler(reg_addr_t addr)
-{
-	write_ioreg(addr, (*m_fuses)[addr - m_reg_base]);
 }
 
 
@@ -117,16 +111,37 @@ void AVR_ArchMega0_Fuses::ioreg_read_handler(reg_addr_t addr)
 #define REG_OFS(reg) \
 	offsetof(NVMCTRL_t, reg)
 
+
+#define NVM_INDEX_NONE		-1
+#define NVM_INDEX_INVALID	-2
+
+
+class AVR_ArchMega0_NVM::Timer : public AVR_CycleTimer {
+
+public:
+
+	Timer(AVR_ArchMega0_NVM& ctl) : m_ctl(ctl) {}
+
+	virtual cycle_count_t next(cycle_count_t when) override {
+		m_ctl.timer_next();
+		return 0;
+	}
+
+private:
+
+	AVR_ArchMega0_NVM& m_ctl;
+
+};
+
+
 AVR_ArchMega0_NVM::AVR_ArchMega0_NVM(const AVR_ArchMega0_NVM_Config& config)
 :AVR_Peripheral(AVR_IOCTL_NVM)
 ,m_config(config)
 ,m_state(State_Idle)
-,m_flash(nullptr)
 ,m_buffer(nullptr)
 ,m_bufset(nullptr)
-,m_block(Block_Invalid)
+,m_mem_index(NVM_INDEX_NONE)
 ,m_page(0)
-,m_eeprom(nullptr)
 ,m_ee_intflag(false)
 {
 	m_timer = new Timer(*this);
@@ -146,18 +161,6 @@ bool AVR_ArchMega0_NVM::init(AVR_Device& device)
 {
 	bool status = AVR_Peripheral::init(device);
 
-	//Obtain the pointer to the flash block in RAM
-	ctlreq_data_t req = { .index = 0 };
-	if (!device.ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_NVM_PTR, &req))
-		return false;
-	m_flash = (uint8_t*) req.p;
-
-	//Obtain the pointer to the EEPROM block in RAM
-	req.index = 1;
-	if (!device.ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_NVM_PTR, &req))
-		return false;
-	m_eeprom = (uint8_t*) req.p;
-
 	//Allocate the page buffer
 	m_buffer = (uint8_t*) malloc(m_config.flash_page_size);
 	m_bufset = (uint8_t*) malloc(m_config.flash_page_size);
@@ -165,7 +168,7 @@ bool AVR_ArchMega0_NVM::init(AVR_Device& device)
 	//Allocate the registers
 	add_ioreg(REG_ADDR(CTRLA), NVMCTRL_CMD_gm);
 	//CTRLB not implemented
-	add_ioreg(REG_ADDR(STATUS), NVMCTRL_EEBUSY_bm | NVMCTRL_FBUSY_bm, true);
+	add_ioreg(REG_ADDR(STATUS), NVMCTRL_WRERROR_bm | NVMCTRL_EEBUSY_bm | NVMCTRL_FBUSY_bm, true);
 	add_ioreg(REG_ADDR(INTCTRL), NVMCTRL_EEREADY_bm);
 	add_ioreg(REG_ADDR(INTFLAGS), NVMCTRL_EEREADY_bm);
 	//DATA and ADDR not implemented
@@ -183,11 +186,9 @@ void AVR_ArchMega0_NVM::reset()
 	//Erase the page buffer
 	clear_buffer();
 	//Set the EEPROM Ready flag
-	SET_IOREG(INTFLAGS, NVMCTRL_EEREADY);
+	m_ee_intflag.set_flag();
 	//Internals
 	m_state = State_Idle;
-	m_block = Block_Invalid;
-	m_page = 0;
 }
 
 bool AVR_ArchMega0_NVM::ctlreq(uint16_t req, ctlreq_data_t* data)
@@ -195,8 +196,8 @@ bool AVR_ArchMega0_NVM::ctlreq(uint16_t req, ctlreq_data_t* data)
 	//Write request from the core when writing to a data space
 	//location mapped to one of the NVM blocks
 	if (req == AVR_CTLREQ_NVM_WRITE) {
-		NVM_request_t* nvm_req = reinterpret_cast<NVM_request_t*>(data->p);
-		write_nvm(data->index, *nvm_req);
+		NVM_request_t* nvm_req = reinterpret_cast<NVM_request_t*>(data->data.as_ptr());
+		write_nvm(*nvm_req);
 		return true;
 	}
 	return false;
@@ -207,8 +208,9 @@ void AVR_ArchMega0_NVM::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t
 	reg_addr_t reg_ofs = addr - m_config.reg_base;
 
 	if (reg_ofs == REG_OFS(CTRLA)) {
-		NVM_Command cmd = (Command) EXTRACT_F(data.value, NVMCTRL_CMD);
+		Command cmd = (Command) EXTRACT_F(data.value, NVMCTRL_CMD);
 		execute_command(cmd);
+		WRITE_IOREG_F(CTRLA, NVMCTRL_CMD, 0x00);
 	}
 
 	else if (reg_ofs == REG_OFS(INTCTRL)) {
@@ -216,34 +218,60 @@ void AVR_ArchMega0_NVM::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t
 	}
 
 	else if (reg_ofs == REG_OFS(INTFLAGS)) {
-		m_ee_intflag.clear_flag();
+		m_ee_intflag.clear_flag(data.value);
 	}
+}
+
+AVR_NonVolatileMemory* AVR_ArchMega0_NVM::get_memory(int nvm_index)
+{
+	ctlreq_data_t req = { .index = (unsigned int) nvm_index };
+	if (!device()->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_NVM, &req))
+		return nullptr;
+	return reinterpret_cast<AVR_NonVolatileMemory*>(req.data.as_ptr());
 }
 
 void AVR_ArchMega0_NVM::clear_buffer()
 {
 	memset(m_buffer, 0xFF, m_config.flash_page_size);
 	memset(m_bufset, 0, m_config.flash_page_size);
+	m_mem_index = NVM_INDEX_NONE;
 }
 
-void AVR_ArchMega0_NVM::write_nvm(int block_index, const NVM_request_t& nvm_req)
+void AVR_ArchMega0_NVM::write_nvm(const NVM_request_t& nvm_req)
 {
-	//Determine the actual page size, depending on which NVM block is
+	if (m_mem_index == NVM_INDEX_INVALID) return;
+	
+	//Determine the page size, depending on which NVM block is
 	//addressed
 	mem_addr_t page_size;
-	if (block_index == 0) {
-		m_block = Block_Flash;
+	int block;
+	if (nvm_req.nvm == AVR_ArchMega0_Core::NVM_Flash) {
+		block = AVR_ArchMega0_Core::NVM_Flash;
 		page_size = m_config.flash_page_size;
 	}
-	else if (block_index == 1) {
-		m_block = Block_EEPROM;
+	else if (nvm_req.nvm == AVR_ArchMega0_Core::NVM_EEPROM) {
+		block = AVR_ArchMega0_Core::NVM_EEPROM;
+		page_size = m_config.flash_page_size >> 1;
+	}
+	else if (nvm_req.nvm == AVR_ArchMega0_Core::NVM_USERROW) {
+		block = AVR_ArchMega0_Core::NVM_USERROW;
 		page_size = m_config.flash_page_size >> 1;
 	}
 	else {
-		m_block = Block_Invalid;
+		m_mem_index = NVM_INDEX_INVALID;
 		return;
 	}
-
+	
+	//Stores the addressed block and check the consistency with
+	//any previous NVM write. They should be to the same block.
+	//If not, the operation is invalidated.
+	if (m_mem_index == NVM_INDEX_NONE)
+		m_mem_index = block;
+	else if (block != m_mem_index) {
+		m_mem_index = NVM_INDEX_INVALID;
+		return;
+	}
+	
 	//Write to the page buffer
 	mem_addr_t page_offset = nvm_req.addr % page_size;
 	m_buffer[page_offset] &= nvm_req.data;
@@ -256,6 +284,9 @@ void AVR_ArchMega0_NVM::write_nvm(int block_index, const NVM_request_t& nvm_req)
 void AVR_ArchMega0_NVM::execute_command(Command cmd)
 {
 	cycle_count_t delay = 0;
+	unsigned int delay_usecs = 0;
+	
+	CLEAR_IOREG(CTRLA, NVMCTRL_WRERROR);
 
 	if (cmd == Cmd_Idle) {
 		//Nothing to do
@@ -263,47 +294,51 @@ void AVR_ArchMega0_NVM::execute_command(Command cmd)
 	}
 	else if (cmd == Cmd_BufferErase) {
 		//Clear the buffer and set the CPU halt (the delay is expressed in cycles)
-		m_state = State_Halting;
 		clear_buffer();
+		m_state = State_Halting;
 		delay = m_config.buffer_erase_delay;
 	}
+	
+	else if (cmd == Cmd_ChipErase) {
+		//Erase the flash
+		AVR_NonVolatileMemory* flash = get_memory(AVR_ArchMega0_Core::NVM_Flash);
+		if (flash)
+			flash->erase();
+		//Erase the eeprom
+		AVR_NonVolatileMemory* eeprom = get_memory(AVR_ArchMega0_Core::NVM_EEPROM);
+		if (eeprom)
+			eeprom->erase();
+		//Set the halt state and delay
+		m_state = State_Halting;
+		delay_usecs = m_config.chip_erase_delay;
+	}
+	
+	else if (cmd == Cmd_EEPROMErase) {
+		//Erase the eeprom
+		AVR_NonVolatileMemory* eeprom = get_memory(AVR_ArchMega0_Core::NVM_EEPROM);
+		if (eeprom)
+			eeprom->erase();
+		//Set the halt state and delay
+		m_state = State_Halting;
+		delay_usecs = m_config.eeprom_erase_delay;
+	}
+	
+	//The remaining commands require a valid block & page selection
+	else if (m_mem_index >= 0) {
+		delay_usecs = execute_page_command(cmd);
+	}
 	else {
-		unsigned int delay_usecs;
-
-		if (cmd == Cmd_ChipErase) {
-			//Erase the flash (fill it with 1's)
-			size_t fsize = device()->core().config().flashend + 1;
-			memset(m_flash, 0xFF, fsize);
-			//Erase the eeprom (fill it with 1's)
-			size_t esize = device()->core().config().eepromend + 1;
-			memset(m_eeprom, 0xFF, esize);
-			//Erase the page buffer
-			clear_buffer();
-			//Set the halt state and delay
-			delay_usecs = m_config.chip_erase_delay;
-			m_state = State_Halting;
-		}
-
-		else if (m_block == Block_Flash) {
-			//Execute the command on the flash block
-			delay_usecs = execute_flash_command(cmd);
-			if (delay_usecs)
-				SET_IOREG(STATUS, NVMCTRL_FBUSY);
-		}
-
-		else if (m_block == Block_EEPROM) {
-			delay_usecs = execute_eeprom_command(cmd);
-			if (delay_usecs)
-				SET_IOREG(STATUS, NVMCTRL_EEBUSY);
-		}
-
-		delay = (device()->frequency() * delay_usecs) / 1000000L;
+		SET_IOREG(CTRLA, NVMCTRL_WRERROR);	
 	}
 
-	//Halt the core if required
+	if (delay_usecs)
+		delay = (device()->frequency() * delay_usecs) / 1000000L;
+
+	//Halt the core if required by the command and set the timer
+	//to simulate the operation completion delay
 	if (delay) {
 		if (m_state == State_Halting) {
-			ctlreq_data_t d = { .index = 0 };
+			ctlreq_data_t d = { .index = 1 };
 			device()->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_HALT, &d);
 		}
 
@@ -311,87 +346,83 @@ void AVR_ArchMega0_NVM::execute_command(Command cmd)
 	}
 }
 
-cycle_count_t AVR_ArchMega0_NVM::execute_flash_command(Command cmd)
+unsigned int AVR_ArchMega0_NVM::execute_page_command(Command cmd)
 {
-	unsigned int delay_usecs = 0;
-	uint8_t* p = m_flash + m_page * m_config.flash_page_size;
-
+	unsigned int delay_usecs;
+	
+	//Boolean indicating if it's an operation to the flash (true)
+	//or to the eeprom (false)
+	bool is_flash_op = (m_mem_index == AVR_ArchMega0_Core::NVM_Flash);
+	
+	//Obtain the pointer to the NVM object
+	AVR_NonVolatileMemory* nvm = get_memory(m_mem_index);
+	if (!nvm) {
+		device()->crash(CRASH_INVALID_CONFIG, "Bad memory block");
+		return 0;
+	}
+	
+	//Get the page size
+	size_t page_size = m_config.flash_page_size;
+	if (!is_flash_op)
+		page_size /= 2;
+	
+	//Erase the page if required by the command
+	//If it's to the flash, it's the whole page, otherwise
+	//it's to the eeprom with a byte granularity
+	if (cmd == Cmd_PageErase || cmd == Cmd_PageEraseWrite) {
+		if (is_flash_op) {
+			nvm->erase(page_size * m_page, page_size);
+			DEBUG_LOG(device()->logger(), "NVM: Erased flash page %d", m_page);
+		} else {
+			DEBUG_LOG(device()->logger(), "NVM: Erased eeprom/userrow page %d", m_page);
+			nvm->erase(m_bufset, page_size * m_page, page_size);
+		}
+		
+		delay_usecs = m_config.page_erase_delay;
+	}
+	
+	//Write the page if required by the command
+	//If it's to the flash, it's the whole page, otherwise
+	//it's to the eeprom/userrow with a byte granularity
 	if (cmd == Cmd_PageWrite || cmd == Cmd_PageEraseWrite) {
-		m_state = State_Halting;
-		//Copy the entire page buffer to the flash
-		memcpy(p, m_buffer, m_config.flash_page_size);
-		//Erase the page buffer
-		clear_buffer();
-		//Determine the CPU halting delay
-		if (cmd == Cmd_PageWrite)
-			delay_usecs = m_config.flash_write_delay;
-		else
-			delay_usecs = m_config.flash_erase_write_delay;
+		if (is_flash_op) {
+			nvm->spm_write(m_buffer, nullptr, page_size * m_page, page_size);
+			DEBUG_LOG(device()->logger(), "NVM: Written flash page %d", m_page);
+		} else {
+			nvm->spm_write(m_buffer, m_bufset, page_size * m_page, page_size);
+			DEBUG_LOG(device()->logger(), "NVM: Written eeprom/userrow page %d", m_page);
+		}
+		
+		delay_usecs += m_config.page_write_delay;
 	}
-
-	else if (cmd == Cmd_PageErase) {
+	
+	//Clears the page buffer
+	clear_buffer();
+	
+	//Update the state and the status flags
+	if (is_flash_op) {
 		m_state = State_Halting;
-		//Erase the flash page
-		memset(p, 0xFF, m_config.flash_page_size);
-		//Determine the CPU halting delay
-		delay_usecs = m_config.flash_erase_delay;
+		SET_IOREG(STATUS, NVMCTRL_FBUSY);
+	} else {
+		m_state = State_Executing;
+		SET_IOREG(STATUS, NVMCTRL_EEBUSY);
+		m_ee_intflag.clear_flag();
 	}
-
+	
 	return delay_usecs;
 }
 
-cycle_count_t AVR_ArchMega0_NVM::execute_eeprom_command(Command cmd)
+void AVR_ArchMega0_NVM::timer_next()
 {
-	unsigned int delay_usecs = 0;
-	size_t page_size = m_config.flash_page_size / 2;
-	uint8_t* p = m_eeprom + m_page * page_size;
-
-	if (cmd == Cmd_PageWrite || cmd == Cmd_PageEraseWrite) {
-		m_state = State_Executing;
-
-		for (size_t i = 0; i < page_size; ++i) {
-			if (m_bufset[i])
-				p[i] = m_buffer[i];
-		}
-
-		if (cmd == Cmd_PageWrite)
-			delay_usecs = m_config.eeprom_write_delay;
-		else
-			delay_usecs = m_config.eeprom_erase_write_delay;
-		//Erase the page buffer
-		clear_buffer();
-	}
-
-	else if (cmd == Cmd_PageErase) {
-		m_state = State_Executing;
-
-		for (size_t i = 0; i < page_size; ++i) {
-			if (m_bufset[i])
-				p[i] = 0xFF;
-		}
-
-		delay_usecs = m_config.eeprom_erase_delay;
-		//Erase the page buffer
-		clear_buffer();
-	}
-
-	return delay_usecs;
-}
-
-void AVR_ArchMega0_NVM::timer_next(cycle_count_t when)
-{
-	if (m_block == Flash){
-		CLEAR_IOREG(STATUS, NVMCTRL_FBUSY);
-	}
-	else if (m_block == EEPROM) {
-		CLEAR_IOREG(STATUS, NVMCTRL_EEBUSY);
-		m_ee_intflag.set_flag();
-	}
-
+	//Update the status flags
+	CLEAR_IOREG(STATUS, NVMCTRL_FBUSY);
+	CLEAR_IOREG(STATUS, NVMCTRL_EEBUSY);
+	m_ee_intflag.set_flag();
+	//If the CPU was halted, allow it to resume
 	if (m_state == State_Halting) {
-		m_state = State_Idle;
-
-		ctlreq_data_t d = { .index = 1 };
+		ctlreq_data_t d = { .index = 0 };
 		device()->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_HALT, &d);
 	}
+	//Update the state
+	m_state = State_Idle;
 }

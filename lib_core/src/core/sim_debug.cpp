@@ -159,8 +159,7 @@ void AVR_DeviceDebugProbe::write_flash(flash_addr_t addr, uint8_t* buf, uint32_t
 	
 	ADJUST_ADDR_LEN(addr, len, core.config().flashend);
 
-	mem_block_t b = { .size = len, .buf = buf };
-	core.m_flash.program(b, addr);
+	core.m_flash.dbg_write(buf, addr, len);
 }
 
 uint32_t AVR_DeviceDebugProbe::read_flash(flash_addr_t addr, uint8_t* buf, uint32_t len)
@@ -169,7 +168,7 @@ uint32_t AVR_DeviceDebugProbe::read_flash(flash_addr_t addr, uint8_t* buf, uint3
 
 	ADJUST_ADDR_LEN(addr, len, core.config().flashend);
 
-	core.m_flash.copy_into(buf, addr, len);
+	core.m_flash.dbg_read(buf, addr, len);
 
 	return len;
 }

@@ -1,6 +1,6 @@
 # YAML configuration file for atmega4809 variant
 #
-# Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2022 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -128,6 +128,10 @@ peripherals:
     CLKCTRL:
         file: Mega0-Mega1_controllers.yml
         base: 0x0060
+    
+    NVMCTRL:
+        file: Mega0-Mega1_controllers.yml
+        base: 0x1000
 
     MISC:
         file: Mega0-Mega1_controllers.yml

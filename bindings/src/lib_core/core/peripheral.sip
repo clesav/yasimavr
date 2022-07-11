@@ -1,7 +1,7 @@
 /*
  * peripheral.sip
  *
- *	Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *	Copyright 2022 Clement Savergne <csavergne@yahoo.com>
 
  	This file is part of yasim-avr.
 
@@ -75,7 +75,7 @@ const uint16_t CTLREQ_CORE_SHORTING    = AVR_CTLREQ_CORE_SHORTING;
 const uint16_t CTLREQ_CORE_CRASH       = AVR_CTLREQ_CORE_CRASH;
 const uint16_t CTLREQ_CORE_RESET       = AVR_CTLREQ_CORE_RESET;
 const uint16_t CTLREQ_CORE_RESET_FLAG  = AVR_CTLREQ_CORE_RESET_FLAG;
-const uint16_t CTLREQ_CORE_NVM_PTR	   = AVR_CTLREQ_CORE_NVM_PTR;
+const uint16_t CTLREQ_CORE_NVM		   = AVR_CTLREQ_CORE_NVM;
 const uint16_t CTLREQ_CORE_HALT        = AVR_CTLREQ_CORE_HALT;
 const uint16_t CTLREQ_WATCHDOG_RESET   = AVR_CTLREQ_WATCHDOG_RESET;
 const uint16_t CTLREQ_NVM_WRITE        = AVR_CTLREQ_NVM_WRITE;
@@ -113,7 +113,7 @@ const uint16_t CTLREQ_CORE_SHORTING;
 const uint16_t CTLREQ_CORE_CRASH;
 const uint16_t CTLREQ_CORE_RESET;
 const uint16_t CTLREQ_CORE_RESET_FLAG;
-const uint16_t CTLREQ_CORE_NVM_PTR;
+const uint16_t CTLREQ_CORE_NVM;
 const uint16_t CTLREQ_CORE_HALT;
 const uint16_t CTLREQ_WATCHDOG_RESET;
 const uint16_t CTLREQ_NVM_WRITE;
@@ -125,6 +125,7 @@ struct NVM_request_t {
 #include "core/sim_peripheral.h"
 %End
 
+	int nvm;
 	mem_addr_t addr;
 	uint16_t data;
 	flash_addr_t instr;

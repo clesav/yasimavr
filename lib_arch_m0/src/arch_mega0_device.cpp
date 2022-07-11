@@ -76,23 +76,25 @@ void AVR_ArchMega0_Core::cpu_write_data(mem_addr_t data_addr, uint8_t value)
 	else if (data_addr >= cfg.eepromstart_ds && data_addr <= cfg.eepromend_ds) {
 		//Prepare the NVM Write request
 		NVM_request_t nvm_req = {
+			.nvm = NVM_EEPROM,
 			.addr = data_addr - cfg.eepromstart_ds, //translate the address into EEPROM space
 			.data = value,
 			.instr = m_pc,
 		};
-		//Send a request to write in the eeprom
-		ctlreq_data_t d = { .index = 1, .p = &nvm_req };
+		//Send a request to write in the memory
+		ctlreq_data_t d = { .data = &nvm_req };
 		m_device->ctlreq(AVR_IOCTL_NVM, AVR_CTLREQ_NVM_WRITE, &d);
 	}
 	else if (data_addr >= cfg.flashstart_ds && data_addr <= cfg.flashend_ds) {
 		//Prepare the NVM Write request
 		NVM_request_t nvm_req = {
+			.nvm = NVM_Flash,
 			.addr = data_addr - cfg.flashstart_ds, //translate the address into flash space
 			.data = value,
 			.instr = m_pc,
 		};
-		//Send a request to write in the flash
-		ctlreq_data_t d = { .index = 0, .p = &nvm_req };
+		//Send a request to write in the memory
+		ctlreq_data_t d = { .data = &nvm_req };
 		m_device->ctlreq(AVR_IOCTL_NVM, AVR_CTLREQ_NVM_WRITE, &d);
 	}
 	else if (!m_device->test_option(AVR_Device::Option_IgnoreBadCpuIO)) {

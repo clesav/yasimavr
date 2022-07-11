@@ -31,8 +31,7 @@ public:
 	AVR_ArchMega0_USERROW(reg_addr_t base);
 
 	virtual bool init(AVR_Device&);
-	virtual void ioreg_read_handler(reg_addr_t);
-
+	virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
 };
 
 
@@ -46,7 +45,6 @@ public:
 	AVR_ArchMega0_Fuses(reg_addr_t base);
 
 	virtual bool init(AVR_Device&);
-	virtual void ioreg_read_handler(reg_addr_t);
 
 };
 
@@ -62,13 +60,11 @@ struct AVR_ArchMega0_NVM_Config {
 	
 	unsigned int buffer_erase_delay;
 
-	unsigned int flash_write_delay;
-	unsigned int flash_erase_delay;
-	unsigned int flash_erase_write_delay;
-	unsigned int eeprom_write_delay;
-	unsigned int eeprom_erase_delay;
-	unsigned int eeprom_erase_write_delay;
+	unsigned int page_write_delay;
+	unsigned int page_erase_delay;
+
 	unsigned int chip_erase_delay;
+	unsigned int eeprom_erase_delay;
 
 	int_vect_t iv_eeready;
 

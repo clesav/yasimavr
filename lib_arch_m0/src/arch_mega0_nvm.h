@@ -43,7 +43,7 @@ public:
 	AVR_ArchMega0_USERROW(reg_addr_t base);
 
 	virtual bool init(AVR_Device& device) override;
-	virtual void ioreg_read_handler(reg_addr_t addr) override;
+	virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
 
 private:
 
@@ -68,13 +68,13 @@ public:
 	AVR_ArchMega0_Fuses(reg_addr_t base);
 
 	virtual bool init(AVR_Device& device) override;
-	virtual void ioreg_read_handler(reg_addr_t addr) override;
 
 private:
 
 	const reg_addr_t m_reg_base;
 	AVR_NonVolatileMemory* m_fuses;
 
+};
 
 //=======================================================================================
 /*
@@ -95,13 +95,10 @@ struct AVR_ArchMega0_NVM_Config {
 	
 	unsigned int buffer_erase_delay;		//Page buffer erase delay in cycles
 	//All the delays below are expressed in microseconds
-	unsigned int flash_write_delay;			//Flash page write operation delay
-	unsigned int flash_erase_delay;			//Flash page erase operation delay
-	unsigned int flash_erase_write_delay;	//Flash combined erase/write delay
-	unsigned int eeprom_write_delay;		//EEPROM write operation delay
-	unsigned int eeprom_erase_delay;		//EEPROM erase operation delay
-	unsigned int eeprom_erase_write_delay;	//EEPROM combined erase/write delay
-	unsigned int chip_erase_delay;			//Chip erase delay in microseconds
+	unsigned int page_write_delay;			//Flash/EEPROM page write operation delay
+	unsigned int page_erase_delay;			//Flash/EEPROM page erase operation delay
+	unsigned int chip_erase_delay;			//Chip erase delay
+	unsigned int eeprom_erase_delay;		//EEPROM erase delay
 
 	int_vect_t iv_eeready;
 
@@ -133,38 +130,29 @@ private:
 		Cmd_ChipErase,
 		Cmd_EEPROMErase,
 	};
-	
-	enum Block {
-		Block_Invalid,
-		Block_Flash,
-		Block_EEPROM,
-		Block_UserRow
-	};
-	
+
 	enum State {
 		State_Idle,
 		State_Executing,
-		State_Halting
+		State_Halting,
 	};
 
 	const AVR_ArchMega0_NVM_Config& m_config;
 	State m_state;
-	uint8_t* m_flash;
 	uint8_t* m_buffer;
 	uint8_t* m_bufset;
-	Block m_block;
+	int m_mem_index;
 	mem_addr_t m_page;
 	Timer* m_timer;
 	
-	uint8_t* m_eeprom;
 	AVR_InterruptFlag m_ee_intflag;
 	
+	AVR_NonVolatileMemory* get_memory(int nvm_index);
 	void clear_buffer();
-	void write_nvm(int block_index, const NVM_request_t& nvm_req);
-	void execute_command(NVM_Command cmd);
-	cycle_count_t execute_flash_command(Command cmd);
-	cycle_count_t execute_eeprom_command(Command cmd);
-	void timer_next(cycle_count_t when);
+	void write_nvm(const NVM_request_t& nvm_req);
+	void execute_command(Command cmd);
+	unsigned int execute_page_command(Command cmd);
+	void timer_next();
 
 };
 

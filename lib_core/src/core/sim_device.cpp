@@ -468,11 +468,11 @@ bool AVR_Device::core_ctlreq(uint16_t req, ctlreq_data_t* reqdata)
 	}
 	
 	else if (req == AVR_CTLREQ_CORE_HALT) {
-		if (reqdata->u == 0 && m_state == State_Running) {
+		if (m_state == State_Running && reqdata->data.as_uint()) {
 			m_state = State_Halted;
 			DEBUG_LOG(*m_logger, "Device halted", "");
 		}
-		else if (reqdata->u == 1 && m_state == State_Halted) {
+		else if (m_state == State_Halted && !reqdata->data.as_uint()) {
 			m_state = State_Running;
 			DEBUG_LOG(*m_logger, "Device resuming from halt", "");
 		}

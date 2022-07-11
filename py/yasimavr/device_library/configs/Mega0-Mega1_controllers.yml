@@ -1,6 +1,6 @@
 # YAML configuration file for atmega0 and atmega1 series
 #
-# Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2022 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -174,6 +174,53 @@ CLKCTRL:
             - OSC20MCTRLA
             - OSC20MCALIBA
             - OSC20MCALIBB
+
+#========================================================================================
+NVMCTRL:
+    registers:
+        - name: CTRLA
+          offset: 0x00
+          fields:
+            CMD:
+                kind: ENUM
+                LSB: 0
+                MSB: 2
+                values: [ NONE, WP, ER, ERWP, PBC, CHER, EEER, WFU ]
+        
+        - name: CTRLB
+          offset: 0x01
+          fields:
+            APCWP: { kind: BIT, pos: 0, supported: no }
+            BOOTLOCK: { kind: BIT, pos: 1, supported: no }
+        
+        - name: STATUS
+          offset: 0x02
+          fields:
+            FBUSY: { kind: BIT, pos: 0, readonly: yes, one: busy, zero: idle }
+            EEBUSY: { kind: BIT, pos: 1, readonly: yes, one: busy, zero: idle }
+            WRERROR: { kind: BIT, pos: 2, readonly: yes, one: error, zero: ok }
+        
+        - name: INTCTRL
+          offset: 0x03
+          fields:
+            EEREADY: { kind: BIT, pos: 0, one: enable, zero: disable }
+        
+        - name: INTFLAGS
+          offset: 0x04
+          fields:
+            EEREADY: { kind: BIT, pos: 0 }
+        
+        - name: DATA
+          offset: 0x06
+          size: 2
+          kind: INT
+          supported: no
+        
+        - name: ADDR
+          offset: 0x08
+          size: 2
+          kind: INT
+          supported: no
 
 #========================================================================================
 MISC:

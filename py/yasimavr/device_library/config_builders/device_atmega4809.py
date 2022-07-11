@@ -1,6 +1,6 @@
 # device_atmega4809.py
 #
-# Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2022 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -44,6 +44,8 @@ sleep_config = get_sleep_config(_desc.peripherals['SLPCTRL'])
 rstctrl_base = _desc.peripherals['RSTCTRL'].reg_base
 #Clock controller
 clkctrl_dummy_regs = convert_dummy_controller_config(_desc.peripherals['CLKCTRL'])
+#NVM controller
+nvmctrl_config = _get_nvmctrl_config(_desc.peripherals['NVMCTRL'])
 #Misc registers
 misc_config = get_misc_config(_desc.peripherals['MISC'])
 #Ports
@@ -89,6 +91,7 @@ class dev_atmega4809(_archlib.AVR_ArchMega0_Device):
         self.attach_peripheral(_archlib.AVR_ArchMega0_ResetCtrl(rstctrl_base))
         self.attach_peripheral(_corelib.AVR_DummyController(_corelib.IOCTL_CLOCK,
                                                             clkctrl_dummy_regs))
+        self.attach_peripheral(_archlib.AVR_ArchMega0_NVM(nvmctrl_config))
         self.attach_peripheral(_archlib.AVR_ArchMega0_MiscRegCtrl(misc_config))
         
         #Ports

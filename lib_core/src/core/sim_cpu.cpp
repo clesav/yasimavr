@@ -532,16 +532,16 @@ cycle_count_t AVR_Core::run_instruction()
 					if (use_extended_addressing())
 						z |= cpu_read_ioreg(m_config.rampz) << 16;
 					uint16_t w = (CPU_READ_GPREG(1) << 8) | CPU_READ_GPREG(0);
-					NVM_request_t nvm_req = { .addr = z, .data = w, .instr = m_pc };
+					NVM_request_t nvm_req = { .nvm = -1, .addr = z, .data = w, .instr = m_pc };
 					TRACE_OP("spm Z[%04x]%s %02x", z, (op ? "+" : ""), w);
 					
 					if (op) {
-						z++;
+						z += 2;
 						cpu_write_ioreg(m_config.rampz, z >> 16);
 						set_r16le(R_ZL, z);
 					}
 					
-					ctlreq_data_t d = { .index = 0, .p = &nvm_req };
+					ctlreq_data_t d = { .data = &nvm_req };
 					m_device->ctlreq(AVR_IOCTL_NVM, AVR_CTLREQ_NVM_WRITE, &d);
 				}	break;
 				case 0x9409:   // IJMP -- Indirect jump -- 1001 0100 0000 1001
@@ -1038,14 +1038,14 @@ void AVR_Core::dbg_insert_breakpoint(breakpoint_t& bp)
 	uint32_t curr_opcode = get_flash16le(bp.addr);
 	bp.instr_len = _is_instruction_32_bits(curr_opcode) ? 4 : 2;
 	//Backup the program instruction
-	m_flash.copy_into(bp.instr, bp.addr, bp.instr_len);
+	m_flash.dbg_read(bp.instr, bp.addr, bp.instr_len);
 	//Replace the program instruction by a break
-	m_flash.write(AVR_BREAK_OPCODE & 0xFF, bp.addr);
-	m_flash.write(AVR_BREAK_OPCODE >> 8, bp.addr + 1);
+	m_flash.dbg_write(AVR_BREAK_OPCODE & 0xFF, bp.addr);
+	m_flash.dbg_write(AVR_BREAK_OPCODE >> 8, bp.addr + 1);
 }
 
 void AVR_Core::dbg_remove_breakpoint(breakpoint_t& bp)
 {
 	//Restore the original instruction in flash
-	m_flash.write(bp.instr, bp.addr, bp.instr_len);
+	m_flash.dbg_write(bp.instr, bp.addr, bp.instr_len);
 }
