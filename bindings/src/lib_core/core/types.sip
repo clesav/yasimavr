@@ -1,7 +1,7 @@
 /*
  * types.sip
  *
- *	Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *	Copyright 2022 Clement Savergne <csavergne@yahoo.com>
 
  	This file is part of yasim-avr.
 
@@ -99,8 +99,9 @@ class vardata_t {
 %TypeCode
 void fill_vardata_with_pyobj(vardata_t* d, PyObject* obj)
 {
-	 if (PyFloat_Check(obj))
+	if (PyFloat_Check(obj)) {
 		*d = PyFloat_AsDouble(obj);
+	}
 	else if (PyLong_Check(obj)) {
         long long v = PyLong_AsLongLong(obj);
         if (v >= 0)
@@ -108,10 +109,13 @@ void fill_vardata_with_pyobj(vardata_t* d, PyObject* obj)
         else
             *d = (int) v;
     }
-	else if (PyUnicode_Check(obj))
+	else if (PyUnicode_Check(obj)) {
 		*d = PyUnicode_AsUTF8(obj);
-	else if (PyBytes_Check(obj))
-		*d = PyBytes_AsString(obj);
+	}
+	else if (PyBytes_Check(obj)) {
+		vardata_t v = vardata_t((uint8_t*) PyBytes_AsString(obj), PyBytes_GET_SIZE(obj));
+		*d = v;
+	}
 	else {
 		int iserr = 0;
 		const sipTypeDef *sipType = sipTypeFromPyTypeObject((PyTypeObject*)(obj->ob_type));
@@ -158,7 +162,8 @@ public:
 		Double,
 		Uinteger,
 		Integer,
-		String
+		String,
+		Bytes
 	};
 
 	vardata_t();
@@ -205,7 +210,7 @@ public:
 			sipRes = vardata_as_pyobject(sipCpp, a0);
 			break;
 		case vardata_t::String:
-			sipRes = PyBytes_FromString(sipCpp->as_str());
+			sipRes = PyUnicode_FromString(sipCpp->as_str());
 			break;
 		case vardata_t::Double:
 			sipRes = PyFloat_FromDouble(sipCpp->as_double());
@@ -215,6 +220,9 @@ public:
 			break;
 		case vardata_t::Integer:
 			sipRes = PyLong_FromLong(sipCpp->as_int());
+			break;
+		case vardata_t::Bytes:
+			sipRes = PyBytes_FromStringAndSize((const char*) sipCpp->as_bytes(), sipCpp->size());
 			break;
 	}
 	%End
