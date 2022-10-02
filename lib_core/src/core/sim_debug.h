@@ -41,10 +41,13 @@ class DLL_EXPORT AVR_DeviceDebugProbe {
     
 public:
 
-	enum WatchpointKind {
+	enum WatchpointFlags {
+		//Event flags
 		Watchpoint_Write = 0x01,
 		Watchpoint_Read = 0x02,
-		Watchpoint_Access = 0x04
+		//Action flags
+		Watchpoint_Signal = 0x10,
+		Watchpoint_Break = 0x20,
 	};
 
 	AVR_DeviceDebugProbe();
@@ -96,8 +99,9 @@ public:
     void remove_breakpoint(flash_addr_t addr);
 
     //Watchpoint management
-    void insert_watchpoint(mem_addr_t addr, mem_addr_t len, WatchpointKind kind);
-    void remove_watchpoint(mem_addr_t addr, WatchpointKind kind);
+    void insert_watchpoint(mem_addr_t addr, mem_addr_t len, int flags);
+    void remove_watchpoint(mem_addr_t addr, int flags);
+    AVR_Signal& watchpoint_signal();
 
     //Callbacks from the CPU for notifications
     void _cpu_notify_data_read(mem_addr_t addr);
@@ -111,7 +115,7 @@ private:
     struct watchpoint_t {
     	mem_addr_t addr;
     	mem_addr_t len;
-    	uint8_t kind;
+    	int flags;
     };
 
     AVR_Device* m_device;
@@ -119,6 +123,10 @@ private:
     std::map<flash_addr_t, breakpoint_t*> m_breakpoints;
     //Mapping containers mem address => watchpoint
     std::map<mem_addr_t, watchpoint_t*> m_watchpoints;
+	//Signal for watchpoint notification
+	AVR_Signal m_wp_signal;
+	
+	void notify_watchpoint(watchpoint_t* wp, int event, mem_addr_t addr);
 
 };
 
@@ -130,6 +138,11 @@ inline AVR_Device* AVR_DeviceDebugProbe::device() const
 inline bool AVR_DeviceDebugProbe::attached() const
 {
 	return !!m_device;
+}
+
+inline AVR_Signal& AVR_DeviceDebugProbe::watchpoint_signal()
+{
+	return m_wp_signal;
 }
 
 #endif //__YASIMAVR_DEBUG_H__

@@ -288,6 +288,9 @@ void AVR_ArchAVR_ADC::read_analog_value()
 	//Clip the raw analog value to the interval [-VCC; +VCC]
 	if (raw_value < -1.0) raw_value = -1.0;
 	if (raw_value > 1.0) raw_value = 1.0;
+	
+	//Applies the channel configuration gain
+	raw_value *= ch_config->gain;
 
 	//Convert the raw value to a 10-bits integer value with respect to VREF
 	if (bipolar) {

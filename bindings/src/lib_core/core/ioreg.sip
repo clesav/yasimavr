@@ -34,7 +34,7 @@ struct ioreg_write_t {
 };
 
 
-class AVR_IO_RegHandler /Abstract/ {
+class AVR_IO_RegHandler {
 %TypeHeaderCode
 #include "core/sim_ioreg.h"
 %End

@@ -218,59 +218,68 @@ void AVR_DeviceDebugProbe::remove_breakpoint(flash_addr_t addr)
 	delete bp;
 }
 
-void AVR_DeviceDebugProbe::insert_watchpoint(mem_addr_t addr, mem_addr_t len, WatchpointKind kind)
+void AVR_DeviceDebugProbe::insert_watchpoint(mem_addr_t addr, mem_addr_t len, int flags)
 {
 	watchpoint_t* wp;
 	auto search = m_watchpoints.find(addr);
 	if (search != m_watchpoints.end()) {
+		//If the watchpoint is found, just OR the flags
 		wp = search->second;
-		wp->kind |= kind;
+		wp->flags |= flags;
 	} else {
 		wp = new watchpoint_t;
 		wp->addr = addr;
 		wp->len = len;
-		wp->kind = kind;
+		wp->flags = flags;
 		m_watchpoints[addr] = wp;
 	}
 }
 
-void AVR_DeviceDebugProbe::remove_watchpoint(mem_addr_t addr, WatchpointKind kind)
+void AVR_DeviceDebugProbe::remove_watchpoint(mem_addr_t addr, int flags)
 {
 	auto search = m_watchpoints.find(addr);
-	if (search == m_watchpoints.end()) return;
-
-	watchpoint_t* wp = search->second;
-
-	wp->kind &= ~kind;
-	if (!wp->kind) {
-		m_watchpoints.erase(search);
-		delete wp;
+	if (search != m_watchpoints.end()) {
+		//If the watchpoint exists, clear its flags
+		watchpoint_t* wp = search->second;
+		wp->flags &= ~flags;
+		//If neither Read or Write event flags are left, destroy the watchpoint
+		if (!(wp->flags & (Watchpoint_Write | Watchpoint_Read))) {
+			m_watchpoints.erase(search);
+			delete wp;
+		}
 	}
 }
 
+void AVR_DeviceDebugProbe::notify_watchpoint(watchpoint_t* wp, int event, mem_addr_t addr)
+{
+	if (wp->flags & Watchpoint_Break) {
+		WARNING_LOG(m_device->logger(), "Device break on watchpoint A=%04x", addr);
+		m_device->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_BREAK, nullptr);
+	}
+	
+	if (wp->flags & Watchpoint_Signal)
+		m_wp_signal.raise_u(wp->addr, event, addr);
+}
+
+//Notification when the CPU reads from the RAM. Check if there's a watchpoint associated with the address.
 void AVR_DeviceDebugProbe::_cpu_notify_data_read(mem_addr_t addr)
 {
-	const uint8_t WP_RA = Watchpoint_Read | Watchpoint_Access;
-
 	for (auto it = m_watchpoints.begin(); it != m_watchpoints.end(); ++it) {
 		watchpoint_t* wp = it->second;
-		if (addr >= wp->addr && addr < (wp->addr + wp->len) && (wp->kind & WP_RA)) {
-			WARNING_LOG(m_device->logger(), "Device break at watchpoint R %04x", addr);
-			m_device->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_BREAK, nullptr);
+		if (addr >= wp->addr && addr < (wp->addr + wp->len) && (wp->flags & Watchpoint_Read)) {
+			notify_watchpoint(wp, Watchpoint_Read, addr);
 			return;
 		}
 	}
 }
 
+//Notification when the CPU writes into the RAM. Check if there's a watchpoint associated with the address.
 void AVR_DeviceDebugProbe::_cpu_notify_data_write(mem_addr_t addr)
 {
-	const uint8_t WP_WA = Watchpoint_Write | Watchpoint_Access;
-
 	for (auto it = m_watchpoints.begin(); it != m_watchpoints.end(); ++it) {
 		watchpoint_t* wp = it->second;
-		if (addr >= wp->addr && addr < (wp->addr + wp->len) && (wp->kind & WP_WA)) {
-			WARNING_LOG(m_device->logger(), "Device break at watchpoint W %04x", addr);
-			m_device->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_BREAK, nullptr);
+		if (addr >= wp->addr && addr < (wp->addr + wp->len) && (wp->flags & Watchpoint_Write)) {
+			notify_watchpoint(wp, Watchpoint_Write, addr);
 			return;
 		}
 	}
@@ -280,4 +289,3 @@ void AVR_DeviceDebugProbe::_cpu_notify_data_write(mem_addr_t addr)
 void AVR_DeviceDebugProbe::_cpu_notify_jump(flash_addr_t addr) {}
 void AVR_DeviceDebugProbe::_cpu_notify_call(flash_addr_t addr) {}
 void AVR_DeviceDebugProbe::_cpu_notify_ret() {}
-

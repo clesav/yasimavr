@@ -32,12 +32,6 @@ const int16_t INTERRUPT_NONE = -1;
 const uint16_t CTLREQ_INTR_REGISTER;
 const int16_t INTERRUPT_NONE;
 
-enum AVR_InterruptState {
-	IntrState_Unused,
-	IntrState_Idle,
-	IntrState_Raised,
-};
-
 
 //=======================================================================================
 
@@ -47,6 +41,13 @@ class AVR_InterruptController : public AVR_Peripheral /Abstract/ {
 %End
 
 public:
+
+	enum SignalId /BaseType=IntEnum/ {
+		Signal_Raised			/PyName=Raised/,
+		Signal_Cancelled		/PyName=Cancelled/,
+		Signal_Acknowledged		/PyName=Acknowledged/,
+		Signal_Returned			/PyName=Returned/
+	};
 	
 	AVR_InterruptController(unsigned int size);
 	virtual ~AVR_InterruptController();
@@ -54,17 +55,6 @@ public:
 	virtual void reset();
 	virtual bool ctlreq(uint16_t, ctlreq_data_t*);
 	virtual void sleep(bool, AVR_SleepMode);
-	
-protected:
-
-	AVR_InterruptState interrupt_state(unsigned int vector) const;
-	unsigned int intr_count() const;
-	void set_interrupt_state(int_vect_t, AVR_InterruptState);
-	
-	virtual void cpu_ack_irq(int_vect_t vector);
-	virtual int_vect_t get_next_irq() const = 0;
-	
-	void update_irq();
 
 };
 

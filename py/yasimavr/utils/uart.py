@@ -1,6 +1,6 @@
 # uart.py
 #
-# Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2022 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -33,65 +33,78 @@ _UART_SignalId = _corelib.AVR_IO_UART.SignalId
 
 
 class UartIO(io.RawIOBase):
-    
+
     class _TxHook(_corelib.AVR_SignalHook):
-        
+
         def __init__(self):
             super(UartIO._TxHook, self).__init__()
             self.queue = collections.deque()
-        
-        def raised(self, data, _):
-            if data.sigid == _UART_SignalId.DataFrame:
-                self.queue.append(data.u)
-    
-    def __init__(self, device, portnum):
+
+        def raised(self, sigdata, _):
+            if sigdata.sigid == _UART_SignalId.DataFrame:
+                self.queue.append(sigdata.data.value())
+
+    def __init__(self, device, portnum, mode='rw'):
         super(UartIO, self).__init__()
-        
+
+        if mode not in ('rw', 'r', 'w'):
+            raise ValueError('Invalid mode')
+
         portnum = str(portnum)
         ok, reqdata = device.ctlreq(_corelib.IOCTL_UART(portnum), _corelib.CTLREQ_UART_ENDPOINT)
-        
+
         if not ok:
             raise ValueError('Endpoint of UART port ' + portnum + ' not found')
-        
+
         self._endpoint = reqdata.data.as_ptr(_corelib.UART_EndPoint)
-        
+
         #Create the signal hook and connect to the endpoint
-        self._tx_hook = self._TxHook()
-        self._endpoint.tx_signal.connect_hook(self._tx_hook)
-        self._tx_signal = _corelib.AVR_Signal()
-        self._tx_signal.connect_hook(self._endpoint.rx_hook)
-    
-    
+        if 'r' in mode:
+            self._rx_hook = self._TxHook()
+            self._endpoint.tx_signal.connect_hook(self._rx_hook)
+
+        if 'w' in mode:
+            self._tx_signal = _corelib.AVR_Signal()
+            self._tx_signal.connect_hook(self._endpoint.rx_hook)
+
+        self._mode = mode
+
+
     def write(self, data):
-        if isinstance(data, int):
+        if 'w' not in self._mode:
+            raise IOError('Invalid mode')
+        elif isinstance(data, int) and (0 <= data <= 255):
             self._tx_signal.raise_(_UART_SignalId.DataFrame, 0, data)
         elif isinstance(data, (bytes, bytearray)):
-            self._tx_signal.raise_(_UART_SignalId.DataString, 0, bytes(data))
+            self._tx_signal.raise_(_UART_SignalId.DataBytes, 0, bytes(data))
         else:
-            raise TypeError()
-    
-    
+            raise TypeError('Invalid data type')
+
+
     def readinto(self, b):
-        n = min(len(self._tx_hook.queue), len(b))
+        if 'r' not in self._mode:
+            raise IOError('Invalid mode')
+
+        n = min(len(self._rx_hook.queue), len(b))
         for i in range(n):
-            b[i] = self._tx_hook.queue.popleft()
+            b[i] = self._rx_hook.queue.popleft()
         return n
-    
-    
+
+
     def readable(self):
-        return True
-    
+        return 'r' in self._mode
+
     def writable(self):
-        return True
-    
+        return 'w' in self._mode
+
     def available(self):
-        return len(self._tx_hook.queue)
-    
-    
+        return len(self._rx_hook.queue)
+
+
     def close(self):
         if not self.closed:
             self._endpoint.tx_signal.disconnect_hook(self)
             self._tx_signal.disconnect_hook(self._endpoint.rx_hook)
-            self._tx_hook.queue.clear()
-        
+            self._rx_hook.queue.clear()
+
         super(UartIO, self).close()

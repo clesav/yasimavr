@@ -17,6 +17,13 @@
 # You should have received a copy of the GNU General Public License
 # along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
 
+'''
+This module defines a GDB stub that act as an interface between
+yasim-avr and the GNU Debugger. It is designed on top of a TCP server and
+implements the relevant parts of the Remote Serial Protocol.
+
+Source: https://www.sourceware.org/gdb/onlinedocs/gdb/Remote-Protocol.html
+'''
 
 import binascii
 import struct
@@ -27,54 +34,30 @@ import os, sys
 from yasimavr.lib.core import AVR_DeviceDebugProbe, AVR_AsyncSimLoop, AVR_Device
 
 
+#Templates for query replies and register descriptions
+
 mem_map_query_tpl = '''<memory-map>
 <memory type="flash" start="0" length="{flashlen}"/>
 <memory type="ram" start="0x800000" length="{datalen}"/>
 </memory-map>
 '''
 
-
 rx_desc_tpl = "name:{name};bitsize:8;offset:0;encoding:uint;format:hex;set:General Purpose Registers;gcc:{index};dwarf:{index};"
+
 sreg_desc = "name:sreg;bitsize:8;offset:0;encoding:uint;format:binary;set:General Purpose Registers;gcc:32;dwarf:32;"
+
 sp_desc = "name:sp;bitsize:16;offset:0;encoding:uint;format:hex;set:General Purpose Registers;gcc:33;dwarf:33;generic:sp;"
+
 pc_desc = "name:pc;bitsize:32;offset:0;encoding:uint;format:hex;set:General Purpose Registers;gcc:34;dwarf:34;generic:pc;"
 
 
-def _decode_hexa_str(hs):
-    s = ''
-    i = 0
-    while (i + 1) < len(hs):
-        a = int(hs[i])
-        b = int(hs[i+1])
-        i += 2
-        if not (a or b): break
-        s += chr(a << 4 + b)
-    
-    return s
-
-
-def _decode_hexa_bytes(hs):
-    nbytes = len(hs) / 2
-    b = bytearray(nbytes)
-    for i in range(nbytes):
-        b[i] = int(hs[i*2:(i+1)*2], 16)
-    return bytes(b)
-
-
+#This is like using struct.unpack but with arbitrary integer length
 def _decode_hexa_int(hs):
+    s = binascii.unhexlify(hs)
     v = 0
-    for i, b in enumerate(_decode_hexa_bytes(hs)):
+    for i, b in enumerate(s):
         v += b << (i * 8)
     return v
-
-
-def int_to_hex(val, nbytes):
-    if nbytes == 1: c = 'B'
-    elif nbytes == 2: c = 'H'
-    elif nbytes == 4: c = 'I'
-    else: raise Exception()
-    
-    return struct.pack('<' + c, val).hex()
 
 
 class _GDB_SocketHandler(socketserver.BaseRequestHandler):
@@ -121,6 +104,8 @@ class GDB_Stub:
         
         self._simloopthread = None
         self._simloopjointhread = None
+        
+        self._verbose = False
     
     
     def set_simloop(self, simloop):
@@ -189,8 +174,9 @@ class GDB_Stub:
                 i = j + 3 #Skip the checksum
             
             elif ord(packet[i]) == 0x03:
-                print('GDB >>> Stub : BREAK')
-                sys.stdout.flush()
+                if self._verbose:
+                    print('GDB >>> Stub : BREAK')
+                    sys.stdout.flush()
                 
                 self.__handle_cmd_break()
                 i += 1 
@@ -203,8 +189,9 @@ class GDB_Stub:
     
     
     def __send_reply(self, reply):
-        print('GDB <<< Stub : ', reply)
-        sys.stdout.flush()
+        if self._verbose:
+            print('GDB <<< Stub : ', reply)
+            sys.stdout.flush()
         
         if isinstance(reply, str):
             reply = reply.encode('ascii')
@@ -238,8 +225,9 @@ class GDB_Stub:
     
     
     def __decode_command(self, cmdline):
-        print('GDB >>> Stub : ', cmdline)
-        sys.stdout.flush()
+        if self._verbose:
+            print('GDB >>> Stub : ', cmdline)
+            sys.stdout.flush()
         
         cmd = cmdline[0]
         cmdargs = cmdline[1:]
@@ -311,7 +299,8 @@ class GDB_Stub:
             
         elif cmdargs.startswith('Rcmd'):
             rcmd_hexa = cmdargs.split(',')[1]
-            rcmd = _decode_hexa_str(rcmd_hexa)
+            rcmd_bytes = binascii.unhexlify(rcmd_hexa)
+            rcmd = rcmd_bytes.decode('ascii')
             if rcmd == 'reset':
                 with self._simloop:
                     self._probe.reset_device()
@@ -507,19 +496,61 @@ class GDB_Stub:
     
     def __handle_cmd_insert_breakpoints(self, cmdargs):
         args = cmdargs.split(',')
-        if args[0] != '0':
-            self.__send_reply('')
-        else:
-            addr = int(args[1], 16)
+        if args[0] == '0':
+            addr = int(args[1], 16) & 0xffffff
             self._probe.insert_breakpoint(addr)
             self.__send_reply('OK')
+        
+        elif args[0] in ('2', '3', '4'):
+            addr = int(args[1], 16) & 0xffffff
+            size = int(args[2], 16)
+            
+            flags = AVR_DeviceDebugProbe.WatchpointFlags.Break
+            if args[0] in ('2', '4'):
+                flags |= AVR_DeviceDebugProbe.WatchpointFlags.Write
+            if args[0] in ('3', '4'):
+                flags |= AVR_DeviceDebugProbe.WatchpointFlags.Read
+            
+            if 0x800000 <= addr < 0x810000:
+                self._probe.insert_watchpoint(addr - 0x800000, size, flags)
+                self.__send_reply('OK')
+            else:
+                self.__send_reply('E01')
+        
+        else:
+            self.__send_reply('')
     
     
     def __handle_cmd_remove_breakpoints(self, cmdargs):
         args = cmdargs.split(',')
-        if args[0] != '0':
-            self.__send_reply('')
-        else:
-            addr = int(args[1], 16)
+        if args[0] == '0':
+            addr = int(args[1], 16) & 0xffffff
             self._probe.remove_breakpoint(addr)
             self.__send_reply('OK')
+        
+        elif args[0] in ('2', '3', '4'):
+            addr = int(args[1], 16) & 0xffffff
+            
+            flags = 0
+            if args[0] in ('2', '4'):
+                flags |= AVR_DeviceDebugProbe.WatchpointFlags.Write
+            if args[0] in ('3', '4'):
+                flags |= AVR_DeviceDebugProbe.WatchpointFlags.Read
+            
+            if 0x800000 <= addr < 0x810000:
+                self._probe.remove_watchpoint(addr - 0x800000, flags)
+                self.__send_reply('OK')
+            else:
+                self.__send_reply('E01')
+        
+        else:
+            self.__send_reply('')
+    
+    
+    @property
+    def verbose(self):
+        return self._verbose
+    
+    def set_verbose(self, v):
+        self._verbose = bool(v)
+

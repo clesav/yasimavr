@@ -1,6 +1,6 @@
 # convertors_avr_xx8.py
 #
-# Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2022 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -181,9 +181,17 @@ def _adc_convertor(cfg, attr, yml_val, per_desc):
 		for reg_value, item in yml_val.items():
 			chan_cfg = _corelib.AVR_IO_ADC.channel_config_t()
 			chan_cfg.reg_value = reg_value
-			chan_cfg.type = _corelib.AVR_IO_ADC.Channel[item[0]]
-			chan_cfg.pin_p = _corelib.str_to_id(item[1])
-			chan_cfg.pin_n = _corelib.str_to_id(item[2]) if len(item) > 2 else 0
+            if isinstance(item, list):
+                chan_cfg.type = _corelib.AVR_IO_ADC.Channel[item[0]]
+                chan_cfg.pin_p = _corelib.str_to_id(item[1])
+                chan_cfg.pin_n = _corelib.str_to_id(item[2]) if len(item) > 2 else 0
+                chan_cfg.gain = int(item[3]) if len(item) > 3 else 1
+            else:
+                chan_cfg.type = _corelib.AVR_IO_ADC.Channel[item]
+                chan_cfg.pin_p = 0
+                chan_cfg.pin_n = 0
+                chan_cfg.gain = 1
+            
 			py_channels.append(chan_cfg)
 		
 		cfg.channels = py_channels

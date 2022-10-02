@@ -97,7 +97,7 @@ void AVR_InterruptController::sleep(bool on, AVR_SleepMode mode)
 
 	for (size_t v = 0; v < m_interrupts.size(); ++v) {
 		if (m_interrupts[v].state == IntrState_Raised) {
-			m_signal.raise_u(0, v, IntrState_Raised);
+			m_signal.raise_u(Signal_Raised, v, 1);
 		}
 	}
 }
@@ -114,10 +114,13 @@ void AVR_InterruptController::cpu_ack_irq(int_vect_t vector)
 
 	if (m_interrupts[vector].handler)
 		m_interrupts[vector].handler->interrupt_ack_handler(vector);
+
+	m_signal.raise_u(Signal_Acknowledged, vector, 0);
 }
 
 void AVR_InterruptController::cpu_reti()
 {
+	m_signal.raise(Signal_Returned);
 	update_irq();
 }
 
@@ -126,7 +129,7 @@ void AVR_InterruptController::update_irq()
 	m_irq_vector = get_next_irq();
 }
 
-void AVR_InterruptController::set_interrupt_state(int_vect_t vector, AVR_InterruptState new_state)
+void AVR_InterruptController::set_interrupt_state(int_vect_t vector, InterruptState new_state)
 {
 	m_interrupts[vector].state = new_state;
 }
@@ -138,7 +141,7 @@ void AVR_InterruptController::raise_interrupt(int_vect_t vector)
 
 	m_interrupts[vector].state = IntrState_Raised;
 
-	m_signal.raise_u(0, vector, IntrState_Raised);
+	m_signal.raise_u(Signal_Raised, vector, 0);
 
 	update_irq();
 }
@@ -147,6 +150,7 @@ void AVR_InterruptController::cancel_interrupt(int_vect_t vector)
 {
 	if (m_interrupts[vector].state == IntrState_Raised) {
 		m_interrupts[vector].state = IntrState_Idle;
+		m_signal.raise_u(Signal_Cancelled, vector, 0);
 		if (m_irq_vector == vector)
 			update_irq();
 	}

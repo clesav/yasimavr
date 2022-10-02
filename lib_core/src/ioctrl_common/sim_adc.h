@@ -58,6 +58,7 @@ public:
 		Channel type;
 		uint32_t pin_p;
 		uint32_t pin_n;
+		unsigned int gain;
 	};
 
 	enum SignalId {

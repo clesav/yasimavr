@@ -29,10 +29,11 @@ class AVR_DeviceDebugProbe {
 
 public:
 
-	enum WatchpointKind {
-		Watchpoint_Write,
-		Watchpoint_Read,
-		Watchpoint_Access
+	enum WatchpointFlags /BaseType=IntFlag/ {
+		Watchpoint_Write         /PyName=Write/,
+		Watchpoint_Read          /PyName=Read/,
+		Watchpoint_Signal        /PyName=Signal/,
+		Watchpoint_Break         /PyName=Break/
 	};
 	
     AVR_DeviceDebugProbe();
@@ -113,7 +114,8 @@ public:
     void insert_breakpoint(flash_addr_t);
     void remove_breakpoint(flash_addr_t);
 
-    void insert_watchpoint(mem_addr_t, mem_addr_t, AVR_DeviceDebugProbe::WatchpointKind);
-    void remove_watchpoint(mem_addr_t, AVR_DeviceDebugProbe::WatchpointKind);
+    void insert_watchpoint(mem_addr_t, mem_addr_t, int);
+    void remove_watchpoint(mem_addr_t, int);
+    AVR_Signal& watchpoint_signal();
     
 };

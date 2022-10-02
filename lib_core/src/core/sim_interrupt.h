@@ -48,12 +48,6 @@ class AVR_InterruptHandler;
 //   . the vector 0 cannot be registered
 #define AVR_CTLREQ_INTR_REGISTER	1
 
-enum AVR_InterruptState {
-	IntrState_Unused,
-	IntrState_Idle,
-	IntrState_Raised,
-};
-
 #define AVR_INTERRUPT_NONE			-1
 
 
@@ -70,6 +64,13 @@ class DLL_EXPORT AVR_InterruptController : public AVR_Peripheral {
 	friend class AVR_InterruptHandler;
 
 public:
+
+	enum SignalId {
+		Signal_Raised,
+		Signal_Cancelled,
+		Signal_Acknowledged,
+		Signal_Returned,
+	};
 
 	//===== Constructor/destructor =====
 	//Construct the controller with the given vector table size
@@ -92,10 +93,16 @@ public:
 
 protected:
 
+	enum InterruptState {
+		IntrState_Unused,
+		IntrState_Idle,
+		IntrState_Raised,
+	};
+
 	//Helper methods to access the vector table, for concrete implementing sub-classes
-	AVR_InterruptState interrupt_state(unsigned int vector) const;
+	InterruptState interrupt_state(unsigned int vector) const;
 	unsigned int intr_count() const;
-	void set_interrupt_state(int_vect_t vector, AVR_InterruptState state);
+	void set_interrupt_state(int_vect_t vector, InterruptState state);
 
 	//Called by cpu_ack_irq with the vector obtained by cpu_get_irq()
 	//By default it sets the interrupt state back to Idle and calls the handler
@@ -111,7 +118,7 @@ private:
 	//===== Structure holding data on the vector table =====
 	struct AVR_Interrupt {
 
-		AVR_InterruptState state;
+		InterruptState state;
 		AVR_InterruptHandler* handler;
 
 		AVR_Interrupt();
@@ -140,7 +147,7 @@ inline unsigned int AVR_InterruptController::intr_count() const
 	return m_interrupts.size();
 }
 
-inline AVR_InterruptState AVR_InterruptController::interrupt_state(unsigned int vector) const
+inline AVR_InterruptController::InterruptState AVR_InterruptController::interrupt_state(unsigned int vector) const
 {
 	return m_interrupts[vector].state;
 }

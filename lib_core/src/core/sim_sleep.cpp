@@ -103,7 +103,7 @@ bool AVR_SleepController::ctlreq(uint16_t req, ctlreq_data_t* __unused)
 void AVR_SleepController::raised(const signal_data_t& sigdata, uint16_t __unused)
 {
 	//data.u contains the state of the interrupt. We only do something on a 'Raise'
-	if (sigdata.data.as_uint() != IntrState_Raised)
+	if (sigdata.sigid != AVR_InterruptController::Signal_Raised)
 		return;
 	
 	int_vect_t vector = sigdata.index;
