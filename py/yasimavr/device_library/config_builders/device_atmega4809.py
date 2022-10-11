@@ -50,7 +50,7 @@ nvmctrl_config = get_nvmctrl_config(_desc.peripherals['NVMCTRL'])
 misc_config = get_misc_config(_desc.peripherals['MISC'])
 #Ports
 port_configs = [(s, get_port_config(_desc.peripherals['PORT' + s]))
-                for s in ('A', 'B', 'C', 'D', 'E', 'F')]                
+                for s in ('A', 'B', 'C', 'D', 'E', 'F')]
 #Timer/counters
 tca_config = get_tca_config(_desc.peripherals['TCA0'])
 tcb_configs = [get_tcb_config(_desc.peripherals['TCB' + str(n)])
@@ -74,7 +74,7 @@ portmux_dummy_regs = convert_dummy_controller_config(_desc.peripherals['PORTMUX'
 fuses_base = _desc.peripherals['FUSES'].reg_base
 #USERROW
 userrow_base = _desc.peripherals['USERROW'].reg_base
-               
+
 del _desc
 
 #========================================================================================
@@ -84,7 +84,7 @@ class dev_atmega4809(_archlib.AVR_ArchMega0_Device):
 
     def __init__(self):
         super(dev_atmega4809, self).__init__(device_config)
-        
+
         #Controllers
         self.attach_peripheral(_archlib.AVR_ArchMega0_IntCtrl(cpuint_config))
         self.attach_peripheral(_corelib.AVR_SleepController(sleep_config))
@@ -93,40 +93,40 @@ class dev_atmega4809(_archlib.AVR_ArchMega0_Device):
                                                             clkctrl_dummy_regs))
         self.attach_peripheral(_archlib.AVR_ArchMega0_NVM(nvmctrl_config))
         self.attach_peripheral(_archlib.AVR_ArchMega0_MiscRegCtrl(misc_config))
-        
+
         #Ports
         for s, cfg in port_configs:
             self.attach_peripheral(_archlib.AVR_ArchMega0_Port(s, cfg))
-        
+
         #Timers/counters
         self.attach_peripheral(_archlib.AVR_ArchMega0_TimerA(tca_config))
         for n, cfg in enumerate(tcb_configs):
             self.attach_peripheral(_archlib.AVR_ArchMega0_TimerB(n, cfg))
-        
+
         #RTC
         self.attach_peripheral(_archlib.AVR_ArchMega0_RTC(rtc_config))
-        
+
         #ADC, VREF
         self.attach_peripheral(_archlib.AVR_ArchMega0_ADC(adc_config))
         self.attach_peripheral(_archlib.AVR_ArchMega0_VREF(vref_base))
-        
+
         #USARTs
         for n, cfg in enumerate(usart_configs):
             self.attach_peripheral(_archlib.AVR_ArchMega0_USART(n, cfg))
-        
+
         #SPI0
         self.attach_peripheral(_archlib.AVR_ArchMega0_SPI(0, spi_config))
-        
+
         #TWI0
         self.attach_peripheral(_archlib.AVR_ArchMega0_TWI(0, twi_config))
-        
+
         #PORTMUX
         self.attach_peripheral(_corelib.AVR_DummyController(_corelib.IOCTL_PORTMUX,
                                                             portmux_dummy_regs))
-        
+
         #FUSES
         self.attach_peripheral(_archlib.AVR_ArchMega0_Fuses(fuses_base))
-        
+
         #USERROW
         self.attach_peripheral(_archlib.AVR_ArchMega0_USERROW(userrow_base))
 

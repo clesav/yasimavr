@@ -1,24 +1,24 @@
 /*
  * peripheral.sip
  *
- *	Copyright 2022 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022 Clement Savergne <csavergne@yahoo.com>
 
- 	This file is part of yasim-avr.
+    This file is part of yasim-avr.
 
-	yasim-avr is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
+    yasim-avr is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
-	yasim-avr is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
+    yasim-avr is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 
-	You should have received a copy of the GNU General Public License
-	along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
+    You should have received a copy of the GNU General Public License
+    along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
  */
- 
+
 //=======================================================================================
 
 
@@ -75,7 +75,7 @@ const uint16_t CTLREQ_CORE_SHORTING    = AVR_CTLREQ_CORE_SHORTING;
 const uint16_t CTLREQ_CORE_CRASH       = AVR_CTLREQ_CORE_CRASH;
 const uint16_t CTLREQ_CORE_RESET       = AVR_CTLREQ_CORE_RESET;
 const uint16_t CTLREQ_CORE_RESET_FLAG  = AVR_CTLREQ_CORE_RESET_FLAG;
-const uint16_t CTLREQ_CORE_NVM		   = AVR_CTLREQ_CORE_NVM;
+const uint16_t CTLREQ_CORE_NVM         = AVR_CTLREQ_CORE_NVM;
 const uint16_t CTLREQ_CORE_HALT        = AVR_CTLREQ_CORE_HALT;
 const uint16_t CTLREQ_WATCHDOG_RESET   = AVR_CTLREQ_WATCHDOG_RESET;
 const uint16_t CTLREQ_NVM_WRITE        = AVR_CTLREQ_NVM_WRITE;
@@ -125,10 +125,10 @@ struct NVM_request_t {
 #include "core/sim_peripheral.h"
 %End
 
-	int nvm;
-	mem_addr_t addr;
-	uint16_t data;
-	flash_addr_t instr;
+    int nvm;
+    mem_addr_t addr;
+    uint16_t data;
+    flash_addr_t instr;
 
 };
 
@@ -140,8 +140,8 @@ struct ctlreq_data_t {
 #include "core/sim_peripheral.h"
 %End
 
-	vardata_t data;
-	uint32_t index;
+    vardata_t data;
+    uint32_t index;
 
 };
 
@@ -151,7 +151,7 @@ struct base_reg_config_t {
 #include "core/sim_peripheral.h"
 %End
 
-	uint8_t reg_value;
+    uint8_t reg_value;
 };
 
 
@@ -164,30 +164,30 @@ public:
 
     AVR_Peripheral(uint32_t);
     virtual ~AVR_Peripheral();
-    
+
     uint32_t id() const;
     const char* name() const;
     %MethodCode
-    	sipRes = sipCpp->name().c_str();
+        sipRes = sipCpp->name().c_str();
     %End
-    
+
     virtual bool init(AVR_Device&);
     virtual void reset();
     virtual bool ctlreq(uint16_t, ctlreq_data_t*);
     virtual void ioreg_read_handler(reg_addr_t);
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
     virtual void sleep(bool on, AVR_SleepMode mode);
-    
+
 protected:
 
     AVR_Device* device() const;
-    
+
     void add_ioreg(regbit_t, bool = false);
     void add_ioreg(reg_addr_t, uint8_t = 0xFF, bool = false);
-    
+
     uint8_t read_ioreg(reg_addr_t) const;
     void write_ioreg(const regbit_t, uint8_t);
-    
+
     uint8_t read_ioreg(const regbit_t) const;
     uint8_t read_ioreg(reg_addr_t, const bitmask_t) const;
     bool test_ioreg(reg_addr_t, uint8_t) const;
@@ -204,9 +204,9 @@ protected:
     void clear_ioreg(reg_addr_t, uint8_t);
     void clear_ioreg(reg_addr_t, const bitmask_t);
     void clear_ioreg(const regbit_t, uint8_t);
-    
+
     bool register_interrupt(int_vect_t, AVR_InterruptHandler*) const;
-    
+
     AVR_Signal* get_signal(uint32_t, uint16_t) const;
 
 };
@@ -219,14 +219,14 @@ class AVR_DummyController : public AVR_Peripheral /NoDefaultCtors/ {
 
 public:
 
-	struct dummy_register_t {
-		regbit_t reg;
-		uint8_t reset;
-	};
+    struct dummy_register_t {
+        regbit_t reg;
+        uint8_t reset;
+    };
 
-	AVR_DummyController(uint32_t, std::vector<AVR_DummyController::dummy_register_t>);
+    AVR_DummyController(uint32_t, std::vector<AVR_DummyController::dummy_register_t>);
 
-	virtual bool init(AVR_Device&);
-	virtual void reset();
+    virtual bool init(AVR_Device&);
+    virtual void reset();
 
 };

@@ -27,14 +27,14 @@ import yasimavr.lib.core as _corelib
 
 
 class TWI_Slave(_corelib.TWI_Endpoint):
-    
+
     def __init__(self, address):
         super().__init__()
         self._address = address & 0x7F
         self._active = False
         self._rw = False
-    
-    
+
+
     #Generic handler for a write request
     #Should be reimplemented to process the provided data
     #and return True for ACK or False for NACK
@@ -42,8 +42,8 @@ class TWI_Slave(_corelib.TWI_Endpoint):
     #by the master
     def write_handler(self, data):
         return False
-    
-    
+
+
     #Generic handler for a read request
     #Should be reimplemented to provide the data being read
     #The handler is called only once for each byte of a read request.
@@ -51,60 +51,60 @@ class TWI_Slave(_corelib.TWI_Endpoint):
     #to the master.
     def read_handler(self):
         return 0
-    
-    
+
+
     #Generic handler for an address and read/write match
     #May be reimplemented for more complex address match behaviours
     #Return True for ACK or False for NACK
     def match_address(self, address, rw):
         return address == self._address
-    
-    
+
+
     @property
     def address(self):
         '''Default address on the bus'''
         return self._address
-    
+
     @address.setter
     def set_address(self, address):
         if not self._active:
             self._address = address
-    
-    
+
+
     @property
     def active(self):
         '''Boolean indicating if the slave is actively addressed on the bus'''
         return self._active
-    
-    
+
+
     @property
     def rw(self):
         '''Boolean indicating the type of operation (True=read, False=write)
         The value is only relevant when active == True'''
         return (self._rw == _corelib.TWI_Packet.Read)
-    
-    
+
+
     #TWI_Endpoint override
     def packet(self, packet):
         pass
-    
-    
+
+
     #TWI_Endpoint override
     def packet_ended(self, packet):
         if packet.cmd == _corelib.TWI_Packet.Cmd.Address:
             try:
-                self._active = self.match_address(packet.addr, packet.rw) 
+                self._active = self.match_address(packet.addr, packet.rw)
             except Exception:
                 self._active = False
-            
+
             if self._active:
                 packet.ack = _corelib.TWI_Packet.Ack
                 self._rw = packet.rw
             else:
                 packet.ack = _corelib.TWI_Packet.Nack
-            
+
             packet.hold = 0
-        
+
         elif packet.cmd == _corelib.TWI_Packet.Cmd.DataRequest and self._active:
             if self._rw == _corelib.TWI_Packet.Read:
                 try:
@@ -116,17 +116,17 @@ class TWI_Slave(_corelib.TWI_Endpoint):
                     ack = self.write_handler(packet.data)
                 except Exception:
                     ack = False
-                    
+
                 packet.ack = _corelib.TWI_Packet.Ack if ack else _corelib.TWI_Packet.Nack
-            
+
             packet.hold = 0
-    
-    
+
+
     #TWI_Endpoint override
     def bus_acquired(self):
         pass
-    
-    
+
+
     #TWI_Endpoint override
     def bus_released(self):
         self._active = False

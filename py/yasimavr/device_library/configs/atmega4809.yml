@@ -128,7 +128,7 @@ peripherals:
     CLKCTRL:
         file: Mega0-Mega1_controllers.yml
         base: 0x0060
-    
+
     NVMCTRL:
         file: Mega0-Mega1_controllers.yml
         base: 0x1000
@@ -241,7 +241,7 @@ peripherals:
     # WDT: not ready
         # file: Mega0-Mega1_timers.yml
         # base: 0x0100
-    
+
     VREF:
         file: Mega0-Mega1_analog.yml
         base: 0x00A0
@@ -314,7 +314,7 @@ peripherals:
        config:
           pin_select: null
           iv_spi: SPI0
-    
+
     TWI0:
        class: TWI
        file: Mega0-Mega1_interfaces.yml
@@ -322,15 +322,15 @@ peripherals:
        config:
           iv_master: TWI0_TWIM
           iv_slave: TWI0_TWIS
-    
+
     PORTMUX:
        file: Mega0-Mega1_interfaces.yml
        base: 0x05E0
-    
+
     FUSES:
         file: Mega0-Mega1_controllers.yml
         base: 0x1280
-    
+
     USERROW:
         file: Mega0-Mega1_controllers.yml
         base: 0x1300

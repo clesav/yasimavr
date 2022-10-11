@@ -1,24 +1,24 @@
 /*
  * sim_cycle_timer.h
  *
- *	Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
 
- 	This file is part of yasim-avr.
+    This file is part of yasim-avr.
 
-	yasim-avr is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
+    yasim-avr is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
-	yasim-avr is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
+    yasim-avr is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 
-	You should have received a copy of the GNU General Public License
-	along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
+    You should have received a copy of the GNU General Public License
+    along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
  */
- 
+
 //=======================================================================================
 
 #ifndef __YASIMAVR_CYCLE_TIMER_H__
@@ -37,24 +37,24 @@ class DLL_EXPORT AVR_CycleTimer {
 
 public:
 
-	AVR_CycleTimer() : m_scheduled(false) {}
-	virtual ~AVR_CycleTimer() {}
+    AVR_CycleTimer() : m_scheduled(false) {}
+    virtual ~AVR_CycleTimer() {}
 
-	inline bool scheduled() const { return m_scheduled; }
+    inline bool scheduled() const { return m_scheduled; }
 
-	//Callback from the cycle loop. 'when' is the current cycle
-	//The returned value is the next 'when' cycle this timer wants to be called.
-	//If it's less or equal than the 'when' argument, the timer is removed from the pool.
-	//Note than there's no guarantee the method will be called exactly on the required 'when'.
-	//The only guarantee is "called 'when' >= required 'when'"
-	//The implementations must account for this.
-	virtual cycle_count_t next(cycle_count_t when) = 0;
+    //Callback from the cycle loop. 'when' is the current cycle
+    //The returned value is the next 'when' cycle this timer wants to be called.
+    //If it's less or equal than the 'when' argument, the timer is removed from the pool.
+    //Note than there's no guarantee the method will be called exactly on the required 'when'.
+    //The only guarantee is "called 'when' >= required 'when'"
+    //The implementations must account for this.
+    virtual cycle_count_t next(cycle_count_t when) = 0;
 
 private:
 
-	friend class AVR_CycleManager;
+    friend class AVR_CycleManager;
 
-	bool m_scheduled;
+    bool m_scheduled;
 
 };
 
@@ -70,13 +70,13 @@ class DLL_EXPORT AVR_CycleManager {
 
 public:
 
-	AVR_CycleManager();
-	~AVR_CycleManager();
+    AVR_CycleManager();
+    ~AVR_CycleManager();
 
-	cycle_count_t cycle() const;
-	void increment_cycle(cycle_count_t count);
+    cycle_count_t cycle() const;
+    void increment_cycle(cycle_count_t count);
 
-	//Adds a new timer and schedule it for call at 'when'
+    //Adds a new timer and schedule it for call at 'when'
     void add_cycle_timer(AVR_CycleTimer* timer, cycle_count_t when);
 
     //Remove a timer from the queue. No-op if the timer is not scheduled.
@@ -90,36 +90,36 @@ public:
     void pause_cycle_timer(AVR_CycleTimer* timer);
 
     //Resumes a paused timer
-	void resume_cycle_timer(AVR_CycleTimer* timer);
+    void resume_cycle_timer(AVR_CycleTimer* timer);
 
-	//Process the timers for the current cycle
-	void process_cycle_timers();
+    //Process the timers for the current cycle
+    void process_cycle_timers();
 
-	//Returns the next cycle 'when' where timers require to be processed
-	//Returns 0 if no timer to be processed
-	cycle_count_t next_when() const;
+    //Returns the next cycle 'when' where timers require to be processed
+    //Returns 0 if no timer to be processed
+    cycle_count_t next_when() const;
 
 private:
 
-	//Structure holding information on a cycle timer when it's in the cycle queue
-	struct TimerSlot;
-	std::deque<TimerSlot*> m_timer_slots;
-	cycle_count_t m_cycle;
+    //Structure holding information on a cycle timer when it's in the cycle queue
+    struct TimerSlot;
+    std::deque<TimerSlot*> m_timer_slots;
+    cycle_count_t m_cycle;
 
-	//Utility method to add a timer in the cycle queue, conserving the order or 'when'
-	//and paused timers last
+    //Utility method to add a timer in the cycle queue, conserving the order or 'when'
+    //and paused timers last
     void add_timer_to_queue(TimerSlot* slot);
 
     //Utility to remove a timer from the queue.
-	TimerSlot* remove_timer_from_queue(AVR_CycleTimer* timer);
+    TimerSlot* remove_timer_from_queue(AVR_CycleTimer* timer);
 
-	int find_timer(AVR_CycleTimer* timer);
+    int find_timer(AVR_CycleTimer* timer);
 
 };
 
 inline cycle_count_t AVR_CycleManager::cycle() const
 {
-	return m_cycle;
+    return m_cycle;
 }
 
 

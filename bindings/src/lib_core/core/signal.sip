@@ -1,24 +1,24 @@
 /*
  * signal.sip
  *
- *	Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
 
- 	This file is part of yasim-avr.
+    This file is part of yasim-avr.
 
-	yasim-avr is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
+    yasim-avr is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
-	yasim-avr is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
+    yasim-avr is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 
-	You should have received a copy of the GNU General Public License
-	along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
+    You should have received a copy of the GNU General Public License
+    along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
  */
- 
+
 //=======================================================================================
 
 struct signal_data_t {
@@ -26,9 +26,9 @@ struct signal_data_t {
 #include "core/sim_signal.h"
 %End
 
-	uint16_t sigid;
-	uint32_t index;
-	vardata_t data;
+    uint16_t sigid;
+    uint32_t index;
+    vardata_t data;
 
 };
 
@@ -40,9 +40,9 @@ class AVR_SignalHook {
 
 public:
 
-	virtual ~AVR_SignalHook();	
-	virtual void raised(const signal_data_t&, uint16_t) = 0;
-		
+    virtual ~AVR_SignalHook();
+    virtual void raised(const signal_data_t&, uint16_t) = 0;
+
 };
 
 
@@ -50,31 +50,31 @@ class AVR_Signal {
 %TypeHeaderCode
 #include "core/sim_signal.h"
 
-extern void fill_vardata_with_pyobj(vardata_t* d, PyObject* obj); 
+extern void fill_vardata_with_pyobj(vardata_t* d, PyObject* obj);
 %End
 
 public:
 
     AVR_Signal();
-	~AVR_Signal();
-    
+    ~AVR_Signal();
+
     void connect_hook(AVR_SignalHook*, uint16_t = 0);
     void disconnect_hook(AVR_SignalHook*);
-    
+
     const signal_data_t& data() const;
-    
+
     void raise() /PyName=raise_/;
     void raise(const signal_data_t&) /PyName=raise_/;
-    
-	void raise(uint16_t, uint32_t, SIP_PYOBJECT) /PyName=raise_/;
+
+    void raise(uint16_t, uint32_t, SIP_PYOBJECT) /PyName=raise_/;
     %MethodCode
-		signal_data_t sigdata;
-		sigdata.sigid = a0;
-		sigdata.index = a1;
-		fill_vardata_with_pyobj(&sigdata.data, a2);
-		sipCpp->raise(sigdata);
-	%End
-    
+        signal_data_t sigdata;
+        sigdata.sigid = a0;
+        sigdata.index = a1;
+        fill_vardata_with_pyobj(&sigdata.data, a2);
+        sipCpp->raise(sigdata);
+    %End
+
 };
 
 
@@ -87,45 +87,45 @@ class AVR_CallableSignalHook : public AVR_SignalHook /NoDefaultCtors/ {
 class AVR_CallableSignalHook : public AVR_SignalHook {
 
 public:
-	
-	AVR_CallableSignalHook(PyObject* callback)
-	:m_callback(callback)
-	{
-		Py_INCREF(m_callback);
-	}
-	
-	virtual ~AVR_CallableSignalHook()
-	{
-		Py_DECREF(m_callback);
-	}
-	
-	virtual void raised(const signal_data_t& sigdata, uint16_t hooktag) override final
-	{
-		//Ensure the GIL is held for the callback
-		PyGILState_STATE pystate = PyGILState_Ensure();
-		//Wrap the sigdata argument into a Python object using the SIP API
-		signal_data_t s = sigdata;
-		PyObject* pysigdata = sipConvertFromType(&s, sipType_signal_data_t, SIP_NULLPTR);
-		//Call the callback
+
+    AVR_CallableSignalHook(PyObject* callback)
+    :m_callback(callback)
+    {
+        Py_INCREF(m_callback);
+    }
+
+    virtual ~AVR_CallableSignalHook()
+    {
+        Py_DECREF(m_callback);
+    }
+
+    virtual void raised(const signal_data_t& sigdata, uint16_t hooktag) override final
+    {
+        //Ensure the GIL is held for the callback
+        PyGILState_STATE pystate = PyGILState_Ensure();
+        //Wrap the sigdata argument into a Python object using the SIP API
+        signal_data_t s = sigdata;
+        PyObject* pysigdata = sipConvertFromType(&s, sipType_signal_data_t, SIP_NULLPTR);
+        //Call the callback
         PyObject* res = PyObject_CallFunction(m_callback, "OH", pysigdata, hooktag);
-		//Reference cleanup
-		Py_XDECREF(res);
-		Py_DECREF(pysigdata);
-		//Release the GIL
-		PyGILState_Release(pystate);
-	}
+        //Reference cleanup
+        Py_XDECREF(res);
+        Py_DECREF(pysigdata);
+        //Release the GIL
+        PyGILState_Release(pystate);
+    }
 
 private:
 
-	PyObject* m_callback;
-	
+    PyObject* m_callback;
+
 };
 %End
 
 public:
-	
-	AVR_CallableSignalHook(SIP_PYCALLABLE);
-	virtual ~AVR_CallableSignalHook();
-	virtual void raised(const signal_data_t&, uint16_t) final;
+
+    AVR_CallableSignalHook(SIP_PYCALLABLE);
+    virtual ~AVR_CallableSignalHook();
+    virtual void raised(const signal_data_t&, uint16_t) final;
 
 };

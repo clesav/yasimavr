@@ -31,15 +31,14 @@ dev_class_cache = {}
 def load_device(dev_name):
     if dev_name in dev_class_cache:
         return dev_class_cache[dev_name]()
-    
+
     mod_name = '.config_builders.device_' + dev_name
-    
+
     dev_mod = importlib.import_module(mod_name, __package__)
-    
+
     importlib.invalidate_caches()
-    
+
     dev_class = dev_mod.DEV_CLASS
     dev_class_cache[dev_name] = dev_class
     return dev_class()
-    
-    
+

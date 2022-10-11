@@ -1,22 +1,22 @@
 /*
  * sim_sleep.h
  *
- *	Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
 
- 	This file is part of yasim-avr.
+    This file is part of yasim-avr.
 
-	yasim-avr is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
+    yasim-avr is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
-	yasim-avr is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
+    yasim-avr is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 
-	You should have received a copy of the GNU General Public License
-	along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
+    You should have received a copy of the GNU General Public License
+    along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 //=======================================================================================
@@ -46,15 +46,15 @@
  *Definition of generic sleep modes
 */
 enum class AVR_SleepMode {
-	Invalid,
-	Active,
-	Pseudo,
-	Idle,
-	ADC,
-	Standby,
-	ExtStandby,
-	PowerDown,
-	PowerSave,
+    Invalid,
+    Active,
+    Pseudo,
+    Idle,
+    ADC,
+    Standby,
+    ExtStandby,
+    PowerDown,
+    PowerSave,
 };
 
 const char* SleepModeName(AVR_SleepMode mode);
@@ -73,16 +73,16 @@ const char* SleepModeName(AVR_SleepMode mode);
 
 struct AVR_SleepConfig {
 
-	struct mode_config_t : base_reg_config_t {
-		AVR_SleepMode mode;
-		//Bitset that indicates for each vector of the device vector map
-		//if the corresponding interrupt can wake up the device from this sleep mode
-		uint8_t int_mask[16];
-	};
+    struct mode_config_t : base_reg_config_t {
+        AVR_SleepMode mode;
+        //Bitset that indicates for each vector of the device vector map
+        //if the corresponding interrupt can wake up the device from this sleep mode
+        uint8_t int_mask[16];
+    };
 
-	std::vector<mode_config_t> modes;
-	regbit_t rb_mode;
-	regbit_t rb_enable;
+    std::vector<mode_config_t> modes;
+    regbit_t rb_mode;
+    regbit_t rb_enable;
 };
 
 
@@ -90,17 +90,17 @@ class DLL_EXPORT AVR_SleepController : public AVR_Peripheral, public AVR_SignalH
 
 public:
 
-	AVR_SleepController(const AVR_SleepConfig& config);
+    AVR_SleepController(const AVR_SleepConfig& config);
 
-	virtual bool init(AVR_Device& device) override;
-	virtual bool ctlreq(uint16_t req, ctlreq_data_t* data) override;
-	virtual void raised(const signal_data_t& data, uint16_t __unused) override;
+    virtual bool init(AVR_Device& device) override;
+    virtual bool ctlreq(uint16_t req, ctlreq_data_t* data) override;
+    virtual void raised(const signal_data_t& data, uint16_t __unused) override;
 
 private:
 
-	const AVR_SleepConfig& m_config;
-	//Index of the current sleep mode in the configuration mode map
-	uint8_t m_mode_index;
+    const AVR_SleepConfig& m_config;
+    //Index of the current sleep mode in the configuration mode map
+    uint8_t m_mode_index;
 
 };
 

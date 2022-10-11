@@ -1,22 +1,22 @@
 /*
  * sim_adc.h
  *
- *	Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
 
- 	This file is part of yasim-avr.
+    This file is part of yasim-avr.
 
-	yasim-avr is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
+    yasim-avr is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
-	yasim-avr is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
+    yasim-avr is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 
-	You should have received a copy of the GNU General Public License
-	along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
+    You should have received a copy of the GNU General Public License
+    along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 //=======================================================================================
@@ -32,8 +32,8 @@
 /*
  * CTLREQ definitions
 */
-#define AVR_CTLREQ_ADC_SET_TEMP			1
-#define AVR_CTLREQ_ADC_FORCE_TRIGGER	2
+#define AVR_CTLREQ_ADC_SET_TEMP         1
+#define AVR_CTLREQ_ADC_FORCE_TRIGGER    2
 
 
 //=======================================================================================
@@ -45,27 +45,27 @@ class AVR_IO_ADC {
 
 public:
 
-	enum Channel {
-		Channel_SingleEnded,
-		Channel_Differential,
-		Channel_Zero,
-		Channel_BandGap,
-		Channel_Temperature,
-		Channel_AcompRef
-	};
+    enum Channel {
+        Channel_SingleEnded,
+        Channel_Differential,
+        Channel_Zero,
+        Channel_BandGap,
+        Channel_Temperature,
+        Channel_AcompRef
+    };
 
-	struct channel_config_t : base_reg_config_t {
-		Channel type;
-		uint32_t pin_p;
-		uint32_t pin_n;
-		unsigned int gain;
-	};
+    struct channel_config_t : base_reg_config_t {
+        Channel type;
+        uint32_t pin_p;
+        uint32_t pin_n;
+        unsigned int gain;
+    };
 
-	enum SignalId {
-		Signal_ConversionStarted,
-		Signal_AboutToSample,
-		Signal_ConversionComplete,
-	};
+    enum SignalId {
+        Signal_ConversionStarted,
+        Signal_AboutToSample,
+        Signal_ConversionComplete,
+    };
 
 };
 

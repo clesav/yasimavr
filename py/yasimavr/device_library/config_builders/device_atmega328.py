@@ -61,36 +61,36 @@ del _desc
 
 class dev_atmega328(arch_lib.AVR_ArchAVR_Device):
 
-	def __init__(self):
-		super(dev_atmega328, self).__init__(device_config)
-		
-		intctrl = arch_lib.AVR_ArchAVR_Interrupt(vector_count)
-		slpctrl = _corelib.AVR_SleepController(sleep_config)
-		misc = arch_lib.AVR_ArchAVR_MiscRegCtrl(misc_config)
-		portb = arch_lib.AVR_ArchAVR_Port(portb_config)
-		portc = arch_lib.AVR_ArchAVR_Port(portc_config)
-		portd = arch_lib.AVR_ArchAVR_Port(portd_config)
-		extint = arch_lib.AVR_ArchAVR_ExtInt(extint_config)
-		timer0 = arch_lib.AVR_ArchAVR_Timer(0, timer0_config)
-		timer1 = arch_lib.AVR_ArchAVR_Timer(1, timer1_config)
-		timer2 = arch_lib.AVR_ArchAVR_Timer(2, timer2_config)
-		adc = arch_lib.AVR_ArchAVR_ADC(adc_config)
-		vref = arch_lib.AVR_ArchAVR_VREF(vref_bandgap)
-		usart = arch_lib.AVR_ArchAVR_USART(0, usart_config)
-			
-		self.attach_peripheral(intctrl)
-		self.attach_peripheral(slpctrl)
-		self.attach_peripheral(misc)
-		self.attach_peripheral(portb)
-		self.attach_peripheral(portc)
-		self.attach_peripheral(portd)
-		self.attach_peripheral(extint)
-		self.attach_peripheral(timer0)
-		self.attach_peripheral(timer1)
-		self.attach_peripheral(timer2)
-		self.attach_peripheral(adc)
-		self.attach_peripheral(vref)
-		self.attach_peripheral(usart)
+    def __init__(self):
+        super(dev_atmega328, self).__init__(device_config)
+
+        intctrl = arch_lib.AVR_ArchAVR_Interrupt(vector_count)
+        slpctrl = _corelib.AVR_SleepController(sleep_config)
+        misc = arch_lib.AVR_ArchAVR_MiscRegCtrl(misc_config)
+        portb = arch_lib.AVR_ArchAVR_Port(portb_config)
+        portc = arch_lib.AVR_ArchAVR_Port(portc_config)
+        portd = arch_lib.AVR_ArchAVR_Port(portd_config)
+        extint = arch_lib.AVR_ArchAVR_ExtInt(extint_config)
+        timer0 = arch_lib.AVR_ArchAVR_Timer(0, timer0_config)
+        timer1 = arch_lib.AVR_ArchAVR_Timer(1, timer1_config)
+        timer2 = arch_lib.AVR_ArchAVR_Timer(2, timer2_config)
+        adc = arch_lib.AVR_ArchAVR_ADC(adc_config)
+        vref = arch_lib.AVR_ArchAVR_VREF(vref_bandgap)
+        usart = arch_lib.AVR_ArchAVR_USART(0, usart_config)
+
+        self.attach_peripheral(intctrl)
+        self.attach_peripheral(slpctrl)
+        self.attach_peripheral(misc)
+        self.attach_peripheral(portb)
+        self.attach_peripheral(portc)
+        self.attach_peripheral(portd)
+        self.attach_peripheral(extint)
+        self.attach_peripheral(timer0)
+        self.attach_peripheral(timer1)
+        self.attach_peripheral(timer2)
+        self.attach_peripheral(adc)
+        self.attach_peripheral(vref)
+        self.attach_peripheral(usart)
 
 DEV_CLASS = dev_atmega328
 

@@ -83,7 +83,7 @@ interrupts:
         - Vector2
         - Vector3
         - Vectorxxx
-    
+
     #Sleep mode mask map.
     #For each valid sleep mode, it defines a bitset of one bit per vector,
     #indicating with 1 if the associated interrupt will wake up

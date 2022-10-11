@@ -1,22 +1,22 @@
 /*
  * sim_debug.h
  *
- *	Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
 
- 	This file is part of yasim-avr.
+    This file is part of yasim-avr.
 
-	yasim-avr is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
+    yasim-avr is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
-	yasim-avr is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
+    yasim-avr is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 
-	You should have received a copy of the GNU General Public License
-	along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
+    You should have received a copy of the GNU General Public License
+    along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 //=======================================================================================
@@ -38,28 +38,28 @@
  *  - device reset and state change
  */
 class DLL_EXPORT AVR_DeviceDebugProbe {
-    
+
 public:
 
-	enum WatchpointFlags {
-		//Event flags
-		Watchpoint_Write = 0x01,
-		Watchpoint_Read = 0x02,
-		//Action flags
-		Watchpoint_Signal = 0x10,
-		Watchpoint_Break = 0x20,
-	};
+    enum WatchpointFlags {
+        //Event flags
+        Watchpoint_Write = 0x01,
+        Watchpoint_Read = 0x02,
+        //Action flags
+        Watchpoint_Signal = 0x10,
+        Watchpoint_Break = 0x20,
+    };
 
-	AVR_DeviceDebugProbe();
-    
+    AVR_DeviceDebugProbe();
+
     AVR_Device* device() const;
 
-	//Attaches the probe to a device, allowing access to its internals
+    //Attaches the probe to a device, allowing access to its internals
     void attach(AVR_Device& device);
-	//Detaches the probe from the device. it MUST be called before
-	//destruction.
+    //Detaches the probe from the device. it MUST be called before
+    //destruction.
     void detach();
-	
+
     bool attached() const;
 
     void reset_device();
@@ -113,9 +113,9 @@ public:
 private:
 
     struct watchpoint_t {
-    	mem_addr_t addr;
-    	mem_addr_t len;
-    	int flags;
+        mem_addr_t addr;
+        mem_addr_t len;
+        int flags;
     };
 
     AVR_Device* m_device;
@@ -123,26 +123,26 @@ private:
     std::map<flash_addr_t, breakpoint_t*> m_breakpoints;
     //Mapping containers mem address => watchpoint
     std::map<mem_addr_t, watchpoint_t*> m_watchpoints;
-	//Signal for watchpoint notification
-	AVR_Signal m_wp_signal;
-	
-	void notify_watchpoint(watchpoint_t* wp, int event, mem_addr_t addr);
+    //Signal for watchpoint notification
+    AVR_Signal m_wp_signal;
+
+    void notify_watchpoint(watchpoint_t* wp, int event, mem_addr_t addr);
 
 };
 
 inline AVR_Device* AVR_DeviceDebugProbe::device() const
 {
-	return m_device;
+    return m_device;
 }
 
 inline bool AVR_DeviceDebugProbe::attached() const
 {
-	return !!m_device;
+    return !!m_device;
 }
 
 inline AVR_Signal& AVR_DeviceDebugProbe::watchpoint_signal()
 {
-	return m_wp_signal;
+    return m_wp_signal;
 }
 
 #endif //__YASIMAVR_DEBUG_H__

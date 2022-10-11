@@ -532,7 +532,7 @@ PORTMUX:
                 LSB: 4
                 MSB: 5
                 values: { 0: DEFAULT, 1: ALT1, 2: ALT2 }
-    
+
     config:
         regs:
             - EVSYSROUTEA

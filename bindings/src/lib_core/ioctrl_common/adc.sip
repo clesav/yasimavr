@@ -1,24 +1,24 @@
 /*
  * adc.sip
  *
- *	Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
 
- 	This file is part of yasim-avr.
+    This file is part of yasim-avr.
 
-	yasim-avr is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
+    yasim-avr is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
-	yasim-avr is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
+    yasim-avr is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 
-	You should have received a copy of the GNU General Public License
-	along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
+    You should have received a copy of the GNU General Public License
+    along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
  */
- 
+
 //=======================================================================================
 
 %ModuleCode
@@ -43,30 +43,30 @@ class AVR_IO_ADC {
 
 public:
 
-	enum Channel {
-		Channel_SingleEnded		/PyName=SingleEnded/,
-		Channel_Differential	/PyName=Differential/,
-		Channel_Zero			/PyName=Zero/,
-		Channel_BandGap			/PyName=BandGap/,
-		Channel_Temperature		/PyName=Temperature/,
-		Channel_AcompRef		/PyName=AcompRef/,
-	};
+    enum Channel {
+        Channel_SingleEnded     /PyName=SingleEnded/,
+        Channel_Differential    /PyName=Differential/,
+        Channel_Zero            /PyName=Zero/,
+        Channel_BandGap         /PyName=BandGap/,
+        Channel_Temperature     /PyName=Temperature/,
+        Channel_AcompRef        /PyName=AcompRef/,
+    };
 
 
-	struct channel_config_t : base_reg_config_t {
+    struct channel_config_t : base_reg_config_t {
 
-		AVR_IO_ADC::Channel type;
-		uint32_t pin_p;
-		uint32_t pin_n;
-		unsigned int gain;
+        AVR_IO_ADC::Channel type;
+        uint32_t pin_p;
+        uint32_t pin_n;
+        unsigned int gain;
 
-	};
+    };
 
 
-	enum SignalId /BaseType=IntEnum/ {
-		Signal_ConversionStarted	/PyName=ConversionStarted/,
-		Signal_AboutToSample		/PyName=AboutToSample/,
-		Signal_ConversionComplete	/PyName=ConversionComplete/,
-	};
-	
+    enum SignalId /BaseType=IntEnum/ {
+        Signal_ConversionStarted    /PyName=ConversionStarted/,
+        Signal_AboutToSample        /PyName=AboutToSample/,
+        Signal_ConversionComplete   /PyName=ConversionComplete/,
+    };
+
 };

@@ -147,7 +147,7 @@ ADC:
         - name: CALIB
           offset: 0x16
           supported: no
-    
+
     config:
         references:
             0 : Internal

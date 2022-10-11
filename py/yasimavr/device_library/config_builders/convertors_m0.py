@@ -33,27 +33,27 @@ from .configbuilder import _PeripheralConfigBuilder, get_core_attributes
 
 def get_core_config(dev_desc):
     cfg = _archlib.AVR_ArchMega0_CoreConfig()
-    
+
     cfg.attributes = get_core_attributes(dev_desc)
-    
+
     cfg.iostart, cfg.ioend = dev_desc.mem_spaces['data'].segments['io']
     cfg.ramstart, cfg.ramend = dev_desc.mem_spaces['data'].segments['ram']
     cfg.flashstart_ds, cfg.flashend_ds = dev_desc.mem_spaces['data'].segments['flash']
     cfg.eepromstart_ds, cfg.eepromend_ds = dev_desc.mem_spaces['data'].segments['eeprom']
-    
+
     cfg.dataend = dev_desc.mem_spaces['data'].memend
     cfg.flashend = dev_desc.mem_spaces['flash'].memend
     cfg.eepromend = dev_desc.mem_spaces['eeprom'].memend
     cfg.userrowend = dev_desc.mem_spaces['userrow'].memend
-    
+
     cfg.eind = dev_desc.peripherals['CPU'].reg_address('EIND', 0)
     cfg.rampz = dev_desc.peripherals['CPU'].reg_address('RAMPZ', 0)
-    
+
     cfg.vector_size = dev_desc.interrupt_map.vector_size
-    
+
     cfg.fusesize = dev_desc.fuses['size']
     cfg.fuses = bytes(dev_desc.fuses['factory_values'])
-    
+
     return cfg
 
 
@@ -87,14 +87,14 @@ def _slpctrl_convertor(cfg, attr, yml_val, per_desc):
             mode_cfg = _corelib.AVR_SleepConfig.mode_config_t()
             mode_cfg.reg_value = mode_reg_value
             mode_cfg.mode = _corelib.AVR_SleepMode[mode_name]
-            
+
             int_mask = per_desc.device.interrupt_map.sleep_mask[mode_name]
             mode_cfg.int_mask = int_mask + [0] * (16 - len(int_mask)) #padding to length=16
-            
+
             py_modes.append(mode_cfg)
-        
+
         cfg.modes = py_modes
-    
+
     else:
         raise Exception('Converter not implemented for ' + attr)
 
@@ -167,9 +167,9 @@ def _rtc_convertor(cfg, attr, yml_val, per_desc):
             clksel_cfg.reg_value = yml_clk[0]
             clksel_cfg.source = _archlib.AVR_ArchMega0_RTC_Config.RTC_ClockSource[yml_clk[1]]
             py_clocks.append(clksel_cfg)
-        
+
         cfg.clocks = py_clocks
-        
+
     else:
         raise Exception('Converter not implemented for ' + attr)
 
@@ -196,12 +196,12 @@ def _adc_convertor(cfg, attr, yml_val, per_desc):
                     chan_cfg.pin_n = _corelib.str_to_id(item[2])
             else:
                 chan_type = item
-            
+
             chan_cfg.type = _corelib.AVR_IO_ADC.Channel[chan_type]
             py_chans.append(chan_cfg)
-            
+
         cfg.channels = py_chans
-    
+
     elif attr == 'references':
         py_refs = []
         for reg_value, item in yml_val.items():
@@ -209,15 +209,15 @@ def _adc_convertor(cfg, attr, yml_val, per_desc):
             ref_cfg.reg_value = reg_value
             ref_cfg.source = _corelib.AVR_IO_VREF.Source[item]
             py_refs.append(ref_cfg)
-        
+
         cfg.references = py_refs
-    
+
     elif attr == 'clk_ps_factors':
         cfg.clk_ps_factors = yml_val
-    
+
     elif attr == 'init_delays':
         cfg.init_delays = yml_val
-    
+
     else:
         raise Exception('Converter not implemented for ' + attr)
 
@@ -244,7 +244,7 @@ def _spi_convertor(cfg, attr, yml_val, per_desc):
             cfg.pin_select = 0
         else:
             cfg.pin_select = _corelib.str_to_id(yml_val)
-    
+
     else:
         raise Exception('Converter not implemented for ' + attr)
 

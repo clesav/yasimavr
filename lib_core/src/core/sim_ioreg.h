@@ -1,22 +1,22 @@
 /*
  * sim_ioreg.h
  *
- *	Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
 
- 	This file is part of yasim-avr.
+    This file is part of yasim-avr.
 
-	yasim-avr is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
+    yasim-avr is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
-	yasim-avr is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
+    yasim-avr is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 
-	You should have received a copy of the GNU General Public License
-	along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
+    You should have received a copy of the GNU General Public License
+    along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 //=======================================================================================
@@ -33,10 +33,10 @@
 //This structure is used for 'ioreg_write_handler' callbacks to hold pre-calculated
 //information on the new register value
 struct ioreg_write_t {
-	uint8_t value; 	 //contains the new value in the register
-	uint8_t posedge; //indicates bits transiting from '0' to '1'
-	uint8_t negedge; //indicates bits transiting from '1' to '0'
-	uint8_t old;	 //contains the old value of the register
+    uint8_t value;   //contains the new value in the register
+    uint8_t posedge; //indicates bits transiting from '0' to '1'
+    uint8_t negedge; //indicates bits transiting from '1' to '0'
+    uint8_t old;     //contains the old value of the register
 };
 
 
@@ -49,7 +49,7 @@ struct ioreg_write_t {
 class DLL_EXPORT AVR_IO_RegHandler {
 
 public:
-	virtual ~AVR_IO_RegHandler() {}
+    virtual ~AVR_IO_RegHandler() {}
 
     virtual void ioreg_read_handler(reg_addr_t addr) = 0;
 
@@ -60,16 +60,16 @@ public:
 
 //=======================================================================================
 /*
- * 	Represents one 8-bits I/O register that is a vehicle for data transfer
- * 	between the CPU and I/O peripherals
- * 	Peripherals can be added as handlers to a register to be notified of
- * 	accesses (read or write) by the CPU
+ *  Represents one 8-bits I/O register that is a vehicle for data transfer
+ *  between the CPU and I/O peripherals
+ *  Peripherals can be added as handlers to a register to be notified of
+ *  accesses (read or write) by the CPU
  */
 class DLL_EXPORT AVR_IO_Register {
 
 public:
 
-	AVR_IO_Register(bool core_reg=false);
+    AVR_IO_Register(bool core_reg=false);
     ~AVR_IO_Register();
 
     //Simple inline interface to access the value
