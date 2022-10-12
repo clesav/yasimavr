@@ -90,7 +90,7 @@ AVR_IO_UART::~AVR_IO_UART()
     delete m_tx_timer;
 }
 
-void AVR_IO_UART::init(AVR_CycleManager& cycle_manager, AVR_DeviceLogger& logger)
+void AVR_IO_UART::init(AVR_CycleManager& cycle_manager, AVR_Logger& logger)
 {
     m_cycle_manager = &cycle_manager;
     m_logger = &logger;
@@ -139,7 +139,7 @@ void AVR_IO_UART::set_tx_buffer_limit(unsigned int limit)
 
 void AVR_IO_UART::push_tx(uint8_t frame)
 {
-    DEBUG_LOG(*m_logger, "UART TX push: 0x%02x ('%c')", frame, frame);
+    m_logger->dbg("TX push: 0x%02x ('%c')", frame, frame);
 
     bool tx = tx_in_progress();
 
@@ -151,7 +151,7 @@ void AVR_IO_UART::push_tx(uint8_t frame)
     m_tx_buffer.push_back(frame);
 
     if (!tx) {
-        DEBUG_LOG(*m_logger, "UART TX start: 0x%02x ('%c')", frame, frame);
+        m_logger->dbg("TX start: 0x%02x ('%c')", frame, frame);
         m_signal.raise_u(Signal_TX_Start, 0, frame);
         m_cycle_manager->add_cycle_timer(m_tx_timer, m_cycle_manager->cycle() + m_delay);
     }
@@ -168,14 +168,14 @@ cycle_count_t AVR_IO_UART::tx_timer_next(cycle_count_t when)
     uint8_t frame = m_tx_buffer.front();
     m_tx_buffer.pop_front();
 
-    DEBUG_LOG(*m_logger, "UART TX complete", "");
+    m_logger->dbg("TX complete");
 
     m_signal.raise_u(Signal_DataFrame, 0, frame);
     m_signal.raise_u(Signal_TX_Complete, 0, 1);
 
     if (m_tx_buffer.size() && !m_paused) {
         uint8_t next_frame = m_tx_buffer.front();
-        DEBUG_LOG(*m_logger, "UART TX start: 0x%02x ('%c')", next_frame, next_frame);
+        m_logger->dbg("TX start: 0x%02x ('%c')", next_frame, next_frame);
         m_signal.raise_u(Signal_TX_Start, 0, next_frame);
         return when + m_delay;
     } else {
@@ -226,7 +226,7 @@ uint8_t AVR_IO_UART::pop_rx()
         uint8_t frame = m_rx_buffer.front();
         m_rx_buffer.pop_front();
         --m_rx_count;
-        DEBUG_LOG(*m_logger, "UART RX pop: 0x%02x ('%c')", frame, frame);
+        m_logger->dbg("RX pop: 0x%02x ('%c')", frame, frame);
         return frame;
     } else {
         return 0;
@@ -250,7 +250,7 @@ void AVR_IO_UART::start_rx()
 
 cycle_count_t AVR_IO_UART::rx_timer_next(cycle_count_t when)
 {
-    DEBUG_LOG(*m_logger, "UART RX complete", "");
+    m_logger->dbg("RX complete");
 
     if (m_rx_enabled && !m_paused) {
         ++m_rx_count;
@@ -292,17 +292,17 @@ void AVR_IO_UART::add_rx_frame(uint8_t frame)
 void AVR_IO_UART::raised(const signal_data_t& sigdata, uint16_t id)
 {
     if (sigdata.sigid == Signal_DataFrame) {
-        DEBUG_LOG(*m_logger, "UART RX frame received", "");
+        m_logger->dbg("RX frame received");
         add_rx_frame(sigdata.data.as_uint());
     }
     else if (sigdata.sigid == Signal_DataString) {
-        DEBUG_LOG(*m_logger, "UART RX string received", "");
+        m_logger->dbg("RX string received");
         const char* s = sigdata.data.as_str();
         for (size_t i = 0; i < strlen(s); ++i)
             add_rx_frame(s[i]);
     }
     else if (sigdata.sigid == Signal_DataBytes) {
-        DEBUG_LOG(*m_logger, "UART RX bytes received", "");
+        m_logger->dbg("RX bytes received");
         const uint8_t* frames = sigdata.data.as_bytes();
         size_t frame_count = sigdata.data.size();
         for (size_t i = 0; i < frame_count; i++)
@@ -318,7 +318,7 @@ void AVR_IO_UART::set_paused(bool paused)
     //If going out of pause and there are TX frames pending, resume the transmission
     if (m_paused && !paused && m_tx_buffer.size()) {
         uint8_t next_frame = m_tx_buffer.front();
-        DEBUG_LOG(*m_logger, "UART TX start: 0x%02x ('%c')", next_frame, next_frame);
+        m_logger->dbg("TX start: 0x%02x ('%c')", next_frame, next_frame);
         m_signal.raise_u(Signal_TX_Start, 0, next_frame);
         m_cycle_manager->add_cycle_timer(m_tx_timer, m_cycle_manager->cycle() + m_delay);
     }

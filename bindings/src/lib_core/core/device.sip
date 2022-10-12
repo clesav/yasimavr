@@ -47,37 +47,6 @@ enum AVR_CoreCrashCodes {
 };
 
 
-//=======================================================================================
-
-class AVR_DeviceLogger /Abstract/ {
-%TypeHeaderCode
-#include "core/sim_device.h"
-%End
-
-public:
-
-    enum {
-        LOG_NONE,
-        LOG_OUTPUT,
-        LOG_ERROR,
-        LOG_WARNING,
-        LOG_DEBUG,
-        LOG_TRACE,
-    };
-
-    virtual ~AVR_DeviceLogger();
-
-    virtual void set_level(int) = 0;
-    virtual void log(const int, const char*, ...) = 0;
-
-};
-
-
-//=======================================================================================
-
-AVR_DeviceLogger& AVR_StandardLogger;
-
-
 class AVR_Device /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "core/sim_device.h"
@@ -181,8 +150,7 @@ public:
     AVR_Pin* find_pin(const char*);
     AVR_Pin* find_pin(uint32_t);
 
-    void set_logger(AVR_DeviceLogger&);
-    AVR_DeviceLogger& logger() const;
+    AVR_RootLogger& logger();
 
     void crash(uint16_t, const char*);
 

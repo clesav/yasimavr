@@ -39,7 +39,7 @@ AVR_IO_SPI::AVR_IO_SPI()
 ,m_rx_limit(0)
 {}
 
-void AVR_IO_SPI::init(AVR_CycleManager& cycle_manager, AVR_DeviceLogger& logger)
+void AVR_IO_SPI::init(AVR_CycleManager& cycle_manager, AVR_Logger& logger)
 {
     m_cycle_manager = &cycle_manager;
     m_logger = &logger;
@@ -141,7 +141,7 @@ uint8_t AVR_IO_SPI::pop_rx()
     if (m_rx_buffer.size()) {
         uint8_t frame = m_rx_buffer.front();
         m_rx_buffer.pop_front();
-        DEBUG_LOG(*m_logger, "SPI RX pop: 0x%02x ('%c')", frame, frame);
+        m_logger->dbg("RX pop: 0x%02x ('%c')", frame, frame);
         return frame;
     } else {
         return 0;
@@ -169,7 +169,7 @@ void AVR_IO_SPI::start_transfer_as_host()
     else
         miso_frame = 0xFF;
 
-    DEBUG_LOG(*m_logger, "SPI host tfr MOSI=0x%02x, MISO=0x%02x", mosi_frame, miso_frame);
+    m_logger->dbg("Host tfr MOSI=0x%02x, MISO=0x%02x", mosi_frame, miso_frame);
 
     m_signal.raise_u(Signal_HostTfrStart, 0, (mosi_frame << 8) | miso_frame);
 
@@ -236,7 +236,7 @@ uint8_t AVR_IO_SPI::start_transfer(uint8_t mosi_frame)
 
     m_signal.raise_u(Signal_ClientTfrStart, 0, (mosi_frame << 8) | miso_frame);
 
-    DEBUG_LOG(*m_logger, "SPI client tfr MOSI=0x%02x, MISO=0x%02x", mosi_frame, miso_frame);
+    m_logger->dbg("Client tfr MOSI=0x%02x, MISO=0x%02x", mosi_frame, miso_frame);
 
     return miso_frame;
 }

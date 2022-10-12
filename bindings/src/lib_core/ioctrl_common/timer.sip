@@ -31,7 +31,7 @@ public:
     AVR_PrescaledTimer();
     virtual ~AVR_PrescaledTimer();
 
-    void init(AVR_CycleManager&, AVR_DeviceLogger&);
+    void init(AVR_CycleManager&, AVR_Logger&);
     void reset();
     void set_prescaler(uint32_t, uint32_t);
     uint32_t prescaler_factor() const;

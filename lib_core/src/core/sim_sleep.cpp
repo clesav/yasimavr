@@ -127,7 +127,7 @@ void AVR_SleepController::raised(const signal_data_t& sigdata, uint16_t __unused
 
     if (do_wake_up) {
         const char* mode_name = SleepModeName(sleep_mode);
-        DEBUG_LOG(device()->logger(), "Waking device from mode %s on vector %d", mode_name, vector);
+        logger().dbg("Waking device from mode %s on vector %d", mode_name, vector);
         device()->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_WAKEUP, nullptr);
     }
 }

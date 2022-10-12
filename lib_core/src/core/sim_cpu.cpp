@@ -204,7 +204,7 @@ static const char* sreg_to_str(const uint8_t* sreg, char* sreg_str)
 #ifdef YASIMAVR_USE_TRACE
 
 #define TRACE_OP(f, args...) \
-    m_device->logger().log(AVR_DeviceLogger::LOG_TRACE, "TRACE: PC=0x%04X SREG=%s | " f, \
+    m_device->logger().log(AVR_AbstractLogger::Level_Trace, "PC=0x%04X SREG=%s | " f, \
                            m_pc, \
                            sreg_to_str(m_sreg, sreg_str), \
                            ##args)

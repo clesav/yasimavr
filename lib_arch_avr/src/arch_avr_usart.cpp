@@ -69,7 +69,7 @@ bool AVR_ArchAVR_USART::init(AVR_Device& device)
                                  m_config.rb_txe_flag,
                                  m_config.txe_vector);
 
-    m_uart.init(device.cycle_manager(), device.logger());
+    m_uart.init(device.cycle_manager(), logger());
     m_uart.set_tx_buffer_limit(2);
     m_uart.set_rx_buffer_limit(3);
     m_uart.signal().connect_hook(this);
@@ -182,7 +182,7 @@ void AVR_ArchAVR_USART::update_framerate()
     else
         bit_delay = (brr + 1) << 4;
 
-    DEBUG_LOG(device()->logger(), "USART baud rate set to %d bps", (device()->frequency() / bit_delay));
+    logger().dbg("Baud rate set to %d bps", (device()->frequency() / bit_delay));
 
     //The USART frame delay is for 10-bits frames (8-bits data, no parity, 1 stop bit)
     uint32_t frame_delay = bit_delay * 10;

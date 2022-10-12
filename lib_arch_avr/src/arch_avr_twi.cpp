@@ -103,7 +103,7 @@ bool AVR_ArchAVR_TWI::init(AVR_Device& device)
                              regbit_t(m_config.reg_ctrl, m_config.bm_int_flag),
                              m_config.iv_twi);
 
-    m_twi.init(device.cycle_manager(), device.logger());
+    m_twi.init(device.cycle_manager(), logger());
     m_twi.signal().connect_hook(this);
 
     return status;

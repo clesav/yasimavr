@@ -253,7 +253,7 @@ void AVR_DeviceDebugProbe::remove_watchpoint(mem_addr_t addr, int flags)
 void AVR_DeviceDebugProbe::notify_watchpoint(watchpoint_t* wp, int event, mem_addr_t addr)
 {
     if (wp->flags & Watchpoint_Break) {
-        WARNING_LOG(m_device->logger(), "Device break on watchpoint A=%04x", addr);
+        m_device->logger().wng("Device break on watchpoint A=%04x", addr);
         m_device->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_BREAK, nullptr);
     }
 

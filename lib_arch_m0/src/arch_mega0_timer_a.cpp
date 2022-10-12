@@ -107,7 +107,7 @@ bool AVR_ArchMega0_TimerA::init(AVR_Device& device)
                                          regbit_t(REG_ADDR(INTFLAGS), TCA_SINGLE_CMP0_bp + i),
                                          m_config.ivs_cmp[i]);
 
-    m_timer.init(device.cycle_manager(), device.logger());
+    m_timer.init(device.cycle_manager(), logger());
     m_timer.signal().connect_hook(this);
 
     return status;
@@ -347,7 +347,7 @@ void AVR_ArchMega0_TimerA::raised(const signal_data_t& sigdata, uint16_t __unuse
 
     if (!sigdata.index) return;
 
-    DEBUG_LOG(device()->logger(), "%s processing events %02x", name().c_str(), m_next_event_type);
+    logger().dbg("Processing events %02x", m_next_event_type);
 
     if (m_next_event_type & TimerEventPer) {
         m_cnt = 0;

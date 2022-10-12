@@ -53,7 +53,7 @@ uint8_t AVR_ArchMega0_Core::cpu_read_data(mem_addr_t data_addr)
         value = cpu_read_flash(data_addr - cfg.flashstart_ds);
     }
     else if (!m_device->test_option(AVR_Device::Option_IgnoreBadCpuIO)) {
-        ERROR_LOG(m_device->logger(), "CPU reading an invalid data address: 0x%04x", data_addr);
+        m_device->logger().err("CPU reading an invalid data address: 0x%04x", data_addr);
         m_device->crash(CRASH_BAD_CPU_IO, "Bad data address");
     }
 
@@ -98,7 +98,7 @@ void AVR_ArchMega0_Core::cpu_write_data(mem_addr_t data_addr, uint8_t value)
         m_device->ctlreq(AVR_IOCTL_NVM, AVR_CTLREQ_NVM_WRITE, &d);
     }
     else if (!m_device->test_option(AVR_Device::Option_IgnoreBadCpuIO)) {
-        ERROR_LOG(m_device->logger(), "CPU writing an invalid data address: 0x%04x", data_addr);
+        m_device->logger().err("CPU writing an invalid data address: 0x%04x", data_addr);
         m_device->crash(CRASH_BAD_CPU_IO, "Bad data address");
     }
 
@@ -191,18 +191,18 @@ bool AVR_ArchMega0_Device::program(const AVR_Firmware& firmware)
 
     if (firmware.has_memory("eeprom")) {
         if (firmware.load_memory("eeprom", m_core_impl.m_eeprom)) {
-            DEBUG_LOG(logger(), "Firmware load: EEPROM loaded", "");
+            logger().dbg("Firmware load: EEPROM loaded");
         } else {
-            ERROR_LOG(logger(), "Firmware load: Error loading the EEPROM", "");
+            logger().err("Firmware load: Error loading the EEPROM");
             return false;
         }
     }
 
     if (firmware.has_memory("user_signatures")) {
         if (firmware.load_memory("user_signatures", m_core_impl.m_userrow)) {
-            DEBUG_LOG(logger(), "Firmware load: USERROW loaded", "");
+            logger().dbg("Firmware load: USERROW loaded");
         } else {
-            ERROR_LOG(logger(), "Firmware load: Error loading the USERROW", "");
+            logger().err("Firmware load: Error loading the USERROW");
             return false;
         }
     }

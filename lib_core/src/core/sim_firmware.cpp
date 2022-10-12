@@ -70,12 +70,12 @@ AVR_Firmware* AVR_Firmware::read_elf(const std::string& filename)
     std::FILE *file;                // File Descriptor
 
     if ((file = fopen(filename.c_str(), "rb")) == nullptr) {
-        AVR_StandardLogger.log(AVR_DeviceLogger::LOG_ERROR, "Unable to open ELF file '%s'", filename.c_str());
+        AVR_global_logger().err("Unable to open ELF file '%s'", filename.c_str());
         return nullptr;
     }
 
     if (fread(&elf_header, sizeof(elf_header), 1, file) == 0) {
-        AVR_StandardLogger.log(AVR_DeviceLogger::LOG_ERROR, "Unable to read ELF file '%s'", filename.c_str());
+        AVR_global_logger().err("Unable to read ELF file '%s'", filename.c_str());
         fclose(file);
         return nullptr;
     }
@@ -170,14 +170,14 @@ AVR_Firmware* AVR_Firmware::read_elf(const std::string& filename)
             firmware->m_blocks["user_signatures"].push_back(b);
         }
         else {
-            AVR_StandardLogger.log(AVR_DeviceLogger::LOG_ERROR, "Firmware section unknown: '%s'", name);
+            AVR_global_logger().err("Firmware section unknown: '%s'", name);
         }
     }
 
     elf_end(elf);
     fclose(file);
 
-    AVR_StandardLogger.log(AVR_DeviceLogger::LOG_DEBUG, "Firmware read from ELF file '%s'", filename.c_str());
+    AVR_global_logger().dbg("Firmware read from ELF file '%s'", filename.c_str());
 
     return firmware;
 }

@@ -374,7 +374,7 @@ AVR_IO_TWI::~AVR_IO_TWI()
     delete m_timer;
 }
 
-void AVR_IO_TWI::init(AVR_CycleManager& cycle_manager, AVR_DeviceLogger& logger)
+void AVR_IO_TWI::init(AVR_CycleManager& cycle_manager, AVR_Logger& logger)
 {
     m_cycle_manager = &cycle_manager;
     m_logger = &logger;
@@ -437,7 +437,7 @@ bool AVR_IO_TWI::start_transfer()
 
     //try to acquire the bus ownership
     if (acquire_bus()) {
-        DEBUG_LOG(*m_logger, "Ownership of bus acquired", "");
+        m_logger->dbg("Ownership of bus acquired");
         set_master_state(State_Addr);
         m_signal.raise_u(Signal_BusStateChange, Cpt_Any, Bus_Owned);
         return true;
@@ -549,7 +549,7 @@ cycle_count_t AVR_IO_TWI::timer_next(cycle_count_t when)
     //is to avoid TWI_Bus callbacks directly calling TWI_Bus functions as it
     //may lead to infinite loops or deadlocks
     if (m_has_deferred_raise) {
-        DEBUG_LOG(*m_logger, "Deferred signal raise, id=%d", m_deferred_sigdata.sigid);
+        m_logger->dbg("Deferred signal raise, id=%d", m_deferred_sigdata.sigid);
         m_signal.raise(m_deferred_sigdata);
         m_has_deferred_raise = false;
     }
@@ -741,7 +741,7 @@ void AVR_IO_TWI::set_slave_ack(bool ack)
 
 void AVR_IO_TWI::packet(TWI_Packet& packet)
 {
-    DEBUG_LOG(*m_logger, "Packet received Command=%d", packet.cmd);
+    m_logger->dbg("Packet received Command=%d", packet.cmd);
 
     switch(packet.cmd) {
 
@@ -840,7 +840,7 @@ void AVR_IO_TWI::packet(TWI_Packet& packet)
 
 void AVR_IO_TWI::packet_ended(TWI_Packet& packet)
 {
-    DEBUG_LOG(*m_logger, "Packet ended, Command=%d", packet.cmd);
+    m_logger->dbg("Packet ended, Command=%d", packet.cmd);
 
     //Upon receiving a packet end for an address (slave only),
     //hold the bus and send the address to the higher layer to
@@ -888,7 +888,7 @@ void AVR_IO_TWI::packet_ended(TWI_Packet& packet)
 
 void AVR_IO_TWI::bus_acquired()
 {
-    DEBUG_LOG(*m_logger, "Bus acquired", "");
+    m_logger->dbg("Bus acquired");
 
     if (m_mst_state == State_Idle) {
         set_master_state(State_Waiting);
@@ -898,7 +898,7 @@ void AVR_IO_TWI::bus_acquired()
 
 void AVR_IO_TWI::bus_released()
 {
-    DEBUG_LOG(*m_logger, "Bus released", "");
+    m_logger->dbg("Bus released");
 
     defer_signal_raise(Signal_BusStateChange, Cpt_Any, Bus_Idle);
 

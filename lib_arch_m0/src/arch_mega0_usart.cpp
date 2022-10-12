@@ -79,7 +79,7 @@ bool AVR_ArchMega0_USART::init(AVR_Device& device)
                                  DEF_REGBIT_B(STATUS, USART_DREIF),
                                  m_config.iv_txe);
 
-    m_uart.init(device.cycle_manager(), device.logger());
+    m_uart.init(device.cycle_manager(), logger());
     m_uart.set_tx_buffer_limit(2);
     m_uart.set_rx_buffer_limit(3);
     m_uart.signal().connect_hook(this);
@@ -131,7 +131,7 @@ void AVR_ArchMega0_USART::ioreg_write_handler(reg_addr_t addr, const ioreg_write
             if (m_uart.tx_pending())
                 m_txe_intflag.clear_flag();
 
-            DEBUG_LOG(device()->logger(), "%s : data pushed: 0x%02x", name().c_str(), data.value);
+            logger().dbg("Data pushed: 0x%02x", data.value);
         }
     }
 
@@ -180,28 +180,28 @@ void AVR_ArchMega0_USART::raised(const signal_data_t& sigdata, uint16_t __unused
         //Notification that the pending frame has been pushed to the shift register
         //to be emitted. The TX buffer is now empty so raise the DRE interrupt.
         m_txe_intflag.set_flag();
-        DEBUG_LOG(device()->logger(), "%s : TX started, raising DRE", name().c_str());
+        logger().dbg("TX started, raising DRE");
     }
 
     else if (sigdata.sigid == AVR_IO_UART::Signal_TX_Complete && sigdata.data.as_uint()) {
         //Notification that the frame in the shift register has been emitted
         //Raise the TXC interrupt.
         m_txc_intflag.set_flag();
-        DEBUG_LOG(device()->logger(), "%s : TX complete, raising TXC", name().c_str());
+        logger().dbg("TX complete, raising TXC");
     }
 
     else if (sigdata.sigid == AVR_IO_UART::Signal_RX_Start) {
         //If the Start-of-Frame detection is enabled, raise the RXS flag
         if (TEST_IOREG(CTRLB, USART_SFDEN) && device()->sleep_mode() == AVR_SleepMode::Standby) {
             m_rxc_intflag.set_flag(USART_RXSIF_bm);
-            DEBUG_LOG(device()->logger(), "%s : RX start, raising RXS", name().c_str());
+            logger().dbg("RX start, raising RXS");
         }
     }
 
     else if (sigdata.sigid == AVR_IO_UART::Signal_RX_Complete && sigdata.data.as_uint()) {
         //Raise the RX completion flag
         m_rxc_intflag.set_flag(USART_RXCIF_bm);
-        DEBUG_LOG(device()->logger(), "%s : RX complete, raising RXC", name().c_str());
+        logger().dbg("RX complete, raising RXC");
     }
 }
 
@@ -223,9 +223,9 @@ void AVR_ArchMega0_USART::sleep(bool on, AVR_SleepMode mode)
 {
     if (mode > AVR_SleepMode::Standby || (mode == AVR_SleepMode::Standby && !TEST_IOREG(CTRLB, USART_SFDEN))) {
         if (on)
-            DEBUG_LOG(device()->logger(), "%s: pausing", name().c_str());
+            logger().dbg("Pausing");
         else
-            DEBUG_LOG(device()->logger(), "%s: resuming", name().c_str());
+            logger().dbg("Resuming");
 
         m_uart.set_paused(on);
     }

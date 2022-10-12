@@ -182,6 +182,8 @@ protected:
 
     AVR_Device* device() const;
 
+    AVR_Logger& logger();
+
     void add_ioreg(regbit_t, bool = false);
     void add_ioreg(reg_addr_t, uint8_t = 0xFF, bool = false);
 

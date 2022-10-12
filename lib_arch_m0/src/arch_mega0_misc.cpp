@@ -308,7 +308,7 @@ void AVR_ArchMega0_MiscRegCtrl::ioreg_write_handler(reg_addr_t addr, const ioreg
     if (addr == CCP) {
         if (data.value == CCP_SPM_gc || data.value == CCP_IOREG_gc) {
             const char* mode_name = (data.value == CCP_SPM_gc) ? "SPM" : "IOREG";
-            DEBUG_LOG(device()->logger(), "Configuration Control Protection inhibited, mode = %s", mode_name);
+            logger().dbg("Configuration Control Protection inhibited, mode = %s", mode_name);
             write_ioreg(addr, 0x00);
         }
     }

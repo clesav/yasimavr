@@ -24,43 +24,7 @@
 #include "sim_device.h"
 #include "sim_firmware.h"
 #include "sim_sleep.h"
-#include "sim_cycle_timer.h"
-#include "sim_debug.h"
 #include "../ioctrl_common/sim_vref.h"
-#include <cstring>
-#include <cstdarg>
-
-//=======================================================================================
-
-class StandardDeviceLogger : public AVR_DeviceLogger {
-public:
-    StandardDeviceLogger() : m_level(LOG_ERROR) {}
-
-    virtual void set_level(int level) override
-    {
-        m_level = level;
-    }
-
-    virtual void log(const int level, const char* format, ...) override
-    {
-        if (level > m_level) return;
-
-        std::FILE* f = stdout; //level == LOG_OUTPUT ? stdout : stderr;
-
-        std::va_list args;
-        va_start(args, format);
-        vfprintf(f, format, args);
-        fprintf(f, "\n");
-        va_end(args);
-        fflush(f);
-    }
-
-private:
-    int m_level;
-};
-
-static StandardDeviceLogger _std_logger;
-AVR_DeviceLogger& AVR_StandardLogger = _std_logger;
 
 
 //=======================================================================================
@@ -103,7 +67,7 @@ void AVR_IO_Console::set_register(reg_addr_t reg)
 void AVR_IO_Console::reset()
 {
     if (m_buf.size())
-        device()->logger().log(AVR_DeviceLogger::LOG_WARNING, "Console output lost by reset");
+        logger().wng("Console output lost by reset");
     m_buf.clear();
 }
 
@@ -114,7 +78,7 @@ void AVR_IO_Console::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& d
             char s[20];
             sprintf(s, "[%llu] ", device()->cycle());
             m_buf.insert(0, s);
-            device()->logger().log(AVR_DeviceLogger::LOG_OUTPUT, m_buf.c_str());
+            logger().log(AVR_Logger::Level_Output, m_buf.c_str());
             m_buf.clear();
         } else {
             m_buf += (char) data.value;
@@ -133,7 +97,7 @@ AVR_Device::AVR_Device(AVR_Core& core, const AVR_DeviceConfiguration& config)
 ,m_frequency(0)
 ,m_sleep_mode(AVR_SleepMode::Active)
 ,m_debugger(nullptr)
-,m_logger(&_std_logger)
+,m_logger(AVR_ID('D', 'E', 'V', ' '))
 ,m_cycle_manager(nullptr)
 ,m_reset_flags(0)
 {
@@ -192,20 +156,21 @@ bool AVR_Device::init(AVR_CycleManager& cycle_manager)
 
     m_cycle_manager = &cycle_manager;
 
-    DEBUG_LOG(*m_logger, "Initialisation of %s core", m_config.name);
+    m_logger.init(cycle_manager);
+
+    m_logger.dbg("Initialisation of %s core", m_config.name);
     if (!m_core.init(*this)) {
-        ERROR_LOG(*m_logger, "Initialisation of %s core failed.", m_config.name);
+        m_logger.err("Initialisation of %s core failed.", m_config.name);
         return false;
     }
 
     for (auto per : m_peripherals) {
         const char* per_name = id_to_str(per->id()).c_str();
-        DEBUG_LOG(*m_logger, "Initialisation of peripheral '%s'", per_name);
+        m_logger.dbg("Initialisation of peripheral '%s'", per_name);
         if (!per->init(*this)) {
-            ERROR_LOG(*m_logger,
-                      "Initialisation of peripheral '%s' of %s failed.",
-                      per_name,
-                      m_config.name);
+            m_logger.err("Initialisation of peripheral '%s' of %s failed.",
+                         per_name,
+                         m_config.name);
             return false;
         }
     }
@@ -213,14 +178,14 @@ bool AVR_Device::init(AVR_CycleManager& cycle_manager)
     m_state = State_Ready;
     reset();
 
-    DEBUG_LOG(*m_logger, "Initialisation of device '%s' complete", m_config.name);
+    m_logger.dbg("Initialisation of device '%s' complete", m_config.name);
 
     return true;
 }
 
 void AVR_Device::reset(uint8_t reset_flag)
 {
-    DEBUG_LOG(*m_logger, "Device reset", "");
+    m_logger.dbg("Device reset");
 
     m_reset_flags |= reset_flag;
 
@@ -239,7 +204,7 @@ void AVR_Device::reset(uint8_t reset_flag)
 bool AVR_Device::load_firmware(const AVR_Firmware& firmware)
 {
     if (m_state != State_Ready) {
-        ERROR_LOG(*m_logger, "Firmware load: Device not ready", "");
+        m_logger.err("Firmware load: Device not ready");
         return false;
     }
 
@@ -248,7 +213,7 @@ bool AVR_Device::load_firmware(const AVR_Firmware& firmware)
 
     //Stores the frequency. Compulsory.
     if (!firmware.frequency) {
-        ERROR_LOG(*m_logger, "Firmware load: MCU frequency not defined", "");
+        m_logger.err("Firmware load: MCU frequency not defined");
         return false;
     }
     m_frequency = firmware.frequency;
@@ -264,10 +229,10 @@ bool AVR_Device::load_firmware(const AVR_Firmware& firmware)
             reqdata.data = firmware.aref;
             ctlreq(AVR_IOCTL_VREF, AVR_CTLREQ_VREF_SET, &reqdata);
         } else {
-            ERROR_LOG(*m_logger, "Firmware load: Unable to set VCC, analog features are unusable.", "");
+            m_logger.err("Firmware load: Unable to set VCC, analog features are unusable.");
         }
     } else {
-        DEBUG_LOG(*m_logger, "Firmware load: VCC not defined in the firmware, analog features are unusable.", "");
+        m_logger.dbg("Firmware load: VCC not defined in the firmware, analog features are unusable.");
     }
 
     //Set the console register
@@ -281,21 +246,21 @@ bool AVR_Device::load_firmware(const AVR_Firmware& firmware)
 bool AVR_Device::program(const AVR_Firmware& firmware)
 {
     if (!firmware.has_memory("flash")) {
-        ERROR_LOG(*m_logger, "Firmware load: No program to load", "");
+        m_logger.err("Firmware load: No program to load");
         return false;
     }
     else if (firmware.load_memory("flash", m_core.m_flash)) {
-        DEBUG_LOG(*m_logger, "Loaded %d bytes of flash", firmware.flashsize());
+        m_logger.dbg("Loaded %d bytes of flash", firmware.flashsize());
     } else {
-        ERROR_LOG(*m_logger, "Firmware load: The flash does not fit", "");
+        m_logger.err("Firmware load: The flash does not fit");
         return false;
     }
 
     if (firmware.has_memory("fuse")) {
         if (!firmware.load_memory("fuse", m_core.m_fuses)) {
-            DEBUG_LOG(*m_logger, "Firmware load: fuses loaded", "");
+            m_logger.dbg("Firmware load: fuses loaded");
         } else {
-            ERROR_LOG(*m_logger, "Firmware load: Error programming the fuses", "");
+            m_logger.err("Firmware load: Error programming the fuses");
             return false;
         }
     }
@@ -344,9 +309,7 @@ bool AVR_Device::ctlreq(uint32_t id, uint16_t req, ctlreq_data_t* reqdata)
             }
         }
 
-        WARNING_LOG(*m_logger,
-                    "Sending request but peripheral %s not found",
-                    id_to_str(id).c_str());
+        m_logger.wng("Sending request but peripheral %s not found", id_to_str(id).c_str());
         return false;
     }
 }
@@ -363,7 +326,7 @@ AVR_Peripheral* AVR_Device::find_peripheral(uint32_t id)
 void AVR_Device::add_ioreg_handler(reg_addr_t addr, AVR_IO_RegHandler* handler, uint8_t ro_mask)
 {
     if (addr != R_SREG && addr > 0) {
-        DEBUG_LOG(*m_logger, "Registering handler for I/O 0x%04X", addr);
+        m_logger.dbg("Registering handler for I/O 0x%04X", addr);
         AVR_IO_Register* reg = m_core.get_ioreg(addr);
         reg->set_handler(handler, 0xFF, ro_mask);
     }
@@ -372,7 +335,7 @@ void AVR_Device::add_ioreg_handler(reg_addr_t addr, AVR_IO_RegHandler* handler, 
 void AVR_Device::add_ioreg_handler(regbit_t rb, AVR_IO_RegHandler *handler, bool readonly)
 {
     if (rb.addr != R_SREG && rb.addr > 0) {
-        DEBUG_LOG(*m_logger, "Registering handler for I/O 0x%04X", rb.addr);
+        m_logger.dbg("Registering handler for I/O 0x%04X", rb.addr);
         AVR_IO_Register* reg = m_core.get_ioreg(rb.addr);
         reg->set_handler(handler, rb.mask, readonly ? rb.mask : 0x00);
     }
@@ -382,7 +345,7 @@ bool AVR_Device::core_ctlreq(uint16_t req, ctlreq_data_t* reqdata)
 {
     if (req == AVR_CTLREQ_CORE_BREAK) {
         if (m_core.m_debug_probe) {
-            WARNING_LOG(*m_logger, "Device break at PC=%04x", m_core.m_pc);
+            m_logger.wng("Device break at PC=%04x", m_core.m_pc);
             m_state = State_Break;
         }
         return true;
@@ -393,11 +356,11 @@ bool AVR_Device::core_ctlreq(uint16_t req, ctlreq_data_t* reqdata)
             //The device cannot get out of sleep or infinite loop if GIE=0.
             //If the detect option is enabled, we exit the sim loop.
             if ((AVR_SleepMode) reqdata->data.as_uint() == AVR_SleepMode::Pseudo)
-                WARNING_LOG(*m_logger, "Device in infinite loop with GIE=0, stopping.", "");
+                m_logger.wng("Device in infinite loop with GIE=0, stopping.");
             else
-                WARNING_LOG(*m_logger, "Device going to sleep with GIE=0, stopping.", "");
+                m_logger.wng("Device going to sleep with GIE=0, stopping.");
 
-            WARNING_LOG(*m_logger, "End of program at PC = 0x%04x", m_core.m_pc);
+            m_logger.wng("End of program at PC = 0x%04x", m_core.m_pc);
             m_state = State_Done;
 
         } else {
@@ -406,9 +369,9 @@ bool AVR_Device::core_ctlreq(uint16_t req, ctlreq_data_t* reqdata)
             m_sleep_mode = (AVR_SleepMode) reqdata->data.as_uint();
 
             if (m_sleep_mode == AVR_SleepMode::Pseudo)
-                DEBUG_LOG(*m_logger, "Device going to pseudo sleep", "");
+                m_logger.dbg("Device going to pseudo sleep");
             else
-                DEBUG_LOG(*m_logger, "Device going to sleep mode %s", SleepModeName(m_sleep_mode));
+                m_logger.dbg("Device going to sleep mode %s", SleepModeName(m_sleep_mode));
 
             for (auto ioctl : m_peripherals)
                 ioctl->sleep(true, m_sleep_mode);
@@ -418,7 +381,7 @@ bool AVR_Device::core_ctlreq(uint16_t req, ctlreq_data_t* reqdata)
     }
 
     else if (req == AVR_CTLREQ_CORE_WAKEUP) {
-        DEBUG_LOG(*m_logger, "Device waking up", "");
+        m_logger.dbg("Device waking up");
         for (auto per : m_peripherals)
             per->sleep(false, m_sleep_mode);
 
@@ -429,7 +392,7 @@ bool AVR_Device::core_ctlreq(uint16_t req, ctlreq_data_t* reqdata)
     }
 
     else if (req == AVR_CTLREQ_CORE_SHORTING) {
-        ERROR_LOG(*m_logger, "Pin %s shorted", m_config.pins[reqdata->index]);
+        m_logger.err("Pin %s shorted", m_config.pins[reqdata->index]);
         if (m_options & Option_ResetOnPinShorting) {
             m_reset_flags |= Reset_BOD;
             m_state = State_Reset;
@@ -440,8 +403,8 @@ bool AVR_Device::core_ctlreq(uint16_t req, ctlreq_data_t* reqdata)
     }
 
     else if (req == AVR_CTLREQ_CORE_CRASH) {
-        ERROR_LOG(*m_logger, "CPU crash, reason=%d", reqdata->index);
-        WARNING_LOG(*m_logger, "End of program at PC = 0x%04x", m_core.m_pc);
+        m_logger.err("CPU crash, reason=%d", reqdata->index);
+        m_logger.wng("End of program at PC = 0x%04x", m_core.m_pc);
         m_state = State_Crashed;
         return true;
     }
@@ -449,7 +412,7 @@ bool AVR_Device::core_ctlreq(uint16_t req, ctlreq_data_t* reqdata)
     else if (req == AVR_CTLREQ_CORE_RESET) {
         m_reset_flags |= reqdata->data.as_uint();
         m_state = State_Reset;
-        WARNING_LOG(*m_logger, "MCU reset triggered, Flags = 0x%02x", m_reset_flags);
+        m_logger.wng("MCU reset triggered, Flags = 0x%02x", m_reset_flags);
         return true;
     }
 
@@ -470,25 +433,16 @@ bool AVR_Device::core_ctlreq(uint16_t req, ctlreq_data_t* reqdata)
     else if (req == AVR_CTLREQ_CORE_HALT) {
         if (m_state == State_Running && reqdata->data.as_uint()) {
             m_state = State_Halted;
-            DEBUG_LOG(*m_logger, "Device halted", "");
+            m_logger.dbg("Device halted");
         }
         else if (m_state == State_Halted && !reqdata->data.as_uint()) {
             m_state = State_Running;
-            DEBUG_LOG(*m_logger, "Device resuming from halt", "");
+            m_logger.dbg("Device resuming from halt");
         }
         return true;
     }
 
     return false;
-}
-
-
-//=======================================================================================
-//Management of the logger and the debugger interface
-
-void AVR_Device::set_logger(AVR_DeviceLogger& logger)
-{
-    m_logger = &logger;
 }
 
 
@@ -515,7 +469,7 @@ AVR_Pin* AVR_Device::find_pin(uint32_t id)
 
 void AVR_Device::crash(uint16_t reason, const char* text)
 {
-    ERROR_LOG(*m_logger, "MCU crash, reason (code=%d) : %s", reason, text);
-    WARNING_LOG(*m_logger, "End of program at PC = 0x%04x", m_core.m_pc);
+    m_logger.err("MCU crash, reason (code=%d) : %s", reason, text);
+    m_logger.wng("End of program at PC = 0x%04x", m_core.m_pc);
     m_state = State_Crashed;
 }

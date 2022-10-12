@@ -55,12 +55,14 @@ public:
     cycle_count_t cycle() const;
     AVR_CycleManager& cycle_manager();
     const AVR_Device& device() const;
+    AVR_Logger& logger();
 
 protected:
 
     AVR_Device& m_device;
     State m_state;
     AVR_CycleManager m_cycle_manager;
+    AVR_Logger m_logger;
 
     cycle_count_t run_device(cycle_count_t cycle_limit);
     void set_state(AVR_AbstractSimLoop::State state);
@@ -90,6 +92,11 @@ inline AVR_CycleManager& AVR_AbstractSimLoop::cycle_manager()
 inline const AVR_Device& AVR_AbstractSimLoop::device() const
 {
     return m_device;
+}
+
+inline AVR_Logger& AVR_AbstractSimLoop::logger()
+{
+    return m_logger;
 }
 
 

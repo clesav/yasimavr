@@ -27,6 +27,7 @@
 #include "sim_core.h"
 #include "sim_cycle_timer.h"
 #include "sim_peripheral.h"
+#include "sim_logger.h"
 #include <string>
 #include <vector>
 #include <map>
@@ -47,40 +48,6 @@ enum class AVR_SleepMode;
 #define CRASH_INVALID_OPCODE        0x05
 #define CRASH_INVALID_CONFIG        0x06
 #define CRASH_FLASH_ADDR_OVERFLOW   0x07
-
-
-//=======================================================================================
-/*
- * Abstract logger definition
- */
-class DLL_EXPORT AVR_DeviceLogger {
-
-public:
-
-    enum {
-        LOG_NONE = 0,
-        LOG_OUTPUT,
-        LOG_ERROR,
-        LOG_WARNING,
-        LOG_DEBUG,
-        LOG_TRACE,
-    };
-
-    virtual ~AVR_DeviceLogger() {}
-
-    virtual void set_level(int level) = 0;
-
-    virtual void log(const int level, const char* format, ...) = 0;
-
-};
-
-//Macro definition for logging
-#define ERROR_LOG(logger, format, ...) (logger).log(AVR_DeviceLogger::LOG_ERROR, "ERR: " format, __VA_ARGS__)
-#define WARNING_LOG(logger, format, ...) (logger).log(AVR_DeviceLogger::LOG_WARNING, "WNG: " format, __VA_ARGS__)
-#define DEBUG_LOG(logger, format, ...) (logger).log(AVR_DeviceLogger::LOG_DEBUG, "DBG: " format, __VA_ARGS__)
-
-//Default logger that writes to stdout
-extern DLL_EXPORT AVR_DeviceLogger& AVR_StandardLogger;
 
 
 //=======================================================================================
@@ -183,8 +150,7 @@ public:
     AVR_Pin* find_pin(const char* name);
     AVR_Pin* find_pin(uint32_t id);
 
-    void set_logger(AVR_DeviceLogger& logger);
-    AVR_DeviceLogger& logger() const;
+    AVR_RootLogger& logger();
 
     void crash(uint16_t reason, const char* text);
 
@@ -206,7 +172,7 @@ private:
     uint32_t m_frequency;
     AVR_SleepMode m_sleep_mode;
     AVR_DeviceDebugProbe* m_debugger;
-    AVR_DeviceLogger *m_logger;
+    AVR_RootLogger m_logger;
     std::vector<AVR_Peripheral*> m_peripherals;
     std::map<uint32_t, AVR_Pin*> m_pins;
     AVR_CycleManager* m_cycle_manager;
@@ -254,9 +220,9 @@ inline void AVR_Device::set_state(State state)
     m_state = state;
 }
 
-inline AVR_DeviceLogger& AVR_Device::logger() const
+inline AVR_RootLogger& AVR_Device::logger()
 {
-    return *m_logger;
+    return m_logger;
 }
 
 inline AVR_CycleManager& AVR_Device::cycle_manager()

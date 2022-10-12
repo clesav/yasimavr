@@ -48,7 +48,7 @@ AVR_PrescaledTimer::~AVR_PrescaledTimer()
         timer->m_parent_timer = nullptr;
 }
 
-void AVR_PrescaledTimer::init(AVR_CycleManager& cycle_manager, AVR_DeviceLogger& logger)
+void AVR_PrescaledTimer::init(AVR_CycleManager& cycle_manager, AVR_Logger& logger)
 {
     m_cycle_manager = &cycle_manager;
     m_logger = &logger;
@@ -146,7 +146,7 @@ void AVR_PrescaledTimer::update_timer(cycle_count_t when)
 void AVR_PrescaledTimer::process_cycles(cycle_count_t cycles)
 {
     if (m_ps_factor && !m_paused)
-        DEBUG_LOG(*m_logger, "Prescaled timer processing cycles dt=%d", cycles);
+        m_logger->dbg("Prescaled timer processing cycles dt=%lld", cycles);
 
     //This part generates the prescaler ticks corresponding to the update interval
     //If ticks occurred in the interval, we check if there's enough to trigger the timeout
@@ -181,12 +181,13 @@ void AVR_PrescaledTimer::process_cycles(cycle_count_t cycles)
         //Update the prescaler counter accordingly
         m_ps_counter = (ticks_dt + m_ps_counter) % m_ps_max;
 
-        DEBUG_LOG(*m_logger, "Prescaled timer generating %d ticks, delay=%d", ticks, m_delay);
+        m_logger->dbg("Prescaled timer generating %lld ticks, delay=%u", ticks, m_delay);
 
         //Raise the signal to inform the parent peripheral of ticks to consume
         //Decrement the delay by the number of ticks
         signal_data_t sigdata = { .sigid = 0 };
         if (timeout) {
+            m_logger->dbg("Prescaled timer generating %lld ticks, delay=%u", ticks, m_delay);
             sigdata.index = 1;
             sigdata.data = m_delay;
             m_delay = 0;
