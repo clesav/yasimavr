@@ -150,7 +150,8 @@ public:
     AVR_Pin* find_pin(const char*);
     AVR_Pin* find_pin(uint32_t);
 
-    AVR_RootLogger& logger();
+    AVR_LogHandler& log_handler();
+    AVR_Logger& logger();
 
     void crash(uint16_t, const char*);
 

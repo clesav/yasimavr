@@ -150,7 +150,8 @@ public:
     AVR_Pin* find_pin(const char* name);
     AVR_Pin* find_pin(uint32_t id);
 
-    AVR_RootLogger& logger();
+    AVR_LogHandler& log_handler();
+    AVR_Logger& logger();
 
     void crash(uint16_t reason, const char* text);
 
@@ -172,7 +173,8 @@ private:
     uint32_t m_frequency;
     AVR_SleepMode m_sleep_mode;
     AVR_DeviceDebugProbe* m_debugger;
-    AVR_RootLogger m_logger;
+    AVR_LogHandler m_log_handler;
+    AVR_Logger m_logger;
     std::vector<AVR_Peripheral*> m_peripherals;
     std::map<uint32_t, AVR_Pin*> m_pins;
     AVR_CycleManager* m_cycle_manager;
@@ -220,7 +222,12 @@ inline void AVR_Device::set_state(State state)
     m_state = state;
 }
 
-inline AVR_RootLogger& AVR_Device::logger()
+inline AVR_LogHandler& AVR_Device::log_handler()
+{
+    return m_log_handler;
+}
+
+inline AVR_Logger& AVR_Device::logger()
 {
     return m_logger;
 }

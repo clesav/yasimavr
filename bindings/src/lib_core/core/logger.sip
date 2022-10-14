@@ -33,32 +33,54 @@ public:
 
     virtual void write(cycle_count_t, int, uint32_t, const char*, std::va_list);
 
+    static AVR_LogWriter* default_writer();
+
 };
 
 
 //=======================================================================================
 
-class AVR_AbstractLogger {
+class AVR_LogHandler {
+%TypeHeaderCode
+#include "core/sim_logger.h"
+%End
+
+    AVR_LogHandler();
+
+    void init(AVR_CycleManager&);
+
+    void set_writer(AVR_LogWriter&);
+    AVR_LogWriter& writer();
+
+};
+
+
+//=======================================================================================
+
+class AVR_Logger {
 %TypeHeaderCode
 #include "core/sim_logger.h"
 %End
 
 public:
 
-    enum /BaseType=IntEnum/ {
-        Level_None,
-        Level_Output,
-        Level_Error,
-        Level_Warning,
-        Level_Debug,
-        Level_Trace,
+    enum Level /BaseType=IntEnum/ {
+        Level_Silent          /PyName=Silent/,
+        Level_Output          /PyName=Output/,
+        Level_Error           /PyName=Error/,
+        Level_Warning         /PyName=Warning/,
+        Level_Debug           /PyName=Debug/,
+        Level_Trace           /PyName=Trace/,
     };
 
-    AVR_AbstractLogger(uint32_t);
-    virtual ~AVR_AbstractLogger();
+    AVR_Logger(uint32_t, AVR_LogHandler&);
+    AVR_Logger(uint32_t, AVR_Logger* = NULL);
 
     void set_level(int);
     int level() const;
+
+    void set_parent(AVR_Logger*);
+    AVR_Logger* parent() const;
 
     void log(int, const char*, ...);
 
@@ -70,56 +92,10 @@ protected:
 
     uint32_t id() const;
 
-    virtual void write(int, uint32_t, const char*, std::va_list) = 0;
+    void filtered_write(int, const char*, std::va_list);
+    void write(int, uint32_t, const char*, std::va_list);
 
 };
 
-
-//=======================================================================================
-
-class AVR_RootLogger : public AVR_AbstractLogger {
-%TypeHeaderCode
-#include "core/sim_logger.h"
-%End
-
-public:
-
-    AVR_RootLogger(uint32_t);
-    virtual ~AVR_RootLogger();
-
-    void init(AVR_CycleManager&);
-
-    void set_writer(AVR_LogWriter&);
-    AVR_LogWriter& writer();
-
-protected:
-
-    virtual void write(int, uint32_t, const char*, std::va_list);
-
-};
-
-
-AVR_RootLogger& AVR_global_logger();
-
-//=======================================================================================
-
-class AVR_Logger : public AVR_AbstractLogger {
-%TypeHeaderCode
-#include "core/sim_logger.h"
-%End
-
-public:
-
-    AVR_Logger(uint32_t);
-    virtual ~AVR_Logger();
-
-    void set_parent(AVR_AbstractLogger*);
-    AVR_AbstractLogger* parent();
-
-protected:
-
-    virtual void write(int, uint32_t, const char*, std::va_list);
-
-};
 
 class std::va_list;

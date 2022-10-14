@@ -97,7 +97,7 @@ AVR_Device::AVR_Device(AVR_Core& core, const AVR_DeviceConfiguration& config)
 ,m_frequency(0)
 ,m_sleep_mode(AVR_SleepMode::Active)
 ,m_debugger(nullptr)
-,m_logger(AVR_ID('D', 'E', 'V', ' '))
+,m_logger(AVR_ID('D', 'E', 'V', 0), m_log_handler)
 ,m_cycle_manager(nullptr)
 ,m_reset_flags(0)
 {
@@ -156,7 +156,7 @@ bool AVR_Device::init(AVR_CycleManager& cycle_manager)
 
     m_cycle_manager = &cycle_manager;
 
-    m_logger.init(cycle_manager);
+    m_log_handler.init(cycle_manager);
 
     m_logger.dbg("Initialisation of %s core", m_config.name);
     if (!m_core.init(*this)) {
