@@ -63,7 +63,7 @@ public:
     AVR_IO_UART();
     virtual ~AVR_IO_UART();
 
-    void init(AVR_CycleManager&, AVR_DeviceLogger&);
+    void init(AVR_CycleManager&, AVR_Logger&);
     void reset();
 
     AVR_Signal& signal();

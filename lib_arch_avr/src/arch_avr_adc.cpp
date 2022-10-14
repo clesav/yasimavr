@@ -79,7 +79,7 @@ bool AVR_ArchAVR_ADC::init(AVR_Device& device)
 
     status &= connect_trigger_signals();
 
-    m_timer.init(device.cycle_manager(), device.logger());
+    m_timer.init(device.cycle_manager(), logger());
     m_timer.signal().connect_hook(this, 0xFFFF);
 
     return status;
@@ -192,7 +192,7 @@ void AVR_ArchAVR_ADC::reset_prescaler()
  */
 void AVR_ArchAVR_ADC::start_conversion_cycle()
 {
-    DEBUG_LOG(device()->logger(), "ADC starting a conversion cycle", "");
+    logger().dbg("Starting a conversion cycle");
 
     m_state = ADC_PendingConversion;
 
@@ -222,7 +222,7 @@ void AVR_ArchAVR_ADC::start_conversion_cycle()
 
 void AVR_ArchAVR_ADC::read_analog_value()
 {
-    DEBUG_LOG(device()->logger(), "ADC reading analog value", "");
+    logger().dbg("Reading analog value");
 
     //Find the channel mux configuration
     int index = find_reg_config<channel_config_t>(m_config.channels, m_latched_ch_mux);
@@ -334,13 +334,13 @@ void AVR_ArchAVR_ADC::timer_raised()
         m_first = false;
 
         if (m_intflag.set_flag())
-            DEBUG_LOG(device()->logger(), "ADC interrupt triggered", "");
+            logger().dbg("Interrupt triggered");
 
         //If free running auto-trigger is enabled, start a new conversion cycle
         if (m_trigger_index >= 0) {
             CFG::TriggerType trig_type = m_config.triggers[m_trigger_index].trig_type;
             if (trig_type == CFG::FreeRunning) {
-                DEBUG_LOG(device()->logger(), "ADC in free running, starting a new conversion", "");
+                logger().dbg("In free running, starting a new conversion");
                 start_conversion_cycle();
             }
         }
@@ -362,7 +362,7 @@ void AVR_ArchAVR_ADC::write_digital_value()
     else
         r = (sign << 10) | v;
 
-    DEBUG_LOG(device()->logger(), "ADC converted value: 0x%04x", r);
+    logger().dbg("Converted value: 0x%04x", r);
 
     write_ioreg(m_config.reg_datah, r >> 8);
     write_ioreg(m_config.reg_datal, r & 0x00FF);
@@ -417,9 +417,8 @@ bool AVR_ArchAVR_ADC::connect_trigger_signals()
             s->connect_hook(this, i);
         }
         else if (expect_signal) {
-            WARNING_LOG(device()->logger(),
-                        "ADC found no signal for trigger %x",
-                        m_config.triggers[i].reg_value);
+            logger().wng("Found no signal for trigger %x",
+                         m_config.triggers[i].reg_value);
         }
     }
 
@@ -493,9 +492,9 @@ void AVR_ArchAVR_ADC::sleep(bool on, AVR_SleepMode mode)
 {
     if (mode > AVR_SleepMode::ADC) {
         if (on)
-            DEBUG_LOG(device()->logger(), "ADC pausing", "");
+            logger().dbg("Pausing");
         else
-            DEBUG_LOG(device()->logger(), "ADC resuming", "");
+            logger().dbg("Resuming");
 
         m_timer.set_paused(on);
     }

@@ -82,7 +82,7 @@ bool AVR_ArchMega0_TWI::init(AVR_Device& device)
         regbit_t(REG_ADDR(SSTATUS), 0, TWI_APIF_bm | TWI_DIF_bm),
         m_config.iv_slave);
 
-    m_twi.init(device.cycle_manager(), device.logger());
+    m_twi.init(device.cycle_manager(), logger());
     m_twi.signal().connect_hook(this);
 
     return status;

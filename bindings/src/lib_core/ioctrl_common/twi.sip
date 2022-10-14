@@ -171,7 +171,7 @@ public:
     AVR_IO_TWI();
     ~AVR_IO_TWI();
 
-    void init(AVR_CycleManager&, AVR_DeviceLogger&);
+    void init(AVR_CycleManager&, AVR_Logger&);
     void reset();
     AVR_Signal& signal();
 

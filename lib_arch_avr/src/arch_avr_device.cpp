@@ -49,7 +49,7 @@ uint8_t AVR_ArchAVR_Core::cpu_read_data(mem_addr_t data_addr)
         value = m_sram[data_addr - m_config.ramstart];
     }
     else if (!m_device->test_option(AVR_Device::Option_IgnoreBadCpuIO)) {
-        ERROR_LOG(m_device->logger(), "CPU reading an invalid data address: 0x%04x", data_addr);
+        m_device->logger().err("CPU reading an invalid data address: 0x%04x", data_addr);
         m_device->crash(CRASH_BAD_CPU_IO, "Bad data address");
     }
 
@@ -71,7 +71,7 @@ void AVR_ArchAVR_Core::cpu_write_data(mem_addr_t data_addr, uint8_t value)
         m_sram[data_addr - m_config.ramstart] = value;
     }
     else if (!m_device->test_option(AVR_Device::Option_IgnoreBadCpuIO)) {
-        ERROR_LOG(m_device->logger(), "CPU writing an invalid data address: 0x%04x", data_addr);
+        m_device->logger().err("CPU writing an invalid data address: 0x%04x", data_addr);
         m_device->crash(CRASH_BAD_CPU_IO, "Bad data address");
     }
 
@@ -145,9 +145,9 @@ bool AVR_ArchAVR_Device::program(const AVR_Firmware& firmware)
 
     if (firmware.has_memory("eeprom")) {
         if (firmware.load_memory("eeprom", m_core_impl.m_eeprom)) {
-            DEBUG_LOG(logger(), "Firmware load: EEPROM loaded", "");
+            logger().dbg("Firmware load: EEPROM loaded");
         } else {
-            ERROR_LOG(logger(), "Firmware load: Error loading the EEPROM", "");
+            logger().err("Firmware load: Error loading the EEPROM");
             return false;
         }
     }

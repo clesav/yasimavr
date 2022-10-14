@@ -126,8 +126,8 @@ bool AVR_ArchMega0_RTC::init(AVR_Device& device)
                                  DEF_REGBIT_B(PITINTFLAGS, RTC_PI),
                                  m_config.iv_pit);
 
-    m_rtc_timer.init(device.cycle_manager(), device.logger());
-    m_pit_timer.init(device.cycle_manager(), device.logger());
+    m_rtc_timer.init(device.cycle_manager(), logger());
+    m_pit_timer.init(device.cycle_manager(), logger());
 
     return status;
 }
@@ -342,8 +342,7 @@ uint32_t AVR_ArchMega0_RTC::rtc_delay()
     if (ticks_to_next_event == ticks_to_cmp)
         m_next_rtc_event_type |= TimerEventCmp;
 
-    DEBUG_LOG(device()->logger(), "Next event for %s (RTC) : 0x%x in %d cycles",
-              name().c_str(), m_next_rtc_event_type, ticks_to_next_event);
+    logger().dbg("Next RTC event : 0x%x in %d cycles", m_next_rtc_event_type, ticks_to_next_event);
 
     return ticks_to_next_event;
 }
@@ -360,8 +359,7 @@ uint32_t AVR_ArchMega0_RTC::pit_delay()
 
     int ticks_to_per = AVR_PrescaledTimer::ticks_to_event(m_pit_cnt, period - 1, period);
 
-    DEBUG_LOG(device()->logger(), "Next event for %s (PIT) in %d cycles",
-              name().c_str(), ticks_to_per);
+    logger().dbg("Next PIT event in %d cycles", ticks_to_per);
 
     return ticks_to_per;
 }
@@ -392,12 +390,12 @@ void AVR_ArchMega0_RTC::rtc_hook_raised(const signal_data_t& sigdata)
     if (m_next_rtc_event_type & TimerEventPer) {
         m_rtc_cnt = 0;
         if (m_rtc_intflag.set_flag(RTC_OVF_bm))
-            DEBUG_LOG(device()->logger(), "RTC triggering OVF interrupt", "");
+            logger().dbg("RTC triggering OVF interrupt");
     }
 
     if (m_next_rtc_event_type & TimerEventCmp) {
         if (m_rtc_intflag.set_flag(RTC_CMP_bm))
-            DEBUG_LOG(device()->logger(), "RTC triggering CMP interrupt", "");
+            logger().dbg("RTC triggering CMP interrupt");
     }
 
     m_rtc_timer.set_timer_delay(rtc_delay());
@@ -410,7 +408,7 @@ void AVR_ArchMega0_RTC::pit_hook_raised(const signal_data_t& sigdata)
 
     m_pit_cnt = 0;
     if (m_pit_intflag.set_flag(RTC_PI_bm))
-        DEBUG_LOG(device()->logger(), "PIT triggering interrupt", "");
+        logger().dbg("PIT triggering interrupt");
 
     m_pit_timer.set_timer_delay(pit_delay());
 }

@@ -92,7 +92,7 @@ bool AVR_IO_Port::ctlreq(uint16_t req, ctlreq_data_t* data)
 void AVR_IO_Port::set_pin_internal_state(uint8_t num, AVR_Pin::State state)
 {
     if (num < 8 && ((m_pinmask >> num) & 1)) {
-        DEBUG_LOG(device()->logger(), "PORT%c pin %d set to %s", m_name, num, AVR_Pin::StateName(state));
+        logger().dbg("Pin %d set to %s", num, AVR_Pin::StateName(state));
         m_pins[num]->set_internal_state(state);
         //m_signal.raise_u(0, num, state);
     }
@@ -112,7 +112,7 @@ void AVR_IO_Port::raised(const signal_data_t& sigdata, uint16_t hooktag)
  */
 void AVR_IO_Port::pin_state_changed(uint8_t num, AVR_Pin::State state)
 {
-    DEBUG_LOG(device()->logger(), "PORT%c detected Pin %d change to %s", m_name, num, AVR_Pin::StateName(state));
+    logger().dbg("Detected Pin %d change to %s", num, AVR_Pin::StateName(state));
     if (state == AVR_Pin::State_Shorted) {
         ctlreq_data_t d = { .index = m_pins[num]->id() };
         device()->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_SHORTING, &d);

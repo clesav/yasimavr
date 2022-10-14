@@ -68,7 +68,7 @@ public:
 
     AVR_IO_SPI();
 
-    void init(AVR_CycleManager&, AVR_DeviceLogger&);
+    void init(AVR_CycleManager&, AVR_Logger&);
     void reset();
     void set_host_mode(bool);
     AVR_Signal& signal();

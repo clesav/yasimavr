@@ -78,7 +78,7 @@ bool AVR_ArchMega0_TimerB::init(AVR_Device& device)
                              DEF_REGBIT_B(INTFLAGS, TCB_CAPT),
                              m_config.iv_capt);
 
-    m_timer.init(device.cycle_manager(), device.logger());
+    m_timer.init(device.cycle_manager(), logger());
     m_timer.signal().connect_hook(this);
 
     return status;
@@ -132,10 +132,10 @@ void AVR_ArchMega0_TimerB::ioreg_write_handler(reg_addr_t addr, const ioreg_writ
             m_clk_mode = data.value & TCB_CLKSEL_gm;
             //Pretty print on the logger
             const char* clk_name = ClockSourceNames[bm_clksel.extract(data.value)];
-            DEBUG_LOG(device()->logger(), "Timer %s clock changed to SRC=%s", name().c_str(), clk_name);
+            logger().dbg("Clock changed to SRC=%s", clk_name);
         } else {
             m_clk_mode = TIMER_CLOCK_DISABLED;
-            DEBUG_LOG(device()->logger(), "Timer %s disabled", name().c_str());
+            logger().dbg("Disabled");
         }
 
         //Check if we need to chain or de-chain the TCB timer from TCA

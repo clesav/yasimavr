@@ -31,13 +31,14 @@
 AVR_Peripheral::AVR_Peripheral(uint32_t id)
 :m_id(id)
 ,m_device(nullptr)
+,m_logger(id)
 {
 }
 
 AVR_Peripheral::~AVR_Peripheral()
 {
     if (m_device)
-        DEBUG_LOG(m_device->logger(), "IOCTL %s destroyed", name().c_str());
+        m_logger.dbg("IOCTL %s destroyed", name().c_str());
 }
 
 std::string AVR_Peripheral::name() const
@@ -48,6 +49,7 @@ std::string AVR_Peripheral::name() const
 bool AVR_Peripheral::init(AVR_Device& device)
 {
     m_device = &device;
+    m_logger.set_parent(&device.logger());
     return true;
 }
 

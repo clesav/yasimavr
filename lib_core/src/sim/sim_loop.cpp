@@ -45,7 +45,9 @@ static uint64_t get_timestamp_usecs(time_point origin)
 AVR_AbstractSimLoop::AVR_AbstractSimLoop(AVR_Device& device)
 :m_device(device)
 ,m_state(State_Running)
+,m_logger(AVR_ID('S', 'M', 'L', 'P'))
 {
+    m_logger.set_parent(&m_device.logger());
     m_device.init(m_cycle_manager);
 }
 
@@ -69,11 +71,11 @@ cycle_count_t AVR_AbstractSimLoop::run_device(cycle_count_t cycle_limit)
             //the loop enters standby mode.
             m_state = State_Standby;
             cycle_delta = 1;
-            WARNING_LOG(m_device.logger(), "SIMLOOP: Nothing scheduled yet to wake-up the device, going in standby.", "");
+            logger().wng("Nothing scheduled yet to wake-up the device, going in standby.");
         }
         else if (next_timer_cycle >= cycle_limit) {
             m_state = State_Stopped;
-            WARNING_LOG(m_device.logger(), "SIMLOOP: Nothing to process further, stopping.", "");
+            logger().wng("Nothing to process further, stopping.");
         }
 
         else if (next_timer_cycle > m_cycle_manager.cycle())
@@ -83,12 +85,12 @@ cycle_count_t AVR_AbstractSimLoop::run_device(cycle_count_t cycle_limit)
 
     else if (dev_state >= AVR_Device::State_Done) {
         m_state = State_Done;
-        WARNING_LOG(m_device.logger(), "SIMLOOP: Device is done, stopping definitely", "");
+        logger().wng("Device is done, stopping definitely");
     }
 
     else if (dev_state >= AVR_Device::State_Stopped) {
         m_state = State_Stopped;
-        WARNING_LOG(m_device.logger(), "SIMLOOP: Device stopped, stopping", "");
+        logger().wng("Device stopped, stopping");
     }
 
     return cycle_delta;
@@ -108,13 +110,13 @@ void AVR_SimLoop::run(cycle_count_t nbcycles)
     if (m_state == State_Done) return;
 
     if (!m_fast_mode && device().frequency() == 0) {
-        ERROR_LOG(m_device.logger(), "Cannot run in realtime mode, MCU frequency not set.", "");
+        logger().err("Cannot run in realtime mode, MCU frequency not set.");
         m_state = State_Done;
         return;
     }
 
     if (m_device.state() < AVR_Device::State_Running) {
-        ERROR_LOG(m_device.logger(), "Device not initialised or firmware not loaded", "");
+        logger().err("Device not initialised or firmware not loaded");
         m_state = State_Done;
         return;
     }
@@ -178,13 +180,13 @@ void AVR_AsyncSimLoop::run()
     if (m_state == State_Done) return;
 
     if (!m_fast_mode && device().frequency() == 0) {
-        ERROR_LOG(m_device.logger(), "Cannot run in realtime mode, MCU frequency not set.", "");
+        logger().err("Cannot run in realtime mode, MCU frequency not set.");
         m_state = State_Done;
         return;
     }
 
     if (m_device.state() < AVR_Device::State_Running) {
-        ERROR_LOG(m_device.logger(), "Device not initialised or firmware not loaded", "");
+        logger().err("Device not initialised or firmware not loaded");
         m_state = State_Done;
         return;
     }
@@ -241,7 +243,7 @@ void AVR_AsyncSimLoop::run()
                 int64_t curr_time_us = get_timestamp_usecs(clock_start);
                 int64_t sleep_time_us = sim_deadline_us - curr_time_us;
                 if (sleep_time_us > MIN_SLEEP_THRESHOLD) {
-                    DEBUG_LOG(m_device.logger(), "LOOP : Sleeping %dus", sleep_time_us);
+                    logger().dbg("Sleeping %lld us", sleep_time_us);
 
                     //usleep is not used here but rather cond_var.wait_for() so that
                     //a transaction may interrupt a catch-up sleep

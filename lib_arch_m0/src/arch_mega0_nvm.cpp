@@ -280,8 +280,8 @@ void AVR_ArchMega0_NVM::write_nvm(const NVM_request_t& nvm_req)
     //Storing the page number
     m_page = nvm_req.addr / page_size;
 
-    DEBUG_LOG(device()->logger(), "NVM: buffer write addr=%04x, index=%d, page=%d, value=%02x",
-            nvm_req.addr, m_mem_index, m_page, nvm_req.data);
+    logger().dbg("Buffer write addr=%04x, index=%d, page=%d, value=%02x",
+                 nvm_req.addr, m_mem_index, m_page, nvm_req.data);
 }
 
 void AVR_ArchMega0_NVM::execute_command(Command cmd)
@@ -375,9 +375,9 @@ unsigned int AVR_ArchMega0_NVM::execute_page_command(Command cmd)
     if (cmd == Cmd_PageErase || cmd == Cmd_PageEraseWrite) {
         if (is_flash_op) {
             nvm->erase(page_size * m_page, page_size);
-            DEBUG_LOG(device()->logger(), "NVM: Erased flash page %d", m_page);
+            logger().dbg("Erased flash page %d", m_page);
         } else {
-            DEBUG_LOG(device()->logger(), "NVM: Erased eeprom/userrow page %d", m_page);
+            logger().dbg("Erased eeprom/userrow page %d", m_page);
             nvm->erase(m_bufset, page_size * m_page, page_size);
         }
 
@@ -390,10 +390,10 @@ unsigned int AVR_ArchMega0_NVM::execute_page_command(Command cmd)
     if (cmd == Cmd_PageWrite || cmd == Cmd_PageEraseWrite) {
         if (is_flash_op) {
             nvm->spm_write(m_buffer, nullptr, page_size * m_page, page_size);
-            DEBUG_LOG(device()->logger(), "NVM: Written flash page %d", m_page);
+            logger().dbg("Written flash page %d", m_page);
         } else {
             nvm->spm_write(m_buffer, m_bufset, page_size * m_page, page_size);
-            DEBUG_LOG(device()->logger(), "NVM: Written eeprom/userrow page %d", m_page);
+            logger().dbg("Written eeprom/userrow page %d", m_page);
         }
 
         delay_usecs += m_config.page_write_delay;

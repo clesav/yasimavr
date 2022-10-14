@@ -65,13 +65,13 @@ bool AVR_InterruptController::ctlreq(uint16_t req, ctlreq_data_t* data)
         unsigned int vector = data->index;
 
         if (vector == 0) {
-            ERROR_LOG(device()->logger(), "Attempt to register reset vector", "");
+            logger().err("Attempt to register reset vector");
         }
         else if (vector >= m_interrupts.size()) {
-            ERROR_LOG(device()->logger(), "Invalid interrupt vector %d", vector);
+            logger().err("Invalid interrupt vector %d", vector);
         }
         else if (m_interrupts[vector].state != IntrState_Unused) {
-            ERROR_LOG(device()->logger(), "Double registration on vector %d", vector);
+            logger().err("Double registration on vector %d", vector);
         }
         else {
             m_interrupts[vector].state = IntrState_Idle;
@@ -231,7 +231,7 @@ bool AVR_InterruptFlag::init(AVR_Device& device,
         vector_ok = true;
     }
     else {
-        ERROR_LOG(device.logger(), "Interrupt flag init with reset vector", "");
+        device.logger().err("Interrupt flag init with reset vector");
         vector_ok = false;
     }
 

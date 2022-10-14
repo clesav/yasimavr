@@ -112,7 +112,7 @@ public:
     virtual ~AVR_IO_UART();
 
     //Initialise the interface. the device will be used for timer related operations
-    void init(AVR_CycleManager& cycle_manager, AVR_DeviceLogger& logger);
+    void init(AVR_CycleManager& cycle_manager, AVR_Logger& logger);
 
     //Reset the interface, clear the buffers and cancel any operation
     void reset();
@@ -177,7 +177,7 @@ private:
     friend class TxTimer;
 
     AVR_CycleManager* m_cycle_manager;
-    AVR_DeviceLogger* m_logger;
+    AVR_Logger* m_logger;
 
     AVR_Signal m_signal;
 

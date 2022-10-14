@@ -56,7 +56,7 @@ public:
     virtual ~AVR_PrescaledTimer();
 
     //Initialise the timer, must be called once during initialisation phases
-    void init(AVR_CycleManager& cycle_manager, AVR_DeviceLogger& logger);
+    void init(AVR_CycleManager& cycle_manager, AVR_Logger& logger);
     //Reset the timer. Both stages are reset and disabled
     void reset();
     //Configure the prescaler:
@@ -94,7 +94,7 @@ public:
 private:
 
     AVR_CycleManager* m_cycle_manager;
-    AVR_DeviceLogger* m_logger;
+    AVR_Logger* m_logger;
 
     //***** Prescaler management *****
     uint32_t m_ps_max;                  //Max value of the prescaler

@@ -73,7 +73,7 @@ public:
     AVR_IO_SPI();
 
     //Initialise the interface. the device will be used for timer related operations
-    void init(AVR_CycleManager& cycle_manager, AVR_DeviceLogger& logger);
+    void init(AVR_CycleManager& cycle_manager, AVR_Logger& logger);
 
     //Reset the interface, clear the buffers and cancel any transfer
     void reset();
@@ -129,7 +129,7 @@ public:
 private:
 
     AVR_CycleManager* m_cycle_manager;
-    AVR_DeviceLogger* m_logger;
+    AVR_Logger* m_logger;
     cycle_count_t m_delay;
     bool m_is_host;
     bool m_tfr_in_progress;

@@ -26,6 +26,7 @@
 
 #include "sim_ioreg.h"
 #include "sim_signal.h"
+#include "sim_logger.h"
 
 class AVR_Device;
 class AVR_InterruptHandler;
@@ -192,6 +193,8 @@ protected:
     //Access to the device. It is null before init() is called
     AVR_Device* device() const;
 
+    AVR_Logger& logger();
+
     void add_ioreg(regbit_t rb, bool readonly = false);
     void add_ioreg(reg_addr_t addr, uint8_t mask = 0xFF, bool readonly = false);
 
@@ -229,6 +232,7 @@ private:
 
     uint32_t m_id;
     AVR_Device* m_device;
+    AVR_Logger m_logger;
 
 };
 
@@ -240,6 +244,11 @@ inline uint32_t AVR_Peripheral::id() const
 inline AVR_Device *AVR_Peripheral::device() const
 {
     return m_device;
+}
+
+inline AVR_Logger& AVR_Peripheral::logger()
+{
+    return m_logger;
 }
 
 inline uint8_t AVR_Peripheral::read_ioreg(regbit_t rb) const

@@ -293,7 +293,7 @@ public:
     ~AVR_IO_TWI();
 
     //Initialise the interface. the device will be used for timer related operations
-    void init(AVR_CycleManager& cycle_manager, AVR_DeviceLogger& logger);
+    void init(AVR_CycleManager& cycle_manager, AVR_Logger& logger);
 
     //Reset the interface cancel any transaction
     void reset();
@@ -351,7 +351,7 @@ private:
     friend class Timer;
 
     AVR_CycleManager* m_cycle_manager;
-    AVR_DeviceLogger* m_logger;
+    AVR_Logger* m_logger;
 
     AVR_Signal m_signal;
     signal_data_t m_deferred_sigdata;

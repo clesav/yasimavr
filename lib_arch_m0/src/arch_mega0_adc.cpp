@@ -91,7 +91,7 @@ bool AVR_ArchMega0_ADC::init(AVR_Device& device)
                                  DEF_REGBIT_B(INTFLAGS, ADC_WCMP),
                                  m_config.iv_wincmp);
 
-    m_timer.init(device.cycle_manager(), device.logger());
+    m_timer.init(device.cycle_manager(), logger());
     m_timer.signal().connect_hook(this);
 
     return status;
@@ -183,7 +183,7 @@ void AVR_ArchMega0_ADC::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t
  */
 void AVR_ArchMega0_ADC::start_conversion_cycle()
 {
-    DEBUG_LOG(device()->logger(), "ADC starting a conversion cycle", "");
+    logger().dbg("Starting a conversion cycle");
 
     m_state = ADC_Starting;
     m_accum_counter = 0;
@@ -217,7 +217,7 @@ void AVR_ArchMega0_ADC::start_conversion_cycle()
 
 void AVR_ArchMega0_ADC::read_analog_value()
 {
-    DEBUG_LOG(device()->logger(), "ADC reading analog value", "");
+    logger().dbg("Reading analog value");
 
     //Find the channel mux configuration
     int index = find_reg_config<channel_config_t>(m_config.channels, m_latched_ch_mux);
@@ -356,7 +356,7 @@ void AVR_ArchMega0_ADC::raised(const signal_data_t& data, uint16_t sigid)
             return;
         }
 
-        DEBUG_LOG(device()->logger(), "ADC conversion complete", "");
+        logger().dbg("Conversion complete");
 
         //Store the result
         WRITE_IOREG(RESL, m_result & 0xFF);
@@ -367,7 +367,7 @@ void AVR_ArchMega0_ADC::raised(const signal_data_t& data, uint16_t sigid)
         //If the interrupt flag is not already set, we raise it
         //If also the interrupt is enabled, we raise it
         if (m_res_intflag.set_flag())
-            DEBUG_LOG(device()->logger(), "ADC triggering RESREADY interrupt", "");
+            logger().dbg("Triggering RESREADY interrupt");
 
         uint8_t winmode = READ_IOREG_F(CTRLE, ADC_WINCM);
         bool raise_win_int;
@@ -386,7 +386,7 @@ void AVR_ArchMega0_ADC::raised(const signal_data_t& data, uint16_t sigid)
 
         if (raise_win_int) {
             if (m_cmp_intflag.set_flag())
-                DEBUG_LOG(device()->logger(), "ADC triggering WINCOMP interrupt", "");
+                logger().dbg("Triggering WINCOMP interrupt");
         }
     }
 }
@@ -401,9 +401,9 @@ void AVR_ArchMega0_ADC::sleep(bool on, AVR_SleepMode mode)
 {
     if (mode > AVR_SleepMode::Standby || (mode == AVR_SleepMode::Standby && !TEST_IOREG(CTRLA, ADC_RUNSTBY))) {
         if (on)
-            DEBUG_LOG(device()->logger(), "ADC pausing", "");
+            logger().dbg("Pausing");
         else
-            DEBUG_LOG(device()->logger(), "ADC resuming", "");
+            logger().dbg("Resuming");
 
         m_timer.set_paused(on);
     }

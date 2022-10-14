@@ -91,7 +91,7 @@ bool AVR_ArchAVR_Timer::init(AVR_Device& device)
                         regbit_t(m_config.reg_int_flag, m_config.int_ocrb.bit),
                         m_config.int_ocrb.vector);
 
-    m_timer.init(device.cycle_manager(), device.logger());
+    m_timer.init(device.cycle_manager(), logger());
     m_timer.signal().connect_hook(this);
 
     return status;
@@ -181,10 +181,9 @@ void AVR_ArchAVR_Timer::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t
             uint8_t v = m_config.rb_clock.extract(data.value);
             int clock_index = find_reg_config<AVR_ArchAVR_TimerConfig::clock_config_t>(m_config.clocks, v);
             if (clock_index >= 0) {
-                DEBUG_LOG(device()->logger(), "Timer %s clock changed to SRC=%s, PS=%d",
-                                               name().c_str(),
-                                               CLOCKSOURCENAME(clock_index),
-                                               CLOCKPRESCALER(clock_index));
+                logger().dbg("Clock changed to SRC=%s, PS=%d",
+                             CLOCKSOURCENAME(clock_index),
+                             CLOCKPRESCALER(clock_index));
                 if (m_config.clocks[clock_index].source == AVR_ArchAVR_TimerConfig::ClockDisabled) {
                     ps_factor = 1;
                     m_clk_enabled = false;
@@ -193,7 +192,7 @@ void AVR_ArchAVR_Timer::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t
                     m_clk_enabled = true;
                 }
             } else {
-                DEBUG_LOG(device()->logger(), "Timer %s clock changed to unsupported mode: 0x%02x", v);
+                logger().dbg("Clock changed to unsupported mode: 0x%02x", v);
                 ps_factor = 1;
                 m_clk_enabled = false;
             }
@@ -220,7 +219,7 @@ void AVR_ArchAVR_Timer::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t
     }
 
     if (do_reschedule) {
-        DEBUG_LOG(device()->logger(), "Rescheduling %s", name().c_str());
+        logger().dbg("Rescheduling");
         m_timer.set_timer_delay(m_clk_enabled ? delay_to_event() : 0);
     }
 }
@@ -260,8 +259,7 @@ uint32_t AVR_ArchAVR_Timer::delay_to_event()
     if (ticks_to_next_event == ticks_to_ocrb)
         m_next_event_type |= TimerEventCompB;
 
-    DEBUG_LOG(device()->logger(), "Next event for %s: 0x%x in %d cycles",
-              name().c_str(), m_next_event_type, ticks_to_next_event);
+    logger().dbg("Next event: 0x%x in %d cycles", m_next_event_type, ticks_to_next_event);
 
     return (uint32_t)ticks_to_next_event;
 }
@@ -269,7 +267,7 @@ uint32_t AVR_ArchAVR_Timer::delay_to_event()
 
 void AVR_ArchAVR_Timer::raised(const signal_data_t& sigdata, uint16_t __unused)
 {
-    DEBUG_LOG(device()->logger(), "Updating counters of %s", name().c_str());
+    logger().dbg("Updating counters");
 
     m_cnt += sigdata.data.as_uint();
 
@@ -282,7 +280,7 @@ void AVR_ArchAVR_Timer::raised(const signal_data_t& sigdata, uint16_t __unused)
     AVR_ArchAVR_TimerConfig::Mode timer_mode = m_config.modes[mode_index].mode;
 
     if (m_next_event_type & TimerEventCompA) {
-        DEBUG_LOG(device()->logger(), "Timer %s triggering interrupt OCRA", name().c_str());
+        logger().dbg("Triggering interrupt OCRA");
 
         if (m_intflag_ocra.set_flag())
             m_intflag_signal.raise_u(Signal_CompA, 0, 1);
@@ -292,14 +290,14 @@ void AVR_ArchAVR_Timer::raised(const signal_data_t& sigdata, uint16_t __unused)
     }
 
     if (m_next_event_type & TimerEventCompB) {
-        DEBUG_LOG(device()->logger(), "Timer %s triggering interrupt OCRB", name().c_str());
+        logger().dbg("Triggering interrupt OCRB");
 
         if (m_intflag_ocrb.set_flag())
             m_intflag_signal.raise_u(Signal_CompB, 0, 1);
     }
 
     if (m_next_event_type & TimerEventMax) {
-        DEBUG_LOG(device()->logger(), "Timer %s triggering interrupt OVF", name().c_str());
+        logger().dbg("Triggering interrupt OVF");
 
         if (m_intflag_ovf.set_flag())
             m_intflag_signal.raise_u(Signal_OVF, 0, 1);
