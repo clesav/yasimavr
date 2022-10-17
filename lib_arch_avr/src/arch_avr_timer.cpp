@@ -240,7 +240,7 @@ uint32_t AVR_ArchAVR_Timer::delay_to_event()
 {
     int wrap = m_config.is_16bits ? 0x10000 : 0x100;
 
-    int ticks_to_max = AVR_PrescaledTimer::ticks_to_event(m_cnt, wrap, wrap);
+    int ticks_to_max = AVR_PrescaledTimer::ticks_to_event(m_cnt, wrap - 1, wrap);
     int ticks_to_next_event = ticks_to_max;
 
     int ticks_to_ocra = AVR_PrescaledTimer::ticks_to_event(m_cnt, m_ocra, wrap);

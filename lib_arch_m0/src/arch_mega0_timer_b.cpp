@@ -206,7 +206,7 @@ enum TimerEventType {
  */
 uint32_t AVR_ArchMega0_TimerB::delay_to_event()
 {
-    int ticks_to_max = AVR_PrescaledTimer::ticks_to_event(m_cnt, 0x10000, 0x10000);
+    int ticks_to_max = AVR_PrescaledTimer::ticks_to_event(m_cnt, 0xFFFF, 0x10000);
     int ticks_to_next_event = ticks_to_max;
 
     int ticks_to_comp = AVR_PrescaledTimer::ticks_to_event(m_cnt, m_ccmp, 0x10000);
@@ -218,6 +218,8 @@ uint32_t AVR_ArchMega0_TimerB::delay_to_event()
         m_next_event_type |= TimerEventMax;
     if (ticks_to_next_event == ticks_to_comp)
         m_next_event_type |= TimerEventComp;
+
+    logger().dbg("Next event: 0x%x in %d cycles", m_next_event_type, ticks_to_next_event);
 
     return ticks_to_next_event;
 }
@@ -248,5 +250,6 @@ void AVR_ArchMega0_TimerB::sleep(bool on, AVR_SleepMode mode)
     bool stbyrun_set = TEST_IOREG(CTRLA, TCB_RUNSTDBY);
     if (mode > AVR_SleepMode::Standby || (mode == AVR_SleepMode::Standby && !stbyrun_set)) {
         m_timer.set_paused(on);
+        logger().dbg(on ? "Pausing" : "Resuming");
     }
 }

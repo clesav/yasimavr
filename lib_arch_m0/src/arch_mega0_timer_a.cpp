@@ -313,7 +313,7 @@ enum TimerEventType {
  */
 uint32_t AVR_ArchMega0_TimerA::delay_to_event()
 {
-    int ticks_to_max = AVR_PrescaledTimer::ticks_to_event(m_cnt, 0x10000, 0x10000);
+    int ticks_to_max = AVR_PrescaledTimer::ticks_to_event(m_cnt, 0xFFFF, 0x10000);
     int ticks_to_next_event = ticks_to_max;
 
     int ticks_to_per = AVR_PrescaledTimer::ticks_to_event(m_cnt, m_per, 0x10000);
