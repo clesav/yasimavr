@@ -136,6 +136,7 @@ public:
 
     void add_ioreg_handler(reg_addr_t addr, AVR_IO_RegHandler* handler, uint8_t ro_mask=0x00);
     void add_ioreg_handler(regbit_t rb, AVR_IO_RegHandler* handler, bool readonly=false);
+    AVR_Peripheral* find_peripheral(const char* name);
     AVR_Peripheral* find_peripheral(uint32_t id);
     bool ctlreq(uint32_t id, uint16_t req, ctlreq_data_t* reqdata = nullptr);
 

@@ -122,6 +122,7 @@ public:
     void attach_peripheral(AVR_Peripheral* /Transfer/);
     void add_ioreg_handler(reg_addr_t, AVR_IO_RegHandler*, uint8_t = 0x00);
     void add_ioreg_handler(regbit_t, AVR_IO_RegHandler*, bool = false);
+    AVR_Peripheral* find_peripheral(const char*);
     AVR_Peripheral* find_peripheral(uint32_t);
 
     SIP_PYTUPLE ctlreq(uint32_t, uint16_t, ctlreq_data_t* = NULL) /TypeHint="Tuple[bool, ctlreq_data_t]"/

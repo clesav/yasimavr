@@ -55,7 +55,7 @@ public:
 
     virtual ~AVR_SignalHook();
 
-    virtual void raised(const signal_data_t& data, uint16_t hooktag) = 0;
+    virtual void raised(const signal_data_t& sigdata, uint16_t hooktag) = 0;
 
 private:
 

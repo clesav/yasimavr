@@ -716,7 +716,7 @@ void AVR_IO_TWI::set_slave_ack(bool ack)
 
     else if (m_slv_state == State_RX_Ack) {
 
-        //In RX_Busy state, the master is expecting an ACK/NACK after a Data Write
+        //In RX_Ack state, the master is expecting an ACK/NACK after a Data Write
         TWI_Packet packet = m_current_packet;
         packet.cmd = TWI_Packet::Cmd_DataAck;
         packet.ack = ack ? TWI_Packet::Ack : TWI_Packet::Nack;

@@ -250,7 +250,7 @@ bool AVR_Device::program(const AVR_Firmware& firmware)
         return false;
     }
     else if (firmware.load_memory("flash", m_core.m_flash)) {
-        m_logger.dbg("Loaded %d bytes of flash", firmware.flashsize());
+        m_logger.dbg("Loaded %d bytes of flash", firmware.memory_size("flash"));
     } else {
         m_logger.err("Firmware load: The flash does not fit");
         return false;
@@ -312,6 +312,11 @@ bool AVR_Device::ctlreq(uint32_t id, uint16_t req, ctlreq_data_t* reqdata)
         m_logger.wng("Sending request but peripheral %s not found", id_to_str(id).c_str());
         return false;
     }
+}
+
+AVR_Peripheral* AVR_Device::find_peripheral(const char* name)
+{
+    return find_peripheral(str_to_id(name));
 }
 
 AVR_Peripheral* AVR_Device::find_peripheral(uint32_t id)

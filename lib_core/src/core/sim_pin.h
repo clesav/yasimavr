@@ -86,7 +86,7 @@ public:
     AVR_Signal& signal();
 
     //Implementation of the AVR_SignalHook interface to receive changes
-    virtual void raised(const signal_data_t& sigdata, uint16_t hootag) override;
+    virtual void raised(const signal_data_t& sigdata, uint16_t hooktag) override;
 
 private:
 

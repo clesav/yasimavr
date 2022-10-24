@@ -128,7 +128,7 @@ void AVR_CycleManager::reschedule_cycle_timer(AVR_CycleTimer* timer, cycle_count
 void AVR_CycleManager::pause_cycle_timer(AVR_CycleTimer* timer)
 {
     TimerSlot* slot = remove_timer_from_queue(timer);
-    if (slot) {
+    if (slot && !slot->paused) {
         slot->paused = true;
         slot->when = (slot->when > m_cycle) ? (slot->when - m_cycle) : 0;
         add_timer_to_queue(slot);
@@ -138,7 +138,7 @@ void AVR_CycleManager::pause_cycle_timer(AVR_CycleTimer* timer)
 void AVR_CycleManager::resume_cycle_timer(AVR_CycleTimer* timer)
 {
     TimerSlot* slot = remove_timer_from_queue(timer);
-    if (slot) {
+    if (slot && slot->paused) {
         slot->paused = false;
         slot->when = slot->when + m_cycle;
         add_timer_to_queue(slot);

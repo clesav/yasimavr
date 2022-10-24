@@ -97,5 +97,6 @@ protected:
 
 };
 
+AVR_Logger& AVR_global_logger();
 
 class std::va_list;

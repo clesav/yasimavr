@@ -76,27 +76,22 @@ public:
 
     bool has_memory(const std::string& name) const;
 
+    size_t memory_size(const std::string& name) const;
+
     std::vector<Block> blocks(const std::string& name) const;
 
     bool load_memory(const std::string& name, AVR_NonVolatileMemory& memory) const;
 
-    flash_addr_t flashsize() const;
     mem_addr_t datasize() const;
     mem_addr_t bsssize() const;
 
 private:
 
     std::map<std::string, std::vector<Block>> m_blocks;
-    flash_addr_t m_flashsize;
     mem_addr_t m_datasize;
     mem_addr_t m_bsssize;
 
 };
-
-inline flash_addr_t AVR_Firmware::flashsize() const
-{
-    return m_flashsize;
-}
 
 inline mem_addr_t AVR_Firmware::datasize() const
 {

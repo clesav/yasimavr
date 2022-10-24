@@ -66,6 +66,7 @@ struct AVR_ArchMega0_ADC_Config {
 
     double temp_cal_25C;            //Temperature sensor value in V at +25 degC
     double temp_cal_coef;           //Temperature sensor linear coef in V/degC
+
 };
 
 class DLL_EXPORT AVR_ArchMega0_ADC : public AVR_IO_ADC,

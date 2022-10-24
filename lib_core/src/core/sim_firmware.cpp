@@ -37,7 +37,6 @@ AVR_Firmware::AVR_Firmware()
 ,vcc(0.0)
 ,aref(0.0)
 ,console_register(0)
-,m_flashsize(0)
 ,m_datasize(0)
 ,m_bsssize(0)
 {}
@@ -147,7 +146,6 @@ AVR_Firmware* AVR_Firmware::read_elf(const std::string& filename)
         if (!strcmp(name, ".text") || !strcmp(name, ".data") || !strcmp(name, ".rodata")) {
             b.base = lma;
             firmware->m_blocks["flash"].push_back(b);
-            firmware->m_flashsize += scn_data->d_size;
         }
         else if (!strcmp(name, ".eeprom")) {
             b.base = lma - 0x810000;
@@ -198,6 +196,21 @@ bool AVR_Firmware::has_memory(const std::string& name) const
 {
     return m_blocks.find(name) != m_blocks.end();
 }
+
+
+size_t AVR_Firmware::memory_size(const std::string& name) const
+{
+    auto it = m_blocks.find(name);
+    if (it == m_blocks.end())
+        return 0;
+
+    size_t s = 0;
+    for (auto block : it->second)
+        s += block.mem_block.size;
+
+    return s;
+}
+
 
 std::vector<AVR_Firmware::Block> AVR_Firmware::blocks(const std::string& name) const
 {

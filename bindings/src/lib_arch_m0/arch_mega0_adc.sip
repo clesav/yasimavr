@@ -50,8 +50,7 @@ struct AVR_ArchMega0_ADC_Config {
 class AVR_ArchMega0_ADC : public AVR_IO_ADC,
                           public AVR_Peripheral,
                           public AVR_SignalHook
-                          /NoDefaultCtors/
-{
+                          /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_mega0_adc.h"
 %End
@@ -66,6 +65,6 @@ public:
     virtual void ioreg_read_handler(reg_addr_t);
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
     virtual void sleep(bool, AVR_SleepMode);
-    virtual void raised(const signal_data_t& data, uint16_t sigid);
+    virtual void raised(const signal_data_t&, uint16_t);
 
 };

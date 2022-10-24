@@ -30,34 +30,34 @@ class Formatter(corelib.AVR_SignalHook):
     formatter it for dumping into a VCD file
 
     parameters:
-        recorder: VCD_Recorder instance
         var_type: VCD variable type (see pyvcd documentation)
         var_size: VCD variable size (see pyvcd documentation)
         init_value: initial value
     """
 
-    def __init__(self, recorder, var_type, var_size, init_value):
+    def __init__(self, var_type, var_size, init_value):
         super().__init__()
-        self._recorder = recorder
+        self._recorder = None
         self._var_type = var_type
         self._var_size = var_size
         self._init_value = init_value
 
 
-    def register(self, writer, var_name):
+    def register(self, recorder, var_name):
         """Called by the recorder to register this Formatter instance
         with a associated VCD Variable object.
 
         parameters:
-            writer: VCDWriter instance
+            recorder: VCD_Recorder instance
             var_name: VCD variable name (see pyvcd documentation)
         """
 
-        self._var = writer.register_var(scope='device',
-                                        name=var_name,
-                                        var_type=self._var_type,
-                                        size=self._var_size,
-                                        init=self._init_value)
+        self._recorder = recorder
+        self._var = recorder._writer.register_var(scope='device',
+                                                  name=var_name,
+                                                  var_type=self._var_type,
+                                                  size=self._var_size,
+                                                  init=self._init_value)
 
 
     def filter(self, sigid, index, hooktag):
@@ -95,8 +95,8 @@ class _PinDigitalFormatter(Formatter):
     _SIGID = corelib.AVR_Pin.SignalId.DigitalStateChange
     _PinState = corelib.AVR_Pin.State
 
-    def __init__(self, recorder, pin):
-        super().__init__(recorder, 'tri', 1, None)
+    def __init__(self, pin):
+        super().__init__('tri', 1, None)
         pin.signal().connect_hook(self)
 
     def filter(self, sigid, index, hooktag):
@@ -118,8 +118,8 @@ class _PortFormatter(Formatter):
     """Formatter specialised for a GPIO port as an 8-bits vectors.
     """
 
-    def __init__(self, recorder, port_signal):
-        super().__init__(recorder, 'reg', 8, None)
+    def __init__(self, port_signal):
+        super().__init__('reg', 8, None)
         port_signal.connect_hook(self)
 
     def format(self, sigdata, hooktag):
@@ -170,8 +170,8 @@ class VCD_Recorder:
         if not var_name:
             var_name = corelib.id_to_str(pin.id())
 
-        formatter = _PinDigitalFormatter(self, pin)
-        formatter.register(self._writer, var_name)
+        formatter = _PinDigitalFormatter(pin)
+        formatter.register(self, var_name)
         self._formatters[var_name] = formatter
 
 
@@ -190,8 +190,8 @@ class VCD_Recorder:
         ok, req = self._simloop.device().ctlreq(port_id, corelib.CTLREQ_GET_SIGNAL)
         if ok:
             sig = req.data.as_ptr(corelib.AVR_Signal)
-            formatter = _PortFormatter(self, sig)
-            formatter.register(self._writer, var_name)
+            formatter = _PortFormatter(sig)
+            formatter.register(self, var_name)
             self._formatters[var_name] = formatter
         else:
             raise Exception('Issue with access to the port signal')
@@ -205,7 +205,7 @@ class VCD_Recorder:
             var_name : variable name
         """
 
-        formatter.register(self._writer, var_name)
+        formatter.register(self, var_name)
         self._formatters[var_name] = formatter
 
 

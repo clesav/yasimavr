@@ -55,9 +55,9 @@ public:
 
     void add_block(const C_STR&, const mem_block_t&, size_t = 0);
     bool has_memory(const C_STR&) const;
+    size_t memory_size(const C_STR&) const;
     std::vector<AVR_Firmware::Block> blocks(const C_STR&) const;
     bool load_memory(const C_STR&, AVR_NonVolatileMemory&) const;
-    flash_addr_t flashsize() const;
     mem_addr_t datasize() const;
     mem_addr_t bsssize() const;
 

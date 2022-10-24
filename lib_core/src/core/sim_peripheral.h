@@ -45,19 +45,19 @@ enum class AVR_SleepMode;
 #define AVR_IOCTL_CORE              AVR_ID('C', 'O', 'R', 'E')      //Core
 #define AVR_IOCTL_WTDG              AVR_ID('W', 'T', 'D', 'G')      //Watchdog
 #define AVR_IOCTL_INTR              AVR_ID('I', 'N', 'T', 'R')      //Interrupt controller
-#define AVR_IOCTL_SLEEP             AVR_ID('S', 'L', 'P', ' ')      //Sleep mode controller
-#define AVR_IOCTL_CLOCK             AVR_ID('C', 'L', 'K', ' ')      //Clock controller
+#define AVR_IOCTL_SLEEP             AVR_ID('S', 'L', 'P', '\0')      //Sleep mode controller
+#define AVR_IOCTL_CLOCK             AVR_ID('C', 'L', 'K', '\0')      //Clock controller
 #define AVR_IOCTL_PORT(n)           AVR_ID('I', 'O', 'G', (n))      //Port controller
 #define AVR_IOCTL_PORTMUX           AVR_ID('I', 'O', 'M', 'X')      //Port Mux controller
-#define AVR_IOCTL_ADC               AVR_ID('A', 'D', 'C', ' ')      //Analog-to-digital converter
-#define AVR_IOCTL_ACOMP             AVR_ID('A', 'C', 'P', ' ')      //Analog comparator
+#define AVR_IOCTL_ADC               AVR_ID('A', 'D', 'C', '\0')      //Analog-to-digital converter
+#define AVR_IOCTL_ACOMP             AVR_ID('A', 'C', 'P', '\0')      //Analog comparator
 #define AVR_IOCTL_TIMER(t, n)       AVR_ID('T', 'C', (t), (n))      //Timer/counter
 #define AVR_IOCTL_EEPROM            AVR_ID('E', 'P', 'R', 'M')      //EEPROM controller
-#define AVR_IOCTL_NVM               AVR_ID('N', 'V', 'M', ' ')      //Non-Volative Memory controller
+#define AVR_IOCTL_NVM               AVR_ID('N', 'V', 'M', '\0')      //Non-Volative Memory controller
 #define AVR_IOCTL_VREF              AVR_ID('V', 'R', 'E', 'F')      //Voltage reference controller
 #define AVR_IOCTL_EXTINT            AVR_ID('E', 'I', 'N', 'T')      //External Interrupt controller
-#define AVR_IOCTL_RST               AVR_ID('R', 'S', 'T', ' ')      //Reset controller
-#define AVR_IOCTL_RTC               AVR_ID('R', 'T', 'C', ' ')      //Real Time Counter
+#define AVR_IOCTL_RST               AVR_ID('R', 'S', 'T', '\0')      //Reset controller
+#define AVR_IOCTL_RTC               AVR_ID('R', 'T', 'C', '\0')      //Real Time Counter
 #define AVR_IOCTL_UART(n)           AVR_ID('U', 'A', 'X', (n))      //UART interface
 #define AVR_IOCTL_SPI(n)            AVR_ID('S', 'P', 'I', (n))      //SPI interface
 #define AVR_IOCTL_TWI(n)            AVR_ID('T', 'W', 'I', (n))      //TWI interface

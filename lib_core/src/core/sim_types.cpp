@@ -22,6 +22,7 @@
 //=======================================================================================
 
 #include "sim_types.h"
+#include <cstring>
 
 
 //=======================================================================================
@@ -138,10 +139,13 @@ std::string id_to_str(uint32_t id)
 
 uint32_t str_to_id(const char* s)
 {
-    if (s[0] == '\0')
-        return 0;
-    else
-        return s[0] | (s[1] << 8) | (s[2] << 16) | (s[3] << 24);
+    //Here we use the fact that strncpy pads the destination buffer
+    //with null chars if the source string is shorter than 4.
+    //That gives us a unique 32-bits ID even for a short name.
+    char sid[5];
+    strncpy(sid, s, 4);
+    return sid[0] | (sid[1] << 8) | (sid[2] << 16) | (sid[3] << 24);
+
 }
 
 uint32_t str_to_id(const std::string& s)

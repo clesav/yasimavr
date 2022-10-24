@@ -41,8 +41,6 @@ class AVR_DeviceDebugProbe;
 
 //=======================================================================================
 
-//Invalid opcode that allows to detect when the PC overflows from the flash
-#define AVR_OVERFLOW_OPCODE     0xf1f1
 //Break opcode, inserted in the program to implement breakpoints
 #define AVR_BREAK_OPCODE        0x9598
 
