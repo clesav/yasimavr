@@ -105,10 +105,10 @@ bool AVR_Peripheral::register_interrupt(int_vect_t vector, AVR_InterruptHandler*
     }
 }
 
-AVR_Signal* AVR_Peripheral::get_signal(uint32_t ctl_id, uint16_t index) const
+AVR_Signal* AVR_Peripheral::get_signal(uint32_t ctl_id) const
 {
     if (m_device) {
-        ctlreq_data_t d = { .index = index };
+        ctlreq_data_t d;
         bool status = m_device->ctlreq(ctl_id, AVR_CTLREQ_GET_SIGNAL, &d);
         if (status)
             return reinterpret_cast<AVR_Signal*>(d.data.as_ptr());

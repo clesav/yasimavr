@@ -380,27 +380,27 @@ bool AVR_ArchAVR_ADC::connect_trigger_signals()
         AVR_Signal* s;
         switch(m_config.triggers[i].trig_type) {
             case CFG::AComp:
-                s = get_signal(AVR_IOCTL_ACOMP, 0);
+                s = get_signal(AVR_IOCTL_ACOMP);
                 break;
 
             case CFG::ExtInt0:
-                s = get_signal(AVR_IOCTL_EXTINT, 0);
+                s = get_signal(AVR_IOCTL_EXTINT);
                 break;
 
             case CFG::Timer0_CompA:
-                s = get_signal(AVR_IOCTL_TIMER('_', '0'), AVR_ArchAVR_Timer::Signal_CompA);
+                s = get_signal(AVR_IOCTL_TIMER('_', '0'));
                 break;
 
             case CFG::Timer0_OVF:
-                s = get_signal(AVR_IOCTL_TIMER('_', '0'), AVR_ArchAVR_Timer::Signal_OVF);
+                s = get_signal(AVR_IOCTL_TIMER('_', '0'));
                 break;
 
             case CFG::Timer1_CompB:
-                s = get_signal(AVR_IOCTL_TIMER('_', '1'), AVR_ArchAVR_Timer::Signal_CompB);
+                s = get_signal(AVR_IOCTL_TIMER('_', '1'));
                 break;
 
             case CFG::Timer1_OVF:
-                s = get_signal(AVR_IOCTL_TIMER('_', '1'), AVR_ArchAVR_Timer::Signal_OVF);
+                s = get_signal(AVR_IOCTL_TIMER('_', '1'));
                 break;
 
             case CFG::Manual:

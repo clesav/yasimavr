@@ -55,7 +55,7 @@ public:
     AVR_Pin::State digital_state() const;
     double analog_value() const;
 
-    AVR_Signal& signal();
+    AVR_DataSignal& signal();
 
     virtual void raised(const signal_data_t&, uint16_t);
 

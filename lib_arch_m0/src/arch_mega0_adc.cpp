@@ -203,7 +203,7 @@ void AVR_ArchMega0_ADC::start_conversion_cycle()
     m_timer.set_timer_delay(ps_start_ticks);
 
     //Raise the signal
-    m_signal.raise_u(Signal_ConversionStarted, m_latched_ch_mux, 0);
+    m_signal.raise_u(Signal_ConversionStarted, m_latched_ch_mux);
 }
 
 /*
@@ -331,7 +331,7 @@ void AVR_ArchMega0_ADC::raised(const signal_data_t& data, uint16_t sigid)
     else if (m_state == ADC_PendingConversion) {
 
         //Raise the signal
-        m_signal.raise_u(Signal_AboutToSample, m_latched_ch_mux, 0);
+        m_signal.raise_u(Signal_AboutToSample, m_latched_ch_mux);
 
         //Do the sampling
         read_analog_value();
@@ -346,7 +346,7 @@ void AVR_ArchMega0_ADC::raised(const signal_data_t& data, uint16_t sigid)
     else if (m_state == ADC_PendingRaise) {
 
         //Raise the signal
-        m_signal.raise_u(Signal_ConversionComplete, m_latched_ch_mux, 0);
+        m_signal.raise_u(Signal_ConversionComplete, m_latched_ch_mux);
 
         //If we need to accumulate more samples, we return to PendingConversion state
         //and recall the cycle timer after the sampling delay

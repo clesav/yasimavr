@@ -44,7 +44,11 @@ AVR_Pin::AVR_Pin(uint32_t id)
 ,m_int_state(State_Floating)
 ,m_resolved_state(State_Floating)
 ,m_analog_value(0.0)
-{}
+{
+    //To ensure there is an initial persistent data stored in the signal
+    m_signal.raise_u(Signal_DigitalStateChange, State_Floating);
+    m_signal.raise_d(Signal_AnalogValueChange, 0.0);
+}
 
 void AVR_Pin::set_external_state(State state)
 {

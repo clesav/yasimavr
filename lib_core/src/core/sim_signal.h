@@ -27,6 +27,7 @@
 #include "sim_types.h"
 #include <stdint.h>
 #include <vector>
+#include <unordered_map>
 
 
 //=======================================================================================
@@ -53,9 +54,20 @@ class AVR_SignalHook {
 
 public:
 
+    AVR_SignalHook() = default;
+    //Copy constructor: to ensure the connection with signals is consistent
+    AVR_SignalHook(const AVR_SignalHook&);
+    //No move constructor
+    AVR_SignalHook(const AVR_SignalHook&&) = delete;
+    //Destructor: severs all connections with signals
     virtual ~AVR_SignalHook();
 
     virtual void raised(const signal_data_t& sigdata, uint16_t hooktag) = 0;
+
+    //Copy assignment : copy all signal connections
+    AVR_SignalHook& operator=(const AVR_SignalHook&);
+    //No move assignment
+    AVR_SignalHook& operator=(const AVR_SignalHook&&) = delete;
 
 private:
 
@@ -77,7 +89,12 @@ class DLL_EXPORT AVR_Signal {
 public:
 
     AVR_Signal();
-    ~AVR_Signal();
+    //Copy constructor
+    AVR_Signal(const AVR_Signal& other);
+    //No move constructor
+    AVR_Signal(const AVR_Signal&&) = delete;
+    //Destructor: severs all connections with hooks
+    virtual ~AVR_Signal();
 
     ////The hooktag is an arbitrary value that only has a meaning
     //for the hook and is passed though by the signal when calling
@@ -93,13 +110,21 @@ public:
     //Various override for simplicity
     void raise(uint16_t sigid);
 
-    ////The different names    void raise(uint16_t sigid, void* p);
+    void raise(uint16_t sigid, void* p);
     void raise(uint16_t sigid, const char* s);
-    void raise(uint16_t sigid, vardata_t v); are necessary to remove ambiguity at compilation
+    void raise(uint16_t sigid, vardata_t v);
+    //The different names are necessary to remove ambiguity at compilation
     void raise_u(uint16_t sigid, uint32_t u, uint32_t index = 0);
     void raise_d(uint16_t sigid, double d, uint32_t index = 0);
 
+    //Copy assignment
+    AVR_Signal& operator=(const AVR_Signal&);
+    //No move assignment
+    AVR_Signal& operator=(const AVR_Signal&&) = delete;
+
 private:
+
+    friend class AVR_SignalHook;
 
     //Flag used to avoid nested raises
     bool m_busy;
@@ -113,6 +138,37 @@ private:
 
     int hook_index(const AVR_SignalHook* hook) const;
     int signal_index(const AVR_SignalHook* hook) const;
+
+};
+
+
+//=======================================================================================
+
+class DLL_EXPORT AVR_DataSignal : public AVR_Signal {
+
+public:
+
+    vardata_t data(uint16_t sigid, uint32_t index = 0) const;
+    bool has_data(uint16_t sigid, uint32_t index = 0) const;
+    void set_data(uint16_t sigid, vardata_t v, uint32_t index = 0);
+
+    void clear();
+
+    virtual void raise(const signal_data_t& sigdata) override;
+
+private:
+
+    struct key_t {
+        uint16_t sigid;
+        uint32_t index;
+        bool operator==(const key_t& other) const;
+    };
+
+    struct keyhash_t {
+        size_t operator()(const key_t& k) const;
+    };
+
+    std::unordered_map<key_t, vardata_t, keyhash_t> m_data;
 
 };
 

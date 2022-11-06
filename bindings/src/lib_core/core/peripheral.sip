@@ -209,7 +209,7 @@ protected:
 
     bool register_interrupt(int_vect_t, AVR_InterruptHandler*) const;
 
-    AVR_Signal* get_signal(uint32_t, uint16_t) const;
+    AVR_Signal* get_signal(uint32_t) const;
 
 };
 

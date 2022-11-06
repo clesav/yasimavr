@@ -83,7 +83,7 @@ public:
     //Resolved analog voltage value at the pin, in interval [0;1]
     double analog_value() const;
     //Signal raised for state/value changes
-    AVR_Signal& signal();
+    AVR_DataSignal& signal();
 
     //Implementation of the AVR_SignalHook interface to receive changes
     virtual void raised(const signal_data_t& sigdata, uint16_t hooktag) override;
@@ -97,7 +97,7 @@ private:
     State m_int_state;
     State m_resolved_state;
     double m_analog_value;
-    AVR_Signal m_signal;
+    AVR_DataSignal m_signal;
 
     State resolve_state();
 
@@ -115,7 +115,7 @@ inline AVR_Pin::State AVR_Pin::state() const
     return m_resolved_state;
 };
 
-inline AVR_Signal& AVR_Pin::signal()
+inline AVR_DataSignal& AVR_Pin::signal()
 {
     return m_signal;
 }
