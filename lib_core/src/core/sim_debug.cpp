@@ -258,7 +258,7 @@ void AVR_DeviceDebugProbe::notify_watchpoint(watchpoint_t* wp, int event, mem_ad
     }
 
     if (wp->flags & Watchpoint_Signal)
-        m_wp_signal.raise_u(wp->addr, event, addr);
+        m_wp_signal.raise_u(event, wp->addr);
 }
 
 //Notification when the CPU reads from the RAM. Check if there's a watchpoint associated with the address.

@@ -61,17 +61,15 @@ public:
     void connect_hook(AVR_SignalHook*, uint16_t = 0);
     void disconnect_hook(AVR_SignalHook*);
 
-    const signal_data_t& data() const;
-
     void raise() /PyName=raise_/;
-    void raise(const signal_data_t&) /PyName=raise_/;
+    virtual void raise(const signal_data_t&) /PyName=raise_/;
 
-    void raise(uint16_t, uint32_t, SIP_PYOBJECT) /PyName=raise_/;
+    void raise(uint16_t, SIP_PYOBJECT, uint32_t = 0) /PyName=raise_/;
     %MethodCode
         signal_data_t sigdata;
         sigdata.sigid = a0;
-        sigdata.index = a1;
-        fill_vardata_with_pyobj(&sigdata.data, a2);
+        fill_vardata_with_pyobj(&sigdata.data, a1);
+        sigdata.index = a2;
         sipCpp->raise(sigdata);
     %End
 

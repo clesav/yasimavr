@@ -74,9 +74,9 @@ class UartIO(io.RawIOBase):
         if 'w' not in self._mode:
             raise IOError('Invalid mode')
         elif isinstance(data, int) and (0 <= data <= 255):
-            self._tx_signal.raise_(_UART_SignalId.DataFrame, 0, data)
+            self._tx_signal.raise_(_UART_SignalId.DataFrame, data)
         elif isinstance(data, (bytes, bytearray)):
-            self._tx_signal.raise_(_UART_SignalId.DataBytes, 0, bytes(data))
+            self._tx_signal.raise_(_UART_SignalId.DataBytes, bytes(data))
         else:
             raise TypeError('Invalid data type')
 

@@ -87,26 +87,22 @@ public:
     void connect_hook(AVR_SignalHook* hook, uint16_t hooktag = 0);
     void disconnect_hook(AVR_SignalHook* hook);
 
-    //Returns the data raised last
-    const signal_data_t& data() const;
-
+    virtual void raise(const signal_data_t& sigdata);
     //Raise a signal with default data
     void raise();
-    void raise(const signal_data_t& value);
     //Various override for simplicity
     void raise(uint16_t sigid);
-    void raise(uint16_t sigid, uint32_t index, void* p);
-    void raise(uint16_t sigid, uint32_t index, const char* s);
-    ////The different names are necessary to remove ambiguity at compilation
-    void raise_u(uint16_t sigid, uint32_t index, uint32_t u);
-    void raise_d(uint16_t sigid, uint32_t index, double d);
+
+    ////The different names    void raise(uint16_t sigid, void* p);
+    void raise(uint16_t sigid, const char* s);
+    void raise(uint16_t sigid, vardata_t v); are necessary to remove ambiguity at compilation
+    void raise_u(uint16_t sigid, uint32_t u, uint32_t index = 0);
+    void raise_d(uint16_t sigid, double d, uint32_t index = 0);
 
 private:
 
     //Flag used to avoid nested raises
     bool m_busy;
-    //Stores a copy of the last data used to raise the signal
-    signal_data_t m_data;
 
     struct hook_slot_t {
         AVR_SignalHook* hook;
@@ -120,9 +116,5 @@ private:
 
 };
 
-inline const signal_data_t& AVR_Signal::data() const
-{
-    return m_data;
-}
 
 #endif //__YASIMAVR_SIGNAL_H__

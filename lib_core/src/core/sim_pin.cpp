@@ -53,8 +53,8 @@ void AVR_Pin::set_external_state(State state)
     m_resolved_state = resolve_state();
     State digstate = digital_state();
     if (digstate != prev_digstate) {
-        m_signal.raise_u(Signal_DigitalStateChange, m_id, digstate);
-        m_signal.raise_d(Signal_AnalogValueChange, m_id, analog_value());
+        m_signal.raise_u(Signal_DigitalStateChange, digstate);
+        m_signal.raise_d(Signal_AnalogValueChange, analog_value());
     }
 }
 
@@ -65,8 +65,8 @@ void AVR_Pin::set_internal_state(State state)
     m_resolved_state = resolve_state();
     State digstate = digital_state();
     if (digstate != prev_digstate) {
-        m_signal.raise_u(Signal_DigitalStateChange, m_id, digstate);
-        m_signal.raise_d(Signal_AnalogValueChange, m_id, analog_value());
+        m_signal.raise_u(Signal_DigitalStateChange, digstate);
+        m_signal.raise_d(Signal_AnalogValueChange, analog_value());
     }
 }
 
@@ -132,10 +132,10 @@ void AVR_Pin::set_external_analog_value(double v)
     //If the digital state has change, raise the digital signal
     State digstate = digital_state();
     if (digstate != prev_digstate)
-        m_signal.raise_u(Signal_DigitalStateChange, m_id, digstate);
+        m_signal.raise_u(Signal_DigitalStateChange, digstate);
 
     //Raise the analog signal in any case
-    m_signal.raise_d(Signal_AnalogValueChange, m_id, analog_value());
+    m_signal.raise_d(Signal_AnalogValueChange, analog_value());
 }
 
 double AVR_Pin::analog_value() const

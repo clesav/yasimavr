@@ -174,7 +174,7 @@ bool TWI_Bus::acquire(TWI_Endpoint* endpoint)
         return false;
     } else {
         m_master = endpoint;
-        m_signal.raise(Signal_Start, 0, endpoint);
+        m_signal.raise(Signal_Start, endpoint);
 
         for (auto ep: m_endpoints) {
             if (ep != endpoint)
@@ -190,7 +190,7 @@ void TWI_Bus::release(TWI_Endpoint* endpoint)
     if (endpoint == m_master) {
         m_master = nullptr;
         m_slave = nullptr;
-        m_signal.raise(Signal_Stop, 0, endpoint);
+        m_signal.raise(Signal_Stop, endpoint);
 
         for (auto ep: m_endpoints) {
             if (ep != endpoint)
@@ -208,7 +208,7 @@ void TWI_Bus::send_packet(TWI_Endpoint& src, TWI_Packet& packet)
                 endpoint->packet(packet);
 
             //Raise the bus signal
-            m_signal.raise(Signal_Address, 0, &packet);
+            m_signal.raise(Signal_Address, &packet);
 
         } break;
 
@@ -226,7 +226,7 @@ void TWI_Bus::send_packet(TWI_Endpoint& src, TWI_Packet& packet)
                 if (m_slave || !m_expected_ack) {
                     m_master->packet(packet);
                     m_expected_ack = 0;
-                    m_signal.raise(Signal_Ack, 0, &packet);
+                    m_signal.raise(Signal_Ack, &packet);
                 }
             }
 
@@ -235,12 +235,12 @@ void TWI_Bus::send_packet(TWI_Endpoint& src, TWI_Packet& packet)
         case TWI_Packet::Cmd_DataRequest:
             m_slave->packet(packet);
             if (!packet.hold)
-                m_signal.raise(Signal_Data, 0, &packet);
+                m_signal.raise(Signal_Data, &packet);
             break;
 
         case TWI_Packet::Cmd_Data:
             m_master->packet(packet);
-            m_signal.raise(Signal_Data, 0, &packet);
+            m_signal.raise(Signal_Data, &packet);
             break;
 
         case TWI_Packet::Cmd_DataAck:
@@ -249,7 +249,7 @@ void TWI_Bus::send_packet(TWI_Endpoint& src, TWI_Packet& packet)
             else
                 m_master->packet(packet);
 
-            m_signal.raise(Signal_Ack, 0, &packet);
+            m_signal.raise(Signal_Ack, &packet);
             break;
 
     }
@@ -421,7 +421,7 @@ void AVR_IO_TWI::set_master_enabled(bool enabled)
 void AVR_IO_TWI::set_master_state(State new_state)
 {
     m_mst_state = new_state;
-    m_signal.raise_u(Signal_StateChange, Cpt_Master, new_state);
+    m_signal.raise_u(Signal_StateChange, new_state, Cpt_Master);
 }
 
 void AVR_IO_TWI::set_bit_delay(cycle_count_t delay)
@@ -439,11 +439,11 @@ bool AVR_IO_TWI::start_transfer()
     if (acquire_bus()) {
         m_logger->dbg("Ownership of bus acquired");
         set_master_state(State_Addr);
-        m_signal.raise_u(Signal_BusStateChange, Cpt_Any, Bus_Owned);
+        m_signal.raise_u(Signal_BusStateChange, Bus_Owned, Cpt_Any);
         return true;
     } else {
         set_master_state(State_Waiting);
-        m_signal.raise_u(Signal_BusStateChange, Cpt_Any, Bus_Busy);
+        m_signal.raise_u(Signal_BusStateChange, Bus_Busy, Cpt_Any);
         return false;
     }
 }
@@ -468,7 +468,7 @@ void AVR_IO_TWI::end_transfer()
 {
     if (State_Active(m_mst_state) && !State_Busy(m_mst_state)) {
         set_master_state(State_Idle);
-        m_signal.raise_u(Signal_BusStateChange, Cpt_Any, Bus_Idle);
+        m_signal.raise_u(Signal_BusStateChange, Bus_Idle, Cpt_Any);
         release_bus();
     }
 }
@@ -567,7 +567,7 @@ cycle_count_t AVR_IO_TWI::timer_next(cycle_count_t when)
             else
                 set_master_state(State_TX);
 
-            m_signal.raise_u(Signal_AddrAck, Cpt_Master, m_current_packet.ack);
+            m_signal.raise_u(Signal_AddrAck, m_current_packet.ack, Cpt_Master);
         }
     }
 
@@ -582,7 +582,7 @@ cycle_count_t AVR_IO_TWI::timer_next(cycle_count_t when)
             set_master_state(State_TX_Ack);
         } else {
             set_master_state(State_TX);
-            m_signal.raise_u(Signal_TxComplete, Cpt_Master, m_current_packet.ack);
+            m_signal.raise_u(Signal_TxComplete, m_current_packet.ack, Cpt_Master);
         }
     }
 
@@ -595,7 +595,7 @@ cycle_count_t AVR_IO_TWI::timer_next(cycle_count_t when)
         //The packet now contains the data byte provided by the slave
         //Setting the ACK/NACK is the responsibility of the upper layers
         set_master_state(State_RX_Ack);
-        m_signal.raise_u(Signal_RxComplete, Cpt_Master, m_current_packet.data);
+        m_signal.raise_u(Signal_RxComplete, m_current_packet.data, Cpt_Master);
     }
 
     else
@@ -652,7 +652,7 @@ void AVR_IO_TWI::set_slave_enabled(bool enabled)
 void AVR_IO_TWI::set_slave_state(State new_state)
 {
     m_slv_state = new_state;
-    m_signal.raise_u(Signal_StateChange, Cpt_Slave, new_state);
+    m_signal.raise_u(Signal_StateChange, new_state, Cpt_Slave);
 }
 
 bool AVR_IO_TWI::start_slave_tx(uint8_t data)
