@@ -206,15 +206,15 @@ void AVR_ArchAVR_Timer::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t
         if (addr == m_config.reg_int_flag) {
             if (m_config.int_ovf.vector && BITSET(data.value, m_config.int_ovf.bit))
                 if (m_intflag_ovf.clear_flag())
-                    m_intflag_signal.raise_u(Signal_OVF, 0, 0);
+                    m_intflag_signal.raise_u(Signal_OVF, 0);
 
             if (m_config.int_ocra.vector && BITSET(data.value, m_config.int_ocra.bit))
                 if (m_intflag_ocra.clear_flag())
-                    m_intflag_signal.raise_u(Signal_CompA, 0, 0);
+                    m_intflag_signal.raise_u(Signal_CompA, 0);
 
             if (m_config.int_ocrb.vector && BITSET(data.value, m_config.int_ocrb.bit))
                 if (m_intflag_ocrb.clear_flag())
-                    m_intflag_signal.raise_u(Signal_CompB, 0, 0);
+                    m_intflag_signal.raise_u(Signal_CompB, 0);
         }
     }
 
@@ -283,7 +283,7 @@ void AVR_ArchAVR_Timer::raised(const signal_data_t& sigdata, uint16_t __unused)
         logger().dbg("Triggering interrupt OCRA");
 
         if (m_intflag_ocra.set_flag())
-            m_intflag_signal.raise_u(Signal_CompA, 0, 1);
+            m_intflag_signal.raise_u(Signal_CompA, 1);
 
         if (timer_mode == AVR_ArchAVR_TimerConfig::MODE_CTC)
             m_cnt = 0;
@@ -293,14 +293,14 @@ void AVR_ArchAVR_Timer::raised(const signal_data_t& sigdata, uint16_t __unused)
         logger().dbg("Triggering interrupt OCRB");
 
         if (m_intflag_ocrb.set_flag())
-            m_intflag_signal.raise_u(Signal_CompB, 0, 1);
+            m_intflag_signal.raise_u(Signal_CompB, 1);
     }
 
     if (m_next_event_type & TimerEventMax) {
         logger().dbg("Triggering interrupt OVF");
 
         if (m_intflag_ovf.set_flag())
-            m_intflag_signal.raise_u(Signal_OVF, 0, 1);
+            m_intflag_signal.raise_u(Signal_OVF, 1);
 
         m_cnt = 0;
     }

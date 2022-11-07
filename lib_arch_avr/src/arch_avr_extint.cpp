@@ -188,7 +188,7 @@ void AVR_ArchAVR_ExtInt::raised(const signal_data_t& sigdata, uint16_t hooktag)
             uint8_t v = (old_level ? 2 : 0) | (pin_level ? 1 : 0);
             set_ioreg(m_config.rb_pcint_flag, bank);
             raise_interrupt(m_config.pcint_vector[bank]);
-            m_signal.raise_u(Signal_PinChange, pin_num, v);
+            m_signal.raise_u(Signal_PinChange, v, pin_num);
         }
 
         //Stores the new pin level for the next change
@@ -216,7 +216,7 @@ void AVR_ArchAVR_ExtInt::raised(const signal_data_t& sigdata, uint16_t hooktag)
             uint8_t v = (old_level ? 2 : 0) | (pin_level ? 1 : 0);
             set_ioreg(m_config.rb_extint_flag, pin_num);
             raise_interrupt(m_config.extint_vector[pin_num]);
-            m_signal.raise_u(Signal_ExtInt, pin_num, v);
+            m_signal.raise_u(Signal_ExtInt, v, pin_num);
         }
 
         //Stores the new pin level for the next change

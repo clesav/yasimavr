@@ -115,7 +115,7 @@ void AVR_InterruptController::cpu_ack_irq(int_vect_t vector)
     if (m_interrupts[vector].handler)
         m_interrupts[vector].handler->interrupt_ack_handler(vector);
 
-    m_signal.raise_u(Signal_Acknowledged, vector, 0);
+    m_signal.raise_u(Signal_Acknowledged, vector);
 }
 
 void AVR_InterruptController::cpu_reti()
@@ -150,7 +150,7 @@ void AVR_InterruptController::cancel_interrupt(int_vect_t vector)
 {
     if (m_interrupts[vector].state == IntrState_Raised) {
         m_interrupts[vector].state = IntrState_Idle;
-        m_signal.raise_u(Signal_Cancelled, vector, 0);
+        m_signal.raise_u(Signal_Cancelled, vector);
         if (m_irq_vector == vector)
             update_irq();
     }

@@ -56,7 +56,7 @@ bool AVR_SleepController::init(AVR_Device& device)
     add_ioreg(m_config.rb_mode);
     add_ioreg(m_config.rb_enable);
 
-    AVR_Signal* s = get_signal(AVR_IOCTL_INTR, 0);
+    AVR_Signal* s = get_signal(AVR_IOCTL_INTR);
     if (s)
         s->connect_hook(this);
     else
