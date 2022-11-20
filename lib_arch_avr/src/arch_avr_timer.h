@@ -1,5 +1,5 @@
 /*
- * arch_avr_port.h
+ * arch_avr_timer.h
  *
  *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
 

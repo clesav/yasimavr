@@ -64,7 +64,7 @@ protected:
     AVR_CycleManager m_cycle_manager;
     AVR_Logger m_logger;
 
-    cycle_count_t run_device(cycle_count_t cycle_limit);
+    cycle_count_t run_device(cycle_count_t final_cycle);
     void set_state(AVR_AbstractSimLoop::State state);
 
 };

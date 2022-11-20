@@ -165,6 +165,8 @@ protected:
     //is the responsibility of architecture-specific implementations.
     virtual bool program(const AVR_Firmware& firmware);
 
+    void erase_peripherals();
+
 private:
 
     AVR_Core& m_core;

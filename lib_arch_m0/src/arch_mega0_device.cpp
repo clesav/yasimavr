@@ -168,6 +168,13 @@ AVR_ArchMega0_Device::AVR_ArchMega0_Device(const AVR_ArchMega0_DeviceConfig& con
 ,m_core_impl(*reinterpret_cast<const AVR_ArchMega0_CoreConfig*>(config.core))
 {}
 
+
+AVR_ArchMega0_Device::~AVR_ArchMega0_Device()
+{
+    erase_peripherals();
+}
+
+
 bool AVR_ArchMega0_Device::core_ctlreq(uint16_t req, ctlreq_data_t* reqdata)
 {
     if (req == AVR_CTLREQ_CORE_NVM) {

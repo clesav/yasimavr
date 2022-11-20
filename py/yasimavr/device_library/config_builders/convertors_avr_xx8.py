@@ -30,11 +30,10 @@ from .configbuilder import _PeripheralConfigBuilder, get_core_attributes
 #========================================================================================
 #Core configuration
 def get_core_config(dev_desc):
-    #TODO: attributes
     cfg = _archlib.AVR_ArchAVR_CoreConfig()
     cfg.attributes = get_core_attributes(dev_desc)
     cfg.iostart, cfg.ioend = dev_desc.mem_spaces['data'].segments['io']
-    cfg.ramstart, cfg.ramend = dev_desc.mem_spaces['data'].segments['sram']
+    cfg.ramstart, cfg.ramend = dev_desc.mem_spaces['data'].segments['ram']
     cfg.dataend = dev_desc.mem_spaces['data'].memend
     cfg.flashend = dev_desc.mem_spaces['flash'].memend
     cfg.eepromend = dev_desc.mem_spaces['eeprom'].memend

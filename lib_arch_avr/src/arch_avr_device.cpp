@@ -124,6 +124,13 @@ AVR_ArchAVR_Device::AVR_ArchAVR_Device(const AVR_ArchAVR_DeviceConfig& config)
 ,m_core_impl(*(config.core))
 {}
 
+
+AVR_ArchAVR_Device::~AVR_ArchAVR_Device()
+{
+    erase_peripherals();
+}
+
+
 bool AVR_ArchAVR_Device::core_ctlreq(uint16_t req, ctlreq_data_t* reqdata)
 {
     if (req == AVR_CTLREQ_CORE_NVM) {

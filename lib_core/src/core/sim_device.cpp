@@ -116,18 +116,31 @@ AVR_Device::AVR_Device(AVR_Core& core, const AVR_DeviceConfiguration& config)
 AVR_Device::~AVR_Device()
 {
     m_state = State_Destroying;
+    erase_peripherals();
+}
+
+
+void AVR_Device::erase_peripherals()
+{
+    //Block state resolution for all pins, to avoid spurious signalling when destroying the peripherals
+    for (auto it = m_pins.begin(); it != m_pins.end(); ++it) {
+        AVR_Pin* pin = it->second;
+        pin->set_resolution_inhibited(true);
+    }
 
     //Destroys all the peripherals, last attached first destroyed.
     for (auto per_it = m_peripherals.rbegin(); per_it != m_peripherals.rend(); ++per_it) {
         AVR_Peripheral* per = *per_it;
         delete per;
     }
+    m_peripherals.clear();
 
     //Destroys the device pins.
     for (auto it = m_pins.begin(); it != m_pins.end(); ++it) {
         AVR_Pin* pin = it->second;
         delete pin;
     }
+    m_pins.clear();
 }
 
 
@@ -397,7 +410,7 @@ bool AVR_Device::core_ctlreq(uint16_t req, ctlreq_data_t* reqdata)
     }
 
     else if (req == AVR_CTLREQ_CORE_SHORTING) {
-        m_logger.err("Pin %s shorted", m_config.pins[reqdata->index]);
+        m_logger.err("Pin %s shorted", id_to_str(reqdata->index).c_str());
         if (m_options & Option_ResetOnPinShorting) {
             m_reset_flags |= Reset_BOD;
             m_state = State_Reset;

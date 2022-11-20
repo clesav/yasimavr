@@ -88,6 +88,7 @@ class DLL_EXPORT AVR_ArchMega0_Device : public AVR_Device {
 public:
 
     AVR_ArchMega0_Device(const AVR_ArchMega0_DeviceConfig& config);
+    virtual ~AVR_ArchMega0_Device();
 
 protected:
 

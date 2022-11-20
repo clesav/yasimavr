@@ -25,12 +25,27 @@ configuration decoded from YAML configuration files
 import yaml
 import weakref
 import os
+import sys
 import collections
 
 
 Architectures = ['AVR', 'Mega0']
 
-_config_repository = os.path.join(os.path.dirname(__file__), 'configs')
+
+#List of path which are searched for YAML configuration files
+#This can be altered by the used
+ConfigRepositories = [
+    os.path.join(os.path.dirname(__file__), 'configs')
+]
+
+def _find_config_file(fn):
+    path_list = ConfigRepositories + sys.path
+    for r in path_list:
+        p = os.path.join(r, fn)
+        if os.path.isfile(p):
+            return p
+    return None
+
 
 class DeviceConfigException(Exception):
     pass
@@ -137,8 +152,6 @@ class RegisterFieldDescriptor:
             return self.LSB, mask
 
 
-
-
 class RegisterDescriptor:
     '''Descriptor class for a I/O register'''
 
@@ -237,7 +250,10 @@ class _DeviceDescriptorLoader:
         if per_filepath in self._yml_cache:
             per_yml_doc = self._yml_cache[per_filepath]
         else:
-            per_path = os.path.join(_config_repository, per_filepath)
+            per_path = _find_config_file(per_filepath)
+            if per_path is None:
+                raise DeviceConfigException('Config file not found: ' + per_filepath)
+
             f = open(per_path)
             per_yml_doc = yaml.safe_load(f)
             self._yml_cache[per_filepath] = per_yml_doc
@@ -262,10 +278,12 @@ class DeviceDescriptor:
         if lower_devname in cls._cache:
             return cls._cache[lower_devname]
         else:
-            return super().__new__(cls)
+            desc = super().__new__(cls)
+            desc._load_config(devname)
+            cls._cache[lower_devname] = desc
+            return desc
 
-    def __init__(self, devname):
-
+    def _load_config(self, devname):
         yml_cfg = self._read_config(devname)
 
         self.name = str(yml_cfg['name'])
@@ -285,7 +303,7 @@ class DeviceDescriptor:
 
         self.core_attributes = dict(yml_cfg['core'])
 
-        self.fuses = dict(yml_cfg['fuses'])
+        self.fuses = dict(yml_cfg.get('fuses', {}))
 
         self.access_config = dict(yml_cfg.get('access', {}))
 
@@ -297,17 +315,16 @@ class DeviceDescriptor:
         for per_name, f in dict(yml_cfg['peripherals']).items():
             self.peripherals[per_name] = PeripheralInstanceDescriptor(per_name, dev_loader, f, self)
 
-        self._cache[devname] = self
-
     @classmethod
     def _read_config(cls, devname):
-        fn = os.path.join(_config_repository, devname + '.yml')
+        fn = _find_config_file(devname + '.yml')
+        if fn is None:
+            raise DeviceConfigException('No configuration found for variant ' + devname)
+
         f = None
         try:
             f = open(fn)
             yml_cfg = yaml.safe_load(f)
-        except FileNotFoundError:
-            raise DeviceConfigException('No configuration found for variant ' + devname)
         except Exception as exc:
             msg = 'Error reading the configuration file for ' + devname
             raise DeviceConfigException(msg) from exc

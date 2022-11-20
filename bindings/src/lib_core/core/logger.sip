@@ -45,6 +45,8 @@ class AVR_LogHandler {
 #include "core/sim_logger.h"
 %End
 
+public:
+
     AVR_LogHandler();
 
     void init(AVR_CycleManager&);

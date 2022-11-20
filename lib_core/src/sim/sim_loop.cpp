@@ -54,7 +54,7 @@ AVR_AbstractSimLoop::AVR_AbstractSimLoop(AVR_Device& device)
 AVR_AbstractSimLoop::~AVR_AbstractSimLoop()
 {}
 
-cycle_count_t AVR_AbstractSimLoop::run_device(cycle_count_t cycle_limit)
+cycle_count_t AVR_AbstractSimLoop::run_device(cycle_count_t final_cycle)
 {
     cycle_count_t cycle_delta = m_device.exec_cycle();
 
@@ -73,7 +73,7 @@ cycle_count_t AVR_AbstractSimLoop::run_device(cycle_count_t cycle_limit)
             cycle_delta = 1;
             logger().wng("Nothing scheduled yet to wake-up the device, going in standby.");
         }
-        else if (next_timer_cycle >= cycle_limit) {
+        else if (next_timer_cycle > final_cycle) {
             m_state = State_Stopped;
             logger().wng("Nothing to process further, stopping.");
         }
@@ -124,10 +124,10 @@ void AVR_SimLoop::run(cycle_count_t nbcycles)
     m_state = State_Running;
 
     const time_point clock_start = std::chrono::steady_clock::now();
-    const cycle_count_t cycle_start = m_cycle_manager.cycle();
-    cycle_count_t final_cycle = nbcycles ? (cycle_start + nbcycles) : LLONG_MAX;
+    cycle_count_t first_cycle = m_cycle_manager.cycle();
+    cycle_count_t final_cycle = nbcycles ? (first_cycle + nbcycles) : LLONG_MAX;
 
-    while (m_cycle_manager.cycle() < final_cycle) {
+    while (m_cycle_manager.cycle() <= final_cycle) {
 
         cycle_count_t cycle_delta = run_device(final_cycle);
 
@@ -139,7 +139,7 @@ void AVR_SimLoop::run(cycle_count_t nbcycles)
             //since the start of the loop divided by the clock frequency). It's then compared
             //to the system clock elapsed and if it's ahead by more than a threshold,
             //pause the loop for the time delta
-            int64_t sim_deadline_us = ((m_cycle_manager.cycle() + cycle_delta - cycle_start) *
+            int64_t sim_deadline_us = ((m_cycle_manager.cycle() + cycle_delta - first_cycle) *
                                         1000000L) / m_device.frequency();
             int64_t curr_time_us = get_timestamp_usecs(clock_start);
             int64_t sleep_time_us = sim_deadline_us - curr_time_us;

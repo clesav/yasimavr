@@ -79,6 +79,7 @@ class DLL_EXPORT AVR_ArchAVR_Device : public AVR_Device {
 public:
 
     AVR_ArchAVR_Device(const AVR_ArchAVR_DeviceConfig& config);
+    virtual ~AVR_ArchAVR_Device();
 
 protected:
 
