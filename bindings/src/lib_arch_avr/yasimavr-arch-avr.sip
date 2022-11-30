@@ -31,6 +31,7 @@
 
 //=======================================================================================
 
+%Include arch_avr_acp.sip
 %Include arch_avr_adc.sip
 %Include arch_avr_device.sip
 %Include arch_avr_extint.sip

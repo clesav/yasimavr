@@ -229,6 +229,33 @@ _AdcConfigBuilder = _PeripheralConfigBuilder(_archlib.AVR_ArchAVR_ADC_Config, _a
 def get_adc_config(per_desc):
     return _AdcConfigBuilder(per_desc)
 
+#========================================================================================
+#ACP configuration
+
+def _acp_convertor(cfg, attr, yml_val, per_desc):
+    if attr == 'mux_pins':
+        py_pins = []
+        for reg_value, item in yml_val.items():
+            mux_cfg = _archlib.AVR_ArchAVR_ACP_Config.mux_config_t()
+            mux_cfg.reg_value = reg_value
+            mux_cfg.pin = _corelib.str_to_id(item[0])
+            py_pins.append(mux_cfg)
+
+        cfg.mux_pins = py_pins
+
+    elif attr == 'pos_pin':
+        cfg.pos_pin = _corelib.str_to_id(yml_val)
+
+    elif attr == 'neg_pin':
+        cfg.neg_pin = _corelib.str_to_id(yml_val)
+
+    else:
+        raise Exception('Converter not implemented for ' + attr)
+
+_AcpConfigBuilder = _PeripheralConfigBuilder(_archlib.AVR_ArchAVR_ACP_Config, _acp_convertor)
+
+def get_acp_config(per_desc):
+    return _AcpConfigBuilder(per_desc)
 
 #========================================================================================
 #Reference voltage configuration

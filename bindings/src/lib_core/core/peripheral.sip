@@ -32,8 +32,6 @@ const uint32_t IOCTL_INTR       = AVR_IOCTL_INTR;
 const uint32_t IOCTL_SLEEP      = AVR_IOCTL_SLEEP;
 const uint32_t IOCTL_CLOCK      = AVR_IOCTL_CLOCK;
 const uint32_t IOCTL_PORTMUX    = AVR_IOCTL_PORTMUX;
-const uint32_t IOCTL_ADC        = AVR_IOCTL_ADC;
-const uint32_t IOCTL_ACOMP      = AVR_IOCTL_ACOMP;
 const uint32_t IOCTL_EEPROM     = AVR_IOCTL_EEPROM;
 const uint32_t IOCTL_NVM        = AVR_IOCTL_NVM;
 const uint32_t IOCTL_VREF       = AVR_IOCTL_VREF;
@@ -44,6 +42,16 @@ const uint32_t IOCTL_RTC        = AVR_IOCTL_RTC;
 uint32_t IOCTL_PORT(char n)
 {
     return AVR_IOCTL_PORT(n);
+}
+
+uint32_t IOCTL_ADC(char n)
+{
+    return AVR_IOCTL_ADC(n);
+}
+
+uint32_t IOCTL_ACP(char n)
+{
+    return AVR_IOCTL_ACP(n);
 }
 
 uint32_t IOCTL_TIMER(char t, char n)
@@ -90,8 +98,6 @@ const uint32_t IOCTL_INTR;
 const uint32_t IOCTL_SLEEP;
 const uint32_t IOCTL_CLOCK;
 const uint32_t IOCTL_PORTMUX;
-const uint32_t IOCTL_ADC;
-const uint32_t IOCTL_ACOMP;
 const uint32_t IOCTL_EEPROM;
 const uint32_t IOCTL_NVM;
 const uint32_t IOCTL_VREF;
@@ -100,6 +106,8 @@ const uint32_t IOCTL_RST;
 const uint32_t IOCTL_RTC;
 
 uint32_t IOCTL_PORT(char);
+uint32_t IOCTL_ADC(char);
+uint32_t IOCTL_ACP(char);
 uint32_t IOCTL_TIMER(char, char);
 uint32_t IOCTL_UART(char);
 uint32_t IOCTL_SPI(char);

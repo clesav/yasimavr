@@ -21,38 +21,30 @@
 
 //=======================================================================================
 
-
 #include "arch_avr_adc.h"
-#include "arch_avr_timer.h"
 #include "core/sim_sleep.h"
 
 
 #define CFG AVR_ArchAVR_ADC_Config
 
-static const uint32_t ADC_Prescaler_Max = 128;
+static const uint32_t ADC_PrescalerMax = 128;
 
 
 //=======================================================================================
 
-AVR_ArchAVR_ADC::AVR_ArchAVR_ADC(const AVR_ArchAVR_ADC_Config& config)
-:AVR_Peripheral(AVR_IOCTL_ADC)
+AVR_ArchAVR_ADC::AVR_ArchAVR_ADC(int num, const CFG& config)
+:AVR_Peripheral(AVR_IOCTL_ADC(0x30 + num))
 ,m_config(config)
 ,m_state(ADC_Disabled)
 ,m_first(true)
-,m_trigger_index(-1)
+,m_trigger(CFG::Trig_Manual)
 ,m_temperature(25.0)
 ,m_latched_ch_mux(0)
 ,m_latched_ref_mux(0)
 ,m_conv_value(0)
-,m_signal(NULL)
 ,m_intflag(true)
 {}
 
-AVR_ArchAVR_ADC::~AVR_ArchAVR_ADC()
-{
-    if (m_signal)
-        delete m_signal;
-}
 
 bool AVR_ArchAVR_ADC::init(AVR_Device& device)
 {
@@ -77,10 +69,8 @@ bool AVR_ArchAVR_ADC::init(AVR_Device& device)
                              m_config.rb_int_flag,
                              m_config.int_vector);
 
-    status &= connect_trigger_signals();
-
     m_timer.init(device.cycle_manager(), logger());
-    m_timer.signal().connect_hook(this, 0xFFFF);
+    m_timer.signal().connect_hook(this);
 
     return status;
 }
@@ -89,7 +79,7 @@ void AVR_ArchAVR_ADC::reset()
 {
     m_state = ADC_Disabled;
     m_first = true;
-    m_trigger_index = -1;
+    m_trigger = CFG::Trig_Manual;
     m_conv_value = 0;
     m_timer.reset();
 }
@@ -97,13 +87,18 @@ void AVR_ArchAVR_ADC::reset()
 bool AVR_ArchAVR_ADC::ctlreq(uint16_t req, ctlreq_data_t* data)
 {
     if (req == AVR_CTLREQ_GET_SIGNAL) {
-        if (!m_signal)
-            m_signal = new AVR_Signal;
-        data->data = m_signal;
+        data->data = &m_signal;
         return true;
     }
     else if (req == AVR_CTLREQ_ADC_SET_TEMP) {
         m_temperature = data->data.as_double();
+        return true;
+    }
+    else if (req == AVR_CTLREQ_ADC_TRIGGER) {
+        if (m_state == ADC_Idle && m_trigger == CFG::Trig_External) {
+            reset_prescaler();
+            start_conversion_cycle();
+        }
         return true;
     }
     return false;
@@ -145,8 +140,18 @@ void AVR_ArchAVR_ADC::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& 
             start_conversion_cycle();
     }
 
-    if (addr == m_config.rb_auto_trig.addr || addr == m_config.rb_trig_mux.addr)
-        update_trigger_signal();
+    if (addr == m_config.rb_auto_trig.addr || addr == m_config.rb_trig_mux.addr) {
+        if (test_ioreg(m_config.rb_auto_trig)) {
+            uint8_t trig_reg_value = read_ioreg(m_config.rb_trig_mux);
+            int ix = find_reg_config<CFG::trigger_config_t>(m_config.triggers, trig_reg_value);
+            if (ix < 0)
+                m_trigger = CFG::Trig_Manual;
+            else
+                m_trigger = m_config.triggers[ix].trigger;
+        } else {
+            m_trigger = CFG::Trig_Manual;
+        }
+    }
 
     if (addr == m_config.rb_left_adj.addr)
         write_digital_value();
@@ -162,21 +167,6 @@ void AVR_ArchAVR_ADC::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& 
 
 
 //=======================================================================================
-/*
- * Hook callback, the sigid determines if it's a timer signal or a trigger signal
- */
-void AVR_ArchAVR_ADC::raised(const signal_data_t& sigdata, uint16_t hooktag)
-{
-    if (hooktag == 0xFFFF) {
-        if (sigdata.index == 1)
-            timer_raised();
-    } else {
-        trigger_raised(sigdata, hooktag);
-    }
-}
-
-
-//=======================================================================================
 //Conversion timing management
 
 void AVR_ArchAVR_ADC::reset_prescaler()
@@ -184,7 +174,7 @@ void AVR_ArchAVR_ADC::reset_prescaler()
     m_timer.reset();
 
     uint32_t clk_ps_factor = m_config.clk_ps_factors[read_ioreg(m_config.rb_prescaler)];
-    m_timer.set_prescaler(ADC_Prescaler_Max, clk_ps_factor);
+    m_timer.set_prescaler(ADC_PrescalerMax, clk_ps_factor);
 }
 
 /*
@@ -207,8 +197,7 @@ void AVR_ArchAVR_ADC::start_conversion_cycle()
     m_timer.set_timer_delay(adc_ticks);
 
     //Raise the signal
-    if (m_signal)
-        m_signal->raise_u(0, m_latched_ch_mux, Signal_ConversionStarted);
+    m_signal.raise_u(Signal_ConversionStarted, m_latched_ch_mux);
 }
 
 /*
@@ -236,8 +225,8 @@ void AVR_ArchAVR_ADC::read_analog_value()
     if(index == -1)
         _crash("ADC: Invalid reference configuration");
     auto ref_config = &(m_config.references[index]);
-    ctlreq_data_t reqdata = { .index = ref_config->source };
-    if (!device()->ctlreq(AVR_IOCTL_VREF, AVR_CTLREQ_ADC_GET_VREF, &reqdata))
+    ctlreq_data_t reqdata = { .data = m_config.vref_channel, .index = ref_config->source };
+    if (!device()->ctlreq(AVR_IOCTL_VREF, AVR_CTLREQ_VREF_GET, &reqdata))
         _crash("ADC: Unable to obtain the voltage reference");
     vref = reqdata.data.as_double();
 
@@ -263,9 +252,9 @@ void AVR_ArchAVR_ADC::read_analog_value()
             bipolar = test_ioreg(m_config.rb_bipolar);
         } break;
 
-        case Channel_BandGap: {
-            ctlreq_data_t reqdata = { .index = AVR_IO_VREF::Source_Internal };
-            if (!device()->ctlreq(AVR_IOCTL_VREF, AVR_CTLREQ_ADC_GET_VREF, &reqdata))
+        case Channel_IntRef: {
+            ctlreq_data_t reqdata = { .data = m_config.vref_channel, .index = ref_config->source };
+            if (!device()->ctlreq(AVR_IOCTL_VREF, AVR_CTLREQ_VREF_GET, &reqdata))
                 _crash("ADC: Unable to obtain the band gap voltage value");
             raw_value = reqdata.data.as_double();
         } break;
@@ -274,8 +263,8 @@ void AVR_ArchAVR_ADC::read_analog_value()
             double temp_volt = m_config.temp_cal_coef * (m_temperature - 25.0) + m_config.temp_cal_25C;
             //The temperature measure obtained is in absolute voltage values.
             //We need to make it relative to VCC
-            ctlreq_data_t reqdata = { .index = AVR_IO_VREF::Source_Ext_VCC };
-            if (!device()->ctlreq(AVR_IOCTL_VREF, AVR_CTLREQ_ADC_GET_VREF, &reqdata))
+            ctlreq_data_t reqdata = { .index = AVR_IO_VREF::Source_VCC };
+            if (!device()->ctlreq(AVR_IOCTL_VREF, AVR_CTLREQ_VREF_GET, &reqdata))
                 _crash("ADC: Unable to obtain the VCC voltage value");
             raw_value = temp_volt / reqdata.data.as_double();
         } break;
@@ -304,12 +293,14 @@ void AVR_ArchAVR_ADC::read_analog_value()
     }
 }
 
-void AVR_ArchAVR_ADC::timer_raised()
+
+void AVR_ArchAVR_ADC::raised(const signal_data_t& sigdata, uint16_t __unused)
 {
+    if (sigdata.index != 1) return;
+
     if (m_state == ADC_PendingConversion) {
         //Raise the signal
-        if (m_signal)
-            m_signal->raise_u(Signal_AboutToSample, m_latched_ch_mux, 0);
+        m_signal.raise_u(Signal_AboutToSample, m_latched_ch_mux);
 
         read_analog_value();
 
@@ -324,8 +315,7 @@ void AVR_ArchAVR_ADC::timer_raised()
     else if (m_state == ADC_PendingRaise) {
 
         //Raise the signal
-        if (m_signal)
-            m_signal->raise_u(Signal_ConversionComplete, m_latched_ch_mux, 0);
+        m_signal.raise_u(Signal_ConversionComplete, m_latched_ch_mux);
 
         //Store the converted value in the data register according to the adjusting
         write_digital_value();
@@ -337,12 +327,9 @@ void AVR_ArchAVR_ADC::timer_raised()
             logger().dbg("Interrupt triggered");
 
         //If free running auto-trigger is enabled, start a new conversion cycle
-        if (m_trigger_index >= 0) {
-            CFG::TriggerType trig_type = m_config.triggers[m_trigger_index].trig_type;
-            if (trig_type == CFG::FreeRunning) {
-                logger().dbg("In free running, starting a new conversion");
-                start_conversion_cycle();
-            }
+        if (m_trigger == CFG::Trig_FreeRunning) {
+            logger().dbg("In free running, starting a new conversion");
+            start_conversion_cycle();
         }
     }
 }
@@ -368,119 +355,6 @@ void AVR_ArchAVR_ADC::write_digital_value()
     write_ioreg(m_config.reg_datal, r & 0x00FF);
 }
 
-//=============================================================================
-//Management of auto triggers
-
-bool AVR_ArchAVR_ADC::connect_trigger_signals()
-{
-    for (unsigned int i = 0; i < m_config.triggers.size(); ++i) {
-        m_trigger_state.push_back(false);
-
-        bool expect_signal = true;
-        AVR_Signal* s;
-        switch(m_config.triggers[i].trig_type) {
-            case CFG::AComp:
-                s = get_signal(AVR_IOCTL_ACOMP);
-                break;
-
-            case CFG::ExtInt0:
-                s = get_signal(AVR_IOCTL_EXTINT);
-                break;
-
-            case CFG::Timer0_CompA:
-                s = get_signal(AVR_IOCTL_TIMER('_', '0'));
-                break;
-
-            case CFG::Timer0_OVF:
-                s = get_signal(AVR_IOCTL_TIMER('_', '0'));
-                break;
-
-            case CFG::Timer1_CompB:
-                s = get_signal(AVR_IOCTL_TIMER('_', '1'));
-                break;
-
-            case CFG::Timer1_OVF:
-                s = get_signal(AVR_IOCTL_TIMER('_', '1'));
-                break;
-
-            case CFG::Manual:
-            case CFG::FreeRunning:
-                expect_signal = false;
-                s = nullptr;
-                break;
-
-            default:
-                s = nullptr;
-        }
-
-        if (s) {
-            s->connect_hook(this, i);
-        }
-        else if (expect_signal) {
-            logger().wng("Found no signal for trigger %x",
-                         m_config.triggers[i].reg_value);
-        }
-    }
-
-    return true;
-}
-
-
-/* This method updates the trigger.
- * "Note that switching from a trigger source that is cleared to a trigger
- * source that is set, will generate a positive edge on the trigger signal." (AVR datasheet)
- * So we need to compare the state of the selected trigger before and after change.
- * If we have a positive edge, we force the start of a conversion cycle.
- */
-void AVR_ArchAVR_ADC::update_trigger_signal()
-{
-    if (test_ioreg(m_config.rb_auto_trig)) {
-
-        bool old_trig_state = (m_trigger_index >= 0) ? m_trigger_state[m_trigger_index] : false;
-
-        uint8_t trig_reg_value = read_ioreg(m_config.rb_trig_mux);
-        m_trigger_index = find_reg_config<CFG::trigger_config_t>(m_config.triggers, trig_reg_value);
-
-        bool new_trig_state = (m_trigger_index >= 0) ? m_trigger_state[m_trigger_index] : false;
-
-        if (new_trig_state && !old_trig_state) {
-            reset_prescaler();
-            start_conversion_cycle();
-        }
-
-    } else {
-        m_trigger_index = -1;
-    }
-}
-
-/*
- * Callback when the auto-trigger hook is raised
- */
-void AVR_ArchAVR_ADC::trigger_raised(const signal_data_t& data, uint16_t sigid)
-{
-    //Obtain the corresponding trigger type
-    CFG::TriggerType trig_type = m_config.triggers[sigid].trig_type;
-
-    //Save the state of the signal, even if it's not the one selected
-    //as trigger.
-    //For ExtInt0, the signal is raised for any EXTINT but we can filter by index
-    if (trig_type != CFG::ExtInt0 || data.index == 0)
-        m_trigger_state[sigid] = data.data.as_uint();
-
-    //No need to process further if:
-    // - the signal raised is not the selected trigger, or
-    // - The ADC is disabled or a conversion is already on-going, or
-    // - Auto-trigger is disabled, or
-    // - The device is in a sleep mode where the ADC is paused
-    if (sigid != m_trigger_index ||
-        m_state != ADC_Idle ||
-        !test_ioreg(m_config.rb_auto_trig) ||
-        device()->sleep_mode() > AVR_SleepMode::ADC) return;
-
-    //Reset the prescaler and start a conversion
-    reset_prescaler();
-    start_conversion_cycle();
-}
 
 //=============================================================================
 //Sleep management

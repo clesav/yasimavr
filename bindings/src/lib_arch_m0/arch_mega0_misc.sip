@@ -34,6 +34,27 @@ const uint16_t CTLREQ_WRITE_SIGROW;
 
 //=======================================================================================
 
+struct AVR_ArchMega0_VREF_Config {
+%TypeHeaderCode
+#include "arch_mega0_misc.h"
+%End
+
+    struct reference_config_t : base_reg_config_t {
+        AVR_IO_VREF::Source source;
+        double level;
+    };
+
+    struct channel_t {
+        regbit_t rb_select;
+        std::vector<AVR_ArchMega0_VREF_Config::reference_config_t> references;
+    };
+
+    std::vector<AVR_ArchMega0_VREF_Config::channel_t> channels;
+
+    reg_addr_t reg_base;
+
+};
+
 class AVR_ArchMega0_VREF : public AVR_IO_VREF /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_mega0_misc.h"
@@ -41,12 +62,10 @@ class AVR_ArchMega0_VREF : public AVR_IO_VREF /NoDefaultCtors/ {
 
 public:
 
-    AVR_ArchMega0_VREF(reg_addr_t);
+    AVR_ArchMega0_VREF(const AVR_ArchMega0_VREF_Config&);
     virtual bool init(AVR_Device&);
-
-protected:
-
-    virtual double get_reference(AVR_IO_VREF::User) const;
+    virtual void reset();
+    virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
 
 };
 

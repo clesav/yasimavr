@@ -31,6 +31,7 @@
 
 //=======================================================================================
 
+%Include arch_mega0_acp.sip
 %Include arch_mega0_adc.sip
 %Include arch_mega0_device.sip
 %Include arch_mega0_misc.sip

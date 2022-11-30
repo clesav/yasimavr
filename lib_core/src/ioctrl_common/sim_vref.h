@@ -36,23 +36,17 @@
 //AVR_CTLREQ_GET_SIGNAL is not implemented
 
 //Request sent by the ADC to the VREF controller to obtain the VREF.
-//The index shall be set to the required source (one of VREF_Source enum values)
+//The index shall be set to the required source (one of AVR_IO_VREF::Source enum values)
 //On returning, the value 'd' contains the voltage value
 //Except for VCC which is returned in absolute volts, all values are returned as a ratio of VCC
-#define AVR_CTLREQ_ADC_GET_VREF         1
-
-//Request sent by the analog comparator to the VREF controller to obtain the VREF.
-//The index shall be set to the required source (one of VREF_Source enum values)
-//On returning, the value 'd' contains the voltage value
-//Except for VCC which is returned in absolute volts, all values are returned as a ratio of VCC
-#define AVR_CTLREQ_ACP_GET_VREF         2
+#define AVR_CTLREQ_VREF_GET             1
 
 //Request sent by Device classes to set the VCC or AREF values when loading the firmware.
 //The index shall be set to the required source (VREF_Ext_VCC or VREF_Ext_AREF)
 //The value 'd' shall be set to the voltage value :
 //  - VCC shall be an absolute positive value in volts
 //  - AREF shall be a ratio of VCC and is clipped to [0.0; 1.0]
-#define AVR_CTLREQ_VREF_SET             3
+#define AVR_CTLREQ_VREF_SET             2
 
 
 //=======================================================================================
@@ -66,45 +60,46 @@ class DLL_EXPORT AVR_IO_VREF : public AVR_Peripheral {
 public:
 
     enum Source {
-        Source_Ext_VCC,             //VCC voltage value
-        Source_Ext_AVCC,            //AVCC voltage value (always equal to VCC for now)
-        Source_Ext_AREF,            //AREF voltage value
-        Source_Internal             //Internal fixed voltage reference or any mux system
+        Source_VCC,             //VCC voltage value
+        Source_AVCC,            //AVCC voltage value (always equal to VCC for now)
+        Source_AREF,            //AREF voltage value
+        Source_Internal,        //Internal reference voltage value
     };
 
-    enum User {
-        User_ADC,
-        User_ACP
+    enum SignalId {
+        Signal_ARef,
+        Signal_IntRef,
     };
 
-    AVR_IO_VREF();
-    virtual ~AVR_IO_VREF();
+    AVR_IO_VREF(uint32_t ref_count);
+
+    bool active() const;
 
     virtual bool ctlreq(uint16_t req, ctlreq_data_t* data) override;
 
 protected:
 
-    //Sub-classes reimplement this to provide the reference values (in volts, absolute)
-    virtual double get_reference(User user) const = 0;
-
-    double vcc() const;
-    double aref() const;
+    void set_reference(uint32_t index, Source source, double voltage=1.0);
+    double reference(uint32_t index) const;
 
 private:
 
     double m_vcc;
     double m_aref;
+    AVR_DataSignal m_signal;
+
+    struct ref_t {
+        double value;
+        bool relative;
+    };
+
+    std::vector<ref_t> m_references;
 
 };
 
-inline double AVR_IO_VREF::vcc() const
+inline bool AVR_IO_VREF::active() const
 {
     return m_vcc;
-}
-
-inline double AVR_IO_VREF::aref() const
-{
-    return m_aref;
 }
 
 #endif //__YASIMAVR_IO_VREF_H__

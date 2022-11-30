@@ -26,17 +26,17 @@
 #include "ioctrl_common/sim_adc.h"
 
 const uint16_t CTLREQ_ADC_SET_TEMP = AVR_CTLREQ_ADC_SET_TEMP;
-const uint16_t CTLREQ_ADC_FORCE_TRIGGER= AVR_CTLREQ_ADC_FORCE_TRIGGER;
+const uint16_t CTLREQ_ADC_TRIGGER = AVR_CTLREQ_ADC_TRIGGER;
 
 %End
 
 const uint16_t CTLREQ_ADC_SET_TEMP;
-const uint16_t CTLREQ_ADC_FORCE_TRIGGER;
+const uint16_t CTLREQ_ADC_TRIGGER;
 
 
 //=======================================================================================
 
-class AVR_IO_ADC {
+class AVR_IO_ADC /Abstract/ {
 %TypeHeaderCode
 #include "ioctrl_common/sim_adc.h"
 %End
@@ -47,7 +47,7 @@ public:
         Channel_SingleEnded     /PyName=SingleEnded/,
         Channel_Differential    /PyName=Differential/,
         Channel_Zero            /PyName=Zero/,
-        Channel_BandGap         /PyName=BandGap/,
+        Channel_IntRef          /PyName=IntRef/,
         Channel_Temperature     /PyName=Temperature/,
         Channel_AcompRef        /PyName=AcompRef/,
     };
@@ -58,6 +58,7 @@ public:
         AVR_IO_ADC::Channel type;
         uint32_t pin_p;
         uint32_t pin_n;
+        char per_num;
         unsigned int gain;
 
     };

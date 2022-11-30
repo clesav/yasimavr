@@ -173,4 +173,60 @@ private:
 };
 
 
+//=======================================================================================
+
+class DLL_EXPORT AVR_DataSignalMux : public AVR_SignalHook {
+
+public:
+
+    AVR_DataSignalMux();
+
+    virtual void raised(const signal_data_t& sigdata, uint16_t hooktag) override;
+
+    size_t add_mux();
+    size_t add_mux(AVR_DataSignal& signal);
+    size_t add_mux(AVR_DataSignal& signal, uint16_t sigid_filt);
+    size_t add_mux(AVR_DataSignal& signal, uint16_t sigid_filt, uint32_t ix_filt);
+
+    AVR_DataSignal& signal();
+
+    void set_selection(size_t index);
+    size_t selected_index() const;
+    bool connected() const;
+
+private:
+
+    struct mux_item_t {
+        AVR_DataSignal* signal;
+        uint16_t sigid_filt;
+        uint32_t index_filt;
+        uint8_t filt_mask;
+        vardata_t data;
+
+        bool match(const signal_data_t& sigdata) const;
+    };
+
+    std::vector<mux_item_t> m_items;
+    AVR_DataSignal m_signal;
+    size_t m_sel_index;
+
+    size_t add_mux(mux_item_t& item);
+
+};
+
+inline AVR_DataSignal& AVR_DataSignalMux::signal()
+{
+    return m_signal;
+}
+
+inline size_t AVR_DataSignalMux::selected_index() const
+{
+    return m_sel_index;
+}
+
+inline bool AVR_DataSignalMux::connected() const
+{
+    return (m_sel_index < m_items.size()) ? !!m_items[m_sel_index].signal : false;
+}
+
 #endif //__YASIMAVR_SIGNAL_H__

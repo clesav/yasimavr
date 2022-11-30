@@ -1,7 +1,7 @@
 /*
- * sim_acomp.h
+ * acp.sip
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -19,17 +19,29 @@
     along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
 //=======================================================================================
 
-#ifndef __YASIMAVR_IO_ACOMP_H__
-#define __YASIMAVR_IO_ACOMP_H__
+class AVR_IO_ACP /Abstract/ {
+%TypeHeaderCode
+#include "ioctrl_common/sim_acp.h"
+%End
 
-/*
- * No definition yet
- *
- * For future use to define Analog Comparator peripherals
- *
- */
+public:
 
+    enum Channel {
+        Channel_Pin         /PyName=Pin/,
+        Channel_AcompRef    /PyName=AcompRef/,
+    };
 
-#endif //__YASIMAVR_IO_ACOMP_H__
+     struct channel_config_t : base_reg_config_t {
+        AVR_IO_ACP::Channel type;
+        uint32_t pin;
+    };
+
+    enum SignalId /BaseType=IntEnum/ {
+        Signal_Output       /PyName=Output/,
+        Signal_DAC          /PyName=DAC/,
+    };
+
+};

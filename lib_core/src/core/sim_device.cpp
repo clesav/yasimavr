@@ -122,12 +122,6 @@ AVR_Device::~AVR_Device()
 
 void AVR_Device::erase_peripherals()
 {
-    //Block state resolution for all pins, to avoid spurious signalling when destroying the peripherals
-    for (auto it = m_pins.begin(); it != m_pins.end(); ++it) {
-        AVR_Pin* pin = it->second;
-        pin->set_resolution_inhibited(true);
-    }
-
     //Destroys all the peripherals, last attached first destroyed.
     for (auto per_it = m_peripherals.rbegin(); per_it != m_peripherals.rend(); ++per_it) {
         AVR_Peripheral* per = *per_it;
@@ -234,11 +228,11 @@ bool AVR_Device::load_firmware(const AVR_Firmware& firmware)
     //Send the power supply voltage from the firmware to the VREF controller (if it exists)
     bool analog_ok = false;
     if (firmware.vcc > 0.0) {
-        ctlreq_data_t reqdata = { .data = firmware.vcc, .index = AVR_IO_VREF::Source_Ext_VCC, };
+        ctlreq_data_t reqdata = { .data = firmware.vcc, .index = AVR_IO_VREF::Source_VCC, };
         analog_ok = ctlreq(AVR_IOCTL_VREF, AVR_CTLREQ_VREF_SET, &reqdata);
         if (analog_ok) {
             //Send the analog voltage reference from the firmware to the VREF controller
-            reqdata.index = AVR_IO_VREF::Source_Ext_AREF;
+            reqdata.index = AVR_IO_VREF::Source_AREF;
             reqdata.data = firmware.aref;
             ctlreq(AVR_IOCTL_VREF, AVR_CTLREQ_VREF_SET, &reqdata);
         } else {

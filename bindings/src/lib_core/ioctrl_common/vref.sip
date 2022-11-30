@@ -26,14 +26,12 @@
 
 #include "ioctrl_common/sim_vref.h"
 
-const uint16_t CTLREQ_ADC_GET_VREF = AVR_CTLREQ_ADC_GET_VREF;
-const uint16_t CTLREQ_ACP_GET_VREF = AVR_CTLREQ_ACP_GET_VREF;
+const uint16_t CTLREQ_VREF_GET = AVR_CTLREQ_VREF_GET;
 const uint16_t CTLREQ_VREF_SET = AVR_CTLREQ_VREF_SET;
 
 %End
 
-const uint16_t CTLREQ_ADC_GET_VREF;
-const uint16_t CTLREQ_ACP_GET_VREF;
+const uint16_t CTLREQ_VREF_GET;
 const uint16_t CTLREQ_VREF_SET;
 
 
@@ -44,28 +42,27 @@ class AVR_IO_VREF : public AVR_Peripheral /Abstract/ {
 
 public:
 
-    enum Source {
-        Source_Ext_VCC          /PyName=Ext_VCC/,
-        Source_Ext_AVCC         /PyName=Ext_AVCC/,
-        Source_Ext_AREF         /PyName=Ext_AREF/,
-        Source_Internal         /PyName=Internal/,
+    enum Source /BaseType=IntEnum/ {
+        Source_VCC                  /PyName=VCC/,
+        Source_AVCC                 /PyName=AVCC/,
+        Source_AREF                 /PyName=AREF/,
+        Source_Internal             /PyName=Internal/,
     };
 
-    enum User {
-        User_ADC,
-        User_ACP
+    enum SignalId /BaseType=IntEnum/ {
+        Signal_ARef                 /PyName=ARef/,
+        Signal_IntRef               /PyName=IntRef/,
     };
 
-    AVR_IO_VREF();
-    virtual ~AVR_IO_VREF();
+    AVR_IO_VREF(size_t ref_count);
+
+    bool active() const;
 
     virtual bool ctlreq(uint16_t, ctlreq_data_t*);
 
 protected:
 
-    virtual double get_reference(AVR_IO_VREF::User user) const = 0;
-
-    double vcc() const;
-    double aref() const;
+    void set_reference(uint32_t, Source, double=1.0);
+    double reference(uint32_t) const;
 
 };

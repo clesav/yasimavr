@@ -255,3 +255,81 @@ size_t AVR_DataSignal::keyhash_t::operator()(const key_t& k) const
 {
     return ((uint32_t)k.sigid) ^ k.index;
 }
+
+
+//=======================================================================================
+
+#define FILT_SIGID          1
+#define FILT_INDEX          2
+
+
+AVR_DataSignalMux::AVR_DataSignalMux()
+:m_sel_index(0)
+{}
+
+void AVR_DataSignalMux::raised(const signal_data_t& sigdata, uint16_t hooktag)
+{
+    if (hooktag == m_sel_index && m_sel_index < m_items.size() && m_items[m_sel_index].match(sigdata)) {
+        m_items[m_sel_index].data = sigdata.data;
+        m_signal.raise({ 0, 0, sigdata.data });
+    }
+}
+
+
+size_t AVR_DataSignalMux::add_mux()
+{
+    mux_item_t item = { nullptr, 0, 0, 0 };
+    return add_mux(item);
+}
+
+
+size_t AVR_DataSignalMux::add_mux(AVR_DataSignal& signal)
+{
+    mux_item_t item = { &signal,  0, 0, 0 };
+    return add_mux(item);
+}
+
+
+size_t AVR_DataSignalMux::add_mux(AVR_DataSignal& signal, uint16_t sigid_filt)
+{
+    mux_item_t item = { &signal, sigid_filt, 0, FILT_SIGID };
+    return add_mux(item);
+}
+
+
+size_t AVR_DataSignalMux::add_mux(AVR_DataSignal& signal, uint16_t sigid_filt, uint32_t ix_filt)
+{
+    mux_item_t item = { &signal, sigid_filt, ix_filt, FILT_SIGID | FILT_INDEX };
+    return add_mux(item);
+}
+
+
+size_t AVR_DataSignalMux::add_mux(mux_item_t& item)
+{
+    size_t index = m_items.size();
+    if (item.signal) {
+        item.signal->connect_hook(this, index);
+        if (!index) {
+            item.data = item.signal->data(item.sigid_filt, item.index_filt);
+            m_signal.set_data(0, item.data, 0);
+        }
+    }
+    m_items.push_back(item);
+    return index;
+}
+
+
+void AVR_DataSignalMux::set_selection(size_t index)
+{
+    if (index < m_items.size() && index != m_sel_index) {
+        m_sel_index = index;
+        m_signal.raise({ 0, 0, m_items[index].data });
+    }
+}
+
+
+bool AVR_DataSignalMux::mux_item_t::match(const signal_data_t& sigdata) const
+{
+    return (sigdata.sigid == sigid_filt || !(filt_mask & FILT_SIGID)) &&
+           (sigdata.index == index_filt || !(filt_mask & FILT_INDEX));
+}
