@@ -37,10 +37,11 @@ AVR_IO_VREF::AVR_IO_VREF(uint32_t ref_count)
 
     //Ensures there's a valid value at the start for each reference
     //in the signal internal data map
-    m_signal.set_data(Signal_ARef, 0.0);
+    m_signal.set_data(Signal_VCCChange, 0.0);
+    m_signal.set_data(Signal_ARefChange, 0.0);
 
     for (uint32_t i = 0; i < m_references.size(); ++i)
-        m_signal.set_data(Signal_IntRef, 0.0, i);
+        m_signal.set_data(Signal_IntRefChange, 0.0, i);
 }
 
 bool AVR_IO_VREF::ctlreq(uint16_t req, ctlreq_data_t* data)
@@ -75,10 +76,12 @@ bool AVR_IO_VREF::ctlreq(uint16_t req, ctlreq_data_t* data)
             m_vcc = data->data.as_double();
             if (m_vcc < 0.0) m_vcc = 0.0;
 
+            m_signal.raise_d(Signal_VCCChange, m_vcc);
+
             //A VCC modif impacts all other references so we must
             //notify them all
             for (uint32_t i = 0; i < m_references.size(); ++i)
-                m_signal.raise_d(Signal_IntRef, reference(i), i);
+                m_signal.raise_d(Signal_IntRefChange, reference(i), i);
 
         }
         else if (data->index == Source_AREF) {
@@ -87,7 +90,7 @@ bool AVR_IO_VREF::ctlreq(uint16_t req, ctlreq_data_t* data)
             if (m_aref > 1.0) m_aref = 1.0;
             if (m_aref < 0.0) m_aref = 0.0;
 
-            m_signal.raise_d(Signal_ARef, m_aref);
+            m_signal.raise_d(Signal_ARefChange, m_aref);
         }
         else
             return false;
@@ -111,7 +114,7 @@ void AVR_IO_VREF::set_reference(uint32_t index, Source source, double voltage)
     m_references[index] = r;
 
     if (m_vcc)
-        m_signal.raise_d(Signal_IntRef, reference(index), index);
+        m_signal.raise_d(Signal_IntRefChange, reference(index), index);
 }
 
 //Returns a reference as an absolute voltage value

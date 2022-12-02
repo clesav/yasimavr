@@ -67,8 +67,9 @@ public:
     };
 
     enum SignalId {
-        Signal_ARef,
-        Signal_IntRef,
+        Signal_ARefChange,
+        Signal_IntRefChange,
+        Signal_VCCChange,
     };
 
     AVR_IO_VREF(uint32_t ref_count);

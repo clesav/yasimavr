@@ -184,7 +184,7 @@ void AVR_ArchMega0_ACP::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t
 */
 void AVR_ArchMega0_ACP::update_DAC()
 {
-    vardata_t vref = m_vref_signal->data(AVR_IO_VREF::Signal_IntRef, m_config.vref_channel);
+    vardata_t vref = m_vref_signal->data(AVR_IO_VREF::Signal_IntRefChange, m_config.vref_channel);
     double dac_value = vref.as_double() * READ_IOREG(DACREF) / 256.0;
     m_signal.raise_d(Signal_DAC, dac_value);
 }
@@ -244,7 +244,7 @@ void AVR_ArchMega0_ACP::update_output()
 void AVR_ArchMega0_ACP::raised(const signal_data_t& sigdata, uint16_t hooktag)
 {
     if (hooktag == HookTag_VREF) {
-        if (sigdata.sigid == AVR_IO_VREF::Signal_IntRef && sigdata.index == m_config.vref_channel) {
+        if (sigdata.sigid == AVR_IO_VREF::Signal_IntRefChange && sigdata.index == m_config.vref_channel) {
             update_DAC();
             update_output();
         }

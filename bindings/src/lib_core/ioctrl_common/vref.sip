@@ -50,8 +50,9 @@ public:
     };
 
     enum SignalId /BaseType=IntEnum/ {
-        Signal_ARef                 /PyName=ARef/,
-        Signal_IntRef               /PyName=IntRef/,
+        Signal_ARefChange           /PyName=ARefChange/,
+        Signal_IntRefChange         /PyName=IntRefChange/,
+        Signal_VCCChange            /PyName=VCCChange/,
     };
 
     AVR_IO_VREF(size_t ref_count);
