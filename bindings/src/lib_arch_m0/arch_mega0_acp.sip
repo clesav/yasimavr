@@ -1,7 +1,7 @@
 /*
- * arch_mega0_adc.sip
+ * arch_mega0_acp.sip
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -19,51 +19,51 @@
     along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-//=======================================================================================
 
-struct AVR_ArchMega0_ADC_Config {
-%TypeHeaderCode
-#include "arch_mega0_adc.h"
+//=======================================================================================
+%ModuleCode
+
+#include "arch_mega0_acp.h"
+
+const uint16_t CTLREQ_ACP_GET_DAC = AVR_CTLREQ_ACP_GET_DAC;
+
 %End
 
-    struct reference_config_t : base_reg_config_t {
-        AVR_IO_VREF::Source source;
-    };
+const uint16_t CTLREQ_ACP_GET_DAC;
 
-    std::vector<AVR_IO_ADC::channel_config_t> channels;
-    std::vector<AVR_ArchMega0_ADC_Config::reference_config_t> references;
+
+//=======================================================================================
+
+struct AVR_ArchMega0_ACP_Config {
+%TypeHeaderCode
+#include "arch_mega0_acp.h"
+%End
+
+    std::vector<AVR_IO_ACP::channel_config_t> pos_channels;
+    std::vector<AVR_IO_ACP::channel_config_t> neg_channels;
+
     uint32_t vref_channel;
-    UnsignedInt16Vector clk_ps_factors;
-    uint16_t clk_ps_max;
-    UnsignedInt16Vector init_delays;
-
     reg_addr_t reg_base;
-
-    int_vect_t iv_resready;
-    int_vect_t iv_wincmp;
-
-    double temp_cal_25C;
-    double temp_cal_coef;
+    int_vect_t iv_cmp;
 
 };
 
 
-class AVR_ArchMega0_ADC : public AVR_IO_ADC,
+class AVR_ArchMega0_ACP : public AVR_IO_ACP,
                           public AVR_Peripheral,
                           public AVR_SignalHook
                           /NoDefaultCtors/ {
 %TypeHeaderCode
-#include "arch_mega0_adc.h"
+#include "arch_mega0_acp.h"
 %End
 
 public:
 
-    AVR_ArchMega0_ADC(int num, const AVR_ArchMega0_ADC_Config&);
+    AVR_ArchMega0_ACP(int num, const AVR_ArchMega0_ACP_Config&);
 
     virtual bool init(AVR_Device&);
     virtual void reset();
     virtual bool ctlreq(uint16_t, ctlreq_data_t*);
-    virtual void ioreg_read_handler(reg_addr_t);
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
     virtual void sleep(bool, AVR_SleepMode);
     virtual void raised(const signal_data_t&, uint16_t);

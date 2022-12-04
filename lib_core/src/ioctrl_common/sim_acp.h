@@ -1,7 +1,7 @@
 /*
- * sim_adc.h
+ * sim_acp.h
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -21,57 +21,35 @@
 
 //=======================================================================================
 
-#ifndef __YASIMAVR_IO_ADC_H__
-#define __YASIMAVR_IO_ADC_H__
+#ifndef __YASIMAVR_IO_ACP_H__
+#define __YASIMAVR_IO_ACP_H__
 
 #include "../core/sim_peripheral.h"
-#include "../core/sim_types.h"
-
-
-//=======================================================================================
-/*
- * CTLREQ definitions
-*/
-#define AVR_CTLREQ_ADC_SET_TEMP         1
-#define AVR_CTLREQ_ADC_TRIGGER          2
 
 
 //=======================================================================================
 /*
  * Configuration enumerations and structures
 */
-
-class DLL_EXPORT AVR_IO_ADC {
+class DLL_EXPORT AVR_IO_ACP {
 
 public:
 
     enum Channel {
-        Channel_SingleEnded,
-        Channel_Differential,
-        Channel_Zero,
-        Channel_IntRef,
-        Channel_Temperature,
+        Channel_Pin,
         Channel_AcompRef
     };
 
     struct channel_config_t : base_reg_config_t {
         Channel type;
-        union {
-            struct {
-                uint32_t pin_p;
-                uint32_t pin_n;
-            };
-            char per_num;
-        };
-        unsigned int gain;
+        uint32_t pin;
     };
 
     enum SignalId {
-        Signal_ConversionStarted,
-        Signal_AboutToSample,
-        Signal_ConversionComplete,
+        Signal_Output,
+        Signal_DAC
     };
 
 };
 
-#endif //__YASIMAVR_IO_ADC_H__
+#endif //__YASIMAVR_IO_ACP_H__

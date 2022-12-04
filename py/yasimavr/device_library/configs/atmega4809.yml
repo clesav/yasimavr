@@ -270,6 +270,24 @@ peripherals:
                 0x1C: AcompRef
                 0x1E: Temperature
                 0x1F: Zero
+            vref_channel: 0
+
+    ACP:
+        file: Mega0-Mega1_analog.yml
+        base: 0x0680
+        config:
+            pos_channels:
+                0x0: [ Pin, PD2 ]
+                0x1: [ Pin, PD4 ]
+                0x2: [ Pin, PD6 ]
+                0x3: [ Pin, PD1 ]
+            neg_channels:
+                0x0: [ Pin, PD3 ]
+                0x1: [ Pin, PD5 ]
+                0x2: [ Pin, PD7 ]
+                0x3: [ AcompRef ]
+            vref_channel: 1
+            iv_cmp: AC0
 
     USART0:
         class: USART

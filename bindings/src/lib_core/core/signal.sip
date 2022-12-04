@@ -169,3 +169,28 @@ public:
     virtual void raised(const signal_data_t&, uint16_t) final;
 
 };
+
+
+class AVR_DataSignalMux : public AVR_SignalHook {
+%TypeHeaderCode
+#include "core/sim_signal.h"
+%End
+
+public:
+
+    AVR_DataSignalMux();
+
+    virtual void raised(const signal_data_t&, uint16_t);
+
+    size_t add_mux();
+    size_t add_mux(AVR_DataSignal&);
+    size_t add_mux(AVR_DataSignal&, uint16_t);
+    size_t add_mux(AVR_DataSignal&, uint16_t, uint32_t);
+
+    AVR_DataSignal& signal();
+
+    void set_selection(size_t);
+    size_t selected_index() const;
+    bool connected() const;
+
+};

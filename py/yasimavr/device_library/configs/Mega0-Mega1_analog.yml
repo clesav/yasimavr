@@ -25,7 +25,7 @@ ADC:
           offset: 0x00
           fields:
             ENABLE: { kind: BIT, pos: 0, one: enabled, zero: disabled }
-            FREERUN: { kind: BIT, pos: 1, one: enabled, zero: disabled, supported: no }
+            FREERUN: { kind: BIT, pos: 1, one: enabled, zero: disabled }
             RESSEL: { kind: BIT, pos: 2, one: 8-bits, zero: 10-bits }
             RUNSTBY: { kind: BIT, pos: 7, one: enabled, zero: disabled }
 
@@ -63,7 +63,7 @@ ADC:
                 LSB: 0
                 MSB: 3
                 unit: samples
-            ASDV: { kind: BIT, pos: 4, one: ASVON, zero: ASVOFF, supported: no }
+            ASDV: { kind: BIT, pos: 4, one: ASVON, zero: ASVOFF }
             INITDLY:
                 kind: ENUM
                 LSB: 5
@@ -107,7 +107,7 @@ ADC:
         - name: EVCTRL
           offset: 0x09
           fields:
-            STARTEI: { kind: BIT, pos: 0 }
+            STARTEI: { kind: BIT, pos: 0, one: enabled, zero: disabled }
 
         - name: INTCTRL
           offset: 0x0A
@@ -146,13 +146,15 @@ ADC:
 
         - name: CALIB
           offset: 0x16
-          supported: no
+          fields:
+            DUTYCYC: { kind: BIT, pos: 0, supported: no }
 
     config:
         references:
             0 : Internal
-            1 : Ext_AVCC
-            2 : Ext_AREF
+            1 : AVCC
+            2 : AREF
+        vref_channel: 0
         clk_ps_factors: [ 2, 4, 8, 16, 32, 64, 128, 256 ]
         clk_ps_max: 256
         init_delays: [0, 16, 32, 64, 128, 256 ]
@@ -161,6 +163,57 @@ ADC:
         #arbitrary values below
         temp_cal_25C: 0.3
         temp_cal_coef: 0.0011
+
+#========================================================================================
+ACP:
+    registers:
+        - name: CTRLA
+          offset: 0x00
+          fields:
+            ENABLE: { kind: BIT, pos: 0, one: enabled, zero: disabled }
+            HYSMODE:
+                kind: ENUM
+                LSB: 1
+                MSB: 2
+                values: [ NONE, SMALL, MEDIUM, LARGE ]
+            LPMODE: { kind: BIT, pos: 3, one: enabled, zero: disabled }
+            INTMODE:
+                kind: ENUM
+                LSB: 4
+                MSB: 5
+                values: { 0x00: BOTHEDGE, 0x02: NEGEDGE, 0x03: POSEDGE }
+            OUTEN: { kind: BIT, pos: 0, supported: no }
+            RUNSTDBY: { kind: BIT, pos: 7, one: enabled, zero: disabled }
+
+        - name: MUXCTRL
+          offset: 0x02
+          fields:
+            MUXNEG:
+                kind: ENUM
+                LSB: 0
+                MSB: 1
+                values: [ AINN0, AINN1, AINN2, DACREF ]
+            MUXPOS:
+                kind: ENUM
+                LSB: 3
+                MSB: 4
+                values: [ AINP0, AINP1, AINP2, AINP3 ]
+            INVERT: { kind: BIT, pos: 7, one: enabled, zero: disabled }
+
+        - name: DACREF
+          offset: 0x04
+          kind: INT
+
+        - name: INTCTRL
+          offset: 0x06
+          fields:
+            CMP: { kind: BIT, pos: 0 }
+
+        - name: STATUS
+          offset: 0x07
+          fields:
+            CMP: { kind: BIT, pos: 0 }
+            STATE: { kind: BIT, pos: 4, readonly: yes }
 
 #========================================================================================
 VREF:
@@ -172,7 +225,7 @@ VREF:
                 kind: ENUM
                 LSB: 0
                 MSB: 2
-                values: [ 0V55, 1V1, 2V5, 4V3, 1V5 , null, null, AVDD ]
+                values: [ 0V55, 1V1, 2V5, 4V3, 1V5 , null, null, AVCC ]
             ADC0REFSEL:
                 kind: ENUM
                 LSB: 4
@@ -182,4 +235,10 @@ VREF:
           offset: 0x01
           supported: no
 
-#========================================================================================
+    config:
+        channels:
+            - rb_select: [ CTRLA, ADC0REFSEL ]
+              references: [ 0.55, 1.1, 2.5, 4.3, 1.5 ]
+
+            - rb_select: [ CTRLA, AC0REFSEL ]
+              references: [ 0.55, 1.1, 2.5, 4.3, 1.5, null, null, AVCC ]

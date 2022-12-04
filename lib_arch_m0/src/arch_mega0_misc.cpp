@@ -28,46 +28,65 @@
 #include <cstring>
 
 
+//=======================================================================================
+
 #define VREF_REG_ADDR(reg) \
-    (m_base_reg + offsetof(VREF_t, reg))
+    (m_config.reg_base + offsetof(VREF_t, reg))
 
 
-AVR_ArchMega0_VREF::AVR_ArchMega0_VREF(const reg_addr_t base)
-:m_base_reg(base)
+AVR_ArchMega0_VREF::AVR_ArchMega0_VREF(const AVR_ArchMega0_VREF_Config& config)
+:AVR_IO_VREF(config.channels.size())
+,m_config(config)
 {}
 
 bool AVR_ArchMega0_VREF::init(AVR_Device& device)
 {
     bool status = AVR_IO_VREF::init(device);
 
-    add_ioreg(VREF_REG_ADDR(CTRLA), VREF_AC0REFSEL_gm | VREF_ADC0REFSEL_gm);
-    add_ioreg(VREF_REG_ADDR(CTRLB), VREF_AC0REFEN_bm | VREF_ADC0REFEN_bm);
+    add_ioreg(VREF_REG_ADDR(CTRLB));
+
+    for (auto channel: m_config.channels)
+        add_ioreg(channel.rb_select);
 
     return status;
 }
 
-double AVR_ArchMega0_VREF::get_reference(User user) const
+void AVR_ArchMega0_VREF::reset()
 {
-    bitmask_t bm;
-    if (user == User_ADC)
-        bm = DEF_BITMASK_F(VREF_ADC0REFSEL);
-    else
-        bm = DEF_BITMASK_F(VREF_AC0REFSEL);
+    //Set each reference channel to the reset value
+    for (uint32_t index = 0; index < m_config.channels.size(); ++index)
+        set_channel_reference(index, 0);
+}
 
-    uint8_t sel_value = read_ioreg(VREF_REG_ADDR(CTRLA), bm);
-
-    switch(sel_value) {
-        case 0 : return 0.55;
-        case 1 : return 1.1;
-        case 2 : return 2.5;
-        case 3 : return 4.3;
-        case 4 : return 1.5;
-        case 7 : return vcc();
-        default : return 0.0;
+void AVR_ArchMega0_VREF::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
+{
+    //Iterate over all the channels, and update if impacted by the register change
+    for (uint32_t ch_ix = 0; ch_ix < m_config.channels.size(); ++ch_ix) {
+        const AVR_ArchMega0_VREF_Config::channel_t& ch = m_config.channels[ch_ix];
+        if (addr == ch.rb_select.addr && ch.rb_select.extract(data.posedge | data.negedge)) {
+            //Extract the selection value for this channel
+            uint8_t reg_value = ch.rb_select.extract(data.value);
+            set_channel_reference(ch_ix, reg_value);
+        }
     }
 }
 
+void AVR_ArchMega0_VREF::set_channel_reference(uint32_t index, uint8_t reg_value)
+{
+    typedef AVR_ArchMega0_VREF_Config::reference_config_t vref_cfg_t;
+
+    //Find the corresponding reference setting from the configuration
+    int ref_ix = find_reg_config<vref_cfg_t>(m_config.channels[index].references, reg_value);
+    //If it's a valid setting, update the reference
+    if (ref_ix >= 0) {
+        vref_cfg_t r = m_config.channels[index].references[ref_ix];
+        set_reference(index, r.source, r.level);
+    }
+}
+
+
 //=======================================================================================
+
 enum InterruptPriority {
     IntrPriorityLevel0 = 0,
     IntrPriorityLevel1 = 1

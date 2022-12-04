@@ -50,6 +50,7 @@ timer1_config = get_timer_config(_desc.peripherals['TC1'])
 timer2_config = get_timer_config(_desc.peripherals['TC2'])
 
 adc_config = get_adc_config(_desc.peripherals['ADC'])
+acp_config = get_acp_config(_desc.peripherals['ACP'])
 vref_bandgap = get_vref_bandgap(_desc.peripherals['VREF'])
 
 usart_config = get_usart_config(_desc.peripherals['USART'])
@@ -75,6 +76,7 @@ class dev_atmega328(arch_lib.AVR_ArchAVR_Device):
         timer1 = arch_lib.AVR_ArchAVR_Timer(1, timer1_config)
         timer2 = arch_lib.AVR_ArchAVR_Timer(2, timer2_config)
         adc = arch_lib.AVR_ArchAVR_ADC(adc_config)
+        acp = arch_lib.AVR_ArchAVR_ACP(acp_config)
         vref = arch_lib.AVR_ArchAVR_VREF(vref_bandgap)
         usart = arch_lib.AVR_ArchAVR_USART(0, usart_config)
 
@@ -89,6 +91,7 @@ class dev_atmega328(arch_lib.AVR_ArchAVR_Device):
         self.attach_peripheral(timer1)
         self.attach_peripheral(timer2)
         self.attach_peripheral(adc)
+        self.attach_peripheral(acp)
         self.attach_peripheral(vref)
         self.attach_peripheral(usart)
 

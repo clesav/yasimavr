@@ -23,6 +23,7 @@
 
 
 #include "arch_mega0_adc.h"
+#include "arch_mega0_acp.h"
 #include "arch_mega0_io.h"
 #include "arch_mega0_io_utils.h"
 #include "core/sim_sleep.h"
@@ -41,8 +42,8 @@
 static const uint32_t ADC_Prescaler_Max = 256;
 
 
-AVR_ArchMega0_ADC::AVR_ArchMega0_ADC(const CFG& config)
-:AVR_Peripheral(AVR_IOCTL_ADC)
+AVR_ArchMega0_ADC::AVR_ArchMega0_ADC(int num, const CFG& config)
+:AVR_Peripheral(AVR_IOCTL_ADC(0x30 + num))
 ,m_config(config)
 ,m_state(ADC_Disabled)
 ,m_first(false)
@@ -61,15 +62,15 @@ bool AVR_ArchMega0_ADC::init(AVR_Device& device)
 {
     bool status = AVR_Peripheral::init(device);
 
-    add_ioreg(REG_ADDR(CTRLA), ADC_RUNSTBY_bm | ADC_RESSEL_bm | ADC_ENABLE_bm);
+    add_ioreg(REG_ADDR(CTRLA), ADC_RUNSTBY_bm | ADC_RESSEL_bm | ADC_FREERUN_bm | ADC_ENABLE_bm);
     add_ioreg(REG_ADDR(CTRLB), ADC_SAMPNUM_gm);
     add_ioreg(REG_ADDR(CTRLC), ADC_PRESC_gm | ADC_REFSEL_gm | ADC_SAMPCAP_bm);
-    add_ioreg(REG_ADDR(CTRLD), ADC_INITDLY_gm | ADC_SAMPDLY_gm); //ASDV not implemented
+    add_ioreg(REG_ADDR(CTRLD), ADC_INITDLY_gm | ADC_ASDV_bm | ADC_SAMPDLY_gm);
     add_ioreg(REG_ADDR(CTRLE), ADC_WINCM_gm);
     add_ioreg(REG_ADDR(SAMPCTRL), ADC_SAMPLEN_gm);
     add_ioreg(REG_ADDR(MUXPOS), ADC_MUXPOS_gm);
     add_ioreg(REG_ADDR(COMMAND), ADC_STCONV_bm);
-    //EVCTRL not implemented
+    add_ioreg(REG_ADDR(EVCTRL), ADC_STARTEI_bm);
     add_ioreg(REG_ADDR(INTCTRL), ADC_WCMP_bm | ADC_RESRDY_bm);
     add_ioreg(REG_ADDR(INTFLAGS), ADC_WCMP_bm | ADC_RESRDY_bm);
     //DBGCTRL not implemented
@@ -80,7 +81,7 @@ bool AVR_ArchMega0_ADC::init(AVR_Device& device)
     add_ioreg(REG_ADDR(WINLTH));
     add_ioreg(REG_ADDR(WINHTL));
     add_ioreg(REG_ADDR(WINHTH));
-    //CALIB not implemented
+    add_ioreg(REG_ADDR(CALIB), ADC_DUTYCYC_bm);
 
     status &= m_res_intflag.init(device,
                                  DEF_REGBIT_B(INTCTRL, ADC_RESRDY),
@@ -116,8 +117,8 @@ bool AVR_ArchMega0_ADC::ctlreq(uint16_t req, ctlreq_data_t* data)
         m_temperature = data->data.as_double();
         return true;
     }
-    else if (req == AVR_CTLREQ_ADC_FORCE_TRIGGER) {
-        if (m_state == ADC_Idle)
+    else if (req == AVR_CTLREQ_ADC_TRIGGER) {
+        if (m_state == ADC_Idle && TEST_IOREG(EVCTRL, ADC_STARTEI))
             start_conversion_cycle();
         return true;
     }
@@ -130,9 +131,8 @@ bool AVR_ArchMega0_ADC::ctlreq(uint16_t req, ctlreq_data_t* data)
 void AVR_ArchMega0_ADC::ioreg_read_handler(reg_addr_t addr)
 {
     //The STCONV bit is dynamic, reading 1 if a conversion is in progress
-    if (addr == REG_ADDR(COMMAND)) {
+    if (addr == REG_ADDR(COMMAND))
         write_ioreg(REG_ADDR(COMMAND), ADC_STCONV_bp, (m_state > ADC_Idle ? 1 : 0));
-    }
 }
 
 void AVR_ArchMega0_ADC::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
@@ -223,7 +223,8 @@ void AVR_ArchMega0_ADC::read_analog_value()
     int index = find_reg_config<channel_config_t>(m_config.channels, m_latched_ch_mux);
     if (index == -1)
         _crash("ADC: Invalid channel configuration");
-    auto ch_config = &(m_config.channels[index]);
+
+    const channel_config_t& ch_config = m_config.channels[index];
 
     //Find the reference voltage mux configuration and request the value from the VREF peripheral
     double vref = 0.0;
@@ -231,35 +232,45 @@ void AVR_ArchMega0_ADC::read_analog_value()
     if(index == -1)
         _crash("ADC: Invalid reference configuration");
     auto ref_config = &(m_config.references[index]);
-    ctlreq_data_t reqdata = { .index = ref_config->source };
-    if (!device()->ctlreq(AVR_IOCTL_VREF, AVR_CTLREQ_ADC_GET_VREF, &reqdata))
+    ctlreq_data_t reqdata = { .data = m_config.vref_channel, .index = ref_config->source };
+    if (!device()->ctlreq(AVR_IOCTL_VREF, AVR_CTLREQ_VREF_GET, &reqdata))
         _crash("ADC: Unable to obtain the voltage reference");
     vref = reqdata.data.as_double();
+    if (vref == 0.0)
+        _crash("ADC: Zero voltage reference");
 
     //Obtain the raw analog value depending on the channel mux configuration
     //The raw value is in the interval [0.0; 1.0] (or [-1.0; +1.0] for bipolar)
     //and is relative to VCC
     double raw_value;
-    switch(ch_config->type) {
+    switch(ch_config.type) {
 
         case Channel_SingleEnded: {
-            AVR_Pin* p = device()->find_pin(ch_config->pin_p);
+            AVR_Pin* p = device()->find_pin(ch_config.pin_p);
             if (!p) _crash("ADC: Invalid pin configuration");
             raw_value = p->analog_value();
         } break;
 
         case Channel_Differential: {
-            AVR_Pin* p = device()->find_pin(ch_config->pin_p);
+            AVR_Pin* p = device()->find_pin(ch_config.pin_p);
             if (!p) _crash("ADC: Invalid pin configuration");
-            AVR_Pin* n = device()->find_pin(ch_config->pin_n);
+            AVR_Pin* n = device()->find_pin(ch_config.pin_n);
             if (!n) _crash("ADC: Invalid pin configuration");
             raw_value = p->analog_value() - n->analog_value();
         } break;
 
-        case Channel_BandGap: {
-            ctlreq_data_t reqdata = { .index = AVR_IO_VREF::Source_Internal };
-            if (!device()->ctlreq(AVR_IOCTL_VREF, AVR_CTLREQ_ADC_GET_VREF, &reqdata))
-                _crash("ADC: Unable to obtain the band gap voltage value");
+        case Channel_IntRef: {
+            ctlreq_data_t reqdata = { .data = m_config.vref_channel,
+                                      .index = AVR_IO_VREF::Source_Internal };
+            if (!device()->ctlreq(AVR_IOCTL_VREF, AVR_CTLREQ_VREF_GET, &reqdata))
+                _crash("ADC: Unable to obtain the internal reference voltage value");
+            raw_value = reqdata.data.as_double();
+        } break;
+
+        case Channel_AcompRef: {
+            ctlreq_data_t reqdata;
+            if (!device()->ctlreq(AVR_IOCTL_ACP(ch_config.per_num), AVR_CTLREQ_ACP_GET_DAC, &reqdata))
+                _crash("ADC: Unable to obtain the DAC reference from the Analog Comparator");
             raw_value = reqdata.data.as_double();
         } break;
 
@@ -267,8 +278,8 @@ void AVR_ArchMega0_ADC::read_analog_value()
             double temp_volt = m_config.temp_cal_coef * (m_temperature - 25.0) + m_config.temp_cal_25C;
             //The temperature measure obtained is in absolute voltage values.
             //We need to make it relative to VCC
-            ctlreq_data_t reqdata = { .index = AVR_IO_VREF::Source_Ext_VCC };
-            if (!device()->ctlreq(AVR_IOCTL_VREF, AVR_CTLREQ_ADC_GET_VREF, &reqdata))
+            ctlreq_data_t reqdata = { .index = AVR_IO_VREF::Source_VCC };
+            if (!device()->ctlreq(AVR_IOCTL_VREF, AVR_CTLREQ_VREF_GET, &reqdata))
                 _crash("ADC: Unable to obtain the VCC voltage value");
             raw_value = temp_volt / reqdata.data.as_double();
         } break;
@@ -287,6 +298,7 @@ void AVR_ArchMega0_ADC::read_analog_value()
     if (result > 1023) result = 1023;
     if (result < 0) result = 0;
 
+    //Reduce the resolution to 8 bits if enabled
     if (TEST_IOREG(CTRLA, ADC_RESSEL))
         result >>= 2;
 
@@ -388,6 +400,17 @@ void AVR_ArchMega0_ADC::raised(const signal_data_t& data, uint16_t sigid)
             if (m_cmp_intflag.set_flag())
                 logger().dbg("Triggering WINCOMP interrupt");
         }
+
+        //if Automatic Sampling Delay Variation is enabled, increment the delay bits
+        if (TEST_IOREG(CTRLD, ADC_ASDV)) {
+            uint8_t dly = READ_IOREG_F(CTRLD, ADC_INITDLY);
+            dly = (dly + 1) % 16;
+            WRITE_IOREG_F(CTRLD, ADC_INITDLY, dly);
+        }
+
+        //If free run mode is enabled, start immediately another conversion cycle
+        if (TEST_IOREG(CTRLA, ADC_FREERUN))
+            start_conversion_cycle();
     }
 }
 

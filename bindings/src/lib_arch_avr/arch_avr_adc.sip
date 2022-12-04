@@ -30,26 +30,22 @@ struct AVR_ArchAVR_ADC_Config {
         AVR_IO_VREF::Source source;
     };
 
-    enum TriggerType {
-        Manual,
-        FreeRunning,
-        AComp,
-        ExtInt0,
-        Timer0_CompA,
-        Timer0_OVF,
-        Timer1_CompB,
-        Timer1_OVF,
-        //Timer1_Capt, //Not supported
+    enum Trigger {
+        Trig_Manual         /PyName=Manual/,
+        Trig_FreeRunning    /PyName=FreeRunning/,
+        Trig_External       /PyName=External/,
     };
 
     struct trigger_config_t : base_reg_config_t {
-        AVR_ArchAVR_ADC_Config::TriggerType trig_type;
+        AVR_ArchAVR_ADC_Config::Trigger trigger;
     };
 
     std::vector<AVR_IO_ADC::channel_config_t> channels;
     std::vector<AVR_ArchAVR_ADC_Config::reference_config_t> references;
     UnsignedInt16Vector clk_ps_factors;
     std::vector<AVR_ArchAVR_ADC_Config::trigger_config_t> triggers;
+
+    uint32_t vref_channel;
 
     reg_addr_t reg_datal;
     reg_addr_t reg_datah;
@@ -83,8 +79,7 @@ class AVR_ArchAVR_ADC : public AVR_IO_ADC,
 
 public:
 
-    AVR_ArchAVR_ADC(const AVR_ArchAVR_ADC_Config&);
-    virtual ~AVR_ArchAVR_ADC();
+    AVR_ArchAVR_ADC(int num, const AVR_ArchAVR_ADC_Config&);
 
     virtual bool init(AVR_Device&);
     virtual void reset();

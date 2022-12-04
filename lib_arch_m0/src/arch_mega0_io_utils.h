@@ -55,6 +55,9 @@
 #define READ_IOREG_F(reg, field) \
     read_ioreg(regbit_t(REG_ADDR(reg), field ## _gp, field ## _gm))
 
+#define READ_IOREG_B(reg, bit) \
+    read_ioreg(regbit_t(REG_ADDR(reg), bit ## _bp, bit ## _bm))
+
 #define WRITE_IOREG(reg, value) \
     write_ioreg(REG_ADDR(reg), (value));
 

@@ -39,14 +39,6 @@ public:
 
     AVR_ArchAVR_VREF(double band_gap);
 
-protected:
-
-    virtual double get_reference(User user) const override;
-
-private:
-
-    double m_band_gap;
-
 };
 
 

@@ -25,7 +25,7 @@ This module applies to devices ATmega80x/160x/320x/480x
 
 import yasimavr.lib.core as _corelib
 import yasimavr.lib.arch_m0 as _archlib
-from .configbuilder import _PeripheralConfigBuilder, get_core_attributes
+from .configbuilder import _PeripheralConfigBuilder, get_core_attributes, convert_regbit
 
 
 #========================================================================================
@@ -180,6 +180,46 @@ def get_rtc_config(per_desc):
 
 
 #========================================================================================
+#VREF management configuration
+
+def _vref_convertor(cfg, attr, yml_val, per_desc):
+    if attr == 'channels':
+        py_chans = []
+        for index, item in enumerate(yml_val):
+            chan_cfg = _archlib.AVR_ArchMega0_VREF_Config.channel_t()
+            chan_cfg.index = index
+            chan_cfg.rb_select = convert_regbit(item['rb_select'], per_desc)
+
+            ref_cfg_list = []
+            for reg_value, chan_ref in enumerate(item['references']):
+                chan_ref_cfg = _archlib.AVR_ArchMega0_VREF_Config.reference_config_t()
+                chan_ref_cfg.reg_value = reg_value
+
+                if chan_ref == 'AVCC':
+                    chan_ref_cfg.source = _corelib.AVR_IO_VREF.Source.AVCC
+                elif chan_ref == 'AREF':
+                    chan_ref_cfg.source = _corelib.AVR_IO_VREF.Source.AREF
+                elif chan_ref is not None:
+                    chan_ref_cfg.source = _corelib.AVR_IO_VREF.Source.Internal
+                    chan_ref_cfg.level = float(chan_ref)
+
+                ref_cfg_list.append(chan_ref_cfg)
+
+            chan_cfg.references = ref_cfg_list
+            py_chans.append(chan_cfg)
+
+        cfg.channels = py_chans
+
+    else:
+        raise Exception('Converter not implemented for ' + attr)
+
+_VREF_ConfigBuilder = _PeripheralConfigBuilder(_archlib.AVR_ArchMega0_VREF_Config, _vref_convertor)
+
+def get_vref_config(per_desc):
+    return _VREF_ConfigBuilder(per_desc)
+
+
+#========================================================================================
 #ADC management configuration
 
 def _adc_convertor(cfg, attr, yml_val, per_desc):
@@ -226,6 +266,34 @@ _ADC_ConfigBuilder = _PeripheralConfigBuilder(_archlib.AVR_ArchMega0_ADC_Config,
 def get_adc_config(per_desc):
     return _ADC_ConfigBuilder(per_desc)
 
+#========================================================================================
+#ACP management configuration
+
+def _acp_convertor(cfg, attr, yml_val, per_desc):
+    if attr in ('pos_channels', 'neg_channels'):
+        py_chans = []
+        for reg_value, item in yml_val.items():
+            chan_cfg = _corelib.AVR_IO_ACP.channel_config_t()
+            chan_cfg.reg_value = reg_value
+            if isinstance(item, list):
+                chan_type = item[0]
+                if len(item) >= 2:
+                    chan_cfg.pin = _corelib.str_to_id(item[1])
+            else:
+                chan_type = item
+
+            chan_cfg.type = _corelib.AVR_IO_ACP.Channel[chan_type]
+            py_chans.append(chan_cfg)
+
+        setattr(cfg, attr, py_chans)
+
+    else:
+        raise Exception('Converter not implemented for ' + attr)
+
+_ACP_ConfigBuilder = _PeripheralConfigBuilder(_archlib.AVR_ArchMega0_ACP_Config, _acp_convertor)
+
+def get_acp_config(per_desc):
+    return _ACP_ConfigBuilder(per_desc)
 
 #========================================================================================
 #USART management configuration

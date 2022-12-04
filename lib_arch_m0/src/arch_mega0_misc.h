@@ -34,21 +34,39 @@
  * Implementation of a Voltage Reference controller for Mega-0/Mega-1 series
  */
 
+struct AVR_ArchMega0_VREF_Config {
+
+    struct reference_config_t : base_reg_config_t {
+        AVR_IO_VREF::Source source;
+        double level;
+    };
+
+    struct channel_t {
+        regbit_t rb_select;
+        std::vector<reference_config_t> references;
+    };
+
+    std::vector<channel_t> channels;
+
+    reg_addr_t reg_base;
+
+};
+
 class DLL_EXPORT AVR_ArchMega0_VREF : public AVR_IO_VREF {
 
 public:
 
-    AVR_ArchMega0_VREF(reg_addr_t base);
+    AVR_ArchMega0_VREF(const AVR_ArchMega0_VREF_Config& config);
 
     virtual bool init(AVR_Device&) override;
-
-protected:
-
-    virtual double get_reference(User user) const override;
+    virtual void reset() override;
+    virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
 
 private:
 
-    const reg_addr_t m_base_reg;
+    const AVR_ArchMega0_VREF_Config& m_config;
+
+    void set_channel_reference(uint32_t index, uint8_t reg_value);
 
 };
 

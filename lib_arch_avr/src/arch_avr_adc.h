@@ -38,26 +38,22 @@ struct AVR_ArchAVR_ADC_Config {
         AVR_IO_VREF::Source source;
     };
 
-    enum TriggerType {
-        Manual = 1,
-        FreeRunning,
-        AComp,
-        ExtInt0,
-        Timer0_CompA,
-        Timer0_OVF,
-        Timer1_CompB,
-        Timer1_OVF,
-        //Timer1_Capt, //Not supported
+    enum Trigger {
+        Trig_Manual,
+        Trig_FreeRunning,
+        Trig_External,
     };
 
     struct trigger_config_t : base_reg_config_t {
-        TriggerType trig_type;
+        Trigger trigger;
     };
 
     std::vector<AVR_IO_ADC::channel_config_t> channels;
     std::vector<reference_config_t> references;
     std::vector<uint16_t> clk_ps_factors;
     std::vector<trigger_config_t> triggers;
+
+    uint32_t vref_channel;
 
     reg_addr_t reg_datal;
     reg_addr_t reg_datah;
@@ -87,8 +83,7 @@ class DLL_EXPORT AVR_ArchAVR_ADC : public AVR_IO_ADC,
 
 public:
 
-    AVR_ArchAVR_ADC(const AVR_ArchAVR_ADC_Config& config);
-    virtual ~AVR_ArchAVR_ADC();
+    AVR_ArchAVR_ADC(int num, const AVR_ArchAVR_ADC_Config& config);
 
     virtual bool init(AVR_Device& device) override;
     virtual void reset() override;
@@ -116,12 +111,10 @@ private:
     //It has impact on the timing
     bool m_first;
 
+    AVR_ArchAVR_ADC_Config::Trigger m_trigger;
+
     //Timer to simulate the conversion cycle duration
     AVR_PrescaledTimer m_timer;
-
-    //Trigger type configured from the registers
-    int m_trigger_index;
-    std::vector<bool> m_trigger_state;
 
     //Simulated device temperature value in deg Celsius
     double m_temperature;
@@ -134,7 +127,7 @@ private:
     int16_t m_conv_value;
 
     //Signal raised at various steps of the conversion
-    AVR_Signal* m_signal;
+    AVR_Signal m_signal;
 
     //Interrupt flag raised at the completion of a conversion
     AVR_InterruptFlag m_intflag;
@@ -145,10 +138,6 @@ private:
 
     void read_analog_value();
     void write_digital_value();
-
-    bool connect_trigger_signals();
-    void update_trigger_signal();
-    void trigger_raised(const signal_data_t& data, uint16_t sigid);
 
 };
 

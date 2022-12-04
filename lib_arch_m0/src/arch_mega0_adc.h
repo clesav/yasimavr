@@ -35,16 +35,14 @@
 /*
  * Implementation of a ADC for the Mega-0/Mega-1 series
  * Unsupported features:
- *      - Free running (TODO)
- *      - Sample Capacitance Selection
- *      - Automatic Sampling Delay Variation
+ *      - Sample Capacitance Selection (register bit available but not used)
  *      - Event Control
  *      - Debug Run Override
- *      - Duty Cycle calibration
+ *      - Duty Cycle calibration (register bit available but not used)
  *
  * Note: Without the event control system, only the software can manually start a conversion.
  * As a workaround, a conversion can be triggered externally by the simulation environment
- * by using the request AVR_CTLREQ_ADC_FORCE_TRIGGER.
+ * by using the request AVR_CTLREQ_ADC_TRIGGER.
  */
 
 struct AVR_ArchMega0_ADC_Config {
@@ -55,6 +53,7 @@ struct AVR_ArchMega0_ADC_Config {
 
     std::vector<AVR_IO_ADC::channel_config_t> channels;
     std::vector<reference_config_t> references;
+    uint32_t vref_channel;
     std::vector<uint16_t> clk_ps_factors;
     uint16_t clk_ps_max;
     std::vector<uint16_t> init_delays;
@@ -75,7 +74,7 @@ class DLL_EXPORT AVR_ArchMega0_ADC : public AVR_IO_ADC,
 
 public:
 
-    AVR_ArchMega0_ADC(const AVR_ArchMega0_ADC_Config& config);
+    AVR_ArchMega0_ADC(int num, const AVR_ArchMega0_ADC_Config& config);
 
     virtual bool init(AVR_Device& device) override;
     virtual void reset() override;

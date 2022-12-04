@@ -27,12 +27,9 @@
 //=======================================================================================
 
 AVR_ArchAVR_VREF::AVR_ArchAVR_VREF(double band_gap)
-:m_band_gap(band_gap)
-{}
-
-double AVR_ArchAVR_VREF::get_reference(User user) const
+:AVR_IO_VREF(1)
 {
-    return m_band_gap;
+    set_reference(0, Source_Internal, band_gap);
 }
 
 

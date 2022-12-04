@@ -21,7 +21,7 @@
 
 //=======================================================================================
 
-class AVR_ArchAVR_VREF : public AVR_IO_VREF {
+class AVR_ArchAVR_VREF : public AVR_IO_VREF /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_avr_misc.h"
 %End
@@ -30,9 +30,6 @@ public:
 
     AVR_ArchAVR_VREF(double);
 
-protected:
-
-    virtual double get_reference(AVR_IO_VREF::User user) const;
 };
 
 

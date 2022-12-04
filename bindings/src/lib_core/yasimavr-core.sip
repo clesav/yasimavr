@@ -57,6 +57,7 @@ typedef unsigned char           uint8_t /PyInt/;
 
 //=======================================================================================
 
+%Include ioctrl_common/acp.sip
 %Include ioctrl_common/adc.sip
 %Include ioctrl_common/port.sip
 %Include ioctrl_common/spi.sip

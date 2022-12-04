@@ -59,8 +59,10 @@ tcb_configs = [get_tcb_config(_desc.peripherals['TCB' + str(n)])
 rtc_config = get_rtc_config(_desc.peripherals['RTC'])
 #ADC
 adc_config = get_adc_config(_desc.peripherals['ADC'])
+#ACP
+acp_config = get_acp_config(_desc.peripherals['ACP'])
 #VREF
-vref_base = _desc.peripherals['VREF'].reg_base
+vref_config = get_vref_config(_desc.peripherals['VREF'])
 #USART
 usart_configs = [get_usart_config(_desc.peripherals['USART' + str(n)])
                  for n in range(4)]
@@ -106,9 +108,10 @@ class dev_atmega4809(_archlib.AVR_ArchMega0_Device):
         #RTC
         self.attach_peripheral(_archlib.AVR_ArchMega0_RTC(rtc_config))
 
-        #ADC, VREF
-        self.attach_peripheral(_archlib.AVR_ArchMega0_ADC(adc_config))
-        self.attach_peripheral(_archlib.AVR_ArchMega0_VREF(vref_base))
+        #ADC, ACP, VREF
+        self.attach_peripheral(_archlib.AVR_ArchMega0_ADC(0, adc_config))
+        self.attach_peripheral(_archlib.AVR_ArchMega0_ACP(0, acp_config))
+        self.attach_peripheral(_archlib.AVR_ArchMega0_VREF(vref_config))
 
         #USARTs
         for n, cfg in enumerate(usart_configs):
