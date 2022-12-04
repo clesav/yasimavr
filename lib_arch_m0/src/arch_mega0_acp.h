@@ -36,8 +36,7 @@
  * Definition of CTLREQ codes for Timer type A
  */
 
-//Request for a Timer type B to register with the timer type A. this is necessary
-//for the TCB to use the same "clock" as the TCA.
+//Request to obtain the DAC output value
 #define AVR_CTLREQ_ACP_GET_DAC         1
 
 
@@ -45,10 +44,6 @@
 /*
  * Implementation of a Analog Comparator for the Mega-0/Mega-1 series
  * Unsupported features:
- *      - INT modes other than BOTHEDGE
- *      - Hysteresis
- *      - Low Power mode
- *      - Output invert
  *      - Pin output
  */
 
@@ -89,9 +84,12 @@ private:
     AVR_DataSignalMux m_neg_mux;
     //Boolean indicating if the peripheral is disabled by the current sleep mode
     bool m_sleeping;
+    //Hysteresis value
+    double m_hysteresis;
 
     bool register_channels(AVR_DataSignalMux& mux, const std::vector<channel_config_t>& channels);
     void update_DAC();
+    void update_hysteresis();
     void update_output();
 
 };

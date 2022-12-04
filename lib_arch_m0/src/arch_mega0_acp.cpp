@@ -45,12 +45,22 @@ enum HookTag {
     HookTag_NegMux,
 };
 
+
+//Comparator hysteresis values in Volts
+//First row is for normal mode, second for low-power mode
+const double Hysteresis[2][4] = {
+    { 0.0, 0.01, 0.03, 0.06 },
+    { 0.0, 0.01, 0.025, 0.05 }
+};
+
+
 AVR_ArchMega0_ACP::AVR_ArchMega0_ACP(int num, const cfg_t& config)
 :AVR_Peripheral(AVR_IOCTL_ACP(0x30 + num))
 ,m_config(config)
 ,m_intflag(false)
 ,m_vref_signal(nullptr)
 ,m_sleeping(false)
+,m_hysteresis(0.0)
 {
     m_signal.set_data(Signal_Output, 0);
     m_signal.set_data(Signal_DAC, 0.0);
@@ -60,8 +70,8 @@ bool AVR_ArchMega0_ACP::init(AVR_Device& device)
 {
     bool status = AVR_Peripheral::init(device);
 
-    add_ioreg(REG_ADDR(CTRLA), AC_ENABLE_bm);
-    add_ioreg(REG_ADDR(MUXCTRLA), AC_MUXPOS_gm | AC_MUXNEG_gm);
+    add_ioreg(REG_ADDR(CTRLA));
+    add_ioreg(REG_ADDR(MUXCTRLA), AC_INVERT_bm | AC_MUXPOS_gm | AC_MUXNEG_gm);
     add_ioreg(REG_ADDR(DACREF), AC_DATA_gm);
     add_ioreg(REG_ADDR(INTCTRL), AC_CMP_bm);
     add_ioreg(REG_ADDR(STATUS), AC_STATE_bm, true);
@@ -115,6 +125,7 @@ void AVR_ArchMega0_ACP::reset()
     m_pos_mux.set_selection(0);
     m_neg_mux.set_selection(0);
     update_DAC();
+    update_hysteresis();
     update_output();
 }
 
@@ -139,8 +150,8 @@ void AVR_ArchMega0_ACP::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t
     reg_addr_t reg_ofs = addr - m_config.reg_base;
 
     if (reg_ofs == REG_OFS(CTRLA)) {
-        if ((data.posedge | data.negedge) & AC_ENABLE_bm)
-            update_output();
+        update_hysteresis();
+        update_output();
     }
 
     else if (reg_ofs == REG_OFS(MUXCTRLA)) {
@@ -189,6 +200,25 @@ void AVR_ArchMega0_ACP::update_DAC()
     m_signal.raise_d(Signal_DAC, dac_value);
 }
 
+
+void AVR_ArchMega0_ACP::update_hysteresis()
+{
+    //Obtain the correct absolute value for the hysteresis
+    //based on register configuration
+    uint8_t lp_mode_sel = READ_IOREG_B(CTRLA, AC_LPMODE);
+    uint8_t hyst_mode_sel = READ_IOREG_F(CTRLA, AC_HYSMODE);
+    double hyst_volt = Hysteresis[lp_mode_sel][hyst_mode_sel];
+
+    //Convert to a value relative to VCC and store the value
+    vardata_t vcc = m_vref_signal->data(AVR_IO_VREF::Source_VCC);
+    if (vcc.as_double()) {
+        m_hysteresis = hyst_volt / vcc.as_double();
+    } else {
+        device()->crash(CRASH_BAD_CTL_IO, "ACP: Invalid VCC value");
+        return;
+    }
+}
+
 void AVR_ArchMega0_ACP::update_output()
 {
     logger().dbg("Updating output");
@@ -198,8 +228,8 @@ void AVR_ArchMega0_ACP::update_output()
 
     //Compute the new output state
     bool enabled = TEST_IOREG(CTRLA, AC_ENABLE);
-    bool old_state = TEST_IOREG(STATUS, AC_STATE);
-    bool new_state;
+    uint8_t old_state = READ_IOREG_B(STATUS, AC_STATE);
+    uint8_t new_state;
 
     if (enabled) {
         double pos, neg;
@@ -214,28 +244,44 @@ void AVR_ArchMega0_ACP::update_output()
         else
             neg = m_signal.data(Signal_DAC).as_double();
 
-        new_state = (pos > neg);
+        //Determine the new state by applying the hysteresis
+        if (old_state && ((pos - neg) < -m_hysteresis))
+            new_state = 0;
+        else if (!old_state && ((pos - neg) > m_hysteresis))
+            new_state = 1;
+        else
+            new_state = old_state;
 
-        logger().dbg("Comparison: p=%g, n=%g, state=%d, old=%d",
-                     pos, neg,
-                     new_state ? 1 : 0,
-                     old_state ? 1 : 0);
+        //Invert the output value if enabled
+        if (TEST_IOREG(MUXCTRLA, AC_INVERT))
+            new_state ^= 1;
+
+        logger().dbg("Comparison: p=%g, n=%g, state=%hhu, old=%hhu", pos, neg, new_state, old_state);
 
         //If the state has changed, raise the interrupt (if enabled) and the signal
-        if (new_state ^ old_state) {
-            if (enabled)
-                m_intflag.set_flag();
-            m_signal.raise_u(Signal_Output, new_state);
-        }
+        uint8_t int_mode_sel = READ_IOREG_F(CTRLA, AC_INTMODE);
+        bool do_raise;
+        if (int_mode_sel == AC_INTMODE_BOTHEDGE_gc)
+            do_raise = new_state ^ old_state;
+        else if (int_mode_sel == AC_INTMODE_NEGEDGE_gc)
+            do_raise = old_state & ~new_state;
+        else if (int_mode_sel == AC_INTMODE_POSEDGE_gc)
+            do_raise = new_state & ~old_state;
+        else
+            do_raise = false;
+
+        if (do_raise)
+            m_intflag.set_flag();
 
     } else {
 
-        new_state = false;
+        new_state = 0;
 
     }
 
-    //Update the state in the register
+    //Update the state in the register and in the signal
     WRITE_IOREG_B(STATUS, AC_STATE, new_state);
+    m_signal.raise_u(Signal_Output, new_state);
 }
 
 /*
@@ -248,11 +294,12 @@ void AVR_ArchMega0_ACP::raised(const signal_data_t& sigdata, uint16_t hooktag)
             update_DAC();
             update_output();
         }
+        else if (sigdata.sigid == AVR_IO_VREF::Signal_VCCChange) {
+            update_hysteresis();
+            update_output();
+        }
     }
-    else if (hooktag == HookTag_PosMux) {
-        update_output();
-    }
-    else if (hooktag == HookTag_NegMux) {
+    else if (hooktag == HookTag_PosMux || hooktag == HookTag_NegMux) {
         update_output();
     }
 }

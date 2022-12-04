@@ -176,15 +176,14 @@ ACP:
                 LSB: 1
                 MSB: 2
                 values: [ NONE, SMALL, MEDIUM, LARGE ]
-                supported: no
-            LPMODE: { kind: BIT, pos: 3, one: enabled, zero: disabled, supported: no }
+            LPMODE: { kind: BIT, pos: 3, one: enabled, zero: disabled }
             INTMODE:
                 kind: ENUM
                 LSB: 4
                 MSB: 5
-                values: { 0x00: BOTHEDGE, 0x02: NEGEDGE, 0x03: POSEDGE, supported: no }
-                supported: no
-            RUNSTDBY: { kind: BIT, pos: 7, one: enabled, zero: disabled, supported: no }
+                values: { 0x00: BOTHEDGE, 0x02: NEGEDGE, 0x03: POSEDGE }
+            OUTEN: { kind: BIT, pos: 0, supported: no }
+            RUNSTDBY: { kind: BIT, pos: 7, one: enabled, zero: disabled }
 
         - name: MUXCTRL
           offset: 0x02
@@ -199,7 +198,7 @@ ACP:
                 LSB: 3
                 MSB: 4
                 values: [ AINP0, AINP1, AINP2, AINP3 ]
-            INVERT: { kind: BIT, pos: 7, one: enabled, zero: disabled, supported: no }
+            INVERT: { kind: BIT, pos: 7, one: enabled, zero: disabled }
 
         - name: DACREF
           offset: 0x04
