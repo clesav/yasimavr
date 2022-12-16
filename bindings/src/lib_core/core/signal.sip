@@ -57,7 +57,6 @@ public:
 
     AVR_Signal();
     AVR_Signal(const AVR_Signal&);
-    virtual ~AVR_Signal();
 
     void connect_hook(AVR_SignalHook*, uint16_t = 0);
     void disconnect_hook(AVR_SignalHook*);
@@ -165,7 +164,7 @@ public:
 
     AVR_CallableSignalHook(SIP_PYCALLABLE);
     AVR_CallableSignalHook(const AVR_CallableSignalHook&);
-    virtual ~AVR_CallableSignalHook();
+
     virtual void raised(const signal_data_t&, uint16_t) final;
 
 };

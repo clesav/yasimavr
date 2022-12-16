@@ -163,7 +163,7 @@ struct base_reg_config_t {
 };
 
 
-class AVR_Peripheral : public AVR_IO_RegHandler {
+class AVR_Peripheral : public AVR_IO_RegHandler /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "core/sim_peripheral.h"
 %End
@@ -171,7 +171,6 @@ class AVR_Peripheral : public AVR_IO_RegHandler {
 public:
 
     AVR_Peripheral(uint32_t);
-    virtual ~AVR_Peripheral();
 
     uint32_t id() const;
     const char* name() const;

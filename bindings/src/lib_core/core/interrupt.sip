@@ -49,8 +49,7 @@ public:
         Signal_Returned         /PyName=Returned/
     };
 
-    AVR_InterruptController(unsigned int size);
-    virtual ~AVR_InterruptController();
+    AVR_InterruptController(unsigned int);
 
     virtual void reset();
     virtual bool ctlreq(uint16_t, ctlreq_data_t*);
@@ -61,7 +60,7 @@ public:
 
 //=======================================================================================
 
-class AVR_InterruptHandler {
+class AVR_InterruptHandler /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "core/sim_interrupt.h"
 %End
@@ -69,11 +68,10 @@ class AVR_InterruptHandler {
 public:
 
     AVR_InterruptHandler();
-    virtual ~AVR_InterruptHandler();
 
-    void raise_interrupt(int_vect_t vector) const;
-    void cancel_interrupt(int_vect_t vector) const;
-    virtual void interrupt_ack_handler(int_vect_t vector);
+    void raise_interrupt(int_vect_t) const;
+    void cancel_interrupt(int_vect_t) const;
+    virtual void interrupt_ack_handler(int_vect_t);
 
 };
 

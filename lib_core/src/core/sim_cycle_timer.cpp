@@ -26,6 +26,35 @@
 
 //=======================================================================================
 
+AVR_CycleTimer::AVR_CycleTimer()
+:m_manager(nullptr)
+{}
+
+
+AVR_CycleTimer::~AVR_CycleTimer()
+{
+    if (m_manager)
+        m_manager->remove_cycle_timer(this);
+}
+
+
+AVR_CycleTimer::AVR_CycleTimer(const AVR_CycleTimer& other)
+:m_manager(other.m_manager)
+{
+    if (m_manager)
+        m_manager->copy_slot(&other, this);
+}
+
+
+AVR_CycleTimer& AVR_CycleTimer::operator=(const AVR_CycleTimer& other)
+{
+    m_manager = other.m_manager;
+    if (m_manager)
+        m_manager->copy_slot(&other, this);
+    return *this;
+}
+
+
 struct AVR_CycleManager::TimerSlot {
     //Pointer to the timer
     AVR_CycleTimer* timer;
@@ -48,7 +77,7 @@ AVR_CycleManager::~AVR_CycleManager()
     //Destroys the cycle timer slots
     for (auto it = m_timer_slots.begin(); it != m_timer_slots.end(); ++it) {
         TimerSlot* slot = *it;
-        slot->timer->m_scheduled = false;
+        slot->timer->m_manager = nullptr;
         delete slot;
     }
 
@@ -60,7 +89,8 @@ void AVR_CycleManager::increment_cycle(cycle_count_t count)
     m_cycle += count;
 }
 
-int AVR_CycleManager::find_timer(AVR_CycleTimer* timer)
+
+int AVR_CycleManager::find_timer(const AVR_CycleTimer* timer) const
 {
     for (auto it = m_timer_slots.begin(); it != m_timer_slots.end(); ++it) {
         TimerSlot* slot = *it;
@@ -100,7 +130,7 @@ void AVR_CycleManager::add_cycle_timer(AVR_CycleTimer* timer, cycle_count_t when
         slot->timer = timer;
         slot->when = when;
         slot->paused = false;
-        slot->timer->m_scheduled = true;
+        slot->timer->m_manager = this;
         add_timer_to_queue(slot);
     }
 }
@@ -109,7 +139,7 @@ void AVR_CycleManager::remove_cycle_timer(AVR_CycleTimer* timer)
 {
     TimerSlot* slot = remove_timer_from_queue(timer);
     if (slot) {
-        slot->timer->m_scheduled = false;
+        slot->timer->m_manager = nullptr;
         delete slot;
     }
 }
@@ -168,7 +198,7 @@ void AVR_CycleManager::process_cycle_timers()
                 slot->when = next_when;
                 add_timer_to_queue(slot);
             } else {
-                slot->timer->m_scheduled = false;
+                slot->timer->m_manager = nullptr;
                 delete slot;
             }
         }
@@ -185,4 +215,19 @@ cycle_count_t AVR_CycleManager::next_when() const
         return INVALID_CYCLE;
     else
         return slot->when;
+}
+
+
+void AVR_CycleManager::copy_slot(const AVR_CycleTimer* src, AVR_CycleTimer* dst)
+{
+    int index = find_timer(src);
+    if (index >= 0) {
+        TimerSlot* src_slot = m_timer_slots[index];
+        TimerSlot* dst_slot = new TimerSlot;
+        dst_slot->timer = dst;
+        dst_slot->when = src_slot->when;
+        dst_slot->paused = src_slot->paused;
+        dst_slot->timer->m_manager = this;
+        add_timer_to_queue(dst_slot);
+    }
 }

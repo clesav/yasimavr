@@ -29,8 +29,6 @@ class AVR_LogWriter {
 
 public:
 
-    virtual ~AVR_LogWriter();
-
     virtual void write(cycle_count_t, int, uint32_t, const char*, std::va_list);
 
     static AVR_LogWriter* default_writer();

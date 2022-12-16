@@ -51,6 +51,8 @@ public:
     };
 
     AVR_DeviceDebugProbe();
+    //Destructor: ensures the probe is detached
+    ~AVR_DeviceDebugProbe() noexcept;
 
     AVR_Device* device() const;
 
@@ -109,6 +111,10 @@ public:
     void _cpu_notify_jump(flash_addr_t addr);
     void _cpu_notify_call(flash_addr_t addr);
     void _cpu_notify_ret();
+
+    //Disable copy semantics
+    AVR_DeviceDebugProbe(const AVR_DeviceDebugProbe&) = delete;
+    AVR_DeviceDebugProbe& operator=(const AVR_DeviceDebugProbe&) = delete;
 
 private:
 

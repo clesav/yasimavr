@@ -49,7 +49,8 @@ struct ioreg_write_t {
 class DLL_EXPORT AVR_IO_RegHandler {
 
 public:
-    virtual ~AVR_IO_RegHandler() {}
+
+    virtual ~AVR_IO_RegHandler() = default;
 
     virtual void ioreg_read_handler(reg_addr_t addr) = 0;
 
@@ -69,7 +70,10 @@ class DLL_EXPORT AVR_IO_Register {
 
 public:
 
-    AVR_IO_Register(bool core_reg=false);
+    explicit AVR_IO_Register(bool core_reg=false);
+    //Copy constructor
+    AVR_IO_Register(const AVR_IO_Register& other);
+    //Destructor
     ~AVR_IO_Register();
 
     //Simple inline interface to access the value
@@ -90,6 +94,9 @@ public:
     //I/O peripheral interface for read/write operation on this register
     uint8_t ioctl_read(reg_addr_t addr);
     void ioctl_write(reg_addr_t addr, uint8_t value);
+
+    //Disable copy assignments
+    AVR_IO_Register& operator=(const AVR_IO_Register&) = delete;
 
 private:
 

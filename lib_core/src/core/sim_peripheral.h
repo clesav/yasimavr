@@ -153,7 +153,7 @@ class DLL_EXPORT AVR_Peripheral: public AVR_IO_RegHandler {
 
 public:
 
-    AVR_Peripheral(uint32_t id);
+    explicit AVR_Peripheral(uint32_t id);
     virtual ~AVR_Peripheral();
 
     uint32_t id() const;
@@ -175,18 +175,22 @@ public:
     //Callback method called when the CPU is reading a I/O register allocated by this peripheral.
     //The value has not been read yet so the module can modify it before the CPU gets it.
     //'addr' is the register address in I/O space
-    virtual void ioreg_read_handler(reg_addr_t addr);
+    virtual void ioreg_read_handler(reg_addr_t addr) override;
 
     //Callback method called when the CPU is writing a I/O register allocated by this peripheral.
     //The value has already been written.
     //'addr' is the register address in I/O space,
     //'data' is the new register content
-    virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data);
+    virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
 
     //Callback method called when the device enters or exits a sleep mode.
     //'on' is true when entering a sleep mode, false when exiting it.
     //'mode' is one of the enum AVR_SleepMode values
     virtual void sleep(bool on, AVR_SleepMode mode);
+
+    //Disable copy semantics
+    AVR_Peripheral(const AVR_Peripheral&) = delete;
+    AVR_Peripheral& operator=(const AVR_Peripheral&) = delete;
 
 protected:
 

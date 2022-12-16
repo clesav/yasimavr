@@ -41,8 +41,6 @@ class AVR_IO_RegHandler {
 
 public:
 
-    virtual ~AVR_IO_RegHandler();
-
     virtual void ioreg_read_handler(reg_addr_t) = 0;
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&) = 0;
 
@@ -57,7 +55,7 @@ class AVR_IO_Register {
 public:
 
     AVR_IO_Register(bool=false);
-    ~AVR_IO_Register();
+    AVR_IO_Register(const AVR_IO_Register&);
 
     uint8_t value() const;
     void set(uint8_t);
@@ -69,5 +67,9 @@ public:
 
     uint8_t ioctl_read(reg_addr_t);
     void ioctl_write(reg_addr_t, uint8_t);
+
+private:
+
+    AVR_IO_Register& operator=(const AVR_IO_Register&);
 
 };

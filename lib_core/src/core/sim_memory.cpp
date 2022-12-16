@@ -33,7 +33,7 @@
         (len) = (size) - (base);
 
 
-AVR_NonVolatileMemory::AVR_NonVolatileMemory(const size_t size)
+AVR_NonVolatileMemory::AVR_NonVolatileMemory(size_t size)
 :m_size(size)
 {
     if (size) {
@@ -53,6 +53,14 @@ AVR_NonVolatileMemory::~AVR_NonVolatileMemory()
         free(m_tag);
     }
 }
+
+
+AVR_NonVolatileMemory::AVR_NonVolatileMemory(const AVR_NonVolatileMemory& other)
+:AVR_NonVolatileMemory(0)
+{
+    *this = other;
+}
+
 
 void AVR_NonVolatileMemory::erase()
 {
@@ -172,4 +180,26 @@ void AVR_NonVolatileMemory::spm_write(unsigned char* buf, unsigned char* bufset,
             m_tag[base + i] = 1;
         }
     }
+}
+
+
+AVR_NonVolatileMemory& AVR_NonVolatileMemory::operator=(const AVR_NonVolatileMemory& other)
+{
+    if (m_size) {
+        free(m_memory);
+        free(m_tag);
+    }
+
+    m_size = other.m_size;
+
+    if (m_size) {
+        m_memory = (unsigned char*) malloc(m_size);
+        memcpy(m_memory, other.m_memory, m_size);
+        m_tag = (unsigned char*) malloc(m_size);
+        memcpy(m_tag, other.m_tag, m_size);
+    } else {
+        m_memory = m_tag = nullptr;
+    }
+
+    return *this;
 }

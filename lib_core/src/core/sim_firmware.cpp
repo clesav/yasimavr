@@ -41,10 +41,16 @@ AVR_Firmware::AVR_Firmware()
 ,m_bsssize(0)
 {}
 
+AVR_Firmware::AVR_Firmware(const AVR_Firmware& other)
+:AVR_Firmware()
+{
+    *this = other;
+}
+
 AVR_Firmware::~AVR_Firmware()
 {
     for (auto it = m_blocks.begin(); it != m_blocks.end(); ++it) {
-        for (Block b : it->second)
+        for (Block& b : it->second)
             if (b.mem_block.size)
                 free(b.mem_block.buf);
     }
@@ -205,7 +211,7 @@ size_t AVR_Firmware::memory_size(const std::string& name) const
         return 0;
 
     size_t s = 0;
-    for (auto block : it->second)
+    for (const Block& block : it->second)
         s += block.mem_block.size;
 
     return s;
@@ -225,8 +231,33 @@ bool AVR_Firmware::load_memory(const std::string& name, AVR_NonVolatileMemory& m
 {
     bool status = true;
 
-    for (Block fb : blocks(name))
+    for (Block& fb : blocks(name))
         status &= memory.program(fb.mem_block, fb.base);
 
     return status;
+}
+
+AVR_Firmware& AVR_Firmware::operator=(const AVR_Firmware& other)
+{
+    for (auto it = m_blocks.begin(); it != m_blocks.end(); ++it) {
+        for (Block& b : it->second)
+            if (b.mem_block.size)
+                free(b.mem_block.buf);
+    }
+    m_blocks.clear();
+
+    variant = other.variant;
+    frequency = other.frequency;
+    vcc = other.vcc;
+    aref = other.aref;
+    console_register = other.console_register;
+    m_datasize = other.m_datasize;
+    m_bsssize = other.m_bsssize;
+
+    for (auto it = other.m_blocks.begin(); it != other.m_blocks.end(); ++it) {
+        for (const Block& b : it->second)
+            add_block(it->first, b.mem_block, b.base);
+    }
+
+    return *this;
 }

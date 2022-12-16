@@ -59,8 +59,8 @@ class AVR_NonVolatileMemory /NoDefaultCtors/ {
 
 public:
 
-    AVR_NonVolatileMemory(const size_t size);
-    ~AVR_NonVolatileMemory();
+    AVR_NonVolatileMemory(size_t);
+    AVR_NonVolatileMemory(const AVR_NonVolatileMemory&);
 
     size_t size() const;
 
@@ -75,15 +75,15 @@ public:
 
     void erase();
     void erase(size_t, size_t);
-    void erase(SIP_PYBUFFER, size_t pos);
+    void erase(SIP_PYBUFFER, size_t);
     %MethodCode
         unsigned char* buf;
         size_t len = import_from_pybuffer(sipAPI_core, &buf, a0);
         sipCpp->erase(buf, a1, len);
     %End
 
-    int dbg_read(size_t pos) const;
-    SIP_PYBUFFER dbg_read(size_t base, size_t len) const;
+    int dbg_read(size_t) const;
+    SIP_PYBUFFER dbg_read(size_t, size_t) const;
     %MethodCode
         unsigned char* buf = (unsigned char*) sipMalloc(a1);
         size_t len_res = sipCpp->dbg_read(buf, a0, a1);
@@ -91,16 +91,16 @@ public:
         sipFree(buf);
     %End
 
-    void dbg_write(unsigned char v /PyInt/, size_t pos);
-    void dbg_write(SIP_PYBUFFER, size_t base);
+    void dbg_write(unsigned char /PyInt/, size_t);
+    void dbg_write(SIP_PYBUFFER, size_t);
     %MethodCode
         unsigned char* buf;
         size_t len = import_from_pybuffer(sipAPI_core, &buf, a0);
         sipCpp->dbg_write(buf, a1, len);
     %End
 
-    void spm_write(unsigned char v /PyInt/, size_t pos);
-    void spm_write(SIP_PYBUFFER, SIP_PYBUFFER, size_t pos);
+    void spm_write(unsigned char /PyInt/, size_t);
+    void spm_write(SIP_PYBUFFER, SIP_PYBUFFER, size_t);
     %MethodCode
         unsigned char* buf;
         unsigned char* bufset = NULL;

@@ -29,7 +29,6 @@ class AVR_CycleTimer {
 public:
 
     AVR_CycleTimer();
-    virtual ~AVR_CycleTimer();
 
     bool scheduled() const;
 
@@ -38,7 +37,7 @@ public:
 };
 
 
-class AVR_CycleManager {
+class AVR_CycleManager /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "core/sim_cycle_timer.h"
 %End
@@ -46,7 +45,6 @@ class AVR_CycleManager {
 public:
 
     AVR_CycleManager();
-    ~AVR_CycleManager();
 
     cycle_count_t cycle() const;
     void increment_cycle(cycle_count_t);

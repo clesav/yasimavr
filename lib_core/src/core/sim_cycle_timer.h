@@ -33,14 +33,20 @@
  * Abstract interface for timers that can register with the cycle manager and
  * be called at a certain cycle
  */
+
+class AVR_CycleManager;
+
 class DLL_EXPORT AVR_CycleTimer {
 
 public:
 
-    AVR_CycleTimer() : m_scheduled(false) {}
-    virtual ~AVR_CycleTimer() {}
+    AVR_CycleTimer();
+    //Copy constructor
+    AVR_CycleTimer(const AVR_CycleTimer& other);
+    //Destructor: ensures the timer is removed from the manager
+    virtual ~AVR_CycleTimer();
 
-    inline bool scheduled() const { return m_scheduled; }
+    inline bool scheduled() const { return !!m_manager; }
 
     //Callback from the cycle loop. 'when' is the current cycle
     //The returned value is the next 'when' cycle this timer wants to be called.
@@ -50,11 +56,15 @@ public:
     //The implementations must account for this.
     virtual cycle_count_t next(cycle_count_t when) = 0;
 
+    //Copy assignment
+    AVR_CycleTimer& operator=(const AVR_CycleTimer& other);
+
 private:
 
     friend class AVR_CycleManager;
 
-    bool m_scheduled;
+    //Pointer to the cycle manager when the timer is scheduled. Null when not scheduled.
+    AVR_CycleManager* m_manager;
 
 };
 
@@ -96,10 +106,16 @@ public:
     void process_cycle_timers();
 
     //Returns the next cycle 'when' where timers require to be processed
-    //Returns 0 if no timer to be processed
+    //Returns INVALID_CYCLE if no timer to be processed
     cycle_count_t next_when() const;
 
+    //no copy semantics
+    AVR_CycleManager(const AVR_CycleManager&) = delete;
+    AVR_CycleManager& operator=(const AVR_CycleManager&) = delete;
+
 private:
+
+    friend class AVR_CycleTimer;
 
     //Structure holding information on a cycle timer when it's in the cycle queue
     struct TimerSlot;
@@ -113,7 +129,9 @@ private:
     //Utility to remove a timer from the queue.
     TimerSlot* remove_timer_from_queue(AVR_CycleTimer* timer);
 
-    int find_timer(AVR_CycleTimer* timer);
+    int find_timer(const AVR_CycleTimer* timer) const;
+
+    void copy_slot(const AVR_CycleTimer* src, AVR_CycleTimer* dst);
 
 };
 

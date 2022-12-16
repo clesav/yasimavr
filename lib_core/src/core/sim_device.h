@@ -156,6 +156,10 @@ public:
 
     void crash(uint16_t reason, const char* text);
 
+    //Disable copy semantics
+    AVR_Device(const AVR_Device&) = delete;
+    AVR_Device& operator=(const AVR_Device&) = delete;
+
 protected:
 
     virtual bool core_ctlreq(uint16_t req, ctlreq_data_t* reqdata);

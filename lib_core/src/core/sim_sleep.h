@@ -90,7 +90,7 @@ class DLL_EXPORT AVR_SleepController : public AVR_Peripheral, public AVR_SignalH
 
 public:
 
-    AVR_SleepController(const AVR_SleepConfig& config);
+    explicit AVR_SleepController(const AVR_SleepConfig& config);
 
     virtual bool init(AVR_Device& device) override;
     virtual bool ctlreq(uint16_t req, ctlreq_data_t* data) override;

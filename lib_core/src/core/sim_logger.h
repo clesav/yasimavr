@@ -34,7 +34,7 @@ class DLL_EXPORT AVR_LogWriter {
 
 public:
 
-    virtual ~AVR_LogWriter() {}
+    virtual ~AVR_LogWriter() = default;
 
     virtual void write(cycle_count_t cycle,
                        int level,
@@ -99,7 +99,7 @@ public:
     };
 
     AVR_Logger(uint32_t id, AVR_LogHandler& hdl);
-    AVR_Logger(uint32_t id, AVR_Logger* prt = nullptr);
+    explicit AVR_Logger(uint32_t id, AVR_Logger* prt = nullptr);
 
     void set_level(int lvl);
     int level() const;

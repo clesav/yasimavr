@@ -26,6 +26,7 @@
 #include "sim_signal.h"
 #include "sim_interrupt.h"
 #include "sim_device.h"
+#include "sim_debug.h"
 #include <cstring>
 
 
@@ -81,6 +82,9 @@ AVR_Core::~AVR_Core()
         if (m_ioregs[i]) delete m_ioregs[i];
     }
     free(m_ioregs);
+
+    if (m_debug_probe)
+        m_debug_probe->detach();
 }
 
 bool AVR_Core::init(AVR_Device& d)

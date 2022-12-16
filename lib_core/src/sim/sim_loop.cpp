@@ -51,9 +51,6 @@ AVR_AbstractSimLoop::AVR_AbstractSimLoop(AVR_Device& device)
     m_device.init(m_cycle_manager);
 }
 
-AVR_AbstractSimLoop::~AVR_AbstractSimLoop()
-{}
-
 cycle_count_t AVR_AbstractSimLoop::run_device(cycle_count_t final_cycle)
 {
     cycle_count_t cycle_delta = m_device.exec_cycle();

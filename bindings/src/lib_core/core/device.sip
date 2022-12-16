@@ -84,7 +84,6 @@ public:
     };
 
     AVR_Device(AVR_Core&, const AVR_DeviceConfiguration&);
-    virtual ~AVR_Device();
 
     AVR_Core& core() const;
 
