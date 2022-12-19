@@ -107,6 +107,10 @@ public:
 
     inline TWI_Bus* bus() const { return m_bus; }
 
+    //Disable copy semantics
+    TWI_Endpoint(const TWI_Endpoint&) = delete;
+    TWI_Endpoint& operator=(const TWI_Endpoint&) = delete;
+
 protected:
 
     //Used by a master endpoint to get ownership of the bus
@@ -170,6 +174,10 @@ public:
 
     void add_endpoint(TWI_Endpoint& endpoint);
     void remove_endpoint(TWI_Endpoint& endpoint);
+
+    //Disable copy semantics
+    TWI_Bus(const TWI_Bus&) = delete;
+    TWI_Bus& operator=(const TWI_Bus&) = delete;
 
 private:
 
@@ -290,7 +298,7 @@ public:
     };
 
     AVR_IO_TWI();
-    ~AVR_IO_TWI();
+    virtual ~AVR_IO_TWI();
 
     //Initialise the interface. the device will be used for timer related operations
     void init(AVR_CycleManager& cycle_manager, AVR_Logger& logger);
@@ -337,6 +345,10 @@ public:
 
     State master_state() const;
     State slave_state() const;
+
+    //Disable copy semantics
+    AVR_IO_TWI(const AVR_IO_TWI&) = delete;
+    AVR_IO_TWI& operator=(const AVR_IO_TWI&) = delete;
 
 protected:
 

@@ -41,7 +41,7 @@ class DLL_EXPORT AVR_IO_Port : public AVR_Peripheral, public AVR_SignalHook {
 public:
 
     //Constructor of the port. The name is the upper case letter identifying the port.
-    AVR_IO_Port(char name);
+    explicit AVR_IO_Port(char name);
 
     //Implementation of AVR_Peripheral callbacks
     virtual bool init(AVR_Device& device) override;

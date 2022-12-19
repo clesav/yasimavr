@@ -91,6 +91,10 @@ public:
 
     static int ticks_to_event(int counter, int event, int wrap);
 
+    //Disable copy semantics
+    AVR_PrescaledTimer(const AVR_PrescaledTimer&) = delete;
+    AVR_PrescaledTimer& operator=(const AVR_PrescaledTimer&) = delete;
+
 private:
 
     AVR_CycleManager* m_cycle_manager;
