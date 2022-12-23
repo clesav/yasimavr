@@ -55,7 +55,7 @@ class DLL_EXPORT AVR_ArchAVR_WDT : public AVR_WatchdogTimer, public AVR_Interrup
 
 public:
 
-    AVR_ArchAVR_WDT(const AVR_ArchAVR_WDT_Config& config);
+    explicit AVR_ArchAVR_WDT(const AVR_ArchAVR_WDT_Config& config);
 
     virtual bool init(AVR_Device& device) override;
     virtual void reset() override;

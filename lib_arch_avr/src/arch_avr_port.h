@@ -46,7 +46,7 @@ class DLL_EXPORT AVR_ArchAVR_Port : public AVR_IO_Port {
 
 public:
 
-    AVR_ArchAVR_Port(const AVR_ArchAVR_PortConfig& config);
+    explicit AVR_ArchAVR_Port(const AVR_ArchAVR_PortConfig& config);
 
     virtual bool init(AVR_Device& device) override;
     virtual void reset() override;

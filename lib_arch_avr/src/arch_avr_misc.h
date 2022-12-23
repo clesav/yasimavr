@@ -37,7 +37,7 @@ class DLL_EXPORT AVR_ArchAVR_VREF : public AVR_IO_VREF {
 
 public:
 
-    AVR_ArchAVR_VREF(double band_gap);
+    explicit AVR_ArchAVR_VREF(double band_gap);
 
 };
 
@@ -75,7 +75,7 @@ class DLL_EXPORT AVR_ArchAVR_MiscRegCtrl : public AVR_Peripheral {
 
 public:
 
-    AVR_ArchAVR_MiscRegCtrl(const AVR_ArchAVR_Misc_Config& config);
+    explicit AVR_ArchAVR_MiscRegCtrl(const AVR_ArchAVR_Misc_Config& config);
 
     virtual bool init(AVR_Device& device) override;
 

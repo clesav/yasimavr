@@ -61,7 +61,7 @@ public:
         NVM_USERROW = NVM_ArchDefined + 1,
     };
 
-    AVR_ArchMega0_Core(const AVR_ArchMega0_CoreConfig& variant);
+    explicit AVR_ArchMega0_Core(const AVR_ArchMega0_CoreConfig& variant);
 
 protected:
 
@@ -87,7 +87,7 @@ class DLL_EXPORT AVR_ArchMega0_Device : public AVR_Device {
 
 public:
 
-    AVR_ArchMega0_Device(const AVR_ArchMega0_DeviceConfig& config);
+    explicit AVR_ArchMega0_Device(const AVR_ArchMega0_DeviceConfig& config);
     virtual ~AVR_ArchMega0_Device();
 
 protected:
