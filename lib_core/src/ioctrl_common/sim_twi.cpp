@@ -81,11 +81,11 @@ static void fill_read_req_packet(TWI_Packet& packet)
 
  void fill_read_packet(TWI_Packet& packet, uint8_t d)
  {
-        packet.cmd = TWI_Packet::Cmd_Data;
-        packet.rw = TWI_Packet::Read;
-        packet.data = 0;
-        packet.ack = TWI_Packet::Nack;
-        packet.hold = 0;
+    packet.cmd = TWI_Packet::Cmd_Data;
+    packet.rw = TWI_Packet::Read;
+    packet.data = 0;
+    packet.ack = TWI_Packet::Nack;
+    packet.hold = 0;
  }
 
 

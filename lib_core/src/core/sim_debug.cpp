@@ -41,6 +41,12 @@ AVR_DeviceDebugProbe::AVR_DeviceDebugProbe()
 :m_device(nullptr)
 {}
 
+AVR_DeviceDebugProbe::~AVR_DeviceDebugProbe()
+{
+    if (m_device)
+        detach();
+}
+
 void AVR_DeviceDebugProbe::attach(AVR_Device& device)
 {
     if (m_device) return;

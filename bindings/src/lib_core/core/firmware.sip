@@ -49,7 +49,7 @@ public:
     reg_addr_t console_register;
 
     AVR_Firmware();
-    ~AVR_Firmware();
+    AVR_Firmware(const AVR_Firmware& other);
 
     static AVR_Firmware* read_elf(const char*);
 

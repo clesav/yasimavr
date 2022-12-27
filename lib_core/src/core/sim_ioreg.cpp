@@ -39,8 +39,6 @@ class AVR_IO_RegDispatcher : public AVR_IO_RegHandler {
 
 public:
 
-    virtual ~AVR_IO_RegDispatcher() {}
-
     void add_handler(AVR_IO_RegHandler* handler)
     {
         for (auto h : m_handlers)
@@ -77,16 +75,28 @@ AVR_IO_Register::AVR_IO_Register(bool core_reg)
 ,m_ro_mask(0)
 {}
 
+AVR_IO_Register::AVR_IO_Register(const AVR_IO_Register& other)
+:m_value(other.m_value)
+,m_flags(other.m_flags)
+,m_use_mask(other.m_use_mask)
+,m_ro_mask(other.m_ro_mask)
+{
+    if (m_flags & Reg_Flag_Dispatcher)
+        m_handler = new AVR_IO_RegDispatcher(*static_cast<AVR_IO_RegDispatcher*>(other.m_handler));
+    else
+        m_handler = other.m_handler;
+}
+
 AVR_IO_Register::~AVR_IO_Register()
 {
     if (m_flags & Reg_Flag_Dispatcher)
-        delete (AVR_IO_RegDispatcher*) m_handler;
+        delete static_cast<AVR_IO_RegDispatcher*>(m_handler);
 }
 
 void AVR_IO_Register::set_handler(AVR_IO_RegHandler* handler, uint8_t use_mask, uint8_t ro_mask)
 {
     if (m_flags & Reg_Flag_Dispatcher) {
-        AVR_IO_RegDispatcher* dispatcher = reinterpret_cast<AVR_IO_RegDispatcher*>(m_handler);
+        AVR_IO_RegDispatcher* dispatcher = static_cast<AVR_IO_RegDispatcher*>(m_handler);
         dispatcher->add_handler(handler);
     }
     else if (m_handler) {

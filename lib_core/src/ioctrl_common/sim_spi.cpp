@@ -26,6 +26,35 @@
 
 //=======================================================================================
 
+AVR_SPI_Client::AVR_SPI_Client()
+:m_host(nullptr)
+{}
+
+AVR_SPI_Client::AVR_SPI_Client(const AVR_SPI_Client& other)
+:AVR_SPI_Client()
+{
+    if (other.m_host)
+        other.m_host->add_client(*this);
+}
+
+AVR_SPI_Client::~AVR_SPI_Client()
+{
+    if (m_host)
+        m_host->remove_client(*this);
+}
+
+AVR_SPI_Client& AVR_SPI_Client::operator=(const AVR_SPI_Client& other)
+{
+    if (m_host)
+        m_host->remove_client(*this);
+
+    if (other.m_host)
+        other.m_host->add_client(*this);
+
+    return *this;
+}
+
+
 AVR_IO_SPI::AVR_IO_SPI()
 :m_cycle_manager(nullptr)
 ,m_logger(nullptr)
@@ -66,9 +95,21 @@ void AVR_IO_SPI::set_host_mode(bool mode)
     m_is_host = mode;
 }
 
-void AVR_IO_SPI::add_client(AVR_SPI_Client* client)
+void AVR_IO_SPI::add_client(AVR_SPI_Client& client)
 {
-    m_clients.push_back(client);
+    m_clients.push_back(&client);
+    client.m_host = this;
+}
+
+void AVR_IO_SPI::remove_client(AVR_SPI_Client& client)
+{
+    for (auto it = m_clients.begin(); it != m_clients.end(); ++it) {
+        if (*it == &client) {
+            m_clients.erase(it);
+            client.m_host = nullptr;
+            return;
+        }
+    }
 }
 
 void AVR_IO_SPI::set_selected(bool selected)

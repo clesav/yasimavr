@@ -48,8 +48,8 @@ public:
         State_Done
     };
 
-    AVR_AbstractSimLoop(AVR_Device& device);
-    ~AVR_AbstractSimLoop();
+    explicit AVR_AbstractSimLoop(AVR_Device& device);
+    virtual ~AVR_AbstractSimLoop() = default;
 
     AVR_AbstractSimLoop::State state() const;
     cycle_count_t cycle() const;
@@ -113,7 +113,7 @@ class DLL_EXPORT AVR_SimLoop : public AVR_AbstractSimLoop {
 
 public:
 
-    AVR_SimLoop(AVR_Device& device);
+    explicit AVR_SimLoop(AVR_Device& device);
 
     //Set the simulation running mode: false=real-time, true=fast
     void set_fast_mode(bool fast);
@@ -149,7 +149,7 @@ class DLL_EXPORT AVR_AsyncSimLoop : public AVR_AbstractSimLoop {
 
 public:
 
-    AVR_AsyncSimLoop(AVR_Device& device);
+    explicit AVR_AsyncSimLoop(AVR_Device& device);
 
     //Set the simulation running mode: false=real-time, true=fast
     void set_fast_mode(bool fast);

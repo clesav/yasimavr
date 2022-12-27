@@ -46,7 +46,6 @@ public:
     };
 
     AVR_ArchAVR_Core(const AVR_ArchAVR_CoreConfig&);
-    virtual ~AVR_ArchAVR_Core();
 
 protected:
 
@@ -64,7 +63,6 @@ class AVR_ArchAVR_Device : public AVR_Device /NoDefaultCtors/ {
 public:
 
     AVR_ArchAVR_Device(const AVR_ArchAVR_DeviceConfig&);
-    virtual ~AVR_ArchAVR_Device();
 
     SIP_PYOBJECT __str__();
     %MethodCode

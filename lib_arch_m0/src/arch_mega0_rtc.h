@@ -64,7 +64,7 @@ class DLL_EXPORT AVR_ArchMega0_RTC : public AVR_Peripheral {
 
 public:
 
-    AVR_ArchMega0_RTC(const AVR_ArchMega0_RTC_Config& config);
+    explicit AVR_ArchMega0_RTC(const AVR_ArchMega0_RTC_Config& config);
     virtual ~AVR_ArchMega0_RTC();
 
     virtual bool init(AVR_Device& device) override;

@@ -40,7 +40,7 @@ AVR_IO_VREF::AVR_IO_VREF(uint32_t ref_count)
     m_signal.set_data(Signal_VCCChange, 0.0);
     m_signal.set_data(Signal_ARefChange, 0.0);
 
-    for (uint32_t i = 0; i < m_references.size(); ++i)
+    for (uint32_t i = 0; i < ref_count; ++i)
         m_signal.set_data(Signal_IntRefChange, 0.0, i);
 }
 

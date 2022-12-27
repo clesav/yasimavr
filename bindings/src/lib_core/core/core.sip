@@ -79,7 +79,6 @@ public:
     };
 
     AVR_Core(const AVR_CoreConfiguration&);
-    virtual ~AVR_Core();
 
     bool init(AVR_Device&);
     void reset();

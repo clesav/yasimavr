@@ -21,7 +21,7 @@
 
 //=======================================================================================
 
-class AVR_DeviceDebugProbe {
+class AVR_DeviceDebugProbe /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "core/sim_debug.h"
 #include "utils/buffer_utils.h"
@@ -37,7 +37,6 @@ public:
     };
 
     AVR_DeviceDebugProbe();
-     ~AVR_DeviceDebugProbe();
 
     AVR_Device* device() const;
 

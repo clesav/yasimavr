@@ -55,7 +55,7 @@ class AVR_ArchMega0_RTC::TimerHook : public AVR_SignalHook {
 
 public:
 
-    TimerHook(AVR_ArchMega0_RTC& ctl) : m_ctl(ctl) {}
+    explicit TimerHook(AVR_ArchMega0_RTC& ctl) : m_ctl(ctl) {}
 
     virtual void raised(const signal_data_t& sigdata, uint16_t hooktag) override {
         if (hooktag)

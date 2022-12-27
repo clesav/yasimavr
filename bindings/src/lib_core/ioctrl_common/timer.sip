@@ -21,7 +21,7 @@
 
 //=======================================================================================
 
-class AVR_PrescaledTimer : public AVR_CycleTimer {
+class AVR_PrescaledTimer : public AVR_CycleTimer /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "ioctrl_common/sim_timer.h"
 %End

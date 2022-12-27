@@ -33,7 +33,7 @@ enum class AVR_SleepMode /BaseType=IntEnum/ {
     PowerSave,
 };
 
-const char* SleepModeName(AVR_SleepMode mode);
+const char* SleepModeName(AVR_SleepMode);
 
 
 struct AVR_SleepConfig {
@@ -62,7 +62,7 @@ struct AVR_SleepConfig {
 };
 
 
-class AVR_SleepController : public AVR_Peripheral /NoDefaultCtors/ {
+class AVR_SleepController : public AVR_Peripheral, public AVR_SignalHook /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "core/sim_sleep.h"
 %End
@@ -70,9 +70,9 @@ class AVR_SleepController : public AVR_Peripheral /NoDefaultCtors/ {
 public:
 
     AVR_SleepController(const AVR_SleepConfig&);
-    virtual ~AVR_SleepController();
 
     virtual bool init(AVR_Device&);
     virtual bool ctlreq(uint16_t, ctlreq_data_t*);
+    virtual void raised(const signal_data_t&, uint16_t);
 
 };

@@ -98,7 +98,7 @@ public:
         NVM_ArchDefined,
     };
 
-    AVR_Core(const AVR_CoreConfiguration& config);
+    explicit AVR_Core(const AVR_CoreConfiguration& config);
     virtual ~AVR_Core();
 
     const AVR_CoreConfiguration& config() const;
@@ -117,6 +117,10 @@ public:
 
     void start_interrupt_inhibit(unsigned int count);
     //AVR_Signal& int_inhib_signal();
+
+    //Disable copy semantics
+    AVR_Core(const AVR_Core&) = delete;
+    AVR_Core& operator=(const AVR_Core&) = delete;
 
 protected:
 

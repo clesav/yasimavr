@@ -66,6 +66,8 @@ public:
     reg_addr_t                  console_register;
 
     AVR_Firmware();
+    //Copy constructor : make a deep copy of all memory blocks
+    AVR_Firmware(const AVR_Firmware& other);
     ~AVR_Firmware();
 
     //Reads a ELF file and returns a new firmware object
@@ -84,6 +86,9 @@ public:
 
     mem_addr_t datasize() const;
     mem_addr_t bsssize() const;
+
+    //Copy assignment
+    AVR_Firmware& operator=(const AVR_Firmware& other);
 
 private:
 

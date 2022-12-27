@@ -68,7 +68,7 @@ public:
     static const char* StateName(State state);
 
     //Constructor of the pin. The ID should be a unique identifier of the pad for the MCU.
-    AVR_Pin(uint32_t id);
+    explicit AVR_Pin(uint32_t id);
 
     //Interface for controlling the pad from external code
     void set_external_state(State state);
@@ -92,7 +92,7 @@ private:
 
     friend class AVR_IO_Port;
 
-    const uint32_t m_id;
+    uint32_t m_id;
     State m_ext_state;
     State m_int_state;
     State m_resolved_state;

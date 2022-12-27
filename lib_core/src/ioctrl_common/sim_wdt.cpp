@@ -31,7 +31,7 @@ class AVR_WatchdogTimer::WDT_Timer : public AVR_CycleTimer {
 
 public:
 
-    WDT_Timer(AVR_WatchdogTimer& ctl) : m_ctl(ctl) {}
+    explicit WDT_Timer(AVR_WatchdogTimer& ctl) : m_ctl(ctl) {}
 
     virtual cycle_count_t next(cycle_count_t when) override {
         return m_ctl.wd_timer_next(when);
@@ -50,7 +50,7 @@ class AVR_WatchdogTimer::WDR_Sync_Timer : public AVR_CycleTimer {
 
 public:
 
-    WDR_Sync_Timer(AVR_WatchdogTimer& ctl) : m_ctl(ctl) {}
+    explicit WDR_Sync_Timer(AVR_WatchdogTimer& ctl) : m_ctl(ctl) {}
 
     virtual cycle_count_t next(cycle_count_t when) override {
         return m_ctl.wdr_sync_timer_next(when);

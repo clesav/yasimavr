@@ -44,7 +44,11 @@ class DLL_EXPORT AVR_NonVolatileMemory {
 
 public:
 
-    AVR_NonVolatileMemory(const size_t size);
+    //Base contructor: construct an unprogrammed NVM
+    explicit AVR_NonVolatileMemory(size_t size);
+    //Copy constructor
+    AVR_NonVolatileMemory(const AVR_NonVolatileMemory& other);
+    //Destructor
     ~AVR_NonVolatileMemory();
 
     size_t size() const;
@@ -79,9 +83,12 @@ public:
     void spm_write(unsigned char v, size_t pos);
     void spm_write(unsigned char* buf, unsigned char* bufset, size_t base, size_t len);
 
+    //Copy assignment
+    AVR_NonVolatileMemory& operator=(const AVR_NonVolatileMemory& other);
+
 private:
 
-    const size_t m_size;
+    size_t m_size;
     unsigned char* m_memory;
     unsigned char* m_tag;
 

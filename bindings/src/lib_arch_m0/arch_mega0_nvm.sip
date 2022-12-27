@@ -79,7 +79,6 @@ class AVR_ArchMega0_NVM : public AVR_Peripheral /NoDefaultCtors/ {
 public:
 
     AVR_ArchMega0_NVM(const AVR_ArchMega0_NVM_Config&);
-    virtual ~AVR_ArchMega0_NVM();
 
     virtual bool init(AVR_Device&);
     virtual void reset();

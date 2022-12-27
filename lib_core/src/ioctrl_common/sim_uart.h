@@ -163,6 +163,10 @@ public:
     //will be ignored but the frames already in the RX FIFO are kept.
     void set_paused(bool enabled);
 
+    //Disable copy semantics
+    AVR_IO_UART(const AVR_IO_UART&) = delete;
+    AVR_IO_UART& operator=(const AVR_IO_UART&) = delete;
+
 protected:
 
     //Implementation of the AVR_Signal::Hook interface to receive frames

@@ -43,7 +43,8 @@ class AVR_SPI_Client {
 
 public:
 
-    virtual ~AVR_SPI_Client();
+    AVR_SPI_Client();
+    AVR_SPI_Client(const AVR_SPI_Client&);
 
     virtual bool selected() const = 0;
     virtual uint8_t start_transfer(uint8_t mosi_frame) = 0;
@@ -73,7 +74,8 @@ public:
     void set_host_mode(bool);
     AVR_Signal& signal();
     void set_frame_delay(cycle_count_t);
-    void add_client(AVR_SPI_Client*);
+    void add_client(AVR_SPI_Client&);
+    void remove_client(AVR_SPI_Client&);
     void set_selected(bool);
     void set_tx_buffer_limit(size_t);
     void push_tx(uint8_t);

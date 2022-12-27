@@ -66,7 +66,7 @@ public:
 };
 
 
-class TWI_Endpoint {
+class TWI_Endpoint /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "ioctrl_common/sim_twi.h"
 %End
@@ -74,7 +74,6 @@ class TWI_Endpoint {
 public:
 
     TWI_Endpoint();
-    virtual ~TWI_Endpoint();
 
     TWI_Bus* bus() const;
 
@@ -93,7 +92,7 @@ protected:
 };
 
 
-class TWI_Bus {
+class TWI_Bus /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "ioctrl_common/sim_twi.h"
 %End
@@ -110,7 +109,6 @@ public:
     };
 
     TWI_Bus();
-    ~TWI_Bus();
 
     AVR_Signal& signal();
 
@@ -169,7 +167,6 @@ public:
     };
 
     AVR_IO_TWI();
-    ~AVR_IO_TWI();
 
     void init(AVR_CycleManager&, AVR_Logger&);
     void reset();

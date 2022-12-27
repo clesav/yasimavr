@@ -72,7 +72,7 @@ public:
         Signal_VCCChange,
     };
 
-    AVR_IO_VREF(uint32_t ref_count);
+    explicit AVR_IO_VREF(uint32_t ref_count);
 
     bool active() const;
 

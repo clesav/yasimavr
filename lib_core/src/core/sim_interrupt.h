@@ -74,7 +74,7 @@ public:
 
     //===== Constructor/destructor =====
     //Construct the controller with the given vector table size
-    AVR_InterruptController(unsigned int size);
+    explicit AVR_InterruptController(unsigned int size);
 
     //===== Override of IO_CTL virtual methods =====
     virtual void reset() override;
@@ -195,7 +195,7 @@ class DLL_EXPORT AVR_InterruptFlag : public AVR_InterruptHandler {
 
 public:
 
-    AVR_InterruptFlag(bool clear_on_ack);
+    explicit AVR_InterruptFlag(bool clear_on_ack);
 
     //Init allocates the resources required. Returns true on success
     bool init(AVR_Device& device, const regbit_t& rb_enable, const regbit_t& rb_flag, int_vect_t vector);

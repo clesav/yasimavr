@@ -99,7 +99,7 @@ bool AVR_ArchMega0_SPI::ctlreq(uint16_t req, ctlreq_data_t* data)
     else if (req == AVR_CTLREQ_SPI_ADD_CLIENT) {
         AVR_SPI_Client* client = reinterpret_cast<AVR_SPI_Client*>(data->data.as_ptr());
         if (client)
-            m_spi.add_client(client);
+            m_spi.add_client(*client);
         return true;
     }
     else if (req == AVR_CTLREQ_SPI_CLIENT) {

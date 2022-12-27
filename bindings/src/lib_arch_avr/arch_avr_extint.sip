@@ -100,7 +100,6 @@ public:
     };
 
     AVR_ArchAVR_ExtInt(const AVR_ArchAVR_ExtIntConfig&);
-    virtual ~AVR_ArchAVR_ExtInt();
 
     virtual bool init(AVR_Device&);
     virtual void reset();

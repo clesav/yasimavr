@@ -45,15 +45,27 @@
 
 //=======================================================================================
 
+class AVR_IO_SPI;
+
 class AVR_SPI_Client {
 
 public:
 
-    virtual ~AVR_SPI_Client() {};
+    AVR_SPI_Client();
+    AVR_SPI_Client(const AVR_SPI_Client& other);
+    virtual ~AVR_SPI_Client();
 
     virtual bool selected() const = 0;
     virtual uint8_t start_transfer(uint8_t mosi_frame) = 0;
     virtual void end_transfer(bool ok) = 0;
+
+    AVR_SPI_Client& operator=(const AVR_SPI_Client& other);
+
+private:
+
+    friend class AVR_IO_SPI;
+
+    AVR_IO_SPI* m_host;
 
 };
 
@@ -89,7 +101,10 @@ public:
     void set_frame_delay(cycle_count_t delay);
 
     //Add a client to the interface
-    void add_client(AVR_SPI_Client* client);
+    void add_client(AVR_SPI_Client& client);
+
+    //Remove a client from the interface
+    void remove_client(AVR_SPI_Client& client);
 
     //Set the interface as selected (client mode only)
     void set_selected(bool selected);

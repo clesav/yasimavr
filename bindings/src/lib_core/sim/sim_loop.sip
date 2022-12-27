@@ -38,7 +38,6 @@ public:
     };
 
     AVR_AbstractSimLoop(AVR_Device&);
-    ~AVR_AbstractSimLoop();
 
     AVR_AbstractSimLoop::State state() const;
     cycle_count_t cycle() const;

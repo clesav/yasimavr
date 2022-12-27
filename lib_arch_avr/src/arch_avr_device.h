@@ -51,7 +51,7 @@ public:
         NVM_EEPROM = NVM_ArchDefined,
     };
 
-    AVR_ArchAVR_Core(const AVR_ArchAVR_CoreConfig& config);
+    explicit AVR_ArchAVR_Core(const AVR_ArchAVR_CoreConfig& config);
 
 protected:
 
@@ -78,7 +78,7 @@ class DLL_EXPORT AVR_ArchAVR_Device : public AVR_Device {
 
 public:
 
-    AVR_ArchAVR_Device(const AVR_ArchAVR_DeviceConfig& config);
+    explicit AVR_ArchAVR_Device(const AVR_ArchAVR_DeviceConfig& config);
     virtual ~AVR_ArchAVR_Device();
 
 protected:

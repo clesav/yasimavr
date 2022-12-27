@@ -46,7 +46,7 @@ class DLL_EXPORT AVR_ArchMega0_WDT : public AVR_WatchdogTimer {
 
 public:
 
-    AVR_ArchMega0_WDT(const AVR_ArchMega0_WDT_Config& config);
+    explicit AVR_ArchMega0_WDT(const AVR_ArchMega0_WDT_Config& config);
 
     virtual bool init(AVR_Device& device) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;

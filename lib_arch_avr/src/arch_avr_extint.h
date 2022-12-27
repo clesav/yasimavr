@@ -69,7 +69,7 @@ public:
         Signal_PinChange
     };
 
-    AVR_ArchAVR_ExtInt(const AVR_ArchAVR_ExtIntConfig& config);
+    explicit AVR_ArchAVR_ExtInt(const AVR_ArchAVR_ExtIntConfig& config);
 
     virtual bool init(AVR_Device& device) override;
     virtual void reset() override;
