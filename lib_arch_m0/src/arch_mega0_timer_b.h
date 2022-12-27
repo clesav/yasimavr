@@ -53,7 +53,6 @@ class DLL_EXPORT AVR_ArchMega0_TimerB : public AVR_Peripheral, public AVR_Signal
 public:
 
     AVR_ArchMega0_TimerB(int num, const AVR_ArchMega0_TimerB_Config& config);
-    virtual ~AVR_ArchMega0_TimerB() {}
 
     //Override of AVR_Peripheral callbacks
     virtual bool init(AVR_Device& device) override;

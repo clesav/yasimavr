@@ -50,7 +50,6 @@ class AVR_ArchMega0_RTC : public AVR_Peripheral /NoDefaultCtors/ {
 public:
 
     AVR_ArchMega0_RTC(const AVR_ArchMega0_RTC_Config&);
-    virtual ~AVR_ArchMega0_RTC();
 
     virtual bool init(AVR_Device&);
     virtual void reset();

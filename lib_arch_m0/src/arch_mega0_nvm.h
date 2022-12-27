@@ -40,7 +40,7 @@ class DLL_EXPORT AVR_ArchMega0_USERROW : public AVR_Peripheral {
 
 public:
 
-    AVR_ArchMega0_USERROW(reg_addr_t base);
+    explicit AVR_ArchMega0_USERROW(reg_addr_t base);
 
     virtual bool init(AVR_Device& device) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
@@ -65,7 +65,7 @@ class DLL_EXPORT AVR_ArchMega0_Fuses : public AVR_Peripheral {
 
 public:
 
-    AVR_ArchMega0_Fuses(reg_addr_t base);
+    explicit AVR_ArchMega0_Fuses(reg_addr_t base);
 
     virtual bool init(AVR_Device& device) override;
 
@@ -110,7 +110,7 @@ class DLL_EXPORT AVR_ArchMega0_NVM : public AVR_Peripheral {
 
 public:
 
-    AVR_ArchMega0_NVM(const AVR_ArchMega0_NVM_Config& config);
+    explicit AVR_ArchMega0_NVM(const AVR_ArchMega0_NVM_Config& config);
     virtual ~AVR_ArchMega0_NVM();
 
     virtual bool init(AVR_Device& device) override;

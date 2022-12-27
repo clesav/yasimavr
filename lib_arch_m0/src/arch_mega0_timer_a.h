@@ -70,7 +70,7 @@ class DLL_EXPORT AVR_ArchMega0_TimerA : public AVR_Peripheral, public AVR_Signal
 
 public:
 
-    AVR_ArchMega0_TimerA(const AVR_ArchMega0_TimerA_Config& config);
+    explicit AVR_ArchMega0_TimerA(const AVR_ArchMega0_TimerA_Config& config);
 
     //Override of AVR_Peripheral callbacks
     virtual bool init(AVR_Device& device) override;

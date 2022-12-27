@@ -56,7 +56,7 @@ class DLL_EXPORT AVR_ArchMega0_VREF : public AVR_IO_VREF {
 
 public:
 
-    AVR_ArchMega0_VREF(const AVR_ArchMega0_VREF_Config& config);
+    explicit AVR_ArchMega0_VREF(const AVR_ArchMega0_VREF_Config& config);
 
     virtual bool init(AVR_Device&) override;
     virtual void reset() override;
