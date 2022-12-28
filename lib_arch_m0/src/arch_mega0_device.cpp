@@ -31,8 +31,8 @@
 
 AVR_ArchMega0_Core::AVR_ArchMega0_Core(const AVR_ArchMega0_CoreConfig& config)
 :AVR_Core(config)
-,m_eeprom(config.eepromend ? (config.eepromend + 1) : 0)
-,m_userrow(config.userrowend ? (config.userrowend + 1) : 0)
+,m_eeprom(config.eepromend ? (config.eepromend + 1) : 0, "eeprom")
+,m_userrow(config.userrowend ? (config.userrowend + 1) : 0, "userrow")
 {}
 
 uint8_t AVR_ArchMega0_Core::cpu_read_data(mem_addr_t data_addr)
@@ -182,6 +182,8 @@ bool AVR_ArchMega0_Device::core_ctlreq(uint16_t req, ctlreq_data_t* reqdata)
             reqdata->data = &(m_core_impl.m_eeprom);
         else if (reqdata->index == AVR_ArchMega0_Core::NVM_USERROW)
             reqdata->data = &(m_core_impl.m_userrow);
+        else if (reqdata->index == AVR_Core::NVM_GetCount)
+            reqdata->data = (unsigned int) (AVR_Core::NVM_CommonCount + 2);
         else
             return AVR_Device::core_ctlreq(req, reqdata);
 

@@ -33,8 +33,9 @@
         (len) = (size) - (base);
 
 
-AVR_NonVolatileMemory::AVR_NonVolatileMemory(size_t size)
+AVR_NonVolatileMemory::AVR_NonVolatileMemory(size_t size, const char* name)
 :m_size(size)
+,m_name(name)
 {
     if (size) {
         m_memory = (unsigned char*) malloc(m_size);
@@ -56,7 +57,7 @@ AVR_NonVolatileMemory::~AVR_NonVolatileMemory()
 
 
 AVR_NonVolatileMemory::AVR_NonVolatileMemory(const AVR_NonVolatileMemory& other)
-:AVR_NonVolatileMemory(0)
+:AVR_NonVolatileMemory(0, nullptr)
 {
     *this = other;
 }
@@ -191,6 +192,7 @@ AVR_NonVolatileMemory& AVR_NonVolatileMemory::operator=(const AVR_NonVolatileMem
     }
 
     m_size = other.m_size;
+    m_name = other.m_name;
 
     if (m_size) {
         m_memory = (unsigned char*) malloc(m_size);

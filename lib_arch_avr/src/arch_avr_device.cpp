@@ -32,7 +32,7 @@
 
 AVR_ArchAVR_Core::AVR_ArchAVR_Core(const AVR_ArchAVR_CoreConfig& config)
 :AVR_Core(config)
-,m_eeprom(config.eepromend ? (config.eepromend + 1) : 0)
+,m_eeprom(config.eepromend ? (config.eepromend + 1) : 0, "eeprom")
 {}
 
 uint8_t AVR_ArchAVR_Core::cpu_read_data(mem_addr_t data_addr)
@@ -136,6 +136,8 @@ bool AVR_ArchAVR_Device::core_ctlreq(uint16_t req, ctlreq_data_t* reqdata)
     if (req == AVR_CTLREQ_CORE_NVM) {
         if (reqdata->index == AVR_ArchAVR_Core::NVM_EEPROM)
             reqdata->data = &(m_core_impl.m_eeprom);
+        else if (reqdata->index == AVR_Core::NVM_GetCount)
+            reqdata->data = (unsigned int) (AVR_Core::NVM_CommonCount + 1);
         else
             return AVR_Device::core_ctlreq(req, reqdata);
 
