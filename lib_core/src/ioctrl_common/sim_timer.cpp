@@ -62,7 +62,7 @@ void AVR_PrescaledTimer::reset()
     m_paused = false;
     m_delay = 0;
     if (!m_updating)
-        m_cycle_manager->remove_cycle_timer(this);
+        m_cycle_manager->cancel(*this);
 }
 
 void AVR_PrescaledTimer::set_prescaler(uint32_t ps_max, uint32_t ps_factor)
@@ -109,9 +109,9 @@ void AVR_PrescaledTimer::reschedule()
     }
 
     if (when > 0)
-        m_cycle_manager->reschedule_cycle_timer(this, when);
+        m_cycle_manager->schedule(*this, when);
     else if (scheduled())
-        m_cycle_manager->remove_cycle_timer(this);
+        m_cycle_manager->cancel(*this);
 }
 
 void AVR_PrescaledTimer::update(cycle_count_t when)

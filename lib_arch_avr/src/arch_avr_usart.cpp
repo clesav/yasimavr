@@ -69,7 +69,7 @@ bool AVR_ArchAVR_USART::init(AVR_Device& device)
                                  m_config.rb_txe_flag,
                                  m_config.txe_vector);
 
-    m_uart.init(device.cycle_manager(), logger());
+    m_uart.init(*device.cycle_manager(), logger());
     m_uart.set_tx_buffer_limit(2);
     m_uart.set_rx_buffer_limit(3);
     m_uart.signal().connect_hook(this);

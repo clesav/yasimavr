@@ -49,12 +49,12 @@ public:
     cycle_count_t cycle() const;
     void increment_cycle(cycle_count_t);
 
-    void add_cycle_timer(AVR_CycleTimer*, cycle_count_t);
-    void remove_cycle_timer(AVR_CycleTimer*);
-    void reschedule_cycle_timer(AVR_CycleTimer*, cycle_count_t);
-    void pause_cycle_timer(AVR_CycleTimer*);
-    void resume_cycle_timer(AVR_CycleTimer*);
-    void process_cycle_timers();
+    void schedule(AVR_CycleTimer&, cycle_count_t);
+    void delay(AVR_CycleTimer&, cycle_count_t);
+    void cancel(AVR_CycleTimer&);
+    void pause(AVR_CycleTimer&);
+    void resume(AVR_CycleTimer&);
+    void process_timers();
     cycle_count_t next_when() const;
 
 };

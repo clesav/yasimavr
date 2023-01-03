@@ -55,13 +55,13 @@ cycle_count_t AVR_AbstractSimLoop::run_device(cycle_count_t final_cycle)
 {
     cycle_count_t cycle_delta = m_device.exec_cycle();
 
-    m_cycle_manager.process_cycle_timers();
+    m_cycle_manager.process_timers();
 
     AVR_Device::State dev_state = m_device.state();
 
     if (dev_state == AVR_Device::State_Sleeping) {
 
-        cycle_count_t next_timer_cycle = m_device.cycle_manager().next_when();
+        cycle_count_t next_timer_cycle = m_cycle_manager.next_when();
 
         if (next_timer_cycle == INVALID_CYCLE) {
             //If the device is sleeping and nothing is scheduled to wake it up,

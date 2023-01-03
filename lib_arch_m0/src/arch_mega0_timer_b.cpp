@@ -78,7 +78,7 @@ bool AVR_ArchMega0_TimerB::init(AVR_Device& device)
                              DEF_REGBIT_B(INTFLAGS, TCB_CAPT),
                              m_config.iv_capt);
 
-    m_timer.init(device.cycle_manager(), logger());
+    m_timer.init(*device.cycle_manager(), logger());
     m_timer.signal().connect_hook(this);
 
     return status;

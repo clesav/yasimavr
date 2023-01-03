@@ -69,7 +69,7 @@ bool AVR_ArchAVR_ADC::init(AVR_Device& device)
                              m_config.rb_int_flag,
                              m_config.int_vector);
 
-    m_timer.init(device.cycle_manager(), logger());
+    m_timer.init(*device.cycle_manager(), logger());
     m_timer.signal().connect_hook(this);
 
     return status;

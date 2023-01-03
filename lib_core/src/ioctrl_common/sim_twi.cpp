@@ -392,7 +392,7 @@ void AVR_IO_TWI::reset()
 
     m_mst_state = State_Disabled;
     m_bitdelay = 1;
-    m_cycle_manager->remove_cycle_timer(m_timer);
+    m_cycle_manager->cancel(*m_timer);
 
     m_slv_state = State_Disabled;
     m_slv_hold = false;
@@ -409,7 +409,7 @@ void AVR_IO_TWI::set_master_enabled(bool enabled)
         if (State_Active(m_mst_state))
             release_bus();
 
-        m_cycle_manager->remove_cycle_timer(m_timer);
+        m_cycle_manager->cancel(*m_timer);
 
         set_master_state(State_Disabled);
     }
@@ -536,7 +536,7 @@ void AVR_IO_TWI::start_timer(cycle_count_t delay)
     if (m_timer_updating)
         m_timer_next_when = m_cycle_manager->cycle() + delay;
     else
-        m_cycle_manager->add_cycle_timer(m_timer, m_cycle_manager->cycle() + delay);
+        m_cycle_manager->delay(*m_timer, delay);
 }
 
 cycle_count_t AVR_IO_TWI::timer_next(cycle_count_t when)

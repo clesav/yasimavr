@@ -140,12 +140,7 @@ public:
         sipRes = sipBuildResult(0, "(bD)", status, d, sipType_ctlreq_data_t, transferObj);
     %End
 
-    void add_cycle_timer(AVR_CycleTimer*, cycle_count_t);
-    void remove_cycle_timer(AVR_CycleTimer*);
-    void reschedule_cycle_timer(AVR_CycleTimer*, cycle_count_t);
-    void pause_cycle_timer(AVR_CycleTimer*);
-    void resume_cycle_timer(AVR_CycleTimer*);
-    AVR_CycleManager& cycle_manager();
+    AVR_CycleManager* cycle_manager();
 
     AVR_Pin* find_pin(const char*);
     AVR_Pin* find_pin(uint32_t);

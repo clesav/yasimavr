@@ -91,7 +91,7 @@ bool AVR_ArchAVR_Timer::init(AVR_Device& device)
                         regbit_t(m_config.reg_int_flag, m_config.int_ocrb.bit),
                         m_config.int_ocrb.vector);
 
-    m_timer.init(device.cycle_manager(), logger());
+    m_timer.init(*device.cycle_manager(), logger());
     m_timer.signal().connect_hook(this);
 
     return status;

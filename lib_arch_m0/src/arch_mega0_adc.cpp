@@ -92,7 +92,7 @@ bool AVR_ArchMega0_ADC::init(AVR_Device& device)
                                  DEF_REGBIT_B(INTFLAGS, ADC_WCMP),
                                  m_config.iv_wincmp);
 
-    m_timer.init(device.cycle_manager(), logger());
+    m_timer.init(*device.cycle_manager(), logger());
     m_timer.signal().connect_hook(this);
 
     return status;

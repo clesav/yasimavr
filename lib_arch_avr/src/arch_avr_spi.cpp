@@ -58,7 +58,7 @@ bool AVR_ArchAVR_SPI::init(AVR_Device& device)
                              m_config.rb_int_flag,
                              m_config.iv_spi);
 
-    m_spi.init(device.cycle_manager(), logger());
+    m_spi.init(*device.cycle_manager(), logger());
     m_spi.set_tx_buffer_limit(1);
     m_spi.set_rx_buffer_limit(2);
     m_spi.signal().connect_hook(this, HOOKTAG_SPI);

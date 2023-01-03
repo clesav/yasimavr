@@ -141,12 +141,7 @@ public:
     bool ctlreq(uint32_t id, uint16_t req, ctlreq_data_t* reqdata = nullptr);
 
     //Helpers for the peripheral timers
-    void add_cycle_timer(AVR_CycleTimer* timer, cycle_count_t when);
-    void remove_cycle_timer(AVR_CycleTimer* timer);
-    void reschedule_cycle_timer(AVR_CycleTimer* timer, cycle_count_t when);
-    void pause_cycle_timer(AVR_CycleTimer* timer);
-    void resume_cycle_timer(AVR_CycleTimer* timer);
-    AVR_CycleManager& cycle_manager();
+    AVR_CycleManager* cycle_manager();
 
     AVR_Pin* find_pin(const char* name);
     AVR_Pin* find_pin(uint32_t id);
@@ -239,34 +234,9 @@ inline AVR_Logger& AVR_Device::logger()
     return m_logger;
 }
 
-inline AVR_CycleManager& AVR_Device::cycle_manager()
+inline AVR_CycleManager* AVR_Device::cycle_manager()
 {
-    return *m_cycle_manager;
-}
-
-inline void AVR_Device::add_cycle_timer(AVR_CycleTimer* timer, cycle_count_t when)
-{
-    m_cycle_manager->add_cycle_timer(timer, when);
-}
-
-inline void AVR_Device::remove_cycle_timer(AVR_CycleTimer* timer)
-{
-    m_cycle_manager->remove_cycle_timer(timer);
-}
-
-inline void AVR_Device::reschedule_cycle_timer(AVR_CycleTimer* timer, cycle_count_t when)
-{
-    m_cycle_manager->reschedule_cycle_timer(timer, when);
-}
-
-inline void AVR_Device::pause_cycle_timer(AVR_CycleTimer* timer)
-{
-    m_cycle_manager->pause_cycle_timer(timer);
-}
-
-inline void AVR_Device::resume_cycle_timer(AVR_CycleTimer* timer)
-{
-    m_cycle_manager->resume_cycle_timer(timer);
+    return m_cycle_manager;
 }
 
 #endif //__YASIMAVR_DEVICE_H__

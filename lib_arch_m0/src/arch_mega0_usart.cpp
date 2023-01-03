@@ -79,7 +79,7 @@ bool AVR_ArchMega0_USART::init(AVR_Device& device)
                                  DEF_REGBIT_B(STATUS, USART_DREIF),
                                  m_config.iv_txe);
 
-    m_uart.init(device.cycle_manager(), logger());
+    m_uart.init(*device.cycle_manager(), logger());
     m_uart.set_tx_buffer_limit(2);
     m_uart.set_rx_buffer_limit(3);
     m_uart.signal().connect_hook(this);

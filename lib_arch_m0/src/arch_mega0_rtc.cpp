@@ -126,8 +126,8 @@ bool AVR_ArchMega0_RTC::init(AVR_Device& device)
                                  DEF_REGBIT_B(PITINTFLAGS, RTC_PI),
                                  m_config.iv_pit);
 
-    m_rtc_timer.init(device.cycle_manager(), logger());
-    m_pit_timer.init(device.cycle_manager(), logger());
+    m_rtc_timer.init(*device.cycle_manager(), logger());
+    m_pit_timer.init(*device.cycle_manager(), logger());
 
     return status;
 }

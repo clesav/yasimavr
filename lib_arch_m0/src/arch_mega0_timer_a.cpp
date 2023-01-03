@@ -107,7 +107,7 @@ bool AVR_ArchMega0_TimerA::init(AVR_Device& device)
                                          regbit_t(REG_ADDR(INTFLAGS), TCA_SINGLE_CMP0_bp + i),
                                          m_config.ivs_cmp[i]);
 
-    m_timer.init(device.cycle_manager(), logger());
+    m_timer.init(*device.cycle_manager(), logger());
     m_timer.signal().connect_hook(this);
 
     return status;

@@ -87,23 +87,22 @@ public:
     void increment_cycle(cycle_count_t count);
 
     //Adds a new timer and schedule it for call at 'when'
-    void add_cycle_timer(AVR_CycleTimer* timer, cycle_count_t when);
+    void schedule(AVR_CycleTimer& timer, cycle_count_t when);
+
+    void delay(AVR_CycleTimer& timer, cycle_count_t delay);
 
     //Remove a timer from the queue. No-op if the timer is not scheduled.
-    void remove_cycle_timer(AVR_CycleTimer* timer);
-
-    //Reschedule a timer, add the timer in the queue if it's not already there.
-    void reschedule_cycle_timer(AVR_CycleTimer* timer, cycle_count_t timer_when);
+    void cancel(AVR_CycleTimer& timer);
 
     //Pause a timer for call. It means the timer stays in the queue but won't be called
     //until it's resumed. The delay until the timer 'when' is conserved during the pause.
-    void pause_cycle_timer(AVR_CycleTimer* timer);
+    void pause(AVR_CycleTimer& timer);
 
     //Resumes a paused timer
-    void resume_cycle_timer(AVR_CycleTimer* timer);
+    void resume(AVR_CycleTimer& timer);
 
     //Process the timers for the current cycle
-    void process_cycle_timers();
+    void process_timers();
 
     //Returns the next cycle 'when' where timers require to be processed
     //Returns INVALID_CYCLE if no timer to be processed
@@ -124,14 +123,12 @@ private:
 
     //Utility method to add a timer in the cycle queue, conserving the order or 'when'
     //and paused timers last
-    void add_timer_to_queue(TimerSlot* slot);
+    void add_to_queue(TimerSlot* slot);
 
     //Utility to remove a timer from the queue.
-    TimerSlot* remove_timer_from_queue(AVR_CycleTimer* timer);
+    TimerSlot* pop_from_queue(AVR_CycleTimer& timer);
 
-    int find_timer(const AVR_CycleTimer* timer) const;
-
-    void copy_slot(const AVR_CycleTimer* src, AVR_CycleTimer* dst);
+    void copy_slot(const AVR_CycleTimer& src, AVR_CycleTimer& dst);
 
 };
 
@@ -139,6 +136,5 @@ inline cycle_count_t AVR_CycleManager::cycle() const
 {
     return m_cycle;
 }
-
 
 #endif //__YASIMAVR_CYCLE_TIMER_H__
