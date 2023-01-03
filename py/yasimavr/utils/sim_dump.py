@@ -220,7 +220,7 @@ def _serialize_simloop(simloop, dumper):
     _serialize_device(simloop.device(), dumper)
 
 
-def sim_dump(simloop : corelib.AVR_AbstractSimLoop, stream : io.TextIOBase = None) -> str | None:
+def sim_dump(simloop : corelib.AVR_AbstractSimLoop, stream : io.TextIOBase = None) -> 'str|None':
     '''
     usage: sim_dump(simloop, stream = None) -> str | None
 

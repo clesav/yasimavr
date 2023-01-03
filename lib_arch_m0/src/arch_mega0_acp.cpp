@@ -203,6 +203,9 @@ void AVR_ArchMega0_ACP::update_DAC()
 
 void AVR_ArchMega0_ACP::update_hysteresis()
 {
+    if (!TEST_IOREG(CTRLA, AC_ENABLE))
+        return;
+
     //Obtain the correct absolute value for the hysteresis
     //based on register configuration
     uint8_t lp_mode_sel = READ_IOREG_B(CTRLA, AC_LPMODE);
@@ -211,12 +214,10 @@ void AVR_ArchMega0_ACP::update_hysteresis()
 
     //Convert to a value relative to VCC and store the value
     vardata_t vcc = m_vref_signal->data(AVR_IO_VREF::Source_VCC);
-    if (vcc.as_double()) {
+    if (vcc.as_double())
         m_hysteresis = hyst_volt / vcc.as_double();
-    } else {
+    else
         device()->crash(CRASH_BAD_CTL_IO, "ACP: Invalid VCC value");
-        return;
-    }
 }
 
 void AVR_ArchMega0_ACP::update_output()
