@@ -92,10 +92,12 @@ class DLL_EXPORT AVR_Core {
 
 public:
 
-    enum AVR_NVM {
+    enum NVM {
         NVM_Flash,
         NVM_Fuses,
-        NVM_ArchDefined,
+        NVM_CommonCount,
+        NVM_ArchDefined = NVM_CommonCount,
+        NVM_GetCount = 0xFFFF,
     };
 
     explicit AVR_Core(const AVR_CoreConfiguration& config);
