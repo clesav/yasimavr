@@ -60,7 +60,7 @@ void AVR_IO_Console::set_register(reg_addr_t reg)
     if (!m_reg_console) {
         m_reg_console = reg;
         if (reg)
-            device()->add_ioreg_handler(reg, this);
+            add_ioreg(reg);
     }
 }
 
@@ -110,7 +110,7 @@ AVR_Device::AVR_Device(AVR_Core& core, const AVR_DeviceConfiguration& config)
 
     //Allocate the console peripheral
     m_console = new AVR_IO_Console();
-    attach_peripheral(m_console);
+    attach_peripheral(*m_console);
 }
 
 AVR_Device::~AVR_Device()
@@ -295,14 +295,12 @@ cycle_count_t AVR_Device::exec_cycle()
 //=======================================================================================
 //Management of I/O peripherals
 
-void AVR_Device::attach_peripheral(AVR_Peripheral* ctl)
+void AVR_Device::attach_peripheral(AVR_Peripheral& ctl)
 {
-    if (!ctl) return;
+    if (ctl.id() == AVR_IOCTL_INTR)
+        m_core.m_intrctl = reinterpret_cast<AVR_InterruptController*>(&ctl);
 
-    if (ctl->id() == AVR_IOCTL_INTR)
-        m_core.m_intrctl = reinterpret_cast<AVR_InterruptController*>(ctl);
-
-    m_peripherals.push_back(ctl);
+    m_peripherals.push_back(&ctl);
 }
 
 bool AVR_Device::ctlreq(uint32_t id, uint16_t req, ctlreq_data_t* reqdata)
@@ -335,21 +333,21 @@ AVR_Peripheral* AVR_Device::find_peripheral(uint32_t id)
     return nullptr;
 }
 
-void AVR_Device::add_ioreg_handler(reg_addr_t addr, AVR_IO_RegHandler* handler, uint8_t ro_mask)
+void AVR_Device::add_ioreg_handler(reg_addr_t addr, AVR_IO_RegHandler& handler, uint8_t ro_mask)
 {
     if (addr != R_SREG && addr > 0) {
         m_logger.dbg("Registering handler for I/O 0x%04X", addr);
         AVR_IO_Register* reg = m_core.get_ioreg(addr);
-        reg->set_handler(handler, 0xFF, ro_mask);
+        reg->set_handler(&handler, 0xFF, ro_mask);
     }
 }
 
-void AVR_Device::add_ioreg_handler(regbit_t rb, AVR_IO_RegHandler *handler, bool readonly)
+void AVR_Device::add_ioreg_handler(const regbit_t& rb, AVR_IO_RegHandler& handler, bool readonly)
 {
     if (rb.addr != R_SREG && rb.addr > 0) {
         m_logger.dbg("Registering handler for I/O 0x%04X", rb.addr);
         AVR_IO_Register* reg = m_core.get_ioreg(rb.addr);
-        reg->set_handler(handler, rb.mask, readonly ? rb.mask : 0x00);
+        reg->set_handler(&handler, rb.mask, readonly ? rb.mask : 0x00);
     }
 }
 

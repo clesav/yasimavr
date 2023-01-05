@@ -72,13 +72,13 @@ void AVR_Peripheral::sleep(bool on, AVR_SleepMode mode)
 
 void AVR_Peripheral::add_ioreg(regbit_t rb, bool readonly)
 {
-    m_device->add_ioreg_handler(rb, this, readonly);
+    m_device->add_ioreg_handler(rb, *this, readonly);
 }
 
 void AVR_Peripheral::add_ioreg(reg_addr_t addr, uint8_t mask, bool readonly)
 {
     regbit_t rb = regbit_t(addr, 0, mask);
-    m_device->add_ioreg_handler(rb, this, readonly);
+    m_device->add_ioreg_handler(rb, *this, readonly);
 }
 
 uint8_t AVR_Peripheral::read_ioreg(reg_addr_t addr) const

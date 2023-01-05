@@ -43,9 +43,9 @@ bool AVR_ArchAVR_Port::init(AVR_Device& device)
 {
     bool status = AVR_IO_Port::init(device);
 
-    device.add_ioreg_handler(regbit_t(m_config.reg_port, 0, pin_mask()), this);
-    device.add_ioreg_handler(regbit_t(m_config.reg_pin, 0, pin_mask()), this);
-    device.add_ioreg_handler(regbit_t(m_config.reg_dir, 0, pin_mask()), this);
+    add_ioreg(m_config.reg_port, pin_mask());
+    add_ioreg(m_config.reg_pin, pin_mask());
+    add_ioreg(m_config.reg_dir, pin_mask());
 
     return status;
 }

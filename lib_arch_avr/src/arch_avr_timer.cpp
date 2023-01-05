@@ -67,9 +67,9 @@ bool AVR_ArchAVR_Timer::init(AVR_Device& device)
     add_ioreg(m_config.reg_ocrb);
 
     if (m_config.is_16bits) {
-        device.add_ioreg_handler(m_config.reg_cnt + 1, this);
-        device.add_ioreg_handler(m_config.reg_ocra + 1, this);
-        device.add_ioreg_handler(m_config.reg_ocrb + 1, this);
+        add_ioreg(m_config.reg_cnt + 1);
+        add_ioreg(m_config.reg_ocra + 1);
+        add_ioreg(m_config.reg_ocrb + 1);
     }
 
     uint8_t int_bitmask = (1 << m_config.int_ovf.bit) |
