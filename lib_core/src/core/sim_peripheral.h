@@ -227,7 +227,7 @@ protected:
     void clear_ioreg(const regbit_t rb, uint8_t bit);
 
     //Helper function to register an interrupt vector
-    bool register_interrupt(int_vect_t vector, AVR_InterruptHandler* handler) const;
+    bool register_interrupt(int_vect_t vector, AVR_InterruptHandler& handler) const;
 
     //Helper function to obtain a pointer to a signal from another peripheral
     AVR_Signal* get_signal(uint32_t ctl_id) const;

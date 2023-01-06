@@ -214,7 +214,7 @@ protected:
     void clear_ioreg(reg_addr_t, const bitmask_t);
     void clear_ioreg(const regbit_t, uint8_t);
 
-    bool register_interrupt(int_vect_t, AVR_InterruptHandler*) const;
+    bool register_interrupt(int_vect_t, AVR_InterruptHandler&) const;
 
     AVR_Signal* get_signal(uint32_t) const;
 

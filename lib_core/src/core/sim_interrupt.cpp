@@ -28,8 +28,9 @@
 
 //========================================================================================
 
-AVR_InterruptController::AVR_Interrupt::AVR_Interrupt()
-:state(IntrState_Unused)
+AVR_InterruptController::interrupt_t::interrupt_t()
+:used(false)
+,raised(false)
 ,handler(nullptr)
 {}
 
@@ -41,16 +42,14 @@ AVR_InterruptController::AVR_InterruptController(unsigned int size)
 ,m_interrupts(size)
 ,m_irq_vector(AVR_INTERRUPT_NONE)
 {
-    m_interrupts[0].state = IntrState_Idle; //The reset vector is always available
+    m_interrupts[0].used = true; //The reset vector is always available
 }
 
 void AVR_InterruptController::reset()
 {
     //Reset the state of all vectors
-    for (uint8_t i = 0; i < m_interrupts.size(); i++) {
-        if (m_interrupts[i].state != IntrState_Unused)
-            m_interrupts[i].state = IntrState_Idle;
-    }
+    for (uint8_t i = 0; i < m_interrupts.size(); i++)
+        m_interrupts[i].raised = false;
 
     m_irq_vector = AVR_INTERRUPT_NONE;
 }
@@ -70,14 +69,32 @@ bool AVR_InterruptController::ctlreq(uint16_t req, ctlreq_data_t* data)
         else if (vector >= m_interrupts.size()) {
             logger().err("Invalid interrupt vector %d", vector);
         }
-        else if (m_interrupts[vector].state != IntrState_Unused) {
+        else if (m_interrupts[vector].used) {
             logger().err("Double registration on vector %d", vector);
         }
         else {
-            m_interrupts[vector].state = IntrState_Idle;
+
             AVR_InterruptHandler* t = reinterpret_cast<AVR_InterruptHandler*>(data->data.as_ptr());
-            m_interrupts[vector].handler = t;
-            t->m_intctl = this;
+            if (t) {
+                m_interrupts[vector].used = true;
+                m_interrupts[vector].handler = t;
+                t->m_intctl = this;
+            }
+        }
+
+        return true;
+    }
+    else if (req == AVR_CTLREQ_INTR_RAISE) {
+        int_vect_t vector = (int_vect_t) data->index;
+
+        if (vector >= 0 && vector < m_interrupts.size()) {
+            if (data->data.as_uint()) {
+                logger().dbg("Raising vector %d on CTLREQ.", vector);
+                raise_interrupt(vector);
+            } else {
+                logger().dbg("Cancelling vector %d on CTLREQ.", vector);
+                cancel_interrupt(vector);
+            }
         }
 
         return true;
@@ -96,9 +113,8 @@ void AVR_InterruptController::sleep(bool on, AVR_SleepMode mode)
     if (!on) return;
 
     for (size_t v = 0; v < m_interrupts.size(); ++v) {
-        if (m_interrupts[v].state == IntrState_Raised) {
-            m_signal.raise_u(Signal_Raised, v, 1);
-        }
+        if (m_interrupts[v].raised)
+            m_signal.raise_u(Signal_StateChange, State_RaisedFromSleep, v);
     }
 }
 
@@ -110,17 +126,17 @@ void AVR_InterruptController::cpu_ack_irq()
 
 void AVR_InterruptController::cpu_ack_irq(int_vect_t vector)
 {
-    m_interrupts[vector].state = IntrState_Idle;
+    m_interrupts[vector].raised = false;
 
     if (m_interrupts[vector].handler)
         m_interrupts[vector].handler->interrupt_ack_handler(vector);
 
-    m_signal.raise_u(Signal_Acknowledged, vector);
+    m_signal.raise_u(Signal_StateChange, State_Acknowledged, vector);
 }
 
 void AVR_InterruptController::cpu_reti()
 {
-    m_signal.raise(Signal_Returned);
+    m_signal.raise_u(Signal_StateChange, State_Returned);
     update_irq();
 }
 
@@ -129,28 +145,26 @@ void AVR_InterruptController::update_irq()
     m_irq_vector = get_next_irq();
 }
 
-void AVR_InterruptController::set_interrupt_state(int_vect_t vector, InterruptState new_state)
+void AVR_InterruptController::set_interrupt_raised(int_vect_t vector, bool raised)
 {
-    m_interrupts[vector].state = new_state;
+    m_interrupts[vector].raised = raised;
 }
 
 void AVR_InterruptController::raise_interrupt(int_vect_t vector)
 {
-    //If the interrupt is unused or already raised, no op
-    if (m_interrupts[vector].state != IntrState_Idle) return;
-
-    m_interrupts[vector].state = IntrState_Raised;
-
-    m_signal.raise_u(Signal_Raised, vector, 0);
-
-    update_irq();
+    //If the interrupt is already raised, no op
+    if (m_interrupts[vector].used && !m_interrupts[vector].raised) {
+        m_interrupts[vector].raised = true;
+        m_signal.raise_u(Signal_StateChange, State_Raised, vector);
+        update_irq();
+    }
 }
 
 void AVR_InterruptController::cancel_interrupt(int_vect_t vector)
 {
-    if (m_interrupts[vector].state == IntrState_Raised) {
-        m_interrupts[vector].state = IntrState_Idle;
-        m_signal.raise_u(Signal_Cancelled, vector);
+    if (m_interrupts[vector].used && m_interrupts[vector].raised) {
+        m_interrupts[vector].raised = false;
+        m_signal.raise_u(Signal_StateChange, State_Cancelled, vector);
         if (m_irq_vector == vector)
             update_irq();
     }
@@ -160,7 +174,7 @@ void AVR_InterruptController::disconnect_handler(AVR_InterruptHandler* handler)
 {
     for (size_t v = 0; v < m_interrupts.size(); v++) {
         if (m_interrupts[v].handler == handler) {
-            m_interrupts[v].state = IntrState_Unused;
+            m_interrupts[v].used = false;
             m_interrupts[v].handler->m_intctl = nullptr;
             m_interrupts[v].handler = nullptr;
         }
@@ -198,7 +212,8 @@ void AVR_InterruptHandler::cancel_interrupt(int_vect_t vector) const
 void AVR_InterruptHandler::interrupt_ack_handler(int_vect_t vector)
 {}
 
-//=============================================================================
+
+//========================================================================================
 
 AVR_InterruptFlag::AVR_InterruptFlag(bool clear_on_ack)
 :m_clr_on_ack(clear_on_ack)
@@ -224,7 +239,7 @@ bool AVR_InterruptFlag::init(AVR_Device& device,
     m_vector = vector;
     bool vector_ok;
     if (vector > 0) {
-        ctlreq_data_t d = { .data = this, .index = m_vector };
+        ctlreq_data_t d = { this, m_vector };
         vector_ok = device.ctlreq(AVR_IOCTL_INTR, AVR_CTLREQ_INTR_REGISTER, &d);
     }
     else if (vector < 0) {

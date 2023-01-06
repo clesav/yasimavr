@@ -82,7 +82,7 @@ bool AVR_ArchMega0_Port::init(AVR_Device& device)
     add_ioreg(VPORT_REG_ADDR(IN));
     add_ioreg(VPORT_REG_ADDR(INTFLAGS));
 
-    register_interrupt(m_config.iv_port, this);
+    register_interrupt(m_config.iv_port, *this);
 
     return status;
 }

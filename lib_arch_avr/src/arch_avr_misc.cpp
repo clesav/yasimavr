@@ -42,7 +42,7 @@ AVR_ArchAVR_Interrupt::AVR_ArchAVR_Interrupt(unsigned int size)
 int_vect_t AVR_ArchAVR_Interrupt::get_next_irq() const
 {
     for (int_vect_t i = 0; i < intr_count(); ++i) {
-        if (interrupt_state(i) == IntrState_Raised)
+        if (interrupt_raised(i))
             return i;
     }
     return AVR_INTERRUPT_NONE;

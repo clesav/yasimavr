@@ -63,14 +63,14 @@ bool AVR_ArchAVR_ExtInt::init(AVR_Device& device)
     for (int i = 0; i < EXTINT_PIN_COUNT; ++i) {
         int_vect_t v = m_config.extint_vector[i];
         if (v)
-            status &= register_interrupt(v, this);
+            status &= register_interrupt(v, *this);
     }
 
     //Register all the Pin Change interrupts
     for (int i = 0; i < PCINT_BANK_COUNT; ++i) {
         int_vect_t v = m_config.pcint_vector[i];
         if (v)
-            status &= register_interrupt(v, this);
+            status &= register_interrupt(v, *this);
     }
 
     //Find the pins for EXTINT and connect the hook mapper to their signals

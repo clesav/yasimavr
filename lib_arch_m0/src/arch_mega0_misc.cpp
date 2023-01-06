@@ -129,7 +129,7 @@ void AVR_ArchMega0_IntCtrl::cpu_ack_irq(int_vect_t vector)
 
     AVR_InterruptController::cpu_ack_irq(vector);
 
-    set_interrupt_state(vector, IntrState_Raised);
+    set_interrupt_raised(vector, true);
 }
 
 int_vect_t AVR_ArchMega0_IntCtrl::get_next_irq() const
@@ -140,22 +140,22 @@ int_vect_t AVR_ArchMega0_IntCtrl::get_next_irq() const
         return AVR_INTERRUPT_NONE;
 
     int lvl1_vector = read_ioreg(INT_REG_ADDR(LVL1VEC));
-    if (lvl1_vector > 0 && interrupt_state(lvl1_vector) == IntrState_Raised)
+    if (lvl1_vector > 0 && interrupt_raised(lvl1_vector))
         return lvl1_vector;
 
     if (BITSET(status_ex, IntrPriorityLevel0))
         return AVR_INTERRUPT_NONE;
 
     int lvl0_vector = read_ioreg(INT_REG_ADDR(LVL0PRI));
-    if (lvl0_vector == 0) {
+    if (!lvl0_vector) {
         for (int_vect_t i = 0; i < intr_count(); ++i) {
-            if (interrupt_state(i) == IntrState_Raised)
+            if (interrupt_raised(i))
                 return i;
         }
     } else {
-        for (unsigned int i = 1; i <= intr_count(); ++i) {
+        for (int_vect_t i = 1; i <= intr_count(); ++i) {
             int_vect_t v = (i + lvl0_vector) % intr_count();
-            if (interrupt_state(v) == IntrState_Raised)
+            if (interrupt_raised(v))
                 return v;
         }
     }

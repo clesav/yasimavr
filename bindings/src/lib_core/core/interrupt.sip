@@ -25,11 +25,13 @@
 
 #include "core/sim_interrupt.h"
 const uint16_t CTLREQ_INTR_REGISTER = AVR_CTLREQ_INTR_REGISTER;
+const uint16_t CTLREQ_INTR_RAISE    = AVR_CTLREQ_INTR_RAISE;
 const int16_t INTERRUPT_NONE = -1;
 
 %End
 
 const uint16_t CTLREQ_INTR_REGISTER;
+const uint16_t CTLREQ_INTR_RAISE;
 const int16_t INTERRUPT_NONE;
 
 
@@ -43,10 +45,15 @@ class AVR_InterruptController : public AVR_Peripheral /Abstract/ {
 public:
 
     enum SignalId /BaseType=IntEnum/ {
-        Signal_Raised           /PyName=Raised/,
-        Signal_Cancelled        /PyName=Cancelled/,
-        Signal_Acknowledged     /PyName=Acknowledged/,
-        Signal_Returned         /PyName=Returned/
+        Signal_StateChange           /PyName=StateChange/,
+    };
+
+    enum State /BaseType=IntEnum/ {
+        State_Raised                /PyName=Raised/,
+        State_Cancelled             /PyName=Cancelled/,
+        State_Acknowledged          /PyName=Acknowledged/,
+        State_Returned              /PyName=Returned/,
+        State_RaisedFromSleep       /PyName=RaisedFromSleep/,
     };
 
     AVR_InterruptController(unsigned int);

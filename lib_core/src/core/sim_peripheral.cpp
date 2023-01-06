@@ -91,13 +91,13 @@ void AVR_Peripheral::write_ioreg(const regbit_t rb, uint8_t value)
     m_device->core().ioctl_write_ioreg(rb, value);
 }
 
-bool AVR_Peripheral::register_interrupt(int_vect_t vector, AVR_InterruptHandler* handler) const
+bool AVR_Peripheral::register_interrupt(int_vect_t vector, AVR_InterruptHandler& handler) const
 {
     if (vector < 0) {
         return true;
     }
     else if (vector > 0 && m_device) {
-        ctlreq_data_t d = { .data = handler, .index = vector };
+        ctlreq_data_t d = { &handler, vector };
         return m_device->ctlreq(AVR_IOCTL_INTR, AVR_CTLREQ_INTR_REGISTER, &d);
     }
     else {
