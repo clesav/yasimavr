@@ -175,7 +175,7 @@ public:
     //Callback method called when the CPU is reading a I/O register allocated by this peripheral.
     //The value has not been read yet so the module can modify it before the CPU gets it.
     //'addr' is the register address in I/O space
-    virtual void ioreg_read_handler(reg_addr_t addr) override;
+    virtual uint8_t ioreg_read_handler(reg_addr_t addr, uint8_t value) override;
 
     //Callback method called when the CPU is writing a I/O register allocated by this peripheral.
     //The value has already been written.
@@ -199,7 +199,7 @@ protected:
 
     AVR_Logger& logger();
 
-    void add_ioreg(regbit_t rb, bool readonly = false);
+    void add_ioreg(const regbit_t& rb, bool readonly = false);
     void add_ioreg(reg_addr_t addr, uint8_t mask = 0xFF, bool readonly = false);
 
     //Primary methods to access a I/O register. Note that it's not limited to those

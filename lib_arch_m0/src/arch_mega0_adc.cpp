@@ -128,11 +128,13 @@ bool AVR_ArchMega0_ADC::ctlreq(uint16_t req, ctlreq_data_t* data)
 
 //I/O register callback reimplementation
 
-void AVR_ArchMega0_ADC::ioreg_read_handler(reg_addr_t addr)
+uint8_t AVR_ArchMega0_ADC::ioreg_read_handler(reg_addr_t addr, uint8_t value)
 {
     //The STCONV bit is dynamic, reading 1 if a conversion is in progress
     if (addr == REG_ADDR(COMMAND))
-        write_ioreg(REG_ADDR(COMMAND), ADC_STCONV_bp, (m_state > ADC_Idle ? 1 : 0));
+        value = DEF_BITMASK_B(ADC_STCONV).replace(value, (m_state > ADC_Idle ? 1 : 0));
+
+    return value;
 }
 
 void AVR_ArchMega0_ADC::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
@@ -145,12 +147,12 @@ void AVR_ArchMega0_ADC::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t
 
         //Positive edge on the enable bit (CTRLA.ENABLE).
         //We reset the state and the prescaler
-        if (data.posedge & ADC_ENABLE_bm) {
+        if (data.posedge() & ADC_ENABLE_bm) {
             m_state = ADC_Idle;
         }
         //Negative edge on the enable bit (CTRLA.ENABLE).
         //We disable the ADC, stop the cycle timer (if a conversion is running)
-        else if (data.negedge & ADC_ENABLE_bm) {
+        else if (data.negedge() & ADC_ENABLE_bm) {
             if (m_state > ADC_Idle)
                 m_timer.set_timer_delay(0);
             m_state = ADC_Disabled;

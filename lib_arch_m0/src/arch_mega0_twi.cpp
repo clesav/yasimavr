@@ -110,7 +110,7 @@ bool AVR_ArchMega0_TWI::ctlreq(uint16_t req, ctlreq_data_t* data)
     return false;
 }
 
-void AVR_ArchMega0_TWI::ioreg_read_handler(reg_addr_t addr)
+uint8_t AVR_ArchMega0_TWI::ioreg_read_handler(reg_addr_t addr, uint8_t value)
 {
     reg_addr_t reg_ofs = addr - m_config.reg_base;
 
@@ -140,6 +140,8 @@ void AVR_ArchMega0_TWI::ioreg_read_handler(reg_addr_t addr)
         if (m_twi.start_slave_rx())
             clear_slave_status();
     }
+
+    return value;
 }
 
 void AVR_ArchMega0_TWI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
@@ -151,9 +153,9 @@ void AVR_ArchMega0_TWI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t
 
     if (reg_ofs == REG_OFS(MCTRLA)) {
         //Update of the ENABLE bit
-        if (data.posedge & TWI_ENABLE_bm)
+        if (data.posedge() & TWI_ENABLE_bm)
             set_master_enabled(true);
-        else if (data.negedge & TWI_ENABLE_bm)
+        else if (data.negedge() & TWI_ENABLE_bm)
             set_master_enabled(false);
 
         //Update of the WIEN or RIEN bits
@@ -268,10 +270,10 @@ void AVR_ArchMega0_TWI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t
 
     else if (reg_ofs == REG_OFS(SCTRLA)) {
         //Update of the ENABLE bit
-        if (data.posedge & TWI_ENABLE_bm) {
+        if (data.posedge() & TWI_ENABLE_bm) {
             m_twi.set_slave_enabled(true);
         }
-        else if (data.negedge & TWI_ENABLE_bm) {
+        else if (data.negedge() & TWI_ENABLE_bm) {
             m_twi.set_slave_enabled(false);
             m_has_slave_rx_data = false;
             clear_slave_status();

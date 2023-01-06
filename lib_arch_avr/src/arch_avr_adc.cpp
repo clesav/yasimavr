@@ -108,11 +108,13 @@ bool AVR_ArchAVR_ADC::ctlreq(uint16_t req, ctlreq_data_t* data)
 //=======================================================================================
 //I/O register callback reimplementation
 
-void AVR_ArchAVR_ADC::ioreg_read_handler(reg_addr_t addr)
+uint8_t AVR_ArchAVR_ADC::ioreg_read_handler(reg_addr_t addr, uint8_t value)
 {
     //The ADSC bit is dynamic, reading 1 if a conversion is in progress
     if (addr == m_config.rb_start.addr)
-        write_ioreg(m_config.rb_start, (m_state > ADC_Idle ? 1 : 0));
+        value = m_config.rb_start.replace(value, (m_state > ADC_Idle ? 1 : 0));
+
+    return value;
 }
 
 void AVR_ArchAVR_ADC::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
@@ -120,14 +122,14 @@ void AVR_ArchAVR_ADC::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& 
     if (addr == m_config.rb_enable.addr) {
         //Positive edge on the enable bit (ADEN).
         //We reset the state and the prescaler and reconnect the trigger
-        if (m_config.rb_enable.extract(data.posedge)) {
+        if (m_config.rb_enable.extract(data.posedge())) {
             m_state = ADC_Idle;
             m_first = true;
             reset_prescaler();
         }
         //Negative edge on the enable bit (ADEN).
         //We disable the ADC, stop the cycle timer (if a conversion is running) and discconnect the trigger
-        else if (m_config.rb_enable.extract(data.negedge)) {
+        else if (m_config.rb_enable.extract(data.negedge())) {
             if (m_state > ADC_Idle)
                 m_timer.set_timer_delay(0);
             m_state = ADC_Disabled;

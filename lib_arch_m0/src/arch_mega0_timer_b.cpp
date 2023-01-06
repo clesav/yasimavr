@@ -94,28 +94,30 @@ void AVR_ArchMega0_TimerB::reset()
     m_timer.reset();
 }
 
-void AVR_ArchMega0_TimerB::ioreg_read_handler(reg_addr_t addr)
+uint8_t AVR_ArchMega0_TimerB::ioreg_read_handler(reg_addr_t addr, uint8_t value)
 {
     reg_addr_t reg_ofs = addr - m_config.reg_base;
 
     //16-bits reading of CNT
     if (reg_ofs == REG_OFS(CNTL)) {
         m_timer.update();
-        write_ioreg(REG_ADDR(CNTL), m_cnt & 0x00FF);
+        value = m_cnt & 0x00FF;
         write_ioreg(REG_ADDR(TEMP), m_cnt >> 8);
     }
     else if (reg_ofs == REG_OFS(CNTH)) {
-        write_ioreg(REG_ADDR(CNTH), read_ioreg(REG_ADDR(TEMP)));
+        value = read_ioreg(REG_ADDR(TEMP));
     }
 
     //16-bits reading of CCMP
     else if (reg_ofs == REG_OFS(CCMPL)) {
-        write_ioreg(REG_ADDR(CCMPL), m_ccmp & 0x00FF);
+        value = m_ccmp & 0x00FF;
         write_ioreg(REG_ADDR(TEMP), m_ccmp >> 8);
     }
     else if (reg_ofs == REG_OFS(CCMPH)) {
-        write_ioreg(REG_ADDR(CCMPH), read_ioreg(REG_ADDR(TEMP)));
+        value = read_ioreg(REG_ADDR(TEMP));
     }
+
+    return value;
 }
 
 void AVR_ArchMega0_TimerB::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)

@@ -28,9 +28,12 @@ struct ioreg_write_t {
 %End
 
     uint8_t value;
-    uint8_t posedge;
-    uint8_t negedge;
     uint8_t old;
+
+    uint8_t posedge() const;
+    uint8_t negedge() const;
+    uint8_t anyedge() const;
+
 };
 
 
@@ -41,7 +44,7 @@ class AVR_IO_RegHandler {
 
 public:
 
-    virtual void ioreg_read_handler(reg_addr_t) = 0;
+    virtual uint8_t ioreg_read_handler(reg_addr_t, uint8_t) = 0;
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&) = 0;
 
 };
@@ -60,7 +63,7 @@ public:
     uint8_t value() const;
     void set(uint8_t);
 
-    void set_handler(AVR_IO_RegHandler*, uint8_t, uint8_t);
+    void set_handler(AVR_IO_RegHandler&, uint8_t, uint8_t);
 
     uint8_t cpu_read(reg_addr_t);
     bool cpu_write(reg_addr_t, uint8_t);

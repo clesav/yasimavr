@@ -338,7 +338,7 @@ void AVR_Device::add_ioreg_handler(reg_addr_t addr, AVR_IO_RegHandler& handler, 
     if (addr != R_SREG && addr > 0) {
         m_logger.dbg("Registering handler for I/O 0x%04X", addr);
         AVR_IO_Register* reg = m_core.get_ioreg(addr);
-        reg->set_handler(&handler, 0xFF, ro_mask);
+        reg->set_handler(handler, 0xFF, ro_mask);
     }
 }
 
@@ -347,7 +347,7 @@ void AVR_Device::add_ioreg_handler(const regbit_t& rb, AVR_IO_RegHandler& handle
     if (rb.addr != R_SREG && rb.addr > 0) {
         m_logger.dbg("Registering handler for I/O 0x%04X", rb.addr);
         AVR_IO_Register* reg = m_core.get_ioreg(rb.addr);
-        reg->set_handler(&handler, rb.mask, readonly ? rb.mask : 0x00);
+        reg->set_handler(handler, rb.mask, readonly ? rb.mask : 0x00);
     }
 }
 

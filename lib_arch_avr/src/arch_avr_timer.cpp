@@ -117,7 +117,7 @@ bool AVR_ArchAVR_Timer::ctlreq(uint16_t req, ctlreq_data_t* data)
     return false;
 }
 
-void AVR_ArchAVR_Timer::ioreg_read_handler(reg_addr_t addr)
+uint8_t AVR_ArchAVR_Timer::ioreg_read_handler(reg_addr_t addr, uint8_t value)
 {
     //reading of interrupt flags
     if (addr == m_config.reg_int_flag)
@@ -126,24 +126,26 @@ void AVR_ArchAVR_Timer::ioreg_read_handler(reg_addr_t addr)
     //8 or 16 bits reading of CNTx
     else if (addr == m_config.reg_cnt) {
         m_timer.update();
-        write_ioreg(m_config.reg_cnt, m_cnt & 0x00FF);
+        value = m_cnt & 0x00FF;
         if (m_config.is_16bits)
             m_temp = m_cnt >> 8;
     }
     else if (m_config.is_16bits && addr == m_config.reg_cnt + 1)
-        write_ioreg(m_config.reg_cnt + 1, m_temp);
+        value = m_temp;
 
     //8 or 16 bits reading of OCRxA
     else if (addr == m_config.reg_ocra)
-        write_ioreg(m_config.reg_ocra, m_ocra & 0x00FF);
+        value = m_ocra & 0x00FF;
     else if (m_config.is_16bits && addr == m_config.reg_ocra + 1)
-        write_ioreg(m_config.reg_ocra + 1, m_ocra >> 8);
+        value = m_ocra >> 8;
 
     //8 or 16 bits reading of OCRxB
     else if (addr == m_config.reg_ocrb)
-        write_ioreg(m_config.reg_ocrb, m_ocrb & 0x00FF);
+        value = m_ocrb & 0x00FF;
     else if (m_config.is_16bits && addr == m_config.reg_ocrb + 1)
-        write_ioreg(m_config.reg_ocrb + 1, m_ocrb >> 8);
+        value = m_ocrb >> 8;
+
+    return value;
 }
 
 void AVR_ArchAVR_Timer::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)

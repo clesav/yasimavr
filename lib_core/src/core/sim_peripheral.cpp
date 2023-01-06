@@ -61,8 +61,10 @@ bool AVR_Peripheral::ctlreq(uint16_t req, ctlreq_data_t* data)
     return false;
 }
 
-void AVR_Peripheral::ioreg_read_handler(reg_addr_t addr)
-{}
+uint8_t AVR_Peripheral::ioreg_read_handler(reg_addr_t addr, uint8_t value)
+{
+    return value;
+}
 
 void AVR_Peripheral::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& value)
 {}
@@ -70,7 +72,7 @@ void AVR_Peripheral::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& v
 void AVR_Peripheral::sleep(bool on, AVR_SleepMode mode)
 {}
 
-void AVR_Peripheral::add_ioreg(regbit_t rb, bool readonly)
+void AVR_Peripheral::add_ioreg(const regbit_t& rb, bool readonly)
 {
     m_device->add_ioreg_handler(rb, *this, readonly);
 }

@@ -101,14 +101,15 @@ bool AVR_ArchAVR_SPI::ctlreq(uint16_t req, ctlreq_data_t* data)
     return false;
 }
 
-void AVR_ArchAVR_SPI::ioreg_read_handler(reg_addr_t addr)
+uint8_t AVR_ArchAVR_SPI::ioreg_read_handler(reg_addr_t addr, uint8_t value)
 {
     if (addr == m_config.reg_data) {
-        uint8_t frame = m_spi.pop_rx();
-        write_ioreg(m_config.reg_data, frame);
+        value = m_spi.pop_rx();
         if (!m_spi.rx_available())
             m_intflag.clear_flag();
     }
+
+    return value;
 }
 
 void AVR_ArchAVR_SPI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
@@ -122,7 +123,7 @@ void AVR_ArchAVR_SPI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& 
     //Writing 0 to SPE cancels any pending TX
     if (addr == m_config.rb_enable.addr) {
         m_spi.set_selected(m_pin_selected && m_config.rb_enable.extract(data.value));
-        if (m_config.rb_enable.extract(data.negedge))
+        if (m_config.rb_enable.extract(data.negedge()))
             m_spi.cancel_tx();
     }
 

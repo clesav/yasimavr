@@ -33,10 +33,28 @@
 //This structure is used for 'ioreg_write_handler' callbacks to hold pre-calculated
 //information on the new register value
 struct ioreg_write_t {
+
     uint8_t value;   //contains the new value in the register
-    uint8_t posedge; //indicates bits transiting from '0' to '1'
-    uint8_t negedge; //indicates bits transiting from '1' to '0'
     uint8_t old;     //contains the old value of the register
+
+    //indicates bits transiting from '0' to '1'
+    inline uint8_t posedge() const
+    {
+        return value & ~old;
+    }
+
+    //indicates bits transiting from '1' to '0'
+    inline uint8_t negedge() const
+    {
+        return old & ~value;
+    }
+
+    //indicates changed bits
+    inline uint8_t anyedge() const
+    {
+        return value ^ old;
+    }
+
 };
 
 
@@ -52,7 +70,7 @@ public:
 
     virtual ~AVR_IO_RegHandler() = default;
 
-    virtual void ioreg_read_handler(reg_addr_t addr) = 0;
+    virtual uint8_t ioreg_read_handler(reg_addr_t addr, uint8_t value) = 0;
 
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) = 0;
 
@@ -81,7 +99,7 @@ public:
     void set(uint8_t value);
 
     //Add a handler to this register
-    void set_handler(AVR_IO_RegHandler* handler, uint8_t use_mask, uint8_t ro_mask);
+    void set_handler(AVR_IO_RegHandler& handler, uint8_t use_mask, uint8_t ro_mask);
 
     //CPU interface for read/write operation on this register
     uint8_t cpu_read(reg_addr_t addr);

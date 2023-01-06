@@ -57,7 +57,7 @@ public:
     //Override of AVR_Peripheral callbacks
     virtual bool init(AVR_Device& device) override;
     virtual void reset() override;
-    virtual void ioreg_read_handler(reg_addr_t addr) override;
+    virtual uint8_t ioreg_read_handler(reg_addr_t addr, uint8_t value) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
     virtual void sleep(bool on, AVR_SleepMode mode) override;
     //Override of Hook callback

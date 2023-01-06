@@ -94,16 +94,18 @@ void AVR_ArchMega0_Port::reset()
     m_dir_value = 0;
 }
 
-void AVR_ArchMega0_Port::ioreg_read_handler(reg_addr_t addr)
+uint8_t AVR_ArchMega0_Port::ioreg_read_handler(reg_addr_t addr, uint8_t value)
 {
     if (addr == VPORT_REG_ADDR(DIR))
-        write_ioreg(addr, read_ioreg(PORT_REG_ADDR(DIR)));
+        value = read_ioreg(PORT_REG_ADDR(DIR));
     else if (addr == VPORT_REG_ADDR(OUT))
-        write_ioreg(addr, read_ioreg(PORT_REG_ADDR(OUT)));
+        value = read_ioreg(PORT_REG_ADDR(OUT));
     else if (addr == VPORT_REG_ADDR(IN))
-        write_ioreg(addr, read_ioreg(PORT_REG_ADDR(IN)));
+        value = read_ioreg(PORT_REG_ADDR(IN));
     else if (addr == VPORT_REG_ADDR(INTFLAGS))
-        write_ioreg(addr, read_ioreg(PORT_REG_ADDR(INTFLAGS)));
+        value = read_ioreg(PORT_REG_ADDR(INTFLAGS));
+
+    return value;
 }
 
 void AVR_ArchMega0_Port::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)

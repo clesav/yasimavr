@@ -53,7 +53,7 @@ public:
 
     virtual bool init(AVR_Device&);
     virtual void reset();
-    virtual void ioreg_read_handler(reg_addr_t);
+    virtual uint8_t ioreg_read_handler(reg_addr_t, uint8_t);
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
     virtual void sleep(bool, AVR_SleepMode);
 

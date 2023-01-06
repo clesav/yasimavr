@@ -98,14 +98,15 @@ bool AVR_ArchAVR_USART::ctlreq(uint16_t req, ctlreq_data_t* data)
     return false;
 }
 
-void AVR_ArchAVR_USART::ioreg_read_handler(reg_addr_t addr)
+uint8_t AVR_ArchAVR_USART::ioreg_read_handler(reg_addr_t addr, uint8_t value)
 {
     if (addr == m_config.reg_data) {
-        uint8_t frame = m_uart.pop_rx();
-        write_ioreg(m_config.reg_data, frame);
+        value = m_uart.pop_rx();
         if (!m_uart.rx_available())
             m_rxc_intflag.clear_flag();
     }
+
+    return value;
 }
 
 void AVR_ArchAVR_USART::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
@@ -117,7 +118,7 @@ void AVR_ArchAVR_USART::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t
     }
 
     //Writing 0 to TXE cancels any pending TX
-    if (addr == m_config.rb_tx_enable.addr && m_config.rb_tx_enable.extract(data.negedge)) {
+    if (addr == m_config.rb_tx_enable.addr && m_config.rb_tx_enable.extract(data.negedge())) {
         m_uart.cancel_tx_pending();
         m_txe_intflag.set_flag();
     }
