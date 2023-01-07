@@ -93,6 +93,8 @@ public:
     //Set the interface in host mode (mode=true) or client mode (mode=false)
     void set_host_mode(bool mode);
 
+    bool is_host_mode() const;
+
     //Return the internal signal used for operation signaling
     AVR_Signal& signal();
 
@@ -169,6 +171,11 @@ private:
 inline AVR_Signal& AVR_IO_SPI::signal()
 {
     return m_signal;
+}
+
+inline bool AVR_IO_SPI::is_host_mode() const
+{
+    return m_is_host;
 }
 
 inline size_t AVR_IO_SPI::rx_available() const
