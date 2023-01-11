@@ -215,6 +215,15 @@ class PeripheralInstanceDescriptor:
         self.device = device
         self.config = f.get('config', {})
 
+    def reg_descriptor(self, reg_name):
+        if '.' in reg_name:
+            per_name, reg_name = reg_name.split('.', 1)
+            per = self.device.peripherals[per_name]
+        else:
+            per = self
+
+        return per.class_descriptor.registers[reg_name]
+
     def reg_address(self, reg_name, default=None):
         if '.' in reg_name:
             per_name, reg_name = reg_name.split('.', 1)

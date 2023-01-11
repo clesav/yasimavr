@@ -75,8 +75,8 @@ class dev_atmega328(arch_lib.AVR_ArchAVR_Device):
         timer0 = arch_lib.AVR_ArchAVR_Timer(0, timer0_config)
         timer1 = arch_lib.AVR_ArchAVR_Timer(1, timer1_config)
         timer2 = arch_lib.AVR_ArchAVR_Timer(2, timer2_config)
-        adc = arch_lib.AVR_ArchAVR_ADC(adc_config)
-        acp = arch_lib.AVR_ArchAVR_ACP(acp_config)
+        adc = arch_lib.AVR_ArchAVR_ADC(0, adc_config)
+        acp = arch_lib.AVR_ArchAVR_ACP(0, acp_config)
         vref = arch_lib.AVR_ArchAVR_VREF(vref_bandgap)
         usart = arch_lib.AVR_ArchAVR_USART(0, usart_config)
 
