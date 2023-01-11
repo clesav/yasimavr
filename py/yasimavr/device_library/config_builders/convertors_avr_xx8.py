@@ -213,7 +213,7 @@ def _adc_convertor(cfg, attr, yml_val, per_desc):
         for reg_value, item in yml_val.items():
             trig_cfg = _archlib.AVR_ArchAVR_ADC_Config.trigger_config_t()
             trig_cfg.reg_value = reg_value
-            trig_cfg.trig_type = _archlib.AVR_ArchAVR_ADC_Config.TriggerType[item]
+            trig_cfg.trig_type = _archlib.AVR_ArchAVR_ADC_Config.Trigger[item]
             py_triggers.append(trig_cfg)
 
         cfg.triggers = py_triggers
@@ -238,7 +238,7 @@ def _acp_convertor(cfg, attr, yml_val, per_desc):
         for reg_value, item in yml_val.items():
             mux_cfg = _archlib.AVR_ArchAVR_ACP_Config.mux_config_t()
             mux_cfg.reg_value = reg_value
-            mux_cfg.pin = _corelib.str_to_id(item[0])
+            mux_cfg.pin = _corelib.str_to_id(item)
             py_pins.append(mux_cfg)
 
         cfg.mux_pins = py_pins

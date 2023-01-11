@@ -138,6 +138,9 @@ peripherals:
     ADC:
         file: mega48-88-168-328_analog.yml
 
+    ACP:
+        file: mega48-88-168-328_analog.yml
+
     VREF:
         file: mega48-88-168-328_analog.yml
 

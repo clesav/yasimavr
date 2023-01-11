@@ -196,7 +196,7 @@ def convert_regbit(rb_desc, per_desc):
         reg_name, sf = rb_desc
         field_names = [ fn.strip() for fn in sf.split('|') ]
 
-    reg = per_desc.class_descriptor.registers[reg_name]
+    reg = per_desc.reg_descriptor(reg_name)
 
     if field_names:
         fields = [ reg.fields[fn] for fn in field_names ]
