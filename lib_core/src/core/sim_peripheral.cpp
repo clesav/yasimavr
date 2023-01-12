@@ -88,7 +88,7 @@ uint8_t AVR_Peripheral::read_ioreg(reg_addr_t addr) const
     return m_device->core().ioctl_read_ioreg(addr);
 }
 
-void AVR_Peripheral::write_ioreg(const regbit_t rb, uint8_t value)
+void AVR_Peripheral::write_ioreg(const regbit_t& rb, uint8_t value)
 {
     m_device->core().ioctl_write_ioreg(rb, value);
 }
