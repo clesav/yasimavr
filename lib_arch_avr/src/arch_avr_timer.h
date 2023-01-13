@@ -73,8 +73,7 @@ struct AVR_ArchAVR_TimerConfig {
     std::vector<clock_config_t> clocks;     //List of clock source configurations
     std::vector<mode_config_t> modes;       //List of the timer mode configurations
     regbit_t rb_clock;                      //Clock/prescaler configuration register
-    regbit_t rb_mode;                       //Timer mode control register
-    regbit_t rb_mode_ext;                   //Timer mode control register extension
+    regbit_compound_t rbc_mode;             //Timer mode control register
     reg_addr_t reg_cnt;                     //Counter register
     reg_addr_t reg_ocra;                    //Output Compare A register
     reg_addr_t reg_ocrb;                    //Output Compare B register

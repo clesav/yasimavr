@@ -129,11 +129,11 @@ struct ctlreq_data_t {
  * maps a register field value to a set of parameters (see the timer classes for examples)
  */
 struct base_reg_config_t {
-    uint8_t reg_value;
+    uint64_t reg_value;
 };
 
 template<typename T>
-int find_reg_config(const std::vector<T>& v, uint8_t reg_value)
+int find_reg_config(const std::vector<T>& v, uint64_t reg_value)
 {
     for (auto it = v.cbegin(); it != v.cend(); ++it) {
         const base_reg_config_t* cfg = &(*it);
@@ -200,6 +200,7 @@ protected:
     AVR_Logger& logger();
 
     void add_ioreg(const regbit_t& rb, bool readonly = false);
+    void add_ioreg(const regbit_compound_t& rbc, bool readonly = false);
     void add_ioreg(reg_addr_t addr, uint8_t mask = 0xFF, bool readonly = false);
 
     //Primary methods to access a I/O register. Note that it's not limited to those
@@ -209,6 +210,7 @@ protected:
 
     //Secondary methods for operating on I/O register values or single bits
     uint8_t read_ioreg(const regbit_t& rb) const;
+    uint64_t read_ioreg(const regbit_compound_t& rbc) const;
     uint8_t read_ioreg(reg_addr_t reg, const bitmask_t& bm) const;
 
     bool test_ioreg(reg_addr_t reg, uint8_t bit) const;
@@ -221,11 +223,13 @@ protected:
     void write_ioreg(reg_addr_t reg, const bitmask_t& bm, uint8_t value);
 
     void set_ioreg(const regbit_t& rb);
+    void set_ioreg(const regbit_compound_t& rbc);
     void set_ioreg(reg_addr_t reg, uint8_t bit);
     void set_ioreg(reg_addr_t reg, const bitmask_t& bm);
     void set_ioreg(const regbit_t& rb, uint8_t bit);
 
     void clear_ioreg(const regbit_t& rb);
+    void clear_ioreg(const regbit_compound_t& rbc);
     void clear_ioreg(reg_addr_t reg);
     void clear_ioreg(reg_addr_t reg, uint8_t bit);
     void clear_ioreg(reg_addr_t reg, const bitmask_t& bm);

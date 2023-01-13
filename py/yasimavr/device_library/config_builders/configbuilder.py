@@ -167,6 +167,9 @@ class _PeripheralConfigBuilder:
         elif attr.startswith('rb_') or isinstance(default_val, _corelib.regbit_t):
             return convert_regbit(yml_val, per_desc)
 
+        elif attr.startswith('rbc_') or isinstance(default_val, _corelib.regbit_compound_t):
+            return convert_regbit_compound_t(yml_val, per_desc)
+
         elif isinstance(default_val, (int, float)):
             return yml_val
 
@@ -188,13 +191,25 @@ def get_core_attributes(dev_desc):
 
     return result
 
-def convert_regbit(rb_desc, per_desc):
-    if isinstance(rb_desc, str):
-        reg_name = rb_desc
+
+def convert_regbit(rb_yml, per_desc):
+    if isinstance(rb_yml, str):
+        reg_name = rb_yml
         field_names = []
+
+    elif isinstance(rb_yml, (list, tuple)):
+        if not (1 <= len(rb_yml) <= 2):
+            raise ValueError()
+
+        reg_name = rb_yml[0]
+
+        if len(rb_yml) == 2:
+            field_names = [ fn.strip() for fn in rb_yml[1].split('|') ]
+        else:
+            field_names = []
+
     else:
-        reg_name, sf = rb_desc
-        field_names = [ fn.strip() for fn in sf.split('|') ]
+        raise ValueError()
 
     reg = per_desc.reg_descriptor(reg_name)
 
@@ -213,6 +228,19 @@ def convert_regbit(rb_desc, per_desc):
     rb = _corelib.regbit_t(per_desc.reg_address(reg_name), bit, mask)
 
     return rb
+
+
+def convert_regbit_compound_t(rbc_yml, per_desc):
+    if not isinstance(rbc_yml, list):
+        return _corelib.regbit_compound_t()
+
+    elif not all(isinstance(item, list) for item in rbc_yml):
+        rb = convert_regbit(rbc_yml, per_desc)
+        return _corelib.regbit_compound_t(rb)
+
+    else:
+        rb_list = [convert_regbit(rb_yml, per_desc) for rb_yml in rbc_yml]
+        return _corelib.regbit_compound_t(rb_list)
 
 
 def convert_dummy_controller_config(per_desc):

@@ -60,8 +60,7 @@ bool AVR_ArchAVR_Timer::init(AVR_Device& device)
     bool status = AVR_Peripheral::init(device);
 
     add_ioreg(m_config.rb_clock.addr);
-    add_ioreg(m_config.rb_mode);
-    add_ioreg(m_config.rb_mode_ext);
+    add_ioreg(m_config.rbc_mode);
     add_ioreg(m_config.reg_cnt);
     add_ioreg(m_config.reg_ocra);
     add_ioreg(m_config.reg_ocrb);
@@ -276,8 +275,7 @@ void AVR_ArchAVR_Timer::raised(const signal_data_t& sigdata, uint16_t __unused)
     if (!sigdata.index) return;
 
     //Find the timer mode currently selected
-    uint8_t mode_reg = read_ioreg(m_config.rb_mode) |
-                     (read_ioreg(m_config.rb_mode_ext) << m_config.rb_mode.bitcount());
+    uint64_t mode_reg = read_ioreg(m_config.rbc_mode);
     int mode_index = find_reg_config<AVR_ArchAVR_TimerConfig::mode_config_t>(m_config.modes, mode_reg);
     AVR_ArchAVR_TimerConfig::Mode timer_mode = m_config.modes[mode_index].mode;
 

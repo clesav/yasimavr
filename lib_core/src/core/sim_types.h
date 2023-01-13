@@ -26,6 +26,7 @@
 
 #include <stdint.h>
 #include <string>
+#include <vector>
 
 #ifdef YASIMAVR_DLL
     #ifdef _MSC_VER
@@ -138,6 +139,56 @@ struct regbit_t {
 
 };
 
+
+class regbit_compound_t {
+
+public:
+
+    regbit_compound_t() = default;
+    explicit regbit_compound_t(const regbit_t& rb);
+    explicit regbit_compound_t(const std::vector<regbit_t>& v);
+    regbit_compound_t(const regbit_compound_t& other);
+
+    void add(const regbit_t& rb);
+
+    std::vector<regbit_t>::const_iterator begin() const;
+    std::vector<regbit_t>::const_iterator end() const;
+    size_t size() const;
+    const regbit_t& operator[](size_t index) const;
+
+    bool addr_match(reg_addr_t addr) const;
+    uint64_t compound(uint8_t regvalue, size_t index) const;
+    uint8_t extract(uint64_t v, size_t index) const;
+
+    regbit_compound_t& operator=(const std::vector<regbit_t>& v);
+    regbit_compound_t& operator=(const regbit_compound_t& other);
+
+private:
+
+    std::vector<regbit_t> m_regbits;
+    std::vector<int> m_offsets;
+
+};
+
+inline std::vector<regbit_t>::const_iterator regbit_compound_t::begin() const
+{
+    return m_regbits.begin();
+}
+
+inline std::vector<regbit_t>::const_iterator regbit_compound_t::end() const
+{
+    return m_regbits.end();
+}
+
+inline size_t regbit_compound_t::size() const
+{
+    return m_regbits.size();
+}
+
+inline const regbit_t& regbit_compound_t::operator[](size_t index) const
+{
+    return m_regbits[index];
+}
 
 //=======================================================================================
 

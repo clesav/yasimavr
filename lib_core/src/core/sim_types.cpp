@@ -126,6 +126,71 @@ int regbit_t::bitcount() const
 
 //=======================================================================================
 
+regbit_compound_t::regbit_compound_t(const regbit_t& rb)
+{
+    add(rb);
+}
+
+regbit_compound_t::regbit_compound_t(const std::vector<regbit_t>& v)
+{
+    *this = v;
+}
+
+regbit_compound_t::regbit_compound_t(const regbit_compound_t& other)
+{
+    *this = other;
+}
+
+void regbit_compound_t::add(const regbit_t& rb)
+{
+    if (m_regbits.size())
+        m_offsets.push_back(m_offsets.back() + m_regbits.back().bitcount());
+    else
+        m_offsets.push_back(0);
+
+    m_regbits.push_back(rb);
+}
+
+bool regbit_compound_t::addr_match(reg_addr_t addr) const
+{
+    for (auto& rb : m_regbits)
+        if (rb.addr == addr)
+            return true;
+    return false;
+}
+
+uint64_t regbit_compound_t::compound(uint8_t regvalue, size_t index) const
+{
+    uint64_t v = m_regbits[index].extract(regvalue);
+    return v << m_offsets[index];
+}
+
+uint8_t regbit_compound_t::extract(uint64_t v, size_t index) const
+{
+    return m_regbits[index].extract((v >> m_offsets[index]) & 0xFF);
+}
+
+regbit_compound_t& regbit_compound_t::operator=(const std::vector<regbit_t>& v)
+{
+    m_regbits.clear();
+    m_offsets.clear();
+
+    for (auto& rb : v)
+        add(rb);
+
+    return *this;
+}
+
+regbit_compound_t& regbit_compound_t::operator=(const regbit_compound_t& other)
+{
+    m_regbits = other.m_regbits;
+    m_offsets = other.m_offsets;
+    return *this;
+}
+
+
+//=======================================================================================
+
 std::string id_to_str(uint32_t id)
 {
     char buf[5];

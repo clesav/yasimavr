@@ -77,6 +77,12 @@ void AVR_Peripheral::add_ioreg(const regbit_t& rb, bool readonly)
     m_device->add_ioreg_handler(rb, *this, readonly);
 }
 
+void AVR_Peripheral::add_ioreg(const regbit_compound_t& rbc, bool readonly)
+{
+    for (auto& rb : rbc)
+        m_device->add_ioreg_handler(rb, *this, readonly);
+}
+
 void AVR_Peripheral::add_ioreg(reg_addr_t addr, uint8_t mask, bool readonly)
 {
     regbit_t rb = regbit_t(addr, 0, mask);
@@ -91,6 +97,32 @@ uint8_t AVR_Peripheral::read_ioreg(reg_addr_t addr) const
 void AVR_Peripheral::write_ioreg(const regbit_t& rb, uint8_t value)
 {
     m_device->core().ioctl_write_ioreg(rb, value);
+}
+
+uint64_t AVR_Peripheral::read_ioreg(const regbit_compound_t& rbc) const
+{
+    uint64_t v = 0;
+    for (size_t i = 0; i < rbc.size(); ++i)
+        v |= rbc.compound(read_ioreg(rbc[i].addr), i);
+    return v;
+}
+
+void AVR_Peripheral::write_ioreg(const regbit_compound_t& rbc, uint64_t value)
+{
+    for (size_t i = 0; i < rbc.size(); ++i)
+        write_ioreg(rbc[i], rbc.extract(value, i));
+}
+
+void AVR_Peripheral::set_ioreg(const regbit_compound_t& rbc)
+{
+    for (auto& rb : rbc)
+        set_ioreg(rb);
+}
+
+void AVR_Peripheral::clear_ioreg(const regbit_compound_t& rbc)
+{
+    for (auto& rb : rbc)
+        set_ioreg(rb);
 }
 
 bool AVR_Peripheral::register_interrupt(int_vect_t vector, AVR_InterruptHandler& handler) const

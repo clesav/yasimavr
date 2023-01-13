@@ -55,8 +55,7 @@ struct AVR_ArchAVR_TimerConfig {
     std::vector<AVR_ArchAVR_TimerConfig::clock_config_t> clocks;
     std::vector<AVR_ArchAVR_TimerConfig::mode_config_t> modes;
     regbit_t rb_clock;
-    regbit_t rb_mode;
-    regbit_t rb_mode_ext;
+    regbit_compound_t rbc_mode;
     reg_addr_t reg_cnt;
     reg_addr_t reg_ocra;
     reg_addr_t reg_ocrb;
