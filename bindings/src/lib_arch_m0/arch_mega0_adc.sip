@@ -58,7 +58,7 @@ class AVR_ArchMega0_ADC : public AVR_IO_ADC,
 
 public:
 
-    AVR_ArchMega0_ADC(int num, const AVR_ArchMega0_ADC_Config&);
+    AVR_ArchMega0_ADC(int, const AVR_ArchMega0_ADC_Config& /KeepReference/);
 
     virtual bool init(AVR_Device&);
     virtual void reset();

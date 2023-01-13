@@ -50,7 +50,7 @@ class AVR_ArchAVR_SPI : public AVR_Peripheral, public AVR_SignalHook /NoDefaultC
 
 public:
 
-    AVR_ArchAVR_SPI(uint8_t num, const AVR_ArchAVR_SPI_Config&);
+    AVR_ArchAVR_SPI(uint8_t, const AVR_ArchAVR_SPI_Config& /KeepReference/);
 
     virtual bool init(AVR_Device&);
     virtual void reset();

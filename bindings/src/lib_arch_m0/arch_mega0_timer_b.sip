@@ -39,7 +39,7 @@ class AVR_ArchMega0_TimerB : public AVR_Peripheral, public AVR_SignalHook /NoDef
 
 public:
 
-    AVR_ArchMega0_TimerB(int, const AVR_ArchMega0_TimerB_Config&);
+    AVR_ArchMega0_TimerB(int, const AVR_ArchMega0_TimerB_Config& /KeepReference/);
 
     virtual bool init(AVR_Device&);
     virtual void reset();

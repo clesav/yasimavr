@@ -50,7 +50,7 @@ class AVR_ArchAVR_WDT : public AVR_WatchdogTimer,
 
 public:
 
-    AVR_ArchAVR_WDT(const AVR_ArchAVR_WDT_Config&);
+    AVR_ArchAVR_WDT(const AVR_ArchAVR_WDT_Config& /KeepReference/);
 
     virtual bool init(AVR_Device&);
     virtual void reset();

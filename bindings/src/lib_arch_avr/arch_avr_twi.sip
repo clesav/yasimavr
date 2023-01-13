@@ -55,7 +55,7 @@ class AVR_ArchAVR_TWI : public AVR_Peripheral, public AVR_SignalHook /NoDefaultC
 
 public:
 
-    AVR_ArchAVR_TWI(uint8_t num, const AVR_ArchAVR_TWI_Config&);
+    AVR_ArchAVR_TWI(uint8_t, const AVR_ArchAVR_TWI_Config& /KeepReference/);
 
     virtual bool init(AVR_Device&);
     virtual void reset();

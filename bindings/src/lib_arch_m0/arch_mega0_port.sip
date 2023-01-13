@@ -40,7 +40,7 @@ class AVR_ArchMega0_Port : public AVR_IO_Port /NoDefaultCtors/ {
 
 public:
 
-    AVR_ArchMega0_Port(char name, const AVR_ArchMega0_PortConfig&);
+    AVR_ArchMega0_Port(char, const AVR_ArchMega0_PortConfig& /KeepReference/);
 
     virtual bool init(AVR_Device&);
     virtual void reset();

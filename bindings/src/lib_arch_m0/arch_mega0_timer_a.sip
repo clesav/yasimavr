@@ -61,7 +61,7 @@ class AVR_ArchMega0_TimerA : public AVR_Peripheral, public AVR_SignalHook /NoDef
 
 public:
 
-    AVR_ArchMega0_TimerA(const AVR_ArchMega0_TimerA_Config&);
+    AVR_ArchMega0_TimerA(const AVR_ArchMega0_TimerA_Config& /KeepReference/);
 
     virtual bool init(AVR_Device&);
     virtual void reset();

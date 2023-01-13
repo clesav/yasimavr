@@ -82,7 +82,7 @@ public:
         Signal_OVF
     };
 
-    AVR_ArchAVR_Timer(int, const AVR_ArchAVR_TimerConfig&);
+    AVR_ArchAVR_Timer(int, const AVR_ArchAVR_TimerConfig& /KeepReference/);
 
     virtual bool init(AVR_Device&);
     virtual void reset();

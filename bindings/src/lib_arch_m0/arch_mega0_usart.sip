@@ -42,7 +42,7 @@ class AVR_ArchMega0_USART : public AVR_Peripheral, public AVR_SignalHook /NoDefa
 
 public:
 
-    AVR_ArchMega0_USART(uint8_t num, const AVR_ArchMega0_USART_Config&);
+    AVR_ArchMega0_USART(uint8_t, const AVR_ArchMega0_USART_Config& /KeepReference/);
 
     virtual bool init(AVR_Device&);
     virtual void reset();

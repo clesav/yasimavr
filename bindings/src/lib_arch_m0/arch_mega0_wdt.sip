@@ -40,7 +40,7 @@ class AVR_ArchMega0_WDT : public AVR_WatchdogTimer /NoDefaultCtors/ {
 
 public:
 
-    AVR_ArchMega0_WDT(const AVR_ArchMega0_WDT_Config&);
+    AVR_ArchMega0_WDT(const AVR_ArchMega0_WDT_Config& /KeepReference/);
 
     virtual bool init(AVR_Device&);
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);

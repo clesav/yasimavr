@@ -70,7 +70,7 @@ class AVR_ArchAVR_MiscRegCtrl : public AVR_Peripheral /NoDefaultCtors/ {
 
 public:
 
-    AVR_ArchAVR_MiscRegCtrl(const AVR_ArchAVR_Misc_Config&);
+    AVR_ArchAVR_MiscRegCtrl(const AVR_ArchAVR_Misc_Config& /KeepReference/);
 
     virtual bool init(AVR_Device& device);
 

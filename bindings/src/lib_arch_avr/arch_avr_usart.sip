@@ -55,7 +55,7 @@ class AVR_ArchAVR_USART : public AVR_Peripheral, public AVR_SignalHook /NoDefaul
 
 public:
 
-    AVR_ArchAVR_USART(uint8_t num, const AVR_ArchAVR_USART_Config&);
+    AVR_ArchAVR_USART(uint8_t, const AVR_ArchAVR_USART_Config& /KeepReference/);
 
     virtual bool init(AVR_Device&);
     virtual void reset();

@@ -62,7 +62,7 @@ class AVR_ArchMega0_VREF : public AVR_IO_VREF /NoDefaultCtors/ {
 
 public:
 
-    AVR_ArchMega0_VREF(const AVR_ArchMega0_VREF_Config&);
+    AVR_ArchMega0_VREF(const AVR_ArchMega0_VREF_Config& /KeepReference/);
 
     virtual bool init(AVR_Device&);
     virtual void reset();
@@ -90,7 +90,7 @@ class AVR_ArchMega0_IntCtrl : public AVR_InterruptController /NoDefaultCtors/ {
 
 public:
 
-    AVR_ArchMega0_IntCtrl(const AVR_ArchMega0_IntCtrl_Config&);
+    AVR_ArchMega0_IntCtrl(const AVR_ArchMega0_IntCtrl_Config& /KeepReference/);
 
     virtual bool init(AVR_Device&);
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
@@ -144,7 +144,7 @@ class AVR_ArchMega0_MiscRegCtrl : public AVR_Peripheral /NoDefaultCtors/ {
 
 public:
 
-    AVR_ArchMega0_MiscRegCtrl(const AVR_ArchMega0_Misc_Config&);
+    AVR_ArchMega0_MiscRegCtrl(const AVR_ArchMega0_Misc_Config& /KeepReference/);
 
     virtual bool init(AVR_Device&);
     virtual void reset();
