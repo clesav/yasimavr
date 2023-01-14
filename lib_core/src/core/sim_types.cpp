@@ -99,7 +99,7 @@ regbit_t::regbit_t(reg_addr_t a)
 {}
 
 regbit_t::regbit_t()
-:regbit_t(0, 0, 0)
+:regbit_t(INVALID_REGISTER, 0, 0)
 {}
 
 regbit_t::regbit_t(reg_addr_t a, const bitmask_t& bm)

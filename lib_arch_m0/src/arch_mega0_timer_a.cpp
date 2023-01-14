@@ -35,7 +35,7 @@
     reg_addr_t(m_config.reg_base + offsetof(TCA_SINGLE_t, reg))
 
 #define REG_OFS(reg) \
-    offsetof(TCA_SINGLE_t, reg)
+    reg_addr_t(offsetof(TCA_SINGLE_t, reg))
 
 #define TIMER_PRESCALER_MAX         1024
 static const uint16_t PrescalerFactors[8] = { 1, 2, 4, 8, 16, 64, 256, 1024 };

@@ -32,10 +32,10 @@
 //=======================================================================================
 
 #define REG_ADDR(reg) \
-    (m_config.reg_base + offsetof(ADC_t, reg))
+    reg_addr_t(m_config.reg_base + offsetof(ADC_t, reg))
 
 #define REG_OFS(reg) \
-    offsetof(ADC_t, reg)
+    reg_addr_t(offsetof(ADC_t, reg))
 
 #define CFG AVR_ArchMega0_ADC_Config
 

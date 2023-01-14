@@ -23,10 +23,14 @@
 
 
 typedef int64_t         cycle_count_t;
-typedef uint16_t        reg_addr_t;
+typedef int16_t         reg_addr_t;
 typedef uint32_t        mem_addr_t;
 typedef uint32_t        flash_addr_t;
-typedef int             int_vect_t;
+typedef int16_t         int_vect_t;
+
+
+const cycle_count_t INVALID_CYCLE;
+const reg_addr_t    INVALID_REGISTER;
 
 
 struct bitmask_t {

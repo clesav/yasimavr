@@ -179,7 +179,7 @@ void AVR_ArchMega0_IntCtrl::cpu_reti()
 //=======================================================================================
 
 #define RST_REG_ADDR(reg) \
-    (m_base_reg + offsetof(RSTCTRL_t, reg))
+    reg_addr_t(m_base_reg + offsetof(RSTCTRL_t, reg))
 
 /*
  * Constructor of a reset controller
@@ -314,7 +314,7 @@ bool AVR_ArchMega0_MiscRegCtrl::ctlreq(uint16_t req, ctlreq_data_t* data)
 uint8_t AVR_ArchMega0_MiscRegCtrl::ioreg_read_handler(reg_addr_t addr, uint8_t value)
 {
     if (addr >= m_config.reg_base_sigrow &&
-        addr < (m_config.reg_base_sigrow + sizeof(SIGROW_t))) {
+        addr < reg_addr_t(m_config.reg_base_sigrow + sizeof(SIGROW_t))) {
 
         reg_addr_t reg_ofs = addr - m_config.reg_base_sigrow;
         if (reg_ofs >= SIGROW_MEM_OFS)

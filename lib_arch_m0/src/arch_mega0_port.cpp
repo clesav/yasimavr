@@ -31,16 +31,16 @@
 //=======================================================================================
 
 #define PORT_REG_ADDR(reg) \
-    (m_config.reg_base_port + offsetof(PORT_t, reg))
+    reg_addr_t(m_config.reg_base_port + offsetof(PORT_t, reg))
 
 #define PORT_REG_OFS(reg) \
-    offsetof(PORT_t, reg)
+    reg_addr_t(offsetof(PORT_t, reg))
 
 #define VPORT_REG_ADDR(reg) \
-    (m_config.reg_base_vport + offsetof(VPORT_t, reg))
+    reg_addr_t(m_config.reg_base_vport + offsetof(VPORT_t, reg))
 
 #define VPORT_REG_OFS(reg) \
-    offsetof(VPORT_t, reg)
+    reg_addr_t(offsetof(VPORT_t, reg))
 
 
 //=======================================================================================
@@ -110,7 +110,7 @@ uint8_t AVR_ArchMega0_Port::ioreg_read_handler(reg_addr_t addr, uint8_t value)
 
 void AVR_ArchMega0_Port::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
-    if (addr >= m_config.reg_base_port && addr < (m_config.reg_base_port + sizeof(PORT_t))) {
+    if (addr >= m_config.reg_base_port && addr < reg_addr_t(m_config.reg_base_port + sizeof(PORT_t))) {
         reg_addr_t reg_ofs = addr - m_config.reg_base_port;
         uint8_t value_masked = data.value & pin_mask();
         switch(reg_ofs) {

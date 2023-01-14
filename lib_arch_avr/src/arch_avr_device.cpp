@@ -84,13 +84,13 @@ void AVR_ArchAVR_Core::dbg_read_data(mem_addr_t addr, uint8_t* buf, mem_addr_t l
     std::memset(buf, 0x00, len);
 
     mem_addr_t bufofs, blockofs;
-    uint32_t n;
+    mem_addr_t n;
 
     if (data_space_map(addr, len, 0, 32, &bufofs, &blockofs, &n))
         std::memcpy(buf + bufofs, m_regs + blockofs, n);
 
     if (data_space_map(addr, len, 32, m_config.ioend, &bufofs, &blockofs, &n)) {
-        for (reg_addr_t i = 0; i < n; ++i)
+        for (mem_addr_t i = 0; i < n; ++i)
             buf[bufofs + i] = cpu_read_ioreg(blockofs + i);
     }
 
@@ -102,13 +102,13 @@ void AVR_ArchAVR_Core::dbg_read_data(mem_addr_t addr, uint8_t* buf, mem_addr_t l
 void AVR_ArchAVR_Core::dbg_write_data(mem_addr_t addr, uint8_t* buf, mem_addr_t len)
 {
     mem_addr_t bufofs, blockofs;
-    uint32_t n;
+    mem_addr_t n;
 
     if (data_space_map(addr, len, 0, 32, &bufofs, &blockofs, &n))
         std::memcpy(m_regs + blockofs, buf + bufofs, n);
 
     if (data_space_map(addr, len, 32, m_config.ioend, &bufofs, &blockofs, &n)) {
-        for (reg_addr_t i = 0; i < n; ++i)
+        for (mem_addr_t i = 0; i < n; ++i)
             cpu_write_ioreg(blockofs + i, buf[bufofs + i]);
     }
 
