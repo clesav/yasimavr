@@ -60,7 +60,7 @@ class AVR_ArchAVR_ACP : public AVR_IO_ACP,
 
 public:
 
-    AVR_ArchAVR_ACP(int num, const AVR_ArchAVR_ACP_Config&);
+    AVR_ArchAVR_ACP(int, const AVR_ArchAVR_ACP_Config& /KeepReference/);
 
     virtual bool init(AVR_Device&);
     virtual void reset();

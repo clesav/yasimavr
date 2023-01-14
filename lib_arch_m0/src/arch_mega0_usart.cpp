@@ -79,7 +79,7 @@ bool AVR_ArchMega0_USART::init(AVR_Device& device)
                                  DEF_REGBIT_B(STATUS, USART_DREIF),
                                  m_config.iv_txe);
 
-    m_uart.init(device.cycle_manager(), logger());
+    m_uart.init(*device.cycle_manager(), logger());
     m_uart.set_tx_buffer_limit(2);
     m_uart.set_rx_buffer_limit(3);
     m_uart.signal().connect_hook(this);
@@ -108,16 +108,17 @@ bool AVR_ArchMega0_USART::ctlreq(uint16_t req, ctlreq_data_t* data)
     return false;
 }
 
-void AVR_ArchMega0_USART::ioreg_read_handler(reg_addr_t addr)
+uint8_t AVR_ArchMega0_USART::ioreg_read_handler(reg_addr_t addr, uint8_t value)
 {
     reg_addr_t reg_ofs = addr - m_config.reg_base;
 
     if (reg_ofs == REG_OFS(RXDATAL)) {
-        uint8_t frame = m_uart.pop_rx();
-        write_ioreg(REG_ADDR(RXDATAL), frame);
+        value = m_uart.pop_rx();
         if (!m_uart.rx_available())
             m_rxc_intflag.clear_flag(USART_RXCIF_bm);
     }
+
+    return value;
 }
 
 void AVR_ArchMega0_USART::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
@@ -152,16 +153,16 @@ void AVR_ArchMega0_USART::ioreg_write_handler(reg_addr_t addr, const ioreg_write
 
     else if (reg_ofs == REG_OFS(CTRLB)) {
         //Processing of TXEN. If it is cleared, we flush the TX buffer
-        if (data.negedge & USART_TXEN_bm) {
+        if (data.negedge() & USART_TXEN_bm) {
             m_uart.cancel_tx_pending();
             m_txe_intflag.set_flag();
         }
 
         //Processing of RXEN changes
-        if (data.posedge & USART_RXEN_bm) {
+        if (data.posedge() & USART_RXEN_bm) {
             m_uart.set_rx_enabled(true);
         }
-        else if (data.negedge & USART_RXEN_bm) {
+        else if (data.negedge() & USART_RXEN_bm) {
             m_uart.set_rx_enabled(false);
             m_rxc_intflag.clear_flag(USART_RXCIF_bm);
         }

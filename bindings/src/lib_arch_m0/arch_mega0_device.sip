@@ -53,7 +53,7 @@ public:
         NVM_USERROW     /PyName=USERROW/,
     };
 
-    AVR_ArchMega0_Core(const AVR_ArchMega0_CoreConfig&);
+    AVR_ArchMega0_Core(const AVR_ArchMega0_CoreConfig& /KeepReference/);
 
 protected:
 
@@ -70,6 +70,6 @@ class AVR_ArchMega0_Device : public AVR_Device /NoDefaultCtors/ {
 
 public:
 
-    AVR_ArchMega0_Device(const AVR_ArchMega0_DeviceConfig&);
+    AVR_ArchMega0_Device(const AVR_ArchMega0_DeviceConfig& /KeepReference/);
 
 };

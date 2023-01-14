@@ -129,11 +129,11 @@ struct ctlreq_data_t {
  * maps a register field value to a set of parameters (see the timer classes for examples)
  */
 struct base_reg_config_t {
-    uint8_t reg_value;
+    uint64_t reg_value;
 };
 
 template<typename T>
-int find_reg_config(const std::vector<T>& v, uint8_t reg_value)
+int find_reg_config(const std::vector<T>& v, uint64_t reg_value)
 {
     for (auto it = v.cbegin(); it != v.cend(); ++it) {
         const base_reg_config_t* cfg = &(*it);
@@ -175,7 +175,7 @@ public:
     //Callback method called when the CPU is reading a I/O register allocated by this peripheral.
     //The value has not been read yet so the module can modify it before the CPU gets it.
     //'addr' is the register address in I/O space
-    virtual void ioreg_read_handler(reg_addr_t addr) override;
+    virtual uint8_t ioreg_read_handler(reg_addr_t addr, uint8_t value) override;
 
     //Callback method called when the CPU is writing a I/O register allocated by this peripheral.
     //The value has already been written.
@@ -199,35 +199,44 @@ protected:
 
     AVR_Logger& logger();
 
-    void add_ioreg(regbit_t rb, bool readonly = false);
+    void add_ioreg(const regbit_t& rb, bool readonly = false);
+    void add_ioreg(const regbit_compound_t& rbc, bool readonly = false);
     void add_ioreg(reg_addr_t addr, uint8_t mask = 0xFF, bool readonly = false);
 
     //Primary methods to access a I/O register. Note that it's not limited to those
     //for which the peripheral has registered itself to.
     uint8_t read_ioreg(reg_addr_t reg) const;
-    void write_ioreg(const regbit_t rb, uint8_t value);
+    void write_ioreg(const regbit_t& rb, uint8_t value);
 
     //Secondary methods for operating on I/O register values or single bits
-    uint8_t read_ioreg(const regbit_t rb) const;
-    uint8_t read_ioreg(reg_addr_t reg, const bitmask_t bm) const;
+    uint8_t read_ioreg(const regbit_t& rb) const;
+    uint64_t read_ioreg(const regbit_compound_t& rbc) const;
+    uint8_t read_ioreg(reg_addr_t reg, const bitmask_t& bm) const;
+
     bool test_ioreg(reg_addr_t reg, uint8_t bit) const;
-    bool test_ioreg(reg_addr_t reg, const bitmask_t bm) const;
-    bool test_ioreg(const regbit_t rb, uint8_t bit = 0) const;
+    bool test_ioreg(reg_addr_t reg, const bitmask_t& bm) const;
+    bool test_ioreg(const regbit_t& rb, uint8_t bit = 0) const;
+
+    void write_ioreg(const regbit_compound_t& rbc, uint64_t value);
     void write_ioreg(reg_addr_t reg, uint8_t value);
     void write_ioreg(reg_addr_t reg, uint8_t bit, uint8_t value);
-    void write_ioreg(reg_addr_t reg, const bitmask_t bm, uint8_t value);
-    void set_ioreg(const regbit_t rb);
+    void write_ioreg(reg_addr_t reg, const bitmask_t& bm, uint8_t value);
+
+    void set_ioreg(const regbit_t& rb);
+    void set_ioreg(const regbit_compound_t& rbc);
     void set_ioreg(reg_addr_t reg, uint8_t bit);
-    void set_ioreg(reg_addr_t reg, const bitmask_t bm);
-    void set_ioreg(const regbit_t rb, uint8_t bit);
-    void clear_ioreg(const regbit_t rb);
+    void set_ioreg(reg_addr_t reg, const bitmask_t& bm);
+    void set_ioreg(const regbit_t& rb, uint8_t bit);
+
+    void clear_ioreg(const regbit_t& rb);
+    void clear_ioreg(const regbit_compound_t& rbc);
     void clear_ioreg(reg_addr_t reg);
     void clear_ioreg(reg_addr_t reg, uint8_t bit);
-    void clear_ioreg(reg_addr_t reg, const bitmask_t bm);
-    void clear_ioreg(const regbit_t rb, uint8_t bit);
+    void clear_ioreg(reg_addr_t reg, const bitmask_t& bm);
+    void clear_ioreg(const regbit_t& rb, uint8_t bit);
 
     //Helper function to register an interrupt vector
-    bool register_interrupt(int_vect_t vector, AVR_InterruptHandler* handler) const;
+    bool register_interrupt(int_vect_t vector, AVR_InterruptHandler& handler) const;
 
     //Helper function to obtain a pointer to a signal from another peripheral
     AVR_Signal* get_signal(uint32_t ctl_id) const;
@@ -255,12 +264,12 @@ inline AVR_Logger& AVR_Peripheral::logger()
     return m_logger;
 }
 
-inline uint8_t AVR_Peripheral::read_ioreg(regbit_t rb) const
+inline uint8_t AVR_Peripheral::read_ioreg(const regbit_t& rb) const
 {
     return rb.extract(read_ioreg(rb.addr));
 }
 
-inline uint8_t AVR_Peripheral::read_ioreg(reg_addr_t reg, const bitmask_t bm) const
+inline uint8_t AVR_Peripheral::read_ioreg(reg_addr_t reg, const bitmask_t& bm) const
 {
     return bm.extract(read_ioreg(reg));
 }
@@ -270,17 +279,17 @@ inline bool AVR_Peripheral::test_ioreg(reg_addr_t reg, uint8_t bit) const
     return read_ioreg(regbit_t(reg, bit));
 }
 
-inline bool AVR_Peripheral::test_ioreg(reg_addr_t reg, const bitmask_t bm) const
+inline bool AVR_Peripheral::test_ioreg(reg_addr_t reg, const bitmask_t& bm) const
 {
     return !!read_ioreg(regbit_t(reg, bm));
 }
 
-inline bool AVR_Peripheral::test_ioreg(const regbit_t rb, uint8_t bit) const
+inline bool AVR_Peripheral::test_ioreg(const regbit_t& rb, uint8_t bit) const
 {
     return !!read_ioreg(regbit_t(rb.addr, rb.bit + bit));
 }
 
-inline void AVR_Peripheral::set_ioreg(const regbit_t rb)
+inline void AVR_Peripheral::set_ioreg(const regbit_t& rb)
 {
     write_ioreg(rb, 0xFF);
 }
@@ -290,17 +299,17 @@ inline void AVR_Peripheral::set_ioreg(reg_addr_t reg, uint8_t bit)
     set_ioreg(regbit_t(reg, bit));
 }
 
-inline void AVR_Peripheral::set_ioreg(reg_addr_t reg, const bitmask_t bm)
+inline void AVR_Peripheral::set_ioreg(reg_addr_t reg, const bitmask_t& bm)
 {
     set_ioreg(regbit_t(reg, bm));
 }
 
-inline void AVR_Peripheral::set_ioreg(const regbit_t rb, uint8_t bit)
+inline void AVR_Peripheral::set_ioreg(const regbit_t& rb, uint8_t bit)
 {
     set_ioreg(regbit_t(rb.addr, rb.bit + bit));
 }
 
-inline void AVR_Peripheral::clear_ioreg(const regbit_t rb)
+inline void AVR_Peripheral::clear_ioreg(const regbit_t& rb)
 {
     write_ioreg(rb, 0x00);
 }
@@ -315,12 +324,12 @@ inline void AVR_Peripheral::clear_ioreg(reg_addr_t reg, uint8_t bit)
     clear_ioreg(regbit_t(reg, bit));
 }
 
-inline void AVR_Peripheral::clear_ioreg(reg_addr_t reg, const bitmask_t bm)
+inline void AVR_Peripheral::clear_ioreg(reg_addr_t reg, const bitmask_t& bm)
 {
     clear_ioreg(regbit_t(reg, bm));
 }
 
-inline void AVR_Peripheral::clear_ioreg(const regbit_t rb, uint8_t bit)
+inline void AVR_Peripheral::clear_ioreg(const regbit_t& rb, uint8_t bit)
 {
     clear_ioreg(regbit_t(rb.addr, rb.bit + bit));
 }
@@ -330,7 +339,7 @@ inline void AVR_Peripheral::write_ioreg(reg_addr_t reg, uint8_t value)
     write_ioreg(regbit_t(reg), value);
 }
 
-inline void AVR_Peripheral::write_ioreg(reg_addr_t reg, const bitmask_t bm, uint8_t value)
+inline void AVR_Peripheral::write_ioreg(reg_addr_t reg, const bitmask_t& bm, uint8_t value)
 {
     write_ioreg(regbit_t(reg, bm), value);
 }

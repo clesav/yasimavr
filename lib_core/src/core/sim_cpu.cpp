@@ -230,7 +230,7 @@ static bool _is_instruction_32_bits(uint16_t opcode)
 cycle_count_t AVR_Core::run_instruction()
 {
 
-    if (m_pc > m_programend) {
+    if (m_pc > m_config.flashend) {
         m_device->crash(CRASH_PC_OVERFLOW, "PC over programend");
         return 0;
     }

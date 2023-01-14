@@ -31,16 +31,16 @@
 //=======================================================================================
 
 #define PORT_REG_ADDR(reg) \
-    (m_config.reg_base_port + offsetof(PORT_t, reg))
+    reg_addr_t(m_config.reg_base_port + offsetof(PORT_t, reg))
 
 #define PORT_REG_OFS(reg) \
-    offsetof(PORT_t, reg)
+    reg_addr_t(offsetof(PORT_t, reg))
 
 #define VPORT_REG_ADDR(reg) \
-    (m_config.reg_base_vport + offsetof(VPORT_t, reg))
+    reg_addr_t(m_config.reg_base_vport + offsetof(VPORT_t, reg))
 
 #define VPORT_REG_OFS(reg) \
-    offsetof(VPORT_t, reg)
+    reg_addr_t(offsetof(VPORT_t, reg))
 
 
 //=======================================================================================
@@ -82,7 +82,7 @@ bool AVR_ArchMega0_Port::init(AVR_Device& device)
     add_ioreg(VPORT_REG_ADDR(IN));
     add_ioreg(VPORT_REG_ADDR(INTFLAGS));
 
-    register_interrupt(m_config.iv_port, this);
+    register_interrupt(m_config.iv_port, *this);
 
     return status;
 }
@@ -94,21 +94,23 @@ void AVR_ArchMega0_Port::reset()
     m_dir_value = 0;
 }
 
-void AVR_ArchMega0_Port::ioreg_read_handler(reg_addr_t addr)
+uint8_t AVR_ArchMega0_Port::ioreg_read_handler(reg_addr_t addr, uint8_t value)
 {
     if (addr == VPORT_REG_ADDR(DIR))
-        write_ioreg(addr, read_ioreg(PORT_REG_ADDR(DIR)));
+        value = read_ioreg(PORT_REG_ADDR(DIR));
     else if (addr == VPORT_REG_ADDR(OUT))
-        write_ioreg(addr, read_ioreg(PORT_REG_ADDR(OUT)));
+        value = read_ioreg(PORT_REG_ADDR(OUT));
     else if (addr == VPORT_REG_ADDR(IN))
-        write_ioreg(addr, read_ioreg(PORT_REG_ADDR(IN)));
+        value = read_ioreg(PORT_REG_ADDR(IN));
     else if (addr == VPORT_REG_ADDR(INTFLAGS))
-        write_ioreg(addr, read_ioreg(PORT_REG_ADDR(INTFLAGS)));
+        value = read_ioreg(PORT_REG_ADDR(INTFLAGS));
+
+    return value;
 }
 
 void AVR_ArchMega0_Port::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
-    if (addr >= m_config.reg_base_port && addr < (m_config.reg_base_port + sizeof(PORT_t))) {
+    if (addr >= m_config.reg_base_port && addr < reg_addr_t(m_config.reg_base_port + sizeof(PORT_t))) {
         reg_addr_t reg_ofs = addr - m_config.reg_base_port;
         uint8_t value_masked = data.value & pin_mask();
         switch(reg_ofs) {

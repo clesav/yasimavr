@@ -79,12 +79,12 @@ class AVR_ArchAVR_ADC : public AVR_IO_ADC,
 
 public:
 
-    AVR_ArchAVR_ADC(int num, const AVR_ArchAVR_ADC_Config&);
+    AVR_ArchAVR_ADC(int, const AVR_ArchAVR_ADC_Config& /KeepReference/);
 
     virtual bool init(AVR_Device&);
     virtual void reset();
     virtual bool ctlreq(uint16_t, ctlreq_data_t*);
-    virtual void ioreg_read_handler(reg_addr_t);
+    virtual uint8_t ioreg_read_handler(reg_addr_t, uint8_t);
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
     virtual void sleep(bool, AVR_SleepMode);
     virtual void raised(const signal_data_t&, uint16_t);

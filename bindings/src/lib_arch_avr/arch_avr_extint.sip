@@ -99,7 +99,7 @@ public:
         Signal_PinChange    /PyName=PinChange/,
     };
 
-    AVR_ArchAVR_ExtInt(const AVR_ArchAVR_ExtIntConfig&);
+    AVR_ArchAVR_ExtInt(const AVR_ArchAVR_ExtIntConfig& /KeepReference/);
 
     virtual bool init(AVR_Device&);
     virtual void reset();

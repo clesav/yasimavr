@@ -159,7 +159,7 @@ struct base_reg_config_t {
 #include "core/sim_peripheral.h"
 %End
 
-    uint8_t reg_value;
+    uint64_t reg_value;
 };
 
 
@@ -181,7 +181,7 @@ public:
     virtual bool init(AVR_Device&);
     virtual void reset();
     virtual bool ctlreq(uint16_t, ctlreq_data_t*);
-    virtual void ioreg_read_handler(reg_addr_t);
+    virtual uint8_t ioreg_read_handler(reg_addr_t, uint8_t);
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
     virtual void sleep(bool on, AVR_SleepMode mode);
 
@@ -191,30 +191,40 @@ protected:
 
     AVR_Logger& logger();
 
-    void add_ioreg(regbit_t, bool = false);
+    void add_ioreg(const regbit_t&, bool = false);
+    void add_ioreg(const regbit_compound_t&, bool = false);
     void add_ioreg(reg_addr_t, uint8_t = 0xFF, bool = false);
 
     uint8_t read_ioreg(reg_addr_t) const;
-    void write_ioreg(const regbit_t, uint8_t);
+    void write_ioreg(const regbit_t&, uint8_t);
 
-    uint8_t read_ioreg(const regbit_t) const;
-    uint8_t read_ioreg(reg_addr_t, const bitmask_t) const;
+    uint8_t read_ioreg(const regbit_t&) const;
+    uint64_t read_ioreg(const regbit_compound_t&) const;
+    uint8_t read_ioreg(reg_addr_t, const bitmask_t&) const;
+
     bool test_ioreg(reg_addr_t, uint8_t) const;
-    bool test_ioreg(reg_addr_t, const bitmask_t) const;
-    bool test_ioreg(const regbit_t, uint8_t = 0) const;
+    bool test_ioreg(reg_addr_t, const bitmask_t&) const;
+    bool test_ioreg(const regbit_t&, uint8_t = 0) const;
+
+    void write_ioreg(const regbit_compound_t&, uint64_t);
     void write_ioreg(reg_addr_t, uint8_t);
     void write_ioreg(reg_addr_t, uint8_t, uint8_t);
-    void write_ioreg(reg_addr_t, const bitmask_t, uint8_t);
-    void set_ioreg(const regbit_t);
-    void set_ioreg(reg_addr_t, uint8_t);
-    void set_ioreg(reg_addr_t, const bitmask_t);
-    void set_ioreg(const regbit_t, uint8_t);
-    void clear_ioreg(const regbit_t);
-    void clear_ioreg(reg_addr_t, uint8_t);
-    void clear_ioreg(reg_addr_t, const bitmask_t);
-    void clear_ioreg(const regbit_t, uint8_t);
+    void write_ioreg(reg_addr_t, const bitmask_t&, uint8_t);
 
-    bool register_interrupt(int_vect_t, AVR_InterruptHandler*) const;
+    void set_ioreg(const regbit_t&);
+    void set_ioreg(const regbit_compound_t&);
+    void set_ioreg(reg_addr_t, uint8_t);
+    void set_ioreg(reg_addr_t, const bitmask_t&);
+    void set_ioreg(const regbit_t&, uint8_t);
+
+    void clear_ioreg(const regbit_t&);
+    void clear_ioreg(const regbit_compound_t&);
+    void clear_ioreg(reg_addr_t);
+    void clear_ioreg(reg_addr_t, uint8_t);
+    void clear_ioreg(reg_addr_t, const bitmask_t&);
+    void clear_ioreg(const regbit_t&, uint8_t);
+
+    bool register_interrupt(int_vect_t, AVR_InterruptHandler&) const;
 
     AVR_Signal* get_signal(uint32_t) const;
 
@@ -233,7 +243,7 @@ public:
         uint8_t reset;
     };
 
-    AVR_DummyController(uint32_t, std::vector<AVR_DummyController::dummy_register_t>);
+    AVR_DummyController(uint32_t, const std::vector<AVR_DummyController::dummy_register_t>&);
 
     virtual bool init(AVR_Device&);
     virtual void reset();

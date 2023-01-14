@@ -23,10 +23,14 @@
 
 
 typedef int64_t         cycle_count_t;
-typedef uint16_t        reg_addr_t;
+typedef int16_t         reg_addr_t;
 typedef uint32_t        mem_addr_t;
 typedef uint32_t        flash_addr_t;
-typedef int             int_vect_t;
+typedef int16_t         int_vect_t;
+
+
+const cycle_count_t INVALID_CYCLE;
+const reg_addr_t    INVALID_REGISTER;
 
 
 struct bitmask_t {
@@ -67,18 +71,57 @@ public:
 
     regbit_t(reg_addr_t, uint8_t, uint8_t);
     regbit_t(reg_addr_t, uint8_t);
+    regbit_t(reg_addr_t, const bitmask_t&);
     regbit_t(reg_addr_t);
     regbit_t();
-    regbit_t(reg_addr_t, const bitmask_t&);
+    regbit_t(const regbit_t&);
 
     bool valid() const;
     uint8_t extract(uint8_t) const;
+    uint8_t set_to(uint8_t, uint8_t = 0xFF) const;
+    uint8_t clear_from(uint8_t, uint8_t = 0xFF) const;
+    uint8_t replace(uint8_t, uint8_t) const;
     int bitcount() const;
 
     const char* __repr__() const;
     %MethodCode
         return PyUnicode_FromFormat("Regbit(%04x, %d, %02x)", sipCpp->addr, sipCpp->bit, sipCpp->mask);
     %End
+
+};
+
+
+class regbit_compound_t {
+%TypeHeaderCode
+#include "core/sim_types.h"
+%End
+
+public:
+
+    regbit_compound_t();
+    regbit_compound_t(const regbit_t&);
+    regbit_compound_t(const std::vector<regbit_t>&);
+    regbit_compound_t(const regbit_compound_t&);
+
+    void add(const regbit_t&);
+
+    regbit_t __getitem__(int) const;
+    %MethodCode
+        Py_ssize_t i = sipConvertFromSequenceIndex(a0, sipCpp->size());
+        if (i < 0)
+            sipIsErr = 1;
+        else
+            sipRes = new regbit_t((*sipCpp)[a0]);
+    %End
+
+    Py_ssize_t __len__() const;
+    %MethodCode
+        sipRes = sipCpp->size();
+    %End
+
+    bool addr_match(reg_addr_t) const;
+    uint64_t compound(uint8_t, size_t) const;
+    uint8_t extract(uint64_t, size_t) const;
 
 };
 

@@ -60,16 +60,15 @@ bool AVR_ArchAVR_Timer::init(AVR_Device& device)
     bool status = AVR_Peripheral::init(device);
 
     add_ioreg(m_config.rb_clock.addr);
-    add_ioreg(m_config.rb_mode);
-    add_ioreg(m_config.rb_mode_ext);
+    add_ioreg(m_config.rbc_mode);
     add_ioreg(m_config.reg_cnt);
     add_ioreg(m_config.reg_ocra);
     add_ioreg(m_config.reg_ocrb);
 
     if (m_config.is_16bits) {
-        device.add_ioreg_handler(m_config.reg_cnt + 1, this);
-        device.add_ioreg_handler(m_config.reg_ocra + 1, this);
-        device.add_ioreg_handler(m_config.reg_ocrb + 1, this);
+        add_ioreg(m_config.reg_cnt + 1);
+        add_ioreg(m_config.reg_ocra + 1);
+        add_ioreg(m_config.reg_ocrb + 1);
     }
 
     uint8_t int_bitmask = (1 << m_config.int_ovf.bit) |
@@ -91,7 +90,7 @@ bool AVR_ArchAVR_Timer::init(AVR_Device& device)
                         regbit_t(m_config.reg_int_flag, m_config.int_ocrb.bit),
                         m_config.int_ocrb.vector);
 
-    m_timer.init(device.cycle_manager(), logger());
+    m_timer.init(*device.cycle_manager(), logger());
     m_timer.signal().connect_hook(this);
 
     return status;
@@ -117,7 +116,7 @@ bool AVR_ArchAVR_Timer::ctlreq(uint16_t req, ctlreq_data_t* data)
     return false;
 }
 
-void AVR_ArchAVR_Timer::ioreg_read_handler(reg_addr_t addr)
+uint8_t AVR_ArchAVR_Timer::ioreg_read_handler(reg_addr_t addr, uint8_t value)
 {
     //reading of interrupt flags
     if (addr == m_config.reg_int_flag)
@@ -126,24 +125,26 @@ void AVR_ArchAVR_Timer::ioreg_read_handler(reg_addr_t addr)
     //8 or 16 bits reading of CNTx
     else if (addr == m_config.reg_cnt) {
         m_timer.update();
-        write_ioreg(m_config.reg_cnt, m_cnt & 0x00FF);
+        value = m_cnt & 0x00FF;
         if (m_config.is_16bits)
             m_temp = m_cnt >> 8;
     }
     else if (m_config.is_16bits && addr == m_config.reg_cnt + 1)
-        write_ioreg(m_config.reg_cnt + 1, m_temp);
+        value = m_temp;
 
     //8 or 16 bits reading of OCRxA
     else if (addr == m_config.reg_ocra)
-        write_ioreg(m_config.reg_ocra, m_ocra & 0x00FF);
+        value = m_ocra & 0x00FF;
     else if (m_config.is_16bits && addr == m_config.reg_ocra + 1)
-        write_ioreg(m_config.reg_ocra + 1, m_ocra >> 8);
+        value = m_ocra >> 8;
 
     //8 or 16 bits reading of OCRxB
     else if (addr == m_config.reg_ocrb)
-        write_ioreg(m_config.reg_ocrb, m_ocrb & 0x00FF);
+        value = m_ocrb & 0x00FF;
     else if (m_config.is_16bits && addr == m_config.reg_ocrb + 1)
-        write_ioreg(m_config.reg_ocrb + 1, m_ocrb >> 8);
+        value = m_ocrb >> 8;
+
+    return value;
 }
 
 void AVR_ArchAVR_Timer::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
@@ -274,8 +275,7 @@ void AVR_ArchAVR_Timer::raised(const signal_data_t& sigdata, uint16_t __unused)
     if (!sigdata.index) return;
 
     //Find the timer mode currently selected
-    uint8_t mode_reg = read_ioreg(m_config.rb_mode) |
-                     (read_ioreg(m_config.rb_mode_ext) << m_config.rb_mode.bitcount());
+    uint64_t mode_reg = read_ioreg(m_config.rbc_mode);
     int mode_index = find_reg_config<AVR_ArchAVR_TimerConfig::mode_config_t>(m_config.modes, mode_reg);
     AVR_ArchAVR_TimerConfig::Mode timer_mode = m_config.modes[mode_index].mode;
 

@@ -88,8 +88,7 @@ TC0:
             - [ 0b0000, MODE_NORMAL ]
             - [ 0b0100, MODE_CTC ]
         rb_clock: [ TCCR0B, CS ]
-        rb_mode: [ TCCR0A, WGM ]
-        rb_mode_ext: [ TCCR0B, WGM2 ]
+        rbc_mode: [ [ TCCR0A, WGM ], [ TCCR0B, WGM2 ] ]
         reg_cnt: TCNT0
         reg_ocra: OCR0A
         reg_ocrb: OCR0B
@@ -188,8 +187,7 @@ TC1:
             - [ 0b0000, MODE_NORMAL ]
             - [ 0b0100, MODE_CTC ]
         rb_clock: [ TCCR1B, CS ]
-        rb_mode: [ TCCR1A, WGM ]
-        rb_mode_ext: [ TCCR1B, WGM2 ]
+        rbc_mode: [ [ TCCR1A, WGM ], [ TCCR1B, WGM2 ] ]
         reg_cnt: TCNT1
         reg_ocra: OCR1A
         reg_ocrb: OCR1B
@@ -274,8 +272,7 @@ TC2:
             - [ 0b0000, MODE_NORMAL ]
             - [ 0b0100, MODE_CTC ]
         rb_clock: [ TCCR2B, CS ]
-        rb_mode: [ TCCR2A, WGM ]
-        rb_mode_ext: [ TCCR2B, WGM2 ]
+        rbc_mode: [ [ TCCR2A, WGM ], [ TCCR2B, WGM2 ] ]
         reg_cnt: TCNT2
         reg_ocra: OCR2A
         reg_ocrb: OCR2B

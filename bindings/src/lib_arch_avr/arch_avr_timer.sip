@@ -55,8 +55,7 @@ struct AVR_ArchAVR_TimerConfig {
     std::vector<AVR_ArchAVR_TimerConfig::clock_config_t> clocks;
     std::vector<AVR_ArchAVR_TimerConfig::mode_config_t> modes;
     regbit_t rb_clock;
-    regbit_t rb_mode;
-    regbit_t rb_mode_ext;
+    regbit_compound_t rbc_mode;
     reg_addr_t reg_cnt;
     reg_addr_t reg_ocra;
     reg_addr_t reg_ocrb;
@@ -83,12 +82,12 @@ public:
         Signal_OVF
     };
 
-    AVR_ArchAVR_Timer(int, const AVR_ArchAVR_TimerConfig&);
+    AVR_ArchAVR_Timer(int, const AVR_ArchAVR_TimerConfig& /KeepReference/);
 
     virtual bool init(AVR_Device&);
     virtual void reset();
     virtual bool ctlreq(uint16_t, ctlreq_data_t*);
-    virtual void ioreg_read_handler(reg_addr_t);
+    virtual uint8_t ioreg_read_handler(reg_addr_t, uint8_t);
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
     virtual void raised(const signal_data_t&, uint16_t);
 

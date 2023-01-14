@@ -40,7 +40,7 @@ class AVR_ArchAVR_Port : public AVR_IO_Port /NoDefaultCtors/ {
 
 public:
 
-    AVR_ArchAVR_Port(const AVR_ArchAVR_PortConfig&);
+    AVR_ArchAVR_Port(const AVR_ArchAVR_PortConfig& /KeepReference/);
 
     virtual bool init(AVR_Device&);
     virtual void reset();

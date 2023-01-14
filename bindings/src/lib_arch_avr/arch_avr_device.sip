@@ -45,7 +45,7 @@ public:
         NVM_EEPROM          /PyName=EEPROM/,
     };
 
-    AVR_ArchAVR_Core(const AVR_ArchAVR_CoreConfig&);
+    AVR_ArchAVR_Core(const AVR_ArchAVR_CoreConfig& /KeepReference/);
 
 protected:
 
@@ -62,7 +62,7 @@ class AVR_ArchAVR_Device : public AVR_Device /NoDefaultCtors/ {
 
 public:
 
-    AVR_ArchAVR_Device(const AVR_ArchAVR_DeviceConfig&);
+    AVR_ArchAVR_Device(const AVR_ArchAVR_DeviceConfig& /KeepReference/);
 
     SIP_PYOBJECT __str__();
     %MethodCode

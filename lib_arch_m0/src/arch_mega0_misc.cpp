@@ -63,7 +63,7 @@ void AVR_ArchMega0_VREF::ioreg_write_handler(reg_addr_t addr, const ioreg_write_
     //Iterate over all the channels, and update if impacted by the register change
     for (uint32_t ch_ix = 0; ch_ix < m_config.channels.size(); ++ch_ix) {
         const AVR_ArchMega0_VREF_Config::channel_t& ch = m_config.channels[ch_ix];
-        if (addr == ch.rb_select.addr && ch.rb_select.extract(data.posedge | data.negedge)) {
+        if (addr == ch.rb_select.addr && ch.rb_select.extract(data.anyedge())) {
             //Extract the selection value for this channel
             uint8_t reg_value = ch.rb_select.extract(data.value);
             set_channel_reference(ch_ix, reg_value);
@@ -129,7 +129,7 @@ void AVR_ArchMega0_IntCtrl::cpu_ack_irq(int_vect_t vector)
 
     AVR_InterruptController::cpu_ack_irq(vector);
 
-    set_interrupt_state(vector, IntrState_Raised);
+    set_interrupt_raised(vector, true);
 }
 
 int_vect_t AVR_ArchMega0_IntCtrl::get_next_irq() const
@@ -140,22 +140,22 @@ int_vect_t AVR_ArchMega0_IntCtrl::get_next_irq() const
         return AVR_INTERRUPT_NONE;
 
     int lvl1_vector = read_ioreg(INT_REG_ADDR(LVL1VEC));
-    if (lvl1_vector > 0 && interrupt_state(lvl1_vector) == IntrState_Raised)
+    if (lvl1_vector > 0 && interrupt_raised(lvl1_vector))
         return lvl1_vector;
 
     if (BITSET(status_ex, IntrPriorityLevel0))
         return AVR_INTERRUPT_NONE;
 
     int lvl0_vector = read_ioreg(INT_REG_ADDR(LVL0PRI));
-    if (lvl0_vector == 0) {
+    if (!lvl0_vector) {
         for (int_vect_t i = 0; i < intr_count(); ++i) {
-            if (interrupt_state(i) == IntrState_Raised)
+            if (interrupt_raised(i))
                 return i;
         }
     } else {
-        for (unsigned int i = 1; i <= intr_count(); ++i) {
+        for (int_vect_t i = 1; i <= intr_count(); ++i) {
             int_vect_t v = (i + lvl0_vector) % intr_count();
-            if (interrupt_state(v) == IntrState_Raised)
+            if (interrupt_raised(v))
                 return v;
         }
     }
@@ -179,7 +179,7 @@ void AVR_ArchMega0_IntCtrl::cpu_reti()
 //=======================================================================================
 
 #define RST_REG_ADDR(reg) \
-    (m_base_reg + offsetof(RSTCTRL_t, reg))
+    reg_addr_t(m_base_reg + offsetof(RSTCTRL_t, reg))
 
 /*
  * Constructor of a reset controller
@@ -267,7 +267,7 @@ bool AVR_ArchMega0_MiscRegCtrl::init(AVR_Device& device)
 
     add_ioreg(CCP);
 
-    for (int i = 0; i < m_config.gpior_count; ++i) {
+    for (unsigned int i = 0; i < m_config.gpior_count; ++i) {
         add_ioreg(m_config.reg_base_gpior + i);
     }
 
@@ -311,15 +311,17 @@ bool AVR_ArchMega0_MiscRegCtrl::ctlreq(uint16_t req, ctlreq_data_t* data)
     return false;
 }
 
-void AVR_ArchMega0_MiscRegCtrl::ioreg_read_handler(reg_addr_t addr)
+uint8_t AVR_ArchMega0_MiscRegCtrl::ioreg_read_handler(reg_addr_t addr, uint8_t value)
 {
     if (addr >= m_config.reg_base_sigrow &&
-        addr < (m_config.reg_base_sigrow + sizeof(SIGROW_t))) {
+        addr < reg_addr_t(m_config.reg_base_sigrow + sizeof(SIGROW_t))) {
 
         reg_addr_t reg_ofs = addr - m_config.reg_base_sigrow;
         if (reg_ofs >= SIGROW_MEM_OFS)
-            write_ioreg(addr, m_sigrow[reg_ofs - SIGROW_MEM_OFS]);
+            value = m_sigrow[reg_ofs - SIGROW_MEM_OFS];
     }
+
+    return value;
 }
 
 void AVR_ArchMega0_MiscRegCtrl::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)

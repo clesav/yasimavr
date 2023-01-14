@@ -96,8 +96,8 @@ void AVR_WatchdogTimer::reset()
     m_win_start = 0;
     m_win_end = 0;
     m_wdr_sync = false;
-    device()->remove_cycle_timer(m_wd_timer);
-    device()->remove_cycle_timer(m_wdr_sync_timer);
+    device()->cycle_manager()->cancel(*m_wd_timer);
+    device()->cycle_manager()->cancel(*m_wdr_sync_timer);
 }
 
 /*
@@ -114,12 +114,12 @@ void AVR_WatchdogTimer::set_timer(uint32_t wdr_win_start, uint32_t wdr_win_end, 
         cycle_count_t elapsed = was_enabled ? (device()->cycle() - m_wdr_cycle) : 0;
         cycle_count_t wd_delay = m_clk_factor * m_win_end;
         if (wd_delay > elapsed)
-            device()->reschedule_cycle_timer(m_wd_timer, m_wdr_cycle + wd_delay - elapsed);
+            device()->cycle_manager()->schedule(*m_wd_timer, m_wdr_cycle + wd_delay - elapsed);
         else
             timeout();
     }
     else {
-        device()->remove_cycle_timer(m_wd_timer);
+        device()->cycle_manager()->cancel(*m_wd_timer);
     }
 }
 
@@ -134,7 +134,7 @@ bool AVR_WatchdogTimer::ctlreq(uint16_t req, ctlreq_data_t* __unused)
     if (req == AVR_CTLREQ_WATCHDOG_RESET) {
         if (m_win_end && !m_wdr_sync) {
             m_wdr_sync = true;
-            device()->add_cycle_timer(m_wdr_sync_timer, device()->cycle() + m_clk_factor * 3);
+            device()->cycle_manager()->delay(*m_wdr_sync_timer, m_clk_factor * 3);
         }
         return true;
     }
@@ -170,7 +170,7 @@ cycle_count_t AVR_WatchdogTimer::wdr_sync_timer_next(cycle_count_t when)
 
     if (m_win_end) {
         cycle_count_t wd_when = when + m_clk_factor * m_win_end;
-        device()->reschedule_cycle_timer(m_wd_timer, wd_when);
+        device()->cycle_manager()->schedule(*m_wd_timer, wd_when);
     }
 
     return 0;

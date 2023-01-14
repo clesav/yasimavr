@@ -118,9 +118,9 @@ public:
 
     cycle_count_t exec_cycle();
 
-    void attach_peripheral(AVR_Peripheral* /Transfer/);
-    void add_ioreg_handler(reg_addr_t, AVR_IO_RegHandler*, uint8_t = 0x00);
-    void add_ioreg_handler(regbit_t, AVR_IO_RegHandler*, bool = false);
+    void attach_peripheral(AVR_Peripheral& /Transfer/);
+    void add_ioreg_handler(reg_addr_t, AVR_IO_RegHandler&, uint8_t = 0x00);
+    void add_ioreg_handler(const regbit_t&, AVR_IO_RegHandler&, bool = false);
     AVR_Peripheral* find_peripheral(const char*);
     AVR_Peripheral* find_peripheral(uint32_t);
 
@@ -140,12 +140,7 @@ public:
         sipRes = sipBuildResult(0, "(bD)", status, d, sipType_ctlreq_data_t, transferObj);
     %End
 
-    void add_cycle_timer(AVR_CycleTimer*, cycle_count_t);
-    void remove_cycle_timer(AVR_CycleTimer*);
-    void reschedule_cycle_timer(AVR_CycleTimer*, cycle_count_t);
-    void pause_cycle_timer(AVR_CycleTimer*);
-    void resume_cycle_timer(AVR_CycleTimer*);
-    AVR_CycleManager& cycle_manager();
+    AVR_CycleManager* cycle_manager();
 
     AVR_Pin* find_pin(const char*);
     AVR_Pin* find_pin(uint32_t);

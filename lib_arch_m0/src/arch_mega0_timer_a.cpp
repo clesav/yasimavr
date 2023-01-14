@@ -35,7 +35,7 @@
     reg_addr_t(m_config.reg_base + offsetof(TCA_SINGLE_t, reg))
 
 #define REG_OFS(reg) \
-    offsetof(TCA_SINGLE_t, reg)
+    reg_addr_t(offsetof(TCA_SINGLE_t, reg))
 
 #define TIMER_PRESCALER_MAX         1024
 static const uint16_t PrescalerFactors[8] = { 1, 2, 4, 8, 16, 64, 256, 1024 };
@@ -107,7 +107,7 @@ bool AVR_ArchMega0_TimerA::init(AVR_Device& device)
                                          regbit_t(REG_ADDR(INTFLAGS), TCA_SINGLE_CMP0_bp + i),
                                          m_config.ivs_cmp[i]);
 
-    m_timer.init(device.cycle_manager(), logger());
+    m_timer.init(*device.cycle_manager(), logger());
     m_timer.signal().connect_hook(this);
 
     return status;
@@ -140,27 +140,27 @@ bool AVR_ArchMega0_TimerA::ctlreq(uint16_t req, ctlreq_data_t* data)
     return false;
 }
 
-void AVR_ArchMega0_TimerA::ioreg_read_handler(reg_addr_t addr)
+uint8_t AVR_ArchMega0_TimerA::ioreg_read_handler(reg_addr_t addr, uint8_t value)
 {
     reg_addr_t reg_ofs = addr - m_config.reg_base;
 
     //16-bits reading of CNT
     if (reg_ofs == REG_OFS(CNTL)) {
         m_timer.update();
-        write_ioreg(addr, m_cnt & 0x00FF);
+        value = m_cnt & 0x00FF;
         write_ioreg(REG_ADDR(TEMP), m_cnt >> 8);
     }
     else if (reg_ofs == REG_OFS(CNTH)) {
-        write_ioreg(addr, read_ioreg(REG_ADDR(TEMP)));
+        value = read_ioreg(REG_ADDR(TEMP));
     }
 
     //16-bits reading of PER
     else if (reg_ofs == REG_OFS(PERL)) {
-        write_ioreg(addr, m_per & 0x00FF);
+        value = m_per & 0x00FF;
         write_ioreg(REG_ADDR(TEMP), m_per >> 8);
     }
     else if (reg_ofs == REG_OFS(PERH)) {
-        write_ioreg(addr, read_ioreg(REG_ADDR(TEMP)));
+        value = read_ioreg(REG_ADDR(TEMP));
     }
 
     //16-bits reading of CMP0,1,2
@@ -168,20 +168,20 @@ void AVR_ArchMega0_TimerA::ioreg_read_handler(reg_addr_t addr)
         int index = (reg_ofs - REG_OFS(CMP0L)) >> 1;
         bool high_byte = (reg_ofs - REG_OFS(CMP0L)) & 1;
         if (high_byte) {
-            write_ioreg(addr, read_ioreg(REG_ADDR(TEMP)));
+            value = read_ioreg(REG_ADDR(TEMP));
         } else {
-            write_ioreg(addr, m_cmp[index] & 0x00FF);
+            value = m_cmp[index] & 0x00FF;
             write_ioreg(REG_ADDR(TEMP), m_cmp[index] >> 8);
         }
     }
 
     //16-bits reading of PERBUF
     else if (reg_ofs == REG_OFS(PERBUFL)) {
-        write_ioreg(addr, m_perbuf & 0x00FF);
+        value = m_perbuf & 0x00FF;
         write_ioreg(REG_ADDR(TEMP), m_perbuf >> 8);
     }
     else if (reg_ofs == REG_OFS(PERBUFH)) {
-        write_ioreg(addr, read_ioreg(REG_ADDR(TEMP)));
+        value = read_ioreg(REG_ADDR(TEMP));
     }
 
     //16-bits reading of CMP0,1,2BUF
@@ -189,12 +189,14 @@ void AVR_ArchMega0_TimerA::ioreg_read_handler(reg_addr_t addr)
         int index = (reg_ofs - REG_OFS(CMP0BUFL)) >> 1;
         bool high_byte = (reg_ofs - REG_OFS(CMP0BUFL)) & 1;
         if (high_byte) {
-            write_ioreg(addr, read_ioreg(REG_ADDR(TEMP)));
+            value = read_ioreg(REG_ADDR(TEMP));
         } else {
-            write_ioreg(addr, m_cmpbuf[index] & 0x00FF);
+            value = m_cmpbuf[index] & 0x00FF;
             write_ioreg(REG_ADDR(TEMP), m_cmpbuf[index] >> 8);
         }
     }
+
+    return value;
 }
 
 void AVR_ArchMega0_TimerA::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)

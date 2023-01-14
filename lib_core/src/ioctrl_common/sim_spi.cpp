@@ -87,7 +87,7 @@ void AVR_IO_SPI::reset()
 
     m_rx_buffer.clear();
 
-    m_cycle_manager->remove_cycle_timer(this);
+    m_cycle_manager->cancel(*this);
 }
 
 void AVR_IO_SPI::set_host_mode(bool mode)
@@ -168,7 +168,7 @@ void AVR_IO_SPI::cancel_tx()
         m_signal.raise_u(Signal_HostTfrComplete, 0);
         m_tfr_in_progress = false;
         m_rx_buffer.pop_back();
-        m_cycle_manager->remove_cycle_timer(this);
+        m_cycle_manager->cancel(*this);
 
         if (m_selected_client) {
             m_selected_client->end_transfer(false);
@@ -222,7 +222,7 @@ void AVR_IO_SPI::start_transfer_as_host()
     //If this is the first transfer, we need to start the timer
     if (!m_tfr_in_progress) {
         m_tfr_in_progress = true;
-        m_cycle_manager->add_cycle_timer(this, m_cycle_manager->cycle() + m_delay);
+        m_cycle_manager->delay(*this, m_delay);
     }
 }
 

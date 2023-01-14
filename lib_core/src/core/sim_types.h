@@ -26,6 +26,7 @@
 
 #include <stdint.h>
 #include <string>
+#include <vector>
 
 #ifdef YASIMAVR_DLL
     #ifdef _MSC_VER
@@ -45,12 +46,13 @@
 //That leaves 63 bits to count cycles, which at a MCU frequency of 20MHz
 //represent more than 14000 simulated years
 typedef int64_t     cycle_count_t;
-typedef uint16_t    reg_addr_t;
+typedef int16_t     reg_addr_t;
 typedef uint32_t    mem_addr_t;
 typedef uint32_t    flash_addr_t;
 typedef int16_t     int_vect_t;
 
-const int64_t INVALID_CYCLE = -1;
+const cycle_count_t INVALID_CYCLE = -1;
+const reg_addr_t    INVALID_REGISTER = -1;
 
 #define BITSET(v, b) (((v) >> (b)) & 0x01)
 
@@ -94,6 +96,7 @@ struct bitmask_t {
 
 };
 
+
 struct regbit_t {
 
     reg_addr_t addr;
@@ -111,7 +114,7 @@ struct regbit_t {
 
     inline bool valid() const
     {
-        return addr > 0;
+        return addr >= 0;
     }
 
     inline uint8_t extract(uint8_t value) const
@@ -138,6 +141,56 @@ struct regbit_t {
 
 };
 
+
+class regbit_compound_t {
+
+public:
+
+    regbit_compound_t() = default;
+    explicit regbit_compound_t(const regbit_t& rb);
+    explicit regbit_compound_t(const std::vector<regbit_t>& v);
+    regbit_compound_t(const regbit_compound_t& other);
+
+    void add(const regbit_t& rb);
+
+    std::vector<regbit_t>::const_iterator begin() const;
+    std::vector<regbit_t>::const_iterator end() const;
+    size_t size() const;
+    const regbit_t& operator[](size_t index) const;
+
+    bool addr_match(reg_addr_t addr) const;
+    uint64_t compound(uint8_t regvalue, size_t index) const;
+    uint8_t extract(uint64_t v, size_t index) const;
+
+    regbit_compound_t& operator=(const std::vector<regbit_t>& v);
+    regbit_compound_t& operator=(const regbit_compound_t& other);
+
+private:
+
+    std::vector<regbit_t> m_regbits;
+    std::vector<int> m_offsets;
+
+};
+
+inline std::vector<regbit_t>::const_iterator regbit_compound_t::begin() const
+{
+    return m_regbits.begin();
+}
+
+inline std::vector<regbit_t>::const_iterator regbit_compound_t::end() const
+{
+    return m_regbits.end();
+}
+
+inline size_t regbit_compound_t::size() const
+{
+    return m_regbits.size();
+}
+
+inline const regbit_t& regbit_compound_t::operator[](size_t index) const
+{
+    return m_regbits[index];
+}
 
 //=======================================================================================
 

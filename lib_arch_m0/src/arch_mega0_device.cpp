@@ -113,10 +113,10 @@ void AVR_ArchMega0_Core::dbg_read_data(mem_addr_t addr, uint8_t* buf, mem_addr_t
     std::memset(buf, 0x00, len);
 
     mem_addr_t bufofs, blockofs;
-    uint32_t n;
+    mem_addr_t n;
 
     if (data_space_map(addr, len, 0, cfg.ioend, &bufofs, &blockofs, &n)) {
-        for (reg_addr_t i = 0; i < n; ++i)
+        for (mem_addr_t i = 0; i < n; ++i)
             buf[bufofs + i] = cpu_read_ioreg(blockofs + i);
     }
 
@@ -142,7 +142,7 @@ void AVR_ArchMega0_Core::dbg_write_data(mem_addr_t addr, uint8_t* buf, mem_addr_
     uint32_t n;
 
     if (data_space_map(addr, len, 0, cfg.ioend, &bufofs, &blockofs, &n)) {
-        for (reg_addr_t i = 0; i < n; ++i)
+        for (mem_addr_t i = 0; i < n; ++i)
             cpu_write_ioreg(blockofs + i, buf[bufofs + i]);
     }
 

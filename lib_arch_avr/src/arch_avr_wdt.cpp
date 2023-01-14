@@ -43,7 +43,7 @@ bool AVR_ArchAVR_WDT::init(AVR_Device& device)
 
     add_ioreg(m_config.reg_wdt);
 
-    status &= register_interrupt(m_config.vector, this);
+    status &= register_interrupt(m_config.vector, *this);
 
     return status;
 }

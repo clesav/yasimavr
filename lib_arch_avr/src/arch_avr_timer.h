@@ -73,8 +73,7 @@ struct AVR_ArchAVR_TimerConfig {
     std::vector<clock_config_t> clocks;     //List of clock source configurations
     std::vector<mode_config_t> modes;       //List of the timer mode configurations
     regbit_t rb_clock;                      //Clock/prescaler configuration register
-    regbit_t rb_mode;                       //Timer mode control register
-    regbit_t rb_mode_ext;                   //Timer mode control register extension
+    regbit_compound_t rbc_mode;             //Timer mode control register
     reg_addr_t reg_cnt;                     //Counter register
     reg_addr_t reg_ocra;                    //Output Compare A register
     reg_addr_t reg_ocrb;                    //Output Compare B register
@@ -107,7 +106,7 @@ public:
     virtual bool init(AVR_Device& device) override;
     virtual void reset() override;
     virtual bool ctlreq(uint16_t req, ctlreq_data_t* data) override;
-    virtual void ioreg_read_handler(reg_addr_t addr) override;
+    virtual uint8_t ioreg_read_handler(reg_addr_t addr, uint8_t value) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
 
     virtual void raised(const signal_data_t& data, uint16_t sigid) override;

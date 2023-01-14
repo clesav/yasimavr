@@ -40,11 +40,11 @@ class AVR_ArchMega0_Port : public AVR_IO_Port /NoDefaultCtors/ {
 
 public:
 
-    AVR_ArchMega0_Port(char name, const AVR_ArchMega0_PortConfig&);
+    AVR_ArchMega0_Port(char, const AVR_ArchMega0_PortConfig& /KeepReference/);
 
     virtual bool init(AVR_Device&);
     virtual void reset();
-    virtual void ioreg_read_handler(reg_addr_t);
+    virtual uint8_t ioreg_read_handler(reg_addr_t, uint8_t);
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
 
 protected:

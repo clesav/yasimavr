@@ -67,7 +67,7 @@ bool AVR_ArchMega0_SPI::init(AVR_Device& device)
                              DEF_REGBIT_B(INTFLAGS, SPI_IF),
                              m_config.iv_spi);
 
-    m_spi.init(device.cycle_manager(), logger());
+    m_spi.init(*device.cycle_manager(), logger());
     m_spi.set_tx_buffer_limit(1);
     m_spi.set_rx_buffer_limit(2);
     m_spi.signal().connect_hook(this, HOOKTAG_SPI);
@@ -115,16 +115,17 @@ bool AVR_ArchMega0_SPI::ctlreq(uint16_t req, ctlreq_data_t* data)
     return false;
 }
 
-void AVR_ArchMega0_SPI::ioreg_read_handler(reg_addr_t addr)
+uint8_t AVR_ArchMega0_SPI::ioreg_read_handler(reg_addr_t addr, uint8_t value)
 {
     reg_addr_t reg_ofs = addr - m_config.reg_base;
 
     if (reg_ofs == REG_OFS(DATA)) {
-        uint8_t frame = m_spi.pop_rx();
-        write_ioreg(REG_ADDR(DATA), frame);
+        value = m_spi.pop_rx();
         if (!m_spi.rx_available())
             m_intflag.clear_flag();
     }
+
+    return value;
 }
 
 void AVR_ArchMega0_SPI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)

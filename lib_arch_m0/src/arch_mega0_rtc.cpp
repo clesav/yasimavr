@@ -126,8 +126,8 @@ bool AVR_ArchMega0_RTC::init(AVR_Device& device)
                                  DEF_REGBIT_B(PITINTFLAGS, RTC_PI),
                                  m_config.iv_pit);
 
-    m_rtc_timer.init(device.cycle_manager(), logger());
-    m_pit_timer.init(device.cycle_manager(), logger());
+    m_rtc_timer.init(*device.cycle_manager(), logger());
+    m_pit_timer.init(*device.cycle_manager(), logger());
 
     return status;
 }
@@ -146,37 +146,39 @@ void AVR_ArchMega0_RTC::reset()
     m_pit_timer.reset();
 }
 
-void AVR_ArchMega0_RTC::ioreg_read_handler(reg_addr_t addr)
+uint8_t AVR_ArchMega0_RTC::ioreg_read_handler(reg_addr_t addr, uint8_t value)
 {
     reg_addr_t reg_ofs = addr - m_config.reg_base;
 
     //16-bits reading of CNT
     if (reg_ofs == REG_OFS(CNTL)) {
         m_rtc_timer.update();
-        write_ioreg(REG_ADDR(CNTL), m_rtc_cnt & 0x00FF);
+        value = m_rtc_cnt & 0x00FF;
         write_ioreg(REG_ADDR(TEMP), m_rtc_cnt >> 8);
     }
     else if (reg_ofs == REG_OFS(CNTH)) {
-        write_ioreg(REG_ADDR(CNTH), read_ioreg(REG_ADDR(TEMP)));
+        value = read_ioreg(REG_ADDR(TEMP));
     }
 
     //16-bits reading of PER
     else if (reg_ofs == REG_OFS(PERL)) {
-        write_ioreg(REG_ADDR(PERL), m_rtc_per & 0x00FF);
+        value = m_rtc_per & 0x00FF;
         write_ioreg(REG_ADDR(TEMP), m_rtc_per >> 8);
     }
     else if (reg_ofs == REG_OFS(PERH)) {
-        write_ioreg(REG_ADDR(PERH), read_ioreg(REG_ADDR(TEMP)));
+        value = read_ioreg(REG_ADDR(TEMP));
     }
 
     //16-bits reading of CMP
     else if (reg_ofs == REG_OFS(CMPL)) {
-        write_ioreg(REG_ADDR(CMPL), m_rtc_cmp & 0x00FF);
+        value = m_rtc_cmp & 0x00FF;
         write_ioreg(REG_ADDR(TEMP), m_rtc_cmp >> 8);
     }
     else if (reg_ofs == REG_OFS(CMPH)) {
-        write_ioreg(REG_ADDR(CMPH), read_ioreg(REG_ADDR(TEMP)));
+        value = read_ioreg(REG_ADDR(TEMP));
     }
+
+    return value;
 }
 
 void AVR_ArchMega0_RTC::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)

@@ -345,7 +345,7 @@ void AVR_ArchMega0_NVM::execute_command(Command cmd)
             device()->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_HALT, &d);
         }
 
-        device()->add_cycle_timer(m_timer, device()->cycle() + delay);
+        device()->cycle_manager()->delay(*m_timer, delay);
     }
 }
 

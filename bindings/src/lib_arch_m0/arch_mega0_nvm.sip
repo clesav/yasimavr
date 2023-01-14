@@ -28,7 +28,7 @@ class AVR_ArchMega0_USERROW : public AVR_Peripheral /NoDefaultCtors/ {
 
 public:
 
-    AVR_ArchMega0_USERROW(reg_addr_t base);
+    AVR_ArchMega0_USERROW(reg_addr_t);
 
     virtual bool init(AVR_Device&);
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
@@ -42,7 +42,7 @@ class AVR_ArchMega0_Fuses : public AVR_Peripheral /NoDefaultCtors/ {
 
 public:
 
-    AVR_ArchMega0_Fuses(reg_addr_t base);
+    AVR_ArchMega0_Fuses(reg_addr_t);
 
     virtual bool init(AVR_Device&);
 
@@ -78,7 +78,7 @@ class AVR_ArchMega0_NVM : public AVR_Peripheral /NoDefaultCtors/ {
 
 public:
 
-    AVR_ArchMega0_NVM(const AVR_ArchMega0_NVM_Config&);
+    AVR_ArchMega0_NVM(const AVR_ArchMega0_NVM_Config& /KeepReference/);
 
     virtual bool init(AVR_Device&);
     virtual void reset();

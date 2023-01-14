@@ -72,6 +72,7 @@ public:
     void init(AVR_CycleManager&, AVR_Logger&);
     void reset();
     void set_host_mode(bool);
+    bool is_host_mode() const;
     AVR_Signal& signal();
     void set_frame_delay(cycle_count_t);
     void add_client(AVR_SPI_Client&);

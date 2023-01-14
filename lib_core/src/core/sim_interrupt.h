@@ -48,6 +48,11 @@ class AVR_InterruptHandler;
 //   . the vector 0 cannot be registered
 #define AVR_CTLREQ_INTR_REGISTER    1
 
+//Request sent to raise or clear artificially any interrupt
+//The index shall be the interrupt vector index
+//The value 'u' shall be 1 for raising the interrupt, 0 for clearing it.
+#define AVR_CTLREQ_INTR_RAISE       2
+
 #define AVR_INTERRUPT_NONE          -1
 
 
@@ -66,10 +71,22 @@ class DLL_EXPORT AVR_InterruptController : public AVR_Peripheral {
 public:
 
     enum SignalId {
-        Signal_Raised,
-        Signal_Cancelled,
-        Signal_Acknowledged,
-        Signal_Returned,
+        Signal_StateChange
+    };
+
+    enum State {
+        //The interrupt has been raised
+        State_Raised,
+        //The interrupt has been cancelled
+        State_Cancelled,
+        //The interrupt has been acknwledged by the CPU and it's about
+        //to jump to the corresponding vector.
+        State_Acknowledged,
+        //The CPU is returning from an ISR
+        State_Returned,
+        //Special case for when an interrupt masked by a sleep mode is re-notified
+        //when exiting the sleep mode.
+        State_RaisedFromSleep
     };
 
     //===== Constructor/destructor =====
@@ -93,16 +110,10 @@ public:
 
 protected:
 
-    enum InterruptState {
-        IntrState_Unused,
-        IntrState_Idle,
-        IntrState_Raised,
-    };
-
     //Helper methods to access the vector table, for concrete implementing sub-classes
-    InterruptState interrupt_state(unsigned int vector) const;
-    unsigned int intr_count() const;
-    void set_interrupt_state(int_vect_t vector, InterruptState state);
+    bool interrupt_raised(unsigned int vector) const;
+    int_vect_t intr_count() const;
+    void set_interrupt_raised(int_vect_t vector, bool raised);
 
     //Called by cpu_ack_irq with the vector obtained by cpu_get_irq()
     //By default it sets the interrupt state back to Idle and calls the handler
@@ -116,17 +127,16 @@ protected:
 private:
 
     //===== Structure holding data on the vector table =====
-    struct AVR_Interrupt {
-
-        InterruptState state;
+    struct interrupt_t {
+        bool used;
+        bool raised;
         AVR_InterruptHandler* handler;
 
-        AVR_Interrupt();
-
+        interrupt_t();
     };
 
     //Interrupt vector table
-    std::vector<AVR_Interrupt> m_interrupts;
+    std::vector<interrupt_t> m_interrupts;
     //Variable holding the vector to be executed next
     int_vect_t m_irq_vector;
     AVR_Signal m_signal;
@@ -142,14 +152,14 @@ inline int_vect_t AVR_InterruptController::cpu_get_irq() const
     return m_irq_vector;
 }
 
-inline unsigned int AVR_InterruptController::intr_count() const
+inline int_vect_t AVR_InterruptController::intr_count() const
 {
     return m_interrupts.size();
 }
 
-inline AVR_InterruptController::InterruptState AVR_InterruptController::interrupt_state(unsigned int vector) const
+inline bool AVR_InterruptController::interrupt_raised(unsigned int vector) const
 {
-    return m_interrupts[vector].state;
+    return m_interrupts[vector].raised;
 }
 
 
@@ -179,6 +189,10 @@ public:
     //The default does nothing
     virtual void interrupt_ack_handler(int_vect_t vector);
 
+    //Disable copy semantics
+    AVR_InterruptHandler(const AVR_InterruptHandler&) = delete;
+    AVR_InterruptHandler& operator=(const AVR_InterruptHandler&) = delete;
+
 private:
 
     AVR_InterruptController* m_intctl;
@@ -206,12 +220,6 @@ public:
     bool clear_flag(uint8_t mask = 0xFF);
 
     bool raised() const;
-
-    //bool trigger(uint8_t mask = 0xFF);
-    //bool trigger_if_set(uint8_t mask = 0xFF);
-
-    //bool cancel(uint8_t mask = 0xFF);
-    //bool cancel_if_clear(uint8_t mask = 0xFF);
 
     //Override to clear the flag on ACK if enabled
     virtual void interrupt_ack_handler(int_vect_t vector) override;

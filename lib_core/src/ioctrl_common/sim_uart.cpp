@@ -107,7 +107,7 @@ void AVR_IO_UART::reset()
 
     m_tx_buffer.clear();
     m_tx_collision = false;
-    m_cycle_manager->remove_cycle_timer(m_tx_timer);
+    m_cycle_manager->cancel(*m_tx_timer);
 
     //Reset the RX part
     //Raise the signal to inform that the RX is canceled
@@ -119,7 +119,7 @@ void AVR_IO_UART::reset()
     m_rx_count = 0;
     m_rx_overflow = false;
     m_paused = false;
-    m_cycle_manager->remove_cycle_timer(m_rx_timer);
+    m_cycle_manager->cancel(*m_rx_timer);
 }
 
 
@@ -153,7 +153,7 @@ void AVR_IO_UART::push_tx(uint8_t frame)
     if (!tx) {
         m_logger->dbg("TX start: 0x%02x ('%c')", frame, frame);
         m_signal.raise_u(Signal_TX_Start, frame);
-        m_cycle_manager->add_cycle_timer(m_tx_timer, m_cycle_manager->cycle() + m_delay);
+        m_cycle_manager->delay(*m_tx_timer, m_delay);
     }
 }
 
@@ -205,7 +205,7 @@ void AVR_IO_UART::set_rx_enabled(bool enabled)
     if (!enabled) {
         if (rx_in_progress()) {
             m_signal.raise_u(Signal_RX_Complete, 0);
-            m_cycle_manager->remove_cycle_timer(m_rx_timer);
+            m_cycle_manager->cancel(*m_rx_timer);
         }
 
         while (m_rx_count) {
@@ -281,7 +281,7 @@ void AVR_IO_UART::add_rx_frame(uint8_t frame)
 
     if (!timer_running) {
         start_rx();
-        m_cycle_manager->add_cycle_timer(m_rx_timer, m_cycle_manager->cycle() + m_delay);
+        m_cycle_manager->delay(*m_rx_timer, m_delay);
     }
 }
 
@@ -320,7 +320,7 @@ void AVR_IO_UART::set_paused(bool paused)
         uint8_t next_frame = m_tx_buffer.front();
         m_logger->dbg("TX start: 0x%02x ('%c')", next_frame, next_frame);
         m_signal.raise_u(Signal_TX_Start, next_frame);
-        m_cycle_manager->add_cycle_timer(m_tx_timer, m_cycle_manager->cycle() + m_delay);
+        m_cycle_manager->delay(*m_tx_timer, m_delay);
     }
 
     m_paused = paused;

@@ -133,15 +133,14 @@ protected:
     //Value of the 32 general registers
     uint8_t m_regs[32];
     //array of the I/O registers
-    AVR_IO_Register** m_ioregs;
+    //We don't actually allocate any register until the peripherals ask for it
+    std::vector<AVR_IO_Register*> m_ioregs;
     //Pointer to the array representing the device memories.
     uint8_t* m_sram;
     //Non-volatile memory model for the flash.
     AVR_NonVolatileMemory m_flash;
     //Non-volatile memory model for the fuse bits.
     AVR_NonVolatileMemory m_fuses;
-    //Top programmed address of the flash in bytes (for PC overflow checks)
-    const flash_addr_t m_programend;
     //PC variable, expressed in 8-bits (unlike the actual device PC)
     flash_addr_t m_pc;
     //Counter to inhibit interrupts for a given number of instructions
