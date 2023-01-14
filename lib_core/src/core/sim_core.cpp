@@ -35,9 +35,9 @@
 AVR_Core::AVR_Core(const AVR_CoreConfiguration& config)
 :m_config(config)
 ,m_device(nullptr)
-,m_flash(m_config.flashend + 1, "flash")
-,m_fuses(m_config.fusesize, "fuses")
-,m_programend(m_config.flashend)
+,m_ioregs(config.ioend - config.iostart + 1, nullptr)
+,m_flash(config.flashend + 1, "flash")
+,m_fuses(config.fusesize, "fuses")
 ,m_pc(0)
 ,m_int_inhib_counter(0)
 ,m_debug_probe(nullptr)
@@ -52,12 +52,6 @@ AVR_Core::AVR_Core(const AVR_CoreConfiguration& config)
     std::vector<unsigned char> f = m_config.fuses;
     mem_block_t fuseblock = { .size = f.size(), .buf = f.data() };
     m_fuses.program(fuseblock);
-
-    //Allocate the I/O registers in RAM
-    //We don't actually allocate any register until the peripherals ask for it
-    size_t ioreg_size = sizeof(AVR_IO_Register*) * (m_config.ioend - m_config.iostart + 1);
-    m_ioregs = (AVR_IO_Register**) malloc(ioreg_size);
-    std::memset(m_ioregs, 0, ioreg_size);
 
     //Create the I/O registers managed by the CPU
     m_ioregs[R_SPL] = new AVR_IO_Register(true);
@@ -77,11 +71,10 @@ AVR_Core::~AVR_Core()
 {
     free(m_sram);
 
-    uint16_t ioreg_size = m_config.ioend - m_config.iostart + 1;
-    for (uint16_t i = 0; i < ioreg_size; ++i) {
-        if (m_ioregs[i]) delete m_ioregs[i];
+    for (auto ioreg : m_ioregs) {
+        if (ioreg)
+            delete ioreg;
     }
-    free(m_ioregs);
 
     if (m_debug_probe)
         m_debug_probe->detach();
@@ -101,10 +94,9 @@ void AVR_Core::reset()
     std::memset(m_regs, 0x00, 32);
     //Resets all the I/O register to 0x00.
     //Peripherals are responsible for resetting registers whose reset value is different from 0
-    uint16_t ioreg_size = m_config.ioend - m_config.iostart + 1;
-    for (int i = 0; i < ioreg_size; ++i) {
-        if (m_ioregs[i])
-            m_ioregs[i]->set(0);
+    for (auto ioreg : m_ioregs) {
+        if (ioreg)
+            ioreg->set(0);
     }
     //Reset of the SREG register (not handled by the loop above)
     std::memset(m_sreg, 0, 8);
@@ -194,7 +186,7 @@ AVR_IO_Register* AVR_Core::get_ioreg(reg_addr_t addr)
 uint8_t AVR_Core::cpu_read_ioreg(reg_addr_t io_addr)
 {
     uint8_t v;
-    if (io_addr < 0 || io_addr > m_config.ioend) {
+    if (io_addr < 0 || io_addr > m_ioregs.size()) {
         m_device->logger().err("CPU reading an off-range I/O address: %d", io_addr);
         m_device->crash(CRASH_BAD_CPU_IO, "Invalid CPU register read");
         v = 0;
@@ -203,7 +195,7 @@ uint8_t AVR_Core::cpu_read_ioreg(reg_addr_t io_addr)
         v = read_sreg();
     }
     else {
-        AVR_IO_Register *ioreg = m_ioregs[io_addr];
+        AVR_IO_Register* ioreg = m_ioregs[io_addr];
         if (ioreg) {
             v = ioreg->cpu_read(io_addr);
         } else {
@@ -219,7 +211,7 @@ uint8_t AVR_Core::cpu_read_ioreg(reg_addr_t io_addr)
 
 void AVR_Core::cpu_write_ioreg(reg_addr_t io_addr, uint8_t value)
 {
-    if (io_addr < 0 || io_addr > m_config.ioend) {
+    if (io_addr < 0 || io_addr > m_ioregs.size()) {
         m_device->logger().err("CPU writing to an off-range I/O address: %d", io_addr);
         m_device->crash(CRASH_BAD_CPU_IO, "Invalid CPU register write");
     }
@@ -227,7 +219,7 @@ void AVR_Core::cpu_write_ioreg(reg_addr_t io_addr, uint8_t value)
         write_sreg(value);
     }
     else {
-        AVR_IO_Register *ioreg = m_ioregs[io_addr];
+        AVR_IO_Register* ioreg = m_ioregs[io_addr];
         if (ioreg) {
             if (ioreg->cpu_write(io_addr, value)) {
                 if (!m_device->test_option(AVR_Device::Option_IgnoreBadCpuIO)) {
@@ -251,7 +243,7 @@ void AVR_Core::cpu_write_ioreg(reg_addr_t io_addr, uint8_t value)
 uint8_t AVR_Core::ioctl_read_ioreg(reg_addr_t addr)
 {
     uint8_t v;
-    if (addr < 0 || addr > m_config.ioend) {
+    if (addr < 0 || addr > m_ioregs.size()) {
         m_device->logger().err("CTL reading an off-range I/O address: %d", addr);
         m_device->crash(CRASH_BAD_CTL_IO, "Invalid CTL register read");
         v = 0;
@@ -260,7 +252,7 @@ uint8_t AVR_Core::ioctl_read_ioreg(reg_addr_t addr)
         v = read_sreg();
     }
     else {
-        AVR_IO_Register *ioreg = m_ioregs[addr];
+        AVR_IO_Register* ioreg = m_ioregs[addr];
         if (ioreg) {
             v = ioreg->ioctl_read(addr);
         } else {
@@ -274,7 +266,7 @@ uint8_t AVR_Core::ioctl_read_ioreg(reg_addr_t addr)
 
 void AVR_Core::ioctl_write_ioreg(regbit_t rb, uint8_t value)
 {
-    if (!rb.valid() || rb.addr > m_config.ioend) {
+    if (!rb.valid() || rb.addr > m_ioregs.size()) {
         m_device->logger().err("CTL writing to an off-range I/O address: %d", rb.addr);
         m_device->crash(CRASH_BAD_CTL_IO, "Invalid CTL register write");
     }
@@ -284,7 +276,7 @@ void AVR_Core::ioctl_write_ioreg(regbit_t rb, uint8_t value)
         write_sreg(v);
     }
     else {
-        AVR_IO_Register *ioreg = m_ioregs[rb.addr];
+        AVR_IO_Register* ioreg = m_ioregs[rb.addr];
         if (ioreg) {
             uint8_t v = ioreg->value();
             v = (v & ~rb.mask) | ((value << rb.bit) & rb.mask);
