@@ -24,14 +24,6 @@
 #include "arch_avr_timer.h"
 #include "core/sim_device.h"
 
-static const char* ClockSourceNames[2] = {
-    "Disabled",
-    "Internal I/O"
-};
-
-#define CLOCKSOURCENAME(ix) ClockSourceNames[m_config.clocks[ix].source]
-#define CLOCKPRESCALER(ix) (1 << (m_config.clocks[ix].div))
-
 
 AVR_ArchAVR_Timer::AVR_ArchAVR_Timer(int num, const AVR_ArchAVR_TimerConfig& config)
 :AVR_Peripheral(AVR_IOCTL_TIMER('_', 0x30 + num))
@@ -180,16 +172,14 @@ void AVR_ArchAVR_Timer::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t
         if (addr == m_config.rb_clock.addr) {
             uint32_t ps_factor;
             uint8_t v = m_config.rb_clock.extract(data.value);
-            int clock_index = find_reg_config<AVR_ArchAVR_TimerConfig::clock_config_t>(m_config.clocks, v);
-            if (clock_index >= 0) {
-                logger().dbg("Clock changed to SRC=%s, PS=%d",
-                             CLOCKSOURCENAME(clock_index),
-                             CLOCKPRESCALER(clock_index));
-                if (m_config.clocks[clock_index].source == AVR_ArchAVR_TimerConfig::ClockDisabled) {
+            auto clock_cfg = find_reg_config_p<AVR_ArchAVR_TimerConfig::clock_config_t>(m_config.clocks, v);
+            if (clock_cfg) {
+                logger().dbg("Clock changed to SEL=%d", v);
+                if (clock_cfg->source == AVR_ArchAVR_TimerConfig::ClockDisabled) {
                     ps_factor = 1;
                     m_clk_enabled = false;
                 } else {
-                    ps_factor = m_config.clocks[clock_index].div;
+                    ps_factor = clock_cfg->div;
                     m_clk_enabled = true;
                 }
             } else {
@@ -276,8 +266,8 @@ void AVR_ArchAVR_Timer::raised(const signal_data_t& sigdata, uint16_t __unused)
 
     //Find the timer mode currently selected
     uint64_t mode_reg = read_ioreg(m_config.rbc_mode);
-    int mode_index = find_reg_config<AVR_ArchAVR_TimerConfig::mode_config_t>(m_config.modes, mode_reg);
-    AVR_ArchAVR_TimerConfig::Mode timer_mode = m_config.modes[mode_index].mode;
+    auto mode_cfg = find_reg_config_p<AVR_ArchAVR_TimerConfig::mode_config_t>(m_config.modes, mode_reg);
+    AVR_ArchAVR_TimerConfig::Mode timer_mode = mode_cfg ? mode_cfg->mode : AVR_ArchAVR_TimerConfig::MODE_INVALID;
 
     if (m_next_event_type & TimerEventCompA) {
         logger().dbg("Triggering interrupt OCRA");

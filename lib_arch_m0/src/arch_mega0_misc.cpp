@@ -76,12 +76,10 @@ void AVR_ArchMega0_VREF::set_channel_reference(uint32_t index, uint8_t reg_value
     typedef AVR_ArchMega0_VREF_Config::reference_config_t vref_cfg_t;
 
     //Find the corresponding reference setting from the configuration
-    int ref_ix = find_reg_config<vref_cfg_t>(m_config.channels[index].references, reg_value);
+    auto vref_cfg = find_reg_config_p<vref_cfg_t>(m_config.channels[index].references, reg_value);
     //If it's a valid setting, update the reference
-    if (ref_ix >= 0) {
-        vref_cfg_t r = m_config.channels[index].references[ref_ix];
-        set_reference(index, r.source, r.level);
-    }
+    if (vref_cfg)
+        set_reference(index, vref_cfg->source, vref_cfg->level);
 }
 
 

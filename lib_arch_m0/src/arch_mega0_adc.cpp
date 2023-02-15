@@ -222,18 +222,16 @@ void AVR_ArchMega0_ADC::read_analog_value()
     logger().dbg("Reading analog value");
 
     //Find the channel mux configuration
-    int index = find_reg_config<channel_config_t>(m_config.channels, m_latched_ch_mux);
-    if (index == -1)
+    auto ch_config = find_reg_config_p<channel_config_t>(m_config.channels, m_latched_ch_mux);
+    if (!ch_config)
         _crash("ADC: Invalid channel configuration");
-
-    const channel_config_t& ch_config = m_config.channels[index];
 
     //Find the reference voltage mux configuration and request the value from the VREF peripheral
     double vref = 0.0;
-    index = find_reg_config<CFG::reference_config_t>(m_config.references, m_latched_ref_mux);
-    if(index == -1)
+    auto ref_config = find_reg_config_p<CFG::reference_config_t>(m_config.references, m_latched_ref_mux);
+    if (!ref_config)
         _crash("ADC: Invalid reference configuration");
-    auto ref_config = &(m_config.references[index]);
+
     ctlreq_data_t reqdata = { .data = m_config.vref_channel, .index = ref_config->source };
     if (!device()->ctlreq(AVR_IOCTL_VREF, AVR_CTLREQ_VREF_GET, &reqdata))
         _crash("ADC: Unable to obtain the voltage reference");
@@ -245,18 +243,18 @@ void AVR_ArchMega0_ADC::read_analog_value()
     //The raw value is in the interval [0.0; 1.0] (or [-1.0; +1.0] for bipolar)
     //and is relative to VCC
     double raw_value;
-    switch(ch_config.type) {
+    switch(ch_config->type) {
 
         case Channel_SingleEnded: {
-            AVR_Pin* p = device()->find_pin(ch_config.pin_p);
+            AVR_Pin* p = device()->find_pin(ch_config->pin_p);
             if (!p) _crash("ADC: Invalid pin configuration");
             raw_value = p->analog_value();
         } break;
 
         case Channel_Differential: {
-            AVR_Pin* p = device()->find_pin(ch_config.pin_p);
+            AVR_Pin* p = device()->find_pin(ch_config->pin_p);
             if (!p) _crash("ADC: Invalid pin configuration");
-            AVR_Pin* n = device()->find_pin(ch_config.pin_n);
+            AVR_Pin* n = device()->find_pin(ch_config->pin_n);
             if (!n) _crash("ADC: Invalid pin configuration");
             raw_value = p->analog_value() - n->analog_value();
         } break;
@@ -271,7 +269,7 @@ void AVR_ArchMega0_ADC::read_analog_value()
 
         case Channel_AcompRef: {
             ctlreq_data_t reqdata;
-            if (!device()->ctlreq(AVR_IOCTL_ACP(ch_config.per_num), AVR_CTLREQ_ACP_GET_DAC, &reqdata))
+            if (!device()->ctlreq(AVR_IOCTL_ACP(ch_config->per_num), AVR_CTLREQ_ACP_GET_DAC, &reqdata))
                 _crash("ADC: Unable to obtain the DAC reference from the Analog Comparator");
             raw_value = reqdata.data.as_double();
         } break;
