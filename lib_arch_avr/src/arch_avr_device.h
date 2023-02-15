@@ -59,7 +59,7 @@ protected:
     virtual void cpu_write_data(mem_addr_t data_addr, uint8_t value) override;
 
     virtual void dbg_read_data(mem_addr_t start, uint8_t* buf, mem_addr_t len) override;
-    virtual void dbg_write_data(mem_addr_t start, uint8_t* buf, mem_addr_t len) override;
+    virtual void dbg_write_data(mem_addr_t start, const uint8_t* buf, mem_addr_t len) override;
 
 private:
 

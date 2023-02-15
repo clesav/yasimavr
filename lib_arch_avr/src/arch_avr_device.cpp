@@ -99,7 +99,7 @@ void AVR_ArchAVR_Core::dbg_read_data(mem_addr_t addr, uint8_t* buf, mem_addr_t l
 
 }
 
-void AVR_ArchAVR_Core::dbg_write_data(mem_addr_t addr, uint8_t* buf, mem_addr_t len)
+void AVR_ArchAVR_Core::dbg_write_data(mem_addr_t addr, const uint8_t* buf, mem_addr_t len)
 {
     mem_addr_t bufofs, blockofs;
     mem_addr_t n;

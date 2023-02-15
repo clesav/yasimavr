@@ -78,57 +78,57 @@ void AVR_DeviceDebugProbe::detach()
     m_device = nullptr;
 }
 
-void AVR_DeviceDebugProbe::reset_device()
+void AVR_DeviceDebugProbe::reset_device() const
 {
     m_device->reset();
 }
 
-void AVR_DeviceDebugProbe::set_device_state(AVR_Device::State state)
+void AVR_DeviceDebugProbe::set_device_state(AVR_Device::State state) const
 {
     m_device->set_state(state);
 }
 
-void AVR_DeviceDebugProbe::write_gpreg(unsigned int num, uint8_t value)
+void AVR_DeviceDebugProbe::write_gpreg(unsigned int num, uint8_t value) const
 {
     m_device->core().m_regs[num] = value;
 }
 
-uint8_t AVR_DeviceDebugProbe::read_gpreg(unsigned int num)
+uint8_t AVR_DeviceDebugProbe::read_gpreg(unsigned int num) const
 {
     return m_device->core().m_regs[num];
 }
 
-void AVR_DeviceDebugProbe::write_sreg(uint8_t value)
+void AVR_DeviceDebugProbe::write_sreg(uint8_t value) const
 {
     m_device->core().write_sreg(value);
 }
 
-uint8_t AVR_DeviceDebugProbe::read_sreg()
+uint8_t AVR_DeviceDebugProbe::read_sreg() const
 {
     return m_device->core().read_sreg();
 }
 
-void AVR_DeviceDebugProbe::write_sp(uint16_t value)
+void AVR_DeviceDebugProbe::write_sp(uint16_t value) const
 {
     m_device->core().write_sp(value);
 }
 
-uint16_t AVR_DeviceDebugProbe::read_sp()
+uint16_t AVR_DeviceDebugProbe::read_sp() const
 {
     return m_device->core().read_sp();
 }
 
-void AVR_DeviceDebugProbe::write_pc(uint32_t value)
+void AVR_DeviceDebugProbe::write_pc(uint32_t value) const
 {
     m_device->core().m_pc = value;
 }
 
-uint32_t AVR_DeviceDebugProbe::read_pc()
+uint32_t AVR_DeviceDebugProbe::read_pc() const
 {
     return m_device->core().m_pc;
 }
 
-void AVR_DeviceDebugProbe::write_ioreg(reg_addr_t addr, uint8_t value)
+void AVR_DeviceDebugProbe::write_ioreg(reg_addr_t addr, uint8_t value) const
 {
     AVR_Core& core = m_device->core();
     const uint16_t iosize = core.config().ioend - core.config().iostart + 1;
@@ -143,7 +143,7 @@ void AVR_DeviceDebugProbe::write_ioreg(reg_addr_t addr, uint8_t value)
     }
 }
 
-uint8_t AVR_DeviceDebugProbe::read_ioreg(reg_addr_t addr)
+uint8_t AVR_DeviceDebugProbe::read_ioreg(reg_addr_t addr) const
 {
     AVR_Core& core = m_device->core();
     const uint16_t iosize = core.config().ioend - core.config().iostart + 1;
@@ -159,7 +159,7 @@ uint8_t AVR_DeviceDebugProbe::read_ioreg(reg_addr_t addr)
     return 0;
 }
 
-void AVR_DeviceDebugProbe::write_flash(flash_addr_t addr, uint8_t* buf, uint32_t len)
+void AVR_DeviceDebugProbe::write_flash(flash_addr_t addr, const uint8_t* buf, uint32_t len) const
 {
     AVR_Core& core = m_device->core();
 
@@ -168,7 +168,7 @@ void AVR_DeviceDebugProbe::write_flash(flash_addr_t addr, uint8_t* buf, uint32_t
     core.m_flash.dbg_write(buf, addr, len);
 }
 
-uint32_t AVR_DeviceDebugProbe::read_flash(flash_addr_t addr, uint8_t* buf, uint32_t len)
+uint32_t AVR_DeviceDebugProbe::read_flash(flash_addr_t addr, uint8_t* buf, uint32_t len) const
 {
     AVR_Core& core = m_device->core();
 
@@ -179,7 +179,7 @@ uint32_t AVR_DeviceDebugProbe::read_flash(flash_addr_t addr, uint8_t* buf, uint3
     return len;
 }
 
-void AVR_DeviceDebugProbe::write_data(mem_addr_t addr, uint8_t* buf, uint32_t len)
+void AVR_DeviceDebugProbe::write_data(mem_addr_t addr, const uint8_t* buf, uint32_t len) const
 {
     //We need to momentarily disable the crash triggered by bad I/O access
     //as we copy the I/O registers as a block
@@ -191,7 +191,7 @@ void AVR_DeviceDebugProbe::write_data(mem_addr_t addr, uint8_t* buf, uint32_t le
     m_device->set_option(AVR_Device::Option_IgnoreBadCpuIO, badioopt);
 }
 
-void AVR_DeviceDebugProbe::read_data(mem_addr_t addr, uint8_t* buf, uint32_t len)
+void AVR_DeviceDebugProbe::read_data(mem_addr_t addr, uint8_t* buf, uint32_t len) const
 {
     //Same as write_data()
     bool badioopt = m_device->test_option(AVR_Device::Option_IgnoreBadCpuIO);

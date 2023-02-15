@@ -78,7 +78,7 @@ void AVR_NonVolatileMemory::erase(size_t base, size_t len)
     memset(m_tag + base, 0, len);
 }
 
-void AVR_NonVolatileMemory::erase(unsigned char* buf, size_t pos, size_t len)
+void AVR_NonVolatileMemory::erase(const unsigned char* buf, size_t pos, size_t len)
 {
     if (!m_size || !len) return;
 
@@ -151,7 +151,7 @@ void AVR_NonVolatileMemory::dbg_write(unsigned char v, size_t pos)
         m_memory[pos] = v;
 }
 
-void AVR_NonVolatileMemory::dbg_write(unsigned char* buf, size_t base, size_t len)
+void AVR_NonVolatileMemory::dbg_write(const unsigned char* buf, size_t base, size_t len)
 {
     if (!m_size || !len) return;
 
@@ -168,7 +168,8 @@ void AVR_NonVolatileMemory::spm_write(unsigned char v, size_t pos)
     }
 }
 
-void AVR_NonVolatileMemory::spm_write(unsigned char* buf, unsigned char* bufset,
+void AVR_NonVolatileMemory::spm_write(const unsigned char* buf,
+                                      const unsigned char* bufset,
                                       size_t base, size_t len)
 {
     if (!m_size || !len) return;

@@ -48,33 +48,33 @@ public:
     %End
     bool attached() const;
 
-    void reset_device();
-    void set_device_state(AVR_Device::State);
+    void reset_device() const;
+    void set_device_state(AVR_Device::State) const;
 
-    void write_gpreg(unsigned int, uint8_t);
-    uint8_t read_gpreg(unsigned int);
+    void write_gpreg(unsigned int, uint8_t) const;
+    uint8_t read_gpreg(unsigned int) const;
 
-    void write_sreg(uint8_t);
-    uint8_t read_sreg();
+    void write_sreg(uint8_t) const;
+    uint8_t read_sreg() const;
 
-    void write_sp(uint16_t);
-    uint16_t read_sp();
+    void write_sp(uint16_t) const;
+    uint16_t read_sp() const;
 
-    void write_pc(uint32_t);
-    uint32_t read_pc();
+    void write_pc(uint32_t) const;
+    uint32_t read_pc() const;
 
-    void write_ioreg(reg_addr_t, uint8_t);
-    uint8_t read_ioreg(reg_addr_t);
+    void write_ioreg(reg_addr_t, uint8_t) const;
+    uint8_t read_ioreg(reg_addr_t) const;
 
-    void write_flash(flash_addr_t, SIP_PYBUFFER);
+    void write_flash(flash_addr_t, SIP_PYBUFFER) const;
     %MethodCode
         Py_buffer pybuf;
         PyObject_GetBuffer(a1, &pybuf, PyBUF_SIMPLE);
-        sipCpp->write_flash(a0, (uint8_t*)(pybuf.buf), pybuf.len);
+        sipCpp->write_flash(a0, (const uint8_t*)(pybuf.buf), pybuf.len);
         PyBuffer_Release(&pybuf);
     %End
 
-    SIP_PYBUFFER read_flash(flash_addr_t addr, uint32_t len);
+    SIP_PYBUFFER read_flash(flash_addr_t addr, uint32_t len) const;
     %MethodCode
         if (a1) {
             uint8_t* buf = (uint8_t*) sipMalloc(a1);
@@ -88,15 +88,15 @@ public:
         }
     %End
 
-    void write_data(mem_addr_t addr, SIP_PYBUFFER buf);
+    void write_data(mem_addr_t addr, SIP_PYBUFFER buf) const;
     %MethodCode
         Py_buffer pybuf;
         PyObject_GetBuffer(a1, &pybuf, PyBUF_SIMPLE);
-        sipCpp->write_data(a0, (uint8_t*)(pybuf.buf), pybuf.len);
+        sipCpp->write_data(a0, (const uint8_t*)(pybuf.buf), pybuf.len);
         PyBuffer_Release(&pybuf);
     %End
 
-    SIP_PYBUFFER read_data(mem_addr_t addr, uint32_t len);
+    SIP_PYBUFFER read_data(mem_addr_t addr, uint32_t len) const;
     %MethodCode
         if (a1) {
             uint8_t* buf = (uint8_t*) sipMalloc(a1);

@@ -64,37 +64,37 @@ public:
 
     bool attached() const;
 
-    void reset_device();
-    void set_device_state(AVR_Device::State state);
+    void reset_device() const;
+    void set_device_state(AVR_Device::State state) const;
 
     //Access to general purpose CPU registers
-    void write_gpreg(unsigned int num, uint8_t value);
-    uint8_t read_gpreg(unsigned int num);
+    void write_gpreg(unsigned int num, uint8_t value) const;
+    uint8_t read_gpreg(unsigned int num) const;
 
     //Access to the SREG register
-    void write_sreg(uint8_t value);
-    uint8_t read_sreg();
+    void write_sreg(uint8_t value) const;
+    uint8_t read_sreg() const;
 
     //Access to the Stack Pointer
-    void write_sp(uint16_t value);
-    uint16_t read_sp();
+    void write_sp(uint16_t value) const;
+    uint16_t read_sp() const;
 
     //Access to the Program Counter
-    void write_pc(uint32_t value);
-    uint32_t read_pc();
+    void write_pc(uint32_t value) const;
+    uint32_t read_pc() const;
 
     //Access to I/O registers. From the peripherals point of view, it's
     //the same as a CPU access
-    void write_ioreg(reg_addr_t addr, uint8_t value);
-    uint8_t read_ioreg(reg_addr_t addr);
+    void write_ioreg(reg_addr_t addr, uint8_t value) const;
+    uint8_t read_ioreg(reg_addr_t addr) const;
 
     //Access to the flash memory
-    void write_flash(flash_addr_t addr, uint8_t* buf, uint32_t len);
-    uint32_t read_flash(flash_addr_t addr, uint8_t* buf, uint32_t len);
+    void write_flash(flash_addr_t addr, const uint8_t* buf, uint32_t len) const;
+    uint32_t read_flash(flash_addr_t addr, uint8_t* buf, uint32_t len) const;
 
     //Access to the data space
-    void write_data(mem_addr_t addr, uint8_t* buf, uint32_t len);
-    void read_data(mem_addr_t addr, uint8_t* buf, uint32_t len);
+    void write_data(mem_addr_t addr, const uint8_t* buf, uint32_t len) const;
+    void read_data(mem_addr_t addr, uint8_t* buf, uint32_t len) const;
 
     //Breakpoint management
     void insert_breakpoint(flash_addr_t addr);

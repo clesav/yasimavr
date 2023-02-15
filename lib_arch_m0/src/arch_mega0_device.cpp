@@ -134,7 +134,7 @@ void AVR_ArchMega0_Core::dbg_read_data(mem_addr_t addr, uint8_t* buf, mem_addr_t
     }
 }
 
-void AVR_ArchMega0_Core::dbg_write_data(mem_addr_t addr, uint8_t* buf, mem_addr_t len)
+void AVR_ArchMega0_Core::dbg_write_data(mem_addr_t addr, const uint8_t* buf, mem_addr_t len)
 {
     const AVR_ArchMega0_CoreConfig& cfg = reinterpret_cast<const AVR_ArchMega0_CoreConfig&>(m_config);
 
@@ -150,12 +150,12 @@ void AVR_ArchMega0_Core::dbg_write_data(mem_addr_t addr, uint8_t* buf, mem_addr_
         std::memcpy(m_sram + blockofs, buf + bufofs, n);
 
     if (data_space_map(addr, len, cfg.flashstart_ds, cfg.flashend_ds, &bufofs, &blockofs, &n)) {
-        mem_block_t b = { .size = n, .buf = buf + bufofs };
+        mem_block_t b = { .size = n, .buf = const_cast<uint8_t*>(buf) + bufofs };
         m_flash.program(b, blockofs);
     }
 
     if (data_space_map(addr, len, cfg.eepromstart_ds, cfg.eepromend_ds, &bufofs, &blockofs, &n)) {
-        mem_block_t b = { .size = n, .buf = buf + bufofs };
+        mem_block_t b = { .size = n, .buf = const_cast<uint8_t*>(buf) + bufofs };
         m_eeprom.program(b, blockofs);
     }
 }
