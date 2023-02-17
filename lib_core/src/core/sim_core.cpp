@@ -60,9 +60,9 @@ AVR_Core::AVR_Core(const AVR_CoreConfiguration& config)
     //If extended addressing is used (flash > 64kb), allocate the
     //registers RAMPZ and EIND
     if (use_extended_addressing()) {
-        if (m_config.rampz)
+        if (m_config.rampz.valid())
             m_ioregs[m_config.rampz] = new AVR_IO_Register(true);
-        if (m_config.eind)
+        if (m_config.eind.valid())
             m_ioregs[m_config.eind] = new AVR_IO_Register(true);
     }
 }
@@ -173,7 +173,7 @@ void AVR_Core::cpu_write_gpreg(uint8_t reg, uint8_t value)
 
 AVR_IO_Register* AVR_Core::get_ioreg(reg_addr_t addr)
 {
-    if (addr < 0)
+    if (!addr.valid())
         return nullptr;
 
     AVR_IO_Register* reg = m_ioregs[addr];
@@ -186,7 +186,7 @@ AVR_IO_Register* AVR_Core::get_ioreg(reg_addr_t addr)
 uint8_t AVR_Core::cpu_read_ioreg(reg_addr_t io_addr)
 {
     uint8_t v;
-    if (io_addr < 0 || io_addr > m_ioregs.size()) {
+    if (!io_addr.valid() || io_addr >= m_ioregs.size()) {
         m_device->logger().err("CPU reading an off-range I/O address: %d", io_addr);
         m_device->crash(CRASH_BAD_CPU_IO, "Invalid CPU register read");
         v = 0;
@@ -211,7 +211,7 @@ uint8_t AVR_Core::cpu_read_ioreg(reg_addr_t io_addr)
 
 void AVR_Core::cpu_write_ioreg(reg_addr_t io_addr, uint8_t value)
 {
-    if (io_addr < 0 || io_addr > m_ioregs.size()) {
+    if (!io_addr.valid() || io_addr >= m_ioregs.size()) {
         m_device->logger().err("CPU writing to an off-range I/O address: %d", io_addr);
         m_device->crash(CRASH_BAD_CPU_IO, "Invalid CPU register write");
     }
@@ -243,7 +243,7 @@ void AVR_Core::cpu_write_ioreg(reg_addr_t io_addr, uint8_t value)
 uint8_t AVR_Core::ioctl_read_ioreg(reg_addr_t addr)
 {
     uint8_t v;
-    if (addr < 0 || addr > m_ioregs.size()) {
+    if (!addr.valid() || addr >= m_ioregs.size()) {
         m_device->logger().err("CTL reading an off-range I/O address: %d", addr);
         m_device->crash(CRASH_BAD_CTL_IO, "Invalid CTL register read");
         v = 0;
@@ -266,7 +266,7 @@ uint8_t AVR_Core::ioctl_read_ioreg(reg_addr_t addr)
 
 void AVR_Core::ioctl_write_ioreg(regbit_t rb, uint8_t value)
 {
-    if (!rb.valid() || rb.addr > m_ioregs.size()) {
+    if (!rb.valid() || rb.addr >= m_ioregs.size()) {
         m_device->logger().err("CTL writing to an off-range I/O address: %d", rb.addr);
         m_device->crash(CRASH_BAD_CTL_IO, "Invalid CTL register write");
     }

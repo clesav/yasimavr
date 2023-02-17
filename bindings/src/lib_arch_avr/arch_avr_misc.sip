@@ -58,7 +58,7 @@ struct AVR_ArchAVR_Misc_Config {
 #include "arch_avr_misc.h"
 %End
 
-    RegAddrVector gpior;
+    std::vector<reg_addr_t> gpior;
 
 };
 

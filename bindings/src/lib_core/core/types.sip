@@ -23,14 +23,68 @@
 
 
 typedef int64_t         cycle_count_t;
-typedef int16_t         reg_addr_t;
 typedef uint32_t        mem_addr_t;
 typedef uint32_t        flash_addr_t;
 typedef int16_t         int_vect_t;
 
 
 const cycle_count_t INVALID_CYCLE;
-const reg_addr_t    INVALID_REGISTER;
+
+
+class reg_addr_t {
+%TypeHeaderCode
+#include "core/sim_types.h"
+%End
+
+public:
+
+    reg_addr_t(int16_t = -1);
+
+    bool valid() const;
+
+    int __index__() const;
+    %MethodCode
+        sipRes = (int16_t)(*sipCpp);
+    %End
+
+    int __int__() const;
+    %MethodCode
+        sipRes = (int16_t)(*sipCpp);
+    %End
+
+    const char* __repr__() const;
+    %MethodCode
+        if (sipCpp->valid())
+            return PyUnicode_FromFormat("[0x%04x]", (int16_t)(*sipCpp));
+        else
+            return PyUnicode_FromString("INVALID_REGISTER");
+    %End
+
+    //Ensures a seamless conversion from a Python integer
+    %ConvertToTypeCode
+        //Type check : we can convert from either a wrapped reg_addr_t or a Python integer
+        if (sipIsErr == 0)
+            return PyObject_TypeCheck(sipPy, sipTypeAsPyTypeObject(sipType_reg_addr_t)) ||
+                   PyLong_Check(sipPy);
+
+        //Conversion from Python integer to unwrapped reg_addr_t
+        if (PyLong_Check(sipPy)) {
+            *sipCppPtr = new reg_addr_t(PyLong_AsLong(sipPy));
+            return sipGetState(sipTransferObj);
+        }
+
+        //Unwrapping of a reg_addr_t
+        *sipCppPtr = reinterpret_cast<reg_addr_t*>(sipConvertToType(sipPy,
+                                                                    sipType_reg_addr_t,
+                                                                    sipTransferObj,
+                                                                    SIP_NO_CONVERTORS,
+                                                                    0,
+                                                                    sipIsErr));
+        return 0;
+    %End
+};
+
+const reg_addr_t INVALID_REGISTER;
 
 
 struct bitmask_t {
@@ -85,7 +139,7 @@ public:
 
     const char* __repr__() const;
     %MethodCode
-        return PyUnicode_FromFormat("Regbit(%04x, %d, %02x)", sipCpp->addr, sipCpp->bit, sipCpp->mask);
+        return PyUnicode_FromFormat("Regbit(%04x, %d, %02x)", (int16_t)(sipCpp->addr), sipCpp->bit, sipCpp->mask);
     %End
 
 };

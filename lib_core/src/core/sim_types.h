@@ -46,13 +46,31 @@
 //That leaves 63 bits to count cycles, which at a MCU frequency of 20MHz
 //represent more than 14000 simulated years
 typedef int64_t     cycle_count_t;
-typedef int16_t     reg_addr_t;
 typedef uint32_t    mem_addr_t;
 typedef uint32_t    flash_addr_t;
 typedef int16_t     int_vect_t;
 
 const cycle_count_t INVALID_CYCLE = -1;
-const reg_addr_t    INVALID_REGISTER = -1;
+
+
+class reg_addr_t {
+
+public:
+
+    constexpr inline reg_addr_t(int16_t addr = -1) : m_addr(addr) {}
+
+    constexpr inline bool valid() const { return m_addr >= 0; }
+
+    constexpr inline operator int16_t() const { return m_addr; }
+
+private:
+
+    int16_t m_addr;
+
+};
+
+const reg_addr_t INVALID_REGISTER;
+
 
 #define BITSET(v, b) (((v) >> (b)) & 0x01)
 
@@ -114,7 +132,7 @@ struct regbit_t {
 
     inline bool valid() const
     {
-        return addr >= 0;
+        return addr.valid();
     }
 
     inline uint8_t extract(uint8_t value) const

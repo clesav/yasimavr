@@ -46,8 +46,8 @@ def get_core_config(dev_desc):
     cfg.eepromend = dev_desc.mem_spaces['eeprom'].memend
     cfg.userrowend = dev_desc.mem_spaces['userrow'].memend
 
-    cfg.eind = dev_desc.peripherals['CPU'].reg_address('EIND', 0)
-    cfg.rampz = dev_desc.peripherals['CPU'].reg_address('RAMPZ', 0)
+    cfg.eind = dev_desc.peripherals['CPU'].reg_address('EIND', _corelib.INVALID_REGISTER)
+    cfg.rampz = dev_desc.peripherals['CPU'].reg_address('RAMPZ', _corelib.INVALID_REGISTER)
 
     cfg.vector_size = dev_desc.interrupt_map.vector_size
 
