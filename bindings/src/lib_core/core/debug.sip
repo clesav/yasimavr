@@ -21,7 +21,7 @@
 
 //=======================================================================================
 
-class AVR_DeviceDebugProbe /NoDefaultCtors/ {
+class AVR_DeviceDebugProbe {
 %TypeHeaderCode
 #include "core/sim_debug.h"
 #include "utils/buffer_utils.h"
@@ -37,16 +37,18 @@ public:
     };
 
     AVR_DeviceDebugProbe();
+    AVR_DeviceDebugProbe(AVR_Device&);
+    AVR_DeviceDebugProbe(const AVR_DeviceDebugProbe&);
 
     AVR_Device* device() const;
 
-    void attach(AVR_Device& /TransferThis/);
+    void attach(AVR_Device&);
+    void attach(AVR_DeviceDebugProbe&);
     void detach();
-    %MethodCode
-        sipCpp->detach();
-        sipTransferBack(sipSelf);
-    %End
     bool attached() const;
+
+    bool is_primary() const;
+    AVR_DeviceDebugProbe* primary() const;
 
     void reset_device() const;
     void set_device_state(AVR_Device::State) const;
@@ -74,11 +76,11 @@ public:
         PyBuffer_Release(&pybuf);
     %End
 
-    SIP_PYBUFFER read_flash(flash_addr_t addr, uint32_t len) const;
+    SIP_PYBUFFER read_flash(flash_addr_t addr, flash_addr_t len) const;
     %MethodCode
         if (a1) {
             uint8_t* buf = (uint8_t*) sipMalloc(a1);
-            uint32_t rlen = sipCpp->read_flash(a0, buf, a1);
+            flash_addr_t rlen = sipCpp->read_flash(a0, buf, a1);
             PyObject* pybuf = export_to_pybuffer(sipAPI_core, buf, rlen);
             sipRes = PyBytes_FromObject(pybuf);
             sipFree(buf);
@@ -96,7 +98,7 @@ public:
         PyBuffer_Release(&pybuf);
     %End
 
-    SIP_PYBUFFER read_data(mem_addr_t addr, uint32_t len) const;
+    SIP_PYBUFFER read_data(mem_addr_t addr, mem_addr_t len) const;
     %MethodCode
         if (a1) {
             uint8_t* buf = (uint8_t*) sipMalloc(a1);

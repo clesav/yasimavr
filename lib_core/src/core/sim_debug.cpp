@@ -39,97 +39,183 @@
 
 AVR_DeviceDebugProbe::AVR_DeviceDebugProbe()
 :m_device(nullptr)
+,m_primary(nullptr)
 {}
+
+AVR_DeviceDebugProbe::AVR_DeviceDebugProbe(AVR_Device& device)
+:AVR_DeviceDebugProbe()
+{
+    attach(device);
+}
+
+AVR_DeviceDebugProbe::AVR_DeviceDebugProbe(const AVR_DeviceDebugProbe& probe)
+:AVR_DeviceDebugProbe()
+{
+    *this = probe;
+}
 
 AVR_DeviceDebugProbe::~AVR_DeviceDebugProbe()
 {
-    if (m_device)
-        detach();
+    detach();
+
+    for (auto secondary : m_secondaries)
+        secondary->m_primary = nullptr;
+}
+
+AVR_DeviceDebugProbe& AVR_DeviceDebugProbe::operator=(const AVR_DeviceDebugProbe& probe)
+{
+    attach(const_cast<AVR_DeviceDebugProbe&>(probe));
+    return *this;
 }
 
 void AVR_DeviceDebugProbe::attach(AVR_Device& device)
 {
-    if (m_device) return;
+    if (m_device == &device)
+        return;
 
-    m_device = &device;
-    device.core().dbg_set_debug_probe(this);
+    if (m_device || m_primary)
+        detach();
+
+    AVR_Core& core = device.core();
+
+    if (core.m_debug_probe) {
+        attach(*core.m_debug_probe);
+    } else {
+        m_device = &device;
+        core.m_debug_probe = this;
+        for (AVR_DeviceDebugProbe* p : m_secondaries)
+            p->m_device = &device;
+    }
+}
+
+void AVR_DeviceDebugProbe::attach(AVR_DeviceDebugProbe& probe)
+{
+    //If this is already a secondary of probe, nothing to do
+    if (m_primary == &probe)
+        return;
+
+    if (m_device || m_primary)
+        detach();
+
+    //Find the actual primary to attach to.
+    AVR_DeviceDebugProbe& primary = probe.m_primary ? *probe.m_primary : probe;
+    //Attach this as secondary
+    primary.m_secondaries.push_back(this);
+    m_primary = &primary;
+    m_device = primary.m_device;
+    //If this was primary, transfer all secondaries this may have to become 'siblings'
+    for (auto secondary : m_secondaries) {
+        primary.m_secondaries.push_back(secondary);
+        secondary->m_primary = &primary;
+    }
+    m_secondaries.clear();
 }
 
 void AVR_DeviceDebugProbe::detach()
 {
-    if (!m_device) return;
+    if (m_primary) {
+        //If this is a secondary probe, detach from the primary
+        for (auto it = m_primary->m_secondaries.begin(); it != m_primary->m_secondaries.end(); ++it) {
+            if (*it == this) {
+                m_primary->m_secondaries.erase(it);
+                break;
+            }
+        }
+        m_primary = nullptr;
+        m_device = nullptr;
 
-    //Destroys all the breakpoints
-    for (auto it = m_breakpoints.begin(); it != m_breakpoints.end(); ++it) {
-        breakpoint_t* bp = it->second;
-        m_device->core().dbg_remove_breakpoint(*bp);
-        delete bp;
+    } else if (m_device) {
+        //if m_device is set and not m_primary, this is an attached primary probe
+
+        //Destroy all the breakpoints
+        for (auto it = m_breakpoints.begin(); it != m_breakpoints.end(); ++it) {
+            breakpoint_t* bp = it->second;
+            m_device->core().dbg_remove_breakpoint(*bp);
+            delete bp;
+        }
+        m_breakpoints.clear();
+
+        //Destroy all the watchpoints
+        for (auto it = m_watchpoints.begin(); it != m_watchpoints.end(); ++it) {
+            watchpoint_t* wp = it->second;
+            delete wp;
+        }
+        m_watchpoints.clear();
+
+        //Detach from the device
+        m_device->core().m_debug_probe = nullptr;
+        m_device = nullptr;
+
+        //Detach all the secondaries from the device, they remain attached to this
+        for (auto sec : m_secondaries)
+            sec->m_device = nullptr;
     }
-    m_breakpoints.clear();
-
-    //Destroys all the watchpoints
-    for (auto it = m_watchpoints.begin(); it != m_watchpoints.end(); ++it) {
-        watchpoint_t* wp = it->second;
-        delete wp;
-    }
-    m_watchpoints.clear();
-
-    m_device->core().dbg_set_debug_probe(nullptr);
-    m_device = nullptr;
 }
 
 void AVR_DeviceDebugProbe::reset_device() const
 {
-    m_device->reset();
+    if (m_device)
+        m_device->reset();
 }
 
 void AVR_DeviceDebugProbe::set_device_state(AVR_Device::State state) const
 {
-    m_device->set_state(state);
+    if (m_device)
+        m_device->set_state(state);
 }
 
 void AVR_DeviceDebugProbe::write_gpreg(unsigned int num, uint8_t value) const
 {
-    m_device->core().m_regs[num] = value;
+    if (m_device)
+        m_device->core().m_regs[num] = value;
 }
 
 uint8_t AVR_DeviceDebugProbe::read_gpreg(unsigned int num) const
 {
+    if (!m_device) return 0;
     return m_device->core().m_regs[num];
 }
 
 void AVR_DeviceDebugProbe::write_sreg(uint8_t value) const
 {
-    m_device->core().write_sreg(value);
+    if (m_device)
+        m_device->core().write_sreg(value);
 }
 
 uint8_t AVR_DeviceDebugProbe::read_sreg() const
 {
+    if (!m_device) return 0;
     return m_device->core().read_sreg();
 }
 
 void AVR_DeviceDebugProbe::write_sp(uint16_t value) const
 {
-    m_device->core().write_sp(value);
+    if (m_device)
+        m_device->core().write_sp(value);
 }
 
 uint16_t AVR_DeviceDebugProbe::read_sp() const
 {
+    if (!m_device) return 0;
     return m_device->core().read_sp();
 }
 
 void AVR_DeviceDebugProbe::write_pc(uint32_t value) const
 {
-    m_device->core().m_pc = value;
+    if (m_device)
+        m_device->core().m_pc = value;
 }
 
 uint32_t AVR_DeviceDebugProbe::read_pc() const
 {
+    if (!m_device) return 0;
     return m_device->core().m_pc;
 }
 
 void AVR_DeviceDebugProbe::write_ioreg(reg_addr_t addr, uint8_t value) const
 {
+    if (!m_device) return;
+
     AVR_Core& core = m_device->core();
     const uint16_t iosize = core.config().ioend - core.config().iostart + 1;
 
@@ -145,6 +231,8 @@ void AVR_DeviceDebugProbe::write_ioreg(reg_addr_t addr, uint8_t value) const
 
 uint8_t AVR_DeviceDebugProbe::read_ioreg(reg_addr_t addr) const
 {
+    if (!m_device) return 0;
+
     AVR_Core& core = m_device->core();
     const uint16_t iosize = core.config().ioend - core.config().iostart + 1;
 
@@ -159,8 +247,10 @@ uint8_t AVR_DeviceDebugProbe::read_ioreg(reg_addr_t addr) const
     return 0;
 }
 
-void AVR_DeviceDebugProbe::write_flash(flash_addr_t addr, const uint8_t* buf, uint32_t len) const
+void AVR_DeviceDebugProbe::write_flash(flash_addr_t addr, const uint8_t* buf, flash_addr_t len) const
 {
+    if (!m_device) return;
+
     AVR_Core& core = m_device->core();
 
     ADJUST_ADDR_LEN(addr, len, core.config().flashend);
@@ -168,8 +258,10 @@ void AVR_DeviceDebugProbe::write_flash(flash_addr_t addr, const uint8_t* buf, ui
     core.m_flash.dbg_write(buf, addr, len);
 }
 
-uint32_t AVR_DeviceDebugProbe::read_flash(flash_addr_t addr, uint8_t* buf, uint32_t len) const
+flash_addr_t AVR_DeviceDebugProbe::read_flash(flash_addr_t addr, uint8_t* buf, flash_addr_t len) const
 {
+    if (!m_device) return 0;
+
     AVR_Core& core = m_device->core();
 
     ADJUST_ADDR_LEN(addr, len, core.config().flashend);
@@ -179,8 +271,10 @@ uint32_t AVR_DeviceDebugProbe::read_flash(flash_addr_t addr, uint8_t* buf, uint3
     return len;
 }
 
-void AVR_DeviceDebugProbe::write_data(mem_addr_t addr, const uint8_t* buf, uint32_t len) const
+void AVR_DeviceDebugProbe::write_data(mem_addr_t addr, const uint8_t* buf, mem_addr_t len) const
 {
+    if (!m_device) return;
+
     //We need to momentarily disable the crash triggered by bad I/O access
     //as we copy the I/O registers as a block
     bool badioopt = m_device->test_option(AVR_Device::Option_IgnoreBadCpuIO);
@@ -191,8 +285,10 @@ void AVR_DeviceDebugProbe::write_data(mem_addr_t addr, const uint8_t* buf, uint3
     m_device->set_option(AVR_Device::Option_IgnoreBadCpuIO, badioopt);
 }
 
-void AVR_DeviceDebugProbe::read_data(mem_addr_t addr, uint8_t* buf, uint32_t len) const
+void AVR_DeviceDebugProbe::read_data(mem_addr_t addr, uint8_t* buf, mem_addr_t len) const
 {
+    if (!m_device) return;
+
     //Same as write_data()
     bool badioopt = m_device->test_option(AVR_Device::Option_IgnoreBadCpuIO);
     m_device->set_option(AVR_Device::Option_IgnoreBadCpuIO, true);
@@ -204,6 +300,13 @@ void AVR_DeviceDebugProbe::read_data(mem_addr_t addr, uint8_t* buf, uint32_t len
 
 void AVR_DeviceDebugProbe::insert_breakpoint(flash_addr_t addr)
 {
+    if (!m_device) return;
+
+    if (m_primary) {
+        m_primary->insert_breakpoint(addr);
+        return;
+    }
+
     if (m_breakpoints.find(addr) != m_breakpoints.end()) return;
 
     breakpoint_t* bp = new breakpoint_t;
@@ -214,6 +317,13 @@ void AVR_DeviceDebugProbe::insert_breakpoint(flash_addr_t addr)
 
 void AVR_DeviceDebugProbe::remove_breakpoint(flash_addr_t addr)
 {
+    if (!m_device) return;
+
+    if (m_primary) {
+        m_primary->remove_breakpoint(addr);
+        return;
+    }
+
     auto search = m_breakpoints.find(addr);
     if (search == m_breakpoints.end()) return;
     breakpoint_t* bp = search->second;
@@ -226,6 +336,13 @@ void AVR_DeviceDebugProbe::remove_breakpoint(flash_addr_t addr)
 
 void AVR_DeviceDebugProbe::insert_watchpoint(mem_addr_t addr, mem_addr_t len, int flags)
 {
+    if (!m_device) return;
+
+    if (m_primary) {
+        m_primary->insert_watchpoint(addr, len, flags);
+        return;
+    }
+
     watchpoint_t* wp;
     auto search = m_watchpoints.find(addr);
     if (search != m_watchpoints.end()) {
@@ -243,6 +360,13 @@ void AVR_DeviceDebugProbe::insert_watchpoint(mem_addr_t addr, mem_addr_t len, in
 
 void AVR_DeviceDebugProbe::remove_watchpoint(mem_addr_t addr, int flags)
 {
+    if (!m_device) return;
+
+    if (m_primary) {
+        m_primary->remove_watchpoint(addr, flags);
+        return;
+    }
+
     auto search = m_watchpoints.find(addr);
     if (search != m_watchpoints.end()) {
         //If the watchpoint exists, clear its flags
@@ -258,13 +382,19 @@ void AVR_DeviceDebugProbe::remove_watchpoint(mem_addr_t addr, int flags)
 
 void AVR_DeviceDebugProbe::notify_watchpoint(watchpoint_t* wp, int event, mem_addr_t addr)
 {
-    if (wp->flags & Watchpoint_Break) {
+    //If the watchpoint flag is set to Break, halt the CPU, only if this is the primary probe
+    if (!m_primary && (wp->flags & Watchpoint_Break)) {
         m_device->logger().wng("Device break on watchpoint A=%04x", addr);
         m_device->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_BREAK, nullptr);
     }
 
+    //If the watchpoint flag is set to Signal, raise the signal
     if (wp->flags & Watchpoint_Signal)
         m_wp_signal.raise_u(event, wp->addr);
+
+    //Notify the secondary probes
+    for (auto secondary : m_secondaries)
+        secondary->notify_watchpoint(wp, event, addr);
 }
 
 //Notification when the CPU reads from the RAM. Check if there's a watchpoint associated with the address.

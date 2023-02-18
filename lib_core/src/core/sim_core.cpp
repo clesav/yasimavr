@@ -379,12 +379,6 @@ flash_addr_t AVR_Core::cpu_pop_flash_addr()
 
 
 //=======================================================================================
-
-void AVR_Core::dbg_set_debug_probe(AVR_DeviceDebugProbe* debug)
-{
-    m_debug_probe = debug;
-}
-
 /*
  * Block memory mapping from data space to a block of memory
  * The block is defined by the interval [blockstart ; blockend] in data space

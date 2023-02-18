@@ -172,8 +172,6 @@ protected:
 
     //===== Debugging management (used by AVR_DeviceDebugProbe) =====
 
-    void dbg_set_debug_probe(AVR_DeviceDebugProbe* debug);
-
     //Debug probe access to memory data in blocks
     virtual void dbg_read_data(mem_addr_t start, uint8_t* buf, mem_addr_t len) = 0;
     virtual void dbg_write_data(mem_addr_t start, const uint8_t* buf, mem_addr_t len) = 0;
