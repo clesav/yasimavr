@@ -47,9 +47,6 @@ public:
     void detach();
     bool attached() const;
 
-    bool is_primary() const;
-    AVR_DeviceDebugProbe* primary() const;
-
     void reset_device() const;
     void set_device_state(AVR_Device::State) const;
 
@@ -76,7 +73,7 @@ public:
         PyBuffer_Release(&pybuf);
     %End
 
-    SIP_PYBUFFER read_flash(flash_addr_t addr, flash_addr_t len) const;
+    SIP_PYBUFFER read_flash(flash_addr_t, flash_addr_t) const;
     %MethodCode
         if (a1) {
             uint8_t* buf = (uint8_t*) sipMalloc(a1);
@@ -90,7 +87,7 @@ public:
         }
     %End
 
-    void write_data(mem_addr_t addr, SIP_PYBUFFER buf) const;
+    void write_data(mem_addr_t, SIP_PYBUFFER) const;
     %MethodCode
         Py_buffer pybuf;
         PyObject_GetBuffer(a1, &pybuf, PyBUF_SIMPLE);
@@ -98,7 +95,7 @@ public:
         PyBuffer_Release(&pybuf);
     %End
 
-    SIP_PYBUFFER read_data(mem_addr_t addr, mem_addr_t len) const;
+    SIP_PYBUFFER read_data(mem_addr_t, mem_addr_t) const;
     %MethodCode
         if (a1) {
             uint8_t* buf = (uint8_t*) sipMalloc(a1);

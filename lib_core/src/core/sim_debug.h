@@ -60,14 +60,12 @@ public:
 
     //Attaches the probe to a device, allowing access to its internals
     void attach(AVR_Device& device);
+    //Attaches this to the same device as the argument
     void attach(AVR_DeviceDebugProbe& probe);
     //Detaches the probe from the device. it MUST be called before
     //destruction.
     void detach();
     bool attached() const;
-
-    bool is_primary() const;
-    AVR_DeviceDebugProbe* primary() const;
 
     void reset_device() const;
     void set_device_state(AVR_Device::State state) const;
@@ -134,13 +132,13 @@ private:
     //Vector of secondary probes.
     std::vector<AVR_DeviceDebugProbe*> m_secondaries;
     //Mapping containers PC => breakpoint
-    std::map<flash_addr_t, breakpoint_t*> m_breakpoints;
+    std::map<flash_addr_t, breakpoint_t> m_breakpoints;
     //Mapping containers mem address => watchpoint
-    std::map<mem_addr_t, watchpoint_t*> m_watchpoints;
+    std::map<mem_addr_t, watchpoint_t> m_watchpoints;
     //Signal for watchpoint notification
     AVR_Signal m_wp_signal;
 
-    void notify_watchpoint(watchpoint_t* wp, int event, mem_addr_t addr);
+    void notify_watchpoint(watchpoint_t& wp, int event, mem_addr_t addr);
 
 };
 
@@ -152,16 +150,6 @@ inline AVR_Device* AVR_DeviceDebugProbe::device() const
 inline bool AVR_DeviceDebugProbe::attached() const
 {
     return !!m_device;
-}
-
-inline bool AVR_DeviceDebugProbe::is_primary() const
-{
-    return !m_primary;
-}
-
-inline AVR_DeviceDebugProbe* AVR_DeviceDebugProbe::primary() const
-{
-    return m_primary;
 }
 
 inline AVR_Signal& AVR_DeviceDebugProbe::watchpoint_signal()
