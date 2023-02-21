@@ -49,10 +49,11 @@ struct AVR_CoreConfiguration {
 
 
 struct AVR_DeviceConfiguration /NoDefaultCtors/ {
-    AVR_CoreConfiguration&          core;
 
-    const char*                     name;
-    StringVector                    pins;
+    std::string                     name;
+    AVR_CoreConfiguration&          core;
+    StdStringVector                 pins;
+
     AVR_DeviceConfiguration(AVR_CoreConfiguration&);
 
 };

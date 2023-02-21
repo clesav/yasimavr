@@ -33,7 +33,7 @@
         (len) = (size) - (base);
 
 
-AVR_NonVolatileMemory::AVR_NonVolatileMemory(size_t size, const char* name)
+AVR_NonVolatileMemory::AVR_NonVolatileMemory(size_t size, const std::string& name)
 :m_size(size)
 ,m_name(name)
 {

@@ -59,11 +59,11 @@ class AVR_NonVolatileMemory /NoDefaultCtors/ {
 
 public:
 
-    AVR_NonVolatileMemory(size_t, const char* = "");
+    AVR_NonVolatileMemory(size_t, const std::string = "");
     AVR_NonVolatileMemory(const AVR_NonVolatileMemory&);
 
     size_t size() const;
-    const char* name() const;
+    const std::string& name() const;
 
     bool programmed(size_t) const;
 

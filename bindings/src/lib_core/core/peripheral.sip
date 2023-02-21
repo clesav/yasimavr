@@ -173,10 +173,7 @@ public:
     AVR_Peripheral(uint32_t);
 
     uint32_t id() const;
-    const char* name() const;
-    %MethodCode
-        sipRes = sipCpp->name().c_str();
-    %End
+    std::string name() const /Factory/;
 
     virtual bool init(AVR_Device&);
     virtual void reset();

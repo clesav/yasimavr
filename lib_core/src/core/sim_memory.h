@@ -45,14 +45,14 @@ class DLL_EXPORT AVR_NonVolatileMemory {
 public:
 
     //Base contructor: construct an unprogrammed NVM
-    explicit AVR_NonVolatileMemory(size_t size, const char* name = "");
+    explicit AVR_NonVolatileMemory(size_t size, const std::string& name = "");
     //Copy constructor
     AVR_NonVolatileMemory(const AVR_NonVolatileMemory& other);
     //Destructor
     ~AVR_NonVolatileMemory();
 
     size_t size() const;
-    const char* name() const;
+    const std::string& name() const;
 
     bool programmed(size_t pos) const;
 
@@ -92,7 +92,7 @@ private:
     size_t m_size;
     unsigned char* m_memory;
     unsigned char* m_tag;
-    const char* m_name;
+    std::string m_name;
 
 };
 
@@ -101,7 +101,7 @@ inline size_t AVR_NonVolatileMemory::size() const
     return m_size;
 }
 
-inline const char* AVR_NonVolatileMemory::name() const
+inline const std::string& AVR_NonVolatileMemory::name() const
 {
     return m_name;
 }

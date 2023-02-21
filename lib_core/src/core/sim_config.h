@@ -66,9 +66,9 @@ struct AVR_CoreConfiguration {
  */
 struct AVR_DeviceConfiguration {
 
-    const char                          *name;
+    std::string                         name;
     AVR_CoreConfiguration&              core;
-    std::vector<const char*>            pins;
+    std::vector<std::string>            pins;
 
     inline explicit AVR_DeviceConfiguration(AVR_CoreConfiguration& _core) : core(_core) {}
 

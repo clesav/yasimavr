@@ -1,3 +1,26 @@
+/*
+ * stdvector.sip
+ *
+ *  Copyright 2022 Clement Savergne <csavergne@yahoo.com>
+
+    This file is part of yasim-avr.
+
+    yasim-avr is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    yasim-avr is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+//=======================================================================================
+
 template<_TYPE_>
 %MappedType std::vector<_TYPE_>
     /TypeHintIn="Vector[_TYPE_]",
@@ -344,13 +367,14 @@ typedef std::vector<uint32_t> UnsignedInt32Vector;
 
 //=======================================================================================
 
-%MappedType StringVector
+%MappedType StdStringVector
     /TypeHintIn="Vector[str]",
      TypeHintOut="List[str]"/
 {
 %TypeHeaderCode
 #include <vector>
-typedef std::vector<const char*> StringVector;
+#include <string>
+typedef std::vector<std::string> StdStringVector;
 %End
 
 %ConvertFromTypeCode
@@ -358,8 +382,7 @@ typedef std::vector<const char*> StringVector;
     if (!l) return 0;
 
     for (size_t i = 0; i < sipCpp->size(); ++i) {
-        const char* s = (*sipCpp)[i];
-        PyObject* tobj = PyUnicode_FromString(s);
+        PyObject* tobj = PyUnicode_FromString((*sipCpp)[i].c_str());
 
         if (!tobj) {
             Py_DECREF(l);
@@ -394,7 +417,7 @@ typedef std::vector<const char*> StringVector;
         return 0;
     }
 
-    std::vector<const char*>* v = new std::vector<const char*>;
+    StdStringVector* v = new StdStringVector;
     while ((item = PyIter_Next(iter)) != NULL) {
         const char* py_str;
         if (PyUnicode_Check(item))
@@ -403,9 +426,8 @@ typedef std::vector<const char*> StringVector;
             py_str = PyBytes_AsString(item);
 
         if (!PyErr_Occurred()) {
-            char* c_str = (char*) malloc(strlen(py_str) + 1);
-            strcpy(c_str, py_str);
-            v->push_back(c_str);
+            std::string s = std::string(py_str);
+            v->push_back(s);
         }
 
         Py_DECREF(item);
@@ -418,8 +440,6 @@ typedef std::vector<const char*> StringVector;
 
     if (*sipIsErr) {
         //In case of error, do a heap tidy up
-        for (auto s : *v)
-            free(const_cast<char*>(s));
         delete v;
         //Nothing to return
         return 0;
@@ -428,37 +448,7 @@ typedef std::vector<const char*> StringVector;
         v->shrink_to_fit();
         //Return the instance
         *sipCppPtr = v;
-        //The instance is not temporary (the C string items aren't)
-        return sipGetState(sipTransferObj) & ~SIP_TEMPORARY;
-    }
-%End
-
-%ReleaseCode
-    for (auto s : *sipCpp)
-        free(const_cast<char*>(s));
-    delete sipCpp;
-%End
-};
-
-
-//=======================================================================================
-
-%MappedType C_STR
-{
-%TypeHeaderCode
-    typedef const char* C_STR;
-%End
-
-%ConvertFromTypeCode
-    return PyUnicode_FromString(*sipCpp);
-%End
-
-%ConvertToTypeCode
-    if (!sipIsErr) {
-        return PyUnicode_Check(sipPy);
-    } else {
-        (**sipCppPtr) = PyUnicode_AsUTF8(sipPy);
-        return 0;
+        return sipGetState(sipTransferObj);
     }
 %End
 };
