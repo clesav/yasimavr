@@ -45,16 +45,14 @@ struct AVR_CoreConfiguration {
     mem_addr_t          fusesize;
     UnsignedInt8Vector  fuses;
 
-    //uint8_t           signature[3];
-    //uint8_t           lockbits;
-
 };
 
 
-struct AVR_DeviceConfiguration {
+struct AVR_DeviceConfiguration /NoDefaultCtors/ {
+    AVR_CoreConfiguration&          core;
 
     const char*                     name;
-    const AVR_CoreConfiguration*    core;
     StringVector                    pins;
+    AVR_DeviceConfiguration(AVR_CoreConfiguration&);
 
 };

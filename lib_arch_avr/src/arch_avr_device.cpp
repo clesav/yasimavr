@@ -121,7 +121,7 @@ void AVR_ArchAVR_Core::dbg_write_data(mem_addr_t addr, const uint8_t* buf, mem_a
 
 AVR_ArchAVR_Device::AVR_ArchAVR_Device(const AVR_ArchAVR_DeviceConfig& config)
 :AVR_Device(m_core_impl, config)
-,m_core_impl(*(config.core))
+,m_core_impl(config.core)
 {}
 
 

@@ -165,7 +165,7 @@ void AVR_ArchMega0_Core::dbg_write_data(mem_addr_t addr, const uint8_t* buf, mem
 
 AVR_ArchMega0_Device::AVR_ArchMega0_Device(const AVR_ArchMega0_DeviceConfig& config)
 :AVR_Device(m_core_impl, config)
-,m_core_impl(*reinterpret_cast<const AVR_ArchMega0_CoreConfig*>(config.core))
+,m_core_impl(reinterpret_cast<const AVR_ArchMega0_CoreConfig&>(config.core))
 {}
 
 

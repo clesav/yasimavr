@@ -61,9 +61,8 @@ def get_core_config(dev_desc):
 #Device configuration
 
 def get_dev_config(dev_desc, core_cfg):
-    cfg = _archlib.AVR_ArchMega0_DeviceConfig()
+    cfg = _archlib.AVR_ArchMega0_DeviceConfig(core_cfg)
     cfg.name = dev_desc.name
-    cfg.core = core_cfg
     cfg.pins = dev_desc.pins
     return cfg
 
