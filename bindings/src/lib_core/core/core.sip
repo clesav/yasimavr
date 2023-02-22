@@ -86,8 +86,8 @@ public:
     void reset();
     int exec_cycle();
     AVR_IO_Register* get_ioreg(reg_addr_t);
-    uint8_t ioctl_read_ioreg(const reg_addr_t);
-    void ioctl_write_ioreg(const regbit_t, uint8_t);
+    uint8_t ioctl_read_ioreg(reg_addr_t);
+    void ioctl_write_ioreg(const regbit_t&, uint8_t);
 
     void start_interrupt_inhibit(unsigned int);
 

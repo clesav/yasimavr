@@ -115,10 +115,9 @@ public:
 
     //Peripheral access to the I/O registers
     uint8_t ioctl_read_ioreg(reg_addr_t addr);
-    void ioctl_write_ioreg(regbit_t rb, uint8_t value);
+    void ioctl_write_ioreg(const regbit_t& rb, uint8_t value);
 
     void start_interrupt_inhibit(unsigned int count);
-    //AVR_Signal& int_inhib_signal();
 
     //Disable copy semantics
     AVR_Core(const AVR_Core&) = delete;
@@ -209,11 +208,6 @@ inline const AVR_CoreConfiguration& AVR_Core::config() const
 {
     return m_config;
 }
-
-//inline AVR_Signal& AVR_Core::int_inhib_signal()
-//{
-//  return m_int_inhib_signal;
-//}
 
 bool data_space_map(mem_addr_t addr, mem_addr_t len,
                     mem_addr_t blockstart, mem_addr_t blockend,
