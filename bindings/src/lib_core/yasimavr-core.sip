@@ -37,6 +37,7 @@ typedef short                   int16_t;
 typedef unsigned char           uint8_t /PyInt/;
 
 %Include support/stdvector.sip
+%Include support/stdstring.sip
 
 //=======================================================================================
 

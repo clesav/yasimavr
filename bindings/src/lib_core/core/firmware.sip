@@ -36,12 +36,7 @@ public:
 
     };
 
-    char* variant /NoSetter/ {
-        %GetCode
-            sipPy = PyUnicode_FromString(sipCpp->variant.c_str());
-        %End
-    };
-
+    std::string variant;
     uint32_t frequency;
     double vcc;
     double aref;
@@ -51,13 +46,13 @@ public:
     AVR_Firmware();
     AVR_Firmware(const AVR_Firmware& other);
 
-    static AVR_Firmware* read_elf(const char*);
+    static AVR_Firmware* read_elf(const std::string&);
 
-    void add_block(const C_STR&, const mem_block_t&, size_t = 0);
-    bool has_memory(const C_STR&) const;
-    size_t memory_size(const C_STR&) const;
-    std::vector<AVR_Firmware::Block> blocks(const C_STR&) const;
-    bool load_memory(const C_STR&, AVR_NonVolatileMemory&) const;
+    void add_block(const std::string&, const mem_block_t&, size_t = 0);
+    bool has_memory(const std::string&) const;
+    size_t memory_size(const std::string&) const;
+    std::vector<AVR_Firmware::Block> blocks(const std::string&) const;
+    bool load_memory(const std::string&, AVR_NonVolatileMemory&) const;
     mem_addr_t datasize() const;
     mem_addr_t bsssize() const;
 

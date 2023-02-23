@@ -143,6 +143,16 @@ int find_reg_config(const std::vector<T>& v, uint64_t reg_value)
     return -1;
 }
 
+template<typename T>
+const T* find_reg_config_p(const std::vector<T>& v, uint64_t reg_value)
+{
+    for (const T& cfg : v) {
+        if (cfg.reg_value == reg_value)
+            return &cfg;
+    }
+    return nullptr;
+}
+
 
 //=======================================================================================
 /*

@@ -60,9 +60,9 @@ AVR_Core::AVR_Core(const AVR_CoreConfiguration& config)
     //If extended addressing is used (flash > 64kb), allocate the
     //registers RAMPZ and EIND
     if (use_extended_addressing()) {
-        if (m_config.rampz)
+        if (m_config.rampz.valid())
             m_ioregs[m_config.rampz] = new AVR_IO_Register(true);
-        if (m_config.eind)
+        if (m_config.eind.valid())
             m_ioregs[m_config.eind] = new AVR_IO_Register(true);
     }
 }
@@ -173,65 +173,81 @@ void AVR_Core::cpu_write_gpreg(uint8_t reg, uint8_t value)
 
 AVR_IO_Register* AVR_Core::get_ioreg(reg_addr_t addr)
 {
-    if (addr < 0)
+    if (!addr.valid())
         return nullptr;
 
-    AVR_IO_Register* reg = m_ioregs[addr];
+    AVR_IO_Register* reg = m_ioregs[(int16_t) addr];
     if (!reg)
-        reg = m_ioregs[addr] = new AVR_IO_Register();
+        reg = m_ioregs[(int16_t) addr] = new AVR_IO_Register();
 
     return reg;
 }
 
-uint8_t AVR_Core::cpu_read_ioreg(reg_addr_t io_addr)
+uint8_t AVR_Core::cpu_read_ioreg(reg_addr_t reg_addr)
 {
-    uint8_t v;
-    if (io_addr < 0 || io_addr > m_ioregs.size()) {
-        m_device->logger().err("CPU reading an off-range I/O address: %d", io_addr);
+    if (!reg_addr.valid()) {
+        m_device->logger().err("CPU reading an invalid I/O address");
         m_device->crash(CRASH_BAD_CPU_IO, "Invalid CPU register read");
-        v = 0;
+        return 0;
     }
-    else if (io_addr == R_SREG) {
-        v = read_sreg();
+
+    int16_t addr = (int16_t) reg_addr;
+
+    if (addr == R_SREG)
+        return read_sreg();
+
+    if (addr >= m_ioregs.size()) {
+        m_device->logger().err("CPU reading an off-range I/O address: %04x", addr);
+        m_device->crash(CRASH_BAD_CPU_IO, "Invalid CPU register read");
+        return 0;
     }
-    else {
-        AVR_IO_Register* ioreg = m_ioregs[io_addr];
-        if (ioreg) {
-            v = ioreg->cpu_read(io_addr);
-        } else {
-            if (!m_device->test_option(AVR_Device::Option_IgnoreBadCpuIO)) {
-                m_device->logger().wng("CPU reading an invalid register: %04x", io_addr);
-                m_device->crash(CRASH_BAD_CPU_IO, "Invalid CPU register read");
-            }
-            v = 0;
+
+    AVR_IO_Register* ioreg = m_ioregs[addr];
+    if (ioreg) {
+        return ioreg->cpu_read(addr);
+    } else {
+        if (!m_device->test_option(AVR_Device::Option_IgnoreBadCpuIO)) {
+            m_device->logger().wng("CPU reading an unregistered I/O address: %04x", addr);
+            m_device->crash(CRASH_BAD_CPU_IO, "Invalid CPU register read");
         }
+        return 0;
     }
-    return v;
 }
 
-void AVR_Core::cpu_write_ioreg(reg_addr_t io_addr, uint8_t value)
+void AVR_Core::cpu_write_ioreg(reg_addr_t reg_addr, uint8_t value)
 {
-    if (io_addr < 0 || io_addr > m_ioregs.size()) {
-        m_device->logger().err("CPU writing to an off-range I/O address: %d", io_addr);
+    if (!reg_addr.valid()) {
+        m_device->logger().err("CPU writing to an invalid I/O address");
         m_device->crash(CRASH_BAD_CPU_IO, "Invalid CPU register write");
+        return;
     }
-    else if (io_addr == R_SREG) {
+
+    int16_t addr = (int16_t) reg_addr;
+
+    if (addr == R_SREG) {
         write_sreg(value);
+        return;
     }
-    else {
-        AVR_IO_Register* ioreg = m_ioregs[io_addr];
-        if (ioreg) {
-            if (ioreg->cpu_write(io_addr, value)) {
-                if (!m_device->test_option(AVR_Device::Option_IgnoreBadCpuIO)) {
-                    m_device->logger().wng("CPU writing to a read-only register: %04x", io_addr);
-                    m_device->crash(CRASH_BAD_CPU_IO, "Register read-only violation");
-                }
-            }
-        } else {
+
+    if (addr >= m_ioregs.size()) {
+        m_device->logger().err("CPU writing to an off-range I/O address: %04x", addr);
+        m_device->crash(CRASH_BAD_CPU_IO, "Invalid CPU register write");
+        return;
+    }
+
+
+    AVR_IO_Register* ioreg = m_ioregs[addr];
+    if (ioreg) {
+        if (ioreg->cpu_write(addr, value)) {
             if (!m_device->test_option(AVR_Device::Option_IgnoreBadCpuIO)) {
-                m_device->logger().wng("CPU writing to an invalid register: %04x", io_addr);
-                m_device->crash(CRASH_BAD_CPU_IO, "Invalid CPU register write");
+                m_device->logger().wng("CPU writing to a read-only register: %04x", addr);
+                m_device->crash(CRASH_BAD_CPU_IO, "Register read-only violation");
             }
+        }
+    } else {
+        if (!m_device->test_option(AVR_Device::Option_IgnoreBadCpuIO)) {
+            m_device->logger().wng("CPU writing to an unregistered I/O address: %04x", addr);
+            m_device->crash(CRASH_BAD_CPU_IO, "Invalid CPU register write");
         }
     }
 }
@@ -240,51 +256,66 @@ void AVR_Core::cpu_write_ioreg(reg_addr_t io_addr, uint8_t value)
 //=======================================================================================
 //Peripheral interface for accessing I/O registers.
 
-uint8_t AVR_Core::ioctl_read_ioreg(reg_addr_t addr)
+uint8_t AVR_Core::ioctl_read_ioreg(const reg_addr_t reg_addr)
 {
-    uint8_t v;
-    if (addr < 0 || addr > m_ioregs.size()) {
-        m_device->logger().err("CTL reading an off-range I/O address: %d", addr);
+    if (!reg_addr.valid()) {
+        m_device->logger().err("CTL reading an invalid I/O address");
         m_device->crash(CRASH_BAD_CTL_IO, "Invalid CTL register read");
-        v = 0;
+        return 0;
     }
-    else if (addr == R_SREG) {
-        v = read_sreg();
+
+    int16_t addr = (int16_t) reg_addr;
+
+    if (addr == R_SREG)
+        return read_sreg();
+
+    if (addr >= m_ioregs.size()) {
+        m_device->logger().err("CTL reading an off-range I/O address: %04x", addr);
+        m_device->crash(CRASH_BAD_CTL_IO, "Invalid CTL register read");
+        return 0;
     }
-    else {
-        AVR_IO_Register* ioreg = m_ioregs[addr];
-        if (ioreg) {
-            v = ioreg->ioctl_read(addr);
-        } else {
-            m_device->logger().err("CTL reading an invalid register: %04x", addr);
-            m_device->crash(CRASH_BAD_CTL_IO, "Invalid CTL register read");
-            v = 0;
-        }
+
+    AVR_IO_Register* ioreg = m_ioregs[addr];
+    if (ioreg) {
+        return ioreg->ioctl_read(addr);
+    } else {
+        m_device->logger().err("CTL reading an invalid register: %04x", addr);
+        m_device->crash(CRASH_BAD_CTL_IO, "Invalid CTL register read");
+        return 0;
     }
-    return v;
 }
 
-void AVR_Core::ioctl_write_ioreg(regbit_t rb, uint8_t value)
+void AVR_Core::ioctl_write_ioreg(const regbit_t& rb, uint8_t value)
 {
-    if (!rb.valid() || rb.addr > m_ioregs.size()) {
-        m_device->logger().err("CTL writing to an off-range I/O address: %d", rb.addr);
+    if (!rb.valid()) {
+        m_device->logger().err("CTL writing to an invalid I/O address");
         m_device->crash(CRASH_BAD_CTL_IO, "Invalid CTL register write");
+        return;
     }
-    else if (rb.addr == R_SREG) {
+
+    int16_t addr = (int16_t) rb.addr;
+
+    if (addr == R_SREG) {
         uint8_t v = read_sreg();
         v = (v & ~rb.mask) | ((value << rb.bit) & rb.mask);
         write_sreg(v);
+        return;
     }
-    else {
-        AVR_IO_Register* ioreg = m_ioregs[rb.addr];
-        if (ioreg) {
-            uint8_t v = ioreg->value();
-            v = (v & ~rb.mask) | ((value << rb.bit) & rb.mask);
-            ioreg->ioctl_write(rb.addr, v);
-        } else {
-            m_device->logger().err("CTL writing an invalid register: %04x", rb.addr);
-            m_device->crash(CRASH_BAD_CTL_IO, "Invalid CTL register write");
-        }
+
+    if (addr >= m_ioregs.size()) {
+        m_device->logger().err("CTL writing to an off-range I/O address: %04x", addr);
+        m_device->crash(CRASH_BAD_CTL_IO, "Invalid CTL register write");
+        return;
+    }
+
+    AVR_IO_Register* ioreg = m_ioregs[addr];
+    if (ioreg) {
+        uint8_t v = ioreg->value();
+        v = (v & ~rb.mask) | ((value << rb.bit) & rb.mask);
+        ioreg->ioctl_write(addr, v);
+    } else {
+        m_device->logger().err("CTL writing to an unregistered I/O address: %04x", addr);
+        m_device->crash(CRASH_BAD_CTL_IO, "Invalid CTL register write");
     }
 }
 
@@ -379,12 +410,6 @@ flash_addr_t AVR_Core::cpu_pop_flash_addr()
 
 
 //=======================================================================================
-
-void AVR_Core::dbg_set_debug_probe(AVR_DeviceDebugProbe* debug)
-{
-    m_debug_probe = debug;
-}
-
 /*
  * Block memory mapping from data space to a block of memory
  * The block is defined by the interval [blockstart ; blockend] in data space

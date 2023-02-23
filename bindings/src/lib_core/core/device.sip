@@ -68,11 +68,11 @@ public:
         State_Destroying    /PyName=Destroying/,
     };
 
-    enum ResetFlag {
-        Reset_PowerOn,
-        Reset_WDT,
-        Reset_BOD,
-        Reset_SW,
+    enum ResetFlag /BaseType=IntFlag/ {
+        Reset_PowerOn       /PyName=PowerOn/,
+        Reset_WDT           /PyName=WDT/,
+        Reset_BOD           /PyName=BOD/,
+        Reset_SW            /PyName=SW/,
     };
 
     enum Option /BaseType=IntFlag/ {

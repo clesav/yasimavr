@@ -279,8 +279,8 @@ void AVR_ArchMega0_RTC::configure_timers()
     if (m_clk_mode) {
         //Read and configure the clock source
         uint8_t clk_mode_val = READ_IOREG_F(CLKSEL, RTC_CLKSEL);
-        int clk_mode_ix = find_reg_config<CFG::clksel_config_t>(m_config.clocks, clk_mode_val);
-        CFG::RTC_ClockSource clk_src = m_config.clocks[clk_mode_ix].source;
+        auto clk_mode_cfg = find_reg_config_p<CFG::clksel_config_t>(m_config.clocks, clk_mode_val);
+        CFG::RTC_ClockSource clk_src = clk_mode_cfg ? clk_mode_cfg->source : CFG::Clock_32kHz;
         uint32_t clk_factor; //ratio (main MCU clock freq) / (RTC clock freq)
         if (clk_src == CFG::Clock_32kHz)
             clk_factor = device()->frequency() / 32768;

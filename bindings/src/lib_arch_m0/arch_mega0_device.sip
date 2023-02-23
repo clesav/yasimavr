@@ -34,10 +34,12 @@ struct AVR_ArchMega0_CoreConfig : public AVR_CoreConfiguration {
 
 };
 
-struct AVR_ArchMega0_DeviceConfig : public AVR_DeviceConfiguration {
+struct AVR_ArchMega0_DeviceConfig : public AVR_DeviceConfiguration  /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_mega0_device.h"
 %End
+
+    AVR_ArchMega0_DeviceConfig(AVR_CoreConfiguration&);
 };
 
 

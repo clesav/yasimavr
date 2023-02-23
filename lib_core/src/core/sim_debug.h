@@ -51,50 +51,53 @@ public:
     };
 
     AVR_DeviceDebugProbe();
+    explicit AVR_DeviceDebugProbe(AVR_Device& device);
+    AVR_DeviceDebugProbe(const AVR_DeviceDebugProbe& probe);
     //Destructor: ensures the probe is detached
-    ~AVR_DeviceDebugProbe() noexcept;
+    ~AVR_DeviceDebugProbe();
 
     AVR_Device* device() const;
 
     //Attaches the probe to a device, allowing access to its internals
     void attach(AVR_Device& device);
+    //Attaches this to the same device as the argument
+    void attach(AVR_DeviceDebugProbe& probe);
     //Detaches the probe from the device. it MUST be called before
     //destruction.
     void detach();
-
     bool attached() const;
 
-    void reset_device();
-    void set_device_state(AVR_Device::State state);
+    void reset_device() const;
+    void set_device_state(AVR_Device::State state) const;
 
     //Access to general purpose CPU registers
-    void write_gpreg(unsigned int num, uint8_t value);
-    uint8_t read_gpreg(unsigned int num);
+    void write_gpreg(unsigned int num, uint8_t value) const;
+    uint8_t read_gpreg(unsigned int num) const;
 
     //Access to the SREG register
-    void write_sreg(uint8_t value);
-    uint8_t read_sreg();
+    void write_sreg(uint8_t value) const;
+    uint8_t read_sreg() const;
 
     //Access to the Stack Pointer
-    void write_sp(uint16_t value);
-    uint16_t read_sp();
+    void write_sp(uint16_t value) const;
+    uint16_t read_sp() const;
 
     //Access to the Program Counter
-    void write_pc(uint32_t value);
-    uint32_t read_pc();
+    void write_pc(uint32_t value) const;
+    uint32_t read_pc() const;
 
     //Access to I/O registers. From the peripherals point of view, it's
     //the same as a CPU access
-    void write_ioreg(reg_addr_t addr, uint8_t value);
-    uint8_t read_ioreg(reg_addr_t addr);
+    void write_ioreg(reg_addr_t addr, uint8_t value) const;
+    uint8_t read_ioreg(reg_addr_t addr) const;
 
     //Access to the flash memory
-    void write_flash(flash_addr_t addr, uint8_t* buf, uint32_t len);
-    uint32_t read_flash(flash_addr_t addr, uint8_t* buf, uint32_t len);
+    void write_flash(flash_addr_t addr, const uint8_t* buf, flash_addr_t len) const;
+    flash_addr_t read_flash(flash_addr_t addr, uint8_t* buf, flash_addr_t len) const;
 
     //Access to the data space
-    void write_data(mem_addr_t addr, uint8_t* buf, uint32_t len);
-    void read_data(mem_addr_t addr, uint8_t* buf, uint32_t len);
+    void write_data(mem_addr_t addr, const uint8_t* buf, mem_addr_t len) const;
+    void read_data(mem_addr_t addr, uint8_t* buf, mem_addr_t len) const;
 
     //Breakpoint management
     void insert_breakpoint(flash_addr_t addr);
@@ -112,9 +115,7 @@ public:
     void _cpu_notify_call(flash_addr_t addr);
     void _cpu_notify_ret();
 
-    //Disable copy semantics
-    AVR_DeviceDebugProbe(const AVR_DeviceDebugProbe&) = delete;
-    AVR_DeviceDebugProbe& operator=(const AVR_DeviceDebugProbe&) = delete;
+    AVR_DeviceDebugProbe& operator=(const AVR_DeviceDebugProbe& probe);
 
 private:
 
@@ -124,15 +125,20 @@ private:
         int flags;
     };
 
+    //Pointer to the device this is attached to.
     AVR_Device* m_device;
+    //Pointer to the primary probe. If null, this is primary.
+    AVR_DeviceDebugProbe* m_primary;
+    //Vector of secondary probes.
+    std::vector<AVR_DeviceDebugProbe*> m_secondaries;
     //Mapping containers PC => breakpoint
-    std::map<flash_addr_t, breakpoint_t*> m_breakpoints;
+    std::map<flash_addr_t, breakpoint_t> m_breakpoints;
     //Mapping containers mem address => watchpoint
-    std::map<mem_addr_t, watchpoint_t*> m_watchpoints;
+    std::map<mem_addr_t, watchpoint_t> m_watchpoints;
     //Signal for watchpoint notification
     AVR_Signal m_wp_signal;
 
-    void notify_watchpoint(watchpoint_t* wp, int event, mem_addr_t addr);
+    void notify_watchpoint(watchpoint_t& wp, int event, mem_addr_t addr);
 
 };
 

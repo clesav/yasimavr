@@ -145,11 +145,8 @@ void AVR_ArchAVR_ADC::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& 
     if (addr == m_config.rb_auto_trig.addr || addr == m_config.rb_trig_mux.addr) {
         if (test_ioreg(m_config.rb_auto_trig)) {
             uint8_t trig_reg_value = read_ioreg(m_config.rb_trig_mux);
-            int ix = find_reg_config<CFG::trigger_config_t>(m_config.triggers, trig_reg_value);
-            if (ix < 0)
-                m_trigger = CFG::Trig_Manual;
-            else
-                m_trigger = m_config.triggers[ix].trigger;
+            auto trig_cfg = find_reg_config_p<CFG::trigger_config_t>(m_config.triggers, trig_reg_value);
+            m_trigger = trig_cfg ? trig_cfg->trigger : CFG::Trig_Manual;
         } else {
             m_trigger = CFG::Trig_Manual;
         }
@@ -216,21 +213,19 @@ void AVR_ArchAVR_ADC::read_analog_value()
     logger().dbg("Reading analog value");
 
     //Find the channel mux configuration
-    int index = find_reg_config<channel_config_t>(m_config.channels, m_latched_ch_mux);
-    if (index == -1)
+    auto ch_config = find_reg_config_p<channel_config_t>(m_config.channels, m_latched_ch_mux);
+    if (!ch_config)
         _crash("ADC: Invalid channel configuration");
-    auto ch_config = &(m_config.channels[index]);
 
     //Find the reference voltage mux configuration and request the value from the VREF peripheral
-    double vref = 0.0;
-    index = find_reg_config<CFG::reference_config_t>(m_config.references, m_latched_ref_mux);
-    if(index == -1)
+    auto ref_config = find_reg_config_p<CFG::reference_config_t>(m_config.references, m_latched_ref_mux);
+    if(!ref_config)
         _crash("ADC: Invalid reference configuration");
-    auto ref_config = &(m_config.references[index]);
-    ctlreq_data_t reqdata = { .data = m_config.vref_channel, .index = ref_config->source };
+
+    ctlreq_data_t reqdata = { .index = ref_config->source };
     if (!device()->ctlreq(AVR_IOCTL_VREF, AVR_CTLREQ_VREF_GET, &reqdata))
         _crash("ADC: Unable to obtain the voltage reference");
-    vref = reqdata.data.as_double();
+    double vref = reqdata.data.as_double();
 
     //Obtain the raw analog value depending on the channel mux configuration
     //The raw value is in the interval [0.0; 1.0] (or [-1.0; +1.0] for bipolar)

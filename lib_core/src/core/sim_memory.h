@@ -45,14 +45,14 @@ class DLL_EXPORT AVR_NonVolatileMemory {
 public:
 
     //Base contructor: construct an unprogrammed NVM
-    explicit AVR_NonVolatileMemory(size_t size, const char* name = "");
+    explicit AVR_NonVolatileMemory(size_t size, const std::string& name = "");
     //Copy constructor
     AVR_NonVolatileMemory(const AVR_NonVolatileMemory& other);
     //Destructor
     ~AVR_NonVolatileMemory();
 
     size_t size() const;
-    const char* name() const;
+    const std::string& name() const;
 
     bool programmed(size_t pos) const;
 
@@ -70,19 +70,19 @@ public:
     //Erases a block in the memory
     void erase(size_t base, size_t size);
     //Erases the memory based on a bufset
-    void erase(unsigned char* buf, size_t pos, size_t len);
+    void erase(const unsigned char* buf, size_t pos, size_t len);
 
     //Reads/writes the NVM by single byte or block. This is designed for
     //the debug probe and breakpoint mechanisms
     int dbg_read(size_t pos) const;
     size_t dbg_read(unsigned char* buf, size_t base, size_t len) const;
     void dbg_write(unsigned char v, size_t pos);
-    void dbg_write(unsigned char* buf, size_t base, size_t len);
+    void dbg_write(const unsigned char* buf, size_t base, size_t len);
 
     //Writes the NVM by single byte or block. This is designed for
     //the self-programming mechanisms
     void spm_write(unsigned char v, size_t pos);
-    void spm_write(unsigned char* buf, unsigned char* bufset, size_t base, size_t len);
+    void spm_write(const unsigned char* buf, const unsigned char* bufset, size_t base, size_t len);
 
     //Copy assignment
     AVR_NonVolatileMemory& operator=(const AVR_NonVolatileMemory& other);
@@ -92,7 +92,7 @@ private:
     size_t m_size;
     unsigned char* m_memory;
     unsigned char* m_tag;
-    const char* m_name;
+    std::string m_name;
 
 };
 
@@ -101,7 +101,7 @@ inline size_t AVR_NonVolatileMemory::size() const
     return m_size;
 }
 
-inline const char* AVR_NonVolatileMemory::name() const
+inline const std::string& AVR_NonVolatileMemory::name() const
 {
     return m_name;
 }
