@@ -139,7 +139,10 @@ public:
 
     const char* __repr__() const;
     %MethodCode
-        return PyUnicode_FromFormat("Regbit(%04x, %d, %02x)", (int16_t)(sipCpp->addr), sipCpp->bit, sipCpp->mask);
+        if (sipCpp->valid())
+            return PyUnicode_FromFormat("Regbit(%04x, %d, %02x)", (int16_t)(sipCpp->addr), sipCpp->bit, sipCpp->mask);
+        else
+            return PyUnicode_FromString("Regbit(INVALID)");
     %End
 
 };
