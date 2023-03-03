@@ -22,7 +22,6 @@ This module defines Descriptor classes that contain the variant
 configuration decoded from YAML configuration files
 '''
 
-import yaml
 import weakref
 import os
 import sys
@@ -30,6 +29,13 @@ import collections
 
 
 Architectures = ['AVR', 'Mega0']
+from yaml import load as _yaml_load
+try:
+    from yaml import CLoader as _YAMLLoader
+except ImportError:
+    from yaml import _YAMLLoader
+
+
 
 
 #List of path which are searched for YAML configuration files
@@ -46,6 +52,9 @@ def _find_config_file(fn):
             return p
     return None
 
+def _load_config_file(fn):
+    with open(fn) as f:
+        return _yaml_load(f, _YAMLLoader)
 
 class DeviceConfigException(Exception):
     pass
@@ -139,10 +148,8 @@ class RegisterFieldDescriptor:
             self.LSB = int(field_config.get('LSB', 0))
             self.MSB = int(field_config.get('MSB', reg_size - 1))
 
-        else:
-            raise DeviceConfigException('Field kind unknown: ' + self.kind)
-
         self.readonly = bool(field_config.get('readonly', False))
+        self.supported = bool(field_config.get('supported', True))
 
     def shift_mask(self):
         if self.kind == 'BIT':
@@ -172,7 +179,7 @@ class RegisterDescriptor:
 
         self.fields = {}
         for field_name, field_config in dict(reg_config.get('fields', {})).items():
-            self.fields[field_name] = RegisterFieldDescriptor(field_name, field_config, self.size)
+            self.fields[field_name] = RegisterFieldDescriptor(field_name, field_config, self.size * 8)
 
         self.readonly = bool(reg_config.get('readonly', False))
         self.supported = bool(reg_config.get('supported', True))
@@ -200,16 +207,16 @@ class PeripheralClassDescriptor:
                 self.registers[r.name + 'L'] = ProxyRegisterDescriptor(r, 0)
                 self.registers[r.name + 'H'] = ProxyRegisterDescriptor(r, 1)
 
-
         self.config = per_config.get('config', {})
 
 
 class PeripheralInstanceDescriptor:
-    '''Descriptor class for the instanciation of a peripheral type'''
+    '''Descriptor class for the instantiation of a peripheral type'''
 
     def __init__(self, name, loader, f, device):
         self.name = name
         self.per_class = f.get('class', name)
+        self.ctl_id = f.get('ctl_id', name[:4])
         self.reg_base = f.get('base', -1)
         self.class_descriptor = loader.load_peripheral(self.per_class, f['file'])
         self.device = device
@@ -238,7 +245,7 @@ class PeripheralInstanceDescriptor:
             if default is not None:
                 return default
             else:
-                raise
+                raise KeyError()
 
 
 #Utility class that manages caches of peripheral configurations and
@@ -263,10 +270,8 @@ class _DeviceDescriptorLoader:
             if per_path is None:
                 raise DeviceConfigException('Config file not found: ' + per_filepath)
 
-            f = open(per_path)
-            per_yml_doc = yaml.safe_load(f)
+            per_yml_doc = _load_config_file(per_path)
             self._yml_cache[per_filepath] = per_yml_doc
-            f.close()
 
         per_config = per_yml_doc[per_name]
         per_descriptor = PeripheralClassDescriptor(per_config)
@@ -330,15 +335,10 @@ class DeviceDescriptor:
         if fn is None:
             raise DeviceConfigException('No configuration found for variant ' + devname)
 
-        f = None
         try:
-            f = open(fn)
-            yml_cfg = yaml.safe_load(f)
+            yml_cfg = _load_config_file(fn)
         except Exception as exc:
             msg = 'Error reading the configuration file for ' + devname
             raise DeviceConfigException(msg) from exc
         else:
             return yml_cfg
-        finally:
-            if f:
-                f.close()
