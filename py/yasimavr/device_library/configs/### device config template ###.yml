@@ -66,8 +66,8 @@ access:
     #low and high bytes must be accessed for a read/write operation
     #if set to 'yes', the low byte will be accessed first.
     #They can be omitted if the device has no 16-bits register.
-    big_endian_on_write: yes
-    big_endian_on_read: yes
+    lsb_first_on_write: yes
+    lsb_first_on_read: yes
 
 #List of the pins of the device
 pins: [ Px0, Px1, Px2, Px3, Px4, Px5, Px6, Px7 ]

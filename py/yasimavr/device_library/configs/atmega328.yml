@@ -42,8 +42,8 @@ core:
     clear_GIE_on_int: yes
 
 access:
-    big_endian_on_write: yes
-    big_endian_on_read: no
+    lsb_first_on_write: yes
+    lsb_first_on_read: no
 
 pins: [ PB0, PB1, PB2, PB3, PB4, PB5, PB6, PB7,
         PC0, PC1, PC2, PC3, PC4, PC5,
