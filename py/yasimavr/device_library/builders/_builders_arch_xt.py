@@ -23,57 +23,24 @@ and returns a configuration structure used to initialised the C++ level objects
 This module applies to devices ATmega80x/160x/320x/480x
 '''
 
-import yasimavr.lib.core as _corelib
-import yasimavr.lib.arch_m0 as _archlib
-from ._base import _PeripheralConfigBuilder, get_core_attributes, convert_regbit
+from ...lib import core as _corelib
+from ...lib import arch_m0 as _archlib
+from ._base import (PeripheralBuilder, PeripheralConfigBuilder,
+                    IndexedPeripheralBuilder, LetteredPeripheralBuilder, DummyPeripheralBuilder,
+                    DeviceBuilder, DeviceBuildError,
+                    get_core_attributes, convert_to_regbit)
 
 
-#========================================================================================
-#Core configuration
-
-def get_core_config(dev_desc):
-    cfg = _archlib.AVR_ArchMega0_CoreConfig()
-
-    cfg.attributes = get_core_attributes(dev_desc)
-
-    cfg.iostart, cfg.ioend = dev_desc.mem_spaces['data'].segments['io']
-    cfg.ramstart, cfg.ramend = dev_desc.mem_spaces['data'].segments['ram']
-    cfg.flashstart_ds, cfg.flashend_ds = dev_desc.mem_spaces['data'].segments['flash']
-    cfg.eepromstart_ds, cfg.eepromend_ds = dev_desc.mem_spaces['data'].segments['eeprom']
-
-    cfg.dataend = dev_desc.mem_spaces['data'].memend
-    cfg.flashend = dev_desc.mem_spaces['flash'].memend
-    cfg.eepromend = dev_desc.mem_spaces['eeprom'].memend
-    cfg.userrowend = dev_desc.mem_spaces['userrow'].memend
-
-    cfg.eind = dev_desc.peripherals['CPU'].reg_address('EIND', _corelib.INVALID_REGISTER)
-    cfg.rampz = dev_desc.peripherals['CPU'].reg_address('RAMPZ', _corelib.INVALID_REGISTER)
-
-    cfg.vector_size = dev_desc.interrupt_map.vector_size
-
-    cfg.fusesize = dev_desc.fuses['size']
-    cfg.fuses = bytes(dev_desc.fuses['factory_values'])
-
-    return cfg
-
-
-#========================================================================================
-#Device configuration
-
-def get_dev_config(dev_desc, core_cfg):
-    cfg = _archlib.AVR_ArchMega0_DeviceConfig(core_cfg)
-    cfg.name = dev_desc.name
-    cfg.pins = dev_desc.pins
-    return cfg
+def base_config_builder(per_descriptor):
+    return per_descriptor.reg_base
 
 
 #========================================================================================
 #Interrupt management configuration
 
-_CpuIntConfigBuilder = _PeripheralConfigBuilder(_archlib.AVR_ArchMega0_IntCtrl_Config)
-
-def get_cpuint_config(per_desc):
-    return _CpuIntConfigBuilder(per_desc)
+def _get_cpuint_builder():
+    _CpuIntConfigBuilder = PeripheralConfigBuilder(_archlib.AVR_ArchMega0_IntCtrl_Config)
+    return PeripheralBuilder(_archlib.AVR_ArchMega0_IntCtrl, _CpuIntConfigBuilder)
 
 
 #========================================================================================
@@ -97,36 +64,55 @@ def _slpctrl_convertor(cfg, attr, yml_val, per_desc):
     else:
         raise Exception('Converter not implemented for ' + attr)
 
-_SleepConfigBuilder = _PeripheralConfigBuilder(_corelib.AVR_SleepConfig, _slpctrl_convertor)
 
-def get_sleep_config(per_desc):
-    return _SleepConfigBuilder(per_desc)
+def _get_slpctrl_builder():
+    _SleepConfigBuilder = PeripheralConfigBuilder(_corelib.AVR_SleepConfig, _slpctrl_convertor)
+    return PeripheralBuilder(_corelib.AVR_SleepController, _SleepConfigBuilder)
+
+
+#========================================================================================
+#CLK controller configuration
+
+def _get_clkctrl_builder():
+    return DummyPeripheralBuilder(_corelib.IOCTL_CLOCK)
+
+
+#========================================================================================
+#RST controller configuration
+
+def _get_rstctrl_builder():
+    return PeripheralBuilder(_archlib.AVR_ArchMega0_ResetCtrl, base_config_builder)
 
 
 #========================================================================================
 #NVM controller configuration
 
-_NVMCtrlConfigBuilder = _PeripheralConfigBuilder(_archlib.AVR_ArchMega0_NVM_Config)
+def _get_nvmctrl_builder():
+    _NVMCtrlConfigBuilder = PeripheralConfigBuilder(_archlib.AVR_ArchMega0_NVM_Config)
+    return PeripheralBuilder(_archlib.AVR_ArchMega0_NVM, _NVMCtrlConfigBuilder)
 
-def get_nvmctrl_config(per_desc):
-    return _NVMCtrlConfigBuilder(per_desc)
 
 #========================================================================================
 #Misc controller configuration
 
-_MISC_ConfigBuilder = _PeripheralConfigBuilder(_archlib.AVR_ArchMega0_Misc_Config)
-
-def get_misc_config(per_desc):
-    return _MISC_ConfigBuilder(per_desc)
+def _get_misc_builder():
+    _MiscConfigBuilder = PeripheralConfigBuilder(_archlib.AVR_ArchMega0_Misc_Config)
+    return PeripheralBuilder(_archlib.AVR_ArchMega0_MiscRegCtrl, _MiscConfigBuilder)
 
 
 #========================================================================================
 #Port management configuration
 
-_PortConfigBuilder = _PeripheralConfigBuilder(_archlib.AVR_ArchMega0_PortConfig)
+def _get_port_builder():
+    _PortConfigBuilder = PeripheralConfigBuilder(_archlib.AVR_ArchMega0_PortConfig)
+    return LetteredPeripheralBuilder(_archlib.AVR_ArchMega0_Port, _PortConfigBuilder)
 
-def get_port_config(per_desc):
-    return _PortConfigBuilder(per_desc)
+
+#========================================================================================
+#Portmuxconfiguration
+
+def _get_portmux_builder():
+    return DummyPeripheralBuilder(_corelib.IOCTL_PORTMUX)
 
 
 #========================================================================================
@@ -140,19 +126,18 @@ def _tca_convertor(cfg, attr, yml_val, per_desc):
     else:
         raise Exception('Converter not implemented for ' + attr)
 
-_TCA_ConfigBuilder = _PeripheralConfigBuilder(_archlib.AVR_ArchMega0_TimerA_Config, _tca_convertor)
 
-def get_tca_config(per_desc):
-    return _TCA_ConfigBuilder(per_desc)
+def _get_tca_builder():
+    _TCA_ConfigBuilder = PeripheralConfigBuilder(_archlib.AVR_ArchMega0_TimerA_Config, _tca_convertor)
+    return PeripheralBuilder(_archlib.AVR_ArchMega0_TimerA, _TCA_ConfigBuilder)
 
 
 #========================================================================================
 #TCB management configuration
 
-_TCB_ConfigBuilder = _PeripheralConfigBuilder(_archlib.AVR_ArchMega0_TimerB_Config)
-
-def get_tcb_config(per_desc):
-    return _TCB_ConfigBuilder(per_desc)
+def _get_tcb_builder():
+    _TCB_ConfigBuilder = PeripheralConfigBuilder(_archlib.AVR_ArchMega0_TimerB_Config)
+    return IndexedPeripheralBuilder(_archlib.AVR_ArchMega0_TimerB,_TCB_ConfigBuilder)
 
 
 #========================================================================================
@@ -172,10 +157,10 @@ def _rtc_convertor(cfg, attr, yml_val, per_desc):
     else:
         raise Exception('Converter not implemented for ' + attr)
 
-_RTC_ConfigBuilder = _PeripheralConfigBuilder(_archlib.AVR_ArchMega0_RTC_Config, _rtc_convertor)
 
-def get_rtc_config(per_desc):
-    return _RTC_ConfigBuilder(per_desc)
+def _get_rtc_builder():
+    _RTC_ConfigBuilder = PeripheralConfigBuilder(_archlib.AVR_ArchMega0_RTC_Config, _rtc_convertor)
+    return PeripheralBuilder(_archlib.AVR_ArchMega0_RTC, _RTC_ConfigBuilder)
 
 
 #========================================================================================
@@ -187,7 +172,7 @@ def _vref_convertor(cfg, attr, yml_val, per_desc):
         for index, item in enumerate(yml_val):
             chan_cfg = _archlib.AVR_ArchMega0_VREF_Config.channel_t()
             chan_cfg.index = index
-            chan_cfg.rb_select = convert_regbit(item['rb_select'], per_desc)
+            chan_cfg.rb_select = convert_to_regbit(item['rb_select'], per_desc)
 
             ref_cfg_list = []
             for reg_value, chan_ref in enumerate(item['references']):
@@ -212,10 +197,10 @@ def _vref_convertor(cfg, attr, yml_val, per_desc):
     else:
         raise Exception('Converter not implemented for ' + attr)
 
-_VREF_ConfigBuilder = _PeripheralConfigBuilder(_archlib.AVR_ArchMega0_VREF_Config, _vref_convertor)
 
-def get_vref_config(per_desc):
-    return _VREF_ConfigBuilder(per_desc)
+def _get_vref_builder():
+    _VREF_ConfigBuilder = PeripheralConfigBuilder(_archlib.AVR_ArchMega0_VREF_Config, _vref_convertor)
+    return PeripheralBuilder(_archlib.AVR_ArchMega0_VREF, _VREF_ConfigBuilder)
 
 
 #========================================================================================
@@ -260,10 +245,11 @@ def _adc_convertor(cfg, attr, yml_val, per_desc):
     else:
         raise Exception('Converter not implemented for ' + attr)
 
-_ADC_ConfigBuilder = _PeripheralConfigBuilder(_archlib.AVR_ArchMega0_ADC_Config, _adc_convertor)
 
-def get_adc_config(per_desc):
-    return _ADC_ConfigBuilder(per_desc)
+def _get_adc_builder():
+    _ADC_ConfigBuilder = PeripheralConfigBuilder(_archlib.AVR_ArchMega0_ADC_Config, _adc_convertor)
+    return IndexedPeripheralBuilder(_archlib.AVR_ArchMega0_ADC, _ADC_ConfigBuilder)
+
 
 #========================================================================================
 #ACP management configuration
@@ -289,18 +275,19 @@ def _acp_convertor(cfg, attr, yml_val, per_desc):
     else:
         raise Exception('Converter not implemented for ' + attr)
 
-_ACP_ConfigBuilder = _PeripheralConfigBuilder(_archlib.AVR_ArchMega0_ACP_Config, _acp_convertor)
 
-def get_acp_config(per_desc):
-    return _ACP_ConfigBuilder(per_desc)
+def _get_acp_builder():
+    _ACP_ConfigBuilder = PeripheralConfigBuilder(_archlib.AVR_ArchMega0_ACP_Config, _acp_convertor)
+    return IndexedPeripheralBuilder(_archlib.AVR_ArchMega0_ACP, _ACP_ConfigBuilder)
+
 
 #========================================================================================
 #USART management configuration
 
-_USART_ConfigBuilder = _PeripheralConfigBuilder(_archlib.AVR_ArchMega0_USART_Config)
+def _get_usart_builder():
+    _USART_ConfigBuilder = PeripheralConfigBuilder(_archlib.AVR_ArchMega0_USART_Config)
+    return IndexedPeripheralBuilder(_archlib.AVR_ArchMega0_USART, _USART_ConfigBuilder)
 
-def get_usart_config(per_desc):
-    return _USART_ConfigBuilder(per_desc)
 
 #========================================================================================
 #SPI management configuration
@@ -315,15 +302,103 @@ def _spi_convertor(cfg, attr, yml_val, per_desc):
     else:
         raise Exception('Converter not implemented for ' + attr)
 
-_SPI_ConfigBuilder = _PeripheralConfigBuilder(_archlib.AVR_ArchMega0_SPI_Config, _spi_convertor)
 
-def get_spi_config(per_desc):
-    return _SPI_ConfigBuilder(per_desc)
+def _get_spi_builder():
+    _SPI_ConfigBuilder = PeripheralConfigBuilder(_archlib.AVR_ArchMega0_SPI_Config, _spi_convertor)
+    return IndexedPeripheralBuilder(_archlib.AVR_ArchMega0_SPI, _SPI_ConfigBuilder)
+
 
 #========================================================================================
 #TWI management configuration
 
-_TWI_ConfigBuilder = _PeripheralConfigBuilder(_archlib.AVR_ArchMega0_TWI_Config)
+def _get_twi_builder():
+    _TWI_ConfigBuilder = PeripheralConfigBuilder(_archlib.AVR_ArchMega0_TWI_Config)
+    return IndexedPeripheralBuilder(_archlib.AVR_ArchMega0_TWI, _TWI_ConfigBuilder)
 
-def get_twi_config(per_desc):
-    return _TWI_ConfigBuilder(per_desc)
+
+#========================================================================================
+#FUSES configuration
+
+def _get_fuses_builder():
+    return PeripheralBuilder(_archlib.AVR_ArchMega0_Fuses, base_config_builder)
+
+
+#========================================================================================
+#USERROW configuration
+
+def _get_userrow_builder():
+    return PeripheralBuilder(_archlib.AVR_ArchMega0_USERROW, base_config_builder)
+
+
+#========================================================================================
+
+class XTDeviceBuilder(DeviceBuilder):
+
+    #Dictionary for the builder getters for Mega0/1 peripherals
+    _per_builder_getters = {
+        'CPUINT': _get_cpuint_builder,
+        'SLPCTRL': _get_slpctrl_builder,
+        'CLKCTRL': _get_clkctrl_builder,
+        'RSTCTRL': _get_rstctrl_builder,
+        'NVMCTRL': _get_nvmctrl_builder,
+        'MISC': _get_misc_builder,
+        'PORT': _get_port_builder,
+        'PORTMUX': _get_portmux_builder,
+        'RTC': _get_rtc_builder,
+        'TCA_SINGLE': _get_tca_builder,
+        'TCB': _get_tcb_builder,
+        'VREF': _get_vref_builder,
+        'ADC': _get_adc_builder,
+        'ACP': _get_acp_builder,
+        'USART': _get_usart_builder,
+        'SPI': _get_spi_builder,
+        'TWI': _get_twi_builder,
+        'FUSES': _get_fuses_builder,
+        'USERROW': _get_userrow_builder,
+    }
+
+    def _build_core_config(self, dev_desc):
+        cfg = _archlib.AVR_ArchMega0_CoreConfig()
+
+        cfg.attributes = get_core_attributes(dev_desc)
+
+        cfg.iostart, cfg.ioend = dev_desc.mem_spaces['data'].segments['io']
+        cfg.ramstart, cfg.ramend = dev_desc.mem_spaces['data'].segments['ram']
+        cfg.flashstart_ds, cfg.flashend_ds = dev_desc.mem_spaces['data'].segments['flash']
+        cfg.eepromstart_ds, cfg.eepromend_ds = dev_desc.mem_spaces['data'].segments['eeprom']
+
+        cfg.dataend = dev_desc.mem_spaces['data'].memend
+        cfg.flashend = dev_desc.mem_spaces['flash'].memend
+        cfg.eepromend = dev_desc.mem_spaces['eeprom'].memend
+        cfg.userrowend = dev_desc.mem_spaces['userrow'].memend
+
+        cfg.eind = dev_desc.peripherals['CPU'].reg_address('EIND', _corelib.INVALID_REGISTER)
+        cfg.rampz = dev_desc.peripherals['CPU'].reg_address('RAMPZ', _corelib.INVALID_REGISTER)
+
+        cfg.vector_size = dev_desc.interrupt_map.vector_size
+
+        cfg.fusesize = dev_desc.fuses['size']
+        cfg.fuses = bytes(dev_desc.fuses['factory_values'])
+
+        return cfg
+
+    def _build_device_config(self, dev_desc, core_cfg):
+        cfg = _archlib.AVR_ArchMega0_DeviceConfig(core_cfg)
+        cfg.name = dev_desc.name
+        cfg.pins = dev_desc.pins
+
+        return cfg
+
+    def _get_peripheral_builder(self, per_class):
+        builder_getter = self._per_builder_getters.get(per_class, None)
+        if builder_getter is None:
+            raise DeviceBuildError('Unknown peripheral class: ' + per_class)
+        per_builder = builder_getter()
+        return per_builder
+
+    @classmethod
+    def build_device(cls, model, dev_class):
+        if not issubclass(dev_class, _archlib.AVR_ArchMega0_Device):
+            raise TypeError('the device class must be a ArchMega0_Device subclass')
+
+        return super().build_device(model, dev_class)

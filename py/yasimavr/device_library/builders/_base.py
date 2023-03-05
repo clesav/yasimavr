@@ -19,6 +19,7 @@
 
 import yasimavr.lib.core as _corelib
 import inspect
+from ..descriptors import DeviceDescriptor
 
 class _ConfigProxy:
 
@@ -51,7 +52,7 @@ class _ConfigProxy:
 
 
 
-class _PeripheralConfigBuilder:
+class PeripheralConfigBuilder:
     '''Helper class to build a peripheral configuration structure
 
     The main use is to convert YAML configuration entry into values
@@ -60,7 +61,7 @@ class _PeripheralConfigBuilder:
     The conversion process is as follow, if a convertor is provided:
     for each entry in the YAML configuration map:
      1 - call the converter function with the following arguments:
-        - C++ structure isntance,
+        - C++ structure instance,
         - attribute name,
         - YAML value,
         - peripheral descriptor
@@ -165,10 +166,10 @@ class _PeripheralConfigBuilder:
                 return None
 
         elif attr.startswith('rb_') or isinstance(default_val, _corelib.regbit_t):
-            return convert_regbit(yml_val, per_desc)
+            return convert_to_regbit(yml_val, per_desc)
 
         elif attr.startswith('rbc_') or isinstance(default_val, _corelib.regbit_compound_t):
-            return convert_regbit_compound_t(yml_val, per_desc)
+            return convert_to_regbit_compound_t(yml_val, per_desc)
 
         elif isinstance(default_val, (int, float)):
             return yml_val
@@ -192,7 +193,7 @@ def get_core_attributes(dev_desc):
     return result
 
 
-def convert_regbit(rb_yml, per_desc):
+def convert_to_regbit(rb_yml, per_desc):
     if isinstance(rb_yml, str):
         reg_name = rb_yml
         field_names = []
@@ -230,21 +231,21 @@ def convert_regbit(rb_yml, per_desc):
     return rb
 
 
-def convert_regbit_compound_t(rbc_yml, per_desc):
+def convert_to_regbit_compound_t(rbc_yml, per_desc):
     if not isinstance(rbc_yml, list):
         return _corelib.regbit_compound_t()
 
     elif not all(isinstance(item, list) for item in rbc_yml):
-        rb = convert_regbit(rbc_yml, per_desc)
+        rb = convert_to_regbit(rbc_yml, per_desc)
         return _corelib.regbit_compound_t(rb)
 
     else:
-        rb_list = [convert_regbit(rb_yml, per_desc) for rb_yml in rbc_yml]
+        rb_list = [convert_to_regbit(rb_yml, per_desc) for rb_yml in rbc_yml]
         return _corelib.regbit_compound_t(rb_list)
 
 
-def convert_dummy_controller_config(per_desc):
-    yml_cfg = dict(per_desc.class_descriptor.config)
+def dummy_config_builder(per_descriptor):
+    yml_cfg = dict(per_descriptor.class_descriptor.config)
 
     py_regs = []
     for yml_item in yml_cfg['regs']:
@@ -255,9 +256,168 @@ def convert_dummy_controller_config(per_desc):
             reg_name = yml_item
             reg_reset = 0
 
-        reg_cfg.reg = convert_regbit(reg_name, per_desc)
+        reg_cfg.reg = convert_to_regbit(reg_name, per_descriptor)
         reg_cfg.reset = reg_reset
 
         py_regs.append(reg_cfg)
 
     return py_regs
+
+
+class PeripheralBuilder:
+    '''
+    Default class for a peripheral builder
+    Peripheral builder instances build peripheral model instances
+    '''
+
+    def __init__(self, per_model, config_builder):
+        '''Initialise a peripheral builder
+        per_model: peripheral model class
+        config_builder: callable object that returns a configuration object to
+                        be passed on to create a peripheral model
+        '''
+        self.per_model = per_model
+        self.config_builder = config_builder
+
+    def build(self, per_name, per_config):
+        '''Constructs a new peripheral model instance
+        per_name : Name of the peripheral model instance to construct
+        per_config : Configuration object to use for the build
+        Returns a new peripheral model instance that can be attached to a device
+        '''
+        build_args = self._get_build_args(per_name, per_config)
+        per_instance = self.per_model(*build_args)
+        return per_instance
+
+    def _get_build_args(self, per_name, per_config):
+        '''Provides the arguments to the peripheral model constructor.
+        The default implementation only uses the per_config object.
+        '''
+        return (per_config,)
+
+    def __repr__(self):
+        return '%s(model=%s)' % (self.__class__.__name__, self.per_model.__name__)
+
+
+class IndexedPeripheralBuilder(PeripheralBuilder):
+    '''Specialisation of PeripheralBuilder for peripherals with an indexed name,
+    such as USART0, USART1, ...
+    The index is extracted from the name and passed on as 1st argument to the
+    model constructor.
+    The index is optional, and if absent, 0 is used.
+    '''
+
+    def _get_build_args(self, per_name, per_config):
+        try:
+            ix = int(per_name[-1])
+        except ValueError:
+            return (0, per_config)
+        else:
+            return (ix, per_config)
+
+
+class LetteredPeripheralBuilder(PeripheralBuilder):
+    '''Specialisation of PeripheralBuilder for peripherals with an lettered name,
+    such as PORTA, PORTB, ...
+    The index is extracted from the name and passed on as 1st argument to the
+    model constructor.
+    '''
+
+    def _get_build_args(self, per_name, per_config):
+        return (per_name[-1], per_config)
+
+
+class DummyPeripheralBuilder(PeripheralBuilder):
+
+    '''Specialisation of PeripheralBuilder for dummy peripherals (
+    using the AVR_DummyController model) requiring the CTLID.
+    '''
+
+    def __init__(self, ctl_id):
+        super().__init__(_corelib.AVR_DummyController, dummy_config_builder)
+        self._ctl_id = ctl_id
+
+    def _get_build_args(self, per_name, per_config):
+        return (self._ctl_id, per_config)
+
+
+class DeviceBuildError(Exception):
+    '''Error type raised during the device and peripheral building process.
+    '''
+    pass
+
+
+class DeviceBuilder:
+    '''Generic device builder object, factory for device simulation models
+    It implements a cache for both peripheral builders and configuration structure
+    '''
+
+    _builder_cache = {}
+
+    def __init__(self, model):
+        self._dev_descriptor = DeviceDescriptor(model)
+        self._core_config = None
+        self._dev_config = None
+        self._per_configs = {}
+        self._per_builders = {}
+
+    @property
+    def dev_descriptor(self):
+        return self._dev_descriptor
+
+    def _build_core_config(self, dev_desc):
+        raise NotImplementedError
+
+    def _build_device_config(self, dev_desc):
+        raise NotImplementedError
+
+    def get_device_config(self):
+        if self._dev_config is None:
+            self._core_config = self._build_core_config(self._dev_descriptor)
+            self._dev_config = self._build_device_config(self._dev_descriptor, self._core_config)
+
+        return self._dev_config
+
+    def build_peripheral(self, device, per_name):
+        per_descriptor = self._dev_descriptor.peripherals[per_name]
+        per_class = per_descriptor.per_class
+
+        if per_class in self._per_builders:
+            per_builder = self._per_builders[per_class]
+        else:
+            per_builder = self._get_peripheral_builder(per_class)
+            self._per_builders[per_class] = per_builder
+
+        if per_name in self._per_configs:
+            per_config = self._per_configs[per_name]
+        else:
+            per_config = per_builder.config_builder(per_descriptor)
+            self._per_configs[per_name] = per_config
+
+        per_instance = per_builder.build(per_descriptor.name, per_config)
+        device.attach_peripheral(per_instance)
+
+    def build_peripherals(self, device, per_names):
+        for per_name in per_names:
+            self.build_peripheral(device, per_name)
+
+    def _get_peripheral_builder(self, per_class):
+        raise NotImplementedError
+
+    @classmethod
+    def build_device(cls, model, dev_class):
+        #Find the appropriate builder instance (use the cache)
+        if model in cls._builder_cache:
+            builder = cls._builder_cache[model]
+        else:
+            builder = cls(model)
+            cls._builder_cache[model] = builder
+
+        dev = dev_class(model, builder)
+        dev._builder_ = builder
+        dev._descriptor_ = builder._dev_descriptor
+        return dev
+
+    @classmethod
+    def clear_cache(cls):
+        cls._builder_cache.clear()

@@ -116,22 +116,27 @@ peripherals:
     CPUINT:
         file: ArchXT_controllers.yml
         base: 0x0110
+        ctl_id: INTR
 
     SLPCTRL:
         file: ArchXT_controllers.yml
         base: 0x0050
+        ctl_id: SLP
 
     RSTCTRL:
         file: ArchXT_controllers.yml
         base: 0x0040
+        ctl_id: RST
 
     CLKCTRL:
         file: ArchXT_controllers.yml
         base: 0x0060
+        ctl_id: CLK
 
     NVMCTRL:
         file: ArchXT_controllers.yml
         base: 0x1000
+        ctl_id: NVM
         config:
            flash_page_size: 128
            iv_eeready: NVMCTRL_EE
@@ -145,6 +150,7 @@ peripherals:
         class: PORT
         file: ArchXT_interfaces.yml
         base: 0x0400
+        ctl_id: IOGA
         config:
             reg_base_port: 0x0400
             reg_base_vport: 0x0000
@@ -154,6 +160,7 @@ peripherals:
         class: PORT
         file: ArchXT_interfaces.yml
         base: 0x0420
+        ctl_id: IOGB
         config:
             reg_base_port: 0x0420
             reg_base_vport: 0x0004
@@ -163,6 +170,7 @@ peripherals:
         class: PORT
         file: ArchXT_interfaces.yml
         base: 0x0440
+        ctl_id: IOGC
         config:
             reg_base_port: 0x0440
             reg_base_vport: 0x0008
@@ -172,6 +180,7 @@ peripherals:
         class: PORT
         file: ArchXT_interfaces.yml
         base: 0x0460
+        ctl_id: IOGD
         config:
             reg_base_port: 0x0460
             reg_base_vport: 0x000C
@@ -181,6 +190,7 @@ peripherals:
         class: PORT
         file: ArchXT_interfaces.yml
         base: 0x0480
+        ctl_id: IOGE
         config:
             reg_base_port: 0x0480
             reg_base_vport: 0x0010
@@ -190,6 +200,7 @@ peripherals:
         class: PORT
         file: ArchXT_interfaces.yml
         base: 0x04A0
+        ctl_id: IOGF
         config:
             reg_base_port: 0x04A0
             reg_base_vport: 0x0014
@@ -295,6 +306,7 @@ peripherals:
         class: USART
         file: ArchXT_interfaces.yml
         base: 0x0800
+        ctl_id: UAX0
         config:
             iv_rxc: USART0_RXC
             iv_txc: USART0_TXC
@@ -304,6 +316,7 @@ peripherals:
         class: USART
         file: ArchXT_interfaces.yml
         base: 0x0820
+        ctl_id: UAX1
         config:
             iv_rxc: USART1_RXC
             iv_txc: USART1_TXC
@@ -313,6 +326,7 @@ peripherals:
         class: USART
         file: ArchXT_interfaces.yml
         base: 0x0840
+        ctl_id: UAX2
         config:
             iv_rxc: USART2_RXC
             iv_txc: USART2_TXC
@@ -322,6 +336,7 @@ peripherals:
         class: USART
         file: ArchXT_interfaces.yml
         base: 0x0860
+        ctl_id: UAX3
         config:
             iv_rxc: USART3_RXC
             iv_txc: USART3_TXC
@@ -346,11 +361,14 @@ peripherals:
     PORTMUX:
         file: ArchXT_interfaces.yml
         base: 0x05E0
+        ctl_id: IOMX
 
     FUSES:
         file: ArchXT_controllers.yml
         base: 0x1280
+        ctl_id: FUSE
 
     USERROW:
         file: ArchXT_controllers.yml
         base: 0x1300
+        ctl_id: UROW
