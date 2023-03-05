@@ -246,7 +246,8 @@ peripherals:
         file: ArchXT_analog.yml
         base: 0x00A0
 
-    ADC:
+    ADC0:
+        class: ADC
         file: ArchXT_analog.yml
         base: 0x0600
         config:
@@ -272,7 +273,8 @@ peripherals:
                 0x1F: Zero
             vref_channel: 0
 
-    ACP:
+    ACP0:
+        class: ACP
         file: ArchXT_analog.yml
         base: 0x0680
         config:
@@ -326,24 +328,24 @@ peripherals:
             iv_txe: USART3_DRE
 
     SPI0:
-       class: SPI
-       file: ArchXT_interfaces.yml
-       base: 0x08C0
-       config:
-          pin_select: null
-          iv_spi: SPI0
+        class: SPI
+        file: ArchXT_interfaces.yml
+        base: 0x08C0
+        config:
+            pin_select: null
+            iv_spi: SPI0
 
     TWI0:
-       class: TWI
-       file: ArchXT_interfaces.yml
-       base: 0x08A0
-       config:
-          iv_master: TWI0_TWIM
-          iv_slave: TWI0_TWIS
+        class: TWI
+        file: ArchXT_interfaces.yml
+        base: 0x08A0
+        config:
+            iv_master: TWI0_TWIM
+            iv_slave: TWI0_TWIS
 
     PORTMUX:
-       file: ArchXT_interfaces.yml
-       base: 0x05E0
+        file: ArchXT_interfaces.yml
+        base: 0x05E0
 
     FUSES:
         file: ArchXT_controllers.yml

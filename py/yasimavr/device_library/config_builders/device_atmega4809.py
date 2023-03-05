@@ -58,9 +58,9 @@ tcb_configs = [get_tcb_config(_desc.peripherals['TCB' + str(n)])
 #RTC
 rtc_config = get_rtc_config(_desc.peripherals['RTC'])
 #ADC
-adc_config = get_adc_config(_desc.peripherals['ADC'])
+adc_config = get_adc_config(_desc.peripherals['ADC0'])
 #ACP
-acp_config = get_acp_config(_desc.peripherals['ACP'])
+acp_config = get_acp_config(_desc.peripherals['ACP0'])
 #VREF
 vref_config = get_vref_config(_desc.peripherals['VREF'])
 #USART

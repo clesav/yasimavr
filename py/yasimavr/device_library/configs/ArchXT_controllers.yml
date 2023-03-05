@@ -296,12 +296,12 @@ MISC:
                 MSB: 3
 
         - name: TEMPSENSE0
-          address: 0x111A
+          address: 0x1120
           readonly: true
           kind: INT
 
         - name: TEMPSENSE1
-          address: 0x111B
+          address: 0x1121
           readonly: true
           kind: INT
 

@@ -467,7 +467,7 @@ RTC:
           fields:
             PI: { kind: BIT, pos: 0 }
 
-        - name: DBGCTRL
+        - name: PITDBGCTRL
           offset: 0x15
           supported: no
 
