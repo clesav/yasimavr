@@ -1,4 +1,4 @@
-# configbuilder.py
+# _base.py
 #
 # Copyright 2021 Clement Savergne <csavergne@yahoo.com>
 #

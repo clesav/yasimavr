@@ -24,7 +24,7 @@ This module initialises a ATmega328
 from ...lib import core as _corelib
 from ...lib import arch_avr as arch_lib
 from ..descriptors import DeviceDescriptor
-from .convertors_avr_xx8 import *
+from ._builders_arch_avr import *
 
 DEV_NAME = 'atmega328'
 

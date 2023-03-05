@@ -24,8 +24,8 @@ This module initialises a ATmega4809
 from ...lib import core as _corelib
 from ...lib import arch_m0 as _archlib
 from ..descriptors import DeviceDescriptor
-from .configbuilder import convert_dummy_controller_config
-from .convertors_m0 import *
+from ._base import convert_dummy_controller_config
+from ._builders_arch_xt import *
 
 DEV_NAME = 'atmega4809'
 

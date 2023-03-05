@@ -1,4 +1,4 @@
-# convertors_avr_xx8.py
+# _builders_arch_avr.py
 #
 # Copyright 2022 Clement Savergne <csavergne@yahoo.com>
 #
@@ -25,7 +25,7 @@ This module applies to devices ATmega48A/PA/88A/PA/168A/PA/328/P
 
 from ...lib import core as _corelib
 from ...lib import arch_avr as _archlib
-from .configbuilder import _PeripheralConfigBuilder, get_core_attributes
+from ._base import _PeripheralConfigBuilder, get_core_attributes
 
 #========================================================================================
 #Core configuration
@@ -45,9 +45,8 @@ def get_core_config(dev_desc):
 #========================================================================================
 #Device configuration
 def get_dev_config(dev_desc, core_cfg):
-    cfg = _archlib.AVR_ArchAVR_DeviceConfig()
+    cfg = _archlib.AVR_ArchAVR_DeviceConfig(core_cfg)
     cfg.name = dev_desc.name
-    cfg.core = core_cfg
     cfg.pins = dev_desc.pins
     return cfg
 

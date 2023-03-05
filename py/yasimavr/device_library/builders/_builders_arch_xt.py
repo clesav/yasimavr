@@ -1,4 +1,4 @@
-# convertors_m0.py
+# _builders_arch_xt.py
 #
 # Copyright 2022 Clement Savergne <csavergne@yahoo.com>
 #
@@ -25,7 +25,7 @@ This module applies to devices ATmega80x/160x/320x/480x
 
 import yasimavr.lib.core as _corelib
 import yasimavr.lib.arch_m0 as _archlib
-from .configbuilder import _PeripheralConfigBuilder, get_core_attributes, convert_regbit
+from ._base import _PeripheralConfigBuilder, get_core_attributes, convert_regbit
 
 
 #========================================================================================
