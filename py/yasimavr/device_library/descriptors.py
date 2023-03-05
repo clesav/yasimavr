@@ -28,7 +28,6 @@ import sys
 import collections
 
 
-Architectures = ['AVR', 'Mega0']
 from yaml import load as _yaml_load
 try:
     from yaml import CLoader as _YAMLLoader
@@ -36,6 +35,7 @@ except ImportError:
     from yaml import _YAMLLoader
 
 
+Architectures = ['AVR', 'XT']
 
 
 #List of path which are searched for YAML configuration files
