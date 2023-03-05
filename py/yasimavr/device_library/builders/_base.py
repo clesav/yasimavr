@@ -21,6 +21,9 @@ import yasimavr.lib.core as _corelib
 import inspect
 from ..descriptors import DeviceDescriptor
 
+global VERBOSE
+VERBOSE = False
+
 class _ConfigProxy:
 
     def __init__(self, cfg):
@@ -126,8 +129,8 @@ class PeripheralConfigBuilder:
 
 
         s = cfg_proxy.untouched()
-        if s:
-            print('Untouched attributes of %s: %s' % (cfg.__class__.__name__, str(s)))
+        if VERBOSE and s:
+            print('### Untouched attributes of %s: %s' % (cfg.__class__.__name__, str(s)))
 
         return cfg
 
@@ -379,6 +382,9 @@ class DeviceBuilder:
         return self._dev_config
 
     def build_peripheral(self, device, per_name):
+        if VERBOSE:
+            print('  Building peripheral', per_name)
+
         per_descriptor = self._dev_descriptor.peripherals[per_name]
         per_class = per_descriptor.per_class
 
@@ -388,9 +394,14 @@ class DeviceBuilder:
             per_builder = self._get_peripheral_builder(per_class)
             self._per_builders[per_class] = per_builder
 
+        if VERBOSE:
+                print('    Peripheral builder found:', per_builder)
+
         if per_name in self._per_configs:
             per_config = self._per_configs[per_name]
         else:
+            if VERBOSE:
+                print('    Building configuration for peripheral', per_name)
             per_config = per_builder.config_builder(per_descriptor)
             self._per_configs[per_name] = per_config
 
@@ -408,8 +419,12 @@ class DeviceBuilder:
     def build_device(cls, model, dev_class):
         #Find the appropriate builder instance (use the cache)
         if model in cls._builder_cache:
+            if VERBOSE:
+                print('DeviceBuilder found in cache for model', model)
             builder = cls._builder_cache[model]
         else:
+            if VERBOSE:
+                print('Creating new DeviceBuilder for model', model)
             builder = cls(model)
             cls._builder_cache[model] = builder
 

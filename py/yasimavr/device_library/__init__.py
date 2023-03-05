@@ -28,11 +28,18 @@ import importlib
 
 _factory_cache = {}
 
-def load_device(dev_name):
+def load_device(dev_name, verbose=False):
     if dev_name in _factory_cache:
+        if verbose:
+            print('Using device factory from cache')
         return _factory_cache[dev_name](dev_name)
 
+    from .builders import _base
+    _base.VERBOSE = verbose
+
     mod_name = '.builders.device_' + dev_name
+    if verbose:
+        print('Loading device factory module', mod_name)
 
     dev_mod = importlib.import_module(mod_name, __package__)
     importlib.invalidate_caches()
