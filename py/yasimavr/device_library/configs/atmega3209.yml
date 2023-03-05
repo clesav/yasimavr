@@ -1,6 +1,6 @@
-# YAML configuration file for atmega4809 variant
+# YAML configuration file for atmega3209 variant
 #
-# Copyright 2022 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2023 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -18,7 +18,7 @@
 # along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
 
 ---
-name: atmega4809
+name: atmega3209
 
 architecture: XT
 
@@ -27,12 +27,12 @@ memory:
         IOEND: 0x13FF
         EEPROMSTART: 0x1400
         EEPROMEND: 0x14FF
-        RAMSTART: 0x2800
+        RAMSTART: 0x3000
         RAMEND: 0x3FFF
         FLASHSTART: 0x4000
-        FLASHEND: 0xFFFF
-    flash:
         FLASHEND: 0xBFFF
+    flash:
+        FLASHEND: 0x7FFF
     eeprom:
         EEPROMEND: 0xFF
     userrow:
@@ -144,7 +144,7 @@ peripherals:
     MISC:
         file: ArchXT_controllers.yml
         config:
-            dev_id: 0x0051961E
+            dev_id: 0x0031951E
 
     PORTA:
         class: PORT

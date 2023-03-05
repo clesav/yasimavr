@@ -354,7 +354,8 @@ class XTDeviceBuilder(DeviceBuilder):
         'SPI': _get_spi_builder,
         'TWI': _get_twi_builder,
         'FUSES': _get_fuses_builder,
-        'USERROW': _get_userrow_builder,
+        'USERROW_64': _get_userrow_builder,
+        'USERROW_32': _get_userrow_builder
     }
 
     def _build_core_config(self, dev_desc):

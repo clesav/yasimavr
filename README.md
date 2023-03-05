@@ -38,5 +38,5 @@ Supported IOs
 Supported Cores (very easy to add new ones!)
 --------------
 + ATMega328
-+ ATMega4809
++ ATMega 0-series (ATmega808/809/1608/1609/3208/3209/4808/4809)
 + more to come...

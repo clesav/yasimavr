@@ -410,10 +410,19 @@ FUSES:
           kind: INT
 
 #========================================================================================
-USERROW:
+USERROW_64:
     registers:
         - name: USERROW
           offset: 0x00
           readonly: true
           kind: ARRAY
           size: 64
+
+#========================================================================================
+USERROW_32:
+    registers:
+        - name: USERROW
+          offset: 0x00
+          readonly: true
+          kind: ARRAY
+          size: 32

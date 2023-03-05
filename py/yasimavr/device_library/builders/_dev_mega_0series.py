@@ -40,10 +40,8 @@ class dev_mega_0series(_archlib.AVR_ArchMega0_Device):
             'NVMCTRL',
             'MISC',
             'PORTA',
-            'PORTB',
             'PORTC',
             'PORTD',
-            'PORTE',
             'PORTF',
             'PORTMUX',
             'RTC',
@@ -51,18 +49,19 @@ class dev_mega_0series(_archlib.AVR_ArchMega0_Device):
             'TCB0',
             'TCB1',
             'TCB2',
-            'TCB3',
             'VREF',
             'ADC0',
             'ACP0',
             'USART0',
             'USART1',
             'USART2',
-            'USART3',
             'SPI0',
             'TWI0',
             'FUSES',
             'USERROW'
         ]
+
+        if model in ('atmega809', 'atmega1609', 'atmega3209', 'atmega4809'):
+            peripherals.extend(['PORTB', 'PORTE', 'TCB3', 'USART3'])
 
         builder.build_peripherals(self, peripherals)
