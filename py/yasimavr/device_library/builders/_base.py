@@ -172,7 +172,7 @@ class PeripheralConfigBuilder:
             return convert_to_regbit(yml_val, per_desc)
 
         elif attr.startswith('rbc_') or isinstance(default_val, _corelib.regbit_compound_t):
-            return convert_to_regbit_compound_t(yml_val, per_desc)
+            return convert_to_regbit_compound(yml_val, per_desc)
 
         elif isinstance(default_val, (int, float)):
             return yml_val
@@ -194,6 +194,27 @@ def get_core_attributes(dev_desc):
             result |= _corelib.AVR_CoreConfiguration.Attributes[lib_flag_name]
 
     return result
+
+
+def _fields_to_bitmasks(fields, reg_size=1):
+    bitmasks = []
+    for by in range(reg_size):
+        bit = 7
+        mask = 0
+        for f in fields:
+            b, m = f.shift_mask()
+            b -= 8 * by
+            m >>= 8 * by
+            if m & 0xFF:
+                b = max(0, b)
+                m &= 0xFF
+                bit = min(bit, b)
+                mask |= m << b
+
+        if mask:
+            bitmasks.append(_corelib.bitmask_t(bit, mask))
+
+    return bitmasks
 
 
 def convert_to_regbit(rb_yml, per_desc):
@@ -219,24 +240,32 @@ def convert_to_regbit(rb_yml, per_desc):
 
     if field_names:
         fields = [ reg.fields[fn] for fn in field_names ]
+        if fields:
+            bitmasks = _fields_to_bitmasks(fields)
+            rb = _corelib.regbit_t(per_desc.reg_address(reg_name), bitmasks[0])
+        else:
+            rb = _corelib.regbit_t()
     else:
-        fields = reg.fields.values()
-
-    bit = 7
-    mask = 0
-    for f in fields:
-        b, m = f.shift_mask()
-        bit = min(bit, b)
-        mask |= m << b
-
-    rb = _corelib.regbit_t(per_desc.reg_address(reg_name), bit, mask)
+        if reg.fields:
+            bitmasks = _fields_to_bitmasks(reg.fields.values())
+            rb = _corelib.regbit_t(per_desc.reg_address(reg_name), bitmasks[0])
+        else:
+            rb = _corelib.regbit_t(per_desc.reg_address(reg_name))
 
     return rb
 
 
-def convert_to_regbit_compound_t(rbc_yml, per_desc):
-    if not isinstance(rbc_yml, list):
+def convert_to_regbit_compound(rbc_yml, per_desc):
+    if not rbc_yml:
         return _corelib.regbit_compound_t()
+
+    elif isinstance(rbc_yml, str):
+        reg = per_desc.reg_descriptor(rbc_yml)
+        bitmasks = _fields_to_bitmasks(reg.fields.values(), reg.size)
+        base_addr = per_desc.reg_address(reg.name)
+        regbits = [_corelib.regbit_t(base_addr + i, bm) for i, bm in enumerate(bitmasks)]
+        rbc = _corelib.regbit_compound_t(regbits)
+        return rbc
 
     elif not all(isinstance(item, list) for item in rbc_yml):
         rb = convert_to_regbit(rbc_yml, per_desc)

@@ -1,4 +1,4 @@
-# _dev_mega_0series.py
+# dev_megaxx8.py
 #
 # Copyright 2023 Clement Savergne <csavergne@yahoo.com>
 #
@@ -18,16 +18,16 @@
 # along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
 
 '''
-This module initialises a ATmega4809
+This module initialises a ATmegaxx8 (ATMega328)
 '''
 
-from ...lib import arch_m0 as _archlib
-
+from ...lib import arch_avr as _archlib
+from ._builders_arch_avr import AVR_DeviceBuilder
 
 #========================================================================================
 #Device class definition
 
-class dev_mega_0series(_archlib.AVR_ArchMega0_Device):
+class dev_megaxx8(_archlib.AVR_ArchAVR_Device):
 
     def __init__(self, model, builder):
         super().__init__(builder.get_device_config())
@@ -35,33 +35,22 @@ class dev_mega_0series(_archlib.AVR_ArchMega0_Device):
         peripherals = [
             'CPUINT',
             'SLPCTRL',
-            'CLKCTRL',
-            'RSTCTRL',
-            'NVMCTRL',
             'MISC',
-            'PORTA',
+            'PORTB',
             'PORTC',
             'PORTD',
-            'PORTF',
-            'PORTMUX',
-            'RTC',
-            'TCA0',
-            'TCB0',
-            'TCB1',
-            'TCB2',
+            'EXTINT',
+            'TC0',
+            'TC1',
+            'TC2',
+            'ADC',
+            'ACP',
             'VREF',
-            'ADC0',
-            'ACP0',
-            'USART0',
-            'USART1',
-            'USART2',
-            'SPI0',
-            'TWI0',
-            'FUSES',
-            'USERROW'
+            'USART'
         ]
 
-        if model in ('atmega809', 'atmega1609', 'atmega3209', 'atmega4809'):
-            peripherals.extend(['PORTB', 'PORTE', 'TCB3', 'USART3'])
-
         builder.build_peripherals(self, peripherals)
+
+
+def device_factory(model):
+    return AVR_DeviceBuilder.build_device(model, dev_megaxx8)

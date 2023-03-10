@@ -332,7 +332,7 @@ def _get_userrow_builder():
 
 #========================================================================================
 
-class XTDeviceBuilder(DeviceBuilder):
+class XT_DeviceBuilder(DeviceBuilder):
 
     #Dictionary for the builder getters for Mega0/1 peripherals
     _per_builder_getters = {

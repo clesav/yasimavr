@@ -52,7 +52,7 @@ def _find_config_file(fn):
             return p
     return None
 
-def _load_config_file(fn):
+def load_config_file(fn):
     with open(fn) as f:
         return _yaml_load(f, _YAMLLoader)
 
@@ -270,7 +270,7 @@ class _DeviceDescriptorLoader:
             if per_path is None:
                 raise DeviceConfigException('Config file not found: ' + per_filepath)
 
-            per_yml_doc = _load_config_file(per_path)
+            per_yml_doc = load_config_file(per_path)
             self._yml_cache[per_filepath] = per_yml_doc
 
         per_config = per_yml_doc[per_name]
@@ -336,7 +336,7 @@ class DeviceDescriptor:
             raise DeviceConfigException('No configuration found for variant ' + devname)
 
         try:
-            yml_cfg = _load_config_file(fn)
+            yml_cfg = load_config_file(fn)
         except Exception as exc:
             msg = 'Error reading the configuration file for ' + devname
             raise DeviceConfigException(msg) from exc

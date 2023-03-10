@@ -32,7 +32,7 @@ simulation.
 
 from functools import total_ordering
 
-from .descriptors import DeviceDescriptor, ProxyRegisterDescriptor
+from .descriptors import ProxyRegisterDescriptor
 from ..lib import core as _corelib
 
 

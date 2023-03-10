@@ -1,4 +1,4 @@
-# device_atmega808.py
+# Device model configuration database
 #
 # Copyright 2023 Clement Savergne <csavergne@yahoo.com>
 #
@@ -17,14 +17,16 @@
 # You should have received a copy of the GNU General Public License
 # along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
 
-'''
-This module initialises a ATmega808
-'''
+---
+dev_mega_0series:
+    - atmega808
+    - atmega809
+    - atmega1608
+    - atmega1609
+    - atmega3208
+    - atmega3209
+    - atmega4808
+    - atmega4809
 
-from ._builders_arch_xt import XTDeviceBuilder
-from ._dev_mega_0series import dev_mega_0series
-
-def factory_atmega808(model):
-    return XTDeviceBuilder.build_device('atmega808', dev_mega_0series)
-
-__all__ = ['factory_atmega808']
+dev_megaxx8:
+    - atmega328
