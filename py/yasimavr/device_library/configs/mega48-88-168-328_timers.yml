@@ -105,9 +105,9 @@ TC1:
           address: 0x60
           fields:
             WGM:
-               kind: ENUM
-               LSB: 0
-               MSB: 1
+                kind: ENUM
+                LSB: 0
+                MSB: 1
             COMB:
                 kind: ENUM
                 LSB: 4
@@ -116,7 +116,6 @@ TC1:
                 kind: ENUM
                 LSB: 6
                 MSB: 7
-
 
         - name: TCCR1B
           address: 0x61
@@ -130,7 +129,6 @@ TC1:
             WGM3: { kind: BIT, pos: 4 }
             ICES: { kind: BIT, pos: 6 }
             ICNC: { kind: BIT, pos: 7 }
-
 
         - name: TCCR1C
           address: 0x62
@@ -204,9 +202,9 @@ TC2:
           address: 0x90
           fields:
             WGM:
-               kind: ENUM
-               LSB: 0
-               MSB: 1
+                kind: ENUM
+                LSB: 0
+                MSB: 1
             COMB:
                 kind: ENUM
                 LSB: 4
@@ -215,7 +213,6 @@ TC2:
                 kind: ENUM
                 LSB: 6
                 MSB: 7
-
 
         - name: TCCR2B
           address: 0x91

@@ -1,6 +1,6 @@
-# YAML configuration file for atmega4809 variant
+# YAML configuration file for atmega809 variant
 #
-# Copyright 2022 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2023 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -18,7 +18,7 @@
 # along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
 
 ---
-name: atmega4809
+name: atmega809
 
 architecture: XT
 
@@ -27,16 +27,16 @@ memory:
         IOEND: 0x13FF
         EEPROMSTART: 0x1400
         EEPROMEND: 0x14FF
-        RAMSTART: 0x2800
+        RAMSTART: 0x3C00
         RAMEND: 0x3FFF
         FLASHSTART: 0x4000
-        FLASHEND: 0xFFFF
+        FLASHEND: 0x5FFF
     flash:
-        FLASHEND: 0xBFFF
+        FLASHEND: 0x1FFF
     eeprom:
         EEPROMEND: 0xFF
     userrow:
-        USERROWEND: 0x3F
+        USERROWEND: 0x1F
 
 core:
     extended_addressing: no
@@ -138,13 +138,13 @@ peripherals:
         base: 0x1000
         ctl_id: NVM
         config:
-           flash_page_size: 128
+           flash_page_size: 64
            iv_eeready: NVMCTRL_EE
 
     MISC:
         file: ArchXT_controllers.yml
         config:
-            dev_id: 0x0051961E
+            dev_id: 0x002A931E
 
     PORTA:
         class: PORT
@@ -369,7 +369,7 @@ peripherals:
         ctl_id: FUSE
 
     USERROW:
-        class: USERROW_64
+        class: USERROW_32
         file: ArchXT_controllers.yml
         base: 0x1300
         ctl_id: UROW

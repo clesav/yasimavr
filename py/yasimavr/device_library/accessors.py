@@ -32,7 +32,8 @@ simulation.
 
 from functools import total_ordering
 
-from .descriptors import DeviceDescriptor, ProxyRegisterDescriptor
+from .descriptors import ProxyRegisterDescriptor
+from ..lib import core as _corelib
 
 
 @total_ordering
@@ -121,6 +122,7 @@ class IntFieldAccessor(_FieldAccessor):
     def __eq__(self, other):
         return other == self.read_raw()
 
+
 class RawFieldAccessor(IntFieldAccessor):
     '''Accessor class for a field of a I/O register consisting of
     an raw value. It identical to INT except it's printed in hexadecimal.
@@ -128,6 +130,7 @@ class RawFieldAccessor(IntFieldAccessor):
 
     def __str__(self):
         return '%s.%s [%s]' % (self._reg.name, self._field.name, hex(self.read()))
+
 
 class EnumFieldAccessor(_FieldAccessor):
     '''Accessor class for a field of a I/O register consisting of
@@ -196,7 +199,7 @@ class RegisterAccessor:
 
     def __str__(self):
         if self._reg.kind == 'ARRAY':
-            return str(self.read())
+            return self.name + ' ' + str(self.read())
         else:
             pattern = '%%s [0x%%0%dx]' % (self._reg.size * 2)
             return pattern % (self.name, self.read())
@@ -218,45 +221,64 @@ class RegisterAccessor:
     def write(self, value):
         if self._reg.readonly:
             raise ValueError('Cannot write readonly register ' + self.name)
+
         if not self._reg.supported:
             raise ValueError('Cannot write unsupported register ' + self.name)
 
+        #Easy and most common case first
         if self._reg.size == 1:
             self._probe.write_ioreg(self._addr, value)
-        else:
-            assert self._reg.size == 2
 
-            big_endian = self._per._endians[0]
-            if big_endian is None:
-                raise Exception('Endian settings are missing')
-            elif big_endian:
-                self._probe.write_ioreg(self._addr, value & 0xFF)
-                self._probe.write_ioreg(self._addr + 1, (value >> 8) & 0xFF)
-            else:
-                self._probe.write_ioreg(self._addr + 1, (value >> 8) & 0xFF)
-                self._probe.write_ioreg(self._addr, value & 0xFF)
+        #Array case
+        elif self._reg.kind == 'ARRAY':
+            for i in range(self._reg.size):
+                self._probe.write_ioreg(self._addr + i, value[i])
+
+        #Multi-byte integer.
+        #Convert the value to bytes (big-endian) and write the bytes
+        #in the order defined by the peripheral byteorder settings
+        else:
+            lsb_first = self._per._byteorders[0]
+            if lsb_first is None:
+                raise Exception('Byte order settings are missing')
+
+            byte_indexes = list(range(self._reg.size))
+            if not lsb_first:
+                byte_indexes.reverse()
+
+            byte_values = value.to_bytes(self._reg.size, byteorder='little')
+
+            for i in byte_indexes:
+                self._probe.write_ioreg(self._addr + i, byte_values[i])
 
     def read(self):
+        #Easy and most common case first
+        if self._reg.size == 1:
+            return self._probe.read_ioreg(self._addr)
+
+        #Array case : no conversion to integer required
         if self._reg.kind == 'ARRAY':
             values = bytes(self._probe.read_ioreg(self._addr + i)
                            for i in range(self._reg.size))
             return values
-        elif self._reg.size == 1:
-            return self._probe.read_ioreg(self._addr)
-        else:
-            assert self._reg.size == 2
 
-            big_endian = self._per._endians[1]
-            if big_endian is None:
-                raise Exception('Endian settings are missing')
-            elif big_endian:
-                vl = self._probe.read_ioreg(self._addr)
-                vh = self._probe.read_ioreg(self._addr + 1)
-                return (vh << 8) + vl
-            else:
-                vh = self._probe.read_ioreg(self._addr + 1)
-                vl = self._probe.read_ioreg(self._addr)
-                return (vh << 8) + vl
+        #Multi-byte integer.
+        #Read the registers in the order defined by the peripheral
+        #byteorder settings and convert to integer (big-endian)
+        lsb_first = self._per._byteorders[1]
+        if lsb_first is None:
+            raise Exception('Byte order settings are missing')
+
+        byte_indexes = list(range(self._reg.size))
+        if not lsb_first:
+            byte_indexes.reverse()
+
+        byte_values = bytearray(self._reg.size)
+        for i in byte_indexes:
+            byte_values[i] = self._probe.read_ioreg(self._addr + i)
+
+        v = int.from_bytes(byte_values, byteorder='little')
+        return v
 
     def __getattr__(self, key):
         if key.startswith('_'):
@@ -290,11 +312,11 @@ class RegisterAccessor:
 class PeripheralAccessor:
     '''Accessor class for a peripheral instance'''
 
-    def __init__(self, probe, name, per, endians):
+    def __init__(self, probe, name, per, byteorders):
         self._probe = probe
         self._name = name
         self._per = per
-        self._endians = endians
+        self._byteorders = byteorders
         self._active = True
 
     @property
@@ -328,29 +350,48 @@ class PeripheralAccessor:
             object.__setattr__(self, key, value)
 
 
-class AVR_DeviceAccessor:
+class DeviceAccessor:
     '''Accessor class for a device'''
 
-    def __init__(self, probe):
-        '''Initialisation of a device accessor
-        probe : device probe, must be already attached to a device
+    def __init__(self, arg, descriptor=None):
+        '''Initialisation of a device accessor from either a probe or a device
+
+        If the 1st argument is a probe, it must be already attached to a device.
+        If it's a device, the accessor will create a debug probe and attach it.
+
+        descriptor: optional device descriptor object. If not specified, the
+                    descriptor is obtained from the _descriptor_ field of the
+                    device model instance
         '''
-        self._probe = probe
-        self._dev = DeviceDescriptor(probe.device().config().name)
+
+        if isinstance(arg, _corelib.AVR_DeviceDebugProbe):
+            self._probe = arg
+            if not self._probe.attached():
+                raise Exception('the probe is not attached to a device')
+        elif isinstance(arg, _corelib.AVR_Device):
+            self._probe = _corelib.AVR_DeviceDebugProbe(arg)
+        else:
+            raise TypeError('First arg must be a device or a attached probe')
+
+        if descriptor is not None:
+            self._desc = descriptor
+        else:
+            self._desc = self._probe.device()._descriptor_
 
     @property
     def name(self):
-        return self._dev.name
+        'Name of the device model corresponding to the descriptor used'
+        return self._desc.name
 
     @property
     def aliases(self):
-        return tuple(self._dev.aliases)
+        return tuple(self._desc.aliases)
 
     @property
     def descriptor(self):
-        return self._dev
+        return self._desc
 
     def __getattr__(self, key):
-        endians = (self._dev.access_config.get('big_endian_on_write', None),
-                   self._dev.access_config.get('big_endian_on_read', None))
-        return PeripheralAccessor(self._probe, key, self._dev.peripherals[key], endians)
+        byteorders = (self._desc.access_config.get('lsb_first_on_write', None),
+                      self._desc.access_config.get('lsb_first_on_read', None))
+        return PeripheralAccessor(self._probe, key, self._desc.peripherals[key], byteorders)

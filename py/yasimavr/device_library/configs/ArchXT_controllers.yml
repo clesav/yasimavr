@@ -1,4 +1,4 @@
-# YAML configuration file for atmega0 and atmega1 series
+# YAML configuration file for AVR XT core architecture
 #
 # Copyright 2022 Clement Savergne <csavergne@yahoo.com>
 #
@@ -296,12 +296,12 @@ MISC:
                 MSB: 3
 
         - name: TEMPSENSE0
-          address: 0x111A
+          address: 0x1120
           readonly: true
           kind: INT
 
         - name: TEMPSENSE1
-          address: 0x111B
+          address: 0x1121
           readonly: true
           kind: INT
 
@@ -410,10 +410,19 @@ FUSES:
           kind: INT
 
 #========================================================================================
-USERROW:
+USERROW_64:
     registers:
         - name: USERROW
           offset: 0x00
           readonly: true
           kind: ARRAY
           size: 64
+
+#========================================================================================
+USERROW_32:
+    registers:
+        - name: USERROW
+          offset: 0x00
+          readonly: true
+          kind: ARRAY
+          size: 32

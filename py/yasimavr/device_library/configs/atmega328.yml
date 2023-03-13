@@ -42,8 +42,8 @@ core:
     clear_GIE_on_int: yes
 
 access:
-    big_endian_on_write: yes
-    big_endian_on_read: no
+    lsb_first_on_write: yes
+    lsb_first_on_read: no
 
 pins: [ PB0, PB1, PB2, PB3, PB4, PB5, PB6, PB7,
         PC0, PC1, PC2, PC3, PC4, PC5,
@@ -95,12 +95,15 @@ peripherals:
 
     CPUINT:
         file: mega48-88-168-328_controllers.yml
+        ctl_id: INTR
 
     RSTCTRL:
         file: mega48-88-168-328_controllers.yml
+        ctl_id: RST
 
     SLPCTRL:
         file: mega48-88-168-328_controllers.yml
+        ctl_id: SLP
 
     MISC:
         file: mega48-88-168-328_controllers.yml
@@ -109,19 +112,23 @@ peripherals:
         class: PORT
         file: mega48-88-168-328_interfaces.yml
         base: 0x03
+        ctl_id: IOGB
 
     PORTC:
         class: PORT
         file: mega48-88-168-328_interfaces.yml
         base: 0x06
+        ctl_id: IOGC
 
     PORTD:
         class: PORT
         file: mega48-88-168-328_interfaces.yml
         base: 0x09
+        ctl_id: IOGD
 
     EXTINT:
         file: mega48-88-168-328_interfaces.yml
+        ctl_id: EINT
 
     TC0:
         file: mega48-88-168-328_timers.yml
@@ -134,15 +141,19 @@ peripherals:
 
     WDT:
         file: mega48-88-168-328_timers.yml
+        ctl_id: WTDG
 
     ADC:
         file: mega48-88-168-328_analog.yml
+        ctl_id: ADC0
 
     ACP:
         file: mega48-88-168-328_analog.yml
+        ctl_id: ACP0
 
     VREF:
         file: mega48-88-168-328_analog.yml
 
     USART:
         file: mega48-88-168-328_interfaces.yml
+        ctl_id: UAX0

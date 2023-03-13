@@ -1,4 +1,4 @@
-# YAML configuration file for atmega0 and atmega1 series
+# YAML configuration file for AVR XT core architecture
 #
 # Copyright 2021 Clement Savergne <csavergne@yahoo.com>
 #
@@ -467,7 +467,7 @@ RTC:
           fields:
             PI: { kind: BIT, pos: 0 }
 
-        - name: DBGCTRL
+        - name: PITDBGCTRL
           offset: 0x15
           supported: no
 

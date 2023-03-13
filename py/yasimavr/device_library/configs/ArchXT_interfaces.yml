@@ -1,4 +1,4 @@
-# YAML configuration file for atmega0 and atmega1 series
+# YAML configuration file for AVR XT core architecture
 #
 # Copyright 2022 Clement Savergne <csavergne@yahoo.com>
 #
@@ -54,7 +54,7 @@ PORT:
         - name: PORTCTRL
           offset: 0x0A
           fields:
-            SRL: { kind: BIT, pos: 0 }
+            SRL: { kind: BIT, pos: 0, supported: no }
 
         - name: PIN0CTRL
           offset: 0x10
@@ -350,24 +350,26 @@ TWI:
         - name: CTRLA
           offset: 0x00
           fields:
-            FMPEN: { kind: BIT, pos: 1, one: enabled, zero: disabled }
+            FMPEN: { kind: BIT, pos: 1, one: enabled, zero: disabled, supported: no }
             SDAHOLD:
                 kind: ENUM
                 LSB: 2
                 MSB: 3
                 values: [ OFF, 50ns, 300ns, 500ns ]
-            SDASETUP: { kind: BIT, pos: 4, one: 8CYC, zero: 4CYC }
+                supported: no
+            SDASETUP: { kind: BIT, pos: 4, one: 8CYC, zero: 4CYC, supported: no }
 
         - name: DUALCTRL
           offset: 0x01
           fields:
             ENABLE: { kind: BIT, pos: 0 , one: enabled, zero: disabled }
-            FMPEN: { kind: BIT, pos: 1, one: enabled, zero: disabled }
+            FMPEN: { kind: BIT, pos: 1, one: enabled, zero: disabled, supported: no }
             SDAHOLD:
                 kind: ENUM
                 LSB: 2
                 MSB: 3
                 values: [ OFF, 50ns, 300ns, 500ns ]
+                supported: no
 
         - name: DBGCTRL
           offset: 0x02
@@ -383,7 +385,8 @@ TWI:
                 LSB: 2
                 MSB: 3
                 values: [ disabled, 50us, 100us, 200us ]
-            QCEN: { kind: BIT, pos: 4, one: enabled, zero: disabled }
+                supported: no
+            QCEN: { kind: BIT, pos: 4, one: enabled, zero: disabled, supported: no }
             WIEN: { kind: BIT, pos: 6, one: enabled, zero: disabled }
             RIEN: { kind: BIT, pos: 7, one: enabled, zero: disabled }
 
@@ -435,8 +438,8 @@ TWI:
           offset: 0x09
           fields:
             ENABLE: { kind: BIT, pos: 0, one: enabled, zero: disabled }
-            SMEN: { kind: BIT, pos: 1, one: enabled, zero: disabled }
-            PMEN: { kind: BIT, pos: 2, one: enabled, zero: disabled }
+            SMEN: { kind: BIT, pos: 1, one: enabled, zero: disabled, supported: no }
+            PMEN: { kind: BIT, pos: 2, one: enabled, zero: disabled, supported: no }
             PIEN: { kind: BIT, pos: 4, one: enabled, zero: disabled }
             APIEN: { kind: BIT, pos: 6, one: enabled, zero: disabled }
             DIEN: { kind: BIT, pos: 7, one: enabled, zero: disabled }

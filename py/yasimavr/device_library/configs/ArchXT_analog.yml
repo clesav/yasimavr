@@ -1,4 +1,4 @@
-# YAML configuration file for atmega0 and atmega1 series
+# YAML configuration file for AVR XT core architecture
 #
 # Copyright 2021 Clement Savergne <csavergne@yahoo.com>
 #
@@ -231,6 +231,7 @@ VREF:
                 LSB: 4
                 MSB: 6
                 values: [ 0V55, 1V1, 2V5, 4V3, 1V5 ]
+
         - name: CTRLB
           offset: 0x01
           supported: no

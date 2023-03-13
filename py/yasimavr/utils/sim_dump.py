@@ -20,7 +20,7 @@
 import io
 
 from ..lib import core as corelib
-from ..device_library.accessors import AVR_DeviceAccessor
+from ..device_library.accessors import DeviceAccessor
 
 __all__ = ['simdump']
 
@@ -94,7 +94,7 @@ class _Dumper:
 def _serialize_registers(probe, dumper):
     dumper.inc_level('I/O Registers')
 
-    accessor = AVR_DeviceAccessor(probe)
+    accessor = DeviceAccessor(probe)
 
     for per_name, per_descriptor in accessor.descriptor.peripherals.items():
         per_class_descriptor = per_descriptor.class_descriptor
@@ -195,8 +195,7 @@ def _serialize_device(device, dumper):
 
     _serialize_pins(device, dumper)
 
-    probe = corelib.AVR_DeviceDebugProbe()
-    probe.attach(device)
+    probe = corelib.AVR_DeviceDebugProbe(device)
 
     _serialize_CPU(probe, dumper)
     _serialize_registers(probe, dumper)

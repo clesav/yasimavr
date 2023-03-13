@@ -26,19 +26,35 @@ from .descriptors import *
 from .accessors import *
 import importlib
 
-dev_class_cache = {}
+_factory_cache = {}
 
-def load_device(dev_name):
-    if dev_name in dev_class_cache:
-        return dev_class_cache[dev_name]()
+def load_device(dev_name, verbose=False):
+    low_dev_name = dev_name.lower()
 
-    mod_name = '.config_builders.device_' + dev_name
+    if low_dev_name in _factory_cache:
+        if verbose:
+            print('Using device factory from cache')
+        return _factory_cache[low_dev_name](low_dev_name)
+
+    from .builders import _base
+    _base.VERBOSE = verbose
+
+    path_device_db = os.path.join(os.path.dirname(__file__), 'configs', 'devices.yml')
+    device_db = load_config_file(path_device_db)
+    for f, dev_list in device_db.items():
+        if low_dev_name in dev_list:
+            dev_factory = f
+            break
+    else:
+        raise Exception('No model found for ' + dev_name)
+
+    mod_name = '.builders.' + dev_factory
+    if verbose:
+        print('Loading device factory module', mod_name)
 
     dev_mod = importlib.import_module(mod_name, __package__)
-
     importlib.invalidate_caches()
 
-    dev_class = dev_mod.DEV_CLASS
-    dev_class_cache[dev_name] = dev_class
-    return dev_class()
-
+    factory = getattr(dev_mod, 'device_factory')
+    _factory_cache[low_dev_name] = factory
+    return factory(low_dev_name)
