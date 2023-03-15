@@ -31,6 +31,9 @@ struct AVR_ArchAVR_DeviceConfig : public AVR_DeviceConfiguration /NoDefaultCtors
 %TypeHeaderCode
 #include "arch_avr_device.h"
 %End
+
+    AVR_ArchAVR_DeviceConfig(AVR_CoreConfiguration&);
+
 };
 
 
