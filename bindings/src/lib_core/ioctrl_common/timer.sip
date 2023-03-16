@@ -50,3 +50,61 @@ public:
     static int ticks_to_event(int, int, int);
 
 };
+
+
+//=======================================================================================
+
+class AVR_TimerCounter /NoDefaultCtors/ {
+%TypeHeaderCode
+#include "ioctrl_common/sim_timer.h"
+%End
+
+public:
+
+    enum ClockSource {
+        Clock_Stopped       /PyName=Stopped/,
+        Clock_Internal      /PyName=Internal/,
+        Clock_External      /PyName=External/,
+    };
+
+    enum EventType /BaseType=IntFlag/ {
+        Event_Max           /PyName=Max/,
+        Event_Top           /PyName=Top/,
+        Event_Bottom        /PyName=Bottom/,
+        Event_OC            /PyName=OC/,
+    };
+
+    enum SignalId  /BaseType=IntEnum/ {
+        Signal_Event        /PyName=Event/,
+        Signal_CompMatch    /PyName=CompMatch/,
+    };
+
+    AVR_TimerCounter(AVR_PrescaledTimer&, long, uint32_t);
+
+    long wrap() const;
+
+    void reset();
+    void reschedule();
+
+    void set_clock_source(ClockSource);
+
+    void set_top(long);
+    long top() const;
+
+    void set_double_slope(bool);
+    bool double_slope() const;
+
+    void set_value(long);
+    long value() const;
+
+    void set_OC_value(uint32_t, long);
+    long OC_value(uint32_t) const;
+
+    bool countdown() const;
+
+    AVR_Signal& signal();
+    AVR_SignalHook& ext_clock_hook();
+
+    void set_logger(AVR_Logger* logger);
+
+};

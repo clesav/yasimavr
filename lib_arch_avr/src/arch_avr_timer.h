@@ -26,82 +26,154 @@
 
 #include "core/sim_peripheral.h"
 #include "core/sim_interrupt.h"
-#include "core/sim_signal.h"
 #include "ioctrl_common/sim_timer.h"
 
 
 //=======================================================================================
 /*
  * Implementation of a 8bits/16bits Timer/Counter for AVR series
- * Only the Normal and CTC modes are currently implemented
  * Other unsupported features:
- *      - External event capture
- *      - External clock sources
  *      - Compare/capture output on pin
  *      - Asynchronous operations
+ *
+ * This timer is a flexible implementation aiming at covering most modes found in
+ * AVR timer/counter. It covers normal, CTC, PWM in both single and dual slopes.
+ * The behaviour is defined by a mode_config_t structure selected by the mode field.
+ * It has a number of Output Compare channels, each defined by a OC_config_t structure.
+ * Each OC channel behaviour is defined by a set of Compare Output Mode (COM) values.
+ *
  */
+
+/*
+ * CTLREQ definitions
+*/
+//Request to obtain a pointer to the SignalHook entry point for external clock ticks
+#define AVR_CTLREQ_TMR_GET_EXTCLK_HOOK        1
+//Request to obtain a pointer to the SignalHook entry point for event capture
+#define AVR_CTLREQ_TMR_GET_CAPT_HOOK          2
+
 
 struct AVR_ArchAVR_TimerConfig {
 
-    enum ClockSource {
-        ClockDisabled = 0,
-        INT_IO_CLOCK,
+    enum COM {
+        COM_NoChange = 0,
+        COM_Toggle,
+        COM_Clear,
+        COM_Set,
+        COM_ToggleA,
+    };
+
+    enum Top {
+        Top_OnMax = 0,
+        Top_OnFixed,
+        Top_OnCompA,
+        Top_OnIC,
+    };
+
+    enum OCR {
+        OCR_Unbuffered = 0,
+        OCR_UpdateOnTop,
+        OCR_UpdateOnBottom,
+    };
+
+    enum OVF {
+        OVF_SetOnMax = 0,
+        OVF_SetOnTop,
+        OVF_SetOnBottom,
     };
 
     struct clock_config_t : base_reg_config_t {
-        ClockSource source;     //Clock source
-        uint32_t div;           //Prescaler factor
+        AVR_TimerCounter::TickSource source;      //Clock source
+        unsigned int div;                         //Prescaler factor
     };
 
-    enum Mode {
-        MODE_INVALID = 0,
-        MODE_NORMAL,
-        MODE_CTC,
+    struct vector_config_t {
+        int_vect_t num;
+        uint8_t bit;
+    };
+
+    struct OC_config_t : base_reg_config_t {
+        reg_addr_t reg_oc;
+        vector_config_t vector;
+        regbit_t rb_mode;
+        regbit_t rb_force;
+    };
+
+    struct COM_config_t : base_reg_config_t {
+        COM up : 4;
+        COM down : 4;
+        COM bottom : 4;
+        COM top : 4;
     };
 
     struct mode_config_t : base_reg_config_t {
-        Mode mode;
+        //Controls when the OVerFlow interrupt flag is set
+        OVF ovf : 2;
+        //Controls the counter value used for TOP
+        Top top : 2;
+        //Controls the fixed top value when top is set to Top_OnFixed.
+        //The fixed value is (2^n - 1), where n = (fixed_top_size + 8)
+        unsigned int fixed_top_exp : 4;
+        //Controls when the OC compare values are updated from the registers
+        OCR ocr : 2;
+        //Controls the slope mode , false=single, true=double
+        bool double_slope : 1;
+        //If true, a Forced Output Compare strobe has no effect
+        bool disable_foc: 1;
+        //Controls which COM config variant is used
+        unsigned int com_variant : 4;
     };
 
-    struct int_config_t {
-        int_vect_t vector;
-        uint8_t bit;
-    };
+    typedef std::vector<COM_config_t> COM_variant_t;
+
 
     bool is_16bits;
 
     std::vector<clock_config_t> clocks;     //List of clock source configurations
     std::vector<mode_config_t> modes;       //List of the timer mode configurations
+
+    /*
+     * List of COM enum values
+     * The COM values are presented in a 2D vector, indexed by:
+     *  - a variant index, selected by the timer mode (in mode_config_t)
+     *  - a OC mode selected by the OC channel mode field (in OC_config_t)
+     */
+    std::vector<COM_variant_t> com_modes;
+
+    std::vector<OC_config_t> oc_channels;   //List of Output Compare channel configurations
+
     regbit_t rb_clock;                      //Clock/prescaler configuration register
     regbit_compound_t rbc_mode;             //Timer mode control register
     reg_addr_t reg_cnt;                     //Counter register
-    reg_addr_t reg_ocra;                    //Output Compare A register
-    reg_addr_t reg_ocrb;                    //Output Compare B register
+    reg_addr_t reg_icr;                     //Input compare register
     reg_addr_t reg_int_enable;              //Interrupt enable register
     reg_addr_t reg_int_flag;                //Interrupt flag register
 
-    int_config_t int_ovf;                   //Overflow Interrupt configuration
-    int_config_t int_ocra;
-    int_config_t int_ocrb;
+    vector_config_t vect_ovf;               //Overflow Interrupt configuration
+    vector_config_t vect_icr;               //Input Capture Interrupt configuration
 
 };
 
-#define DEF_CLOCK_SOURCE_DISABLED  AVR_ArchAVR_TimerConfig::ClockDisabled, 0
-#define DEF_CLOCK_SOURCE_INT(_div) AVR_ArchAVR_TimerConfig::INT_IO_CLOCK , _div
 
 class DLL_EXPORT AVR_ArchAVR_Timer : public AVR_Peripheral, public AVR_SignalHook {
 
 public:
 
-    //The Timer module defines one signal (index 0) that is raised when a Interrupt Flag is set
-    //The index of the signal data contains one of the following enum values
     enum SignalId {
-        Signal_CompA,
-        Signal_CompB,
-        Signal_OVF
+        //Signal raised on a overflow event, no data is carried
+        Signal_OVF,
+        //Signal raised on a Compare Match event. The index indicates which channel
+        //(0='A', 1='B', etc...), no data is carried.
+        Signal_CompMatch,
+        //Signal raised wth the Compare Output value. The index indicates which channel
+        //(0='A', 1='B', etc...), no data is carried.
+        Signal_CompOutput,
+        //Signal raised on a Input Capture event, no data is carried.
+        Signal_Capt
     };
 
     AVR_ArchAVR_Timer(int num, const AVR_ArchAVR_TimerConfig& config);
+    ~AVR_ArchAVR_Timer();
 
     virtual bool init(AVR_Device& device) override;
     virtual void reset() override;
@@ -109,36 +181,44 @@ public:
     virtual uint8_t ioreg_read_handler(reg_addr_t addr, uint8_t value) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
 
-    virtual void raised(const signal_data_t& data, uint16_t sigid) override;
+    virtual void raised(const signal_data_t& sigdata, uint16_t hooktag) override;
 
 private:
 
-    class TimerInterruptHook;
-    friend class TimerInterruptHook;
+    class CaptureHook;
+    friend class CaptureHook;
+
+    struct OutputCompareChannel;
+    friend struct OutputCompareChannel;
 
     const AVR_ArchAVR_TimerConfig& m_config;
 
     //***** Clock management *****
     uint16_t m_clk_ps_max;              //Max value counted by the clock prescaler
-    bool m_clk_enabled;
-
-    //***** Counter management *****
-    uint16_t m_cnt;                         //Current counter value
-    uint16_t m_ocra;
-    uint16_t m_ocrb;
+    //Input Capture Register value
+    uint16_t m_icr;
+    //Temporary register when the CPU is reading 16-bits registers
     uint8_t m_temp;
-
-    //***** Event management
+    //Current timer/counter mode
+    AVR_ArchAVR_TimerConfig::mode_config_t m_mode;
+    //List of output compare modules
+    std::vector<OutputCompareChannel*> m_oc_channels;
+    //Event timer engine
     AVR_PrescaledTimer m_timer;
-    uint8_t m_next_event_type;
-
-    //***** Interrupt and signal management *****
+    //Timer counter engine
+    AVR_TimerCounter m_counter;
+    //Interrupt and signal management
     AVR_InterruptFlag m_intflag_ovf;
-    AVR_InterruptFlag m_intflag_ocra;
-    AVR_InterruptFlag m_intflag_ocrb;
-    AVR_Signal m_intflag_signal;
+    AVR_InterruptFlag m_intflag_icr;
+    AVR_DataSignal m_signal;
+    CaptureHook* m_capt_hook;
 
-    uint32_t delay_to_event();
+    void update_top();
+    void capt_raised();
+    AVR_ArchAVR_TimerConfig::COM_config_t get_COM_config(uint8_t regval);
+    void process_ticks(unsigned int ticks, bool event_reached);
+    void change_OC_state(uint32_t index, uint8_t event_flags);
+    bool output_active(AVR_ArchAVR_TimerConfig::COM_config_t& mode, uint32_t output_index);
 
 };
 

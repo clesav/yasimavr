@@ -435,3 +435,12 @@ class DeviceBuilder:
     @classmethod
     def clear_cache(cls):
         cls._builder_cache.clear()
+
+
+def convert_enum_member(klass, v):
+    if v is None:
+        return klass(0)
+    elif isinstance(v, str):
+        return klass[v]
+    else:
+        return klass(v)
