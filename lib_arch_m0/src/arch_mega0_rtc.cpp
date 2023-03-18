@@ -125,8 +125,8 @@ bool AVR_ArchMega0_RTC::init(AVR_Device& device)
 
     m_rtc_timer.init(*device.cycle_manager(), logger());
     m_pit_timer.init(*device.cycle_manager(), logger());
-    m_rtc_counter.set_logger(logger());
-    m_pit_counter.set_logger(logger());
+    m_rtc_counter.set_logger(&logger());
+    m_pit_counter.set_logger(&logger());
 
     return status;
 }
@@ -149,7 +149,7 @@ uint8_t AVR_ArchMega0_RTC::ioreg_read_handler(reg_addr_t addr, uint8_t value)
     //16-bits reading of CNT
     if (reg_ofs == REG_OFS(CNTL)) {
         m_rtc_timer.update();
-        uint16_t v = (uint16_t) m_rtc_counter.value();
+        uint16_t v = (uint16_t) m_rtc_counter.counter();
         value = v & 0x00FF;
         write_ioreg(REG_ADDR(TEMP), v >> 8);
     }
@@ -218,7 +218,7 @@ void AVR_ArchMega0_RTC::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t
     }
     else if (reg_ofs == REG_OFS(CNTH)) {
         uint8_t temp = read_ioreg(REG_ADDR(TEMP));
-        m_rtc_counter.set_value(temp | (data.value << 8));
+        m_rtc_counter.set_counter(temp | (data.value << 8));
         m_rtc_counter.reschedule();
     }
 
@@ -240,7 +240,7 @@ void AVR_ArchMega0_RTC::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t
     else if (reg_ofs == REG_OFS(CMPH)) {
         uint8_t temp = read_ioreg(REG_ADDR(TEMP));
         m_rtc_timer.update();
-        m_rtc_counter.set_comp_value(temp | (data.value << 8));
+        m_rtc_counter.set_comp_value(0, temp | (data.value << 8));
         m_rtc_counter.reschedule();
     }
 
@@ -333,7 +333,7 @@ void AVR_ArchMega0_RTC::rtc_hook_raised(const signal_data_t& sigdata)
             logger().dbg("RTC triggering OVF interrupt");
     }
 
-    if (event_type & AVR_TimerCounter::Event_Comp) {
+    if (event_type & AVR_TimerCounter::Event_Compare) {
         if (m_rtc_intflag.set_flag(RTC_CMP_bm))
             logger().dbg("RTC triggering CMP interrupt");
     }
@@ -344,7 +344,7 @@ void AVR_ArchMega0_RTC::pit_hook_raised(const signal_data_t& sigdata)
     if (sigdata.sigid != AVR_TimerCounter::Signal_Event)
         return;
 
-    if (event_type & AVR_TimerCounter::Event_Top) {
+    if (sigdata.data.as_uint() & AVR_TimerCounter::Event_Top) {
         if (m_pit_intflag.set_flag(RTC_PI_bm))
             logger().dbg("PIT triggering interrupt");
     }

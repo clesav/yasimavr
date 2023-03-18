@@ -198,8 +198,8 @@ public:
     void set_double_slope(bool enable);
     bool double_slope() const;
 
-    void set_value(long value);
-    long value() const;
+    void set_counter(long value);
+    long counter() const;
 
     void set_comp_value(uint32_t index, long value);
     long comp_value(uint32_t index) const;
@@ -276,7 +276,7 @@ inline bool AVR_TimerCounter::double_slope() const
     return m_double_slope;
 }
 
-inline long AVR_TimerCounter::value() const
+inline long AVR_TimerCounter::counter() const
 {
     return m_counter;
 }

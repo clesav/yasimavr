@@ -414,7 +414,7 @@ void AVR_TimerCounter::set_double_slope(bool enable)
 }
 
 
-void AVR_TimerCounter::set_value(long value)
+void AVR_TimerCounter::set_counter(long value)
 {
     if (value >= 0 && value < m_wrap)
         m_counter = value;

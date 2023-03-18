@@ -67,7 +67,7 @@ struct AVR_ArchAVR_TimerConfig {
     };
 
     struct clock_config_t : base_reg_config_t {
-        AVR_TimerCounter::ClockSource source;
+        AVR_TimerCounter::TickSource source;
         unsigned int div;
     };
 

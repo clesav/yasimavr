@@ -80,11 +80,11 @@ TC0:
 
         clocks:
             0b000: [ Stopped ]
-            0b001: [ Internal, 1 ]
-            0b010: [ Internal, 8 ]
-            0b011: [ Internal, 64 ]
-            0b100: [ Internal, 256 ]
-            0b101: [ Internal, 1024 ]
+            0b001: [ Timer, 1 ]
+            0b010: [ Timer, 8 ]
+            0b011: [ Timer, 64 ]
+            0b100: [ Timer, 256 ]
+            0b101: [ Timer, 1024 ]
             0b110: [ External ]
             0b111: [ External ]
 
@@ -251,11 +251,11 @@ TC1:
 
         clocks:
             0b000: [ Stopped ]
-            0b001: [ Internal, 1 ]
-            0b010: [ Internal, 8 ]
-            0b011: [ Internal, 64 ]
-            0b100: [ Internal, 256 ]
-            0b101: [ Internal, 1024 ]
+            0b001: [ Timer, 1 ]
+            0b010: [ Timer, 8 ]
+            0b011: [ Timer, 64 ]
+            0b100: [ Timer, 256 ]
+            0b101: [ Timer, 1024 ]
             0b110: [ External ]
             0b111: [ External ]
 
@@ -485,13 +485,13 @@ TC2:
 
         clocks:
             0b000: [ Stopped ]
-            0b001: [ Internal, 1 ]
-            0b010: [ Internal, 8 ]
-            0b011: [ Internal, 32 ]
-            0b100: [ Internal, 64 ]
-            0b101: [ Internal, 128 ]
-            0b110: [ Internal, 256 ]
-            0b111: [ Internal, 1024 ]
+            0b001: [ Timer, 1 ]
+            0b010: [ Timer, 8 ]
+            0b011: [ Timer, 32 ]
+            0b100: [ Timer, 64 ]
+            0b101: [ Timer, 128 ]
+            0b110: [ Timer, 256 ]
+            0b111: [ Timer, 1024 ]
 
         modes:
             0b000: #Normal

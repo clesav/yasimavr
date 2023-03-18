@@ -28,7 +28,7 @@ from ...lib import arch_avr as _archlib
 from ._base import (PeripheralBuilder, PeripheralConfigBuilder,
                     IndexedPeripheralBuilder,
                     DeviceBuilder, DeviceBuildError,
-                    get_core_attributes, convert_enum_member)
+                    get_core_attributes, convert_to_regbit, convert_enum_member)
 
 
 #========================================================================================
@@ -133,7 +133,7 @@ def _timer_convertor(cfg, attr, yml_val, per_desc):
         for reg_value, clk_cfg_yml in yml_val.items():
             clk_cfg = _archlib.AVR_ArchAVR_TimerConfig.clock_config_t()
             clk_cfg.reg_value = reg_value
-            clk_cfg.source = CFG.ClockSource[clk_cfg_yml[0]]
+            clk_cfg.source = _corelib.AVR_TimerCounter.TickSource[clk_cfg_yml[0]]
             clk_cfg.div = clk_cfg_yml[1] if len(clk_cfg_yml) > 1 else 1
             py_clocks.append(clk_cfg)
         cfg.clocks = py_clocks
@@ -161,8 +161,8 @@ def _timer_convertor(cfg, attr, yml_val, per_desc):
             oc_cfg.reg_oc = per_desc.reg_address(oc_cfg_yml['reg_oc'])
             oc_cfg.vector.num = per_desc.device.interrupt_map.vectors.index(oc_cfg_yml['vector'][0])
             oc_cfg.vector.bit = oc_cfg_yml['vector'][1]
-            oc_cfg.rb_mode = convert_regbit(oc_cfg_yml['rb_mode'], per_desc)
-            oc_cfg.rb_force = convert_regbit(oc_cfg_yml['rb_force'], per_desc)
+            oc_cfg.rb_mode = convert_to_regbit(oc_cfg_yml['rb_mode'], per_desc)
+            oc_cfg.rb_force = convert_to_regbit(oc_cfg_yml['rb_force'], per_desc)
             oc_cfg_list.append(oc_cfg)
 
         cfg.oc_channels = oc_cfg_list

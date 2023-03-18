@@ -22,7 +22,6 @@
 //=======================================================================================
 
 #include "arch_avr_timer.h"
-//#include "core/sim_device.h"
 
 
 typedef AVR_ArchAVR_TimerConfig CFG;
@@ -131,7 +130,7 @@ bool AVR_ArchAVR_Timer::init(AVR_Device& device)
                                  m_config.vect_ovf.num);
     uint8_t int_bitmask = 1 << m_config.vect_ovf.bit;
 
-    if (m_config.reg_icr) {
+    if (m_config.reg_icr.valid()) {
         add_ioreg(m_config.reg_icr);
         if (m_config.is_16bits)
             add_ioreg(m_config.reg_icr + 1);
@@ -179,7 +178,7 @@ void AVR_ArchAVR_Timer::reset()
     m_counter.reset();
     m_intflag_ovf.update_from_ioreg();
 
-    if (m_config.reg_icr) {
+    if (m_config.reg_icr.valid()) {
         m_icr = 0;
         m_intflag_icr.update_from_ioreg();
     }
@@ -217,7 +216,7 @@ uint8_t AVR_ArchAVR_Timer::ioreg_read_handler(reg_addr_t addr, uint8_t value)
     //8 or 16 bits reading of CNTx
     else if (addr == m_config.reg_cnt) {
         m_timer.update();
-        uint16_t v = m_counter.value();
+        uint16_t v = m_counter.counter();
         value = v & 0x00FF;
         if (m_config.is_16bits)
             m_temp = v >> 8;
@@ -246,7 +245,7 @@ void AVR_ArchAVR_Timer::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t
 
     //8 or 16 bits writing to CNTx
     if (addr == m_config.reg_cnt) {
-        m_counter.set_value((m_temp << 8) | data.value);
+        m_counter.set_counter((m_temp << 8) | data.value);
         do_reschedule = true;
     }
     else if (m_config.is_16bits && addr == m_config.reg_cnt + 1) {
@@ -545,13 +544,13 @@ void AVR_ArchAVR_Timer::change_OC_state(uint32_t index, uint8_t event_flags)
 void AVR_ArchAVR_Timer::capt_raised()
 {
     //If no ICR is registered, the Input Capture function is unavailable
-    if (!m_config.reg_icr) return;
+    if (!m_config.reg_icr.valid()) return;
 
     //If ICR is used for TOP value, the Input Capture function is disabled
     if (m_mode.top == CFG::Top_OnIC) return;
 
     m_timer.update();
-    m_icr = m_counter.value();
+    m_icr = m_counter.counter();
     m_intflag_icr.set_flag();
     m_signal.raise_u(Signal_Capt, 0);
 }

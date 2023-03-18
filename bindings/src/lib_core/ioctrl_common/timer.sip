@@ -61,17 +61,17 @@ class AVR_TimerCounter /NoDefaultCtors/ {
 
 public:
 
-    enum ClockSource {
-        Clock_Stopped       /PyName=Stopped/,
-        Clock_Internal      /PyName=Internal/,
-        Clock_External      /PyName=External/,
+    enum TickSource {
+        Tick_Stopped       /PyName=Stopped/,
+        Tick_Timer         /PyName=Timer/,
+        Tick_External      /PyName=External/,
     };
 
     enum EventType /BaseType=IntFlag/ {
         Event_Max           /PyName=Max/,
         Event_Top           /PyName=Top/,
         Event_Bottom        /PyName=Bottom/,
-        Event_OC            /PyName=OC/,
+        Event_Compare       /PyName=Compare/,
     };
 
     enum SignalId  /BaseType=IntEnum/ {
@@ -86,7 +86,7 @@ public:
     void reset();
     void reschedule();
 
-    void set_clock_source(ClockSource);
+    void set_tick_source(TickSource);
 
     void set_top(long);
     long top() const;
@@ -94,16 +94,16 @@ public:
     void set_double_slope(bool);
     bool double_slope() const;
 
-    void set_value(long);
-    long value() const;
+    void set_counter(long);
+    long counter() const;
 
-    void set_OC_value(uint32_t, long);
-    long OC_value(uint32_t) const;
+    void set_comp_value(uint32_t, long);
+    long comp_value(uint32_t) const;
 
     bool countdown() const;
 
     AVR_Signal& signal();
-    AVR_SignalHook& ext_clock_hook();
+    AVR_SignalHook& ext_tick_hook();
 
     void set_logger(AVR_Logger* logger);
 
