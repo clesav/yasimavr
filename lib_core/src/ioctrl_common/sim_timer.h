@@ -166,6 +166,12 @@ public:
         Tick_External,
     };
 
+    enum SlopeMode {
+        Slope_Up = 0,
+        Slope_Down,
+        Slope_Double,
+    };
+
     enum EventType {
         Event_Max     = 0x01,
         Event_Top     = 0x02,
@@ -191,12 +197,13 @@ public:
     void reschedule();
 
     void set_tick_source(TickSource src);
+    TickSource tick_source() const;
 
     void set_top(long top);
     long top() const;
 
-    void set_double_slope(bool enable);
-    bool double_slope() const;
+    void set_slope_mode(SlopeMode mode);
+    SlopeMode slope_mode() const;
 
     void set_counter(long value);
     long counter() const;
@@ -236,8 +243,8 @@ private:
     long m_counter;
     //Top value
     long m_top;
-    //Indicates if double slope is enabled
-    bool m_double_slope;
+    //Slope mode
+    SlopeMode m_slope;
     //Indicates if the counter is counting up (false) or down (true)
     bool m_countdown;
     //List of compare units
@@ -266,14 +273,19 @@ inline long AVR_TimerCounter::wrap() const
     return m_wrap;
 }
 
+inline AVR_TimerCounter::TickSource AVR_TimerCounter::tick_source() const
+{
+    return m_source;
+}
+
 inline long AVR_TimerCounter::top() const
 {
     return m_top;
 }
 
-inline bool AVR_TimerCounter::double_slope() const
+inline AVR_TimerCounter::SlopeMode AVR_TimerCounter::slope_mode() const
 {
-    return m_double_slope;
+    return m_slope;
 }
 
 inline long AVR_TimerCounter::counter() const

@@ -318,7 +318,9 @@ void AVR_ArchAVR_Timer::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t
             auto mode_cfg = find_reg_config_p<CFG::mode_config_t>(m_config.modes, reg_val);
             if (mode_cfg) {
                 m_mode = *mode_cfg;
-                m_counter.set_double_slope(m_mode.double_slope);
+                m_counter.set_slope_mode(m_mode.double_slope ?
+                                         AVR_TimerCounter::Slope_Double :
+                                         AVR_TimerCounter::Slope_Up);
                 update_top();
             } else {
                 logger().dbg("Unsupported mode setting: 0x%02x", reg_val);

@@ -326,7 +326,7 @@ class AVR_TimerCounter::ExtTickHook : public AVR_SignalHook {
 
 public:
 
-	ExtTickHook(AVR_TimerCounter& timer) : m_timer(timer) {}
+    ExtTickHook(AVR_TimerCounter& timer) : m_timer(timer) {}
 
     virtual void raised(const signal_data_t& sigdata, uint16_t hooktag) override
     {
@@ -345,7 +345,7 @@ AVR_TimerCounter::AVR_TimerCounter(AVR_PrescaledTimer& timer, long wrap, uint32_
 ,m_counter(0)
 ,m_top(wrap - 1)
 ,m_source(Tick_Stopped)
-,m_double_slope(false)
+,m_slope(Slope_Up)
 ,m_countdown(false)
 ,m_cmp(comp_count)
 ,m_timer(timer)
@@ -375,8 +375,10 @@ void AVR_TimerCounter::set_logger(AVR_Logger* logger)
 void AVR_TimerCounter::reset()
 {
     m_source = Tick_Stopped;
+    m_slope = Slope_Up;
     m_counter = 0;
     m_countdown = false;
+    m_top = m_wrap - 1;
 
     for (auto& comp : m_cmp)
         comp.value = 0;
@@ -405,12 +407,14 @@ void AVR_TimerCounter::set_top(long top)
 }
 
 
-void AVR_TimerCounter::set_double_slope(bool enable)
+void AVR_TimerCounter::set_slope_mode(SlopeMode mode)
 {
-    m_double_slope = enable;
+    m_slope = mode;
 
-    if (!enable)
+    if (mode == Slope_Up)
         m_countdown = false;
+    else if (mode == Slope_Down)
+        m_countdown = true;
 }
 
 
@@ -578,12 +582,19 @@ void AVR_TimerCounter::process_ticks(long ticks, bool event_reached)
         if (m_logger)
             m_logger->dbg("Counter reaching TOP value");
 
-        //If double-slopping, change the counting direction or else, wrap
-        if (m_double_slope) {
+        //Annoying Special Case : TOP == BOTTOM, the counter must remain at 0
+        //and whether the counting is up or down is meaningless
+        if (!m_top) {
+            m_counter = 0;
+        }
+        //If double-slopping, change the counting direction
+        else if (m_slope == Slope_Double) {
             m_countdown = true;
             //Here, counter is equal to TOP + 1 but it should be TOP - 1 thus the "minus 2"
             m_counter -= 2;
-        } else {
+        }
+        //Else if still counting up, wrap
+        else if (m_slope == Slope_Up) {
             m_counter = 0;
         }
     }
@@ -593,11 +604,18 @@ void AVR_TimerCounter::process_ticks(long ticks, bool event_reached)
         if (m_logger)
             m_logger->dbg("Counter reaching BOTTOM value");
 
-        //If counting down, change direction
-        if (m_countdown) {
-            m_countdown = false;
-            //Here, counter is equal to BOTTOM - 1 but it should be BOTTOM + 1 thus the "plus 2"
-            m_counter += 2;
+        //Annoying Special Case already treated above.
+        if (m_top) {
+            //If double-slopping, change the counting direction
+            if (m_slope == Slope_Double) {
+                m_countdown = false;
+                //Here, counter is equal to BOTTOM - 1 but it should be BOTTOM + 1 thus the "plus 2"
+                m_counter += 2;
+            }
+            //Else if still counting down, wrap
+            else if (m_slope == Slope_Down) {
+                m_counter = m_wrap - 1;
+            }
         }
     }
 

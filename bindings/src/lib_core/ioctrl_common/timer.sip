@@ -67,6 +67,12 @@ public:
         Tick_External      /PyName=External/,
     };
 
+    enum SlopeMode {
+        Slope_Up           /PyName=Up/,
+        Slope_Down         /PyName=Down/,
+        Slope_Double       /PyName=Double/,
+    };
+
     enum EventType /BaseType=IntFlag/ {
         Event_Max           /PyName=Max/,
         Event_Top           /PyName=Top/,
@@ -87,12 +93,13 @@ public:
     void reschedule();
 
     void set_tick_source(TickSource);
+    TickSource tick_source() const;
 
     void set_top(long);
     long top() const;
 
-    void set_double_slope(bool);
-    bool double_slope() const;
+    void set_slope_mode(SlopeMode);
+    SlopeMode slope_mode() const;
 
     void set_counter(long);
     long counter() const;
