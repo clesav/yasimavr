@@ -107,6 +107,9 @@ public:
     void set_comp_value(uint32_t, long);
     long comp_value(uint32_t) const;
 
+    void set_comp_enabled(uint32_t, bool);
+    bool comp_enabled(uint32_t) const;
+
     bool countdown() const;
 
     AVR_Signal& signal();

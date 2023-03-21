@@ -112,7 +112,7 @@ struct AVR_ArchAVR_TimerConfig {
         //Controls the counter value used for TOP
         Top top : 2;
         //Controls the fixed top value when top is set to Top_OnFixed.
-        //The fixed value is (2^n - 1), where n = (fixed_top_size + 8)
+        //The fixed value is (2^n - 1), where n = (fixed_top_exp + 8)
         unsigned int fixed_top_exp : 4;
         //Controls when the OC compare values are updated from the registers
         OCR ocr : 2;
@@ -165,7 +165,7 @@ public:
         //Signal raised on a Compare Match event. The index indicates which channel
         //(0='A', 1='B', etc...), no data is carried.
         Signal_CompMatch,
-        //Signal raised wth the Compare Output value. The index indicates which channel
+        //Signal raised with the Compare Output value. The index indicates which channel
         //(0='A', 1='B', etc...), no data is carried.
         Signal_CompOutput,
         //Signal raised on a Input Capture event, no data is carried.

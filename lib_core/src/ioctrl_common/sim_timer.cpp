@@ -380,8 +380,10 @@ void AVR_TimerCounter::reset()
     m_countdown = false;
     m_top = m_wrap - 1;
 
-    for (auto& comp : m_cmp)
+    for (auto& comp : m_cmp) {
         comp.value = 0;
+        comp.enabled = false;
+    }
 }
 
 
@@ -402,8 +404,7 @@ void AVR_TimerCounter::set_tick_source(TickSource src)
 
 void AVR_TimerCounter::set_top(long top)
 {
-    if (top >= 0 || top < m_wrap)
-        m_top = top;
+    m_top = top;
 }
 
 
@@ -420,17 +421,18 @@ void AVR_TimerCounter::set_slope_mode(SlopeMode mode)
 
 void AVR_TimerCounter::set_counter(long value)
 {
-    if (value >= 0 && value < m_wrap)
-        m_counter = value;
+    m_counter = value;
 }
 
 
 void AVR_TimerCounter::set_comp_value(uint32_t index, long value)
 {
-    if (value < 0 || value >= m_wrap) return;
-    if (index >= m_cmp.size()) return;
-
     m_cmp[index].value = value;
+}
+
+void AVR_TimerCounter::set_comp_enabled(uint32_t index, bool enable)
+{
+    m_cmp[index].enabled = enable;
 }
 
 
@@ -460,10 +462,12 @@ long AVR_TimerCounter::delay_to_event()
     //List of ticks counts to each Output Compare unit
     std::vector<long> comp_ticks = std::vector<long>(m_cmp.size());
     for (uint32_t i = 0; i < m_cmp.size(); ++i) {
-        long t = ticks_to_event(m_cmp[i].value);
-        comp_ticks[i] = t;
-        if (t < ticks_to_next_event)
-            ticks_to_next_event = t;
+        if (m_cmp[i].enabled) {
+            long t = ticks_to_event(m_cmp[i].value);
+            comp_ticks[i] = t;
+            if (t < ticks_to_next_event)
+                ticks_to_next_event = t;
+        }
     }
 
     //Ticks for the counter to reach TOP.
@@ -486,7 +490,7 @@ long AVR_TimerCounter::delay_to_event()
         m_next_event_type |= Event_Bottom;
 
     for (uint32_t i = 0; i < m_cmp.size(); ++i) {
-        bool is_next_event = (ticks_to_next_event == comp_ticks[i]);
+        bool is_next_event = (m_cmp[i].enabled && ticks_to_next_event == comp_ticks[i]);
         m_cmp[i].is_next_event = is_next_event;
         if (is_next_event)
             m_next_event_type |= Event_Compare;
@@ -526,13 +530,13 @@ void AVR_TimerCounter::extclock_raised()
         m_next_event_type |= Event_Max;
 
     for (auto& comp : m_cmp) {
-        bool is_next_event = (m_counter == comp.value);
+        bool is_next_event = (comp.enabled && m_counter == comp.value);
         comp.is_next_event = is_next_event;
         if (is_next_event)
             m_next_event_type |= Event_Compare;
     }
 
-    if (!m_countdown && m_counter == m_top)
+    if (m_counter == m_top)
         m_next_event_type |= Event_Top;
 
     if (m_counter == 0)
@@ -582,20 +586,17 @@ void AVR_TimerCounter::process_ticks(long ticks, bool event_reached)
         if (m_logger)
             m_logger->dbg("Counter reaching TOP value");
 
+        //If still counting up, wrap the counter
         //Annoying Special Case : TOP == BOTTOM, the counter must remain at 0
         //and whether the counting is up or down is meaningless
-        if (!m_top) {
+        if (m_slope == Slope_Up || !m_top) {
             m_counter = 0;
         }
         //If double-slopping, change the counting direction
-        else if (m_slope == Slope_Double) {
+        else if (m_slope == Slope_Double && !m_countdown) {
             m_countdown = true;
-            //Here, counter is equal to TOP + 1 but it should be TOP - 1 thus the "minus 2"
-            m_counter -= 2;
-        }
-        //Else if still counting up, wrap
-        else if (m_slope == Slope_Up) {
-            m_counter = 0;
+            //Here, counter is equal to TOP + 1 but it should be TOP - 1
+            m_counter = m_top - 1;
         }
     }
 
@@ -604,17 +605,17 @@ void AVR_TimerCounter::process_ticks(long ticks, bool event_reached)
         if (m_logger)
             m_logger->dbg("Counter reaching BOTTOM value");
 
-        //Annoying Special Case already treated above.
+        //Check to avoid treating the Annoying Special Case twice
         if (m_top) {
-            //If double-slopping, change the counting direction
-            if (m_slope == Slope_Double) {
-                m_countdown = false;
-                //Here, counter is equal to BOTTOM - 1 but it should be BOTTOM + 1 thus the "plus 2"
-                m_counter += 2;
+            //If still counting down, wrap the counter
+            if (m_slope == Slope_Down) {
+                m_counter = m_top;
             }
-            //Else if still counting down, wrap
-            else if (m_slope == Slope_Down) {
-                m_counter = m_wrap - 1;
+            //If double-slopping, change the counting direction
+            else if (m_slope == Slope_Double && m_countdown) {
+                m_countdown = false;
+                //Here, counter is equal to BOTTOM - 1 but it should be BOTTOM + 1
+                m_counter = 1;
             }
         }
     }

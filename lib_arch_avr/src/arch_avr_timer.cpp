@@ -325,7 +325,6 @@ void AVR_ArchAVR_Timer::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t
             } else {
                 logger().dbg("Unsupported mode setting: 0x%02x", reg_val);
             }
-            do_reschedule = true;
             do_com_reconfig = true;
         }
 
@@ -354,10 +353,13 @@ void AVR_ArchAVR_Timer::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t
         for (uint32_t i = 0; i < m_oc_channels.size(); ++i) {
             OutputCompareChannel* oc = m_oc_channels[i];
             oc->mode = get_COM_config(read_ioreg(oc->config.rb_mode));
+            bool oc_active = output_active(oc->mode, i);
+            m_counter.set_comp_enabled(i, oc_active);
             //If the ocm is inactive, ensure the output level is reset
-            if (!output_active(oc->mode, i))
+            if (!oc_active)
                 m_signal.raise_u(Signal_CompOutput, 0, i);
         }
+        do_reschedule = true;
     }
 
     if (do_reschedule)

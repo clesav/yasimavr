@@ -211,6 +211,9 @@ public:
     void set_comp_value(uint32_t index, long value);
     long comp_value(uint32_t index) const;
 
+    void set_comp_enabled(uint32_t index, bool enable);
+    bool comp_enabled(uint32_t index) const;
+
     bool countdown() const;
 
     AVR_Signal& signal();
@@ -232,6 +235,7 @@ private:
 
     struct CompareUnit {
         long value = 0;
+        bool enabled = false;
         bool is_next_event = false;
     };
 
@@ -296,6 +300,11 @@ inline long AVR_TimerCounter::counter() const
 inline long AVR_TimerCounter::comp_value(uint32_t index) const
 {
     return m_cmp[index].value;
+}
+
+inline bool AVR_TimerCounter::comp_enabled(uint32_t index) const
+{
+    return m_cmp[index].enabled;
 }
 
 inline bool AVR_TimerCounter::countdown() const
