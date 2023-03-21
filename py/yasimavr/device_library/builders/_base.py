@@ -196,31 +196,10 @@ def get_core_attributes(dev_desc):
     return result
 
 
-def _fields_to_bitmasks(fields, reg_size=1):
-    bitmasks = []
-    for by in range(reg_size):
-        bit = 7
-        mask = 0
-        for f in fields:
-            b, m = f.shift_mask()
-            b -= 8 * by
-            m >>= 8 * by
-            if m & 0xFF:
-                b = max(0, b)
-                m &= 0xFF
-                bit = min(bit, b)
-                mask |= m << b
-
-        if mask:
-            bitmasks.append(_corelib.bitmask_t(bit, mask))
-
-    return bitmasks
-
-
 def convert_to_regbit(rb_yml, per_desc):
     if isinstance(rb_yml, str):
         reg_name = rb_yml
-        field_names = []
+        field_names = None
 
     elif isinstance(rb_yml, (list, tuple)):
         if not (1 <= len(rb_yml) <= 2):
@@ -231,28 +210,16 @@ def convert_to_regbit(rb_yml, per_desc):
         if len(rb_yml) == 2:
             field_names = [ fn.strip() for fn in rb_yml[1].split('|') ]
         else:
-            field_names = []
+            field_names = None
 
     else:
         raise ValueError()
 
     reg = per_desc.reg_descriptor(reg_name)
-
-    if field_names:
-        fields = [ reg.fields[fn] for fn in field_names ]
-        if fields:
-            bitmasks = _fields_to_bitmasks(fields)
-            rb = _corelib.regbit_t(per_desc.reg_address(reg_name), bitmasks[0])
-        else:
-            rb = _corelib.regbit_t()
+    if reg.size == 1:
+        return reg.regbit(field_names)
     else:
-        if reg.fields:
-            bitmasks = _fields_to_bitmasks(reg.fields.values())
-            rb = _corelib.regbit_t(per_desc.reg_address(reg_name), bitmasks[0])
-        else:
-            rb = _corelib.regbit_t(per_desc.reg_address(reg_name))
-
-    return rb
+        return reg.regbit(field_names)[0]
 
 
 def convert_to_regbit_compound(rbc_yml, per_desc):
@@ -261,11 +228,11 @@ def convert_to_regbit_compound(rbc_yml, per_desc):
 
     elif isinstance(rbc_yml, str):
         reg = per_desc.reg_descriptor(rbc_yml)
-        bitmasks = _fields_to_bitmasks(reg.fields.values(), reg.size)
-        base_addr = per_desc.reg_address(reg.name)
-        regbits = [_corelib.regbit_t(base_addr + i, bm) for i, bm in enumerate(bitmasks)]
-        rbc = _corelib.regbit_compound_t(regbits)
-        return rbc
+        if reg.size == 1:
+            rb = reg.regbit()
+            return _corelib.regbit_compound_t([rb])
+        else:
+            return reg.regbit()
 
     elif not all(isinstance(item, list) for item in rbc_yml):
         rb = convert_to_regbit(rbc_yml, per_desc)

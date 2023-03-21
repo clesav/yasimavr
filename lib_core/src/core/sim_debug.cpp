@@ -364,7 +364,7 @@ void AVR_DeviceDebugProbe::remove_watchpoint(mem_addr_t addr, int flags)
     }
 }
 
-void AVR_DeviceDebugProbe::notify_watchpoint(watchpoint_t& wp, int event, mem_addr_t addr)
+void AVR_DeviceDebugProbe::notify_watchpoint(watchpoint_t& wp, int event, mem_addr_t addr, uint8_t value)
 {
     //If the watchpoint flag is set to Break, halt the CPU, only if this is the primary probe
     if (!m_primary && (wp.flags & Watchpoint_Break)) {
@@ -374,30 +374,30 @@ void AVR_DeviceDebugProbe::notify_watchpoint(watchpoint_t& wp, int event, mem_ad
 
     //If the watchpoint flag is set to Signal, raise the signal
     if (wp.flags & Watchpoint_Signal)
-        m_wp_signal.raise_u(event, wp.addr);
+        m_wp_signal.raise_u(event, (uint32_t)value, wp.addr);
 
     //Notify the secondary probes
     for (auto secondary : m_secondaries)
-        secondary->notify_watchpoint(wp, event, addr);
+        secondary->notify_watchpoint(wp, event, addr, value);
 }
 
 //Notification when the CPU reads from the RAM. Check if there's a watchpoint associated with the address.
-void AVR_DeviceDebugProbe::_cpu_notify_data_read(mem_addr_t addr)
+void AVR_DeviceDebugProbe::_cpu_notify_data_read(mem_addr_t addr, uint8_t value)
 {
     for (auto& [_, wp] : m_watchpoints) {
         if (addr >= wp.addr && addr < (wp.addr + wp.len) && (wp.flags & Watchpoint_Read)) {
-            notify_watchpoint(wp, Watchpoint_Read, addr);
+            notify_watchpoint(wp, Watchpoint_Read, addr, value);
             return;
         }
     }
 }
 
 //Notification when the CPU writes into the RAM. Check if there's a watchpoint associated with the address.
-void AVR_DeviceDebugProbe::_cpu_notify_data_write(mem_addr_t addr)
+void AVR_DeviceDebugProbe::_cpu_notify_data_write(mem_addr_t addr, uint8_t value)
 {
     for (auto& [_, wp] : m_watchpoints) {
         if (addr >= wp.addr && addr < (wp.addr + wp.len) && (wp.flags & Watchpoint_Write)) {
-            notify_watchpoint(wp, Watchpoint_Write, addr);
+            notify_watchpoint(wp, Watchpoint_Write, addr, value);
             return;
         }
     }

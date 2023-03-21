@@ -58,3 +58,16 @@ def load_device(dev_name, verbose=False):
     factory = getattr(dev_mod, 'device_factory')
     _factory_cache[low_dev_name] = factory
     return factory(low_dev_name)
+
+
+def model_list():
+    models = []
+    p = os.path.join(os.path.dirname(__file__), 'builders')
+    for fn in os.listdir(p):
+        fp = os.path.join(p, fn)
+        if not os.path.isfile(fp): continue
+        if fn.startswith('device_') and fn.endswith('.py'):
+            fn = os.path.splitext(fn)[0].replace('device_', '')
+            models.append(fn)
+
+    return models

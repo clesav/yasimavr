@@ -44,6 +44,7 @@ ConfigRepositories = [
     os.path.join(os.path.dirname(__file__), 'configs')
 ]
 
+
 def _find_config_file(fn):
     path_list = ConfigRepositories + sys.path
     for r in path_list:
@@ -52,12 +53,15 @@ def _find_config_file(fn):
             return p
     return None
 
+
 def load_config_file(fn):
     with open(fn) as f:
         return _yaml_load(f, _YAMLLoader)
 
+
 class DeviceConfigException(Exception):
     pass
+
 
 #Internal utility that returns a absolute register address based
 #on its offset and the peripheral base address if it has one.
@@ -75,6 +79,7 @@ def _get_reg_address(reg_descriptor, base):
 
 
 MemorySegmentDescriptor = collections.namedtuple('_MemorySegmentDescriptor', ['start', 'end'])
+
 
 class MemorySpaceDescriptor:
     '''Descriptor class for a memory space'''
@@ -184,6 +189,38 @@ class RegisterDescriptor:
         self.readonly = bool(reg_config.get('readonly', False))
         self.supported = bool(reg_config.get('supported', True))
 
+    def bitmask(self, field_names=None):
+        if field_names is None:
+            field = self.fields.values()
+        else:
+            fields = [f for n, f in self.fields.items() if n in field_names]
+
+        bitmasks = []
+        for by in range(self.size):
+            bit = 7
+            mask = 0
+            for f in fields:
+                b, m = f.shift_mask()
+                b -= 8 * by
+                m >>= 8 * by
+                if m & 0xFF:
+                    b = max(0, b)
+                    m &= 0xFF
+                    bit = min(bit, b)
+                    mask |= m << b
+
+            bitmasks.append(_corelib.bitmask_t(bit, mask))
+
+        return bitmasks[0] if self.size == 1 else bitmasks
+
+    def regbit(self, field_names=None):
+        bm = self.bitmask(field_names)
+        if self.size == 1:
+            return _corelib.regbit_t(self.address, bm)
+        else:
+            rbs = [_corelib.regbit_t(self.address + i, bm) for i, bm in enumerate(bm)]
+            return _corelib.regbit_compound_t(rbs)
+
 
 class ProxyRegisterDescriptor:
     '''Descriptor class for a register proxy, used to represent the
@@ -232,20 +269,7 @@ class PeripheralInstanceDescriptor:
         return per.class_descriptor.registers[reg_name]
 
     def reg_address(self, reg_name, default=None):
-        if '.' in reg_name:
-            per_name, reg_name = reg_name.split('.', 1)
-            per = self.device.peripherals[per_name]
-        else:
-            per = self
-
-        try:
-            reg_descriptor = per.class_descriptor.registers[reg_name]
-            return _get_reg_address(reg_descriptor, per.reg_base)
-        except:
-            if default is not None:
-                return default
-            else:
-                raise KeyError()
+        return self.device._reg_address(reg_name, self, default)
 
 
 #Utility class that manages caches of peripheral configurations and
@@ -342,3 +366,34 @@ class DeviceDescriptor:
             raise DeviceConfigException(msg) from exc
         else:
             return yml_cfg
+
+    def reg_address(self, reg_path, default=None):
+        return self._reg_address(reg_path, None, default)
+
+    def _reg_address(self, reg_path, per_from, default):
+        if '.' in reg_path:
+            per_name, reg_name = reg_path.split('.', 1)
+            try:
+                per = self.peripherals[per_name]
+            except KeyError:
+                if default is None:
+                    raise DeviceConfigException('Unknown peripheral') from None
+                else:
+                    return default
+
+        elif isinstance(per_from, PeripheralInstanceDescriptor):
+            per = per_from
+            reg_name = reg_path
+
+        else:
+            raise DeviceConfigException('Invalid register name')
+
+        try:
+            reg_descriptor = per.class_descriptor.registers[reg_name]
+        except KeyError:
+            if default is None:
+                raise DeviceConfigException('Unknown register') from None
+            else:
+                return default
+        else:
+            return _get_reg_address(reg_descriptor, per.reg_base)

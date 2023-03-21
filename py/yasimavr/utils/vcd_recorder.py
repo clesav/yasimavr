@@ -18,12 +18,12 @@
 # along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
 
 import vcd
-from yasimavr.lib import core as corelib
+from yasimavr.lib import core as _corelib
 
-__all__ = ['Formatter', 'PinFormatMode', 'VCD_Recorder']
+__all__ = ['Formatter', 'VCD_Recorder']
 
 
-class Formatter(corelib.AVR_SignalHook):
+class Formatter(_corelib.AVR_SignalHook):
     """Generic formatter class.
 
     A formatter is a signal hook connected to receive data changes and
@@ -60,7 +60,7 @@ class Formatter(corelib.AVR_SignalHook):
                                                   init=self._init_value)
 
 
-    def filter(self, sigid, index, hooktag):
+    def filter(self, sigdata, hooktag):
         """Generic filtering facility to be reimplemented by subclasses
         Must return True if the value shall be recorded, based on the
         signal data fields. By default all values are recorded.
@@ -80,7 +80,7 @@ class Formatter(corelib.AVR_SignalHook):
     #the value associated to the signal
     def raised(self, sigdata, hooktag):
         try:
-            if self.filter(sigdata.sigid, sigdata.index, hooktag):
+            if self.filter(sigdata, hooktag):
                 fmt_value = self.format(sigdata, hooktag)
                 self._recorder._change(self._var, fmt_value)
         except Exception:
@@ -92,15 +92,15 @@ class _PinDigitalFormatter(Formatter):
     """Formatter specialised for the digital state of GPIO pins.
     """
 
-    _SIGID = corelib.AVR_Pin.SignalId.DigitalStateChange
-    _PinState = corelib.AVR_Pin.State
+    _SIGID = _corelib.AVR_Pin.SignalId.DigitalStateChange
+    _PinState = _corelib.AVR_Pin.State
 
     def __init__(self, pin):
         super().__init__('tri', 1, None)
         pin.signal().connect_hook(self)
 
-    def filter(self, sigid, index, hooktag):
-        return (sigid == self._SIGID)
+    def filter(self, sigdata, hooktag):
+        return (sigdata.sigid == self._SIGID)
 
     def format(self, sigdata, hooktag):
         pin_state = self._PinState(sigdata.data.as_uint())
@@ -124,6 +124,39 @@ class _PortFormatter(Formatter):
 
     def format(self, sigdata, hooktag):
         return sigdata.data.as_uint()
+
+
+class _SignalFormatter(Formatter):
+
+    def __init__(self, sig, size, sigid, index):
+        vartype = 'tri' if size == 1 else 'reg'
+        super().__init__(vartype, size, 0)
+        self._sigid = sigid
+        self._index = index
+        sig.connect_hook(self)
+
+    def filter(self, sigdata, hooktag):
+        return ((self._sigid is None or sigdata.sigid == self._sigid) and \
+                (self._index is None or sigdata.index == self._index))
+
+    def format(self, sigdata, hooktag):
+        return sigdata.data.as_uint()
+
+
+class _InterruptFormatter(Formatter):
+
+    _State = _corelib.AVR_InterruptController.State
+
+    def __init__(self, vector):
+        super().__init__('tri', 1, False)
+        self._vector = vector
+
+    def filter(self, sigdata, hooktag):
+        return (sigdata.index == self._vector)
+
+    def format(self, sigdata, hooktag):
+        vect_state = self._State(sigdata.data.as_uint())
+        return vect_state not in (self._State.Cancelled, self._State.Returned)
 
 
 class VCD_Recorder:
@@ -163,12 +196,12 @@ class VCD_Recorder:
         """Register a new VCD variable for a AVR_Pin instance.
 
         parameters:
-            pin : AVR_Pin object
-            var_name : optional variable name, defaults to the pin identifier
+            pin: AVR_Pin object
+            var_name: optional variable name, defaults to the pin identifier
         """
 
         if not var_name:
-            var_name = corelib.id_to_str(pin.id())
+            var_name = _corelib.id_to_str(pin.id())
 
         formatter = _PinDigitalFormatter(pin)
         formatter.register(self, var_name)
@@ -179,17 +212,17 @@ class VCD_Recorder:
         """Register a new VCD variable for a GPIO port.
 
         parameters:
-            port_name : Letter identifying the GPIO port
-            var_name : optional variable name, defaults to the port identifier
+            port_name: Letter identifying the GPIO port
+            var_name: optional variable name, defaults to the port identifier
         """
 
         if not var_name:
             var_name = 'GPIO_P' + port_name
 
-        port_id = corelib.IOCTL_PORT(port_name)
-        ok, req = self._simloop.device().ctlreq(port_id, corelib.CTLREQ_GET_SIGNAL)
+        port_id = _corelib.IOCTL_PORT(port_name)
+        ok, req = self._simloop.device().ctlreq(port_id, _corelib.CTLREQ_GET_SIGNAL)
         if ok:
-            sig = req.data.as_ptr(corelib.AVR_Signal)
+            sig = req.data.as_ptr(_corelib.AVR_Signal)
             formatter = _PortFormatter(sig)
             formatter.register(self, var_name)
             self._formatters[var_name] = formatter
@@ -197,12 +230,50 @@ class VCD_Recorder:
             raise Exception('Issue with access to the port signal')
 
 
+    def add_interrupt(self, vector, var_name=''):
+        """Register a new VCD variable for an interrupt vector.
+
+        parameters:
+            vector: interrupt vector index
+            var_name: optional variable name, defaults to the vector index
+        """
+
+        if not var_name:
+            var_name = 'vect_' + str(vector)
+
+        ok, d = self._simloop.device().ctlreq(_corelib.IOCTL_INTR, _corelib.CTLREQ_GET_SIGNAL)
+        if ok:
+            sig = d.data.as_ptr(_corelib.AVR_Signal)
+            formatter = _InterruptFormatter(vector)
+            sig.connect_hook(formatter)
+            formatter.register(self, var_name)
+            self._formatters[var_name] = formatter
+        else:
+            raise Exception('Unable to obtain the interrupt signal')
+
+
+    def add_signal(self, sig, var_name, size=32, sigid=None, sigindex=None):
+        """Register a new VCD variable for a generic peripheral signal.
+
+        parameters:
+            sig: Signal to connect to
+            var_name: Variable name
+            size: variable size, default is 32 bits
+            sigid: optional SignalId value for filtering
+            sigindex: optional index value for filtering
+        """
+
+        formatter = _SignalFormatter(sig, size, sigid, sigindex)
+        formatter.register(self, var_name)
+        self._formatters[var_name] = formatter
+
+
     def add(self, formatter, var_name):
         """Register a new VCD variable for a generic formatter.
 
         parameters:
-            formatter : Formatter object
-            var_name : variable name
+            formatter: Formatter object
+            var_name: variable name
         """
 
         formatter.register(self, var_name)
@@ -228,6 +299,14 @@ class VCD_Recorder:
 
         ts = self._ts_ratio * self._simloop.cycle()
         self._writer.dump_off(ts)
+
+
+    def flush(self):
+        """Flushes the recorded data into the destination file
+        """
+
+        ts = self._ts_ratio * self._simloop.cycle()
+        self._writer.flush(ts)
 
 
     def close(self):

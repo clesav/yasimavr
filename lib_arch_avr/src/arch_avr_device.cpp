@@ -54,7 +54,7 @@ uint8_t AVR_ArchAVR_Core::cpu_read_data(mem_addr_t data_addr)
     }
 
     if (m_debug_probe)
-        m_debug_probe->_cpu_notify_data_read(data_addr);
+        m_debug_probe->_cpu_notify_data_read(data_addr, value);
 
     return value;
 }
@@ -76,7 +76,7 @@ void AVR_ArchAVR_Core::cpu_write_data(mem_addr_t data_addr, uint8_t value)
     }
 
     if (m_debug_probe)
-        m_debug_probe->_cpu_notify_data_write(data_addr);
+        m_debug_probe->_cpu_notify_data_write(data_addr, value);
 }
 
 void AVR_ArchAVR_Core::dbg_read_data(mem_addr_t addr, uint8_t* buf, mem_addr_t len)
