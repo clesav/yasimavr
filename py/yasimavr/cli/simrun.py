@@ -196,6 +196,9 @@ def _init_VCD():
             sig = d.data.as_ptr(_corelib.AVR_Signal)
             _vcd_out.add_signal(sig, name, size, sigid, sigindex)
 
+        else:
+            raise ValueError('Invalid trace kind: ' + kind)
+
 
 def _run_syncloop():
     global _simloop

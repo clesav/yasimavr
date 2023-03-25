@@ -215,11 +215,14 @@ def convert_to_regbit(rb_yml, per_desc):
     else:
         raise ValueError()
 
-    reg = per_desc.reg_descriptor(reg_name)
-    if reg.size == 1:
-        return reg.regbit(field_names)
+    reg_desc = per_desc.reg_descriptor(reg_name)
+    addr = per_desc.reg_address(reg_name)
+    if reg_desc.size == 1:
+        bm = reg_desc.bitmask(field_names)
+        return _corelib.regbit_t(addr, bm)
     else:
-        return reg.regbit(field_names)[0]
+        bms = reg_desc.bitmask(field_names)
+        return _corelib.regbit_t(addr, bms[0])
 
 
 def convert_to_regbit_compound(rbc_yml, per_desc):

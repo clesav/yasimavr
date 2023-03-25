@@ -27,6 +27,8 @@ import os
 import sys
 import collections
 
+from ..lib import core as _corelib
+
 
 from yaml import load as _yaml_load
 try:
@@ -191,7 +193,7 @@ class RegisterDescriptor:
 
     def bitmask(self, field_names=None):
         if field_names is None:
-            field = self.fields.values()
+            fields = self.fields.values()
         else:
             fields = [f for n, f in self.fields.items() if n in field_names]
 
@@ -212,14 +214,6 @@ class RegisterDescriptor:
             bitmasks.append(_corelib.bitmask_t(bit, mask))
 
         return bitmasks[0] if self.size == 1 else bitmasks
-
-    def regbit(self, field_names=None):
-        bm = self.bitmask(field_names)
-        if self.size == 1:
-            return _corelib.regbit_t(self.address, bm)
-        else:
-            rbs = [_corelib.regbit_t(self.address + i, bm) for i, bm in enumerate(bm)]
-            return _corelib.regbit_compound_t(rbs)
 
 
 class ProxyRegisterDescriptor:
