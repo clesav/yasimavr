@@ -40,3 +40,12 @@ Supported Cores (very easy to add new ones!)
 + ATMega328
 + ATMega 0-series (ATmega808/809/1608/1609/3208/3209/4808/4809)
 + more to come...
+
+How to use
+--------------
+_yasimavr_ can be used as a Python package to run a prepared simulation script.
+(See the examples for how it looks like)
+
+It also supports direct command line run : _python -m yasimavr [options] [firmware]_
+
+For the list of command line options, execute _python -m yasimavr -h_
