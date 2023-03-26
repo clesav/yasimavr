@@ -308,8 +308,8 @@ class AVR_DeviceBuilder(DeviceBuilder):
         cfg.dataend = dev_desc.mem_spaces['data'].memend
         cfg.flashend = dev_desc.mem_spaces['flash'].memend
         cfg.eepromend = dev_desc.mem_spaces['eeprom'].memend
-        cfg.eind = dev_desc.peripherals['CPU'].reg_address('EIND', 0)
-        cfg.rampz = dev_desc.peripherals['CPU'].reg_address('RAMPZ', 0)
+        cfg.eind = dev_desc.reg_address('CPU.EIND', _corelib.INVALID_REGISTER)
+        cfg.rampz = dev_desc.reg_address('CPU.RAMPZ', _corelib.INVALID_REGISTER)
         cfg.vector_size = dev_desc.interrupt_map.vector_size
         return cfg
 

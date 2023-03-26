@@ -109,8 +109,8 @@ public:
     AVR_Signal& watchpoint_signal();
 
     //Callbacks from the CPU for notifications
-    void _cpu_notify_data_read(mem_addr_t addr);
-    void _cpu_notify_data_write(mem_addr_t addr);
+    void _cpu_notify_data_read(mem_addr_t addr, uint8_t value);
+    void _cpu_notify_data_write(mem_addr_t addr, uint8_t value);
     void _cpu_notify_jump(flash_addr_t addr);
     void _cpu_notify_call(flash_addr_t addr);
     void _cpu_notify_ret();
@@ -138,7 +138,7 @@ private:
     //Signal for watchpoint notification
     AVR_Signal m_wp_signal;
 
-    void notify_watchpoint(watchpoint_t& wp, int event, mem_addr_t addr);
+    void notify_watchpoint(watchpoint_t& wp, int event, mem_addr_t addr, uint8_t value);
 
 };
 
