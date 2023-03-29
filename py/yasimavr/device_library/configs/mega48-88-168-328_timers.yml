@@ -24,7 +24,7 @@ TC0:
         - name: TCCR0A
           address: 0x24
           fields:
-            WGM:
+            WGM10:
                kind: ENUM
                LSB: 0
                MSB: 1
@@ -166,7 +166,7 @@ TC0:
               0b11: 0x0023         #Clear on down-counting, Set on up-counting
 
         rb_clock: [ TCCR0B, CS ]
-        rbc_mode: [ [ TCCR0A, WGM ], [ TCCR0B, WGM2 ] ]
+        rbc_mode: [ [ TCCR0A, WGM10 ], [ TCCR0B, WGM2 ] ]
         reg_cnt: TCNT0
         reg_int_enable: TIMSK0
         reg_int_flag: TIFR0
@@ -178,7 +178,7 @@ TC1:
         - name: TCCR1A
           address: 0x60
           fields:
-            WGM:
+            WGM10:
                 kind: ENUM
                 LSB: 0
                 MSB: 1
@@ -199,8 +199,10 @@ TC1:
                 LSB: 0
                 MSB: 2
                 values: [ Disabled, NODIV, DIV8, DIV64, DIV256, DIV1024, T1_FALL, T1_RISE ]
-            WGM2: { kind: BIT, pos: 3 }
-            WGM3: { kind: BIT, pos: 4 }
+            WGM32:
+                kind: ENUM
+                LSB: 3
+                MSB: 4
             ICES: { kind: BIT, pos: 6 }
             ICNC: { kind: BIT, pos: 7 }
 
@@ -334,7 +336,7 @@ TC1:
                 disable_foc: yes
                 com_variant: 4
 
-            0b1001: #Phase correct PWM with TOP=ICR1
+            0b1010: #Phase correct PWM with TOP=ICR1
                 ovf: SetOnBottom
                 top: OnIC
                 ocr: UpdateOnTop
@@ -342,7 +344,7 @@ TC1:
                 disable_foc: yes
                 com_variant: 3
 
-            0b1010: #Phase correct PWM with TOP=OCR1A
+            0b1011: #Phase correct PWM with TOP=OCR1A
                 ovf: SetOnBottom
                 top: OnCompA
                 ocr: UpdateOnTop
@@ -350,7 +352,7 @@ TC1:
                 disable_foc: yes
                 com_variant: 4
 
-            0b1010: #CTC with TOP=OCR1A
+            0b1100: #CTC with TOP=OCR1A
                 top: OnIC
                 com_variant: 0
 
@@ -411,7 +413,7 @@ TC1:
               0b11: 0x0023         #Clear on down-counting, Set on up-counting
 
         rb_clock: [ TCCR1B, CS ]
-        rbc_mode: [ [ TCCR1A, WGM ], [ TCCR1B, WGM2 ] ]
+        rbc_mode: [ [ TCCR1A, WGM10 ], [ TCCR1B, WGM32 ] ]
         reg_cnt: TCNT1
         reg_icr: ICR1
         reg_int_enable: TIMSK1
@@ -425,7 +427,7 @@ TC2:
         - name: TCCR2A
           address: 0x90
           fields:
-            WGM:
+            WGM10:
                 kind: ENUM
                 LSB: 0
                 MSB: 1
@@ -571,7 +573,7 @@ TC2:
               0b11: 0x0023         #Clear on down-counting, Set on up-counting
 
         rb_clock: [ TCCR2B, CS ]
-        rbc_mode: [ [ TCCR2A, WGM ], [ TCCR2B, WGM2 ] ]
+        rbc_mode: [ [ TCCR2A, WGM10 ], [ TCCR2B, WGM2 ] ]
         reg_cnt: TCNT2
         reg_int_enable: TIMSK2
         reg_int_flag: TIFR2

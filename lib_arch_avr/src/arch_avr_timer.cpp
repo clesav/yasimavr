@@ -57,7 +57,7 @@ struct AVR_ArchAVR_Timer::OutputCompareChannel {
 
     const CFG::OC_config_t& config;
     CFG::COM_config_t mode;
-    uint8_t reg;
+    uint16_t reg;
     unsigned char state;
     AVR_InterruptFlag intflag;
 
@@ -313,7 +313,7 @@ void AVR_ArchAVR_Timer::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t
             do_reschedule = true;
         }
 
-        if (addr == m_config.rbc_mode.addr_match(addr)) {
+        if (m_config.rbc_mode.addr_match(addr)) {
             uint8_t reg_val = read_ioreg(m_config.rbc_mode);
             auto mode_cfg = find_reg_config_p<CFG::mode_config_t>(m_config.modes, reg_val);
             if (mode_cfg) {
@@ -322,6 +322,7 @@ void AVR_ArchAVR_Timer::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t
                                          AVR_TimerCounter::Slope_Double :
                                          AVR_TimerCounter::Slope_Up);
                 update_top();
+                logger().dbg("New mode setting: 0x%02x", reg_val);
             } else {
                 logger().dbg("Unsupported mode setting: 0x%02x", reg_val);
             }
@@ -447,7 +448,7 @@ void AVR_ArchAVR_Timer::raised(const signal_data_t& sigdata, uint16_t __unused)
                     update_top();
             }
 
-            if (m_mode.ovf == CFG::OVF_SetOnTop && !m_counter.countdown())
+            if (m_mode.ovf == CFG::OVF_SetOnTop)
                 raise_ovf = true;
 
             //Process the OC channels, only if OCRx != TOP, otherwise
@@ -470,7 +471,7 @@ void AVR_ArchAVR_Timer::raised(const signal_data_t& sigdata, uint16_t __unused)
                     update_top();
             }
 
-            if (m_mode.ovf == CFG::OVF_SetOnBottom && m_counter.countdown())
+            if (m_mode.ovf == CFG::OVF_SetOnBottom)
                 raise_ovf = true;
 
             //Ditto as Event_Top
@@ -489,7 +490,6 @@ void AVR_ArchAVR_Timer::raised(const signal_data_t& sigdata, uint16_t __unused)
     }
 
     else if (sigdata.sigid == AVR_TimerCounter::Signal_CompMatch) {
-        logger().dbg("Triggering Compare Match %ud" , sigdata.index);
         change_OC_state(sigdata.index, sigdata.data.as_uint());
         //Raise the corresponding interrupt flag
         m_oc_channels[sigdata.index]->intflag.set_flag();
@@ -540,8 +540,10 @@ void AVR_ArchAVR_Timer::change_OC_state(uint32_t index, uint8_t event_flags)
     else if (do_toggle && !(do_set || do_clear))
         oc->state ^= 1;
 
-    if (oc->state != old_state)
-        m_signal.raise_u(Signal_CompOutput, oc->state ? 1 : 0, index);
+    if (oc->state != old_state) {
+        logger().dbg("OC update from %u to %u", old_state, oc->state);
+        m_signal.raise_u(Signal_CompOutput, oc->state, index);
+    }
 }
 
 
