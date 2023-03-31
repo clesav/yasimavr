@@ -24,7 +24,7 @@ TC0:
         - name: TCCR0A
           address: 0x24
           fields:
-            WGM:
+            WGM10:
                kind: ENUM
                LSB: 0
                MSB: 1
@@ -77,26 +77,100 @@ TC0:
 
     config:
         is_16bits: no
-        clocks:     #format: [ 'enum value', 'clock mode', 'prescaler factor' ]
-            - [ 0b000, ClockDisabled, 0 ]
-            - [ 0b001, INT_IO_CLOCK, 1 ]
-            - [ 0b010, INT_IO_CLOCK, 8 ]
-            - [ 0b011, INT_IO_CLOCK, 64 ]
-            - [ 0b100, INT_IO_CLOCK, 256 ]
-            - [ 0b101, INT_IO_CLOCK, 1024 ]
-        modes:      #format: [ 'enum value', 'timer mode' ]
-            - [ 0b0000, MODE_NORMAL ]
-            - [ 0b0100, MODE_CTC ]
+
+        clocks:
+            0b000: [ Stopped ]
+            0b001: [ Timer, 1 ]
+            0b010: [ Timer, 8 ]
+            0b011: [ Timer, 64 ]
+            0b100: [ Timer, 256 ]
+            0b101: [ Timer, 1024 ]
+            0b110: [ External ]
+            0b111: [ External ]
+
+        modes:
+            0b000: #Normal
+                com_variant: 0
+
+            0b001: #Phase correct PWM with TOP=MAX
+                ovf: SetOnBottom
+                ocr: UpdateOnTop
+                double_slope: yes
+                disable_foc: yes
+                com_variant: 3
+
+            0b010: #CTC
+                top: OnCompA
+                com_variant: 0
+
+            0b011: #Fast PWM with TOP=MAX
+                ocr: UpdateOnBottom
+                disable_foc: yes
+                com_variant: 1
+
+            0b101: #Phase correct PWM with TOP=OCRxA
+                ovf: SetOnBottom
+                top: OnCompA
+                ocr: UpdateOnTop
+                double_slope: yes
+                disable_foc: yes
+                com_variant: 2
+
+            0b111: #Fast PWM with TOP=OCRxA
+                ovf: SetOnTop
+                top: OnCompA
+                ocr: UpdateOnBottom
+                disable_foc: yes
+                com_variant: 4
+
+        oc_channels:
+            - reg_oc: OCR0A
+              vector: [ TIMER0_COMPA, 1 ]
+              rb_mode: [ TCCR0A, COMA ]
+              rb_force: [ TCCR0B, FOCA ]
+
+            - reg_oc: OCR0B
+              vector: [ TIMER0_COMPB, 2 ]
+              rb_mode: [ TCCR0A, COMB ]
+              rb_force: [ TCCR0B, FOCB ]
+
+        com_modes:
+            #Non-PWM modes
+            - 0b00: 0x0000         #OC disconnected
+              0b01: 0x0011         #OC Toggle on Compare Match
+              0b10: 0x0022         #OC Clear on Compare Match
+              0b11: 0x0033         #OC Set on Compare Match
+
+            #Fast PWM mode with WGM02=0
+            - 0b00: 0x0000         #OC disconnected
+              0b01: 0x0000         #OC disconnected
+              0b10: 0x0302         #Clear on Compare, Set on Bottom
+              0b11: 0x0203         #Set on Compare, Clear on Bottom
+
+            #Fast PWM mode with WGM02=1
+            - 0b00: 0x0000         #OC disconnected
+              0b01: 0x0004         #Toggle on Compare (OC0A only)
+              0b10: 0x0302         #Clear on Compare, Set on Bottom
+              0b11: 0x0203         #Set on Compare, Clear on Bottom
+
+            #Phase Correct PWM mode with WGM02=0
+            - 0b00: 0x0000         #OC disconnected
+              0b01: 0x0000         #OC disconnected
+              0b10: 0x0032         #Clear on up-counting, Set on down-counting
+              0b11: 0x0023         #Clear on down-counting, Set on up-counting
+
+            #Phase Correct PWM mode with WGM02=1
+            - 0b00: 0x0000         #OC disconnected
+              0b01: 0x0004         #Toggle on Compare (OC0A only)
+              0b10: 0x0032         #Clear on up-counting, Set on down-counting
+              0b11: 0x0023         #Clear on down-counting, Set on up-counting
+
         rb_clock: [ TCCR0B, CS ]
-        rbc_mode: [ [ TCCR0A, WGM ], [ TCCR0B, WGM2 ] ]
+        rbc_mode: [ [ TCCR0A, WGM10 ], [ TCCR0B, WGM2 ] ]
         reg_cnt: TCNT0
-        reg_ocra: OCR0A
-        reg_ocrb: OCR0B
         reg_int_enable: TIMSK0
         reg_int_flag: TIFR0
-        int_ovf: [ TIMER0_OVF, 0 ]
-        int_ocra: [ TIMER0_COMPA, 1 ]
-        int_ocrb: [ TIMER0_COMPB, 2 ]
+        vect_ovf: [ TIMER0_OVF, 0 ]
 
 #========================================================================================
 TC1:
@@ -104,7 +178,7 @@ TC1:
         - name: TCCR1A
           address: 0x60
           fields:
-            WGM:
+            WGM10:
                 kind: ENUM
                 LSB: 0
                 MSB: 1
@@ -125,8 +199,10 @@ TC1:
                 LSB: 0
                 MSB: 2
                 values: [ Disabled, NODIV, DIV8, DIV64, DIV256, DIV1024, T1_FALL, T1_RISE ]
-            WGM2: { kind: BIT, pos: 3 }
-            WGM3: { kind: BIT, pos: 4 }
+            WGM32:
+                kind: ENUM
+                LSB: 3
+                MSB: 4
             ICES: { kind: BIT, pos: 6 }
             ICNC: { kind: BIT, pos: 7 }
 
@@ -174,26 +250,176 @@ TC1:
 
     config:
         is_16bits: yes
+
         clocks:
-            - [ 0b000, ClockDisabled, 0 ]
-            - [ 0b001, INT_IO_CLOCK, 1 ]
-            - [ 0b010, INT_IO_CLOCK, 8 ]
-            - [ 0b011, INT_IO_CLOCK, 64 ]
-            - [ 0b100, INT_IO_CLOCK, 256 ]
-            - [ 0b101, INT_IO_CLOCK, 1024 ]
+            0b000: [ Stopped ]
+            0b001: [ Timer, 1 ]
+            0b010: [ Timer, 8 ]
+            0b011: [ Timer, 64 ]
+            0b100: [ Timer, 256 ]
+            0b101: [ Timer, 1024 ]
+            0b110: [ External ]
+            0b111: [ External ]
+
         modes:
-            - [ 0b0000, MODE_NORMAL ]
-            - [ 0b0100, MODE_CTC ]
+            0b0000: #Normal
+                com_variant: 0
+
+            0b0001: #Phase correct PWM with TOP=0x00FF
+                ovf: SetOnBottom
+                top: OnFixed
+                top_fixed_exp: 0
+                ocr: UpdateOnTop
+                double_slope: yes
+                disable_foc: yes
+                com_variant: 3
+
+            0b0010: #Phase correct PWM with TOP=0x01FF
+                ovf: SetOnBottom
+                top: OnFixed
+                top_fixed_exp: 1
+                ocr: UpdateOnTop
+                double_slope: yes
+                disable_foc: yes
+                com_variant: 3
+
+            0b0011: #Phase correct PWM with TOP=0x03FF
+                ovf: SetOnBottom
+                top: OnFixed
+                top_fixed_exp: 2
+                ocr: UpdateOnTop
+                double_slope: yes
+                disable_foc: yes
+                com_variant: 3
+
+            0b0100: #CTC with TOP=OCR1A
+                top: OnCompA
+                com_variant: 0
+
+            0b0101: #Fast PWM with TOP=0x00FF
+                ovf: SetOnTop
+                top: OnFixed
+                top_fixed_exp: 0
+                ocr: UpdateOnBottom
+                disable_foc: yes
+                com_variant: 1
+
+            0b0110: #Fast PWM with TOP=0x01FF
+                ovf: SetOnTop
+                top: OnFixed
+                top_fixed_exp: 1
+                ocr: UpdateOnBottom
+                disable_foc: yes
+                com_variant: 1
+
+            0b0111: #Fast PWM with TOP=0x03FF
+                ovf: SetOnTop
+                top: OnFixed
+                top_fixed_exp: 2
+                ocr: UpdateOnBottom
+                disable_foc: yes
+                com_variant: 1
+
+            0b1000: #Phase&Freq correct PWM with TOP=ICR1
+                ovf: SetOnBottom
+                top: OnIC
+                ocr: UpdateOnBottom
+                double_slope: yes
+                disable_foc: yes
+                com_variant: 3
+
+            0b1001: #Phase&Freq correct PWM with TOP=OCR1A
+                ovf: SetOnBottom
+                top: OnCompA
+                ocr: UpdateOnBottom
+                double_slope: yes
+                disable_foc: yes
+                com_variant: 4
+
+            0b1010: #Phase correct PWM with TOP=ICR1
+                ovf: SetOnBottom
+                top: OnIC
+                ocr: UpdateOnTop
+                double_slope: yes
+                disable_foc: yes
+                com_variant: 3
+
+            0b1011: #Phase correct PWM with TOP=OCR1A
+                ovf: SetOnBottom
+                top: OnCompA
+                ocr: UpdateOnTop
+                double_slope: yes
+                disable_foc: yes
+                com_variant: 4
+
+            0b1100: #CTC with TOP=OCR1A
+                top: OnIC
+                com_variant: 0
+
+            0b1110: #Fast PWM with TOP=ICR1
+                ovf: SetOnTop
+                top: OnIC
+                ocr: UpdateOnBottom
+                disable_foc: yes
+                com_variant: 2
+
+            0b1111: #Fast PWM with TOP=OCR1A
+                ovf: SetOnTop
+                top: OnCompA
+                ocr: UpdateOnBottom
+                disable_foc: yes
+                com_variant: 2
+
+        oc_channels:
+            - reg_oc: OCR1A
+              vector: [ TIMER1_COMPA, 1 ]
+              rb_mode: [ TCCR1A, COMA ]
+              rb_force: [ TCCR1C, FOCA ]
+
+            - reg_oc: OCR1B
+              vector: [ TIMER1_COMPB, 2 ]
+              rb_mode: [ TCCR1A, COMB ]
+              rb_force: [ TCCR1C, FOCB ]
+
+        com_modes:
+            #Non-PWM modes
+            - 0b00: 0x0000         #OC disconnected
+              0b01: 0x0011         #OC Toggle on Compare Match
+              0b10: 0x0022         #OC Clear on Compare Match
+              0b11: 0x0033         #OC Set on Compare Match
+
+            #Fast PWM mode with WGM13:0 != 14 or 15
+            - 0b00: 0x0000         #OC disconnected
+              0b01: 0x0000         #OC disconnected
+              0b10: 0x0302         #Clear on Compare, Set on Bottom
+              0b11: 0x0203         #Set on Compare, Clear on Bottom
+
+            #Fast PWM mode with WGM13:0 == 14 or 15
+            - 0b00: 0x0000         #OC disconnected
+              0b01: 0x0004         #Toggle on Compare (OC1A only)
+              0b10: 0x0302         #Clear on Compare, Set on Bottom
+              0b11: 0x0203         #Set on Compare, Clear on Bottom
+
+            #Phase Correct PWM mode with WGM13:0 != 9 or 11
+            - 0b00: 0x0000         #OC disconnected
+              0b01: 0x0000         #OC disconnected
+              0b10: 0x0032         #Clear on up-counting, Set on down-counting
+              0b11: 0x0023         #Clear on down-counting, Set on up-counting
+
+            #Phase Correct PWM mode with WGM13:0 == 9 or 11
+            - 0b00: 0x0000         #OC disconnected
+              0b01: 0x0004         #Toggle on Compare (OC1A only)
+              0b10: 0x0032         #Clear on up-counting, Set on down-counting
+              0b11: 0x0023         #Clear on down-counting, Set on up-counting
+
         rb_clock: [ TCCR1B, CS ]
-        rbc_mode: [ [ TCCR1A, WGM ], [ TCCR1B, WGM2 ] ]
+        rbc_mode: [ [ TCCR1A, WGM10 ], [ TCCR1B, WGM32 ] ]
         reg_cnt: TCNT1
-        reg_ocra: OCR1A
-        reg_ocrb: OCR1B
+        reg_icr: ICR1
         reg_int_enable: TIMSK1
         reg_int_flag: TIFR1
-        int_ovf: [ TIMER1_OVF, 0 ]
-        int_ocra: [ TIMER1_COMPA, 1 ]
-        int_ocrb: [ TIMER1_COMPB, 2 ]
+        vect_ovf: [ TIMER1_OVF, 0 ]
+        vect_icr: [ TIMER1_CAPT, 5 ]
 
 #========================================================================================
 TC2:
@@ -201,7 +427,7 @@ TC2:
         - name: TCCR2A
           address: 0x90
           fields:
-            WGM:
+            WGM10:
                 kind: ENUM
                 LSB: 0
                 MSB: 1
@@ -258,26 +484,100 @@ TC2:
 
     config:
         is_16bits: no
+
         clocks:
-            - [ 0b000, ClockDisabled, 0 ]
-            - [ 0b001, INT_IO_CLOCK, 1 ]
-            - [ 0b010, INT_IO_CLOCK, 8 ]
-            - [ 0b011, INT_IO_CLOCK, 64 ]
-            - [ 0b100, INT_IO_CLOCK, 256 ]
-            - [ 0b101, INT_IO_CLOCK, 1024 ]
+            0b000: [ Stopped ]
+            0b001: [ Timer, 1 ]
+            0b010: [ Timer, 8 ]
+            0b011: [ Timer, 32 ]
+            0b100: [ Timer, 64 ]
+            0b101: [ Timer, 128 ]
+            0b110: [ Timer, 256 ]
+            0b111: [ Timer, 1024 ]
+
         modes:
-            - [ 0b0000, MODE_NORMAL ]
-            - [ 0b0100, MODE_CTC ]
+            0b000: #Normal
+                com_variant: 0
+
+            0b001: #Phase correct PWM with TOP=MAX
+                ovf: SetOnBottom
+                ocr: UpdateOnTop
+                double_slope: yes
+                disable_foc: yes
+                com_variant: 3
+
+            0b010: #CTC
+                top: OnCompA
+                com_variant: 0
+
+            0b011: #Fast PWM with TOP=MAX
+                ocr: UpdateOnBottom
+                disable_foc: yes
+                com_variant: 1
+
+            0b101: #Phase correct PWM with TOP=OCRxA
+                ovf: SetOnBottom
+                top: OnCompA
+                ocr: UpdateOnTop
+                double_slope: yes
+                disable_foc: yes
+                com_variant: 2
+
+            0b111: #Fast PWM with TOP=OCRxA
+                ovf: SetOnTop
+                top: OnCompA
+                ocr: UpdateOnBottom
+                disable_foc: yes
+                com_variant: 4
+
+        oc_channels:
+            - reg_oc: OCR2A
+              vector: [ TIMER2_COMPA, 1 ]
+              rb_mode: [ TCCR2A, COMA ]
+              rb_force: [ TCCR2B, FOCA ]
+
+            - reg_oc: OCR2B
+              vector: [ TIMER2_COMPB, 2 ]
+              rb_mode: [ TCCR2A, COMB ]
+              rb_force: [ TCCR2B, FOCB ]
+
+        com_modes:
+            #Non-PWM modes
+            - 0b00: 0x0000         #OC disconnected
+              0b01: 0x0011         #OC Toggle on Compare Match
+              0b10: 0x0022         #OC Clear on Compare Match
+              0b11: 0x0033         #OC Set on Compare Match
+
+            #Fast PWM mode with WGM22=0
+            - 0b00: 0x0000         #OC disconnected
+              0b01: 0x0000         #OC disconnected
+              0b10: 0x0302         #Clear on Compare, Set on Bottom
+              0b11: 0x0203         #Set on Compare, Clear on Bottom
+
+            #Fast PWM mode with WGM22=1
+            - 0b00: 0x0000         #OC disconnected
+              0b01: 0x0004         #Toggle on Compare (OC0A only)
+              0b10: 0x0302         #Clear on Compare, Set on Bottom
+              0b11: 0x0203         #Set on Compare, Clear on Bottom
+
+            #Phase Correct PWM mode with WGM22=0
+            - 0b00: 0x0000         #OC disconnected
+              0b01: 0x0000         #OC disconnected
+              0b10: 0x0032         #Clear on up-counting, Set on down-counting
+              0b11: 0x0023         #Clear on down-counting, Set on up-counting
+
+            #Phase Correct PWM mode with WGM22=1
+            - 0b00: 0x0000         #OC disconnected
+              0b01: 0x0004         #Toggle on Compare (OC0A only)
+              0b10: 0x0032         #Clear on up-counting, Set on down-counting
+              0b11: 0x0023         #Clear on down-counting, Set on up-counting
+
         rb_clock: [ TCCR2B, CS ]
-        rbc_mode: [ [ TCCR2A, WGM ], [ TCCR2B, WGM2 ] ]
+        rbc_mode: [ [ TCCR2A, WGM10 ], [ TCCR2B, WGM2 ] ]
         reg_cnt: TCNT2
-        reg_ocra: OCR2A
-        reg_ocrb: OCR2B
         reg_int_enable: TIMSK2
         reg_int_flag: TIFR2
-        int_ovf: [ TIMER2_OVF, 0 ]
-        int_ocra: [ TIMER2_COMPA, 1 ]
-        int_ocrb: [ TIMER2_COMPB, 2 ]
+        vect_ovf: [ TIMER2_OVF, 0 ]
 
 #========================================================================================
 WDT:

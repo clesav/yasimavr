@@ -69,18 +69,12 @@ private:
 
     uint8_t m_clk_mode;
 
-    //***** Counters *****
-    uint16_t m_cnt;
-    uint16_t m_ccmp;
-
     //***** Interrupt flag management *****
     AVR_InterruptFlag m_intflag;
 
     //***** Timer management *****
     AVR_PrescaledTimer m_timer;
-    uint8_t m_next_event_type;
-
-    uint32_t delay_to_event();
+    AVR_TimerCounter m_counter;
 
 };
 

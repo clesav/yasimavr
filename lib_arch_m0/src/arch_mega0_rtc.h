@@ -79,16 +79,11 @@ private:
 
     uint8_t m_clk_mode;
 
-    //***** Counters *****
-    uint16_t m_rtc_cnt;     //RTC tick counter
-    uint16_t m_rtc_per;     //RTC period
-    uint16_t m_rtc_cmp;     //RTC compare register
-    uint16_t m_pit_cnt;     //PIT tick counter
-
     //***** prescaled timer, one for each counter *****
     AVR_PrescaledTimer m_rtc_timer;
     AVR_PrescaledTimer m_pit_timer;
-    uint8_t m_next_rtc_event_type;
+    AVR_TimerCounter m_rtc_counter;
+    AVR_TimerCounter m_pit_counter;
 
     //***** Interrupt flags *****
     AVR_InterruptFlag m_rtc_intflag;
@@ -103,9 +98,6 @@ private:
     void pit_hook_raised(const signal_data_t& sigdata);
 
     void configure_timers();
-
-    uint32_t rtc_delay();
-    uint32_t pit_delay();
 
 };
 

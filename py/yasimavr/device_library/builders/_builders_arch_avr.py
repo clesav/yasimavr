@@ -28,7 +28,7 @@ from ...lib import arch_avr as _archlib
 from ._base import (PeripheralBuilder, PeripheralConfigBuilder,
                     IndexedPeripheralBuilder,
                     DeviceBuilder, DeviceBuildError,
-                    get_core_attributes)
+                    get_core_attributes, convert_to_regbit, convert_enum_member)
 
 
 #========================================================================================
@@ -125,36 +125,76 @@ def _get_extint_builder():
 #Timers/counters configuration
 
 def _timer_convertor(cfg, attr, yml_val, per_desc):
+
+    CFG = _archlib.AVR_ArchAVR_TimerConfig
+
     if attr == 'clocks':
         py_clocks = []
-        for clk_opt in yml_val:
+        for reg_value, clk_cfg_yml in yml_val.items():
             clk_cfg = _archlib.AVR_ArchAVR_TimerConfig.clock_config_t()
-            clk_cfg.reg_value = clk_opt[0]
-            clk_cfg.source = _archlib.AVR_ArchAVR_TimerConfig.ClockSource[clk_opt[1]]
-            clk_cfg.div = clk_opt[2]
+            clk_cfg.reg_value = reg_value
+            clk_cfg.source = _corelib.AVR_TimerCounter.TickSource[clk_cfg_yml[0]]
+            clk_cfg.div = clk_cfg_yml[1] if len(clk_cfg_yml) > 1 else 1
             py_clocks.append(clk_cfg)
         cfg.clocks = py_clocks
 
     elif attr == 'modes':
         py_modes = []
-        for mode_opt in yml_val:
-            mode_cfg = _archlib.AVR_ArchAVR_TimerConfig.mode_config_t()
-            mode_cfg.reg_value = mode_opt[0]
-            mode_cfg.mode = _archlib.AVR_ArchAVR_TimerConfig.Mode[mode_opt[1]]
+        for reg_value, mode_cfg_yml in yml_val.items():
+            mode_cfg = CFG.mode_config_t()
+            mode_cfg.reg_value = reg_value
+            mode_cfg.top = convert_enum_member(CFG.Top, mode_cfg_yml.get('top'))
+            mode_cfg.top_fixed_value = mode_cfg_yml.get('top_fixed_value', 0)
+            mode_cfg.ovf = convert_enum_member(CFG.OVF, mode_cfg_yml.get('ovf'))
+            mode_cfg.ocr = convert_enum_member(CFG.OCR, mode_cfg_yml.get('ocr'))
+            mode_cfg.double_slope = bool(mode_cfg_yml.get('double_slope', False))
+            mode_cfg.foc_disabled = bool(mode_cfg_yml.get('foc_disabled', False))
+            mode_cfg.com_variant = mode_cfg_yml.get('com_variant', 0)
             py_modes.append(mode_cfg)
+
         cfg.modes = py_modes
 
-    elif attr == 'int_ovf':
-        cfg.int_ovf.vector = per_desc.device.interrupt_map.vectors.index(yml_val[0])
-        cfg.int_ovf.bit = yml_val[1]
+    elif attr == 'oc_channels':
+        oc_cfg_list = []
+        for oc_cfg_yml in yml_val:
+            oc_cfg = CFG.OC_config_t()
+            oc_cfg.reg_oc = per_desc.reg_address(oc_cfg_yml['reg_oc'])
+            oc_cfg.vector.num = per_desc.device.interrupt_map.vectors.index(oc_cfg_yml['vector'][0])
+            oc_cfg.vector.bit = oc_cfg_yml['vector'][1]
+            oc_cfg.rb_mode = convert_to_regbit(oc_cfg_yml['rb_mode'], per_desc)
+            oc_cfg.rb_force = convert_to_regbit(oc_cfg_yml['rb_force'], per_desc)
+            oc_cfg_list.append(oc_cfg)
 
-    elif attr == 'int_ocra':
-        cfg.int_ocra.vector = per_desc.device.interrupt_map.vectors.index(yml_val[0])
-        cfg.int_ocra.bit = yml_val[1]
+        cfg.oc_channels = oc_cfg_list
 
-    elif attr == 'int_ocrb':
-        cfg.int_ocrb.vector = per_desc.device.interrupt_map.vectors.index(yml_val[0])
-        cfg.int_ocrb.bit = yml_val[1]
+    elif attr == 'vect_ovf':
+        vect_cfg = CFG.vector_config_t()
+        vect_cfg.num = per_desc.device.interrupt_map.vectors.index(yml_val[0])
+        vect_cfg.bit = yml_val[1]
+        cfg.vect_ovf = vect_cfg
+
+    elif attr == 'vect_icr':
+        vect_cfg = CFG.vector_config_t()
+        vect_cfg.num = per_desc.device.interrupt_map.vectors.index(yml_val[0])
+        vect_cfg.bit = yml_val[1]
+        cfg.vect_icr = vect_cfg
+
+    elif attr == 'com_modes':
+        com_modes = []
+        for variant_opt in yml_val:
+            variant_cfg = []
+            for reg_value, raw_opt in variant_opt.items():
+                com_cfg = _archlib.AVR_ArchAVR_TimerConfig.COM_config_t()
+                com_cfg.reg_value = reg_value
+                com_cfg.up = convert_enum_member(CFG.COM, raw_opt & 0x0F)
+                com_cfg.down = convert_enum_member(CFG.COM, (raw_opt >> 4) & 0x0F)
+                com_cfg.top = convert_enum_member(CFG.COM, (raw_opt >> 8) & 0x0F)
+                com_cfg.bottom = convert_enum_member(CFG.COM, (raw_opt >> 12) & 0x0F)
+                variant_cfg.append(com_cfg)
+
+            com_modes.append(variant_cfg)
+
+        cfg.com_modes = com_modes
 
     else:
         raise Exception('Converter not implemented for ' + attr)

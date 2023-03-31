@@ -143,4 +143,183 @@ inline AVR_Signal& AVR_PrescaledTimer::signal()
     return m_signal;
 }
 
+
+//=======================================================================================
+/*
+ * Implementation of a generic Timer/Counter for AVR series
+ * This timer is a flexible implementation aiming at covering most modes found in
+ * AVR timer/counter. It covers normal, CTC, PWM in both single and dual slopes.
+ * It has a arbitrary number of Compare Units that raise signals when the counter
+ * matches their values.
+ * A TimerCounter object must be associated to a PrescaledTimer object. The TimerCounter
+ * will set the timer delay but configuring the PrescaledTimer object, in particular theis up
+ * to the user.
+ */
+
+class DLL_EXPORT AVR_TimerCounter {
+
+public:
+
+    enum TickSource {
+        Tick_Stopped = 0,
+        Tick_Timer,
+        Tick_External,
+    };
+
+    enum SlopeMode {
+        Slope_Up = 0,
+        Slope_Down,
+        Slope_Double,
+    };
+
+    enum EventType {
+        Event_Max     = 0x01,
+        Event_Top     = 0x02,
+        Event_Bottom  = 0x04,
+        Event_Compare = 0x08
+    };
+
+    enum SignalId {
+        //Signal raised on a overflow event, the data is a uint, combination
+        //of EventType flags, indicating the type(s) of event
+        Signal_Event,
+        //Signal raised on a Compare Match event. The index indicates which channel
+        //(0='A', 1='B', etc...), no data is carried.
+        Signal_CompMatch,
+    };
+
+    AVR_TimerCounter(AVR_PrescaledTimer& timer, long wrap, uint32_t comp_count);
+    ~AVR_TimerCounter();
+
+    long wrap() const;
+
+    void reset();
+    void reschedule();
+
+    void set_tick_source(TickSource src);
+    TickSource tick_source() const;
+
+    void set_top(long top);
+    long top() const;
+
+    void set_slope_mode(SlopeMode mode);
+    SlopeMode slope_mode() const;
+
+    void set_counter(long value);
+    long counter() const;
+
+    void set_comp_value(uint32_t index, long value);
+    long comp_value(uint32_t index) const;
+
+    void set_comp_enabled(uint32_t index, bool enable);
+    bool comp_enabled(uint32_t index) const;
+
+    bool countdown() const;
+
+    AVR_Signal& signal();
+    AVR_SignalHook& ext_tick_hook();
+
+    void set_logger(AVR_Logger* logger);
+
+    //no copy semantics
+    AVR_TimerCounter(const AVR_TimerCounter&) = delete;
+    AVR_TimerCounter& operator=(const AVR_TimerCounter&) = delete;
+
+private:
+
+    class TimerHook;
+    friend class TimerHook;
+
+    class ExtTickHook;
+    friend class ExtTickHook;
+
+    struct CompareUnit {
+        long value = 0;
+        bool enabled = false;
+        bool is_next_event = false;
+    };
+
+    //Selected tick source
+    TickSource m_source;
+    //Counter wrap value
+    long m_wrap;
+    //Current counter value
+    long m_counter;
+    //Top value
+    long m_top;
+    //Slope mode
+    SlopeMode m_slope;
+    //Indicates if the counter is counting up (false) or down (true)
+    bool m_countdown;
+    //List of compare units
+    std::vector<CompareUnit> m_cmp;
+    //Event timer engine
+    AVR_PrescaledTimer& m_timer;
+    //Flag variable storing the next event type(s)
+    uint8_t m_next_event_type;
+    //Signal management
+    AVR_DataSignal m_signal;
+    TimerHook* m_timer_hook;
+    ExtTickHook* m_ext_hook;
+    //Logging
+    AVR_Logger* m_logger;
+
+    long delay_to_event();
+    void timer_raised(const signal_data_t& sigdata);
+    void extclock_raised();
+    long ticks_to_event(long event);
+    void process_ticks(long ticks, bool event_reached);
+
+};
+
+inline long AVR_TimerCounter::wrap() const
+{
+    return m_wrap;
+}
+
+inline AVR_TimerCounter::TickSource AVR_TimerCounter::tick_source() const
+{
+    return m_source;
+}
+
+inline long AVR_TimerCounter::top() const
+{
+    return m_top;
+}
+
+inline AVR_TimerCounter::SlopeMode AVR_TimerCounter::slope_mode() const
+{
+    return m_slope;
+}
+
+inline long AVR_TimerCounter::counter() const
+{
+    return m_counter;
+}
+
+inline long AVR_TimerCounter::comp_value(uint32_t index) const
+{
+    return m_cmp[index].value;
+}
+
+inline bool AVR_TimerCounter::comp_enabled(uint32_t index) const
+{
+    return m_cmp[index].enabled;
+}
+
+inline bool AVR_TimerCounter::countdown() const
+{
+    return m_countdown;
+}
+
+inline AVR_Signal& AVR_TimerCounter::signal()
+{
+    return m_signal;
+}
+
+inline AVR_SignalHook& AVR_TimerCounter::ext_tick_hook()
+{
+    return *reinterpret_cast<AVR_SignalHook*>(m_ext_hook);
+}
+
 #endif //__YASIMAVR_IO_TIMER_H__

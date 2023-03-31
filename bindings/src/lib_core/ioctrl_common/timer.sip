@@ -50,3 +50,71 @@ public:
     static int ticks_to_event(int, int, int);
 
 };
+
+
+//=======================================================================================
+
+class AVR_TimerCounter /NoDefaultCtors/ {
+%TypeHeaderCode
+#include "ioctrl_common/sim_timer.h"
+%End
+
+public:
+
+    enum TickSource {
+        Tick_Stopped       /PyName=Stopped/,
+        Tick_Timer         /PyName=Timer/,
+        Tick_External      /PyName=External/,
+    };
+
+    enum SlopeMode {
+        Slope_Up           /PyName=Up/,
+        Slope_Down         /PyName=Down/,
+        Slope_Double       /PyName=Double/,
+    };
+
+    enum EventType /BaseType=IntFlag/ {
+        Event_Max           /PyName=Max/,
+        Event_Top           /PyName=Top/,
+        Event_Bottom        /PyName=Bottom/,
+        Event_Compare       /PyName=Compare/,
+    };
+
+    enum SignalId  /BaseType=IntEnum/ {
+        Signal_Event        /PyName=Event/,
+        Signal_CompMatch    /PyName=CompMatch/,
+    };
+
+    AVR_TimerCounter(AVR_PrescaledTimer&, long, uint32_t);
+
+    long wrap() const;
+
+    void reset();
+    void reschedule();
+
+    void set_tick_source(TickSource);
+    TickSource tick_source() const;
+
+    void set_top(long);
+    long top() const;
+
+    void set_slope_mode(SlopeMode);
+    SlopeMode slope_mode() const;
+
+    void set_counter(long);
+    long counter() const;
+
+    void set_comp_value(uint32_t, long);
+    long comp_value(uint32_t) const;
+
+    void set_comp_enabled(uint32_t, bool);
+    bool comp_enabled(uint32_t) const;
+
+    bool countdown() const;
+
+    AVR_Signal& signal();
+    AVR_SignalHook& ext_tick_hook();
+
+    void set_logger(AVR_Logger* logger);
+
+};

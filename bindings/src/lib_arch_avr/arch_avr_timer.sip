@@ -21,49 +21,154 @@
 
 //=======================================================================================
 
+%ModuleCode
+
+#include "arch_avr_timer.h"
+
+const uint16_t CTLREQ_TMR_GET_EXTCLK_HOOK = AVR_CTLREQ_TMR_GET_EXTCLK_HOOK;
+const uint16_t CTLREQ_TMR_GET_CAPT_HOOK = AVR_CTLREQ_TMR_GET_CAPT_HOOK;
+
+%End
+
+const uint16_t CTLREQ_TMR_GET_EXTCLK_HOOK;
+const uint16_t CTLREQ_TMR_GET_CAPT_HOOK;
+
+
 struct AVR_ArchAVR_TimerConfig {
 %TypeHeaderCode
 #include "arch_avr_timer.h"
 %End
 
-    enum ClockSource {
-        ClockDisabled,
-        INT_IO_CLOCK,
+    enum COM {
+        COM_NoChange        /PyName=NoChange/,
+        COM_Toggle          /PyName=Toggle/,
+        COM_Clear           /PyName=Clear/,
+        COM_Set             /PyName=Set/,
+        COM_ToggleA         /PyName=ToggleA/,
+    };
+
+    enum Top {
+        Top_OnMax           /PyName=OnMax/,
+        Top_OnFixed         /PyName=OnFixed/,
+        Top_OnCompA         /PyName=OnCompA/,
+        Top_OnIC            /PyName=OnIC/,
+    };
+
+    enum OCR {
+        OCR_Unbuffered      /PyName=Unbuffered/,
+        OCR_UpdateOnTop     /PyName=UpdateOnTop/,
+        OCR_UpdateOnBottom  /PyName=UpdateOnBottom/,
+    };
+
+    enum OVF {
+        OVF_SetOnMax        /PyName=SetOnMax/,
+        OVF_SetOnTop        /PyName=SetOnTop/,
+        OVF_SetOnBottom     /PyName=SetOnBottom/,
     };
 
     struct clock_config_t : base_reg_config_t {
-        AVR_ArchAVR_TimerConfig::ClockSource source;
-        uint32_t div;
+        AVR_TimerCounter::TickSource source;
+        unsigned int div;
     };
 
-    enum Mode {
-        MODE_INVALID,
-        MODE_NORMAL,
-        MODE_CTC,
+    struct vector_config_t {
+        int_vect_t num;
+        uint8_t bit;
+    };
+
+    struct OC_config_t : base_reg_config_t {
+        reg_addr_t reg_oc;
+        vector_config_t vector;
+        regbit_t rb_mode;
+        regbit_t rb_force;
+    };
+
+    struct COM_config_t : base_reg_config_t {
+        AVR_ArchAVR_TimerConfig::COM up;
+        AVR_ArchAVR_TimerConfig::COM down;
+        AVR_ArchAVR_TimerConfig::COM bottom;
+        AVR_ArchAVR_TimerConfig::COM top;
     };
 
     struct mode_config_t : base_reg_config_t {
-        AVR_ArchAVR_TimerConfig::Mode mode;
-    };
-
-    struct int_config_t {
-        int_vect_t vector;
-        uint8_t bit;
+        AVR_ArchAVR_TimerConfig::OVF ovf;
+        AVR_ArchAVR_TimerConfig::Top top;
+        unsigned int fixed_top_exp;
+        AVR_ArchAVR_TimerConfig::OCR ocr;
+        bool double_slope;
+        bool disable_foc;
+        unsigned int com_variant;
     };
 
     bool is_16bits;
     std::vector<AVR_ArchAVR_TimerConfig::clock_config_t> clocks;
     std::vector<AVR_ArchAVR_TimerConfig::mode_config_t> modes;
+    std::vector<AVR_ArchAVR_TimerConfig::OC_config_t> oc_channels;
     regbit_t rb_clock;
     regbit_compound_t rbc_mode;
     reg_addr_t reg_cnt;
-    reg_addr_t reg_ocra;
-    reg_addr_t reg_ocrb;
+    reg_addr_t reg_icr;
     reg_addr_t reg_int_enable;
     reg_addr_t reg_int_flag;
-    AVR_ArchAVR_TimerConfig::int_config_t int_ovf;
-    AVR_ArchAVR_TimerConfig::int_config_t int_ocra;
-    AVR_ArchAVR_TimerConfig::int_config_t int_ocrb;
+    AVR_ArchAVR_TimerConfig::vector_config_t vect_ovf;
+    AVR_ArchAVR_TimerConfig::vector_config_t vect_icr;
+
+    SIP_PYLIST com_modes {
+    %GetCode
+        PyObject* l = PyList_New(sipCpp->com_modes.size());
+        AVR_ArchAVR_TimerConfig::COM_variant_t* COM_variant;
+        for (size_t i = 0; i < sipCpp->com_modes.size(); ++i) {
+            COM_variant = &sipCpp->com_modes[i];
+            PyObject* ll = PyList_New(COM_variant->size());
+            PyList_SET_ITEM(l, i, ll);
+            for (size_t j = 0; j < COM_variant->size(); ++j) {
+                AVR_ArchAVR_TimerConfig::COM_config_t* cfg = &(*COM_variant)[j];
+                PyObject* pycfg = sipConvertFromType(cfg,
+                                                     sipType_AVR_ArchAVR_TimerConfig_COM_config_t,
+                                                     SIP_NULLPTR);
+                PyList_SET_ITEM(ll, j, pycfg);
+            }
+        }
+        sipPy = l;
+    %End
+    %SetCode
+        PyObject* iter1 = PyObject_GetIter(sipPy);
+        if (iter1) {
+            std::vector<std::vector<AVR_ArchAVR_TimerConfig::COM_config_t>> com_modes;
+            PyObject* item1;
+            while ((item1 = PyIter_Next(iter1)) != NULL) {
+                PyObject* iter2 = PyObject_GetIter(item1);
+                if (iter2) {
+                    PyObject* item2;
+                    std::vector<AVR_ArchAVR_TimerConfig::COM_config_t> com_variant;
+                    while ((item2 = PyIter_Next(iter2)) != NULL) {
+                        void* sipCfg = sipForceConvertToType(item2,
+                                                             sipType_AVR_ArchAVR_TimerConfig_COM_config_t,
+                                                             SIP_NULLPTR, SIP_NOT_NONE, SIP_NULLPTR, &sipErr);
+                        if (sipErr) break;
+                        com_variant.push_back(*reinterpret_cast<AVR_ArchAVR_TimerConfig::COM_config_t*>(sipCfg));
+                    }
+                    Py_DECREF(iter2);
+                    if (sipErr) break;
+                    com_modes.push_back(com_variant);
+                } else {
+                    sipErr = 1;
+                }
+                Py_DECREF(item1);
+                if (sipErr) break;
+            }
+            Py_DECREF(iter1);
+            if (!sipErr)
+                sipCpp->com_modes = com_modes;
+        } else {
+            sipErr = 1;
+        }
+
+        if (sipErr)
+            PyErr_SetString(PyExc_TypeError, "Invalid type");
+    %End
+    };
+
 };
 
 
@@ -77,9 +182,10 @@ class AVR_ArchAVR_Timer : public AVR_Peripheral,
 public:
 
     enum Signal /BaseType=IntEnum/ {
-        Signal_CompA,
-        Signal_CompB,
-        Signal_OVF
+        Signal_OVF              /PyName=OVF/,
+        Signal_CompMatch        /PyName=CompMatch/,
+        Signal_CompOutput       /PyName=CompOutput/,
+        Signal_Capt             /PyName=Capt/
     };
 
     AVR_ArchAVR_Timer(int, const AVR_ArchAVR_TimerConfig& /KeepReference/);

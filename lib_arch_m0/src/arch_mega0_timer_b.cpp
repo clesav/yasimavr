@@ -50,10 +50,8 @@ AVR_ArchMega0_TimerB::AVR_ArchMega0_TimerB(int num, const AVR_ArchMega0_TimerB_C
 :AVR_Peripheral(AVR_IOCTL_TIMER('B', 0x30 + num))
 ,m_config(config)
 ,m_clk_mode(TIMER_CLOCK_DISABLED)
-,m_cnt(0)
-,m_ccmp(0)
 ,m_intflag(false)
-,m_next_event_type(0)
+,m_counter(m_timer, 0x10000, 0)
 {}
 
 bool AVR_ArchMega0_TimerB::init(AVR_Device& device)
@@ -79,7 +77,9 @@ bool AVR_ArchMega0_TimerB::init(AVR_Device& device)
                              m_config.iv_capt);
 
     m_timer.init(*device.cycle_manager(), logger());
-    m_timer.signal().connect_hook(this);
+
+    m_counter.set_logger(&logger());
+    m_counter.signal().connect_hook(this);
 
     return status;
 }
@@ -88,10 +88,9 @@ void AVR_ArchMega0_TimerB::reset()
 {
     AVR_Peripheral::reset();
     m_clk_mode = TIMER_CLOCK_DISABLED;
-    m_cnt = 0;
-    m_ccmp = 0;
-    m_next_event_type = 0;
     m_timer.reset();
+    m_counter.reset();
+    m_counter.set_top(0);
 }
 
 uint8_t AVR_ArchMega0_TimerB::ioreg_read_handler(reg_addr_t addr, uint8_t value)
@@ -101,8 +100,9 @@ uint8_t AVR_ArchMega0_TimerB::ioreg_read_handler(reg_addr_t addr, uint8_t value)
     //16-bits reading of CNT
     if (reg_ofs == REG_OFS(CNTL)) {
         m_timer.update();
-        value = m_cnt & 0x00FF;
-        write_ioreg(REG_ADDR(TEMP), m_cnt >> 8);
+        uint16_t v = m_counter.counter();
+        value = v & 0x00FF;
+        write_ioreg(REG_ADDR(TEMP), v >> 8);
     }
     else if (reg_ofs == REG_OFS(CNTH)) {
         value = read_ioreg(REG_ADDR(TEMP));
@@ -110,8 +110,9 @@ uint8_t AVR_ArchMega0_TimerB::ioreg_read_handler(reg_addr_t addr, uint8_t value)
 
     //16-bits reading of CCMP
     else if (reg_ofs == REG_OFS(CCMPL)) {
-        value = m_ccmp & 0x00FF;
-        write_ioreg(REG_ADDR(TEMP), m_ccmp >> 8);
+        uint16_t v = (uint16_t) m_counter.top();
+        value = v & 0x00FF;
+        write_ioreg(REG_ADDR(TEMP), v >> 8);
     }
     else if (reg_ofs == REG_OFS(CCMPH)) {
         value = read_ioreg(REG_ADDR(TEMP));
@@ -122,7 +123,6 @@ uint8_t AVR_ArchMega0_TimerB::ioreg_read_handler(reg_addr_t addr, uint8_t value)
 
 void AVR_ArchMega0_TimerB::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
-    bool do_reschedule = false;
     reg_addr_t reg_ofs = addr - m_config.reg_base;
 
     if (reg_ofs == REG_OFS(CTRLA)) {
@@ -158,7 +158,7 @@ void AVR_ArchMega0_TimerB::ioreg_write_handler(reg_addr_t addr, const ioreg_writ
                 m_timer.set_prescaler(2, 0);
         }
 
-        do_reschedule = true;
+        m_counter.reschedule();
     }
 
     //16-bits writing to CNT
@@ -167,8 +167,9 @@ void AVR_ArchMega0_TimerB::ioreg_write_handler(reg_addr_t addr, const ioreg_writ
     }
     else if (reg_ofs == REG_OFS(CNTH)) {
         uint8_t temp = read_ioreg(REG_ADDR(TEMP));
-        m_cnt = temp | (data.value << 8);
-        do_reschedule = true;
+        m_timer.update();
+        m_counter.set_counter(temp | (data.value << 8));
+        m_counter.reschedule();
     }
 
     //16-bits writing to CCMP
@@ -177,8 +178,8 @@ void AVR_ArchMega0_TimerB::ioreg_write_handler(reg_addr_t addr, const ioreg_writ
     }
     else if (reg_ofs == REG_OFS(CCMPH)) {
         uint8_t temp = read_ioreg(REG_ADDR(TEMP));
-        m_ccmp = temp | (data.value << 8);
-        do_reschedule = true;
+        m_counter.set_top(temp | (data.value << 8));
+        m_counter.reschedule();
     }
 
     else if (reg_ofs == REG_OFS(INTCTRL)) {
@@ -190,60 +191,12 @@ void AVR_ArchMega0_TimerB::ioreg_write_handler(reg_addr_t addr, const ioreg_writ
         if (data.value & TCB_CAPT_bm)
             m_intflag.clear_flag();
     }
-
-    if (do_reschedule)
-        m_timer.set_timer_delay(delay_to_event());
-}
-
-/*
- * Defines the types of 'event' that can be triggered by the counter
- */
-enum TimerEventType {
-    TimerEventMax       = 0x01,
-    TimerEventComp      = 0x02,
-};
-
-/*
- * Calculates the delay in prescaler ticks and the type of the next timer/counter event
- */
-uint32_t AVR_ArchMega0_TimerB::delay_to_event()
-{
-    int ticks_to_max = AVR_PrescaledTimer::ticks_to_event(m_cnt, 0xFFFF, 0x10000);
-    int ticks_to_next_event = ticks_to_max;
-
-    int ticks_to_comp = AVR_PrescaledTimer::ticks_to_event(m_cnt, m_ccmp, 0x10000);
-    if (ticks_to_comp < ticks_to_next_event)
-        ticks_to_next_event = ticks_to_comp;
-
-    m_next_event_type = 0;
-    if (ticks_to_next_event == ticks_to_max)
-        m_next_event_type |= TimerEventMax;
-    if (ticks_to_next_event == ticks_to_comp)
-        m_next_event_type |= TimerEventComp;
-
-    logger().dbg("Next event: 0x%x in %d cycles", m_next_event_type, ticks_to_next_event);
-
-    return ticks_to_next_event;
 }
 
 void AVR_ArchMega0_TimerB::raised(const signal_data_t& sigdata, uint16_t __unused)
 {
-    m_cnt += sigdata.data.as_uint();
-
-    if (!sigdata.index) return;
-
-    //From this point onwards, we know we have an 'event' to process.
-
-    if (m_next_event_type & TimerEventComp) {
+    if (sigdata.data.as_uint() & AVR_TimerCounter::Event_Top)
         m_intflag.set_flag();
-        m_cnt = 0;
-    }
-
-    if (m_next_event_type & TimerEventMax)
-        m_cnt = 0;
-
-    //Reconfigure the timer delay to the next event
-    m_timer.set_timer_delay(delay_to_event());
 }
 
 void AVR_ArchMega0_TimerB::sleep(bool on, AVR_SleepMode mode)

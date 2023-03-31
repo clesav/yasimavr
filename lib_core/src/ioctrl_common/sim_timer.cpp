@@ -294,3 +294,338 @@ int AVR_PrescaledTimer::ticks_to_event(int counter, int event, int wrap)
         ticks += wrap;
     return ticks;
 }
+
+
+//=======================================================================================
+
+/*
+ * Implementation of a SignalHook for external clocking. It just forwards to the main class.
+ */
+class AVR_TimerCounter::TimerHook : public AVR_SignalHook {
+
+public:
+
+    TimerHook(AVR_TimerCounter& timer) : m_timer(timer) {}
+
+    virtual void raised(const signal_data_t& sigdata, uint16_t hooktag) override
+    {
+        m_timer.timer_raised(sigdata);
+    }
+
+private:
+
+    AVR_TimerCounter& m_timer;
+
+};
+
+
+/*
+ * Implementation of a SignalHook for external clocking. It just forwards to the main class.
+ */
+class AVR_TimerCounter::ExtTickHook : public AVR_SignalHook {
+
+public:
+
+    ExtTickHook(AVR_TimerCounter& timer) : m_timer(timer) {}
+
+    virtual void raised(const signal_data_t& sigdata, uint16_t hooktag) override
+    {
+        m_timer.extclock_raised();
+    }
+
+private:
+
+    AVR_TimerCounter& m_timer;
+
+};
+
+
+AVR_TimerCounter::AVR_TimerCounter(AVR_PrescaledTimer& timer, long wrap, uint32_t comp_count)
+:m_wrap(wrap)
+,m_counter(0)
+,m_top(wrap - 1)
+,m_source(Tick_Stopped)
+,m_slope(Slope_Up)
+,m_countdown(false)
+,m_cmp(comp_count)
+,m_timer(timer)
+,m_next_event_type(0)
+,m_logger(nullptr)
+{
+    m_timer_hook = new TimerHook(*this);
+    m_ext_hook = new ExtTickHook(*this);
+
+    m_timer.signal().connect_hook(m_timer_hook);
+}
+
+
+AVR_TimerCounter::~AVR_TimerCounter()
+{
+    delete m_timer_hook;
+    delete m_ext_hook;
+}
+
+
+void AVR_TimerCounter::set_logger(AVR_Logger* logger)
+{
+    m_logger = logger;
+}
+
+
+void AVR_TimerCounter::reset()
+{
+    m_source = Tick_Stopped;
+    m_slope = Slope_Up;
+    m_counter = 0;
+    m_countdown = false;
+    m_top = m_wrap - 1;
+
+    for (auto& comp : m_cmp) {
+        comp.value = 0;
+        comp.enabled = false;
+    }
+}
+
+
+void AVR_TimerCounter::reschedule()
+{
+    if (m_source == Tick_Timer)
+        m_timer.set_timer_delay(delay_to_event());
+    else
+        m_timer.set_timer_delay(0);
+}
+
+
+void AVR_TimerCounter::set_tick_source(TickSource src)
+{
+    m_source = src;
+}
+
+
+void AVR_TimerCounter::set_top(long top)
+{
+    m_top = top;
+}
+
+
+void AVR_TimerCounter::set_slope_mode(SlopeMode mode)
+{
+    m_slope = mode;
+
+    if (mode == Slope_Up)
+        m_countdown = false;
+    else if (mode == Slope_Down)
+        m_countdown = true;
+}
+
+
+void AVR_TimerCounter::set_counter(long value)
+{
+    m_counter = value;
+}
+
+
+void AVR_TimerCounter::set_comp_value(uint32_t index, long value)
+{
+    m_cmp[index].value = value;
+}
+
+void AVR_TimerCounter::set_comp_enabled(uint32_t index, bool enable)
+{
+    m_cmp[index].enabled = enable;
+}
+
+
+long AVR_TimerCounter::ticks_to_event(long event)
+{
+    if (m_countdown)
+        return AVR_PrescaledTimer::ticks_to_event(event, m_counter, m_wrap);
+    else
+        return AVR_PrescaledTimer::ticks_to_event(m_counter, event, m_wrap);
+}
+
+
+/*
+ * Calculates the delay in prescaler ticks and the type of the next timer/counter event
+ * 1st step : calculate the delays in ticks to each possible event, determine the
+ *            smallest of them and store it in 'ticks_to_next_event' to be the returned value.
+ * 2st step : store in 'm_next_event_type' the combination of flags TimerEventType corresponding
+ *            to the event, or combination thereof, reached at 'ticks_to_next_event'.
+ */
+long AVR_TimerCounter::delay_to_event()
+{
+    //Ticks count to reach MAX, i.e. the max value of the counter.
+    //Only relevant if counting up
+    long ticks_to_max = m_countdown ? m_wrap : ticks_to_event(m_wrap - 1);
+    long ticks_to_next_event = ticks_to_max;
+
+    //List of ticks counts to each Output Compare unit
+    std::vector<long> comp_ticks = std::vector<long>(m_cmp.size());
+    for (uint32_t i = 0; i < m_cmp.size(); ++i) {
+        if (m_cmp[i].enabled) {
+            long t = ticks_to_event(m_cmp[i].value);
+            comp_ticks[i] = t;
+            if (t < ticks_to_next_event)
+                ticks_to_next_event = t;
+        }
+    }
+
+    //Ticks for the counter to reach TOP.
+    long ticks_to_top = ticks_to_event(m_top);
+    if (ticks_to_top < ticks_to_next_event)
+        ticks_to_next_event = ticks_to_top;
+
+    //Ticks count to the bottom value
+    long ticks_to_bottom = ticks_to_event(0);
+    if (ticks_to_bottom < ticks_to_next_event)
+        ticks_to_next_event = ticks_to_bottom;
+
+    //Compile the flag for the next event
+    m_next_event_type = 0;
+    if (ticks_to_next_event == ticks_to_max)
+        m_next_event_type |= Event_Max;
+    if (ticks_to_next_event == ticks_to_top)
+        m_next_event_type |= Event_Top;
+    if (ticks_to_next_event == ticks_to_bottom)
+        m_next_event_type |= Event_Bottom;
+
+    for (uint32_t i = 0; i < m_cmp.size(); ++i) {
+        bool is_next_event = (m_cmp[i].enabled && ticks_to_next_event == comp_ticks[i]);
+        m_cmp[i].is_next_event = is_next_event;
+        if (is_next_event)
+            m_next_event_type |= Event_Compare;
+    }
+
+    if (m_logger)
+        m_logger->dbg("Next event: 0x%02x in %ld cycles", m_next_event_type, ticks_to_next_event);
+
+    return ticks_to_next_event;
+}
+
+
+/*
+ * Callback from the internal prescaled timer
+ * Process the timer ticks, by updating the counter
+ */
+void AVR_TimerCounter::timer_raised(const signal_data_t& sigdata)
+{
+    if (m_logger)
+        m_logger->dbg("Updating counters");
+
+    process_ticks(sigdata.data.as_uint(), sigdata.index);
+}
+
+
+/*
+ * Callback for a single external clock tick.
+ * Determine the events that should be raised for the current value of
+ * the counter, then process one tick.
+ */
+void AVR_TimerCounter::extclock_raised()
+{
+    if (m_source != Tick_External) return;
+
+    m_next_event_type = 0;
+    if (m_counter == m_wrap - 1)
+        m_next_event_type |= Event_Max;
+
+    for (auto& comp : m_cmp) {
+        bool is_next_event = (comp.enabled && m_counter == comp.value);
+        comp.is_next_event = is_next_event;
+        if (is_next_event)
+            m_next_event_type |= Event_Compare;
+    }
+
+    if (m_counter == m_top)
+        m_next_event_type |= Event_Top;
+
+    if (m_counter == 0)
+        m_next_event_type |= Event_Bottom;
+
+    process_ticks(1, m_next_event_type != 0);
+}
+
+
+/*
+ * Processes the timer clock ticks to update the counter and raise
+ * the signals for any event reached.
+ */
+void AVR_TimerCounter::process_ticks(long ticks, bool event_reached)
+{
+    //Update the counter according to the direction
+    if (m_countdown)
+        m_counter -= ticks;
+    else
+        m_counter += ticks;
+
+    //If the next event is not reached yet, nothing to process further
+    if (!event_reached) return;
+
+    //If the MAX value has been reached
+    if (m_next_event_type & Event_Max) {
+        if (m_logger)
+            m_logger->dbg("Counter reaching MAX value");
+        //Edge case to ensure counter wrapping.
+        if (!(m_next_event_type & Event_Top))
+            m_counter = 0;
+    }
+
+    //If one of the Output Compare Unit has been reached
+    if (m_next_event_type & Event_Compare) {
+        for (uint32_t i = 0; i < m_cmp.size(); ++i) {
+            if (m_cmp[i].is_next_event) {
+                if (m_logger)
+                    m_logger->dbg("Triggering Compare Match %u" , i);
+                m_signal.raise_u(Signal_CompMatch, m_next_event_type, i);
+            }
+        }
+    }
+
+    //If the TOP value has been reached
+    if (m_next_event_type & Event_Top) {
+        if (m_logger)
+            m_logger->dbg("Counter reaching TOP value");
+
+        //If still counting up, wrap the counter
+        //Annoying Special Case : TOP == BOTTOM, the counter must remain at 0
+        //and whether the counting is up or down is meaningless
+        if (m_slope == Slope_Up || !m_top) {
+            m_counter = 0;
+        }
+        //If double-slopping, change the counting direction
+        else if (m_slope == Slope_Double && !m_countdown) {
+            m_countdown = true;
+            //Here, counter is equal to TOP + 1 but it should be TOP - 1
+            m_counter = m_top - 1;
+        }
+    }
+
+    //If the BOTTOM value has been reached
+    if (m_next_event_type & Event_Bottom) {
+        if (m_logger)
+            m_logger->dbg("Counter reaching BOTTOM value");
+
+        //Check to avoid treating the Annoying Special Case twice
+        if (m_top) {
+            //If still counting down, wrap the counter
+            if (m_slope == Slope_Down) {
+                m_counter = m_top;
+            }
+            //If double-slopping, change the counting direction
+            else if (m_slope == Slope_Double && m_countdown) {
+                m_countdown = false;
+                //Here, counter is equal to BOTTOM - 1 but it should be BOTTOM + 1
+                m_counter = 1;
+            }
+        }
+    }
+
+    if (m_logger)
+        m_logger->dbg("Counter value: %ld", m_counter);
+
+    m_signal.raise_u(Signal_Event, m_next_event_type);
+
+    //Set the timer to the next event
+    if (m_source == Tick_Timer)
+        m_timer.set_timer_delay(delay_to_event());
+}
