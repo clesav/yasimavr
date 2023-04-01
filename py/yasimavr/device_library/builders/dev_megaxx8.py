@@ -21,16 +21,16 @@
 This module initialises a ATmegaxx8 (ATMega328)
 '''
 
-from ...lib import arch_avr as _archlib
-from ._builders_arch_avr import AVR_DeviceBuilder
+from ._builders_arch_avr import AVR_DeviceBuilder, AVR_BaseDevice
+from ..descriptors import DeviceDescriptor
 
 #========================================================================================
 #Device class definition
 
-class dev_megaxx8(_archlib.AVR_ArchAVR_Device):
+class dev_megaxx8(AVR_BaseDevice):
 
-    def __init__(self, model, builder):
-        super().__init__(builder.get_device_config())
+    def __init__(self, dev_descriptor, builder):
+        super().__init__(dev_descriptor, builder)
 
         peripherals = [
             'CPUINT',
@@ -53,4 +53,5 @@ class dev_megaxx8(_archlib.AVR_ArchAVR_Device):
 
 
 def device_factory(model):
-    return AVR_DeviceBuilder.build_device(model, dev_megaxx8)
+    dev_desc = DeviceDescriptor(model)
+    return AVR_DeviceBuilder.build_device(dev_desc, dev_megaxx8)

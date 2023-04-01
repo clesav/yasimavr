@@ -332,6 +332,14 @@ def _get_userrow_builder():
 
 #========================================================================================
 
+class XT_BaseDevice(_archlib.AVR_ArchMega0_Device):
+
+    def __init__(self, dev_descriptor, builder):
+        super().__init__(builder.get_device_config())
+
+
+#========================================================================================
+
 class XT_DeviceBuilder(DeviceBuilder):
 
     #Dictionary for the builder getters for Mega0/1 peripherals
@@ -399,7 +407,7 @@ class XT_DeviceBuilder(DeviceBuilder):
 
     @classmethod
     def build_device(cls, model, dev_class):
-        if not issubclass(dev_class, _archlib.AVR_ArchMega0_Device):
+        if not issubclass(dev_class, XT_BaseDevice):
             raise TypeError('the device class must be a ArchMega0_Device subclass')
 
         return super().build_device(model, dev_class)

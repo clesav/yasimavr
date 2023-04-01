@@ -322,6 +322,14 @@ def _get_usart_builder():
 
 #========================================================================================
 
+class AVR_BaseDevice(_archlib.AVR_ArchAVR_Device):
+
+    def __init__(self, dev_descriptor, builder):
+        super().__init__(builder.get_device_config())
+
+
+#========================================================================================
+
 class AVR_DeviceBuilder(DeviceBuilder):
 
     #Dictionary for the builder getters for AVR peripherals
@@ -368,7 +376,7 @@ class AVR_DeviceBuilder(DeviceBuilder):
 
     @classmethod
     def build_device(cls, model, dev_class):
-        if not issubclass(dev_class, _archlib.AVR_ArchAVR_Device):
+        if not issubclass(dev_class, AVR_BaseDevice):
             raise TypeError('The device class must be a ArchAVR_Device subclass')
 
         return super().build_device(model, dev_class)
