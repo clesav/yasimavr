@@ -22,9 +22,10 @@
 * I/O registry and memory direct access
 '''
 
-from .descriptors import *
-from .accessors import *
+from .descriptors import DeviceDescriptor, LibraryModelDatabase, load_config_file
+from .accessors import DeviceAccessor
 import importlib
+import os.path
 
 _factory_cache = {}
 
@@ -59,14 +60,58 @@ def load_device(dev_name, verbose=False):
     return factory(low_dev_name)
 
 
+def load_device_from_config(dev_descriptor, dev_class=None, verbose=False):
+    from .builders import _base
+    _base.VERBOSE = verbose
+
+    arch = dev_descriptor.architecture
+    if arch == 'AVR':
+        from .builders._builders_arch_avr import AVR_DeviceBuilder, AVR_BaseDevice
+
+        if dev_class is None:
+            dev_class = AVR_BaseDevice
+            do_peripheral_build = True
+        elif not issubclass(dev_class, AVR_BaseDevice):
+            raise TypeError('the device class must be a AVR_BaseDevice subclass')
+        else:
+            do_peripheral_build = False
+
+        dev = AVR_DeviceBuilder.build_device(dev_descriptor, dev_class)
+
+    elif arch == 'XT':
+        from .builders._builders_arch_xt import XT_DeviceBuilder, XT_BaseDevice
+
+        if dev_class is None:
+            dev_class = XT_BaseDevice
+            do_peripheral_build = True
+        elif not issubclass(dev_class, XT_BaseDevice):
+            raise TypeError('the device class must be a XT_BaseDevice subclass')
+        else:
+            do_peripheral_build = False
+
+        dev = XT_DeviceBuilder.build_device(dev_descriptor, dev_class)
+
+    else:
+        raise ValueError('Architecture unknown: ' + arch)
+
+    if do_peripheral_build:
+        per_name_list = dev_descriptor.peripherals.keys()
+        dev._builder_.build_peripherals(dev, per_name_list)
+
+    return dev
+
+
 def model_list():
+    device_db = load_config_file(LibraryModelDatabase)
     models = []
-    p = os.path.join(os.path.dirname(__file__), 'builders')
-    for fn in os.listdir(p):
-        fp = os.path.join(p, fn)
-        if not os.path.isfile(fp): continue
-        if fn.startswith('device_') and fn.endswith('.py'):
-            fn = os.path.splitext(fn)[0].replace('device_', '')
-            models.append(fn)
+    for dev_list in device_db.values():
+        models.extend(dev_list)
 
     return models
+
+
+__all__ = ['load_device',
+           'load_device_from_config',
+           'model_list',
+           'DeviceDescriptor',
+           'DeviceAccessor']

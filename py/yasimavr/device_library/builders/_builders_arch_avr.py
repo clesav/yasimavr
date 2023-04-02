@@ -374,9 +374,3 @@ class AVR_DeviceBuilder(DeviceBuilder):
         per_builder = builder_getter()
         return per_builder
 
-    @classmethod
-    def build_device(cls, model, dev_class):
-        if not issubclass(dev_class, AVR_BaseDevice):
-            raise TypeError('The device class must be a ArchAVR_Device subclass')
-
-        return super().build_device(model, dev_class)

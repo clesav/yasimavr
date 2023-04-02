@@ -405,9 +405,3 @@ class XT_DeviceBuilder(DeviceBuilder):
         per_builder = builder_getter()
         return per_builder
 
-    @classmethod
-    def build_device(cls, model, dev_class):
-        if not issubclass(dev_class, XT_BaseDevice):
-            raise TypeError('the device class must be a ArchMega0_Device subclass')
-
-        return super().build_device(model, dev_class)
