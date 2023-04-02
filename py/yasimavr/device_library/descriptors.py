@@ -24,7 +24,6 @@ configuration decoded from YAML configuration files
 
 import weakref
 import os
-import sys
 import collections
 
 from ..lib import core as _corelib
@@ -39,17 +38,18 @@ except ImportError:
 
 Architectures = ['AVR', 'XT']
 
+LibraryRepository = os.path.join(os.path.dirname(__file__), 'configs')
+LibraryModelDatabase = os.path.join(LibraryRepository, 'devices.yml')
 
 #List of path which are searched for YAML configuration files
 #This can be altered by the used
 ConfigRepositories = [
-    os.path.join(os.path.dirname(__file__), 'configs')
+    LibraryRepository
 ]
 
 
-def _find_config_file(fn):
-    path_list = ConfigRepositories + sys.path
-    for r in path_list:
+def _find_config_file(fn, repositories):
+    for r in repositories:
         p = os.path.join(r, fn)
         if os.path.isfile(p):
             return p
@@ -272,8 +272,9 @@ class PeripheralInstanceDescriptor:
 #the configuration loading is complete
 class _DeviceDescriptorLoader:
 
-    def __init__(self, yml_cfg):
+    def __init__(self, yml_cfg, repositories):
         self.cfg = yml_cfg
+        self.repositories = repositories
         self._yml_cache = {}
         self._per_cache = {}
 
@@ -284,7 +285,7 @@ class _DeviceDescriptorLoader:
         if per_filepath in self._yml_cache:
             per_yml_doc = self._yml_cache[per_filepath]
         else:
-            per_path = _find_config_file(per_filepath)
+            per_path = _find_config_file(per_filepath, self.repositories)
             if per_path is None:
                 raise DeviceConfigException('Config file not found: ' + per_filepath)
 
@@ -305,25 +306,56 @@ class DeviceDescriptor:
     #Instance cache to speed up the loading of a device several times
     _cache = weakref.WeakValueDictionary()
 
-    def __new__(cls, devname):
-        lower_devname = devname.lower()
-        if lower_devname in cls._cache:
-            return cls._cache[lower_devname]
-        else:
-            desc = super().__new__(cls)
-            desc._load_config(devname)
-            cls._cache[lower_devname] = desc
-            return desc
 
-    def _load_config(self, devname):
-        yml_cfg = self._read_config(devname)
+    @classmethod
+    def create_from_model(cls, model):
+        lower_model = model.lower()
+        if lower_model in cls._cache:
+            return cls._cache[lower_model]
+
+        fn = _find_config_file(lower_model + '.yml', ConfigRepositories)
+        if fn is None:
+            raise DeviceConfigException('No configuration found for variant ' + model)
+
+        try:
+            yml_cfg = load_config_file(fn)
+        except Exception as exc:
+            msg = 'Error reading the configuration file for ' + model
+            raise DeviceConfigException(msg) from exc
+
+        desc = cls()
+        desc._load_config(yml_cfg, ConfigRepositories)
+        cls._cache[lower_model] = desc
+        return desc
+
+
+    @classmethod
+    def create_from_file(cls, filename, repositories=()):
+        if repositories:
+            r = repositories + ConfigRepositories
+        else:
+            r = [os.path.dirname(filename)] + ConfigRepositories
+
+        try:
+            yml_cfg = load_config_file(filename)
+        except Exception as exc:
+            msg = 'Error reading the configuration file'
+            raise DeviceConfigException(msg) from exc
+
+        desc = cls()
+        desc._load_config(yml_cfg, r)
+        return desc
+
+
+    def _load_config(self, yml_cfg, repositories):
 
         self.name = str(yml_cfg['name'])
 
         if 'aliasof' in yml_cfg:
-            yml_cfg = self._read_config(str(yml_cfg['aliasof']).lower())
+            alias = str(yml_cfg['aliasof']).lower()
+            yml_cfg = self._read_config(alias, repositories)
 
-        dev_loader = _DeviceDescriptorLoader(yml_cfg)
+        dev_loader = _DeviceDescriptorLoader(yml_cfg, repositories)
 
         self.architecture = str(yml_cfg['architecture'])
         if self.architecture not in Architectures:
@@ -347,22 +379,10 @@ class DeviceDescriptor:
         for per_name, f in dict(yml_cfg['peripherals']).items():
             self.peripherals[per_name] = PeripheralInstanceDescriptor(per_name, dev_loader, f, self)
 
-    @classmethod
-    def _read_config(cls, devname):
-        fn = _find_config_file(devname + '.yml')
-        if fn is None:
-            raise DeviceConfigException('No configuration found for variant ' + devname)
-
-        try:
-            yml_cfg = load_config_file(fn)
-        except Exception as exc:
-            msg = 'Error reading the configuration file for ' + devname
-            raise DeviceConfigException(msg) from exc
-        else:
-            return yml_cfg
 
     def reg_address(self, reg_path, default=None):
         return self._reg_address(reg_path, None, default)
+
 
     def _reg_address(self, reg_path, per_from, default):
         if '.' in reg_path:

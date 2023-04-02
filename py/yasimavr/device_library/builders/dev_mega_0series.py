@@ -68,5 +68,5 @@ class dev_mega_0series(XT_BaseDevice):
 
 
 def device_factory(model):
-    dev_desc = DeviceDescriptor(model)
+    dev_desc = DeviceDescriptor.create_from_model(model)
     return XT_DeviceBuilder.build_device(dev_desc, dev_mega_0series)

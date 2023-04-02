@@ -39,8 +39,7 @@ def load_device(dev_name, verbose=False):
     from .builders import _base
     _base.VERBOSE = verbose
 
-    path_device_db = os.path.join(os.path.dirname(__file__), 'configs', 'devices.yml')
-    device_db = load_config_file(path_device_db)
+    device_db = load_config_file(LibraryModelDatabase)
     for f, dev_list in device_db.items():
         if low_dev_name in dev_list:
             dev_factory = f

@@ -53,5 +53,5 @@ class dev_megaxx8(AVR_BaseDevice):
 
 
 def device_factory(model):
-    dev_desc = DeviceDescriptor(model)
+    dev_desc = DeviceDescriptor.create_from_model(model)
     return AVR_DeviceBuilder.build_device(dev_desc, dev_megaxx8)
