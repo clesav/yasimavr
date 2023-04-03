@@ -394,7 +394,10 @@ class DeviceBuilder:
             self._per_builders[per_class] = per_builder
 
         if VERBOSE:
-                print('    Peripheral builder found:', per_builder)
+            print('    Peripheral builder found:', per_builder)
+
+        if per_builder is None:
+            return
 
         if per_name in self._per_configs:
             per_config = self._per_configs[per_name]

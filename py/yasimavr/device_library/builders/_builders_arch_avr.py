@@ -334,6 +334,7 @@ class AVR_DeviceBuilder(DeviceBuilder):
 
     #Dictionary for the builder getters for AVR peripherals
     _per_builder_getters = {
+        'CPU': None,
         'CPUINT': _get_intctrl_builder,
         'SLPCTRL': _get_slpctrl_builder,
         'MISC': _get_misc_builder,
@@ -368,9 +369,11 @@ class AVR_DeviceBuilder(DeviceBuilder):
         return cfg
 
     def _get_peripheral_builder(self, per_class):
-        builder_getter = self._per_builder_getters.get(per_class, None)
-        if builder_getter is None:
+        if per_class not in self._per_builder_getters:
             raise DeviceBuildError('Unknown peripheral class: ' + per_class)
-        per_builder = builder_getter()
-        return per_builder
-
+        builder_getter = self._per_builder_getters[per_class]
+        if builder_getter is not None:
+            per_builder = builder_getter()
+            return per_builder
+        else:
+            return None

@@ -344,6 +344,7 @@ class XT_DeviceBuilder(DeviceBuilder):
 
     #Dictionary for the builder getters for Mega0/1 peripherals
     _per_builder_getters = {
+        'CPU': None,
         'CPUINT': _get_cpuint_builder,
         'SLPCTRL': _get_slpctrl_builder,
         'CLKCTRL': _get_clkctrl_builder,
@@ -395,13 +396,14 @@ class XT_DeviceBuilder(DeviceBuilder):
         cfg = _archlib.AVR_ArchMega0_DeviceConfig(core_cfg)
         cfg.name = dev_desc.name
         cfg.pins = dev_desc.pins
-
         return cfg
 
     def _get_peripheral_builder(self, per_class):
-        builder_getter = self._per_builder_getters.get(per_class, None)
-        if builder_getter is None:
+        if per_class not in self._per_builder_getters:
             raise DeviceBuildError('Unknown peripheral class: ' + per_class)
-        per_builder = builder_getter()
-        return per_builder
-
+        builder_getter = self._per_builder_getters[per_class]
+        if builder_getter is not None:
+            per_builder = builder_getter()
+            return per_builder
+        else:
+            return None
