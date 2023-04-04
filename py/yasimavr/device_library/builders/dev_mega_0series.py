@@ -18,7 +18,15 @@
 # along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
 
 '''
-This module initialises a ATmega4809
+This module initialises a device model for the ATmegaxx0x family:
+ATmega808
+ATmega809
+ATmega1608
+ATmega1609
+ATmega3208
+ATmega3209
+ATmega4808
+ATmega4809
 '''
 
 from ._builders_arch_xt import XT_DeviceBuilder, XT_BaseDevice

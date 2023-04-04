@@ -83,6 +83,10 @@ AVR_Core::~AVR_Core()
 bool AVR_Core::init(AVR_Device& d)
 {
     m_device = &d;
+    if (!m_intrctl) {
+        m_device->logger().err("No Interrupt Controller attached");
+        return false;
+    }
     return true;
 }
 
