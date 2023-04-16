@@ -1,0 +1,413 @@
+
+---
+name: atgiga4809
+
+architecture: XT
+
+memory:
+    data:
+        IOEND: 0x13FF
+        EEPROMSTART: 0x1400
+        EEPROMEND: 0x14FF
+        RAMSTART: 0x2800
+        RAMEND: 0x3FFF
+        FLASHSTART: 0x4000
+        FLASHEND: 0xFFFF
+    flash:
+        FLASHEND: 0xBFFF
+    eeprom:
+        EEPROMEND: 0xFF
+    userrow:
+        USERROWEND: 0x3F
+
+core:
+    extended_addressing: no
+    clear_GIE_on_int: no
+
+fuses:
+    size: 11
+    factory_values: [ 0x00, 0x00, 0x02, 0x00, 0x00,
+                      0xC0, 0x07, 0x00, 0x00, 0x00,
+                      0xC5 ]
+
+access:
+    lsb_first_on_write: yes
+    lsb_first_on_read: yes
+
+pins: [ PA0, PA1, PA2, PA3, PA4, PA5, PA6, PA7,
+        PB0, PB1, PB2, PB3, PB4, PB5, PB6, PB7,
+        PC0, PC1, PC2, PC3, PC4, PC5, PC6, PC7,
+        PD0, PD1, PD2, PD3, PD4, PD5, PD6, PD7,
+        PE0, PE1, PE2, PE3, PE4, PE5, PE6, PE7,
+        PF0, PF1, PF2, PF3, PF4, PF5, PF6, PF7,
+        PG0, PG1, PG2, PG3, PG4, PG5, PG6, PG7,
+        PH0, PH1, PH2, PH3, PH4, PH5, PH6, PH7,
+        PJ0, PJ1, PJ2, PJ3, PJ4, PJ5, PJ6, PJ7,
+        PK0, PK1, PK2, PK3, PK4, PK5, PK6, PK7,
+        PL0, PL1, PL2, PL3, PL4, PL5, PL6, PL7,
+        PM0, PM1, PM2, PM3, PM4, PM5, PM6, PM7,
+        PN0, PN1, PN2, PN3, PN4, PN5, PN6, PN7 ]
+
+interrupts:
+    vector_size: 4
+
+    vectors:
+        - RESET
+        - CRCSCAN
+        - BOD
+        - PORTG
+        - PORTH
+        - PORTJ
+        - PORTA
+        - TCA0_OVF
+        - TCA0_HUNF
+        - TCA0_CMP0
+        - TCA0_CMP1
+        - TCA0_CMP2
+        - TCB0
+        - TCB1
+        - TWI0_TWIS
+        - TWI0_TWIM
+        - SPI0
+        - USART0_RXC
+        - USART0_DRE
+        - USART0_TXC
+        - PORTD
+        - PORTK
+        - ADC0_RESRDY
+        - ADC0_WCOMP
+        - PORTC
+        - TCB2
+        - TCB4
+        - TCB5
+        - TCB6
+        - PORTF
+        - NVMCTRL_EE
+        - TCB7
+        - USART2_DRE
+        - USART2_TXC
+        - PORTB
+        - PORTE
+        - TCB3
+        - PORTL
+        - PORTM
+        - PORTN
+
+    sleep_mask:
+        Idle:       [ 0xFF, 0xFF, 0xFF, 0xFF, 0xFF ]
+        Standby:    [ 0x7F, 0x70, 0xB2, 0xA7, 0x3C ]
+        PowerDown:  [ 0x77, 0x40, 0x10, 0x21, 0x0C ]
+
+peripherals:
+    CPU:
+        file: ArchXT_controllers.yml
+
+    CPUINT:
+        file: ArchXT_controllers.yml
+        base: 0x0110
+        ctl_id: INTR
+
+    SLPCTRL:
+        file: ArchXT_controllers.yml
+        base: 0x0050
+        ctl_id: SLP
+
+    RSTCTRL:
+        file: ArchXT_controllers.yml
+        base: 0x0040
+        ctl_id: RST
+
+    CLKCTRL:
+        file: ArchXT_controllers.yml
+        base: 0x0060
+        ctl_id: CLK
+
+    NVMCTRL:
+        file: ArchXT_controllers.yml
+        base: 0x1000
+        ctl_id: NVM
+        config:
+           flash_page_size: 128
+           iv_eeready: NVMCTRL_EE
+
+    MISC:
+        class: MISC
+        file: ArchXT_controllers.yml
+        config:
+            dev_id: 0x00FFFFFF
+
+    PORTA:
+        class: PORT
+        file: ArchXT_interfaces.yml
+        base: 0x0400
+        ctl_id: IOGA
+        config:
+            reg_base_port: 0x0400
+            reg_base_vport: 0x0000
+            iv_port: PORTA
+
+    PORTB:
+        class: PORT
+        file: ArchXT_interfaces.yml
+        base: 0x0420
+        ctl_id: IOGB
+        config:
+            reg_base_port: 0x0420
+            reg_base_vport: 0x0004
+            iv_port: PORTB
+
+    PORTC:
+        class: PORT
+        file: ArchXT_interfaces.yml
+        base: 0x0440
+        ctl_id: IOGC
+        config:
+            reg_base_port: 0x0440
+            reg_base_vport: 0x0008
+            iv_port: PORTC
+
+    PORTD:
+        class: PORT
+        file: ArchXT_interfaces.yml
+        base: 0x0460
+        ctl_id: IOGD
+        config:
+            reg_base_port: 0x0460
+            reg_base_vport: 0x000C
+            iv_port: PORTD
+
+    PORTE:
+        class: PORT
+        file: ArchXT_interfaces.yml
+        base: 0x0480
+        ctl_id: IOGE
+        config:
+            reg_base_port: 0x0480
+            reg_base_vport: 0x0010
+            iv_port: PORTE
+
+    PORTF:
+        class: PORT
+        file: ArchXT_interfaces.yml
+        base: 0x04A0
+        ctl_id: IOGF
+        config:
+            reg_base_port: 0x04A0
+            reg_base_vport: 0x0014
+            iv_port: PORTF
+
+    PORTG:
+        class: PORT
+        file: ArchXT_interfaces.yml
+        base: 0x04C0
+        ctl_id: IOGG
+        config:
+            reg_base_port: 0x04C0
+            reg_base_vport: 0x0018
+            iv_port: PORTG
+
+    PORTH:
+        class: PORT
+        file: ArchXT_interfaces.yml
+        base: 0x04E0
+        ctl_id: IOGH
+        config:
+            reg_base_port: 0x04E0
+            reg_base_vport: 0x001A
+            iv_port: PORTH
+
+    PORTJ:
+        class: PORT
+        file: ArchXT_interfaces.yml
+        base: 0x0500
+        ctl_id: IOGJ
+        config:
+            reg_base_port: 0x0500
+            reg_base_vport: 0x001C
+            iv_port: PORTJ
+
+    PORTK:
+        class: PORT
+        file: ArchXT_interfaces.yml
+        base: 0x0520
+        ctl_id: IOGK
+        config:
+            reg_base_port: 0x0520
+            reg_base_vport: 0x001E
+            iv_port: PORTK
+
+    PORTL:
+        class: PORT
+        file: ArchXT_interfaces.yml
+        base: 0x0540
+        ctl_id: IOGL
+        config:
+            reg_base_port: 0x0540
+            reg_base_vport: 0x0020
+            iv_port: PORTL
+
+    PORTM:
+        class: PORT
+        file: ArchXT_interfaces.yml
+        base: 0x0580
+        ctl_id: IOGN
+        config:
+            reg_base_port: 0x0580
+            reg_base_vport: 0x0024
+            iv_port: PORTM
+
+    PORTN:
+        class: PORT
+        file: ArchXT_interfaces.yml
+        base: 0x05C0
+        ctl_id: IOGP
+        config:
+            reg_base_port: 0x05C0
+            reg_base_vport: 0x0028
+            iv_port: PORTN
+
+    TCA0:
+        class: TCA_SINGLE
+        file: ArchXT_timers.yml
+        base: 0x0A00
+        config:
+            iv_ovf: TCA0_OVF
+            ivs_cmp: [ TCA0_CMP0, TCA0_CMP1, TCA0_CMP2 ]
+
+    TCB0:
+        class: TCB
+        file: ArchXT_timers.yml
+        base: 0x0A80
+        config:
+            iv_capt: TCB0
+
+    TCB1:
+        class: TCB
+        file: ArchXT_timers.yml
+        base: 0x0A90
+        config:
+            iv_capt: TCB1
+
+    TCB2:
+        class: TCB
+        file: ArchXT_timers.yml
+        base: 0x0AA0
+        config:
+            iv_capt: TCB2
+
+    TCB3:
+        class: TCB
+        file: ArchXT_timers.yml
+        base: 0x0AB0
+        config:
+            iv_capt: TCB3
+
+    TCB4:
+        class: TCB
+        file: ArchXT_timers.yml
+        base: 0x0AC0
+        config:
+            iv_capt: TCB4
+
+    TCB5:
+        class: TCB
+        file: ArchXT_timers.yml
+        base: 0x0AD0
+        config:
+            iv_capt: TCB5
+
+    TCB6:
+        class: TCB
+        file: ArchXT_timers.yml
+        base: 0x0AE0
+        config:
+            iv_capt: TCB6
+
+    TCB7:
+        class: TCB
+        file: ArchXT_timers.yml
+        base: 0x0AF0
+        config:
+            iv_capt: TCB7
+
+    VREF:
+        file: ArchXT_analog.yml
+        base: 0x00A0
+
+    ADC0:
+        class: ADC
+        file: ArchXT_analog.yml
+        base: 0x0600
+        config:
+            channels:
+                0x00: [ SingleEnded, PD0 ]
+                0x01: [ SingleEnded, PD1 ]
+                0x02: [ SingleEnded, PD2 ]
+                0x03: [ SingleEnded, PD3 ]
+                0x04: [ SingleEnded, PD4 ]
+                0x05: [ SingleEnded, PD5 ]
+                0x06: [ SingleEnded, PD6 ]
+                0x07: [ SingleEnded, PD7 ]
+                0x08: [ SingleEnded, PE0 ]
+                0x09: [ SingleEnded, PE1 ]
+                0x0A: [ SingleEnded, PE2 ]
+                0x0B: [ SingleEnded, PE3 ]
+                0x0C: [ SingleEnded, PF2 ]
+                0x0D: [ SingleEnded, PF3 ]
+                0x0E: [ SingleEnded, PF4 ]
+                0x0F: [ SingleEnded, PF5 ]
+
+                0x10: [ SingleEnded, PG0 ]
+                0x11: [ SingleEnded, PG1 ]
+                0x12: [ SingleEnded, PG2 ]
+                0x13: [ SingleEnded, PG3 ]
+                0x14: [ SingleEnded, PG4 ]
+                0x15: [ SingleEnded, PG5 ]
+                0x16: [ SingleEnded, PG6 ]
+                0x17: [ SingleEnded, PG7 ]
+                0x18: [ SingleEnded, PH0 ]
+                0x19: [ SingleEnded, PH1 ]
+                0x1A: [ SingleEnded, PH2 ]
+                0x1B: [ SingleEnded, PH3 ]
+
+                0x1C: AcompRef
+                0x1E: Temperature
+                0x1F: Zero
+            vref_channel: 0
+
+    USART0:
+        class: USART
+        file: ArchXT_interfaces.yml
+        base: 0x0800
+        ctl_id: UAX0
+        config:
+            iv_rxc: USART0_RXC
+            iv_txc: USART0_TXC
+            iv_txe: USART0_DRE
+
+    SPI0:
+        class: SPI
+        file: ArchXT_interfaces.yml
+        base: 0x08C0
+        config:
+            pin_select: null
+            iv_spi: SPI0
+
+    TWI0:
+        class: TWI
+        file: ArchXT_interfaces.yml
+        base: 0x08A0
+        config:
+            iv_master: TWI0_TWIM
+            iv_slave: TWI0_TWIS
+
+    FUSES:
+        file: ArchXT_controllers.yml
+        base: 0x1280
+        ctl_id: FUSE
+
+    USERROW:
+        class: USERROW_64
+        file: ArchXT_controllers.yml
+        base: 0x1300
+        ctl_id: UROW
