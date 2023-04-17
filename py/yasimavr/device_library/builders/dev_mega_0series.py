@@ -18,19 +18,27 @@
 # along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
 
 '''
-This module initialises a ATmega4809
+This module initialises a device model for the ATmegaxx0x family:
+ATmega808
+ATmega809
+ATmega1608
+ATmega1609
+ATmega3208
+ATmega3209
+ATmega4808
+ATmega4809
 '''
 
-from ...lib import arch_m0 as _archlib
-from ._builders_arch_xt import XT_DeviceBuilder
+from ._builders_arch_xt import XT_DeviceBuilder, XT_BaseDevice
+from ..descriptors import DeviceDescriptor
 
 #========================================================================================
 #Device class definition
 
-class dev_mega_0series(_archlib.AVR_ArchMega0_Device):
+class dev_mega_0series(XT_BaseDevice):
 
-    def __init__(self, model, builder):
-        super().__init__(builder.get_device_config())
+    def __init__(self, dev_descriptor, builder):
+        super().__init__(dev_descriptor, builder)
 
         peripherals = [
             'CPUINT',
@@ -61,11 +69,12 @@ class dev_mega_0series(_archlib.AVR_ArchMega0_Device):
             'USERROW'
         ]
 
-        if model in ('atmega809', 'atmega1609', 'atmega3209', 'atmega4809'):
+        if dev_descriptor.name in ('atmega809', 'atmega1609', 'atmega3209', 'atmega4809'):
             peripherals.extend(['PORTB', 'PORTE', 'TCB3', 'USART3'])
 
         builder.build_peripherals(self, peripherals)
 
 
 def device_factory(model):
-    return XT_DeviceBuilder.build_device(model, dev_mega_0series)
+    dev_desc = DeviceDescriptor.create_from_model(model)
+    return XT_DeviceBuilder.build_device(dev_desc, dev_mega_0series)

@@ -356,8 +356,8 @@ class DeviceBuilder:
 
     _builder_cache = {}
 
-    def __init__(self, model):
-        self._dev_descriptor = DeviceDescriptor(model)
+    def __init__(self, dev_descriptor):
+        self._dev_descriptor = dev_descriptor
         self._core_config = None
         self._dev_config = None
         self._per_configs = {}
@@ -394,7 +394,10 @@ class DeviceBuilder:
             self._per_builders[per_class] = per_builder
 
         if VERBOSE:
-                print('    Peripheral builder found:', per_builder)
+            print('    Peripheral builder found:', per_builder)
+
+        if per_builder is None:
+            return
 
         if per_name in self._per_configs:
             per_config = self._per_configs[per_name]
@@ -415,7 +418,8 @@ class DeviceBuilder:
         raise NotImplementedError
 
     @classmethod
-    def build_device(cls, model, dev_class):
+    def build_device(cls, dev_desc, dev_class):
+        model = dev_desc.name
         #Find the appropriate builder instance (use the cache)
         if model in cls._builder_cache:
             if VERBOSE:
@@ -424,12 +428,12 @@ class DeviceBuilder:
         else:
             if VERBOSE:
                 print('Creating new DeviceBuilder for model', model)
-            builder = cls(model)
+            builder = cls(dev_desc)
             cls._builder_cache[model] = builder
 
-        dev = dev_class(model, builder)
+        dev = dev_class(dev_desc, builder)
         dev._builder_ = builder
-        dev._descriptor_ = builder._dev_descriptor
+        dev._descriptor_ = dev_desc
         return dev
 
     @classmethod
