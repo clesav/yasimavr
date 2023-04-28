@@ -1,5 +1,5 @@
 /*
- * arch_mega0_timer_a.h
+ * arch_xt_timer_a.h
  *
  *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
 

@@ -1,5 +1,5 @@
 /*
- * arch_mega0_nvm.h
+ * arch_xt_nvm.h
  *
  *  Copyright 2022 Clement Savergne <csavergne@yahoo.com>
 

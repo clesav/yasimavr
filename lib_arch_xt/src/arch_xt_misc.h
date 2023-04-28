@@ -1,5 +1,5 @@
 /*
- * arch_mega0_misc.h
+ * arch_xt_misc.h
  *
  *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
 

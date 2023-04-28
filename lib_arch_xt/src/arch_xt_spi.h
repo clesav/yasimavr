@@ -1,5 +1,5 @@
 /*
- * arch_mega0_spi.h
+ * arch_xt_spi.h
  *
  *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
 

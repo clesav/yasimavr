@@ -1,5 +1,5 @@
 /*
- * arch_mega0_spi.cpp
+ * arch_xt_spi.cpp
  *
  *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
 
@@ -21,9 +21,9 @@
 
 //=======================================================================================
 
-#include "arch_mega0_spi.h"
-#include "arch_mega0_io.h"
-#include "arch_mega0_io_utils.h"
+#include "arch_xt_spi.h"
+#include "arch_xt_io.h"
+#include "arch_xt_io_utils.h"
 
 
 //=======================================================================================

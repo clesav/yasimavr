@@ -1,5 +1,5 @@
 /*
- * arch_mega0_acp.h
+ * arch_xt_acp.h
  *
  *  Copyright 2022 Clement Savergne <csavergne@yahoo.com>
 

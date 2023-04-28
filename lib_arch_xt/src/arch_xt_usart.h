@@ -1,5 +1,5 @@
 /*
- * arch_mega0_usart.h
+ * arch_xt_usart.h
  *
  *  Copyright 2022 Clement Savergne <csavergne@yahoo.com>
 

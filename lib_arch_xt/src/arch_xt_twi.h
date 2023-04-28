@@ -1,5 +1,5 @@
 /*
- * arch_mega0_timer_b.h
+ * arch_xt_twi.h
  *
  *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
 
@@ -21,61 +21,63 @@
 
 //=======================================================================================
 
-#ifndef __YASIMAVR_MEGA0_TIMER_B_H__
-#define __YASIMAVR_MEGA0_TIMER_B_H__
+#ifndef __YASIMAVR_MEGA0_TWI_H__
+#define __YASIMAVR_MEGA0_TWI_H__
 
-#include "core/sim_peripheral.h"
+
 #include "core/sim_interrupt.h"
-#include "ioctrl_common/sim_timer.h"
+#include "ioctrl_common/sim_twi.h"
 
 
 //=======================================================================================
 /*
- * AVR_ArchMega0_TimerB is the implementation of a Timer/Counter type B for the Mega-0/Mega-1 series
- * Only the Periodic Interrupt mode is currently implemented
- * Other unsupported features:
- *      - Event control and input
- *      - Debug run override
- *      - Compare/capture output on pin
- *      - Status register
- *      - Synchronize Update (SYNCUPD)
+ * Implementation of a TWI for the Mega-0/Mega-1 series
+ * Features:
+ *  - Host/client mode
+ *  - data order, phase and polarity settings have no effect
+ *  - write collision flag not supported
+ *
+ *  for supported CTLREQs, see sim_spi.h
  */
 
-struct AVR_ArchMega0_TimerB_Config {
+struct AVR_ArchMega0_TWI_Config {
 
     reg_addr_t reg_base;
-    int_vect_t iv_capt;
+    int_vect_t iv_master;
+    int_vect_t iv_slave;
 
 };
 
-class DLL_EXPORT AVR_ArchMega0_TimerB : public AVR_Peripheral, public AVR_SignalHook {
+class DLL_EXPORT AVR_ArchMega0_TWI : public AVR_Peripheral, public AVR_SignalHook {
 
 public:
 
-    AVR_ArchMega0_TimerB(int num, const AVR_ArchMega0_TimerB_Config& config);
+    AVR_ArchMega0_TWI(uint8_t num, const AVR_ArchMega0_TWI_Config& config);
 
-    //Override of AVR_Peripheral callbacks
     virtual bool init(AVR_Device& device) override;
     virtual void reset() override;
+    virtual bool ctlreq(uint16_t req, ctlreq_data_t* data) override;
     virtual uint8_t ioreg_read_handler(reg_addr_t addr, uint8_t value) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
-    virtual void sleep(bool on, AVR_SleepMode mode) override;
-    //Override of Hook callback
-    virtual void raised(const signal_data_t& data, uint16_t sigid) override;
+    virtual void raised(const signal_data_t& sigdata, uint16_t hooktag) override;
 
 private:
 
-    const AVR_ArchMega0_TimerB_Config& m_config;
+    const AVR_ArchMega0_TWI_Config& m_config;
 
-    uint8_t m_clk_mode;
+    AVR_IO_TWI m_twi;
+    bool m_has_address;
+    bool m_has_master_rx_data;
+    bool m_has_slave_rx_data;
 
-    //***** Interrupt flag management *****
-    AVR_InterruptFlag m_intflag;
+    AVR_InterruptFlag m_intflag_master;
+    AVR_InterruptFlag m_intflag_slave;
 
-    //***** Timer management *****
-    AVR_PrescaledTimer m_timer;
-    AVR_TimerCounter m_counter;
+    void set_master_enabled(bool enabled);
+    void clear_master_status();
+    void clear_slave_status();
+    bool address_match(uint8_t address);
 
 };
 
-#endif
+#endif //__YASIMAVR_MEGA0_TWI_H__

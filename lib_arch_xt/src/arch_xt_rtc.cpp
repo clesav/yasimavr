@@ -1,5 +1,5 @@
 /*
- * arch_mega0_rtc.cpp
+ * arch_xt_rtc.cpp
  *
  *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
 
@@ -21,9 +21,9 @@
 
 //=======================================================================================
 
-#include "arch_mega0_rtc.h"
-#include "arch_mega0_io.h"
-#include "arch_mega0_io_utils.h"
+#include "arch_xt_rtc.h"
+#include "arch_xt_io.h"
+#include "arch_xt_io_utils.h"
 #include "core/sim_device.h"
 #include "core/sim_sleep.h"
 

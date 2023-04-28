@@ -1,5 +1,5 @@
 /*
- * arch_mega0_timer_a.cpp
+ * arch_xt_timer_a.cpp
  *
  *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
 
@@ -21,10 +21,10 @@
 
 //=======================================================================================
 
-#include "arch_mega0_timer_a.h"
-#include "arch_mega0_timer_b.h"
-#include "arch_mega0_io.h"
-#include "arch_mega0_io_utils.h"
+#include "arch_xt_timer_a.h"
+#include "arch_xt_timer_b.h"
+#include "arch_xt_io.h"
+#include "arch_xt_io_utils.h"
 #include "core/sim_device.h"
 #include "core/sim_sleep.h"
 

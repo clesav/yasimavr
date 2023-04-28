@@ -1,5 +1,5 @@
 /*
- * arch_mega0_twi.h
+ * arch_xt_port.h
  *
  *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
 
@@ -21,63 +21,49 @@
 
 //=======================================================================================
 
-#ifndef __YASIMAVR_MEGA0_TWI_H__
-#define __YASIMAVR_MEGA0_TWI_H__
-
+#ifndef __YASIMAVR_MEGA0_PORT_H__
+#define __YASIMAVR_MEGA0_PORT_H__
 
 #include "core/sim_interrupt.h"
-#include "ioctrl_common/sim_twi.h"
+#include "ioctrl_common/sim_port.h"
 
 
 //=======================================================================================
 /*
- * Implementation of a TWI for the Mega-0/Mega-1 series
- * Features:
- *  - Host/client mode
- *  - data order, phase and polarity settings have no effect
- *  - write collision flag not supported
- *
- *  for supported CTLREQs, see sim_spi.h
+ * Implementation of a GPIO port controller for Mega0/1 series, based on the generic
+ * AVIO_IO_Port class
  */
 
-struct AVR_ArchMega0_TWI_Config {
+struct AVR_ArchMega0_PortConfig {
 
-    reg_addr_t reg_base;
-    int_vect_t iv_master;
-    int_vect_t iv_slave;
-
+    reg_addr_t reg_base_port;
+    reg_addr_t reg_base_vport;
+    int_vect_t iv_port;
 };
 
-class DLL_EXPORT AVR_ArchMega0_TWI : public AVR_Peripheral, public AVR_SignalHook {
+
+class DLL_EXPORT AVR_ArchMega0_Port : public AVR_IO_Port, public AVR_InterruptHandler {
 
 public:
 
-    AVR_ArchMega0_TWI(uint8_t num, const AVR_ArchMega0_TWI_Config& config);
+    AVR_ArchMega0_Port(char name, const AVR_ArchMega0_PortConfig& config);
 
     virtual bool init(AVR_Device& device) override;
     virtual void reset() override;
-    virtual bool ctlreq(uint16_t req, ctlreq_data_t* data) override;
     virtual uint8_t ioreg_read_handler(reg_addr_t addr, uint8_t value) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
-    virtual void raised(const signal_data_t& sigdata, uint16_t hooktag) override;
+
+protected:
+
+    virtual void pin_state_changed(uint8_t num, AVR_Pin::State state) override;
 
 private:
 
-    const AVR_ArchMega0_TWI_Config& m_config;
+    const AVR_ArchMega0_PortConfig& m_config;
+    uint8_t m_port_value;
+    uint8_t m_dir_value;
 
-    AVR_IO_TWI m_twi;
-    bool m_has_address;
-    bool m_has_master_rx_data;
-    bool m_has_slave_rx_data;
-
-    AVR_InterruptFlag m_intflag_master;
-    AVR_InterruptFlag m_intflag_slave;
-
-    void set_master_enabled(bool enabled);
-    void clear_master_status();
-    void clear_slave_status();
-    bool address_match(uint8_t address);
-
+    void update_pin_states();
 };
 
-#endif //__YASIMAVR_MEGA0_TWI_H__
+#endif //__YASIMAVR_MEGA0_PORT_H__

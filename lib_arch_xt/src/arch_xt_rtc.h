@@ -1,5 +1,5 @@
 /*
- * arch_mega0_rtc.h
+ * arch_xt_rtc.h
  *
  *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
 

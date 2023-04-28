@@ -1,5 +1,5 @@
 /*
- * arch_mega0_usart.cpp
+ * arch_xt_usart.cpp
  *
  *  Copyright 2022 Clement Savergne <csavergne@yahoo.com>
 
@@ -21,9 +21,9 @@
 
 //=======================================================================================
 
-#include "arch_mega0_usart.h"
-#include "arch_mega0_io.h"
-#include "arch_mega0_io_utils.h"
+#include "arch_xt_usart.h"
+#include "arch_xt_io.h"
+#include "arch_xt_io_utils.h"
 #include "core/sim_sleep.h"
 
 //=======================================================================================

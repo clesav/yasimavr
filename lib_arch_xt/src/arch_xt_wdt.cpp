@@ -1,5 +1,5 @@
 /*
- * arch_mega0_wdt.cpp
+ * arch_xt_wdt.cpp
  *
  *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
 
@@ -21,8 +21,8 @@
 
 //=======================================================================================
 
-#include "arch_mega0_wdt.h"
-#include "arch_mega0_io.h"
+#include "arch_xt_wdt.h"
+#include "arch_xt_io.h"
 #include "core/sim_device.h"
 
 

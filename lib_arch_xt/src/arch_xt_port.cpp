@@ -1,5 +1,5 @@
 /*
- * arch_mega0_port.cpp
+ * arch_xt_port.cpp
  *
  *  Copyright 2022 Clement Savergne <csavergne@yahoo.com>
 
@@ -21,9 +21,9 @@
 
 //=======================================================================================
 
-#include "arch_mega0_port.h"
-#include "arch_mega0_io.h"
-#include "arch_mega0_io_utils.h"
+#include "arch_xt_port.h"
+#include "arch_xt_io.h"
+#include "arch_xt_io_utils.h"
 #include "core/sim_device.h"
 #include <cstddef>
 

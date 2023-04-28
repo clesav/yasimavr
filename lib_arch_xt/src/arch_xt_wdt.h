@@ -1,5 +1,5 @@
 /*
- * arch_mega0_wdt.h
+ * arch_xt_wdt.h
  *
  *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
 

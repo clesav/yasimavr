@@ -1,5 +1,5 @@
 /*
- * arch_mega0_device.h
+ * arch_xt_device.h
  *
  *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
 

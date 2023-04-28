@@ -1,5 +1,5 @@
 /*
- * arch_mega0_device.cpp
+ * arch_xt_device.cpp
  *
  *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
 
@@ -21,7 +21,7 @@
 
 //=======================================================================================
 
-#include "arch_mega0_device.h"
+#include "arch_xt_device.h"
 #include "core/sim_debug.h"
 #include "core/sim_firmware.h"
 #include <cstring>
