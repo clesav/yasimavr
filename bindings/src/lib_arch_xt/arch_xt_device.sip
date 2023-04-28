@@ -21,9 +21,9 @@
 
 //=======================================================================================
 
-struct AVR_ArchMega0_CoreConfig : public AVR_CoreConfiguration {
+struct AVR_ArchXT_CoreConfig : public AVR_CoreConfiguration {
 %TypeHeaderCode
-#include "arch_mega0_device.h"
+#include "arch_xt_device.h"
 %End
 
     mem_addr_t              flashstart_ds;
@@ -34,28 +34,28 @@ struct AVR_ArchMega0_CoreConfig : public AVR_CoreConfiguration {
 
 };
 
-struct AVR_ArchMega0_DeviceConfig : public AVR_DeviceConfiguration  /NoDefaultCtors/ {
+struct AVR_ArchXT_DeviceConfig : public AVR_DeviceConfiguration  /NoDefaultCtors/ {
 %TypeHeaderCode
-#include "arch_mega0_device.h"
+#include "arch_xt_device.h"
 %End
 
-    AVR_ArchMega0_DeviceConfig(AVR_CoreConfiguration&);
+    AVR_ArchXT_DeviceConfig(AVR_CoreConfiguration&);
 };
 
 
-class AVR_ArchMega0_Core : public AVR_Core /NoDefaultCtors/ {
+class AVR_ArchXT_Core : public AVR_Core /NoDefaultCtors/ {
 %TypeHeaderCode
-#include "arch_mega0_device.h"
+#include "arch_xt_device.h"
 %End
 
 public:
 
-    enum AVR_ArchMega0_NVM /BaseType=IntEnum/ {
+    enum AVR_ArchXT_NVM /BaseType=IntEnum/ {
         NVM_EEPROM      /PyName=EEPROM/,
         NVM_USERROW     /PyName=USERROW/,
     };
 
-    AVR_ArchMega0_Core(const AVR_ArchMega0_CoreConfig& /KeepReference/);
+    AVR_ArchXT_Core(const AVR_ArchXT_CoreConfig& /KeepReference/);
 
 protected:
 
@@ -65,13 +65,13 @@ protected:
 };
 
 
-class AVR_ArchMega0_Device : public AVR_Device /NoDefaultCtors/ {
+class AVR_ArchXT_Device : public AVR_Device /NoDefaultCtors/ {
 %TypeHeaderCode
-#include "arch_mega0_device.h"
+#include "arch_xt_device.h"
 %End
 
 public:
 
-    AVR_ArchMega0_Device(const AVR_ArchMega0_DeviceConfig& /KeepReference/);
+    AVR_ArchXT_Device(const AVR_ArchXT_DeviceConfig& /KeepReference/);
 
 };

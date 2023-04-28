@@ -1,5 +1,5 @@
 /*
- * arch_mega0_acp.sip
+ * arch_xt_acp.sip
  *
  *  Copyright 2022 Clement Savergne <csavergne@yahoo.com>
 
@@ -23,7 +23,7 @@
 //=======================================================================================
 %ModuleCode
 
-#include "arch_mega0_acp.h"
+#include "arch_xt_acp.h"
 
 const uint16_t CTLREQ_ACP_GET_DAC = AVR_CTLREQ_ACP_GET_DAC;
 
@@ -34,9 +34,9 @@ const uint16_t CTLREQ_ACP_GET_DAC;
 
 //=======================================================================================
 
-struct AVR_ArchMega0_ACP_Config {
+struct AVR_ArchXT_ACP_Config {
 %TypeHeaderCode
-#include "arch_mega0_acp.h"
+#include "arch_xt_acp.h"
 %End
 
     std::vector<AVR_IO_ACP::channel_config_t> pos_channels;
@@ -49,17 +49,17 @@ struct AVR_ArchMega0_ACP_Config {
 };
 
 
-class AVR_ArchMega0_ACP : public AVR_IO_ACP,
-                          public AVR_Peripheral,
-                          public AVR_SignalHook
-                          /NoDefaultCtors/ {
+class AVR_ArchXT_ACP : public AVR_IO_ACP,
+                       public AVR_Peripheral,
+                       public AVR_SignalHook
+                       /NoDefaultCtors/ {
 %TypeHeaderCode
-#include "arch_mega0_acp.h"
+#include "arch_xt_acp.h"
 %End
 
 public:
 
-    AVR_ArchMega0_ACP(int, const AVR_ArchMega0_ACP_Config& /KeepReference/);
+    AVR_ArchXT_ACP(int, const AVR_ArchXT_ACP_Config& /KeepReference/);
 
     virtual bool init(AVR_Device&);
     virtual void reset();

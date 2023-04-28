@@ -1,5 +1,5 @@
 /*
- * arch_mega0_spi.sip
+ * arch_xt_spi.sip
  *
  *  Copyright 2022 Clement Savergne <csavergne@yahoo.com>
 
@@ -21,9 +21,9 @@
 
 //=======================================================================================
 
-struct AVR_ArchMega0_SPI_Config {
+struct AVR_ArchXT_SPI_Config {
 %TypeHeaderCode
-#include "arch_mega0_spi.h"
+#include "arch_xt_spi.h"
 %End
 
     reg_addr_t reg_base;
@@ -33,14 +33,14 @@ struct AVR_ArchMega0_SPI_Config {
 };
 
 
-class AVR_ArchMega0_SPI : public AVR_Peripheral, public AVR_SignalHook /NoDefaultCtors/ {
+class AVR_ArchXT_SPI : public AVR_Peripheral, public AVR_SignalHook /NoDefaultCtors/ {
 %TypeHeaderCode
-#include "arch_mega0_spi.h"
+#include "arch_xt_spi.h"
 %End
 
 public:
 
-    AVR_ArchMega0_SPI(uint8_t, const AVR_ArchMega0_SPI_Config& /KeepReference/);
+    AVR_ArchXT_SPI(uint8_t, const AVR_ArchXT_SPI_Config& /KeepReference/);
 
     virtual bool init(AVR_Device&);
     virtual void reset();

@@ -1,5 +1,5 @@
 /*
- * arch_mega0_usart.sip
+ * arch_xt_usart.sip
  *
  *  Copyright 2022 Clement Savergne <csavergne@yahoo.com>
 
@@ -21,9 +21,9 @@
 
 //=======================================================================================
 
-struct AVR_ArchMega0_USART_Config {
+struct AVR_ArchXT_USART_Config {
 %TypeHeaderCode
-#include "arch_mega0_usart.h"
+#include "arch_xt_usart.h"
 %End
 
     reg_addr_t reg_base;
@@ -35,14 +35,14 @@ struct AVR_ArchMega0_USART_Config {
 };
 
 
-class AVR_ArchMega0_USART : public AVR_Peripheral, public AVR_SignalHook /NoDefaultCtors/ {
+class AVR_ArchXT_USART : public AVR_Peripheral, public AVR_SignalHook /NoDefaultCtors/ {
 %TypeHeaderCode
-#include "arch_mega0_usart.h"
+#include "arch_xt_usart.h"
 %End
 
 public:
 
-    AVR_ArchMega0_USART(uint8_t, const AVR_ArchMega0_USART_Config& /KeepReference/);
+    AVR_ArchXT_USART(uint8_t, const AVR_ArchXT_USART_Config& /KeepReference/);
 
     virtual bool init(AVR_Device&);
     virtual void reset();

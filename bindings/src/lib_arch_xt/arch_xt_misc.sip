@@ -1,5 +1,5 @@
 /*
- * arch_mega0_misc.sip
+ * arch_xt_misc.sip
  *
  *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
 
@@ -23,7 +23,7 @@
 
 %ModuleCode
 
-#include "arch_mega0_misc.h"
+#include "arch_xt_misc.h"
 
 const uint16_t CTLREQ_WRITE_SIGROW = AVR_CTLREQ_WRITE_SIGROW;
 
@@ -34,9 +34,9 @@ const uint16_t CTLREQ_WRITE_SIGROW;
 
 //=======================================================================================
 
-struct AVR_ArchMega0_VREF_Config {
+struct AVR_ArchXT_VREF_Config {
 %TypeHeaderCode
-#include "arch_mega0_misc.h"
+#include "arch_xt_misc.h"
 %End
 
     struct reference_config_t : base_reg_config_t {
@@ -46,23 +46,23 @@ struct AVR_ArchMega0_VREF_Config {
 
     struct channel_t {
         regbit_t rb_select;
-        std::vector<AVR_ArchMega0_VREF_Config::reference_config_t> references;
+        std::vector<AVR_ArchXT_VREF_Config::reference_config_t> references;
     };
 
-    std::vector<AVR_ArchMega0_VREF_Config::channel_t> channels;
+    std::vector<AVR_ArchXT_VREF_Config::channel_t> channels;
 
     reg_addr_t reg_base;
 
 };
 
-class AVR_ArchMega0_VREF : public AVR_IO_VREF /NoDefaultCtors/ {
+class AVR_ArchXT_VREF : public AVR_IO_VREF /NoDefaultCtors/ {
 %TypeHeaderCode
-#include "arch_mega0_misc.h"
+#include "arch_xt_misc.h"
 %End
 
 public:
 
-    AVR_ArchMega0_VREF(const AVR_ArchMega0_VREF_Config& /KeepReference/);
+    AVR_ArchXT_VREF(const AVR_ArchXT_VREF_Config& /KeepReference/);
 
     virtual bool init(AVR_Device&);
     virtual void reset();
@@ -73,9 +73,9 @@ public:
 
 //=======================================================================================
 
-struct AVR_ArchMega0_IntCtrl_Config {
+struct AVR_ArchXT_IntCtrl_Config {
 %TypeHeaderCode
-#include "arch_mega0_misc.h"
+#include "arch_xt_misc.h"
 %End
 
     unsigned int vector_count;
@@ -83,14 +83,14 @@ struct AVR_ArchMega0_IntCtrl_Config {
 
 };
 
-class AVR_ArchMega0_IntCtrl : public AVR_InterruptController /NoDefaultCtors/ {
+class AVR_ArchXT_IntCtrl : public AVR_InterruptController /NoDefaultCtors/ {
 %TypeHeaderCode
-#include "arch_mega0_misc.h"
+#include "arch_xt_misc.h"
 %End
 
 public:
 
-    AVR_ArchMega0_IntCtrl(const AVR_ArchMega0_IntCtrl_Config& /KeepReference/);
+    AVR_ArchXT_IntCtrl(const AVR_ArchXT_IntCtrl_Config& /KeepReference/);
 
     virtual bool init(AVR_Device&);
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
@@ -106,14 +106,14 @@ protected:
 
 //=======================================================================================
 
-class AVR_ArchMega0_ResetCtrl : public AVR_Peripheral /NoDefaultCtors/ {
+class AVR_ArchXT_ResetCtrl : public AVR_Peripheral /NoDefaultCtors/ {
 %TypeHeaderCode
-#include "arch_mega0_misc.h"
+#include "arch_xt_misc.h"
 %End
 
 public:
 
-    AVR_ArchMega0_ResetCtrl(reg_addr_t);
+    AVR_ArchXT_ResetCtrl(reg_addr_t);
 
     virtual bool init(AVR_Device&);
     virtual void reset();
@@ -124,9 +124,9 @@ public:
 
 //=======================================================================================
 
-struct AVR_ArchMega0_Misc_Config {
+struct AVR_ArchXT_Misc_Config {
 %TypeHeaderCode
-#include "arch_mega0_misc.h"
+#include "arch_xt_misc.h"
 %End
 
     reg_addr_t reg_base_gpior;
@@ -137,14 +137,14 @@ struct AVR_ArchMega0_Misc_Config {
 
 };
 
-class AVR_ArchMega0_MiscRegCtrl : public AVR_Peripheral /NoDefaultCtors/ {
+class AVR_ArchXT_MiscRegCtrl : public AVR_Peripheral /NoDefaultCtors/ {
 %TypeHeaderCode
-#include "arch_mega0_misc.h"
+#include "arch_xt_misc.h"
 %End
 
 public:
 
-    AVR_ArchMega0_MiscRegCtrl(const AVR_ArchMega0_Misc_Config& /KeepReference/);
+    AVR_ArchXT_MiscRegCtrl(const AVR_ArchXT_Misc_Config& /KeepReference/);
 
     virtual bool init(AVR_Device&);
     virtual void reset();

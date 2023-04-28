@@ -1,5 +1,5 @@
 /*
- * arch_mega0_twi.sip
+ * arch_xt_twi.sip
  *
  *  Copyright 2022 Clement Savergne <csavergne@yahoo.com>
 
@@ -21,9 +21,9 @@
 
 //=======================================================================================
 
-struct AVR_ArchMega0_TWI_Config {
+struct AVR_ArchXT_TWI_Config {
 %TypeHeaderCode
-#include "arch_mega0_twi.h"
+#include "arch_xt_twi.h"
 %End
 
     reg_addr_t reg_base;
@@ -33,14 +33,14 @@ struct AVR_ArchMega0_TWI_Config {
 };
 
 
-class AVR_ArchMega0_TWI : public AVR_Peripheral, public AVR_SignalHook /NoDefaultCtors/ {
+class AVR_ArchXT_TWI : public AVR_Peripheral, public AVR_SignalHook /NoDefaultCtors/ {
 %TypeHeaderCode
-#include "arch_mega0_twi.h"
+#include "arch_xt_twi.h"
 %End
 
 public:
 
-    AVR_ArchMega0_TWI(uint8_t, const AVR_ArchMega0_TWI_Config& /KeepReference/);
+    AVR_ArchXT_TWI(uint8_t, const AVR_ArchXT_TWI_Config& /KeepReference/);
 
     virtual bool init(AVR_Device&);
     virtual void reset();

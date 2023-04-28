@@ -1,5 +1,5 @@
 /*
- * arch_mega0_timer_a.sip
+ * arch_xt_timer_a.sip
  *
  *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
 
@@ -23,7 +23,7 @@
 
 %ModuleCode
 
-#include "arch_mega0_timer_a.h"
+#include "arch_xt_timer_a.h"
 const uint16_t CTLREQ_TCA_REGISTER_TCB = AVR_CTLREQ_TCA_REGISTER_TCB;
 const uint8_t TCA_CMP_CHANNEL_COUNT = AVR_TCA_CMP_CHANNEL_COUNT;
 
@@ -35,9 +35,9 @@ const uint8_t TCA_CMP_CHANNEL_COUNT;
 
 //=======================================================================================
 
-struct AVR_ArchMega0_TimerA_Config {
+struct AVR_ArchXT_TimerA_Config {
 %TypeHeaderCode
-#include "arch_mega0_timer_a.h"
+#include "arch_xt_timer_a.h"
 %End
 
     reg_addr_t reg_base;
@@ -54,14 +54,14 @@ struct AVR_ArchMega0_TimerA_Config {
 };
 
 
-class AVR_ArchMega0_TimerA : public AVR_Peripheral, public AVR_SignalHook /NoDefaultCtors/ {
+class AVR_ArchXT_TimerA : public AVR_Peripheral, public AVR_SignalHook /NoDefaultCtors/ {
 %TypeHeaderCode
-#include "arch_mega0_timer_a.h"
+#include "arch_xt_timer_a.h"
 %End
 
 public:
 
-    AVR_ArchMega0_TimerA(const AVR_ArchMega0_TimerA_Config& /KeepReference/);
+    AVR_ArchXT_TimerA(const AVR_ArchXT_TimerA_Config& /KeepReference/);
 
     virtual bool init(AVR_Device&);
     virtual void reset();

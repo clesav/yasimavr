@@ -1,5 +1,5 @@
 /*
- * arch_mega0_adc.sip
+ * arch_xt_adc.sip
  *
  *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
 
@@ -21,9 +21,9 @@
 
 //=======================================================================================
 
-struct AVR_ArchMega0_ADC_Config {
+struct AVR_ArchXT_ADC_Config {
 %TypeHeaderCode
-#include "arch_mega0_adc.h"
+#include "arch_xt_adc.h"
 %End
 
     struct reference_config_t : base_reg_config_t {
@@ -31,7 +31,7 @@ struct AVR_ArchMega0_ADC_Config {
     };
 
     std::vector<AVR_IO_ADC::channel_config_t> channels;
-    std::vector<AVR_ArchMega0_ADC_Config::reference_config_t> references;
+    std::vector<AVR_ArchXT_ADC_Config::reference_config_t> references;
     uint32_t vref_channel;
     UnsignedInt16Vector clk_ps_factors;
     uint16_t clk_ps_max;
@@ -48,17 +48,17 @@ struct AVR_ArchMega0_ADC_Config {
 };
 
 
-class AVR_ArchMega0_ADC : public AVR_IO_ADC,
-                          public AVR_Peripheral,
-                          public AVR_SignalHook
-                          /NoDefaultCtors/ {
+class AVR_ArchXT_ADC : public AVR_IO_ADC,
+                       public AVR_Peripheral,
+                       public AVR_SignalHook
+                       /NoDefaultCtors/ {
 %TypeHeaderCode
-#include "arch_mega0_adc.h"
+#include "arch_xt_adc.h"
 %End
 
 public:
 
-    AVR_ArchMega0_ADC(int, const AVR_ArchMega0_ADC_Config& /KeepReference/);
+    AVR_ArchXT_ADC(int, const AVR_ArchXT_ADC_Config& /KeepReference/);
 
     virtual bool init(AVR_Device&);
     virtual void reset();

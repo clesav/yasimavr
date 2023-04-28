@@ -1,5 +1,5 @@
 /*
- * arch_mega0_rtc.sip
+ * arch_xt_rtc.sip
  *
  *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
 
@@ -21,9 +21,9 @@
 
 //=======================================================================================
 
-struct AVR_ArchMega0_RTC_Config {
+struct AVR_ArchXT_RTC_Config {
 %TypeHeaderCode
-#include "arch_mega0_rtc.h"
+#include "arch_xt_rtc.h"
 %End
 
     enum RTC_ClockSource {
@@ -35,21 +35,21 @@ struct AVR_ArchMega0_RTC_Config {
         RTC_ClockSource source;
     };
 
-    std::vector<AVR_ArchMega0_RTC_Config::clksel_config_t> clocks;
+    std::vector<AVR_ArchXT_RTC_Config::clksel_config_t> clocks;
     reg_addr_t reg_base;
     int_vect_t iv_rtc;
     int_vect_t iv_pit;
 
 };
 
-class AVR_ArchMega0_RTC : public AVR_Peripheral /NoDefaultCtors/ {
+class AVR_ArchXT_RTC : public AVR_Peripheral /NoDefaultCtors/ {
 %TypeHeaderCode
-#include "arch_mega0_rtc.h"
+#include "arch_xt_rtc.h"
 %End
 
 public:
 
-    AVR_ArchMega0_RTC(const AVR_ArchMega0_RTC_Config& /KeepReference/);
+    AVR_ArchXT_RTC(const AVR_ArchXT_RTC_Config& /KeepReference/);
 
     virtual bool init(AVR_Device&);
     virtual void reset();

@@ -1,5 +1,5 @@
 /*
- * arch_mega0_wdt.sip
+ * arch_xt_wdt.sip
  *
  *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
 
@@ -21,9 +21,9 @@
 
 //=======================================================================================
 
-struct AVR_ArchMega0_WDT_Config {
+struct AVR_ArchXT_WDT_Config {
 %TypeHeaderCode
-#include "arch_mega0_wdt.h"
+#include "arch_xt_wdt.h"
 %End
 
     uint32_t clock_frequency;
@@ -33,14 +33,14 @@ struct AVR_ArchMega0_WDT_Config {
 
 };
 
-class AVR_ArchMega0_WDT : public AVR_WatchdogTimer /NoDefaultCtors/ {
+class AVR_ArchXT_WDT : public AVR_WatchdogTimer /NoDefaultCtors/ {
 %TypeHeaderCode
-#include "arch_mega0_wdt.h"
+#include "arch_xt_wdt.h"
 %End
 
 public:
 
-    AVR_ArchMega0_WDT(const AVR_ArchMega0_WDT_Config& /KeepReference/);
+    AVR_ArchXT_WDT(const AVR_ArchXT_WDT_Config& /KeepReference/);
 
     virtual bool init(AVR_Device&);
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);

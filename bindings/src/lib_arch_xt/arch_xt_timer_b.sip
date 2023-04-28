@@ -1,5 +1,5 @@
 /*
- * arch_mega0_timer_b.sip
+ * arch_xt_timer_b.sip
  *
  *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
 
@@ -21,9 +21,9 @@
 
 //=======================================================================================
 
-struct AVR_ArchMega0_TimerB_Config {
+struct AVR_ArchXT_TimerB_Config {
 %TypeHeaderCode
-#include "arch_mega0_timer_b.h"
+#include "arch_xt_timer_b.h"
 %End
 
     reg_addr_t reg_base;
@@ -32,14 +32,14 @@ struct AVR_ArchMega0_TimerB_Config {
 };
 
 
-class AVR_ArchMega0_TimerB : public AVR_Peripheral, public AVR_SignalHook /NoDefaultCtors/ {
+class AVR_ArchXT_TimerB : public AVR_Peripheral, public AVR_SignalHook /NoDefaultCtors/ {
 %TypeHeaderCode
-#include "arch_mega0_timer_b.h"
+#include "arch_xt_timer_b.h"
 %End
 
 public:
 
-    AVR_ArchMega0_TimerB(int, const AVR_ArchMega0_TimerB_Config& /KeepReference/);
+    AVR_ArchXT_TimerB(int, const AVR_ArchXT_TimerB_Config& /KeepReference/);
 
     virtual bool init(AVR_Device&);
     virtual void reset();

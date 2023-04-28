@@ -1,5 +1,5 @@
 /*
- * arch_mega0_nvm.sip
+ * arch_xt_nvm.sip
  *
  *  Copyright 2022 Clement Savergne <csavergne@yahoo.com>
 
@@ -21,37 +21,37 @@
 
 //=======================================================================================
 
-class AVR_ArchMega0_USERROW : public AVR_Peripheral /NoDefaultCtors/ {
+class AVR_ArchXT_USERROW : public AVR_Peripheral /NoDefaultCtors/ {
 %TypeHeaderCode
-#include "arch_mega0_nvm.h"
+#include "arch_xt_nvm.h"
 %End
 
 public:
 
-    AVR_ArchMega0_USERROW(reg_addr_t);
+    AVR_ArchXT_USERROW(reg_addr_t);
 
     virtual bool init(AVR_Device&);
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
 };
 
 
-class AVR_ArchMega0_Fuses : public AVR_Peripheral /NoDefaultCtors/ {
+class AVR_ArchXT_Fuses : public AVR_Peripheral /NoDefaultCtors/ {
 %TypeHeaderCode
-#include "arch_mega0_nvm.h"
+#include "arch_xt_nvm.h"
 %End
 
 public:
 
-    AVR_ArchMega0_Fuses(reg_addr_t);
+    AVR_ArchXT_Fuses(reg_addr_t);
 
     virtual bool init(AVR_Device&);
 
 };
 
 
-struct AVR_ArchMega0_NVM_Config {
+struct AVR_ArchXT_NVM_Config {
 %TypeHeaderCode
-#include "arch_mega0_nvm.h"
+#include "arch_xt_nvm.h"
 %End
 
     reg_addr_t reg_base;
@@ -71,14 +71,14 @@ struct AVR_ArchMega0_NVM_Config {
 };
 
 
-class AVR_ArchMega0_NVM : public AVR_Peripheral /NoDefaultCtors/ {
+class AVR_ArchXT_NVM : public AVR_Peripheral /NoDefaultCtors/ {
 %TypeHeaderCode
-#include "arch_mega0_nvm.h"
+#include "arch_xt_nvm.h"
 %End
 
 public:
 
-    AVR_ArchMega0_NVM(const AVR_ArchMega0_NVM_Config& /KeepReference/);
+    AVR_ArchXT_NVM(const AVR_ArchXT_NVM_Config& /KeepReference/);
 
     virtual bool init(AVR_Device&);
     virtual void reset();

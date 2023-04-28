@@ -1,5 +1,5 @@
 /*
- * arch_mega0_port.sip
+ * arch_xt_port.sip
  *
  *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
 
@@ -21,9 +21,9 @@
 
 //=======================================================================================
 
-struct AVR_ArchMega0_PortConfig {
+struct AVR_ArchXT_PortConfig {
 %TypeHeaderCode
-#include "arch_mega0_port.h"
+#include "arch_xt_port.h"
 %End
 
     reg_addr_t reg_base_port;
@@ -33,14 +33,14 @@ struct AVR_ArchMega0_PortConfig {
 };
 
 
-class AVR_ArchMega0_Port : public AVR_IO_Port /NoDefaultCtors/ {
+class AVR_ArchXT_Port : public AVR_IO_Port /NoDefaultCtors/ {
 %TypeHeaderCode
-#include "arch_mega0_port.h"
+#include "arch_xt_port.h"
 %End
 
 public:
 
-    AVR_ArchMega0_Port(char, const AVR_ArchMega0_PortConfig& /KeepReference/);
+    AVR_ArchXT_Port(char, const AVR_ArchXT_PortConfig& /KeepReference/);
 
     virtual bool init(AVR_Device&);
     virtual void reset();

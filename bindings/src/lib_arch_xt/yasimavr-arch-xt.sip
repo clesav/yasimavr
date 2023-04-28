@@ -1,5 +1,5 @@
 /*
- * yasimavr-arch-m0.sip
+ * yasimavr-arch-xt.sip
  *
  *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
 
@@ -21,7 +21,7 @@
 
 //=======================================================================================
 
-%Module(name=yasimavr.lib.arch_m0)
+%Module(name=yasimavr.lib.arch_xt)
 
 %Import ../lib_core/yasimavr-core.sip
 
@@ -31,16 +31,16 @@
 
 //=======================================================================================
 
-%Include arch_mega0_acp.sip
-%Include arch_mega0_adc.sip
-%Include arch_mega0_device.sip
-%Include arch_mega0_misc.sip
-%Include arch_mega0_nvm.sip
-%Include arch_mega0_port.sip
-%Include arch_mega0_rtc.sip
-%Include arch_mega0_spi.sip
-%Include arch_mega0_timer_a.sip
-%Include arch_mega0_timer_b.sip
-%Include arch_mega0_twi.sip
-%Include arch_mega0_usart.sip
-%Include arch_mega0_wdt.sip
+%Include arch_xt_acp.sip
+%Include arch_xt_adc.sip
+%Include arch_xt_device.sip
+%Include arch_xt_misc.sip
+%Include arch_xt_nvm.sip
+%Include arch_xt_port.sip
+%Include arch_xt_rtc.sip
+%Include arch_xt_spi.sip
+%Include arch_xt_timer_a.sip
+%Include arch_xt_timer_b.sip
+%Include arch_xt_twi.sip
+%Include arch_xt_usart.sip
+%Include arch_xt_wdt.sip
