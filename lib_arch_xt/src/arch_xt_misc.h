@@ -21,8 +21,8 @@
 
 //=======================================================================================
 
-#ifndef __YASIMAVR_MEGA0_MISC_H__
-#define __YASIMAVR_MEGA0_MISC_H__
+#ifndef __YASIMAVR_XT_MISC_H__
+#define __YASIMAVR_XT_MISC_H__
 
 #include "core/sim_interrupt.h"
 #include "core/sim_types.h"
@@ -31,10 +31,10 @@
 
 //=======================================================================================
 /*
- * Implementation of a Voltage Reference controller for Mega-0/Mega-1 series
+ * Implementation of a Voltage Reference controller for XT core series
  */
 
-struct AVR_ArchMega0_VREF_Config {
+struct AVR_ArchXT_VREF_Config {
 
     struct reference_config_t : base_reg_config_t {
         AVR_IO_VREF::Source source;
@@ -52,11 +52,11 @@ struct AVR_ArchMega0_VREF_Config {
 
 };
 
-class DLL_EXPORT AVR_ArchMega0_VREF : public AVR_IO_VREF {
+class DLL_EXPORT AVR_ArchXT_VREF : public AVR_IO_VREF {
 
 public:
 
-    explicit AVR_ArchMega0_VREF(const AVR_ArchMega0_VREF_Config& config);
+    explicit AVR_ArchXT_VREF(const AVR_ArchXT_VREF_Config& config);
 
     virtual bool init(AVR_Device&) override;
     virtual void reset() override;
@@ -64,7 +64,7 @@ public:
 
 private:
 
-    const AVR_ArchMega0_VREF_Config& m_config;
+    const AVR_ArchXT_VREF_Config& m_config;
 
     void set_channel_reference(uint32_t index, uint8_t reg_value);
 
@@ -73,14 +73,14 @@ private:
 
 //=======================================================================================
 /*
- * Implementation of a CPU Interrupt controller for Mega-0/Mega-1 series
+ * Implementation of a CPU Interrupt controller for XT core series
  * Unsupported features:
  *      - Round-robin scheduling
  *      - Compact vector table
  *      - Interrupt Vector Select feature
  */
 
-struct AVR_ArchMega0_IntCtrl_Config {
+struct AVR_ArchXT_IntCtrl_Config {
 
     unsigned int vector_count;
     reg_addr_t reg_base;
@@ -88,11 +88,11 @@ struct AVR_ArchMega0_IntCtrl_Config {
 };
 
 
-class DLL_EXPORT AVR_ArchMega0_IntCtrl : public AVR_InterruptController {
+class DLL_EXPORT AVR_ArchXT_IntCtrl : public AVR_InterruptController {
 
 public:
 
-    AVR_ArchMega0_IntCtrl(const AVR_ArchMega0_IntCtrl_Config& config);
+    AVR_ArchXT_IntCtrl(const AVR_ArchXT_IntCtrl_Config& config);
 
     virtual bool init(AVR_Device& device) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
@@ -105,24 +105,24 @@ protected:
 
 private:
 
-    const AVR_ArchMega0_IntCtrl_Config& m_config;
+    const AVR_ArchXT_IntCtrl_Config& m_config;
 
 };
 
 
 //=======================================================================================
 /*
- * Implementation of a Reset controller for Mega-0/Mega-1 series
+ * Implementation of a Reset controller for XT core series
  * Supported features :
  *  - Reset flag (register RSTFR)
  *  - Software reset (register SWRR)
  */
 
-class DLL_EXPORT AVR_ArchMega0_ResetCtrl : public AVR_Peripheral {
+class DLL_EXPORT AVR_ArchXT_ResetCtrl : public AVR_Peripheral {
 
 public:
 
-    AVR_ArchMega0_ResetCtrl(reg_addr_t base);
+    AVR_ArchXT_ResetCtrl(reg_addr_t base);
 
     virtual bool init(AVR_Device& device) override;
     virtual void reset() override;
@@ -146,7 +146,7 @@ private:
 #define AVR_CTLREQ_WRITE_SIGROW         1
 
 
-struct AVR_ArchMega0_Misc_Config {
+struct AVR_ArchXT_Misc_Config {
 
     reg_addr_t reg_base_gpior;
     unsigned int gpior_count;
@@ -159,12 +159,12 @@ struct AVR_ArchMega0_Misc_Config {
 };
 
 
-class DLL_EXPORT AVR_ArchMega0_MiscRegCtrl : public AVR_Peripheral {
+class DLL_EXPORT AVR_ArchXT_MiscRegCtrl : public AVR_Peripheral {
 
 public:
 
-    AVR_ArchMega0_MiscRegCtrl(const AVR_ArchMega0_Misc_Config& config);
-    virtual ~AVR_ArchMega0_MiscRegCtrl();
+    AVR_ArchXT_MiscRegCtrl(const AVR_ArchXT_Misc_Config& config);
+    virtual ~AVR_ArchXT_MiscRegCtrl();
 
     virtual bool init(AVR_Device& device) override;
     virtual void reset() override;
@@ -174,9 +174,9 @@ public:
 
 private:
 
-    const AVR_ArchMega0_Misc_Config& m_config;
+    const AVR_ArchXT_Misc_Config& m_config;
     uint8_t* m_sigrow;
 
 };
 
-#endif //__YASIMAVR_MEGA0_MISC_H__
+#endif //__YASIMAVR_XT_MISC_H__

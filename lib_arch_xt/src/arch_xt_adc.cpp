@@ -37,12 +37,12 @@
 #define REG_OFS(reg) \
     reg_addr_t(offsetof(ADC_t, reg))
 
-#define CFG AVR_ArchMega0_ADC_Config
+#define CFG AVR_ArchXT_ADC_Config
 
 static const uint32_t ADC_Prescaler_Max = 256;
 
 
-AVR_ArchMega0_ADC::AVR_ArchMega0_ADC(int num, const CFG& config)
+AVR_ArchXT_ADC::AVR_ArchXT_ADC(int num, const CFG& config)
 :AVR_Peripheral(AVR_IOCTL_ADC(0x30 + num))
 ,m_config(config)
 ,m_state(ADC_Disabled)
@@ -58,7 +58,7 @@ AVR_ArchMega0_ADC::AVR_ArchMega0_ADC(int num, const CFG& config)
 ,m_cmp_intflag(false)
 {}
 
-bool AVR_ArchMega0_ADC::init(AVR_Device& device)
+bool AVR_ArchXT_ADC::init(AVR_Device& device)
 {
     bool status = AVR_Peripheral::init(device);
 
@@ -98,7 +98,7 @@ bool AVR_ArchMega0_ADC::init(AVR_Device& device)
     return status;
 }
 
-void AVR_ArchMega0_ADC::reset()
+void AVR_ArchXT_ADC::reset()
 {
     m_state = ADC_Disabled;
     m_result = 0;
@@ -107,7 +107,7 @@ void AVR_ArchMega0_ADC::reset()
     m_timer.reset();
 }
 
-bool AVR_ArchMega0_ADC::ctlreq(uint16_t req, ctlreq_data_t* data)
+bool AVR_ArchXT_ADC::ctlreq(uint16_t req, ctlreq_data_t* data)
 {
     if (req == AVR_CTLREQ_GET_SIGNAL) {
         data->data = &m_signal;
@@ -128,7 +128,7 @@ bool AVR_ArchMega0_ADC::ctlreq(uint16_t req, ctlreq_data_t* data)
 
 //I/O register callback reimplementation
 
-uint8_t AVR_ArchMega0_ADC::ioreg_read_handler(reg_addr_t addr, uint8_t value)
+uint8_t AVR_ArchXT_ADC::ioreg_read_handler(reg_addr_t addr, uint8_t value)
 {
     //The STCONV bit is dynamic, reading 1 if a conversion is in progress
     if (addr == REG_ADDR(COMMAND))
@@ -137,7 +137,7 @@ uint8_t AVR_ArchMega0_ADC::ioreg_read_handler(reg_addr_t addr, uint8_t value)
     return value;
 }
 
-void AVR_ArchMega0_ADC::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
+void AVR_ArchXT_ADC::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
     reg_addr_t reg_ofs = addr - m_config.reg_base;
 
@@ -183,7 +183,7 @@ void AVR_ArchMega0_ADC::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t
 /*
  * Method that starts a conversion cycle
  */
-void AVR_ArchMega0_ADC::start_conversion_cycle()
+void AVR_ArchXT_ADC::start_conversion_cycle()
 {
     logger().dbg("Starting a conversion cycle");
 
@@ -217,7 +217,7 @@ void AVR_ArchMega0_ADC::start_conversion_cycle()
         return; \
     } while(0);
 
-void AVR_ArchMega0_ADC::read_analog_value()
+void AVR_ArchXT_ADC::read_analog_value()
 {
     logger().dbg("Reading analog value");
 
@@ -314,7 +314,7 @@ void AVR_ArchMega0_ADC::read_analog_value()
 * First, we perform the actual analog read.
 * Second, we store it in the data register and raise the interrupt flag
 */
-void AVR_ArchMega0_ADC::raised(const signal_data_t& data, uint16_t sigid)
+void AVR_ArchXT_ADC::raised(const signal_data_t& data, uint16_t sigid)
 {
     if (data.index != 1) return;
 
@@ -420,7 +420,7 @@ void AVR_ArchMega0_ADC::raised(const signal_data_t& data, uint16_t sigid)
 /*
 * The ADC is paused for modes above Standby and in Standby if RUNSTBY is not set
 */
-void AVR_ArchMega0_ADC::sleep(bool on, AVR_SleepMode mode)
+void AVR_ArchXT_ADC::sleep(bool on, AVR_SleepMode mode)
 {
     if (mode > AVR_SleepMode::Standby || (mode == AVR_SleepMode::Standby && !TEST_IOREG(CTRLA, ADC_RUNSTBY))) {
         if (on)

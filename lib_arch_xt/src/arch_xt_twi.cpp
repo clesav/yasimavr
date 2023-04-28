@@ -38,7 +38,7 @@
 
 //=======================================================================================
 
-AVR_ArchMega0_TWI::AVR_ArchMega0_TWI(uint8_t num, const AVR_ArchMega0_TWI_Config& config)
+AVR_ArchXT_TWI::AVR_ArchXT_TWI(uint8_t num, const AVR_ArchXT_TWI_Config& config)
 :AVR_Peripheral(AVR_IOCTL_TWI(0x30 + num))
 ,m_config(config)
 ,m_has_address(false)
@@ -48,7 +48,7 @@ AVR_ArchMega0_TWI::AVR_ArchMega0_TWI(uint8_t num, const AVR_ArchMega0_TWI_Config
 ,m_intflag_slave(false)
 {}
 
-bool AVR_ArchMega0_TWI::init(AVR_Device& device)
+bool AVR_ArchXT_TWI::init(AVR_Device& device)
 {
     bool status = AVR_Peripheral::init(device);
 
@@ -88,7 +88,7 @@ bool AVR_ArchMega0_TWI::init(AVR_Device& device)
     return status;
 }
 
-void AVR_ArchMega0_TWI::reset()
+void AVR_ArchXT_TWI::reset()
 {
     m_twi.reset();
     m_has_address = false;
@@ -96,7 +96,7 @@ void AVR_ArchMega0_TWI::reset()
     m_has_slave_rx_data = false;
 }
 
-bool AVR_ArchMega0_TWI::ctlreq(uint16_t req, ctlreq_data_t* data)
+bool AVR_ArchXT_TWI::ctlreq(uint16_t req, ctlreq_data_t* data)
 {
     if (req == AVR_CTLREQ_GET_SIGNAL) {
         data->data = &m_twi.signal();
@@ -110,7 +110,7 @@ bool AVR_ArchMega0_TWI::ctlreq(uint16_t req, ctlreq_data_t* data)
     return false;
 }
 
-uint8_t AVR_ArchMega0_TWI::ioreg_read_handler(reg_addr_t addr, uint8_t value)
+uint8_t AVR_ArchXT_TWI::ioreg_read_handler(reg_addr_t addr, uint8_t value)
 {
     reg_addr_t reg_ofs = addr - m_config.reg_base;
 
@@ -144,7 +144,7 @@ uint8_t AVR_ArchMega0_TWI::ioreg_read_handler(reg_addr_t addr, uint8_t value)
     return value;
 }
 
-void AVR_ArchMega0_TWI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
+void AVR_ArchXT_TWI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
     reg_addr_t reg_ofs = addr - m_config.reg_base;
 
@@ -303,7 +303,7 @@ void AVR_ArchMega0_TWI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t
 
 }
 
-void AVR_ArchMega0_TWI::raised(const signal_data_t& sigdata, uint16_t __unused)
+void AVR_ArchXT_TWI::raised(const signal_data_t& sigdata, uint16_t __unused)
 {
     switch (sigdata.sigid) {
 
@@ -429,7 +429,7 @@ void AVR_ArchMega0_TWI::raised(const signal_data_t& sigdata, uint16_t __unused)
     }
 }
 
-void AVR_ArchMega0_TWI::set_master_enabled(bool enabled)
+void AVR_ArchXT_TWI::set_master_enabled(bool enabled)
 {
     if (enabled) {
         m_twi.set_master_enabled(true);
@@ -443,21 +443,21 @@ void AVR_ArchMega0_TWI::set_master_enabled(bool enabled)
     }
 }
 
-void AVR_ArchMega0_TWI::clear_master_status()
+void AVR_ArchXT_TWI::clear_master_status()
 {
     bitmask_t bm = bitmask_t(0, TWI_BUSERR_bm | TWI_ARBLOST_bm | TWI_CLKHOLD_bm);
     clear_ioreg(REG_ADDR(MSTATUS), bm);
     m_intflag_master.clear_flag();
 }
 
-void AVR_ArchMega0_TWI::clear_slave_status()
+void AVR_ArchXT_TWI::clear_slave_status()
 {
     bitmask_t bm = bitmask_t(0, TWI_BUSERR_bm | TWI_COLL_bm | TWI_CLKHOLD_bm);
     clear_ioreg(REG_ADDR(SSTATUS), bm);
     m_intflag_slave.clear_flag();
 }
 
-bool AVR_ArchMega0_TWI::address_match(uint8_t bus_address)
+bool AVR_ArchXT_TWI::address_match(uint8_t bus_address)
 {
     //if PMEN is set, all addresses are recognized
     if (TEST_IOREG(SCTRLA, TWI_PMEN))

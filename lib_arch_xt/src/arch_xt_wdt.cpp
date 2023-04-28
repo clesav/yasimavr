@@ -40,11 +40,11 @@
 /*
  * Constructor of a generic watchdog timer
  */
-AVR_ArchMega0_WDT::AVR_ArchMega0_WDT(const AVR_ArchMega0_WDT_Config& config)
+AVR_ArchXT_WDT::AVR_ArchXT_WDT(const AVR_ArchXT_WDT_Config& config)
 :m_config(config)
 {}
 
-bool AVR_ArchMega0_WDT::init(AVR_Device& device)
+bool AVR_ArchXT_WDT::init(AVR_Device& device)
 {
     bool status = AVR_WatchdogTimer::init(device);
 
@@ -54,7 +54,7 @@ bool AVR_ArchMega0_WDT::init(AVR_Device& device)
     return status;
 }
 
-void AVR_ArchMega0_WDT::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
+void AVR_ArchXT_WDT::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
     uint32_t clk_factor = device()->frequency() / m_config.clock_frequency;
     uint8_t win_start_index = (data.value & WDT_WINDOW_gm) >> WDT_WINDOW_gp;
@@ -64,7 +64,7 @@ void AVR_ArchMega0_WDT::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t
     set_timer(win_start, win_end, clk_factor);
 }
 
-void AVR_ArchMega0_WDT::timeout()
+void AVR_ArchXT_WDT::timeout()
 {
     //Trigger the reset. Don't call reset() because we want the current
     //cycle to complete beforehand. The state of the device would be

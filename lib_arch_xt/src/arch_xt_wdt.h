@@ -21,18 +21,18 @@
 
 //=======================================================================================
 
-#ifndef __YASIMAVR_MEGA0_WDT_H__
-#define __YASIMAVR_MEGA0_WDT_H__
+#ifndef __YASIMAVR_XT_WDT_H__
+#define __YASIMAVR_XT_WDT_H__
 
 #include "ioctrl_common/sim_wdt.h"
 
 
 //=======================================================================================
 /*
- * Implementation of a Watchdog Timer for Mega0/1 series
+ * Implementation of a Watchdog Timer for XT core series
  */
 
-struct AVR_ArchMega0_WDT_Config {
+struct AVR_ArchXT_WDT_Config {
 
     uint32_t clock_frequency;
     std::vector<uint32_t> delays;
@@ -42,11 +42,11 @@ struct AVR_ArchMega0_WDT_Config {
 };
 
 
-class DLL_EXPORT AVR_ArchMega0_WDT : public AVR_WatchdogTimer {
+class DLL_EXPORT AVR_ArchXT_WDT : public AVR_WatchdogTimer {
 
 public:
 
-    explicit AVR_ArchMega0_WDT(const AVR_ArchMega0_WDT_Config& config);
+    explicit AVR_ArchXT_WDT(const AVR_ArchXT_WDT_Config& config);
 
     virtual bool init(AVR_Device& device) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
@@ -57,8 +57,8 @@ protected:
 
 private:
 
-    const AVR_ArchMega0_WDT_Config& m_config;
+    const AVR_ArchXT_WDT_Config& m_config;
 
 };
 
-#endif //__YASIMAVR_MEGA0_WDT_H__
+#endif //__YASIMAVR_XT_WDT_H__

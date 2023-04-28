@@ -21,14 +21,14 @@
 
 //=======================================================================================
 
-#ifndef __YASIMAVR_MEGA0_TIMER_A_H__
-#define __YASIMAVR_MEGA0_TIMER_A_H__
+#ifndef __YASIMAVR_XT_TIMER_A_H__
+#define __YASIMAVR_XT_TIMER_A_H__
 
 #include "core/sim_peripheral.h"
 #include "core/sim_interrupt.h"
 #include "ioctrl_common/sim_timer.h"
 
-class AVR_ArchMega0_TimerB;
+class AVR_ArchXT_TimerB;
 
 
 //=======================================================================================
@@ -47,7 +47,7 @@ class AVR_ArchMega0_TimerB;
 
 //=======================================================================================
 /*
- * Implementation of a Timer/Counter type A for the Mega-0/Mega-1 series
+ * Implementation of a Timer/Counter type A for the XT core series
  * Only the Normal WGM mode in Single timer configuration is currently implemented
  * Other unsupported features:
  *      - Event control and input
@@ -57,7 +57,7 @@ class AVR_ArchMega0_TimerB;
  *      - Timer command for forced update/restart
  */
 
-struct AVR_ArchMega0_TimerA_Config {
+struct AVR_ArchXT_TimerA_Config {
 
     reg_addr_t reg_base;
 
@@ -66,11 +66,11 @@ struct AVR_ArchMega0_TimerA_Config {
 
 };
 
-class DLL_EXPORT AVR_ArchMega0_TimerA : public AVR_Peripheral, public AVR_SignalHook {
+class DLL_EXPORT AVR_ArchXT_TimerA : public AVR_Peripheral, public AVR_SignalHook {
 
 public:
 
-    explicit AVR_ArchMega0_TimerA(const AVR_ArchMega0_TimerA_Config& config);
+    explicit AVR_ArchXT_TimerA(const AVR_ArchXT_TimerA_Config& config);
 
     //Override of AVR_Peripheral callbacks
     virtual bool init(AVR_Device& device) override;
@@ -84,10 +84,10 @@ public:
 
 private:
 
-    const AVR_ArchMega0_TimerA_Config& m_config;
+    const AVR_ArchXT_TimerA_Config& m_config;
 
     //***** Clock management *****
-    std::vector<AVR_ArchMega0_TimerB*> m_synched_timers;
+    std::vector<AVR_ArchXT_TimerB*> m_synched_timers;
 
     //***** Counters *****
     uint16_t m_cnt;                                 //Current counter register value

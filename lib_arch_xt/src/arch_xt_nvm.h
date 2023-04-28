@@ -21,8 +21,8 @@
 
 //=======================================================================================
 
-#ifndef __YASIMAVR_MEGA0_NVM_H__
-#define __YASIMAVR_MEGA0_NVM_H__
+#ifndef __YASIMAVR_XT_NVM_H__
+#define __YASIMAVR_XT_NVM_H__
 
 #include "core/sim_peripheral.h"
 #include "core/sim_interrupt.h"
@@ -30,17 +30,17 @@
 
 //=======================================================================================
 /*
- * Implementation of a USERROW controller for Mega0/Mega1 series
+ * Implementation of a USERROW controller for XT core series
  * The purpose of this controller is only to allow reading from the userrow
  * using the data address space.
  */
 
 
-class DLL_EXPORT AVR_ArchMega0_USERROW : public AVR_Peripheral {
+class DLL_EXPORT AVR_ArchXT_USERROW : public AVR_Peripheral {
 
 public:
 
-    explicit AVR_ArchMega0_USERROW(reg_addr_t base);
+    explicit AVR_ArchXT_USERROW(reg_addr_t base);
 
     virtual bool init(AVR_Device& device) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
@@ -55,17 +55,17 @@ private:
 
 //=======================================================================================
 /*
- * Implementation of a fuse controller for Mega0/Mega1 series
+ * Implementation of a fuse controller for XT core series
  * The purpose of this controller is only to allow reading the fuses
  * using the data address space.
  */
 
 
-class DLL_EXPORT AVR_ArchMega0_Fuses : public AVR_Peripheral {
+class DLL_EXPORT AVR_ArchXT_Fuses : public AVR_Peripheral {
 
 public:
 
-    explicit AVR_ArchMega0_Fuses(reg_addr_t base);
+    explicit AVR_ArchXT_Fuses(reg_addr_t base);
 
     virtual bool init(AVR_Device& device) override;
 
@@ -78,7 +78,7 @@ private:
 
 //=======================================================================================
 /*
- * Implementation of a NVM controller for Mega0/Mega1 series
+ * Implementation of a NVM controller for XT core series
  * Features:
  *  - supports all commands except WFU(Write FUse)
  *  - the Configuration Change Protection for SPM is not supported (has no effect)
@@ -88,7 +88,7 @@ private:
  *   - internally, AVR_CTLREQ_NVM_WRITE is supported to receive NVM write to the page buffer
  */
 
-struct AVR_ArchMega0_NVM_Config {
+struct AVR_ArchXT_NVM_Config {
 
     reg_addr_t reg_base;
 
@@ -106,12 +106,12 @@ struct AVR_ArchMega0_NVM_Config {
 
 };
 
-class DLL_EXPORT AVR_ArchMega0_NVM : public AVR_Peripheral {
+class DLL_EXPORT AVR_ArchXT_NVM : public AVR_Peripheral {
 
 public:
 
-    explicit AVR_ArchMega0_NVM(const AVR_ArchMega0_NVM_Config& config);
-    virtual ~AVR_ArchMega0_NVM();
+    explicit AVR_ArchXT_NVM(const AVR_ArchXT_NVM_Config& config);
+    virtual ~AVR_ArchXT_NVM();
 
     virtual bool init(AVR_Device& device) override;
     virtual void reset() override;
@@ -139,7 +139,7 @@ private:
         State_Halting,
     };
 
-    const AVR_ArchMega0_NVM_Config& m_config;
+    const AVR_ArchXT_NVM_Config& m_config;
     State m_state;
     uint8_t* m_buffer;
     uint8_t* m_bufset;
@@ -158,4 +158,4 @@ private:
 
 };
 
-#endif //__YASIMAVR_MEGA0_NVM_H__
+#endif //__YASIMAVR_XT_NVM_H__

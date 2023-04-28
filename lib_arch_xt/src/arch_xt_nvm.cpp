@@ -31,18 +31,18 @@
 
 //=======================================================================================
 
-AVR_ArchMega0_USERROW::AVR_ArchMega0_USERROW(reg_addr_t base)
+AVR_ArchXT_USERROW::AVR_ArchXT_USERROW(reg_addr_t base)
 :AVR_Peripheral(AVR_ID('U', 'R', 'O', 'W'))
 ,m_reg_base(base)
 ,m_userrow(nullptr)
 {}
 
-bool AVR_ArchMega0_USERROW::init(AVR_Device& device)
+bool AVR_ArchXT_USERROW::init(AVR_Device& device)
 {
     bool status = AVR_Peripheral::init(device);
 
     //Obtain the pointer to the userrow block in RAM
-    ctlreq_data_t req = { .index = AVR_ArchMega0_Core::NVM_USERROW };
+    ctlreq_data_t req = { .index = AVR_ArchXT_Core::NVM_USERROW };
     if (!device.ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_NVM, &req))
         return false;
     m_userrow = reinterpret_cast<AVR_NonVolatileMemory*>(req.data.as_ptr());
@@ -57,11 +57,11 @@ bool AVR_ArchMega0_USERROW::init(AVR_Device& device)
     return status;
 }
 
-void AVR_ArchMega0_USERROW::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
+void AVR_ArchXT_USERROW::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
     //Send a NVM write request with the new data value
     NVM_request_t nvm_req = {
-        .nvm = AVR_ArchMega0_Core::NVM_USERROW,
+        .nvm = AVR_ArchXT_Core::NVM_USERROW,
         .addr = (mem_addr_t) addr - m_reg_base, //translate the address into userrow space
         .data = data.value,
         //.instr = device()->core()->program_counter(), //TODO:
@@ -77,18 +77,18 @@ void AVR_ArchMega0_USERROW::ioreg_write_handler(reg_addr_t addr, const ioreg_wri
 
 //=======================================================================================
 
-AVR_ArchMega0_Fuses::AVR_ArchMega0_Fuses(reg_addr_t base)
+AVR_ArchXT_Fuses::AVR_ArchXT_Fuses(reg_addr_t base)
 :AVR_Peripheral(AVR_ID('F', 'U', 'S', 'E'))
 ,m_reg_base(base)
 ,m_fuses(nullptr)
 {}
 
-bool AVR_ArchMega0_Fuses::init(AVR_Device& device)
+bool AVR_ArchXT_Fuses::init(AVR_Device& device)
 {
     bool status = AVR_Peripheral::init(device);
 
     //Obtain the pointer to the fuse block in RAM
-    ctlreq_data_t req = { .index = AVR_ArchMega0_Core::NVM_Fuses };
+    ctlreq_data_t req = { .index = AVR_ArchXT_Core::NVM_Fuses };
     if (!device.ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_NVM, &req))
         return false;
     m_fuses = reinterpret_cast<AVR_NonVolatileMemory*>(req.data.as_ptr());
@@ -116,11 +116,11 @@ bool AVR_ArchMega0_Fuses::init(AVR_Device& device)
 #define NVM_INDEX_INVALID   -2
 
 
-class AVR_ArchMega0_NVM::Timer : public AVR_CycleTimer {
+class AVR_ArchXT_NVM::Timer : public AVR_CycleTimer {
 
 public:
 
-    Timer(AVR_ArchMega0_NVM& ctl) : m_ctl(ctl) {}
+    Timer(AVR_ArchXT_NVM& ctl) : m_ctl(ctl) {}
 
     virtual cycle_count_t next(cycle_count_t when) override {
         m_ctl.timer_next();
@@ -129,12 +129,12 @@ public:
 
 private:
 
-    AVR_ArchMega0_NVM& m_ctl;
+    AVR_ArchXT_NVM& m_ctl;
 
 };
 
 
-AVR_ArchMega0_NVM::AVR_ArchMega0_NVM(const AVR_ArchMega0_NVM_Config& config)
+AVR_ArchXT_NVM::AVR_ArchXT_NVM(const AVR_ArchXT_NVM_Config& config)
 :AVR_Peripheral(AVR_IOCTL_NVM)
 ,m_config(config)
 ,m_state(State_Idle)
@@ -147,7 +147,7 @@ AVR_ArchMega0_NVM::AVR_ArchMega0_NVM(const AVR_ArchMega0_NVM_Config& config)
     m_timer = new Timer(*this);
 }
 
-AVR_ArchMega0_NVM::~AVR_ArchMega0_NVM()
+AVR_ArchXT_NVM::~AVR_ArchXT_NVM()
 {
     delete m_timer;
 
@@ -157,7 +157,7 @@ AVR_ArchMega0_NVM::~AVR_ArchMega0_NVM()
         free(m_bufset);
 }
 
-bool AVR_ArchMega0_NVM::init(AVR_Device& device)
+bool AVR_ArchXT_NVM::init(AVR_Device& device)
 {
     bool status = AVR_Peripheral::init(device);
 
@@ -181,7 +181,7 @@ bool AVR_ArchMega0_NVM::init(AVR_Device& device)
     return status;
 }
 
-void AVR_ArchMega0_NVM::reset()
+void AVR_ArchXT_NVM::reset()
 {
     //Erase the page buffer
     clear_buffer();
@@ -191,7 +191,7 @@ void AVR_ArchMega0_NVM::reset()
     m_state = State_Idle;
 }
 
-bool AVR_ArchMega0_NVM::ctlreq(uint16_t req, ctlreq_data_t* data)
+bool AVR_ArchXT_NVM::ctlreq(uint16_t req, ctlreq_data_t* data)
 {
     //Write request from the core when writing to a data space
     //location mapped to one of the NVM blocks
@@ -203,7 +203,7 @@ bool AVR_ArchMega0_NVM::ctlreq(uint16_t req, ctlreq_data_t* data)
     return false;
 }
 
-void AVR_ArchMega0_NVM::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
+void AVR_ArchXT_NVM::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
     reg_addr_t reg_ofs = addr - m_config.reg_base;
 
@@ -222,7 +222,7 @@ void AVR_ArchMega0_NVM::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t
     }
 }
 
-AVR_NonVolatileMemory* AVR_ArchMega0_NVM::get_memory(int nvm_index)
+AVR_NonVolatileMemory* AVR_ArchXT_NVM::get_memory(int nvm_index)
 {
     ctlreq_data_t req = { .index = (unsigned int) nvm_index };
     if (!device()->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_NVM, &req))
@@ -230,14 +230,14 @@ AVR_NonVolatileMemory* AVR_ArchMega0_NVM::get_memory(int nvm_index)
     return reinterpret_cast<AVR_NonVolatileMemory*>(req.data.as_ptr());
 }
 
-void AVR_ArchMega0_NVM::clear_buffer()
+void AVR_ArchXT_NVM::clear_buffer()
 {
     memset(m_buffer, 0xFF, m_config.flash_page_size);
     memset(m_bufset, 0, m_config.flash_page_size);
     m_mem_index = NVM_INDEX_NONE;
 }
 
-void AVR_ArchMega0_NVM::write_nvm(const NVM_request_t& nvm_req)
+void AVR_ArchXT_NVM::write_nvm(const NVM_request_t& nvm_req)
 {
     if (m_mem_index == NVM_INDEX_INVALID) return;
 
@@ -245,16 +245,16 @@ void AVR_ArchMega0_NVM::write_nvm(const NVM_request_t& nvm_req)
     //addressed
     mem_addr_t page_size;
     int block;
-    if (nvm_req.nvm == AVR_ArchMega0_Core::NVM_Flash) {
-        block = AVR_ArchMega0_Core::NVM_Flash;
+    if (nvm_req.nvm == AVR_ArchXT_Core::NVM_Flash) {
+        block = AVR_ArchXT_Core::NVM_Flash;
         page_size = m_config.flash_page_size;
     }
-    else if (nvm_req.nvm == AVR_ArchMega0_Core::NVM_EEPROM) {
-        block = AVR_ArchMega0_Core::NVM_EEPROM;
+    else if (nvm_req.nvm == AVR_ArchXT_Core::NVM_EEPROM) {
+        block = AVR_ArchXT_Core::NVM_EEPROM;
         page_size = m_config.flash_page_size >> 1;
     }
-    else if (nvm_req.nvm == AVR_ArchMega0_Core::NVM_USERROW) {
-        block = AVR_ArchMega0_Core::NVM_USERROW;
+    else if (nvm_req.nvm == AVR_ArchXT_Core::NVM_USERROW) {
+        block = AVR_ArchXT_Core::NVM_USERROW;
         page_size = m_config.flash_page_size >> 1;
     }
     else {
@@ -284,7 +284,7 @@ void AVR_ArchMega0_NVM::write_nvm(const NVM_request_t& nvm_req)
                  nvm_req.addr, m_mem_index, m_page, nvm_req.data);
 }
 
-void AVR_ArchMega0_NVM::execute_command(Command cmd)
+void AVR_ArchXT_NVM::execute_command(Command cmd)
 {
     cycle_count_t delay = 0;
     unsigned int delay_usecs = 0;
@@ -304,11 +304,11 @@ void AVR_ArchMega0_NVM::execute_command(Command cmd)
 
     else if (cmd == Cmd_ChipErase) {
         //Erase the flash
-        AVR_NonVolatileMemory* flash = get_memory(AVR_ArchMega0_Core::NVM_Flash);
+        AVR_NonVolatileMemory* flash = get_memory(AVR_ArchXT_Core::NVM_Flash);
         if (flash)
             flash->erase();
         //Erase the eeprom
-        AVR_NonVolatileMemory* eeprom = get_memory(AVR_ArchMega0_Core::NVM_EEPROM);
+        AVR_NonVolatileMemory* eeprom = get_memory(AVR_ArchXT_Core::NVM_EEPROM);
         if (eeprom)
             eeprom->erase();
         //Set the halt state and delay
@@ -318,7 +318,7 @@ void AVR_ArchMega0_NVM::execute_command(Command cmd)
 
     else if (cmd == Cmd_EEPROMErase) {
         //Erase the eeprom
-        AVR_NonVolatileMemory* eeprom = get_memory(AVR_ArchMega0_Core::NVM_EEPROM);
+        AVR_NonVolatileMemory* eeprom = get_memory(AVR_ArchXT_Core::NVM_EEPROM);
         if (eeprom)
             eeprom->erase();
         //Set the halt state and delay
@@ -349,13 +349,13 @@ void AVR_ArchMega0_NVM::execute_command(Command cmd)
     }
 }
 
-unsigned int AVR_ArchMega0_NVM::execute_page_command(Command cmd)
+unsigned int AVR_ArchXT_NVM::execute_page_command(Command cmd)
 {
     unsigned int delay_usecs;
 
     //Boolean indicating if it's an operation to the flash (true)
     //or to the eeprom (false)
-    bool is_flash_op = (m_mem_index == AVR_ArchMega0_Core::NVM_Flash);
+    bool is_flash_op = (m_mem_index == AVR_ArchXT_Core::NVM_Flash);
 
     //Obtain the pointer to the NVM object
     AVR_NonVolatileMemory* nvm = get_memory(m_mem_index);
@@ -415,7 +415,7 @@ unsigned int AVR_ArchMega0_NVM::execute_page_command(Command cmd)
     return delay_usecs;
 }
 
-void AVR_ArchMega0_NVM::timer_next()
+void AVR_ArchXT_NVM::timer_next()
 {
     //Update the status flags
     CLEAR_IOREG(STATUS, NVMCTRL_FBUSY);

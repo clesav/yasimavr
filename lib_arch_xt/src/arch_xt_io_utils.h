@@ -27,8 +27,8 @@
 //=======================================================================================
 
 
-#ifndef __YASIMAVR_MEGA0_IO_UTILS_H__
-#define __YASIMAVR_MEGA0_IO_UTILS_H__
+#ifndef __YASIMAVR_XT_IO_UTILS_H__
+#define __YASIMAVR_XT_IO_UTILS_H__
 
 
 #define DEF_BITMASK_F(field) \
@@ -77,4 +77,4 @@
     clear_ioreg(REG_ADDR(reg), bit ## _bp)
 
 
-#endif //__YASIMAVR_MEGA0_IO_UTILS_H__
+#endif //__YASIMAVR_XT_IO_UTILS_H__

@@ -21,8 +21,8 @@
 
 //=======================================================================================
 
-#ifndef __YASIMAVR_MEGA0_TIMER_B_H__
-#define __YASIMAVR_MEGA0_TIMER_B_H__
+#ifndef __YASIMAVR_XT_TIMER_B_H__
+#define __YASIMAVR_XT_TIMER_B_H__
 
 #include "core/sim_peripheral.h"
 #include "core/sim_interrupt.h"
@@ -31,7 +31,7 @@
 
 //=======================================================================================
 /*
- * AVR_ArchMega0_TimerB is the implementation of a Timer/Counter type B for the Mega-0/Mega-1 series
+ * AVR_ArchXT_TimerB is the implementation of a Timer/Counter type B for the XT core series
  * Only the Periodic Interrupt mode is currently implemented
  * Other unsupported features:
  *      - Event control and input
@@ -41,18 +41,18 @@
  *      - Synchronize Update (SYNCUPD)
  */
 
-struct AVR_ArchMega0_TimerB_Config {
+struct AVR_ArchXT_TimerB_Config {
 
     reg_addr_t reg_base;
     int_vect_t iv_capt;
 
 };
 
-class DLL_EXPORT AVR_ArchMega0_TimerB : public AVR_Peripheral, public AVR_SignalHook {
+class DLL_EXPORT AVR_ArchXT_TimerB : public AVR_Peripheral, public AVR_SignalHook {
 
 public:
 
-    AVR_ArchMega0_TimerB(int num, const AVR_ArchMega0_TimerB_Config& config);
+    AVR_ArchXT_TimerB(int num, const AVR_ArchXT_TimerB_Config& config);
 
     //Override of AVR_Peripheral callbacks
     virtual bool init(AVR_Device& device) override;
@@ -65,7 +65,7 @@ public:
 
 private:
 
-    const AVR_ArchMega0_TimerB_Config& m_config;
+    const AVR_ArchXT_TimerB_Config& m_config;
 
     uint8_t m_clk_mode;
 

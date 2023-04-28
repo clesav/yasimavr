@@ -46,7 +46,7 @@ static const char* ClockSourceNames[3] = {
 };
 
 
-AVR_ArchMega0_TimerB::AVR_ArchMega0_TimerB(int num, const AVR_ArchMega0_TimerB_Config& config)
+AVR_ArchXT_TimerB::AVR_ArchXT_TimerB(int num, const AVR_ArchXT_TimerB_Config& config)
 :AVR_Peripheral(AVR_IOCTL_TIMER('B', 0x30 + num))
 ,m_config(config)
 ,m_clk_mode(TIMER_CLOCK_DISABLED)
@@ -54,7 +54,7 @@ AVR_ArchMega0_TimerB::AVR_ArchMega0_TimerB(int num, const AVR_ArchMega0_TimerB_C
 ,m_counter(m_timer, 0x10000, 0)
 {}
 
-bool AVR_ArchMega0_TimerB::init(AVR_Device& device)
+bool AVR_ArchXT_TimerB::init(AVR_Device& device)
 {
     bool status = AVR_Peripheral::init(device);
 
@@ -84,7 +84,7 @@ bool AVR_ArchMega0_TimerB::init(AVR_Device& device)
     return status;
 }
 
-void AVR_ArchMega0_TimerB::reset()
+void AVR_ArchXT_TimerB::reset()
 {
     AVR_Peripheral::reset();
     m_clk_mode = TIMER_CLOCK_DISABLED;
@@ -93,7 +93,7 @@ void AVR_ArchMega0_TimerB::reset()
     m_counter.set_top(0);
 }
 
-uint8_t AVR_ArchMega0_TimerB::ioreg_read_handler(reg_addr_t addr, uint8_t value)
+uint8_t AVR_ArchXT_TimerB::ioreg_read_handler(reg_addr_t addr, uint8_t value)
 {
     reg_addr_t reg_ofs = addr - m_config.reg_base;
 
@@ -121,7 +121,7 @@ uint8_t AVR_ArchMega0_TimerB::ioreg_read_handler(reg_addr_t addr, uint8_t value)
     return value;
 }
 
-void AVR_ArchMega0_TimerB::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
+void AVR_ArchXT_TimerB::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
     reg_addr_t reg_ofs = addr - m_config.reg_base;
 
@@ -193,13 +193,13 @@ void AVR_ArchMega0_TimerB::ioreg_write_handler(reg_addr_t addr, const ioreg_writ
     }
 }
 
-void AVR_ArchMega0_TimerB::raised(const signal_data_t& sigdata, uint16_t __unused)
+void AVR_ArchXT_TimerB::raised(const signal_data_t& sigdata, uint16_t __unused)
 {
     if (sigdata.data.as_uint() & AVR_TimerCounter::Event_Top)
         m_intflag.set_flag();
 }
 
-void AVR_ArchMega0_TimerB::sleep(bool on, AVR_SleepMode mode)
+void AVR_ArchXT_TimerB::sleep(bool on, AVR_SleepMode mode)
 {
     //The timer is paused for sleep modes above Standby and in Standby if RUNSTDBY bit is not set
     bool stbyrun_set = TEST_IOREG(CTRLA, TCB_RUNSTDBY);

@@ -22,8 +22,8 @@
 //=======================================================================================
 
 
-#ifndef __YASIMAVR_MEGA0_IO_H__
-#define __YASIMAVR_MEGA0_IO_H__
+#ifndef __YASIMAVR_XT_IO_H__
+#define __YASIMAVR_XT_IO_H__
 
 #include "core/sim_types.h"
 
@@ -3900,4 +3900,4 @@ typedef enum WDT_WINDOW_enum
 #define PIN7_bp 7
 
 
-#endif //__YASIMAVR_MEGA0_IO_H__
+#endif //__YASIMAVR_XT_IO_H__

@@ -41,7 +41,7 @@
 static const uint16_t PrescalerFactors[8] = { 1, 2, 4, 8, 16, 64, 256, 1024 };
 
 
-AVR_ArchMega0_TimerA::AVR_ArchMega0_TimerA(const AVR_ArchMega0_TimerA_Config& config)
+AVR_ArchXT_TimerA::AVR_ArchXT_TimerA(const AVR_ArchXT_TimerA_Config& config)
 :AVR_Peripheral(AVR_IOCTL_TIMER('A', '0'))
 ,m_config(config)
 ,m_cnt(0)
@@ -56,7 +56,7 @@ AVR_ArchMega0_TimerA::AVR_ArchMega0_TimerA(const AVR_ArchMega0_TimerA_Config& co
 }
 {}
 
-bool AVR_ArchMega0_TimerA::init(AVR_Device& device)
+bool AVR_ArchXT_TimerA::init(AVR_Device& device)
 {
     bool status = AVR_Peripheral::init(device);
 
@@ -113,7 +113,7 @@ bool AVR_ArchMega0_TimerA::init(AVR_Device& device)
     return status;
 }
 
-void AVR_ArchMega0_TimerA::reset()
+void AVR_ArchXT_TimerA::reset()
 {
     AVR_Peripheral::reset();
     m_cnt = 0;
@@ -127,7 +127,7 @@ void AVR_ArchMega0_TimerA::reset()
     m_timer.reset();
 }
 
-bool AVR_ArchMega0_TimerA::ctlreq(uint16_t req, ctlreq_data_t* data)
+bool AVR_ArchXT_TimerA::ctlreq(uint16_t req, ctlreq_data_t* data)
 {
     if (req == AVR_CTLREQ_TCA_REGISTER_TCB) {
         AVR_PrescaledTimer* t = reinterpret_cast<AVR_PrescaledTimer*>(data->data.as_ptr());
@@ -140,7 +140,7 @@ bool AVR_ArchMega0_TimerA::ctlreq(uint16_t req, ctlreq_data_t* data)
     return false;
 }
 
-uint8_t AVR_ArchMega0_TimerA::ioreg_read_handler(reg_addr_t addr, uint8_t value)
+uint8_t AVR_ArchXT_TimerA::ioreg_read_handler(reg_addr_t addr, uint8_t value)
 {
     reg_addr_t reg_ofs = addr - m_config.reg_base;
 
@@ -199,7 +199,7 @@ uint8_t AVR_ArchMega0_TimerA::ioreg_read_handler(reg_addr_t addr, uint8_t value)
     return value;
 }
 
-void AVR_ArchMega0_TimerA::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
+void AVR_ArchXT_TimerA::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
     bool do_reschedule = false;
     reg_addr_t reg_ofs = addr - m_config.reg_base;
@@ -313,7 +313,7 @@ enum TimerEventType {
 /*
  * Calculates the delay in source ticks and the type of the next timer/counter event
  */
-uint32_t AVR_ArchMega0_TimerA::delay_to_event()
+uint32_t AVR_ArchXT_TimerA::delay_to_event()
 {
     int ticks_to_max = AVR_PrescaledTimer::ticks_to_event(m_cnt, 0xFFFF, 0x10000);
     int ticks_to_next_event = ticks_to_max;
@@ -343,7 +343,7 @@ uint32_t AVR_ArchMega0_TimerA::delay_to_event()
     return (uint32_t)ticks_to_next_event;
 }
 
-void AVR_ArchMega0_TimerA::raised(const signal_data_t& sigdata, uint16_t __unused)
+void AVR_ArchXT_TimerA::raised(const signal_data_t& sigdata, uint16_t __unused)
 {
     m_cnt += sigdata.data.as_uint();
 
@@ -366,7 +366,7 @@ void AVR_ArchMega0_TimerA::raised(const signal_data_t& sigdata, uint16_t __unuse
     m_timer.set_timer_delay(delay_to_event());
 }
 
-void AVR_ArchMega0_TimerA::update_16bits_buffers()
+void AVR_ArchXT_TimerA::update_16bits_buffers()
 {
     m_per = m_perbuf;
     for (int i = 0; i < AVR_TCA_CMP_CHANNEL_COUNT; ++i)
@@ -376,7 +376,7 @@ void AVR_ArchMega0_TimerA::update_16bits_buffers()
     clear_ioreg(REG_ADDR(CTRLFCLR));
 }
 
-void AVR_ArchMega0_TimerA::sleep(bool on, AVR_SleepMode mode)
+void AVR_ArchXT_TimerA::sleep(bool on, AVR_SleepMode mode)
 {
     if (mode > AVR_SleepMode::Idle)
         m_timer.set_paused(on);

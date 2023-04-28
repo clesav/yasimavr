@@ -35,7 +35,7 @@
     offsetof(USART_t, reg)
 
 
-AVR_ArchMega0_USART::AVR_ArchMega0_USART(uint8_t num, const AVR_ArchMega0_USART_Config& config)
+AVR_ArchXT_USART::AVR_ArchXT_USART(uint8_t num, const AVR_ArchXT_USART_Config& config)
 :AVR_Peripheral(AVR_IOCTL_UART(0x30 + num))
 ,m_config(config)
 ,m_rxc_intflag(false)
@@ -45,7 +45,7 @@ AVR_ArchMega0_USART::AVR_ArchMega0_USART(uint8_t num, const AVR_ArchMega0_USART_
     m_endpoint = { &m_uart.signal(), &m_uart };
 }
 
-bool AVR_ArchMega0_USART::init(AVR_Device& device)
+bool AVR_ArchXT_USART::init(AVR_Device& device)
 {
     bool status = AVR_Peripheral::init(device);
 
@@ -87,14 +87,14 @@ bool AVR_ArchMega0_USART::init(AVR_Device& device)
     return status;
 }
 
-void AVR_ArchMega0_USART::reset()
+void AVR_ArchXT_USART::reset()
 {
     m_uart.reset();
     SET_IOREG(STATUS, USART_DREIF);
     update_framerate();
 }
 
-bool AVR_ArchMega0_USART::ctlreq(uint16_t req, ctlreq_data_t* data)
+bool AVR_ArchXT_USART::ctlreq(uint16_t req, ctlreq_data_t* data)
 {
     if (req == AVR_CTLREQ_GET_SIGNAL) {
         data->data = &m_uart.signal();
@@ -108,7 +108,7 @@ bool AVR_ArchMega0_USART::ctlreq(uint16_t req, ctlreq_data_t* data)
     return false;
 }
 
-uint8_t AVR_ArchMega0_USART::ioreg_read_handler(reg_addr_t addr, uint8_t value)
+uint8_t AVR_ArchXT_USART::ioreg_read_handler(reg_addr_t addr, uint8_t value)
 {
     reg_addr_t reg_ofs = addr - m_config.reg_base;
 
@@ -121,7 +121,7 @@ uint8_t AVR_ArchMega0_USART::ioreg_read_handler(reg_addr_t addr, uint8_t value)
     return value;
 }
 
-void AVR_ArchMega0_USART::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
+void AVR_ArchXT_USART::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
     reg_addr_t reg_ofs = addr - m_config.reg_base;
 
@@ -175,7 +175,7 @@ void AVR_ArchMega0_USART::ioreg_write_handler(reg_addr_t addr, const ioreg_write
     }
 }
 
-void AVR_ArchMega0_USART::raised(const signal_data_t& sigdata, uint16_t __unused)
+void AVR_ArchXT_USART::raised(const signal_data_t& sigdata, uint16_t __unused)
 {
     if (sigdata.sigid == AVR_IO_UART::Signal_TX_Start) {
         //Notification that the pending frame has been pushed to the shift register
@@ -206,7 +206,7 @@ void AVR_ArchMega0_USART::raised(const signal_data_t& sigdata, uint16_t __unused
     }
 }
 
-void AVR_ArchMega0_USART::update_framerate()
+void AVR_ArchXT_USART::update_framerate()
 {
     //From datasheet (normal speed mode) : (Fbaud = Fclk * 64 / (16 * reg_baud))
     //Expressed in delay rather than frequency: bit_delay = Tbaud / Tclk = reg_baud / 4
@@ -220,7 +220,7 @@ void AVR_ArchMega0_USART::update_framerate()
 /*
 * The USART is paused for modes above Standby and in Standby if the Start-Frame Detection feature is not enabled
 */
-void AVR_ArchMega0_USART::sleep(bool on, AVR_SleepMode mode)
+void AVR_ArchXT_USART::sleep(bool on, AVR_SleepMode mode)
 {
     if (mode > AVR_SleepMode::Standby || (mode == AVR_SleepMode::Standby && !TEST_IOREG(CTRLB, USART_SFDEN))) {
         if (on)

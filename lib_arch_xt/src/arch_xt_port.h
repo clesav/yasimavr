@@ -21,8 +21,8 @@
 
 //=======================================================================================
 
-#ifndef __YASIMAVR_MEGA0_PORT_H__
-#define __YASIMAVR_MEGA0_PORT_H__
+#ifndef __YASIMAVR_XT_PORT_H__
+#define __YASIMAVR_XT_PORT_H__
 
 #include "core/sim_interrupt.h"
 #include "ioctrl_common/sim_port.h"
@@ -30,11 +30,11 @@
 
 //=======================================================================================
 /*
- * Implementation of a GPIO port controller for Mega0/1 series, based on the generic
+ * Implementation of a GPIO port controller for XT core series, based on the generic
  * AVIO_IO_Port class
  */
 
-struct AVR_ArchMega0_PortConfig {
+struct AVR_ArchXT_PortConfig {
 
     reg_addr_t reg_base_port;
     reg_addr_t reg_base_vport;
@@ -42,11 +42,11 @@ struct AVR_ArchMega0_PortConfig {
 };
 
 
-class DLL_EXPORT AVR_ArchMega0_Port : public AVR_IO_Port, public AVR_InterruptHandler {
+class DLL_EXPORT AVR_ArchXT_Port : public AVR_IO_Port, public AVR_InterruptHandler {
 
 public:
 
-    AVR_ArchMega0_Port(char name, const AVR_ArchMega0_PortConfig& config);
+    AVR_ArchXT_Port(char name, const AVR_ArchXT_PortConfig& config);
 
     virtual bool init(AVR_Device& device) override;
     virtual void reset() override;
@@ -59,11 +59,11 @@ protected:
 
 private:
 
-    const AVR_ArchMega0_PortConfig& m_config;
+    const AVR_ArchXT_PortConfig& m_config;
     uint8_t m_port_value;
     uint8_t m_dir_value;
 
     void update_pin_states();
 };
 
-#endif //__YASIMAVR_MEGA0_PORT_H__
+#endif //__YASIMAVR_XT_PORT_H__

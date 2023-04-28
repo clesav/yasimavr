@@ -22,8 +22,8 @@
 //=======================================================================================
 
 
-#ifndef __YASIMAVR_MEGA0_ACOMP_H__
-#define __YASIMAVR_MEGA0_ACOMP_H__
+#ifndef __YASIMAVR_XT_ACOMP_H__
+#define __YASIMAVR_XT_ACOMP_H__
 
 #include "ioctrl_common/sim_acp.h"
 #include "ioctrl_common/sim_vref.h"
@@ -42,12 +42,12 @@
 
 //=======================================================================================
 /*
- * Implementation of a Analog Comparator for the Mega-0/Mega-1 series
+ * Implementation of a Analog Comparator for the XT core series
  * Unsupported features:
  *      - Pin output
  */
 
-struct AVR_ArchMega0_ACP_Config {
+struct AVR_ArchXT_ACP_Config {
 
     std::vector<AVR_IO_ACP::channel_config_t> pos_channels;
     std::vector<AVR_IO_ACP::channel_config_t> neg_channels;
@@ -58,13 +58,13 @@ struct AVR_ArchMega0_ACP_Config {
 
 };
 
-class DLL_EXPORT AVR_ArchMega0_ACP : public AVR_IO_ACP,
-                                     public AVR_Peripheral,
-                                     public AVR_SignalHook {
+class DLL_EXPORT AVR_ArchXT_ACP : public AVR_IO_ACP,
+                                  public AVR_Peripheral,
+                                  public AVR_SignalHook {
 
 public:
 
-    AVR_ArchMega0_ACP(int num, const AVR_ArchMega0_ACP_Config& config);
+    AVR_ArchXT_ACP(int num, const AVR_ArchXT_ACP_Config& config);
 
     virtual bool init(AVR_Device& device) override;
     virtual void reset() override;
@@ -75,7 +75,7 @@ public:
 
 private:
 
-    const AVR_ArchMega0_ACP_Config& m_config;
+    const AVR_ArchXT_ACP_Config& m_config;
     AVR_InterruptFlag m_intflag;
     AVR_DataSignal m_signal;
     //Pointer to the VREF signal to obtain ACP voltage reference updates
@@ -94,4 +94,4 @@ private:
 
 };
 
-#endif //__YASIMAVR_MEGA0_ACOMP_H__
+#endif //__YASIMAVR_XT_ACOMP_H__

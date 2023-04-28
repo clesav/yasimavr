@@ -43,7 +43,7 @@ const uint32_t ClockFactors[] = {4, 16, 64, 128};
 
 //=======================================================================================
 
-AVR_ArchMega0_SPI::AVR_ArchMega0_SPI(uint8_t num, const AVR_ArchMega0_SPI_Config& config)
+AVR_ArchXT_SPI::AVR_ArchXT_SPI(uint8_t num, const AVR_ArchXT_SPI_Config& config)
 :AVR_Peripheral(AVR_IOCTL_SPI(0x30 + num))
 ,m_config(config)
 ,m_pin_select(nullptr)
@@ -51,7 +51,7 @@ AVR_ArchMega0_SPI::AVR_ArchMega0_SPI(uint8_t num, const AVR_ArchMega0_SPI_Config
 ,m_intflag(false)
 {}
 
-bool AVR_ArchMega0_SPI::init(AVR_Device& device)
+bool AVR_ArchXT_SPI::init(AVR_Device& device)
 {
     bool status = AVR_Peripheral::init(device);
 
@@ -83,14 +83,14 @@ bool AVR_ArchMega0_SPI::init(AVR_Device& device)
     return status;
 }
 
-void AVR_ArchMega0_SPI::reset()
+void AVR_ArchXT_SPI::reset()
 {
     m_spi.reset();
     m_pin_selected = false;
     m_intflag.update_from_ioreg();
 }
 
-bool AVR_ArchMega0_SPI::ctlreq(uint16_t req, ctlreq_data_t* data)
+bool AVR_ArchXT_SPI::ctlreq(uint16_t req, ctlreq_data_t* data)
 {
     if (req == AVR_CTLREQ_GET_SIGNAL) {
         data->data = &m_spi.signal();
@@ -115,7 +115,7 @@ bool AVR_ArchMega0_SPI::ctlreq(uint16_t req, ctlreq_data_t* data)
     return false;
 }
 
-uint8_t AVR_ArchMega0_SPI::ioreg_read_handler(reg_addr_t addr, uint8_t value)
+uint8_t AVR_ArchXT_SPI::ioreg_read_handler(reg_addr_t addr, uint8_t value)
 {
     reg_addr_t reg_ofs = addr - m_config.reg_base;
 
@@ -128,7 +128,7 @@ uint8_t AVR_ArchMega0_SPI::ioreg_read_handler(reg_addr_t addr, uint8_t value)
     return value;
 }
 
-void AVR_ArchMega0_SPI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
+void AVR_ArchXT_SPI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
     reg_addr_t reg_ofs = addr - m_config.reg_base;
 
@@ -159,7 +159,7 @@ void AVR_ArchMega0_SPI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t
     }
 }
 
-void AVR_ArchMega0_SPI::raised(const signal_data_t& sigdata, uint16_t hooktag)
+void AVR_ArchXT_SPI::raised(const signal_data_t& sigdata, uint16_t hooktag)
 {
     if (hooktag == HOOKTAG_SPI) {
         if (sigdata.sigid == AVR_IO_SPI::Signal_HostTfrComplete ||

@@ -37,7 +37,7 @@
 #define REG_OFS(reg) \
     offsetof(RTC_t, reg)
 
-typedef AVR_ArchMega0_RTC_Config CFG;
+typedef AVR_ArchXT_RTC_Config CFG;
 
 #define PRESCALER_MAX 32678
 
@@ -51,11 +51,11 @@ enum RTC_Mode {
 
 //=======================================================================================
 
-class AVR_ArchMega0_RTC::TimerHook : public AVR_SignalHook {
+class AVR_ArchXT_RTC::TimerHook : public AVR_SignalHook {
 
 public:
 
-    explicit TimerHook(AVR_ArchMega0_RTC& ctl) : m_ctl(ctl) {}
+    explicit TimerHook(AVR_ArchXT_RTC& ctl) : m_ctl(ctl) {}
 
     virtual void raised(const signal_data_t& sigdata, uint16_t hooktag) override {
         if (hooktag)
@@ -66,12 +66,12 @@ public:
 
 private:
 
-    AVR_ArchMega0_RTC& m_ctl;
+    AVR_ArchXT_RTC& m_ctl;
 
 };
 
 
-AVR_ArchMega0_RTC::AVR_ArchMega0_RTC(const CFG& config)
+AVR_ArchXT_RTC::AVR_ArchXT_RTC(const CFG& config)
 :AVR_Peripheral(AVR_IOCTL_RTC)
 ,m_config(config)
 ,m_clk_mode(RTC_Disabled)
@@ -85,12 +85,12 @@ AVR_ArchMega0_RTC::AVR_ArchMega0_RTC(const CFG& config)
     m_pit_counter.signal().connect_hook(m_timer_hook, 1);
 }
 
-AVR_ArchMega0_RTC::~AVR_ArchMega0_RTC()
+AVR_ArchXT_RTC::~AVR_ArchXT_RTC()
 {
     delete m_timer_hook;
 }
 
-bool AVR_ArchMega0_RTC::init(AVR_Device& device)
+bool AVR_ArchXT_RTC::init(AVR_Device& device)
 {
     bool status = AVR_Peripheral::init(device);
 
@@ -131,7 +131,7 @@ bool AVR_ArchMega0_RTC::init(AVR_Device& device)
     return status;
 }
 
-void AVR_ArchMega0_RTC::reset()
+void AVR_ArchXT_RTC::reset()
 {
     m_clk_mode = RTC_Disabled;
     write_ioreg(REG_ADDR(PERL), 0xFF);
@@ -142,7 +142,7 @@ void AVR_ArchMega0_RTC::reset()
     m_pit_counter.reset();
 }
 
-uint8_t AVR_ArchMega0_RTC::ioreg_read_handler(reg_addr_t addr, uint8_t value)
+uint8_t AVR_ArchXT_RTC::ioreg_read_handler(reg_addr_t addr, uint8_t value)
 {
     reg_addr_t reg_ofs = addr - m_config.reg_base;
 
@@ -180,7 +180,7 @@ uint8_t AVR_ArchMega0_RTC::ioreg_read_handler(reg_addr_t addr, uint8_t value)
     return value;
 }
 
-void AVR_ArchMega0_RTC::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
+void AVR_ArchXT_RTC::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
     const reg_addr_t reg_ofs = addr - m_config.reg_base;
     bool do_reconfigure = false;
@@ -273,7 +273,7 @@ void AVR_ArchMega0_RTC::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t
         configure_timers();
 }
 
-void AVR_ArchMega0_RTC::configure_timers()
+void AVR_ArchXT_RTC::configure_timers()
 {
     if (m_clk_mode) {
         //Read and configure the clock source
@@ -310,7 +310,7 @@ void AVR_ArchMega0_RTC::configure_timers()
 /*
  *  Callback when entering sleep mode
  */
-void AVR_ArchMega0_RTC::sleep(bool on, AVR_SleepMode mode)
+void AVR_ArchXT_RTC::sleep(bool on, AVR_SleepMode mode)
 {
     //The RTC timer is paused for sleep modes above Standby and in Standby if RTC_RUNSTDBY is not set
     //The PIT timer is not affected by sleep modes
@@ -321,7 +321,7 @@ void AVR_ArchMega0_RTC::sleep(bool on, AVR_SleepMode mode)
 /*
  *  Callbacks for the prescaled timers
  */
-void AVR_ArchMega0_RTC::rtc_hook_raised(const signal_data_t& sigdata)
+void AVR_ArchXT_RTC::rtc_hook_raised(const signal_data_t& sigdata)
 {
     if (sigdata.sigid != AVR_TimerCounter::Signal_Event)
         return;
@@ -339,7 +339,7 @@ void AVR_ArchMega0_RTC::rtc_hook_raised(const signal_data_t& sigdata)
     }
 }
 
-void AVR_ArchMega0_RTC::pit_hook_raised(const signal_data_t& sigdata)
+void AVR_ArchXT_RTC::pit_hook_raised(const signal_data_t& sigdata)
 {
     if (sigdata.sigid != AVR_TimerCounter::Signal_Event)
         return;

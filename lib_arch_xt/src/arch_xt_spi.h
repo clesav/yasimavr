@@ -21,8 +21,8 @@
 
 //=======================================================================================
 
-#ifndef __YASIMAVR_MEGA0_SPI_H__
-#define __YASIMAVR_MEGA0_SPI_H__
+#ifndef __YASIMAVR_XT_SPI_H__
+#define __YASIMAVR_XT_SPI_H__
 
 
 #include "ioctrl_common/sim_spi.h"
@@ -31,7 +31,7 @@
 
 //=======================================================================================
 /*
- * Implementation of a SPI for the Mega-0/Mega-1 series
+ * Implementation of a SPI for the XT core series
  * Features:
  *  - Host/client mode
  *  - data order, phase and polarity settings have no effect
@@ -43,7 +43,7 @@
  *  for supported CTLREQs, see sim_spi.h
  */
 
-struct AVR_ArchMega0_SPI_Config {
+struct AVR_ArchXT_SPI_Config {
 
     reg_addr_t reg_base;
     uint32_t pin_select;
@@ -51,11 +51,11 @@ struct AVR_ArchMega0_SPI_Config {
 
 };
 
-class DLL_EXPORT AVR_ArchMega0_SPI : public AVR_Peripheral, public AVR_SignalHook {
+class DLL_EXPORT AVR_ArchXT_SPI : public AVR_Peripheral, public AVR_SignalHook {
 
 public:
 
-    AVR_ArchMega0_SPI(uint8_t num, const AVR_ArchMega0_SPI_Config& config);
+    AVR_ArchXT_SPI(uint8_t num, const AVR_ArchXT_SPI_Config& config);
 
     virtual bool init(AVR_Device& device) override;
     virtual void reset() override;
@@ -66,7 +66,7 @@ public:
 
 private:
 
-    const AVR_ArchMega0_SPI_Config& m_config;
+    const AVR_ArchXT_SPI_Config& m_config;
 
     AVR_IO_SPI m_spi;
 
@@ -77,4 +77,4 @@ private:
 
 };
 
-#endif //__YASIMAVR_MEGA0_SPI_H__
+#endif //__YASIMAVR_XT_SPI_H__

@@ -21,8 +21,8 @@
 
 //=======================================================================================
 
-#ifndef __YASIMAVR_MEGA0_DEVICE_H__
-#define __YASIMAVR_MEGA0_DEVICE_H__
+#ifndef __YASIMAVR_XT_DEVICE_H__
+#define __YASIMAVR_XT_DEVICE_H__
 
 #include "core/sim_core.h"
 #include "core/sim_device.h"
@@ -32,7 +32,7 @@
 
 //=======================================================================================
 
-struct AVR_ArchMega0_CoreConfig : AVR_CoreConfiguration {
+struct AVR_ArchXT_CoreConfig : AVR_CoreConfiguration {
 
     mem_addr_t              flashstart_ds;      //first address of the flash in the data space
     mem_addr_t              flashend_ds;        //last address of the flash in the data space
@@ -47,21 +47,21 @@ struct AVR_ArchMega0_CoreConfig : AVR_CoreConfiguration {
 
 //=======================================================================================
 
-typedef AVR_DeviceConfiguration AVR_ArchMega0_DeviceConfig;
+typedef AVR_DeviceConfiguration AVR_ArchXT_DeviceConfig;
 
 
 //=======================================================================================
 
-class DLL_EXPORT AVR_ArchMega0_Core : public AVR_Core {
+class DLL_EXPORT AVR_ArchXT_Core : public AVR_Core {
 
 public:
 
-    enum AVR_ArchMega0_NVM {
+    enum AVR_ArchXT_NVM {
         NVM_EEPROM = NVM_ArchDefined,
         NVM_USERROW = NVM_ArchDefined + 1,
     };
 
-    explicit AVR_ArchMega0_Core(const AVR_ArchMega0_CoreConfig& variant);
+    explicit AVR_ArchXT_Core(const AVR_ArchXT_CoreConfig& variant);
 
 protected:
 
@@ -76,19 +76,19 @@ private:
     AVR_NonVolatileMemory m_eeprom;
     AVR_NonVolatileMemory m_userrow;
 
-friend class AVR_ArchMega0_Device;
+friend class AVR_ArchXT_Device;
 
 };
 
 
 //=======================================================================================
 
-class DLL_EXPORT AVR_ArchMega0_Device : public AVR_Device {
+class DLL_EXPORT AVR_ArchXT_Device : public AVR_Device {
 
 public:
 
-    explicit AVR_ArchMega0_Device(const AVR_ArchMega0_DeviceConfig& config);
-    virtual ~AVR_ArchMega0_Device();
+    explicit AVR_ArchXT_Device(const AVR_ArchXT_DeviceConfig& config);
+    virtual ~AVR_ArchXT_Device();
 
 protected:
 
@@ -99,8 +99,8 @@ protected:
 
 private:
 
-    AVR_ArchMega0_Core m_core_impl;
+    AVR_ArchXT_Core m_core_impl;
 
 };
 
-#endif //__YASIMAVR_MEGA0_DEVICE_H__
+#endif //__YASIMAVR_XT_DEVICE_H__

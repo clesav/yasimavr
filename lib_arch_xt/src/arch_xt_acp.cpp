@@ -36,7 +36,7 @@
 #define REG_OFS(reg) \
     offsetof(AC_t, reg)
 
-typedef AVR_ArchMega0_ACP_Config cfg_t;
+typedef AVR_ArchXT_ACP_Config cfg_t;
 
 
 enum HookTag {
@@ -54,7 +54,7 @@ const double Hysteresis[2][4] = {
 };
 
 
-AVR_ArchMega0_ACP::AVR_ArchMega0_ACP(int num, const cfg_t& config)
+AVR_ArchXT_ACP::AVR_ArchXT_ACP(int num, const cfg_t& config)
 :AVR_Peripheral(AVR_IOCTL_ACP(0x30 + num))
 ,m_config(config)
 ,m_intflag(false)
@@ -66,7 +66,7 @@ AVR_ArchMega0_ACP::AVR_ArchMega0_ACP(int num, const cfg_t& config)
     m_signal.set_data(Signal_DAC, 0.0);
 }
 
-bool AVR_ArchMega0_ACP::init(AVR_Device& device)
+bool AVR_ArchXT_ACP::init(AVR_Device& device)
 {
     bool status = AVR_Peripheral::init(device);
 
@@ -97,7 +97,7 @@ bool AVR_ArchMega0_ACP::init(AVR_Device& device)
     return status;
 }
 
-bool AVR_ArchMega0_ACP::register_channels(AVR_DataSignalMux& mux, const std::vector<channel_config_t>& channels)
+bool AVR_ArchXT_ACP::register_channels(AVR_DataSignalMux& mux, const std::vector<channel_config_t>& channels)
 {
     for (auto channel : channels) {
         switch(channel.type) {
@@ -118,7 +118,7 @@ bool AVR_ArchMega0_ACP::register_channels(AVR_DataSignalMux& mux, const std::vec
     return true;
 }
 
-void AVR_ArchMega0_ACP::reset()
+void AVR_ArchXT_ACP::reset()
 {
     m_sleeping = false;
     m_intflag.update_from_ioreg();
@@ -129,7 +129,7 @@ void AVR_ArchMega0_ACP::reset()
     update_output();
 }
 
-bool AVR_ArchMega0_ACP::ctlreq(uint16_t req, ctlreq_data_t* data)
+bool AVR_ArchXT_ACP::ctlreq(uint16_t req, ctlreq_data_t* data)
 {
     if (req == AVR_CTLREQ_GET_SIGNAL) {
         data->data = &m_signal;
@@ -145,7 +145,7 @@ bool AVR_ArchMega0_ACP::ctlreq(uint16_t req, ctlreq_data_t* data)
 }
 
 //I/O register callback reimplementation
-void AVR_ArchMega0_ACP::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
+void AVR_ArchXT_ACP::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
     reg_addr_t reg_ofs = addr - m_config.reg_base;
 
@@ -193,7 +193,7 @@ void AVR_ArchMega0_ACP::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t
 /*
 * Update the DAC value and raise the corresponding signal
 */
-void AVR_ArchMega0_ACP::update_DAC()
+void AVR_ArchXT_ACP::update_DAC()
 {
     vardata_t vref = m_vref_signal->data(AVR_IO_VREF::Signal_IntRefChange, m_config.vref_channel);
     double dac_value = vref.as_double() * READ_IOREG(DACREF) / 256.0;
@@ -201,7 +201,7 @@ void AVR_ArchMega0_ACP::update_DAC()
 }
 
 
-void AVR_ArchMega0_ACP::update_hysteresis()
+void AVR_ArchXT_ACP::update_hysteresis()
 {
     if (!TEST_IOREG(CTRLA, AC_ENABLE))
         return;
@@ -220,7 +220,7 @@ void AVR_ArchMega0_ACP::update_hysteresis()
         device()->crash(CRASH_BAD_CTL_IO, "ACP: Invalid VCC value");
 }
 
-void AVR_ArchMega0_ACP::update_output()
+void AVR_ArchXT_ACP::update_output()
 {
     logger().dbg("Updating output");
 
@@ -288,7 +288,7 @@ void AVR_ArchMega0_ACP::update_output()
 /*
 * Callback from the pin signal hook.
 */
-void AVR_ArchMega0_ACP::raised(const signal_data_t& sigdata, uint16_t hooktag)
+void AVR_ArchXT_ACP::raised(const signal_data_t& sigdata, uint16_t hooktag)
 {
     if (hooktag == HookTag_VREF) {
         if (sigdata.sigid == AVR_IO_VREF::Signal_IntRefChange && sigdata.index == m_config.vref_channel) {
@@ -308,7 +308,7 @@ void AVR_ArchMega0_ACP::raised(const signal_data_t& sigdata, uint16_t hooktag)
 /*
 * Sleep management
 */
-void AVR_ArchMega0_ACP::sleep(bool on, AVR_SleepMode mode)
+void AVR_ArchXT_ACP::sleep(bool on, AVR_SleepMode mode)
 {
     if (mode > AVR_SleepMode::Standby || (mode == AVR_SleepMode::Standby && !TEST_IOREG(CTRLA, AC_RUNSTDBY)))
         m_sleeping = on;

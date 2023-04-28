@@ -21,8 +21,8 @@
 
 //=======================================================================================
 
-#ifndef __YASIMAVR_MEGA0_USART_H__
-#define __YASIMAVR_MEGA0_USART_H__
+#ifndef __YASIMAVR_XT_USART_H__
+#define __YASIMAVR_XT_USART_H__
 
 #include "core/sim_interrupt.h"
 #include "ioctrl_common/sim_uart.h"
@@ -30,7 +30,7 @@
 
 //=======================================================================================
 /*
- * Implementation of a USART interface for Mega0/Mega1 series
+ * Implementation of a USART interface for XT core series
  * Features:
  *  - 8-bits frames only, regardless of the frame size setting
  *  - stop bits and parity settings have no effect
@@ -48,7 +48,7 @@
  *      data in and out (see sim_uart.h)
  */
 
-struct AVR_ArchMega0_USART_Config {
+struct AVR_ArchXT_USART_Config {
 
     reg_addr_t reg_base;
 
@@ -58,11 +58,11 @@ struct AVR_ArchMega0_USART_Config {
 
 };
 
-class DLL_EXPORT AVR_ArchMega0_USART : public AVR_Peripheral, public AVR_SignalHook {
+class DLL_EXPORT AVR_ArchXT_USART : public AVR_Peripheral, public AVR_SignalHook {
 
 public:
 
-    AVR_ArchMega0_USART(uint8_t num, const AVR_ArchMega0_USART_Config& config);
+    AVR_ArchXT_USART(uint8_t num, const AVR_ArchXT_USART_Config& config);
 
     virtual bool init(AVR_Device& device) override;
     virtual void reset() override;
@@ -74,7 +74,7 @@ public:
 
 private:
 
-    const AVR_ArchMega0_USART_Config& m_config;
+    const AVR_ArchXT_USART_Config& m_config;
 
     AVR_IO_UART m_uart;
     UART_EndPoint m_endpoint;
@@ -87,4 +87,4 @@ private:
 
 };
 
-#endif //__YASIMAVR_MEGA0_USART_H__
+#endif //__YASIMAVR_XT_USART_H__

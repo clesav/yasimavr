@@ -21,8 +21,8 @@
 
 //=======================================================================================
 
-#ifndef __YASIMAVR_MEGA0_TWI_H__
-#define __YASIMAVR_MEGA0_TWI_H__
+#ifndef __YASIMAVR_XT_TWI_H__
+#define __YASIMAVR_XT_TWI_H__
 
 
 #include "core/sim_interrupt.h"
@@ -31,7 +31,7 @@
 
 //=======================================================================================
 /*
- * Implementation of a TWI for the Mega-0/Mega-1 series
+ * Implementation of a TWI for the XT core series
  * Features:
  *  - Host/client mode
  *  - data order, phase and polarity settings have no effect
@@ -40,7 +40,7 @@
  *  for supported CTLREQs, see sim_spi.h
  */
 
-struct AVR_ArchMega0_TWI_Config {
+struct AVR_ArchXT_TWI_Config {
 
     reg_addr_t reg_base;
     int_vect_t iv_master;
@@ -48,11 +48,11 @@ struct AVR_ArchMega0_TWI_Config {
 
 };
 
-class DLL_EXPORT AVR_ArchMega0_TWI : public AVR_Peripheral, public AVR_SignalHook {
+class DLL_EXPORT AVR_ArchXT_TWI : public AVR_Peripheral, public AVR_SignalHook {
 
 public:
 
-    AVR_ArchMega0_TWI(uint8_t num, const AVR_ArchMega0_TWI_Config& config);
+    AVR_ArchXT_TWI(uint8_t num, const AVR_ArchXT_TWI_Config& config);
 
     virtual bool init(AVR_Device& device) override;
     virtual void reset() override;
@@ -63,7 +63,7 @@ public:
 
 private:
 
-    const AVR_ArchMega0_TWI_Config& m_config;
+    const AVR_ArchXT_TWI_Config& m_config;
 
     AVR_IO_TWI m_twi;
     bool m_has_address;
@@ -80,4 +80,4 @@ private:
 
 };
 
-#endif //__YASIMAVR_MEGA0_TWI_H__
+#endif //__YASIMAVR_XT_TWI_H__

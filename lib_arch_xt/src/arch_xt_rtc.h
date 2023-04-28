@@ -21,8 +21,8 @@
 
 //=======================================================================================
 
-#ifndef __YASIMAVR_MEGA0_RTC_H__
-#define __YASIMAVR_MEGA0_RTC_H__
+#ifndef __YASIMAVR_XT_RTC_H__
+#define __YASIMAVR_XT_RTC_H__
 
 #include "core/sim_peripheral.h"
 #include "core/sim_interrupt.h"
@@ -31,7 +31,7 @@
 
 //=======================================================================================
 /*
- * AVR_ArchMega0_RTC is the implementation of a Real-Time Clock for the Mega-0/Mega-1 series
+ * AVR_ArchXT_RTC is the implementation of a Real-Time Clock for the XT core series
  * This includes a Periodic Interrupt Timer system
  * Unsupported features:
  *      - External clock source
@@ -40,7 +40,7 @@
  *      - Synchronization Busy flags
  */
 
-struct AVR_ArchMega0_RTC_Config {
+struct AVR_ArchXT_RTC_Config {
 
     enum RTC_ClockSource {
         Clock_32kHz,
@@ -60,12 +60,12 @@ struct AVR_ArchMega0_RTC_Config {
 };
 
 
-class DLL_EXPORT AVR_ArchMega0_RTC : public AVR_Peripheral {
+class DLL_EXPORT AVR_ArchXT_RTC : public AVR_Peripheral {
 
 public:
 
-    explicit AVR_ArchMega0_RTC(const AVR_ArchMega0_RTC_Config& config);
-    virtual ~AVR_ArchMega0_RTC();
+    explicit AVR_ArchXT_RTC(const AVR_ArchXT_RTC_Config& config);
+    virtual ~AVR_ArchXT_RTC();
 
     virtual bool init(AVR_Device& device) override;
     virtual void reset() override;
@@ -75,7 +75,7 @@ public:
 
 private:
 
-    const AVR_ArchMega0_RTC_Config& m_config;
+    const AVR_ArchXT_RTC_Config& m_config;
 
     uint8_t m_clk_mode;
 

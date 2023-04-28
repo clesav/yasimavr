@@ -45,14 +45,14 @@
 
 //=======================================================================================
 
-AVR_ArchMega0_Port::AVR_ArchMega0_Port(char name, const AVR_ArchMega0_PortConfig& config)
+AVR_ArchXT_Port::AVR_ArchXT_Port(char name, const AVR_ArchXT_PortConfig& config)
 :AVR_IO_Port(name)
 ,m_config(config)
 ,m_port_value(0)
 ,m_dir_value(0)
 {}
 
-bool AVR_ArchMega0_Port::init(AVR_Device& device)
+bool AVR_ArchXT_Port::init(AVR_Device& device)
 {
     bool status = AVR_IO_Port::init(device);
 
@@ -87,14 +87,14 @@ bool AVR_ArchMega0_Port::init(AVR_Device& device)
     return status;
 }
 
-void AVR_ArchMega0_Port::reset()
+void AVR_ArchXT_Port::reset()
 {
     AVR_IO_Port::reset();
     m_port_value = 0;
     m_dir_value = 0;
 }
 
-uint8_t AVR_ArchMega0_Port::ioreg_read_handler(reg_addr_t addr, uint8_t value)
+uint8_t AVR_ArchXT_Port::ioreg_read_handler(reg_addr_t addr, uint8_t value)
 {
     if (addr == VPORT_REG_ADDR(DIR))
         value = read_ioreg(PORT_REG_ADDR(DIR));
@@ -108,7 +108,7 @@ uint8_t AVR_ArchMega0_Port::ioreg_read_handler(reg_addr_t addr, uint8_t value)
     return value;
 }
 
-void AVR_ArchMega0_Port::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
+void AVR_ArchXT_Port::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
     if (addr >= m_config.reg_base_port && addr < reg_addr_t(m_config.reg_base_port + sizeof(PORT_t))) {
         reg_addr_t reg_ofs = addr - m_config.reg_base_port;
@@ -213,7 +213,7 @@ void AVR_ArchMega0_Port::ioreg_write_handler(reg_addr_t addr, const ioreg_write_
     }
 }
 
-void AVR_ArchMega0_Port::update_pin_states()
+void AVR_ArchXT_Port::update_pin_states()
 {
     AVR_Pin::State state;
     uint8_t valdir = m_dir_value;
@@ -243,7 +243,7 @@ void AVR_ArchMega0_Port::update_pin_states()
     }
 }
 
-void AVR_ArchMega0_Port::pin_state_changed(uint8_t num, AVR_Pin::State state)
+void AVR_ArchXT_Port::pin_state_changed(uint8_t num, AVR_Pin::State state)
 {
     AVR_IO_Port::pin_state_changed(num, state);
     if (state == AVR_Pin::State_Shorted) return;

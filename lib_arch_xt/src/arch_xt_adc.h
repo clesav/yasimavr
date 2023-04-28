@@ -22,8 +22,8 @@
 //=======================================================================================
 
 
-#ifndef __YASIMAVR_MEGA0_ADC_H__
-#define __YASIMAVR_MEGA0_ADC_H__
+#ifndef __YASIMAVR_XT_ADC_H__
+#define __YASIMAVR_XT_ADC_H__
 
 #include "core/sim_interrupt.h"
 #include "ioctrl_common/sim_adc.h"
@@ -33,7 +33,7 @@
 
 //=======================================================================================
 /*
- * Implementation of a ADC for the Mega-0/Mega-1 series
+ * Implementation of a ADC for the XT core series
  * Unsupported features:
  *      - Sample Capacitance Selection (register bit available but not used)
  *      - Event Control
@@ -45,7 +45,7 @@
  * by using the request AVR_CTLREQ_ADC_TRIGGER.
  */
 
-struct AVR_ArchMega0_ADC_Config {
+struct AVR_ArchXT_ADC_Config {
 
     struct reference_config_t : base_reg_config_t {
         AVR_IO_VREF::Source source;
@@ -68,13 +68,13 @@ struct AVR_ArchMega0_ADC_Config {
 
 };
 
-class DLL_EXPORT AVR_ArchMega0_ADC : public AVR_IO_ADC,
-                                     public AVR_Peripheral,
-                                     public AVR_SignalHook {
+class DLL_EXPORT AVR_ArchXT_ADC : public AVR_IO_ADC,
+                                  public AVR_Peripheral,
+                                  public AVR_SignalHook {
 
 public:
 
-    AVR_ArchMega0_ADC(int num, const AVR_ArchMega0_ADC_Config& config);
+    AVR_ArchXT_ADC(int num, const AVR_ArchXT_ADC_Config& config);
 
     virtual bool init(AVR_Device& device) override;
     virtual void reset() override;
@@ -94,7 +94,7 @@ private:
         ADC_PendingRaise,
     };
 
-    const AVR_ArchMega0_ADC_Config& m_config;
+    const AVR_ArchXT_ADC_Config& m_config;
     State m_state;
     bool m_first;
     AVR_PrescaledTimer m_timer;
@@ -114,4 +114,4 @@ private:
 
 };
 
-#endif //__YASIMAVR_MEGA0_ADC_H__
+#endif //__YASIMAVR_XT_ADC_H__

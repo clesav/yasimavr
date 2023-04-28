@@ -29,15 +29,15 @@
 
 //=======================================================================================
 
-AVR_ArchMega0_Core::AVR_ArchMega0_Core(const AVR_ArchMega0_CoreConfig& config)
+AVR_ArchXT_Core::AVR_ArchXT_Core(const AVR_ArchXT_CoreConfig& config)
 :AVR_Core(config)
 ,m_eeprom(config.eepromend ? (config.eepromend + 1) : 0, "eeprom")
 ,m_userrow(config.userrowend ? (config.userrowend + 1) : 0, "userrow")
 {}
 
-uint8_t AVR_ArchMega0_Core::cpu_read_data(mem_addr_t data_addr)
+uint8_t AVR_ArchXT_Core::cpu_read_data(mem_addr_t data_addr)
 {
-    const AVR_ArchMega0_CoreConfig& cfg = reinterpret_cast<const AVR_ArchMega0_CoreConfig&>(m_config);
+    const AVR_ArchXT_CoreConfig& cfg = reinterpret_cast<const AVR_ArchXT_CoreConfig&>(m_config);
     uint8_t value = 0;
 
     if (data_addr <= cfg.ioend) {
@@ -63,9 +63,9 @@ uint8_t AVR_ArchMega0_Core::cpu_read_data(mem_addr_t data_addr)
     return value;
 }
 
-void AVR_ArchMega0_Core::cpu_write_data(mem_addr_t data_addr, uint8_t value)
+void AVR_ArchXT_Core::cpu_write_data(mem_addr_t data_addr, uint8_t value)
 {
-    const AVR_ArchMega0_CoreConfig& cfg = reinterpret_cast<const AVR_ArchMega0_CoreConfig&>(m_config);
+    const AVR_ArchXT_CoreConfig& cfg = reinterpret_cast<const AVR_ArchXT_CoreConfig&>(m_config);
 
     if (data_addr <= cfg.ioend) {
         cpu_write_ioreg(data_addr, value);
@@ -106,9 +106,9 @@ void AVR_ArchMega0_Core::cpu_write_data(mem_addr_t data_addr, uint8_t value)
         m_debug_probe->_cpu_notify_data_write(data_addr, value);
 }
 
-void AVR_ArchMega0_Core::dbg_read_data(mem_addr_t addr, uint8_t* buf, mem_addr_t len)
+void AVR_ArchXT_Core::dbg_read_data(mem_addr_t addr, uint8_t* buf, mem_addr_t len)
 {
-    const AVR_ArchMega0_CoreConfig& cfg = reinterpret_cast<const AVR_ArchMega0_CoreConfig&>(m_config);
+    const AVR_ArchXT_CoreConfig& cfg = reinterpret_cast<const AVR_ArchXT_CoreConfig&>(m_config);
 
     std::memset(buf, 0x00, len);
 
@@ -134,9 +134,9 @@ void AVR_ArchMega0_Core::dbg_read_data(mem_addr_t addr, uint8_t* buf, mem_addr_t
     }
 }
 
-void AVR_ArchMega0_Core::dbg_write_data(mem_addr_t addr, const uint8_t* buf, mem_addr_t len)
+void AVR_ArchXT_Core::dbg_write_data(mem_addr_t addr, const uint8_t* buf, mem_addr_t len)
 {
-    const AVR_ArchMega0_CoreConfig& cfg = reinterpret_cast<const AVR_ArchMega0_CoreConfig&>(m_config);
+    const AVR_ArchXT_CoreConfig& cfg = reinterpret_cast<const AVR_ArchXT_CoreConfig&>(m_config);
 
     mem_addr_t bufofs, blockofs;
     uint32_t n;
@@ -163,24 +163,24 @@ void AVR_ArchMega0_Core::dbg_write_data(mem_addr_t addr, const uint8_t* buf, mem
 
 //=======================================================================================
 
-AVR_ArchMega0_Device::AVR_ArchMega0_Device(const AVR_ArchMega0_DeviceConfig& config)
+AVR_ArchXT_Device::AVR_ArchXT_Device(const AVR_ArchXT_DeviceConfig& config)
 :AVR_Device(m_core_impl, config)
-,m_core_impl(reinterpret_cast<const AVR_ArchMega0_CoreConfig&>(config.core))
+,m_core_impl(reinterpret_cast<const AVR_ArchXT_CoreConfig&>(config.core))
 {}
 
 
-AVR_ArchMega0_Device::~AVR_ArchMega0_Device()
+AVR_ArchXT_Device::~AVR_ArchXT_Device()
 {
     erase_peripherals();
 }
 
 
-bool AVR_ArchMega0_Device::core_ctlreq(uint16_t req, ctlreq_data_t* reqdata)
+bool AVR_ArchXT_Device::core_ctlreq(uint16_t req, ctlreq_data_t* reqdata)
 {
     if (req == AVR_CTLREQ_CORE_NVM) {
-        if (reqdata->index == AVR_ArchMega0_Core::NVM_EEPROM)
+        if (reqdata->index == AVR_ArchXT_Core::NVM_EEPROM)
             reqdata->data = &(m_core_impl.m_eeprom);
-        else if (reqdata->index == AVR_ArchMega0_Core::NVM_USERROW)
+        else if (reqdata->index == AVR_ArchXT_Core::NVM_USERROW)
             reqdata->data = &(m_core_impl.m_userrow);
         else if (reqdata->index == AVR_Core::NVM_GetCount)
             reqdata->data = (unsigned int) (AVR_Core::NVM_CommonCount + 2);
@@ -193,7 +193,7 @@ bool AVR_ArchMega0_Device::core_ctlreq(uint16_t req, ctlreq_data_t* reqdata)
     }
 }
 
-bool AVR_ArchMega0_Device::program(const AVR_Firmware& firmware)
+bool AVR_ArchXT_Device::program(const AVR_Firmware& firmware)
 {
     if (!AVR_Device::program(firmware))
         return false;
