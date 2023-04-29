@@ -43,8 +43,8 @@ bindings: siplib
 	$(COPY_FILE) sipgen\gen\core\core.pyi Release
 	$(COPY_FILE) sipgen\gen\arch_avr\yasimavr\lib\arch_avr.pyd Release
 	$(COPY_FILE) sipgen\gen\arch_avr\arch_avr.pyi Release
-	$(COPY_FILE) sipgen\gen\arch_m0\yasimavr\lib\arch_m0.pyd Release
-	$(COPY_FILE) sipgen\gen\arch_m0\arch_m0.pyi Release
+	$(COPY_FILE) sipgen\gen\arch_xt\yasimavr\lib\arch_xt.pyd Release
+	$(COPY_FILE) sipgen\gen\arch_xt\arch_xt.pyi Release
 
 bindings-debug: siplib
 	$(COPY_FILE) src\pyproject.Debug.toml sipgen\pyproject.toml
@@ -54,8 +54,8 @@ bindings-debug: siplib
 	$(COPY_FILE) sipgen\gen\core\core.pyi Debug
 	$(COPY_FILE) sipgen\gen\arch_avr\yasimavr\lib\arch_avr.pyd Debug
 	$(COPY_FILE) sipgen\gen\arch_avr\arch_avr.pyi Debug
-	$(COPY_FILE) sipgen\gen\arch_m0\yasimavr\lib\arch_m0.pyd Debug
-	$(COPY_FILE) sipgen\gen\arch_m0\arch_m0.pyi Debug
+	$(COPY_FILE) sipgen\gen\arch_xt\yasimavr\lib\arch_xt.pyd Debug
+	$(COPY_FILE) sipgen\gen\arch_xt\arch_xt.pyi Debug
 
 clean: FORCE
 	-rmdir /q /s sipgen

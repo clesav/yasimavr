@@ -23,4 +23,4 @@ based on the XT architecture.
 '''
 
 from .builders._builders_arch_xt import XT_BaseDevice
-from ..lib.arch_m0 import *
+from ..lib.arch_xt import *

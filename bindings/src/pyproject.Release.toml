@@ -51,15 +51,15 @@ pep484-pyi = true
 protected-is-public = false
 
 
-[tool.sip.bindings.yasimavr-arch-m0]
-sip-file = "../src/lib_arch_m0/yasimavr-arch-m0.sip"
+[tool.sip.bindings.yasimavr-arch-xt]
+sip-file = "../src/lib_arch_xt/yasimavr-arch-xt.sip"
 include-dirs = ["../../lib_core/src",
-                "../../lib_arch_m0/src",
+                "../../lib_arch_xt/src",
                 "../src"]
 libraries = ["yasimavr_core",
-             "yasimavr_arch_m0"]
+             "yasimavr_arch_xt"]
 library-dirs = ["../../lib_core/Release",
-                "../../lib_arch_m0/Release"]
+                "../../lib_arch_xt/Release"]
 pep484-pyi = true
 protected-is-public = false
 

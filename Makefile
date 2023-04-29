@@ -26,17 +26,17 @@ all: libs py-bindings
 
 libs: lib-core \
 	  lib-arch-avr \
-	  lib-arch-m0
+	  lib-arch-xt
 
 debug: libs-debug py-bindings-debug
 
 libs-debug: lib-core-debug \
 	        lib-arch-avr-debug \
-	        lib-arch-m0-debug
+	        lib-arch-xt-debug
 
 clean: lib-core-clean \
 	   lib-arch-avr-clean \
-	   lib-arch-m0-clean \
+	   lib-arch-xt-clean \
 	   py-bindings-clean
 	-cd "$(LIB_TARGET_DIR)" && $(DEL_FILE) *.*
 
@@ -68,17 +68,17 @@ lib-arch-avr-clean: FORCE
 	-cd "lib_arch_avr\Debug" && $(MAKE) -f Makefile clean
 
 
-lib-arch-m0: lib-core
-	cd lib_arch_m0\Release && $(MAKE) -f Makefile all
-	$(COPY) "lib_arch_m0\Release\yasimavr_arch_m0.dll" "$(LIB_TARGET_DIR)"
+lib-arch-xt: lib-core
+	cd lib_arch_xt\Release && $(MAKE) -f Makefile all
+	$(COPY) "lib_arch_xt\Release\yasimavr_arch_xt.dll" "$(LIB_TARGET_DIR)"
 
-lib-arch-m0-debug: lib-core-debug
-	cd lib_arch_m0\Debug && $(MAKE) -f Makefile all
-	$(COPY) "lib_arch_m0\Debug\yasimavr_arch_m0.dll" "$(LIB_TARGET_DIR)"
+lib-arch-xt-debug: lib-core-debug
+	cd lib_arch_xt\Debug && $(MAKE) -f Makefile all
+	$(COPY) "lib_arch_xt\Debug\yasimavr_arch_xt.dll" "$(LIB_TARGET_DIR)"
 
-lib-arch-m0-clean: FORCE
-	-cd "lib_arch_m0\Release" && $(MAKE) -f Makefile clean
-	-cd "lib_arch_m0\Debug" && $(MAKE) -f Makefile clean
+lib-arch-xt-clean: FORCE
+	-cd "lib_arch_xt\Release" && $(MAKE) -f Makefile clean
+	-cd "lib_arch_xt\Debug" && $(MAKE) -f Makefile clean
 
 
 py-bindings: libs
