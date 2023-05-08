@@ -25,10 +25,12 @@
 #include "sim_core.h"
 #include "sim_device.h"
 
+YASIMAVR_USING_NAMESPACE
+
 
 //========================================================================================
 
-AVR_InterruptController::interrupt_t::interrupt_t()
+InterruptController::interrupt_t::interrupt_t()
 :used(false)
 ,raised(false)
 ,handler(nullptr)
@@ -37,15 +39,15 @@ AVR_InterruptController::interrupt_t::interrupt_t()
 
 //========================================================================================
 
-AVR_InterruptController::AVR_InterruptController(unsigned int size)
-:AVR_Peripheral(AVR_IOCTL_INTR)
+InterruptController::InterruptController(unsigned int size)
+:Peripheral(AVR_IOCTL_INTR)
 ,m_interrupts(size)
 ,m_irq_vector(AVR_INTERRUPT_NONE)
 {
     m_interrupts[0].used = true; //The reset vector is always available
 }
 
-void AVR_InterruptController::reset()
+void InterruptController::reset()
 {
     //Reset the state of all vectors
     for (uint8_t i = 0; i < m_interrupts.size(); i++)
@@ -54,7 +56,7 @@ void AVR_InterruptController::reset()
     m_irq_vector = AVR_INTERRUPT_NONE;
 }
 
-bool AVR_InterruptController::ctlreq(uint16_t req, ctlreq_data_t* data)
+bool InterruptController::ctlreq(uint16_t req, ctlreq_data_t* data)
 {
     if (req == AVR_CTLREQ_GET_SIGNAL) {
         data->data = &m_signal;
@@ -74,7 +76,7 @@ bool AVR_InterruptController::ctlreq(uint16_t req, ctlreq_data_t* data)
         }
         else {
 
-            AVR_InterruptHandler* t = reinterpret_cast<AVR_InterruptHandler*>(data->data.as_ptr());
+            InterruptHandler* t = reinterpret_cast<InterruptHandler*>(data->data.as_ptr());
             if (t) {
                 m_interrupts[vector].used = true;
                 m_interrupts[vector].handler = t;
@@ -108,7 +110,7 @@ bool AVR_InterruptController::ctlreq(uint16_t req, ctlreq_data_t* data)
  * that could wake the device at the next cycle.
  * We do that by raising the common signal for any interrupt still in the Raised state.
  */
-void AVR_InterruptController::sleep(bool on, AVR_SleepMode mode)
+void InterruptController::sleep(bool on, SleepMode mode)
 {
     if (!on) return;
 
@@ -118,13 +120,13 @@ void AVR_InterruptController::sleep(bool on, AVR_SleepMode mode)
     }
 }
 
-void AVR_InterruptController::cpu_ack_irq()
+void InterruptController::cpu_ack_irq()
 {
     cpu_ack_irq(m_irq_vector);
     update_irq();
 }
 
-void AVR_InterruptController::cpu_ack_irq(int_vect_t vector)
+void InterruptController::cpu_ack_irq(int_vect_t vector)
 {
     m_interrupts[vector].raised = false;
 
@@ -134,23 +136,23 @@ void AVR_InterruptController::cpu_ack_irq(int_vect_t vector)
     m_signal.raise_u(Signal_StateChange, State_Acknowledged, vector);
 }
 
-void AVR_InterruptController::cpu_reti()
+void InterruptController::cpu_reti()
 {
     m_signal.raise_u(Signal_StateChange, State_Returned);
     update_irq();
 }
 
-void AVR_InterruptController::update_irq()
+void InterruptController::update_irq()
 {
     m_irq_vector = get_next_irq();
 }
 
-void AVR_InterruptController::set_interrupt_raised(int_vect_t vector, bool raised)
+void InterruptController::set_interrupt_raised(int_vect_t vector, bool raised)
 {
     m_interrupts[vector].raised = raised;
 }
 
-void AVR_InterruptController::raise_interrupt(int_vect_t vector)
+void InterruptController::raise_interrupt(int_vect_t vector)
 {
     //If the interrupt is already raised, no op
     if (m_interrupts[vector].used && !m_interrupts[vector].raised) {
@@ -160,7 +162,7 @@ void AVR_InterruptController::raise_interrupt(int_vect_t vector)
     }
 }
 
-void AVR_InterruptController::cancel_interrupt(int_vect_t vector)
+void InterruptController::cancel_interrupt(int_vect_t vector)
 {
     if (m_interrupts[vector].used && m_interrupts[vector].raised) {
         m_interrupts[vector].raised = false;
@@ -170,7 +172,7 @@ void AVR_InterruptController::cancel_interrupt(int_vect_t vector)
     }
 }
 
-void AVR_InterruptController::disconnect_handler(AVR_InterruptHandler* handler)
+void InterruptController::disconnect_handler(InterruptHandler* handler)
 {
     for (size_t v = 0; v < m_interrupts.size(); v++) {
         if (m_interrupts[v].handler == handler) {
@@ -180,42 +182,42 @@ void AVR_InterruptController::disconnect_handler(AVR_InterruptHandler* handler)
         }
     }
 
-    if (device()->state() < AVR_Device::State_Destroying)
+    if (device()->state() < Device::State_Destroying)
         update_irq();
 }
 
 
 //========================================================================================
 
-AVR_InterruptHandler::AVR_InterruptHandler()
+InterruptHandler::InterruptHandler()
 :m_intctl(nullptr)
 {}
 
-AVR_InterruptHandler::~AVR_InterruptHandler()
+InterruptHandler::~InterruptHandler()
 {
     if (m_intctl)
         m_intctl->disconnect_handler(this);
 }
 
-void AVR_InterruptHandler::raise_interrupt(int_vect_t vector) const
+void InterruptHandler::raise_interrupt(int_vect_t vector) const
 {
     if (m_intctl)
         m_intctl->raise_interrupt(vector);
 }
 
-void AVR_InterruptHandler::cancel_interrupt(int_vect_t vector) const
+void InterruptHandler::cancel_interrupt(int_vect_t vector) const
 {
     if (m_intctl)
         m_intctl->cancel_interrupt(vector);
 }
 
-void AVR_InterruptHandler::interrupt_ack_handler(int_vect_t vector)
+void InterruptHandler::interrupt_ack_handler(int_vect_t vector)
 {}
 
 
 //========================================================================================
 
-AVR_InterruptFlag::AVR_InterruptFlag(bool clear_on_ack)
+InterruptFlag::InterruptFlag(bool clear_on_ack)
 :m_clr_on_ack(clear_on_ack)
 ,m_vector(AVR_INTERRUPT_NONE)
 ,m_raised(false)
@@ -223,10 +225,10 @@ AVR_InterruptFlag::AVR_InterruptFlag(bool clear_on_ack)
 ,m_enable_reg(nullptr)
 {}
 
-bool AVR_InterruptFlag::init(AVR_Device& device,
-                             const regbit_t& rb_enable,
-                             const regbit_t& rb_flag,
-                             int_vect_t vector)
+bool InterruptFlag::init(Device& device,
+                         const regbit_t& rb_enable,
+                         const regbit_t& rb_flag,
+                         int_vect_t vector)
 {
     //Obtain a pointer to the two registers flag and enable
     m_rb_enable = rb_enable;
@@ -253,7 +255,7 @@ bool AVR_InterruptFlag::init(AVR_Device& device,
     return m_flag_reg && m_enable_reg && vector_ok;
 }
 
-int AVR_InterruptFlag::update_from_ioreg()
+int InterruptFlag::update_from_ioreg()
 {
     bool raised = flag_raised();
 
@@ -276,7 +278,7 @@ int AVR_InterruptFlag::update_from_ioreg()
     }
 }
 
-bool AVR_InterruptFlag::set_flag(uint8_t mask)
+bool InterruptFlag::set_flag(uint8_t mask)
 {
     uint8_t new_flag_reg = m_rb_flag.set_to(m_flag_reg->value(), mask);
     m_flag_reg->set(new_flag_reg);
@@ -290,7 +292,7 @@ bool AVR_InterruptFlag::set_flag(uint8_t mask)
     }
 }
 
-bool AVR_InterruptFlag::clear_flag(uint8_t mask)
+bool InterruptFlag::clear_flag(uint8_t mask)
 {
     uint8_t new_flag_reg = m_rb_flag.clear_from(m_flag_reg->value(), mask);
     m_flag_reg->set(new_flag_reg);
@@ -304,14 +306,14 @@ bool AVR_InterruptFlag::clear_flag(uint8_t mask)
     }
 }
 
-bool AVR_InterruptFlag::flag_raised() const
+bool InterruptFlag::flag_raised() const
 {
     uint8_t en_mask = m_rb_enable.extract(m_enable_reg->value());
     uint8_t fl_mask = m_rb_flag.extract(m_flag_reg->value());
     return !!(en_mask & fl_mask);
 }
 
-void AVR_InterruptFlag::interrupt_ack_handler(int_vect_t vector)
+void InterruptFlag::interrupt_ack_handler(int_vect_t vector)
 {
     //If the clear-on-ack is enabled, clear the flag field and
     //cancel the interrupt

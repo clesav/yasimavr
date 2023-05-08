@@ -23,6 +23,8 @@
 
 #include "sim_twi.h"
 
+YASIMAVR_USING_NAMESPACE
+
 
 //=======================================================================================
 
@@ -315,11 +317,11 @@ void TWI_Bus::end_packet(TWI_Endpoint& src, TWI_Packet& packet)
 
 //=======================================================================================
 
-class AVR_IO_TWI::Timer : public AVR_CycleTimer {
+class IO_TWI::Timer : public CycleTimer {
 
 public:
 
-    Timer(AVR_IO_TWI& ctl) : m_ctl(ctl) {}
+    Timer(IO_TWI& ctl) : m_ctl(ctl) {}
 
     virtual cycle_count_t next(cycle_count_t when) override
     {
@@ -328,33 +330,33 @@ public:
 
 private:
 
-    AVR_IO_TWI& m_ctl;
+    IO_TWI& m_ctl;
 
 };
 
 
-inline bool State_Active(AVR_IO_TWI::State state)
+inline bool State_Active(IO_TWI::State state)
 {
-    return (state & AVR_IO_TWI::StateFlag_Active);
+    return (state & IO_TWI::StateFlag_Active);
 }
 
-inline bool State_Busy(AVR_IO_TWI::State state)
+inline bool State_Busy(IO_TWI::State state)
 {
-    return (state & AVR_IO_TWI::StateFlag_Busy);
+    return (state & IO_TWI::StateFlag_Busy);
 }
 
-inline bool State_Data(AVR_IO_TWI::State state)
+inline bool State_Data(IO_TWI::State state)
 {
-    return (state & AVR_IO_TWI::StateFlag_Data);
+    return (state & IO_TWI::StateFlag_Data);
 }
 
-inline bool State_Tx(AVR_IO_TWI::State state)
+inline bool State_Tx(IO_TWI::State state)
 {
-    return (state & AVR_IO_TWI::StateFlag_Tx);
+    return (state & IO_TWI::StateFlag_Tx);
 }
 
 
-AVR_IO_TWI::AVR_IO_TWI()
+IO_TWI::IO_TWI()
 :m_cycle_manager(nullptr)
 ,m_logger(nullptr)
 ,m_has_deferred_raise(false)
@@ -369,18 +371,18 @@ AVR_IO_TWI::AVR_IO_TWI()
     m_timer = new Timer(*this);
 }
 
-AVR_IO_TWI::~AVR_IO_TWI()
+IO_TWI::~IO_TWI()
 {
     delete m_timer;
 }
 
-void AVR_IO_TWI::init(AVR_CycleManager& cycle_manager, AVR_Logger& logger)
+void IO_TWI::init(CycleManager& cycle_manager, Logger& logger)
 {
     m_cycle_manager = &cycle_manager;
     m_logger = &logger;
 }
 
-void AVR_IO_TWI::reset()
+void IO_TWI::reset()
 {
     m_has_deferred_raise = false;
 
@@ -403,7 +405,7 @@ void AVR_IO_TWI::reset()
  * Master operations
  */
 
-void AVR_IO_TWI::set_master_enabled(bool enabled)
+void IO_TWI::set_master_enabled(bool enabled)
 {
     if (m_mst_state != State_Disabled && !enabled) {
         if (State_Active(m_mst_state))
@@ -418,18 +420,18 @@ void AVR_IO_TWI::set_master_enabled(bool enabled)
     }
 }
 
-void AVR_IO_TWI::set_master_state(State new_state)
+void IO_TWI::set_master_state(State new_state)
 {
     m_mst_state = new_state;
     m_signal.raise_u(Signal_StateChange, new_state, Cpt_Master);
 }
 
-void AVR_IO_TWI::set_bit_delay(cycle_count_t delay)
+void IO_TWI::set_bit_delay(cycle_count_t delay)
 {
     m_bitdelay = delay;
 }
 
-bool AVR_IO_TWI::start_transfer()
+bool IO_TWI::start_transfer()
 {
     //Illegal to be here if not idle
     if (m_mst_state != State_Idle)
@@ -448,7 +450,7 @@ bool AVR_IO_TWI::start_transfer()
     }
 }
 
-bool AVR_IO_TWI::send_address(uint8_t remote_addr, bool rw)
+bool IO_TWI::send_address(uint8_t remote_addr, bool rw)
 {
     if (!State_Active(m_mst_state) || State_Busy(m_mst_state))
         return false;
@@ -464,7 +466,7 @@ bool AVR_IO_TWI::send_address(uint8_t remote_addr, bool rw)
     return true;
 }
 
-void AVR_IO_TWI::end_transfer()
+void IO_TWI::end_transfer()
 {
     if (State_Active(m_mst_state) && !State_Busy(m_mst_state)) {
         set_master_state(State_Idle);
@@ -473,7 +475,7 @@ void AVR_IO_TWI::end_transfer()
     }
 }
 
-bool AVR_IO_TWI::start_master_tx(uint8_t data)
+bool IO_TWI::start_master_tx(uint8_t data)
 {
     if (m_mst_state != State_TX)
         return false;
@@ -495,7 +497,7 @@ bool AVR_IO_TWI::start_master_tx(uint8_t data)
     return true;
 }
 
-bool AVR_IO_TWI::start_master_rx()
+bool IO_TWI::start_master_rx()
 {
     if (m_mst_state != State_RX)
         return false;
@@ -517,7 +519,7 @@ bool AVR_IO_TWI::start_master_rx()
     return true;
 }
 
-void AVR_IO_TWI::set_master_ack(bool ack)
+void IO_TWI::set_master_ack(bool ack)
 {
     if (m_mst_state == State_RX_Ack) {
         //Prepare and send the ReadAck packet
@@ -531,7 +533,7 @@ void AVR_IO_TWI::set_master_ack(bool ack)
     }
 }
 
-void AVR_IO_TWI::start_timer(cycle_count_t delay)
+void IO_TWI::start_timer(cycle_count_t delay)
 {
     if (m_timer_updating)
         m_timer_next_when = m_cycle_manager->cycle() + delay;
@@ -539,7 +541,7 @@ void AVR_IO_TWI::start_timer(cycle_count_t delay)
         m_cycle_manager->delay(*m_timer, delay);
 }
 
-cycle_count_t AVR_IO_TWI::timer_next(cycle_count_t when)
+cycle_count_t IO_TWI::timer_next(cycle_count_t when)
 {
     m_timer_updating = true;
     m_timer_next_when = 0;
@@ -606,7 +608,7 @@ cycle_count_t AVR_IO_TWI::timer_next(cycle_count_t when)
     return m_timer_next_when;
 }
 
-void AVR_IO_TWI::defer_signal_raise(uint16_t sigid, uint32_t index, uint32_t u)
+void IO_TWI::defer_signal_raise(uint16_t sigid, uint32_t index, uint32_t u)
 {
     signal_data_t sig = { .sigid = sigid, .index = index, .data = u };
     m_deferred_sigdata = sig;
@@ -619,7 +621,7 @@ void AVR_IO_TWI::defer_signal_raise(uint16_t sigid, uint32_t index, uint32_t u)
  * Slave operations
  */
 
-void AVR_IO_TWI::set_slave_enabled(bool enabled)
+void IO_TWI::set_slave_enabled(bool enabled)
 {
     if (m_slv_state != State_Disabled && !enabled) {
         TWI_Packet packet = m_current_packet;
@@ -649,13 +651,13 @@ void AVR_IO_TWI::set_slave_enabled(bool enabled)
     }
 }
 
-void AVR_IO_TWI::set_slave_state(State new_state)
+void IO_TWI::set_slave_state(State new_state)
 {
     m_slv_state = new_state;
     m_signal.raise_u(Signal_StateChange, new_state, Cpt_Slave);
 }
 
-bool AVR_IO_TWI::start_slave_tx(uint8_t data)
+bool IO_TWI::start_slave_tx(uint8_t data)
 {
     if (m_slv_state == State_TX) {
         m_tx_data = data;
@@ -676,7 +678,7 @@ bool AVR_IO_TWI::start_slave_tx(uint8_t data)
     }
 }
 
-bool AVR_IO_TWI::start_slave_rx()
+bool IO_TWI::start_slave_rx()
 {
     if (m_slv_state == State_RX) {
         m_slv_hold = false;
@@ -695,7 +697,7 @@ bool AVR_IO_TWI::start_slave_rx()
     }
 }
 
-void AVR_IO_TWI::set_slave_ack(bool ack)
+void IO_TWI::set_slave_ack(bool ack)
 {
     if (m_slv_state == State_Addr_Busy) {
 
@@ -739,7 +741,7 @@ void AVR_IO_TWI::set_slave_ack(bool ack)
  * Endpoint interface reimplementation
  */
 
-void AVR_IO_TWI::packet(TWI_Packet& packet)
+void IO_TWI::packet(TWI_Packet& packet)
 {
     m_logger->dbg("Packet received Command=%d", packet.cmd);
 
@@ -838,7 +840,7 @@ void AVR_IO_TWI::packet(TWI_Packet& packet)
     m_current_packet = packet;
 }
 
-void AVR_IO_TWI::packet_ended(TWI_Packet& packet)
+void IO_TWI::packet_ended(TWI_Packet& packet)
 {
     m_logger->dbg("Packet ended, Command=%d", packet.cmd);
 
@@ -886,7 +888,7 @@ void AVR_IO_TWI::packet_ended(TWI_Packet& packet)
     m_current_packet = packet;
 }
 
-void AVR_IO_TWI::bus_acquired()
+void IO_TWI::bus_acquired()
 {
     m_logger->dbg("Bus acquired");
 
@@ -896,7 +898,7 @@ void AVR_IO_TWI::bus_acquired()
     }
 }
 
-void AVR_IO_TWI::bus_released()
+void IO_TWI::bus_released()
 {
     m_logger->dbg("Bus released");
 

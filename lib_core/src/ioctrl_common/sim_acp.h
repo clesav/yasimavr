@@ -26,12 +26,14 @@
 
 #include "../core/sim_peripheral.h"
 
+YASIMAVR_BEGIN_NAMESPACE
+
 
 //=======================================================================================
 /*
  * Configuration enumerations and structures
 */
-class DLL_EXPORT AVR_IO_ACP {
+class DLL_EXPORT IO_ACP {
 
 public:
 
@@ -51,5 +53,8 @@ public:
     };
 
 };
+
+
+YASIMAVR_END_NAMESPACE
 
 #endif //__YASIMAVR_IO_ACP_H__

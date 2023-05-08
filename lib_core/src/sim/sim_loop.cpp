@@ -26,6 +26,8 @@
 #include <unistd.h>
 #include <chrono>
 
+YASIMAVR_USING_NAMESPACE
+
 
 //=======================================================================================
 
@@ -42,7 +44,7 @@ static uint64_t get_timestamp_usecs(time_point origin)
 
 //=======================================================================================
 
-AVR_AbstractSimLoop::AVR_AbstractSimLoop(AVR_Device& device)
+AbstractSimLoop::AbstractSimLoop(Device& device)
 :m_device(device)
 ,m_state(State_Running)
 ,m_logger(AVR_ID('S', 'M', 'L', 'P'))
@@ -51,15 +53,15 @@ AVR_AbstractSimLoop::AVR_AbstractSimLoop(AVR_Device& device)
     m_device.init(m_cycle_manager);
 }
 
-cycle_count_t AVR_AbstractSimLoop::run_device(cycle_count_t final_cycle)
+cycle_count_t AbstractSimLoop::run_device(cycle_count_t final_cycle)
 {
     cycle_count_t cycle_delta = m_device.exec_cycle();
 
     m_cycle_manager.process_timers();
 
-    AVR_Device::State dev_state = m_device.state();
+    Device::State dev_state = m_device.state();
 
-    if (dev_state == AVR_Device::State_Sleeping) {
+    if (dev_state == Device::State_Sleeping) {
 
         cycle_count_t next_timer_cycle = m_cycle_manager.next_when();
 
@@ -80,12 +82,12 @@ cycle_count_t AVR_AbstractSimLoop::run_device(cycle_count_t final_cycle)
 
     }
 
-    else if (dev_state >= AVR_Device::State_Done) {
+    else if (dev_state >= Device::State_Done) {
         m_state = State_Done;
         logger().wng("Device is done, stopping definitely");
     }
 
-    else if (dev_state >= AVR_Device::State_Stopped) {
+    else if (dev_state >= Device::State_Stopped) {
         m_state = State_Stopped;
         logger().wng("Device stopped, stopping");
     }
@@ -96,13 +98,13 @@ cycle_count_t AVR_AbstractSimLoop::run_device(cycle_count_t final_cycle)
 
 //=======================================================================================
 
-AVR_SimLoop::AVR_SimLoop(AVR_Device& device)
-:AVR_AbstractSimLoop(device)
+SimLoop::SimLoop(Device& device)
+:AbstractSimLoop(device)
 ,m_fast_mode(false)
 {}
 
 
-void AVR_SimLoop::run(cycle_count_t nbcycles)
+void SimLoop::run(cycle_count_t nbcycles)
 {
     if (m_state == State_Done) return;
 
@@ -112,7 +114,7 @@ void AVR_SimLoop::run(cycle_count_t nbcycles)
         return;
     }
 
-    if (m_device.state() < AVR_Device::State_Running) {
+    if (m_device.state() < Device::State_Running) {
         logger().err("Device not initialised or firmware not loaded");
         m_state = State_Done;
         return;
@@ -161,19 +163,19 @@ void AVR_SimLoop::run(cycle_count_t nbcycles)
 
 //=======================================================================================
 
-AVR_AsyncSimLoop::AVR_AsyncSimLoop(AVR_Device& device)
-:AVR_AbstractSimLoop(device)
+AsyncSimLoop::AsyncSimLoop(Device& device)
+:AbstractSimLoop(device)
 ,m_cycling_enabled(false)
 ,m_cycle_wait(false)
 ,m_fast_mode(false)
 {}
 
-void AVR_AsyncSimLoop::set_fast_mode(bool fast)
+void AsyncSimLoop::set_fast_mode(bool fast)
 {
     m_fast_mode = fast;
 }
 
-void AVR_AsyncSimLoop::run()
+void AsyncSimLoop::run()
 {
     if (m_state == State_Done) return;
 
@@ -183,7 +185,7 @@ void AVR_AsyncSimLoop::run()
         return;
     }
 
-    if (m_device.state() < AVR_Device::State_Running) {
+    if (m_device.state() < Device::State_Running) {
         logger().err("Device not initialised or firmware not loaded");
         m_state = State_Done;
         return;
@@ -295,7 +297,7 @@ void AVR_AsyncSimLoop::run()
     }
 }
 
-bool AVR_AsyncSimLoop::start_transaction()
+bool AsyncSimLoop::start_transaction()
 {
     std::unique_lock<std::mutex> lock(m_cycle_mutex);
 
@@ -320,7 +322,7 @@ bool AVR_AsyncSimLoop::start_transaction()
     return m_state != State_Done;
 }
 
-void AVR_AsyncSimLoop::end_transaction()
+void AsyncSimLoop::end_transaction()
 {
     std::unique_lock<std::mutex> lock(m_cycle_mutex);
 
@@ -329,25 +331,25 @@ void AVR_AsyncSimLoop::end_transaction()
     m_cycle_cv.notify_all();
 }
 
-void AVR_AsyncSimLoop::loop_continue()
+void AsyncSimLoop::loop_continue()
 {
     if (m_state < State_Done)
         set_state(State_Running);
 }
 
-void AVR_AsyncSimLoop::loop_step()
+void AsyncSimLoop::loop_step()
 {
     if (m_state == State_Stopped)
         set_state(State_Step);
 }
 
-void AVR_AsyncSimLoop::loop_pause()
+void AsyncSimLoop::loop_pause()
 {
     if (m_state < State_Done)
         set_state(State_Stopped);
 }
 
-void AVR_AsyncSimLoop::loop_kill()
+void AsyncSimLoop::loop_kill()
 {
     set_state(State_Done);
 }

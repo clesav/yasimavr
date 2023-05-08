@@ -27,6 +27,8 @@
 #include "../core/sim_peripheral.h"
 #include "../core/sim_types.h"
 
+YASIMAVR_BEGIN_NAMESPACE
+
 
 //=======================================================================================
 /*
@@ -41,7 +43,7 @@
  * Configuration enumerations and structures
 */
 
-class DLL_EXPORT AVR_IO_ADC {
+class DLL_EXPORT IO_ADC {
 
 public:
 
@@ -73,5 +75,8 @@ public:
     };
 
 };
+
+
+YASIMAVR_END_NAMESPACE
 
 #endif //__YASIMAVR_IO_ADC_H__

@@ -30,13 +30,15 @@
 #include <mutex>
 #include <condition_variable>
 
+YASIMAVR_BEGIN_NAMESPACE
+
 
 //=======================================================================================
 /*
  * Base class for a simloop
  */
 
-class DLL_EXPORT AVR_AbstractSimLoop {
+class DLL_EXPORT AbstractSimLoop {
 
 public:
 
@@ -48,53 +50,53 @@ public:
         State_Done
     };
 
-    explicit AVR_AbstractSimLoop(AVR_Device& device);
-    virtual ~AVR_AbstractSimLoop() = default;
+    explicit AbstractSimLoop(Device& device);
+    virtual ~AbstractSimLoop() = default;
 
-    AVR_AbstractSimLoop::State state() const;
+    AbstractSimLoop::State state() const;
     cycle_count_t cycle() const;
-    AVR_CycleManager& cycle_manager();
-    const AVR_Device& device() const;
-    AVR_Logger& logger();
+    CycleManager& cycle_manager();
+    const Device& device() const;
+    Logger& logger();
 
 protected:
 
-    AVR_Device& m_device;
+    Device& m_device;
     State m_state;
-    AVR_CycleManager m_cycle_manager;
-    AVR_Logger m_logger;
+    CycleManager m_cycle_manager;
+    Logger m_logger;
 
     cycle_count_t run_device(cycle_count_t final_cycle);
-    void set_state(AVR_AbstractSimLoop::State state);
+    void set_state(AbstractSimLoop::State state);
 
 };
 
-inline AVR_AbstractSimLoop::State AVR_AbstractSimLoop::state() const
+inline AbstractSimLoop::State AbstractSimLoop::state() const
 {
     return m_state;
 }
 
-inline void AVR_AbstractSimLoop::set_state(State state)
+inline void AbstractSimLoop::set_state(State state)
 {
     m_state = state;
 }
 
-inline cycle_count_t AVR_AbstractSimLoop::cycle() const
+inline cycle_count_t AbstractSimLoop::cycle() const
 {
     return m_cycle_manager.cycle();
 }
 
-inline AVR_CycleManager& AVR_AbstractSimLoop::cycle_manager()
+inline CycleManager& AbstractSimLoop::cycle_manager()
 {
     return m_cycle_manager;
 }
 
-inline const AVR_Device& AVR_AbstractSimLoop::device() const
+inline const Device& AbstractSimLoop::device() const
 {
     return m_device;
 }
 
-inline AVR_Logger& AVR_AbstractSimLoop::logger()
+inline Logger& AbstractSimLoop::logger()
 {
     return m_logger;
 }
@@ -102,18 +104,18 @@ inline AVR_Logger& AVR_AbstractSimLoop::logger()
 
 //=======================================================================================
 /*
- * AVR_SimLoop is a basic synchronous simulation loop. It is designed for "fast" simulations
+ * SimLoop is a basic synchronous simulation loop. It is designed for "fast" simulations
  * with a deterministic set of stimuli.
  * It can run in "fast" mode or "real-time" mode
  *  - In real-time mode : the simulation will try to adjust the speed of the simulation
  *  to align the simulated time with the system time.
  *  - In fast mode : no adjustment is done and the simulation runs as fast as permitted.
  */
-class DLL_EXPORT AVR_SimLoop : public AVR_AbstractSimLoop {
+class DLL_EXPORT SimLoop : public AbstractSimLoop {
 
 public:
 
-    explicit AVR_SimLoop(AVR_Device& device);
+    explicit SimLoop(Device& device);
 
     //Set the simulation running mode: false=real-time, true=fast
     void set_fast_mode(bool fast);
@@ -129,14 +131,14 @@ private:
 
 };
 
-inline void AVR_SimLoop::set_fast_mode(bool fast)
+inline void SimLoop::set_fast_mode(bool fast)
 {
     m_fast_mode = fast;
 }
 
 //=======================================================================================
 /*
- * AVR_SimLoop is a asynchronous simulation loop. It is designed when simulation need to
+ * SimLoop is a asynchronous simulation loop. It is designed when simulation need to
  * interact with code running in another thread. Examples: debugger, GUI, sockets.
  * The simulation library in itself is not thread-safe.
  * The synchronization is done by using the methods start_transaction and end_transaction
@@ -145,11 +147,11 @@ inline void AVR_SimLoop::set_fast_mode(bool fast)
  * the simulated MCU.
  */
 
-class DLL_EXPORT AVR_AsyncSimLoop : public AVR_AbstractSimLoop {
+class DLL_EXPORT AsyncSimLoop : public AbstractSimLoop {
 
 public:
 
-    explicit AVR_AsyncSimLoop(AVR_Device& device);
+    explicit AsyncSimLoop(Device& device);
 
     //Set the simulation running mode: false=real-time, true=fast
     void set_fast_mode(bool fast);
@@ -182,5 +184,7 @@ private:
 
 };
 
+
+YASIMAVR_END_NAMESPACE
 
 #endif //__YASIMAVR_LOOP_H__

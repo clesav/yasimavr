@@ -27,6 +27,8 @@
 #include "../core/sim_cycle_timer.h"
 #include "../core/sim_peripheral.h"
 
+YASIMAVR_BEGIN_NAMESPACE
+
 
 //=======================================================================================
 /*
@@ -35,12 +37,12 @@
  * The actual effect of the timeout is left to sub-classes by overriding timeout()
  * The configuration via fuses is not supported at the moment
  */
-class DLL_EXPORT AVR_WatchdogTimer : public AVR_Peripheral {
+class DLL_EXPORT WatchdogTimer : public Peripheral {
 
 public:
 
-    AVR_WatchdogTimer();
-    virtual ~AVR_WatchdogTimer();
+    WatchdogTimer();
+    virtual ~WatchdogTimer();
 
     //Callback that resets and disable the timer
     virtual void reset() override;
@@ -85,5 +87,8 @@ private:
     cycle_count_t wdr_sync_timer_next(cycle_count_t when);
 
 };
+
+
+YASIMAVR_END_NAMESPACE
 
 #endif //__YASIMAVR_IO_WDT_H__

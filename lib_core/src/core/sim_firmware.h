@@ -30,9 +30,12 @@
 #include <map>
 #include <vector>
 
+YASIMAVR_BEGIN_NAMESPACE
+
+
 //=======================================================================================
 /*
- * AVR_Firmware contains the information of a firmware loaded from a ELF file.
+ * Firmware contains the information of a firmware loaded from a ELF file.
  * the ELF format decoding relies on the library libelf.
  * The data from the ELF is split is the various memory areas of the device.
  * Each memory area can avec several blocks of data (e.g. flash has .text, .rodata, ...)
@@ -46,7 +49,7 @@
  *  - "signature"           .signature                  0x840000
  *  - "user_signatures"     .user_signatures            0x850000
  */
-class DLL_EXPORT AVR_Firmware {
+class DLL_EXPORT Firmware {
 
 public:
 
@@ -65,13 +68,13 @@ public:
 
     reg_addr_t                  console_register;
 
-    AVR_Firmware();
+    Firmware();
     //Copy constructor : make a deep copy of all memory blocks
-    AVR_Firmware(const AVR_Firmware& other);
-    ~AVR_Firmware();
+    Firmware(const Firmware& other);
+    ~Firmware();
 
     //Reads a ELF file and returns a new firmware object
-    static AVR_Firmware* read_elf(const std::string& filename);
+    static Firmware* read_elf(const std::string& filename);
 
     //Add a data block to a memory
     void add_block(const std::string& name, const mem_block_t& block, size_t base = 0);
@@ -82,13 +85,13 @@ public:
 
     std::vector<Block> blocks(const std::string& name) const;
 
-    bool load_memory(const std::string& name, AVR_NonVolatileMemory& memory) const;
+    bool load_memory(const std::string& name, NonVolatileMemory& memory) const;
 
     mem_addr_t datasize() const;
     mem_addr_t bsssize() const;
 
     //Copy assignment
-    AVR_Firmware& operator=(const AVR_Firmware& other);
+    Firmware& operator=(const Firmware& other);
 
 private:
 
@@ -98,14 +101,17 @@ private:
 
 };
 
-inline mem_addr_t AVR_Firmware::datasize() const
+inline mem_addr_t Firmware::datasize() const
 {
     return m_datasize;
 }
 
-inline mem_addr_t AVR_Firmware::bsssize() const
+inline mem_addr_t Firmware::bsssize() const
 {
     return m_bsssize;
 }
+
+
+YASIMAVR_END_NAMESPACE
 
 #endif //__YASIMAVR_FIRMWARE_H__

@@ -24,14 +24,16 @@
 #include "sim_wdt.h"
 #include "../core/sim_device.h"
 
+YASIMAVR_USING_NAMESPACE
+
 
 //=======================================================================================
 
-class AVR_WatchdogTimer::WDT_Timer : public AVR_CycleTimer {
+class WatchdogTimer::WDT_Timer : public CycleTimer {
 
 public:
 
-    explicit WDT_Timer(AVR_WatchdogTimer& ctl) : m_ctl(ctl) {}
+    explicit WDT_Timer(WatchdogTimer& ctl) : m_ctl(ctl) {}
 
     virtual cycle_count_t next(cycle_count_t when) override {
         return m_ctl.wd_timer_next(when);
@@ -39,18 +41,18 @@ public:
 
 private:
 
-    AVR_WatchdogTimer& m_ctl;
+    WatchdogTimer& m_ctl;
 
 };
 
 
 //=======================================================================================
 
-class AVR_WatchdogTimer::WDR_Sync_Timer : public AVR_CycleTimer {
+class WatchdogTimer::WDR_Sync_Timer : public CycleTimer {
 
 public:
 
-    explicit WDR_Sync_Timer(AVR_WatchdogTimer& ctl) : m_ctl(ctl) {}
+    explicit WDR_Sync_Timer(WatchdogTimer& ctl) : m_ctl(ctl) {}
 
     virtual cycle_count_t next(cycle_count_t when) override {
         return m_ctl.wdr_sync_timer_next(when);
@@ -58,7 +60,7 @@ public:
 
 private:
 
-    AVR_WatchdogTimer& m_ctl;
+    WatchdogTimer& m_ctl;
 
 };
 
@@ -67,8 +69,8 @@ private:
 /*
  * Constructor of a generic watchdog timer
  */
-AVR_WatchdogTimer::AVR_WatchdogTimer()
-:AVR_Peripheral(AVR_IOCTL_WTDG)
+WatchdogTimer::WatchdogTimer()
+:Peripheral(AVR_IOCTL_WTDG)
 ,m_clk_factor(0)
 ,m_win_start(0)
 ,m_win_end(0)
@@ -82,7 +84,7 @@ AVR_WatchdogTimer::AVR_WatchdogTimer()
 /*
  * Destructor of a generic watchdog timer
  */
-AVR_WatchdogTimer::~AVR_WatchdogTimer()
+WatchdogTimer::~WatchdogTimer()
 {
     delete m_wd_timer;
     delete m_wdr_sync_timer;
@@ -91,7 +93,7 @@ AVR_WatchdogTimer::~AVR_WatchdogTimer()
 /*
  * On a reset, cancel the two timers
  */
-void AVR_WatchdogTimer::reset()
+void WatchdogTimer::reset()
 {
     m_win_start = 0;
     m_win_end = 0;
@@ -103,7 +105,7 @@ void AVR_WatchdogTimer::reset()
 /*
  * Sets the timer delay, and start the cycle timer if necessary
  */
-void AVR_WatchdogTimer::set_timer(uint32_t wdr_win_start, uint32_t wdr_win_end, uint32_t clk_factor)
+void WatchdogTimer::set_timer(uint32_t wdr_win_start, uint32_t wdr_win_end, uint32_t clk_factor)
 {
     bool was_enabled = (m_win_end > 0);
     m_clk_factor = clk_factor;
@@ -129,7 +131,7 @@ void AVR_WatchdogTimer::set_timer(uint32_t wdr_win_start, uint32_t wdr_win_end, 
  * (3 cycles)
  * Ignores the request if there's already one being synced
  */
-bool AVR_WatchdogTimer::ctlreq(uint16_t req, ctlreq_data_t* __unused)
+bool WatchdogTimer::ctlreq(uint16_t req, ctlreq_data_t* __unused)
 {
     if (req == AVR_CTLREQ_WATCHDOG_RESET) {
         if (m_win_end && !m_wdr_sync) {
@@ -144,7 +146,7 @@ bool AVR_WatchdogTimer::ctlreq(uint16_t req, ctlreq_data_t* __unused)
 /*
  * Watchdog timeout notification.
  */
-cycle_count_t AVR_WatchdogTimer::wd_timer_next(cycle_count_t when)
+cycle_count_t WatchdogTimer::wd_timer_next(cycle_count_t when)
 {
     timeout();
 
@@ -161,7 +163,7 @@ cycle_count_t AVR_WatchdogTimer::wd_timer_next(cycle_count_t when)
  * handles the reset of the watchdog timer
  * triggers a timeout if the window start is set and the reset is too soon
  */
-cycle_count_t AVR_WatchdogTimer::wdr_sync_timer_next(cycle_count_t when)
+cycle_count_t WatchdogTimer::wdr_sync_timer_next(cycle_count_t when)
 {
     if (m_win_start && when < (m_clk_factor * m_win_start + m_wdr_cycle))
         timeout();

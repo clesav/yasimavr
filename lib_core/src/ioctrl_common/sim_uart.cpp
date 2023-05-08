@@ -24,17 +24,19 @@
 #include "sim_uart.h"
 #include <cstring>
 
+YASIMAVR_USING_NAMESPACE
+
 
 //=======================================================================================
 /*
  * Reimplementation of cycle timers for TX and RX
  */
 
-class AVR_IO_UART::TxTimer : public AVR_CycleTimer {
+class IO_UART::TxTimer : public CycleTimer {
 
 public:
 
-    TxTimer(AVR_IO_UART& ctl) : m_ctl(ctl) {}
+    TxTimer(IO_UART& ctl) : m_ctl(ctl) {}
 
     virtual cycle_count_t next(cycle_count_t when) override
     {
@@ -43,16 +45,16 @@ public:
 
 private:
 
-    AVR_IO_UART& m_ctl;
+    IO_UART& m_ctl;
 
 };
 
 
-class AVR_IO_UART::RxTimer : public AVR_CycleTimer {
+class IO_UART::RxTimer : public CycleTimer {
 
 public:
 
-    RxTimer(AVR_IO_UART& ctl) : m_ctl(ctl) {}
+    RxTimer(IO_UART& ctl) : m_ctl(ctl) {}
 
     virtual cycle_count_t next(cycle_count_t when) override
     {
@@ -61,14 +63,14 @@ public:
 
 private:
 
-    AVR_IO_UART& m_ctl;
+    IO_UART& m_ctl;
 
 };
 
 
 //=======================================================================================
 
-AVR_IO_UART::AVR_IO_UART()
+IO_UART::IO_UART()
 :m_cycle_manager(nullptr)
 ,m_logger(nullptr)
 ,m_delay(1)
@@ -84,19 +86,19 @@ AVR_IO_UART::AVR_IO_UART()
     m_tx_timer = new TxTimer(*this);
 }
 
-AVR_IO_UART::~AVR_IO_UART()
+IO_UART::~IO_UART()
 {
     delete m_rx_timer;
     delete m_tx_timer;
 }
 
-void AVR_IO_UART::init(AVR_CycleManager& cycle_manager, AVR_Logger& logger)
+void IO_UART::init(CycleManager& cycle_manager, Logger& logger)
 {
     m_cycle_manager = &cycle_manager;
     m_logger = &logger;
 }
 
-void AVR_IO_UART::reset()
+void IO_UART::reset()
 {
     m_delay = 1;
 
@@ -130,14 +132,14 @@ void AVR_IO_UART::reset()
  * Change the TX buffer limit and discard frames to adjust
  * if necessary
  */
-void AVR_IO_UART::set_tx_buffer_limit(unsigned int limit)
+void IO_UART::set_tx_buffer_limit(unsigned int limit)
 {
     m_tx_limit = limit;
     while (limit > 0 && m_tx_buffer.size() > limit)
         m_tx_buffer.pop_back();
 }
 
-void AVR_IO_UART::push_tx(uint8_t frame)
+void IO_UART::push_tx(uint8_t frame)
 {
     m_logger->dbg("TX push: 0x%02x ('%c')", frame, frame);
 
@@ -157,13 +159,13 @@ void AVR_IO_UART::push_tx(uint8_t frame)
     }
 }
 
-void AVR_IO_UART::cancel_tx_pending()
+void IO_UART::cancel_tx_pending()
 {
     while (m_tx_buffer.size() > 1)
         m_tx_buffer.pop_back();
 }
 
-cycle_count_t AVR_IO_UART::tx_timer_next(cycle_count_t when)
+cycle_count_t IO_UART::tx_timer_next(cycle_count_t when)
 {
     uint8_t frame = m_tx_buffer.front();
     m_tx_buffer.pop_front();
@@ -187,7 +189,7 @@ cycle_count_t AVR_IO_UART::tx_timer_next(cycle_count_t when)
 //=======================================================================================
 //RX management
 
-void AVR_IO_UART::set_rx_buffer_limit(unsigned int limit)
+void IO_UART::set_rx_buffer_limit(unsigned int limit)
 {
     m_rx_limit = limit;
     while (limit > 0 && m_rx_count > limit) {
@@ -196,7 +198,7 @@ void AVR_IO_UART::set_rx_buffer_limit(unsigned int limit)
     }
 }
 
-void AVR_IO_UART::set_rx_enabled(bool enabled)
+void IO_UART::set_rx_enabled(bool enabled)
 {
     m_rx_enabled = enabled;
 
@@ -220,7 +222,7 @@ void AVR_IO_UART::set_rx_enabled(bool enabled)
 /*
  * Pop a received frame from the device FIFO (front part)
  */
-uint8_t AVR_IO_UART::pop_rx()
+uint8_t IO_UART::pop_rx()
 {
     if (m_rx_count) {
         uint8_t frame = m_rx_buffer.front();
@@ -233,7 +235,7 @@ uint8_t AVR_IO_UART::pop_rx()
     }
 }
 
-void AVR_IO_UART::start_rx()
+void IO_UART::start_rx()
 {
     //If the MCU RX buffer is full, we discard the front of the FIFO
     //and set the overrun flag
@@ -248,7 +250,7 @@ void AVR_IO_UART::start_rx()
     m_signal.raise_u(Signal_RX_Start, m_rx_buffer[m_rx_count]);
 }
 
-cycle_count_t AVR_IO_UART::rx_timer_next(cycle_count_t when)
+cycle_count_t IO_UART::rx_timer_next(cycle_count_t when)
 {
     m_logger->dbg("RX complete");
 
@@ -273,7 +275,7 @@ cycle_count_t AVR_IO_UART::rx_timer_next(cycle_count_t when)
     }
 }
 
-void AVR_IO_UART::add_rx_frame(uint8_t frame)
+void IO_UART::add_rx_frame(uint8_t frame)
 {
     bool timer_running = rx_in_progress();
 
@@ -286,10 +288,10 @@ void AVR_IO_UART::add_rx_frame(uint8_t frame)
 }
 
 /*
- * Reimplementation of AVR_Signal::Hook to receive
+ * Reimplementation of Signal::Hook to receive
  * data
  */
-void AVR_IO_UART::raised(const signal_data_t& sigdata, uint16_t id)
+void IO_UART::raised(const signal_data_t& sigdata, uint16_t id)
 {
     if (sigdata.sigid == Signal_DataFrame) {
         m_logger->dbg("RX frame received");
@@ -313,7 +315,7 @@ void AVR_IO_UART::raised(const signal_data_t& sigdata, uint16_t id)
 //=======================================================================================
 //Pause management
 
-void AVR_IO_UART::set_paused(bool paused)
+void IO_UART::set_paused(bool paused)
 {
     //If going out of pause and there are TX frames pending, resume the transmission
     if (m_paused && !paused && m_tx_buffer.size()) {

@@ -27,9 +27,11 @@
 #include "sim_types.h"
 #include "sim_device.h"
 
+YASIMAVR_BEGIN_NAMESPACE
+
 //=======================================================================================
 /*
- * AVR_DeviceDebugProbe is a facility to access the inner state of a AVR_Device and its core
+ * DeviceDebugProbe is a facility to access the inner state of a Device and its core
  * to debug the execution of a firmware.
  * It provides:
  *  - function to read/write directly into CPU registers, I/O registers, flash, data space
@@ -37,7 +39,7 @@
  *  - data watchpoints
  *  - device reset and state change
  */
-class DLL_EXPORT AVR_DeviceDebugProbe {
+class DLL_EXPORT DeviceDebugProbe {
 
 public:
 
@@ -50,25 +52,25 @@ public:
         Watchpoint_Break = 0x20,
     };
 
-    AVR_DeviceDebugProbe();
-    explicit AVR_DeviceDebugProbe(AVR_Device& device);
-    AVR_DeviceDebugProbe(const AVR_DeviceDebugProbe& probe);
+    DeviceDebugProbe();
+    explicit DeviceDebugProbe(Device& device);
+    DeviceDebugProbe(const DeviceDebugProbe& probe);
     //Destructor: ensures the probe is detached
-    ~AVR_DeviceDebugProbe();
+    ~DeviceDebugProbe();
 
-    AVR_Device* device() const;
+    Device* device() const;
 
     //Attaches the probe to a device, allowing access to its internals
-    void attach(AVR_Device& device);
+    void attach(Device& device);
     //Attaches this to the same device as the argument
-    void attach(AVR_DeviceDebugProbe& probe);
+    void attach(DeviceDebugProbe& probe);
     //Detaches the probe from the device. it MUST be called before
     //destruction.
     void detach();
     bool attached() const;
 
     void reset_device() const;
-    void set_device_state(AVR_Device::State state) const;
+    void set_device_state(Device::State state) const;
 
     //Access to general purpose CPU registers
     void write_gpreg(unsigned int num, uint8_t value) const;
@@ -106,7 +108,7 @@ public:
     //Watchpoint management
     void insert_watchpoint(mem_addr_t addr, mem_addr_t len, int flags);
     void remove_watchpoint(mem_addr_t addr, int flags);
-    AVR_Signal& watchpoint_signal();
+    Signal& watchpoint_signal();
 
     //Callbacks from the CPU for notifications
     void _cpu_notify_data_read(mem_addr_t addr, uint8_t value);
@@ -115,7 +117,7 @@ public:
     void _cpu_notify_call(flash_addr_t addr);
     void _cpu_notify_ret();
 
-    AVR_DeviceDebugProbe& operator=(const AVR_DeviceDebugProbe& probe);
+    DeviceDebugProbe& operator=(const DeviceDebugProbe& probe);
 
 private:
 
@@ -126,35 +128,38 @@ private:
     };
 
     //Pointer to the device this is attached to.
-    AVR_Device* m_device;
+    Device* m_device;
     //Pointer to the primary probe. If null, this is primary.
-    AVR_DeviceDebugProbe* m_primary;
+    DeviceDebugProbe* m_primary;
     //Vector of secondary probes.
-    std::vector<AVR_DeviceDebugProbe*> m_secondaries;
+    std::vector<DeviceDebugProbe*> m_secondaries;
     //Mapping containers PC => breakpoint
     std::map<flash_addr_t, breakpoint_t> m_breakpoints;
     //Mapping containers mem address => watchpoint
     std::map<mem_addr_t, watchpoint_t> m_watchpoints;
     //Signal for watchpoint notification
-    AVR_Signal m_wp_signal;
+    Signal m_wp_signal;
 
     void notify_watchpoint(watchpoint_t& wp, int event, mem_addr_t addr, uint8_t value);
 
 };
 
-inline AVR_Device* AVR_DeviceDebugProbe::device() const
+inline Device* DeviceDebugProbe::device() const
 {
     return m_device;
 }
 
-inline bool AVR_DeviceDebugProbe::attached() const
+inline bool DeviceDebugProbe::attached() const
 {
     return !!m_device;
 }
 
-inline AVR_Signal& AVR_DeviceDebugProbe::watchpoint_signal()
+inline Signal& DeviceDebugProbe::watchpoint_signal()
 {
     return m_wp_signal;
 }
+
+
+YASIMAVR_END_NAMESPACE
 
 #endif //__YASIMAVR_DEBUG_H__

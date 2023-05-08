@@ -29,6 +29,7 @@
 #include <string>
 #include <vector>
 
+YASIMAVR_BEGIN_NAMESPACE
 
 //cycle counts are signed to have -1 as invalid value
 //That leaves 63 bits to count cycles, which at a MCU frequency of 20MHz
@@ -271,5 +272,7 @@ private:
 
 };
 
+
+YASIMAVR_END_NAMESPACE
 
 #endif //__YASIMAVR_TYPES_H__

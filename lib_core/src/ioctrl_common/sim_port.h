@@ -28,23 +28,25 @@
 #include "../core/sim_types.h"
 #include "../core/sim_pin.h"
 
+YASIMAVR_BEGIN_NAMESPACE
+
 
 //=======================================================================================
 /*
- * AVR_IO_Port implements a GPIO port controller for up to 8 bits
+ * IO_Port implements a GPIO port controller for up to 8 bits
  * the exact number of pins is determined by the device configuration
  * An initialization, the port will lookup all possible ports with the letter
  * (e.g. port 'B' will lookup all pins named 'PBx' (x=0 to 7)
  */
-class DLL_EXPORT AVR_IO_Port : public AVR_Peripheral, public AVR_SignalHook {
+class DLL_EXPORT IO_Port : public Peripheral, public SignalHook {
 
 public:
 
     //Constructor of the port. The name is the upper case letter identifying the port.
-    explicit AVR_IO_Port(char name);
+    explicit IO_Port(char name);
 
     //Implementation of AVR_Peripheral callbacks
-    virtual bool init(AVR_Device& device) override;
+    virtual bool init(Device& device) override;
     virtual void reset() override;
     virtual bool ctlreq(uint16_t req, ctlreq_data_t* data) override;
     virtual void raised(const signal_data_t& sigdata, uint16_t sigid) override;
@@ -54,24 +56,27 @@ protected:
     //returns the pin mask, containing a '1' for each existing pin
     uint8_t pin_mask() const;
     //Set the internal state of a pin (0 to 7)
-    void set_pin_internal_state(uint8_t num, AVR_Pin::State state);
+    void set_pin_internal_state(uint8_t num, Pin::State state);
     //Callback method called when the resolved state of a pin has changed
     //The default implementation only handles the SHORTED case and the logging
-    virtual void pin_state_changed(uint8_t num, AVR_Pin::State state);
+    virtual void pin_state_changed(uint8_t num, Pin::State state);
 
 private:
 
     const char m_name;
     uint8_t m_pinmask;
-    AVR_Signal m_signal;
-    std::vector<AVR_Pin*> m_pins;
+    Signal m_signal;
+    std::vector<Pin*> m_pins;
     uint8_t m_port_value;
 
 };
 
-inline uint8_t AVR_IO_Port::pin_mask() const
+inline uint8_t IO_Port::pin_mask() const
 {
     return m_pinmask;
 }
+
+
+YASIMAVR_END_NAMESPACE
 
 #endif //__YASIMAVR_IO_PORT_H__

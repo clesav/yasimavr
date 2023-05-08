@@ -23,8 +23,10 @@
 
 #include "sim_pin.h"
 
+YASIMAVR_USING_NAMESPACE
 
-const char* AVR_Pin::StateName(State state)
+
+const char* Pin::StateName(State state)
 {
     switch(state) {
         case State_Floating: return "Floating";
@@ -38,7 +40,7 @@ const char* AVR_Pin::StateName(State state)
     };
 }
 
-AVR_Pin::AVR_Pin(uint32_t id)
+Pin::Pin(uint32_t id)
 :m_id(id)
 ,m_ext_state(State_Floating)
 ,m_int_state(State_Floating)
@@ -50,7 +52,7 @@ AVR_Pin::AVR_Pin(uint32_t id)
     m_signal.raise_d(Signal_AnalogValueChange, 0.0);
 }
 
-void AVR_Pin::set_external_state(State state)
+void Pin::set_external_state(State state)
 {
     State prev_digstate = digital_state();
     m_ext_state = state;
@@ -62,7 +64,7 @@ void AVR_Pin::set_external_state(State state)
     }
 }
 
-void AVR_Pin::set_internal_state(State state)
+void Pin::set_internal_state(State state)
 {
     State prev_digstate = digital_state();
     m_int_state = state;
@@ -77,7 +79,7 @@ void AVR_Pin::set_internal_state(State state)
 /*
  * Resolves the electrical state from the combination of the internal and external states
  */
-AVR_Pin::State AVR_Pin::resolve_state()
+Pin::State Pin::resolve_state()
 {
     switch (m_int_state) {
         case State_Floating:
@@ -119,7 +121,7 @@ AVR_Pin::State AVR_Pin::resolve_state()
     }
 }
 
-void AVR_Pin::set_external_analog_value(double v)
+void Pin::set_external_analog_value(double v)
 {
     //If the pin state is not Analog, ignore any change
     if (m_ext_state != State_Analog)
@@ -142,7 +144,7 @@ void AVR_Pin::set_external_analog_value(double v)
     m_signal.raise_d(Signal_AnalogValueChange, analog_value());
 }
 
-double AVR_Pin::analog_value() const
+double Pin::analog_value() const
 {
     switch (m_resolved_state) {
         case State_Floating:
@@ -162,7 +164,7 @@ double AVR_Pin::analog_value() const
     }
 }
 
-AVR_Pin::State AVR_Pin::digital_state() const
+Pin::State Pin::digital_state() const
 {
     switch (m_resolved_state) {
         case State_PullUp:
@@ -181,7 +183,7 @@ AVR_Pin::State AVR_Pin::digital_state() const
     }
 }
 
-void AVR_Pin::raised(const signal_data_t& sigdata, uint16_t __unused)
+void Pin::raised(const signal_data_t& sigdata, uint16_t __unused)
 {
     if (sigdata.sigid == Signal_DigitalStateChange)
         set_external_state((State) sigdata.data.as_uint());

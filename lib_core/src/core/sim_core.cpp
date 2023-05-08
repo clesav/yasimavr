@@ -29,10 +29,12 @@
 #include "sim_debug.h"
 #include <cstring>
 
+YASIMAVR_USING_NAMESPACE
+
 
 //=======================================================================================
 
-AVR_Core::AVR_Core(const AVR_CoreConfiguration& config)
+Core::Core(const CoreConfiguration& config)
 :m_config(config)
 ,m_device(nullptr)
 ,m_ioregs(config.ioend - config.iostart + 1, nullptr)
@@ -54,20 +56,20 @@ AVR_Core::AVR_Core(const AVR_CoreConfiguration& config)
     m_fuses.program(fuseblock);
 
     //Create the I/O registers managed by the CPU
-    m_ioregs[R_SPL] = new AVR_IO_Register(true);
-    m_ioregs[R_SPH] = new AVR_IO_Register(true);
+    m_ioregs[R_SPL] = new IO_Register(true);
+    m_ioregs[R_SPH] = new IO_Register(true);
 
     //If extended addressing is used (flash > 64kb), allocate the
     //registers RAMPZ and EIND
     if (use_extended_addressing()) {
         if (m_config.rampz.valid())
-            m_ioregs[m_config.rampz] = new AVR_IO_Register(true);
+            m_ioregs[m_config.rampz] = new IO_Register(true);
         if (m_config.eind.valid())
-            m_ioregs[m_config.eind] = new AVR_IO_Register(true);
+            m_ioregs[m_config.eind] = new IO_Register(true);
     }
 }
 
-AVR_Core::~AVR_Core()
+Core::~Core()
 {
     free(m_sram);
 
@@ -80,7 +82,7 @@ AVR_Core::~AVR_Core()
         m_debug_probe->detach();
 }
 
-bool AVR_Core::init(AVR_Device& d)
+bool Core::init(Device& d)
 {
     m_device = &d;
     if (!m_intrctl) {
@@ -90,7 +92,7 @@ bool AVR_Core::init(AVR_Device& d)
     return true;
 }
 
-void AVR_Core::reset()
+void Core::reset()
 {
     //Jump to the reset interrupt vector
     m_pc = 0;
@@ -110,7 +112,7 @@ void AVR_Core::reset()
     m_int_inhib_counter = 1;
 }
 
-int AVR_Core::exec_cycle()
+int Core::exec_cycle()
 {
     //Check if we have a interrupt request and if we can handle it
     int_vect_t irq_vector;
@@ -121,7 +123,7 @@ int AVR_Core::exec_cycle()
         cpu_push_flash_addr(m_pc >> 1);
         m_pc = irq_vector * m_config.vector_size;
         //Clear the GIE flag if allowed by the core options
-        if (m_config.attributes & AVR_CoreConfiguration::ClearGIEOnInt)
+        if (m_config.attributes & CoreConfiguration::ClearGIEOnInt)
             m_sreg[SREG_I] = 0;
     }
 
@@ -139,10 +141,10 @@ int AVR_Core::exec_cycle()
     return cycles;
 }
 
-void AVR_Core::exec_reti()
+void Core::exec_reti()
 {
     //On a RETI, if allowed by the core options, set the GIE flag
-    if (m_config.attributes & AVR_CoreConfiguration::ClearGIEOnInt)
+    if (m_config.attributes & CoreConfiguration::ClearGIEOnInt)
         m_sreg[SREG_I] = 1;
     //Inform the Interrupt Controller
     m_intrctl->cpu_reti();
@@ -151,7 +153,7 @@ void AVR_Core::exec_reti()
     start_interrupt_inhibit(1);
 }
 
-void AVR_Core::start_interrupt_inhibit(unsigned int count)
+void Core::start_interrupt_inhibit(unsigned int count)
 {
     if (m_int_inhib_counter < count)
         m_int_inhib_counter = count;
@@ -161,12 +163,12 @@ void AVR_Core::start_interrupt_inhibit(unsigned int count)
 //=======================================================================================
 //CPU interface for accessing general purpose working registers (r0 to r31)
 
-uint8_t AVR_Core::cpu_read_gpreg(uint8_t reg)
+uint8_t Core::cpu_read_gpreg(uint8_t reg)
 {
     return m_regs[reg];
 }
 
-void AVR_Core::cpu_write_gpreg(uint8_t reg, uint8_t value)
+void Core::cpu_write_gpreg(uint8_t reg, uint8_t value)
 {
     m_regs[reg] = value;
 }
@@ -175,19 +177,19 @@ void AVR_Core::cpu_write_gpreg(uint8_t reg, uint8_t value)
 //=======================================================================================
 //CPU interface for accessing I/O registers.
 
-AVR_IO_Register* AVR_Core::get_ioreg(reg_addr_t addr)
+IO_Register* Core::get_ioreg(reg_addr_t addr)
 {
     if (!addr.valid())
         return nullptr;
 
-    AVR_IO_Register* reg = m_ioregs[(int16_t) addr];
+    IO_Register* reg = m_ioregs[(int16_t) addr];
     if (!reg)
-        reg = m_ioregs[(int16_t) addr] = new AVR_IO_Register();
+        reg = m_ioregs[(int16_t) addr] = new IO_Register();
 
     return reg;
 }
 
-uint8_t AVR_Core::cpu_read_ioreg(reg_addr_t reg_addr)
+uint8_t Core::cpu_read_ioreg(reg_addr_t reg_addr)
 {
     if (!reg_addr.valid()) {
         m_device->logger().err("CPU reading an invalid I/O address");
@@ -206,11 +208,11 @@ uint8_t AVR_Core::cpu_read_ioreg(reg_addr_t reg_addr)
         return 0;
     }
 
-    AVR_IO_Register* ioreg = m_ioregs[addr];
+    IO_Register* ioreg = m_ioregs[addr];
     if (ioreg) {
         return ioreg->cpu_read(addr);
     } else {
-        if (!m_device->test_option(AVR_Device::Option_IgnoreBadCpuIO)) {
+        if (!m_device->test_option(Device::Option_IgnoreBadCpuIO)) {
             m_device->logger().wng("CPU reading an unregistered I/O address: %04x", addr);
             m_device->crash(CRASH_BAD_CPU_IO, "Invalid CPU register read");
         }
@@ -218,7 +220,7 @@ uint8_t AVR_Core::cpu_read_ioreg(reg_addr_t reg_addr)
     }
 }
 
-void AVR_Core::cpu_write_ioreg(reg_addr_t reg_addr, uint8_t value)
+void Core::cpu_write_ioreg(reg_addr_t reg_addr, uint8_t value)
 {
     if (!reg_addr.valid()) {
         m_device->logger().err("CPU writing to an invalid I/O address");
@@ -240,16 +242,16 @@ void AVR_Core::cpu_write_ioreg(reg_addr_t reg_addr, uint8_t value)
     }
 
 
-    AVR_IO_Register* ioreg = m_ioregs[addr];
+    IO_Register* ioreg = m_ioregs[addr];
     if (ioreg) {
         if (ioreg->cpu_write(addr, value)) {
-            if (!m_device->test_option(AVR_Device::Option_IgnoreBadCpuIO)) {
+            if (!m_device->test_option(Device::Option_IgnoreBadCpuIO)) {
                 m_device->logger().wng("CPU writing to a read-only register: %04x", addr);
                 m_device->crash(CRASH_BAD_CPU_IO, "Register read-only violation");
             }
         }
     } else {
-        if (!m_device->test_option(AVR_Device::Option_IgnoreBadCpuIO)) {
+        if (!m_device->test_option(Device::Option_IgnoreBadCpuIO)) {
             m_device->logger().wng("CPU writing to an unregistered I/O address: %04x", addr);
             m_device->crash(CRASH_BAD_CPU_IO, "Invalid CPU register write");
         }
@@ -260,7 +262,7 @@ void AVR_Core::cpu_write_ioreg(reg_addr_t reg_addr, uint8_t value)
 //=======================================================================================
 //Peripheral interface for accessing I/O registers.
 
-uint8_t AVR_Core::ioctl_read_ioreg(const reg_addr_t reg_addr)
+uint8_t Core::ioctl_read_ioreg(const reg_addr_t reg_addr)
 {
     if (!reg_addr.valid()) {
         m_device->logger().err("CTL reading an invalid I/O address");
@@ -279,7 +281,7 @@ uint8_t AVR_Core::ioctl_read_ioreg(const reg_addr_t reg_addr)
         return 0;
     }
 
-    AVR_IO_Register* ioreg = m_ioregs[addr];
+    IO_Register* ioreg = m_ioregs[addr];
     if (ioreg) {
         return ioreg->ioctl_read(addr);
     } else {
@@ -289,7 +291,7 @@ uint8_t AVR_Core::ioctl_read_ioreg(const reg_addr_t reg_addr)
     }
 }
 
-void AVR_Core::ioctl_write_ioreg(const regbit_t& rb, uint8_t value)
+void Core::ioctl_write_ioreg(const regbit_t& rb, uint8_t value)
 {
     if (!rb.valid()) {
         m_device->logger().err("CTL writing to an invalid I/O address");
@@ -312,7 +314,7 @@ void AVR_Core::ioctl_write_ioreg(const regbit_t& rb, uint8_t value)
         return;
     }
 
-    AVR_IO_Register* ioreg = m_ioregs[addr];
+    IO_Register* ioreg = m_ioregs[addr];
     if (ioreg) {
         uint8_t v = ioreg->value();
         v = (v & ~rb.mask) | ((value << rb.bit) & rb.mask);
@@ -326,7 +328,7 @@ void AVR_Core::ioctl_write_ioreg(const regbit_t& rb, uint8_t value)
 
 //=======================================================================================
 
-uint8_t AVR_Core::cpu_read_flash(flash_addr_t pgm_addr)
+uint8_t Core::cpu_read_flash(flash_addr_t pgm_addr)
 {
     if (pgm_addr > m_config.flashend) {
         m_device->logger().err("CPU reading an invalid flash address: 0x%04x", pgm_addr);
@@ -336,7 +338,7 @@ uint8_t AVR_Core::cpu_read_flash(flash_addr_t pgm_addr)
 
     if (!m_flash.programmed(pgm_addr)) {
         m_device->logger().wng("CPU reading an unprogrammed flash address: 0x%04x", pgm_addr);
-        if (!m_device->test_option(AVR_Device::Option_IgnoreBadCpuLPM)) {
+        if (!m_device->test_option(Device::Option_IgnoreBadCpuLPM)) {
             m_device->crash(CRASH_FLASH_ADDR_OVERFLOW, "Invalid flash address");
         }
     }
@@ -348,7 +350,7 @@ uint8_t AVR_Core::cpu_read_flash(flash_addr_t pgm_addr)
 //=======================================================================================
 ////CPU helpers for managing the SREG register
 
-uint8_t AVR_Core::read_sreg()
+uint8_t Core::read_sreg()
 {
     uint8_t v = 0;
     for (int i = 0; i < 8; ++i)
@@ -356,7 +358,7 @@ uint8_t AVR_Core::read_sreg()
     return v;
 }
 
-void AVR_Core::write_sreg(uint8_t value)
+void Core::write_sreg(uint8_t value)
 {
     for (int i = 0; i < 8; ++i)
         m_sreg[i] = (value >> i) & 1;
@@ -366,18 +368,18 @@ void AVR_Core::write_sreg(uint8_t value)
 //=======================================================================================
 ////CPU helpers for managing the stack
 
-uint16_t AVR_Core::read_sp()
+uint16_t Core::read_sp()
 {
     return m_ioregs[R_SPL]->value() | (m_ioregs[R_SPH]->value() << 8);
 }
 
-void AVR_Core::write_sp(uint16_t sp)
+void Core::write_sp(uint16_t sp)
 {
     m_ioregs[R_SPL]->set(sp & 0xFF);
     m_ioregs[R_SPH]->set(sp >> 8);
 }
 
-void AVR_Core::cpu_push_flash_addr(flash_addr_t addr)
+void Core::cpu_push_flash_addr(flash_addr_t addr)
 {
     mem_addr_t sp = read_sp();
     cpu_write_data(sp, addr);
@@ -390,7 +392,7 @@ void AVR_Core::cpu_push_flash_addr(flash_addr_t addr)
     }
 }
 
-flash_addr_t AVR_Core::cpu_pop_flash_addr()
+flash_addr_t Core::cpu_pop_flash_addr()
 {
     flash_addr_t addr;
     mem_addr_t sp = read_sp();
@@ -420,10 +422,10 @@ flash_addr_t AVR_Core::cpu_pop_flash_addr()
  * If the data space block defined by (address/len) intersects with the block,
  * the offsets bufofs, blockofs, blocklen are computed and the function returns true
  */
-bool data_space_map(mem_addr_t addr, mem_addr_t len,
-                    mem_addr_t blockstart, mem_addr_t blockend,
-                    mem_addr_t* bufofs, mem_addr_t* blockofs,
-                    mem_addr_t* blocklen)
+bool YASIMAVR_QUALIFIED_NAME(data_space_map)(mem_addr_t addr, mem_addr_t len,
+                                             mem_addr_t blockstart, mem_addr_t blockend,
+                                             mem_addr_t* bufofs, mem_addr_t* blockofs,
+                                             mem_addr_t* blocklen)
 {
     if (addr <= blockend && (addr + len) > blockstart) {
         *bufofs = addr > blockstart ? 0 : (blockstart - addr);

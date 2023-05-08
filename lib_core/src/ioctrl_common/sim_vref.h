@@ -27,6 +27,8 @@
 #include "../core/sim_peripheral.h"
 #include "../core/sim_types.h"
 
+YASIMAVR_BEGIN_NAMESPACE
+
 
 //=======================================================================================
 /*
@@ -55,7 +57,7 @@
  * Note that setting VCC in the firmware is required for using any analog feature of a MCU.
  * Failing to do so will trigger a device crash
  */
-class DLL_EXPORT AVR_IO_VREF : public AVR_Peripheral {
+class DLL_EXPORT IO_VREF : public Peripheral {
 
 public:
 
@@ -72,7 +74,7 @@ public:
         Signal_VCCChange,
     };
 
-    explicit AVR_IO_VREF(uint32_t ref_count);
+    explicit IO_VREF(uint32_t ref_count);
 
     bool active() const;
 
@@ -87,7 +89,7 @@ private:
 
     double m_vcc;
     double m_aref;
-    AVR_DataSignal m_signal;
+    DataSignal m_signal;
 
     struct ref_t {
         double value;
@@ -98,9 +100,12 @@ private:
 
 };
 
-inline bool AVR_IO_VREF::active() const
+inline bool IO_VREF::active() const
 {
     return m_vcc;
 }
+
+
+YASIMAVR_END_NAMESPACE
 
 #endif //__YASIMAVR_IO_VREF_H__

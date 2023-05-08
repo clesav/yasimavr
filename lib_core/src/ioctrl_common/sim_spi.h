@@ -30,6 +30,8 @@
 #include <deque>
 #include <vector>
 
+YASIMAVR_BEGIN_NAMESPACE
+
 
 //=======================================================================================
 /*
@@ -45,32 +47,32 @@
 
 //=======================================================================================
 
-class AVR_IO_SPI;
+class IO_SPI;
 
-class AVR_SPI_Client {
+class SPI_Client {
 
 public:
 
-    AVR_SPI_Client();
-    AVR_SPI_Client(const AVR_SPI_Client& other);
-    virtual ~AVR_SPI_Client();
+    SPI_Client();
+    SPI_Client(const SPI_Client& other);
+    virtual ~SPI_Client();
 
     virtual bool selected() const = 0;
     virtual uint8_t start_transfer(uint8_t mosi_frame) = 0;
     virtual void end_transfer(bool ok) = 0;
 
-    AVR_SPI_Client& operator=(const AVR_SPI_Client& other);
+    SPI_Client& operator=(const SPI_Client& other);
 
 private:
 
-    friend class AVR_IO_SPI;
+    friend class IO_SPI;
 
-    AVR_IO_SPI* m_host;
+    IO_SPI* m_host;
 
 };
 
 
-class DLL_EXPORT AVR_IO_SPI : public AVR_SPI_Client, public AVR_CycleTimer {
+class DLL_EXPORT IO_SPI : public SPI_Client, public CycleTimer {
 
 public:
 
@@ -82,10 +84,10 @@ public:
         Signal_ClientTfrComplete,
     };
 
-    AVR_IO_SPI();
+    IO_SPI();
 
     //Initialise the interface. the device will be used for timer related operations
-    void init(AVR_CycleManager& cycle_manager, AVR_Logger& logger);
+    void init(CycleManager& cycle_manager, Logger& logger);
 
     //Reset the interface, clear the buffers and cancel any transfer
     void reset();
@@ -96,17 +98,17 @@ public:
     bool is_host_mode() const;
 
     //Return the internal signal used for operation signaling
-    AVR_Signal& signal();
+    Signal& signal();
 
     //Set the delay in clock ticks to emit or receive a frame
     //The minimum valid value is 1
     void set_frame_delay(cycle_count_t delay);
 
     //Add a client to the interface
-    void add_client(AVR_SPI_Client& client);
+    void add_client(SPI_Client& client);
 
     //Remove a client from the interface
-    void remove_client(AVR_SPI_Client& client);
+    void remove_client(SPI_Client& client);
 
     //Set the interface as selected (client mode only)
     void set_selected(bool selected);
@@ -136,23 +138,23 @@ public:
     //Pop a frame from the RX buffer, return 0 if there aren't any
     uint8_t pop_rx();
 
-    //Reimplementation of AVR_CycleTimer interface
+    //Reimplementation of CycleTimer interface
     virtual cycle_count_t next(cycle_count_t when) override;
-    //Reimplementation of AVR_SPI_Client interface
+    //Reimplementation of SPI_Client interface
     virtual bool selected() const override;
     virtual uint8_t start_transfer(uint8_t mosi_frame) override;
     virtual void end_transfer(bool ok) override;
 
 private:
 
-    AVR_CycleManager* m_cycle_manager;
-    AVR_Logger* m_logger;
+    CycleManager* m_cycle_manager;
+    Logger* m_logger;
     cycle_count_t m_delay;
     bool m_is_host;
     bool m_tfr_in_progress;
     bool m_selected;
-    std::vector<AVR_SPI_Client*> m_clients;
-    AVR_SPI_Client* m_selected_client;
+    std::vector<SPI_Client*> m_clients;
+    SPI_Client* m_selected_client;
 
     uint8_t m_shift_reg;
 
@@ -162,33 +164,35 @@ private:
     std::deque<uint8_t> m_rx_buffer;
     size_t m_rx_limit;
 
-    AVR_Signal m_signal;
+    Signal m_signal;
 
     void start_transfer_as_host();
 
 };
 
-inline AVR_Signal& AVR_IO_SPI::signal()
+inline Signal& IO_SPI::signal()
 {
     return m_signal;
 }
 
-inline bool AVR_IO_SPI::is_host_mode() const
+inline bool IO_SPI::is_host_mode() const
 {
     return m_is_host;
 }
 
-inline size_t AVR_IO_SPI::rx_available() const
+inline size_t IO_SPI::rx_available() const
 {
     size_t n = m_rx_buffer.size();
     if (m_tfr_in_progress) --n;
     return n;
 }
 
-inline bool AVR_IO_SPI::tfr_in_progress() const
+inline bool IO_SPI::tfr_in_progress() const
 {
     return m_tfr_in_progress;
 }
 
+
+YASIMAVR_END_NAMESPACE
 
 #endif //__YASIMAVR_IO_SPI_H__

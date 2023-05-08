@@ -31,6 +31,8 @@
 #include <deque>
 #include <vector>
 
+YASIMAVR_BEGIN_NAMESPACE
+
 
 //=======================================================================================
 /*
@@ -170,7 +172,7 @@ public:
     TWI_Bus();
     ~TWI_Bus();
 
-    AVR_Signal& signal();
+    Signal& signal();
 
     void add_endpoint(TWI_Endpoint& endpoint);
     void remove_endpoint(TWI_Endpoint& endpoint);
@@ -183,7 +185,7 @@ private:
 
     friend class TWI_Endpoint;
 
-    AVR_Signal m_signal;
+    Signal m_signal;
     //List of all the endpoints connected to this bus
     std::vector<TWI_Endpoint*> m_endpoints;
     //Pointer to the master currently owning the bus
@@ -210,13 +212,13 @@ private:
 
 };
 
-inline AVR_Signal& TWI_Bus::signal()
+inline Signal& TWI_Bus::signal()
 {
     return m_signal;
 }
 
 
-class DLL_EXPORT AVR_IO_TWI : public TWI_Endpoint {
+class DLL_EXPORT IO_TWI : public TWI_Endpoint {
 
 public:
 
@@ -297,16 +299,16 @@ public:
         State_RX_Ack        = 0xC7,
     };
 
-    AVR_IO_TWI();
-    virtual ~AVR_IO_TWI();
+    IO_TWI();
+    virtual ~IO_TWI();
 
     //Initialise the interface. the device will be used for timer related operations
-    void init(AVR_CycleManager& cycle_manager, AVR_Logger& logger);
+    void init(CycleManager& cycle_manager, Logger& logger);
 
     //Reset the interface cancel any transaction
     void reset();
 
-    AVR_Signal& signal();
+    Signal& signal();
 
     void set_master_enabled(bool enabled);
     void set_bit_delay(cycle_count_t delay);
@@ -347,8 +349,8 @@ public:
     State slave_state() const;
 
     //Disable copy semantics
-    AVR_IO_TWI(const AVR_IO_TWI&) = delete;
-    AVR_IO_TWI& operator=(const AVR_IO_TWI&) = delete;
+    IO_TWI(const IO_TWI&) = delete;
+    IO_TWI& operator=(const IO_TWI&) = delete;
 
 protected:
 
@@ -362,10 +364,10 @@ private:
     class Timer;
     friend class Timer;
 
-    AVR_CycleManager* m_cycle_manager;
-    AVR_Logger* m_logger;
+    CycleManager* m_cycle_manager;
+    Logger* m_logger;
 
-    AVR_Signal m_signal;
+    Signal m_signal;
     signal_data_t m_deferred_sigdata;
     bool m_has_deferred_raise;
     Timer* m_timer;
@@ -391,19 +393,22 @@ private:
 
 };
 
-inline AVR_Signal& AVR_IO_TWI::signal()
+inline Signal& IO_TWI::signal()
 {
     return m_signal;
 }
 
-inline AVR_IO_TWI::State AVR_IO_TWI::master_state() const
+inline IO_TWI::State IO_TWI::master_state() const
 {
     return m_mst_state;
 }
 
-inline AVR_IO_TWI::State AVR_IO_TWI::slave_state() const
+inline IO_TWI::State IO_TWI::slave_state() const
 {
     return m_slv_state;
 }
+
+
+YASIMAVR_END_NAMESPACE
 
 #endif //__YASIMAVR_IO_TWI_H__

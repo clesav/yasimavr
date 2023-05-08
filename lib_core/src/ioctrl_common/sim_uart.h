@@ -29,6 +29,8 @@
 #include "../core/sim_signal.h"
 #include <deque>
 
+YASIMAVR_BEGIN_NAMESPACE
+
 
 //=======================================================================================
 /*
@@ -45,8 +47,8 @@
 */
 struct UART_EndPoint {
 
-    AVR_Signal* tx_signal;
-    AVR_SignalHook* rx_hook;
+    Signal* tx_signal;
+    SignalHook* rx_hook;
 
 };
 
@@ -79,7 +81,7 @@ struct UART_EndPoint {
  * The signal UART_RX_Complete are emitted at the end of a reception, with data = 1 if the frame
  * if kept or data = 0 if canceled or discarded
  */
-class DLL_EXPORT AVR_IO_UART : public AVR_SignalHook {
+class DLL_EXPORT IO_UART : public SignalHook {
 
 public:
 
@@ -108,17 +110,17 @@ public:
         Signal_RX_Complete,
     };
 
-    AVR_IO_UART();
-    virtual ~AVR_IO_UART();
+    IO_UART();
+    virtual ~IO_UART();
 
     //Initialise the interface. the device will be used for timer related operations
-    void init(AVR_CycleManager& cycle_manager, AVR_Logger& logger);
+    void init(CycleManager& cycle_manager, Logger& logger);
 
     //Reset the interface, clear the buffers and cancel any operation
     void reset();
 
     //Return the internal signal used for operation signaling
-    AVR_Signal& signal();
+    Signal& signal();
 
     //Set the delay in clock ticks to emit or receive a frame
     //The minimum valid value is 1
@@ -164,12 +166,12 @@ public:
     void set_paused(bool enabled);
 
     //Disable copy semantics
-    AVR_IO_UART(const AVR_IO_UART&) = delete;
-    AVR_IO_UART& operator=(const AVR_IO_UART&) = delete;
+    IO_UART(const IO_UART&) = delete;
+    IO_UART& operator=(const IO_UART&) = delete;
 
 protected:
 
-    //Implementation of the AVR_Signal::Hook interface to receive frames
+    //Implementation of the Signal::Hook interface to receive frames
     //from the outside
     virtual void raised(const signal_data_t& data, uint16_t id) override;
 
@@ -180,10 +182,10 @@ private:
     friend class RxTimer;
     friend class TxTimer;
 
-    AVR_CycleManager* m_cycle_manager;
-    AVR_Logger* m_logger;
+    CycleManager* m_cycle_manager;
+    Logger* m_logger;
 
-    AVR_Signal m_signal;
+    Signal m_signal;
 
     //Frame delay in clock cycles
     cycle_count_t m_delay;
@@ -232,44 +234,47 @@ private:
 
 };
 
-inline AVR_Signal& AVR_IO_UART::signal()
+inline Signal& IO_UART::signal()
 {
     return m_signal;
 }
 
-inline unsigned int AVR_IO_UART::rx_available() const
+inline unsigned int IO_UART::rx_available() const
 {
     return m_rx_count;
 }
 
-inline void AVR_IO_UART::set_frame_delay(cycle_count_t delay)
+inline void IO_UART::set_frame_delay(cycle_count_t delay)
 {
     m_delay = delay ? delay : 1;
 }
 
-inline unsigned int AVR_IO_UART::tx_pending() const
+inline unsigned int IO_UART::tx_pending() const
 {
     return m_tx_buffer.size() ? (m_tx_buffer.size() - 1) : 0;
 }
 
-inline bool AVR_IO_UART::has_tx_collision() const
+inline bool IO_UART::has_tx_collision() const
 {
     return m_tx_collision;
 }
 
-inline void AVR_IO_UART::clear_tx_collision()
+inline void IO_UART::clear_tx_collision()
 {
     m_tx_collision = false;
 }
 
-inline bool AVR_IO_UART::has_rx_overflow() const
+inline bool IO_UART::has_rx_overflow() const
 {
     return m_rx_overflow;
 }
 
-inline void AVR_IO_UART::clear_rx_overflow()
+inline void IO_UART::clear_rx_overflow()
 {
     m_rx_overflow = false;
 }
+
+
+YASIMAVR_END_NAMESPACE
 
 #endif //__YASIMAVR_IO_UART_H__

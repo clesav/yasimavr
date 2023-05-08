@@ -27,14 +27,16 @@
 #include "sim_cycle_timer.h"
 #include <cstdarg>
 
+YASIMAVR_BEGIN_NAMESPACE
+
 
 //=======================================================================================
 
-class DLL_EXPORT AVR_LogWriter {
+class DLL_EXPORT LogWriter {
 
 public:
 
-    virtual ~AVR_LogWriter() = default;
+    virtual ~LogWriter() = default;
 
     virtual void write(cycle_count_t cycle,
                        int level,
@@ -42,42 +44,42 @@ public:
                        const char* format,
                        std::va_list args);
 
-    static AVR_LogWriter* default_writer();
+    static LogWriter* default_writer();
 };
 
 
 //=======================================================================================
 
-class AVR_Logger;
+class Logger;
 
-class DLL_EXPORT AVR_LogHandler {
+class DLL_EXPORT LogHandler {
 
-    friend class AVR_Logger;
+    friend class Logger;
 
 public:
 
-    AVR_LogHandler();
+    LogHandler();
 
-    void init(AVR_CycleManager& cycle_manager);
+    void init(CycleManager& cycle_manager);
 
-    void set_writer(AVR_LogWriter& w);
-    AVR_LogWriter& writer();
+    void set_writer(LogWriter& w);
+    LogWriter& writer();
 
 private:
 
-    AVR_CycleManager* m_cycle_manager;
-    AVR_LogWriter* m_writer;
+    CycleManager* m_cycle_manager;
+    LogWriter* m_writer;
 
     void write(int lvl, uint32_t id, const char* fmt, std::va_list args);
 
 };
 
-inline void AVR_LogHandler::set_writer(AVR_LogWriter& writer)
+inline void LogHandler::set_writer(LogWriter& writer)
 {
     m_writer = &writer;
 }
 
-inline AVR_LogWriter& AVR_LogHandler::writer()
+inline LogWriter& LogHandler::writer()
 {
     return *m_writer;
 }
@@ -85,7 +87,7 @@ inline AVR_LogWriter& AVR_LogHandler::writer()
 
 //=======================================================================================
 
-class DLL_EXPORT AVR_Logger {
+class DLL_EXPORT Logger {
 
 public:
 
@@ -98,14 +100,14 @@ public:
         Level_Trace,
     };
 
-    AVR_Logger(uint32_t id, AVR_LogHandler& hdl);
-    explicit AVR_Logger(uint32_t id, AVR_Logger* prt = nullptr);
+    Logger(uint32_t id, LogHandler& hdl);
+    explicit Logger(uint32_t id, Logger* prt = nullptr);
 
     void set_level(int lvl);
     int level() const;
 
-    void set_parent(AVR_Logger* p);
-    AVR_Logger* parent() const;
+    void set_parent(Logger* p);
+    Logger* parent() const;
 
     void log(int level, const char* format, ...);
 
@@ -124,37 +126,40 @@ private:
 
     uint32_t m_id;
     int m_level;
-    AVR_Logger* m_parent;
-    AVR_LogHandler* m_handler;
+    Logger* m_parent;
+    LogHandler* m_handler;
 
 };
 
-inline void AVR_Logger::set_level(int lvl)
+inline void Logger::set_level(int lvl)
 {
     m_level = lvl;
 }
 
-inline int AVR_Logger::level() const
+inline int Logger::level() const
 {
     return m_level;
 }
 
-inline uint32_t AVR_Logger::id() const
+inline uint32_t Logger::id() const
 {
     return m_id;
 }
 
-inline void AVR_Logger::set_parent(AVR_Logger* p)
+inline void Logger::set_parent(Logger* p)
 {
     m_parent = p;
 }
 
-inline AVR_Logger* AVR_Logger::parent() const
+inline Logger* Logger::parent() const
 {
     return m_parent;
 }
 
 
-AVR_Logger& AVR_global_logger();
+Logger& global_logger();
+
+
+YASIMAVR_END_NAMESPACE
 
 #endif //__YASIMAVR_LOGGER_H__

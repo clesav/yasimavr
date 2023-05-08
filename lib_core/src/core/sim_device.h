@@ -32,11 +32,14 @@
 #include <vector>
 #include <map>
 
-class AVR_DeviceConfiguration;
-class AVR_Firmware;
-class AVR_Interrupt;
-class AVR_IO_Console;
-enum class AVR_SleepMode;
+YASIMAVR_BEGIN_NAMESPACE
+
+class DeviceConfiguration;
+class Firmware;
+class Interrupt;
+class IO_Console;
+enum class SleepMode;
+
 
 //=======================================================================================
 //Crash codes definition
@@ -54,9 +57,9 @@ enum class AVR_SleepMode;
 /*
  * Generic AVR device definition, holding all the data about a MCU
  */
-class DLL_EXPORT AVR_Device {
+class DLL_EXPORT Device {
 
-    friend class AVR_DeviceDebugProbe;
+    friend class DeviceDebugProbe;
 
 public:
 
@@ -101,27 +104,27 @@ public:
         Option_InfiniteLoopDetect   = 0x10,
     };
 
-    AVR_Device(AVR_Core& core, const AVR_DeviceConfiguration& config);
-    virtual ~AVR_Device();
+    Device(Core& core, const DeviceConfiguration& config);
+    virtual ~Device();
 
-    AVR_Core& core() const;
+    Core& core() const;
 
     void set_option(Option option, bool value);
     bool test_option(Option option) const;
 
-    const AVR_DeviceConfiguration& config() const;
+    const DeviceConfiguration& config() const;
     State state() const;
     cycle_count_t cycle() const;
-    AVR_SleepMode sleep_mode() const; //Returns one of AVR_SleepMode enum values
+    SleepMode sleep_mode() const; //Returns one of SleepMode enum values
     uint32_t frequency() const;
 
     //Init should be called just after constructing the device to allows all peripherals
     //to allocate resources and connect signals
     //Returns true on success or false on failure
-    bool init(AVR_CycleManager& cycle_manager);
+    bool init(CycleManager& cycle_manager);
 
     //Loads a firmware object into the flash and loads the parameters in the .mcu section
-    bool load_firmware(const AVR_Firmware& firmware);
+    bool load_firmware(const Firmware& firmware);
 
     //Simulates a MCU reset
     void reset(uint8_t reset_flags = Reset_PowerOn);
@@ -132,28 +135,28 @@ public:
 
     //Attach a peripheral to the device. The peripheral will be owned by the device and will
     //be destroyed alongside
-    void attach_peripheral(AVR_Peripheral& ctl);
+    void attach_peripheral(Peripheral& ctl);
 
-    void add_ioreg_handler(reg_addr_t addr, AVR_IO_RegHandler& handler, uint8_t ro_mask=0x00);
-    void add_ioreg_handler(const regbit_t& rb, AVR_IO_RegHandler& handler, bool readonly=false);
-    AVR_Peripheral* find_peripheral(const char* name);
-    AVR_Peripheral* find_peripheral(uint32_t id);
+    void add_ioreg_handler(reg_addr_t addr, IO_RegHandler& handler, uint8_t ro_mask=0x00);
+    void add_ioreg_handler(const regbit_t& rb, IO_RegHandler& handler, bool readonly=false);
+    Peripheral* find_peripheral(const char* name);
+    Peripheral* find_peripheral(uint32_t id);
     bool ctlreq(uint32_t id, uint16_t req, ctlreq_data_t* reqdata = nullptr);
 
     //Helpers for the peripheral timers
-    AVR_CycleManager* cycle_manager();
+    CycleManager* cycle_manager();
 
-    AVR_Pin* find_pin(const char* name);
-    AVR_Pin* find_pin(uint32_t id);
+    Pin* find_pin(const char* name);
+    Pin* find_pin(uint32_t id);
 
-    AVR_LogHandler& log_handler();
-    AVR_Logger& logger();
+    LogHandler& log_handler();
+    Logger& logger();
 
     void crash(uint16_t reason, const char* text);
 
     //Disable copy semantics
-    AVR_Device(const AVR_Device&) = delete;
-    AVR_Device& operator=(const AVR_Device&) = delete;
+    Device(const Device&) = delete;
+    Device& operator=(const Device&) = delete;
 
 protected:
 
@@ -162,81 +165,84 @@ protected:
     //Loads the various memory area using the firmware data.
     //The basic implementation loads only the flash and the fuses, the rest
     //is the responsibility of architecture-specific implementations.
-    virtual bool program(const AVR_Firmware& firmware);
+    virtual bool program(const Firmware& firmware);
 
     void erase_peripherals();
 
 private:
 
-    AVR_Core& m_core;
-    const AVR_DeviceConfiguration& m_config;
+    Core& m_core;
+    const DeviceConfiguration& m_config;
     uint32_t m_options;
     State m_state;
     uint32_t m_frequency;
-    AVR_SleepMode m_sleep_mode;
-    AVR_DeviceDebugProbe* m_debugger;
-    AVR_LogHandler m_log_handler;
-    AVR_Logger m_logger;
-    std::vector<AVR_Peripheral*> m_peripherals;
-    std::map<uint32_t, AVR_Pin*> m_pins;
-    AVR_CycleManager* m_cycle_manager;
-    AVR_IO_Console* m_console;
+    SleepMode m_sleep_mode;
+    DeviceDebugProbe* m_debugger;
+    LogHandler m_log_handler;
+    Logger m_logger;
+    std::vector<Peripheral*> m_peripherals;
+    std::map<uint32_t, Pin*> m_pins;
+    CycleManager* m_cycle_manager;
+    IO_Console* m_console;
     uint8_t m_reset_flags;
 
-    std::string& name_from_pin(AVR_Pin* pin);
+    std::string& name_from_pin(Pin* pin);
 
     void set_state(State state);
 
 };
 
-inline const AVR_DeviceConfiguration& AVR_Device::config() const
+inline const DeviceConfiguration& Device::config() const
 {
     return m_config;
 }
 
-inline AVR_Device::State AVR_Device::state() const
+inline Device::State Device::state() const
 {
     return m_state;
 }
 
-inline cycle_count_t AVR_Device::cycle() const
+inline cycle_count_t Device::cycle() const
 {
     return m_cycle_manager ? m_cycle_manager->cycle() : INVALID_CYCLE;
 }
 
-inline AVR_Core& AVR_Device::core() const
+inline Core& Device::core() const
 {
     return m_core;
 }
 
-inline AVR_SleepMode AVR_Device::sleep_mode() const
+inline SleepMode Device::sleep_mode() const
 {
     return m_sleep_mode;
 }
 
-inline uint32_t AVR_Device::frequency() const
+inline uint32_t Device::frequency() const
 {
     return m_frequency;
 }
 
-inline void AVR_Device::set_state(State state)
+inline void Device::set_state(State state)
 {
     m_state = state;
 }
 
-inline AVR_LogHandler& AVR_Device::log_handler()
+inline LogHandler& Device::log_handler()
 {
     return m_log_handler;
 }
 
-inline AVR_Logger& AVR_Device::logger()
+inline Logger& Device::logger()
 {
     return m_logger;
 }
 
-inline AVR_CycleManager* AVR_Device::cycle_manager()
+inline CycleManager* Device::cycle_manager()
 {
     return m_cycle_manager;
 }
+
+
+YASIMAVR_END_NAMESPACE
 
 #endif //__YASIMAVR_DEVICE_H__
