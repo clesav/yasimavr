@@ -24,6 +24,8 @@
 #include "arch_avr_acp.h"
 #include "core/sim_device.h"
 
+YASIMAVR_USING_NAMESPACE
+
 
 //=======================================================================================
 
@@ -39,8 +41,8 @@ enum {
 };
 
 
-AVR_ArchAVR_ACP::AVR_ArchAVR_ACP(int num, const AVR_ArchAVR_ACP_Config& config)
-:AVR_Peripheral(AVR_IOCTL_ACP(0x30 + num))
+ArchAVR_ACP::ArchAVR_ACP(int num, const ArchAVR_ACP_Config& config)
+:Peripheral(AVR_IOCTL_ACP(0x30 + num))
 ,m_config(config)
 ,m_intflag(true)
 ,m_pos_value(0.0)
@@ -48,9 +50,9 @@ AVR_ArchAVR_ACP::AVR_ArchAVR_ACP(int num, const AVR_ArchAVR_ACP_Config& config)
 {}
 
 
-bool AVR_ArchAVR_ACP::init(AVR_Device& device)
+bool ArchAVR_ACP::init(Device& device)
 {
-    bool status = AVR_Peripheral::init(device);
+    bool status = Peripheral::init(device);
 
     add_ioreg(m_config.rb_disable);
     add_ioreg(m_config.rb_mux_enable);
@@ -67,38 +69,38 @@ bool AVR_ArchAVR_ACP::init(AVR_Device& device)
                              m_config.iv_cmp);
 
     //Find the positive input pin and add it to the positive input mux
-    AVR_Pin* pos_pin = device.find_pin(m_config.pos_pin);
+    Pin* pos_pin = device.find_pin(m_config.pos_pin);
     if (!pos_pin) {
         logger().err("Positive input pin invalid");
         return false;
     }
-    m_pos_mux.add_mux(pos_pin->signal(), AVR_Pin::Signal_AnalogValueChange);
+    m_pos_mux.add_mux(pos_pin->signal(), Pin::Signal_AnalogValueChange);
 
     //Find the negative input pin and add it to the negative input mux
-    AVR_Pin* neg_pin = device.find_pin(m_config.neg_pin);
+    Pin* neg_pin = device.find_pin(m_config.neg_pin);
     if (!neg_pin) {
         logger().err("Negative input pin invalid");
         return false;
     }
-    m_neg_mux.add_mux(neg_pin->signal(), AVR_Pin::Signal_AnalogValueChange);
+    m_neg_mux.add_mux(neg_pin->signal(), Pin::Signal_AnalogValueChange);
 
     //Find the signal from the voltage reference controller and add it to
     //the positive input mux
-    AVR_DataSignal* vref_sig = dynamic_cast<AVR_DataSignal*>(get_signal(AVR_IOCTL_VREF));
+    DataSignal* vref_sig = dynamic_cast<DataSignal*>(get_signal(AVR_IOCTL_VREF));
     if (!vref_sig) {
         logger().err("No voltage reference signal");
         return false;
     }
-    m_pos_mux.add_mux(*vref_sig, AVR_IO_VREF::Signal_IntRefChange);
+    m_pos_mux.add_mux(*vref_sig, IO_VREF::Signal_IntRefChange);
 
     //Connect the mux pins to the negative input mux
     for (size_t i = 0; i < m_config.mux_pins.size(); ++i) {
-        AVR_Pin* pin = device.find_pin(m_config.mux_pins[i].pin);
+        Pin* pin = device.find_pin(m_config.mux_pins[i].pin);
         if (!pin) {
             logger().err("Negative mux pin invalid");
             return false;
         }
-        m_neg_mux.add_mux(pin->signal(), AVR_Pin::Signal_AnalogValueChange);
+        m_neg_mux.add_mux(pin->signal(), Pin::Signal_AnalogValueChange);
     }
 
     m_pos_mux.signal().connect_hook(this, HookTag_Pos);
@@ -108,7 +110,7 @@ bool AVR_ArchAVR_ACP::init(AVR_Device& device)
 }
 
 
-void AVR_ArchAVR_ACP::reset()
+void ArchAVR_ACP::reset()
 {
     m_intflag.update_from_ioreg();
     change_pos_channel();
@@ -116,7 +118,7 @@ void AVR_ArchAVR_ACP::reset()
 }
 
 
-bool AVR_ArchAVR_ACP::ctlreq(uint16_t req, ctlreq_data_t* data)
+bool ArchAVR_ACP::ctlreq(uint16_t req, ctlreq_data_t* data)
 {
     if (req == AVR_CTLREQ_GET_SIGNAL) {
         data->data = &m_out_signal;
@@ -129,7 +131,7 @@ bool AVR_ArchAVR_ACP::ctlreq(uint16_t req, ctlreq_data_t* data)
 
 //I/O register callback reimplementation
 
-void AVR_ArchAVR_ACP::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
+void ArchAVR_ACP::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
     if (addr == m_config.rb_disable.addr) {
         clear_ioreg(m_config.rb_output);
@@ -158,7 +160,7 @@ void AVR_ArchAVR_ACP::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& 
 }
 
 
-void AVR_ArchAVR_ACP::change_pos_channel()
+void ArchAVR_ACP::change_pos_channel()
 {
     if (test_ioreg(m_config.rb_bandgap_select))
         m_pos_mux.set_selection(Mux_IntRef);
@@ -167,11 +169,11 @@ void AVR_ArchAVR_ACP::change_pos_channel()
 }
 
 
-void AVR_ArchAVR_ACP::change_neg_channel()
+void ArchAVR_ACP::change_neg_channel()
 {
     if (test_ioreg(m_config.rb_mux_enable) && !test_ioreg(m_config.rb_adc_enable)) {
         uint8_t mux_regval = read_ioreg(m_config.rb_mux);
-        int mux_index = find_reg_config<AVR_ArchAVR_ACP_Config::mux_config_t>(m_config.mux_pins, mux_regval);
+        int mux_index = find_reg_config<ArchAVR_ACP_Config::mux_config_t>(m_config.mux_pins, mux_regval);
         if (mux_index < 0) {
             device()->crash(CRASH_BAD_CTL_IO, "ACP: Invalid mux configuration");
             return;
@@ -183,7 +185,7 @@ void AVR_ArchAVR_ACP::change_neg_channel()
 }
 
 
-void AVR_ArchAVR_ACP::update_state()
+void ArchAVR_ACP::update_state()
 {
     logger().dbg("ACP updating");
 
@@ -205,7 +207,7 @@ void AVR_ArchAVR_ACP::update_state()
 /*
  * Hook callback, the hooktag determines if it's for the positive or the negative side
  */
-void AVR_ArchAVR_ACP::raised(const signal_data_t& sigdata, uint16_t hooktag)
+void ArchAVR_ACP::raised(const signal_data_t& sigdata, uint16_t hooktag)
 {
     if (hooktag == HookTag_Pos)
         m_pos_value = sigdata.data.as_double();

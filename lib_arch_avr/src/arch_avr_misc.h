@@ -27,17 +27,19 @@
 #include "core/sim_interrupt.h"
 #include "ioctrl_common/sim_vref.h"
 
+YASIMAVR_BEGIN_NAMESPACE
+
 
 //=======================================================================================
 /*
  * Implementation of a Voltage Reference controller for AVR series
  */
 
-class DLL_EXPORT AVR_ArchAVR_VREF : public AVR_IO_VREF {
+class DLL_EXPORT ArchAVR_VREF : public IO_VREF {
 
 public:
 
-    explicit AVR_ArchAVR_VREF(double band_gap);
+    explicit ArchAVR_VREF(double band_gap);
 
 };
 
@@ -46,11 +48,11 @@ public:
 /*
  * Implementation of a interrupt controller for AVR series
  */
-class DLL_EXPORT AVR_ArchAVR_Interrupt : public AVR_InterruptController {
+class DLL_EXPORT ArchAVR_Interrupt : public InterruptController {
 
 public:
 
-    AVR_ArchAVR_Interrupt(unsigned int size);
+    ArchAVR_Interrupt(unsigned int size);
 
 protected:
 
@@ -64,25 +66,28 @@ protected:
  * Implementation of a interrupt controller for AVR series
  */
 
-struct AVR_ArchAVR_Misc_Config {
+struct ArchAVR_Misc_Config {
 
     std::vector<reg_addr_t> gpior;
 
 };
 
 
-class DLL_EXPORT AVR_ArchAVR_MiscRegCtrl : public AVR_Peripheral {
+class DLL_EXPORT ArchAVR_MiscRegCtrl : public Peripheral {
 
 public:
 
-    explicit AVR_ArchAVR_MiscRegCtrl(const AVR_ArchAVR_Misc_Config& config);
+    explicit ArchAVR_MiscRegCtrl(const ArchAVR_Misc_Config& config);
 
-    virtual bool init(AVR_Device& device) override;
+    virtual bool init(Device& device) override;
 
 private:
 
-    const AVR_ArchAVR_Misc_Config& m_config;
+    const ArchAVR_Misc_Config& m_config;
 
 };
+
+
+YASIMAVR_END_NAMESPACE
 
 #endif //__YASIMAVR_AVR_MISC_H__

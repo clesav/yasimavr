@@ -24,13 +24,15 @@
 #include "arch_avr_port.h"
 #include "core/sim_device.h"
 
+YASIMAVR_USING_NAMESPACE
+
 
 //=======================================================================================
 /*
  * Constructor of a GPIO port
  */
-AVR_ArchAVR_Port::AVR_ArchAVR_Port(const AVR_ArchAVR_PortConfig& config)
-:AVR_IO_Port(config.name)
+ArchAVR_Port::ArchAVR_Port(const ArchAVR_PortConfig& config)
+:IO_Port(config.name)
 ,m_config(config)
 ,m_portr_value(0)
 ,m_ddr_value(0)
@@ -39,9 +41,9 @@ AVR_ArchAVR_Port::AVR_ArchAVR_Port(const AVR_ArchAVR_PortConfig& config)
 /*
  * Initialisation of a GPIO port
  */
-bool AVR_ArchAVR_Port::init(AVR_Device& device)
+bool ArchAVR_Port::init(Device& device)
 {
-    bool status = AVR_IO_Port::init(device);
+    bool status = IO_Port::init(device);
 
     add_ioreg(m_config.reg_port, pin_mask());
     add_ioreg(m_config.reg_pin, pin_mask());
@@ -53,15 +55,15 @@ bool AVR_ArchAVR_Port::init(AVR_Device& device)
 /*
  * Reset of a GPIO port. The reset of the pins is done by the device
  */
-void AVR_ArchAVR_Port::reset()
+void ArchAVR_Port::reset()
 {
-    AVR_IO_Port::reset();
+    IO_Port::reset();
 
     m_portr_value = 0;
     m_ddr_value = 0;
 }
 
-void AVR_ArchAVR_Port::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
+void ArchAVR_Port::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
     if (addr == m_config.reg_port) {
         update_pin_states(data.value, m_ddr_value);
@@ -80,17 +82,17 @@ void AVR_ArchAVR_Port::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t&
     }
 }
 
-void AVR_ArchAVR_Port::update_pin_states(uint8_t portr, uint8_t ddr)
+void ArchAVR_Port::update_pin_states(uint8_t portr, uint8_t ddr)
 {
     //Filters the pins to update to only those for which portr or ddr has actually changed
     uint8_t pinmask = ((portr ^ m_portr_value) | (ddr ^ m_ddr_value)) & pin_mask();
-    AVR_Pin::State state;
+    Pin::State state;
     for (int i = 0; i < 8; ++i) {
         if (pinmask & 1) {
             if (ddr & 1) {
-                state = portr & 1 ? AVR_Pin::State_High : AVR_Pin::State_Low;
+                state = portr & 1 ? Pin::State_High : Pin::State_Low;
             } else {
-                state = portr & 1 ? AVR_Pin::State_PullUp : AVR_Pin::State_Floating;
+                state = portr & 1 ? Pin::State_PullUp : Pin::State_Floating;
             }
             set_pin_internal_state(i, state);
         }
@@ -103,12 +105,12 @@ void AVR_ArchAVR_Port::update_pin_states(uint8_t portr, uint8_t ddr)
 /*
  * Callback for a state change of a pin. Update PINR with the new value
  */
-void AVR_ArchAVR_Port::pin_state_changed(uint8_t num, AVR_Pin::State state)
+void ArchAVR_Port::pin_state_changed(uint8_t num, Pin::State state)
 {
-    AVR_IO_Port::pin_state_changed(num, state);
+    IO_Port::pin_state_changed(num, state);
     //The SHORTED case is taken care of by AVR_IO_Port
-    if (state != AVR_Pin::State_Shorted) {
-        bool new_value = (state == AVR_Pin::State_High) ? 1 : 0;
+    if (state != Pin::State_Shorted) {
+        bool new_value = (state == Pin::State_High) ? 1 : 0;
         write_ioreg(m_config.reg_pin, num, new_value);
     }
 }

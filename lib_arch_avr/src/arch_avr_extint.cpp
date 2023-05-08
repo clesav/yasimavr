@@ -24,6 +24,10 @@
 #include "arch_avr_extint.h"
 #include "core/sim_device.h"
 
+YASIMAVR_USING_NAMESPACE
+
+
+//=======================================================================================
 
 enum class ExtIntMode {
     Low,
@@ -37,8 +41,8 @@ enum class ExtIntMode {
 /*
  * Constructor of a ExtInt controller
  */
-AVR_ArchAVR_ExtInt::AVR_ArchAVR_ExtInt(const AVR_ArchAVR_ExtIntConfig& config)
-:AVR_Peripheral(AVR_IOCTL_EXTINT)
+ArchAVR_ExtInt::ArchAVR_ExtInt(const ArchAVR_ExtIntConfig& config)
+:Peripheral(AVR_IOCTL_EXTINT)
 ,m_config(config)
 ,m_extint_pin_value(0)
 {}
@@ -46,9 +50,9 @@ AVR_ArchAVR_ExtInt::AVR_ArchAVR_ExtInt(const AVR_ArchAVR_ExtIntConfig& config)
 /*
  * Initialisation of a ExtInt controller
  */
-bool AVR_ArchAVR_ExtInt::init(AVR_Device& device)
+bool ArchAVR_ExtInt::init(Device& device)
 {
-    bool status = AVR_Peripheral::init(device);
+    bool status = Peripheral::init(device);
 
     //Defines all the I/O registers
     add_ioreg(m_config.rb_extint_ctrl);
@@ -76,7 +80,7 @@ bool AVR_ArchAVR_ExtInt::init(AVR_Device& device)
     //Find the pins for EXTINT and connect the hook mapper to their signals
     for (int i = 0; i < EXTINT_PIN_COUNT; ++i) {
         uint32_t pin_id = m_config.extint_pins[i];
-        AVR_Pin* pin = device.find_pin(pin_id);
+        Pin* pin = device.find_pin(pin_id);
         if (pin)
             pin->signal().connect_hook(this, i);
     }
@@ -84,7 +88,7 @@ bool AVR_ArchAVR_ExtInt::init(AVR_Device& device)
     //Find the pins for Pin Change and connect the hook mapper to their signals
     for (int i = 0; i < PCINT_PIN_COUNT; ++i) {
         uint32_t pin_id = m_config.pcint_pins[i];
-        AVR_Pin* pin = device.find_pin(pin_id);
+        Pin* pin = device.find_pin(pin_id);
         if (pin)
             pin->signal().connect_hook(this, 0x100 | i);
     }
@@ -92,14 +96,14 @@ bool AVR_ArchAVR_ExtInt::init(AVR_Device& device)
     return status;
 }
 
-void AVR_ArchAVR_ExtInt::reset()
+void ArchAVR_ExtInt::reset()
 {
     m_extint_pin_value = 0;
     for (int i = 0; i < PCINT_BANK_COUNT; ++i)
         m_pcint_pin_value[i] = 0;
 }
 
-bool AVR_ArchAVR_ExtInt::ctlreq(uint16_t req, ctlreq_data_t* data)
+bool ArchAVR_ExtInt::ctlreq(uint16_t req, ctlreq_data_t* data)
 {
     if (req == AVR_CTLREQ_GET_SIGNAL) {
         data->data = &m_signal;
@@ -108,7 +112,7 @@ bool AVR_ArchAVR_ExtInt::ctlreq(uint16_t req, ctlreq_data_t* data)
     return false;
 }
 
-void AVR_ArchAVR_ExtInt::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
+void ArchAVR_ExtInt::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
     //If we're writing a 1 to a interrupt flag bit, it cancels the corresponding interrupt if it
     //has not been executed yet
@@ -136,7 +140,7 @@ void AVR_ArchAVR_ExtInt::ioreg_write_handler(reg_addr_t addr, const ioreg_write_
     }
 }
 
-void AVR_ArchAVR_ExtInt::interrupt_ack_handler(int_vect_t vector)
+void ArchAVR_ExtInt::interrupt_ack_handler(int_vect_t vector)
 {
     //First, iterate over the extint vector to find the one just acked.
     //we need to check if the trigger condition is still present
@@ -166,11 +170,11 @@ void AVR_ArchAVR_ExtInt::interrupt_ack_handler(int_vect_t vector)
     }
 }
 
-void AVR_ArchAVR_ExtInt::raised(const signal_data_t& sigdata, uint16_t hooktag)
+void ArchAVR_ExtInt::raised(const signal_data_t& sigdata, uint16_t hooktag)
 {
-    if (sigdata.sigid != AVR_Pin::Signal_DigitalStateChange) return;
+    if (sigdata.sigid != Pin::Signal_DigitalStateChange) return;
 
-    bool pin_level = (sigdata.data.as_uint() == AVR_Pin::State_High);
+    bool pin_level = (sigdata.data.as_uint() == Pin::State_High);
     uint8_t pin_num = hooktag & 0x00FF;
     bool is_pc = (hooktag & 0x0100);
 
@@ -231,7 +235,7 @@ void AVR_ArchAVR_ExtInt::raised(const signal_data_t& sigdata, uint16_t hooktag)
 /*
  * Utility function that returns the sensing mode for a pin
  */
-uint8_t AVR_ArchAVR_ExtInt::get_extint_mode(uint8_t pin) const
+uint8_t ArchAVR_ExtInt::get_extint_mode(uint8_t pin) const
 {
     uint8_t rb_value = read_ioreg(m_config.rb_extint_ctrl);
     uint8_t mode = (rb_value >> (pin << 1)) & 0x03;

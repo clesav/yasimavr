@@ -29,6 +29,8 @@
 #include "ioctrl_common/sim_vref.h"
 #include "core/sim_interrupt.h"
 
+YASIMAVR_BEGIN_NAMESPACE
+
 
 //=======================================================================================
 /*
@@ -39,7 +41,7 @@
  */
 
 
-struct AVR_ArchAVR_ACP_Config {
+struct ArchAVR_ACP_Config {
 
     struct mux_config_t : base_reg_config_t {
         uint32_t pin;
@@ -64,15 +66,15 @@ struct AVR_ArchAVR_ACP_Config {
 };
 
 
-class DLL_EXPORT AVR_ArchAVR_ACP : public AVR_IO_ACP,
-                                   public AVR_Peripheral,
-                                   public AVR_SignalHook {
+class DLL_EXPORT ArchAVR_ACP : public IO_ACP,
+                               public Peripheral,
+                               public SignalHook {
 
 public:
 
-    AVR_ArchAVR_ACP(int num, const AVR_ArchAVR_ACP_Config& config);
+    ArchAVR_ACP(int num, const ArchAVR_ACP_Config& config);
 
-    virtual bool init(AVR_Device& device) override;
+    virtual bool init(Device& device) override;
     virtual void reset() override;
     virtual bool ctlreq(uint16_t req, ctlreq_data_t* data) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
@@ -80,11 +82,11 @@ public:
 
 private:
 
-    const AVR_ArchAVR_ACP_Config& m_config;
-    AVR_InterruptFlag m_intflag;
-    AVR_DataSignalMux m_pos_mux;
-    AVR_DataSignalMux m_neg_mux;
-    AVR_Signal m_out_signal;
+    const ArchAVR_ACP_Config& m_config;
+    InterruptFlag m_intflag;
+    DataSignalMux m_pos_mux;
+    DataSignalMux m_neg_mux;
+    Signal m_out_signal;
     double m_pos_value;
     double m_neg_value;
 
@@ -93,5 +95,8 @@ private:
     void update_state();
 
 };
+
+
+YASIMAVR_END_NAMESPACE
 
 #endif //__YASIMAVR_AVR_ACOMP_H__

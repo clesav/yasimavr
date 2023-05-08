@@ -23,18 +23,22 @@
 
 #include "arch_avr_timer.h"
 
+YASIMAVR_USING_NAMESPACE
 
-typedef AVR_ArchAVR_TimerConfig CFG;
+
+//=======================================================================================
+
+typedef ArchAVR_TimerConfig CFG;
 
 
 /*
  * Implementation of a SignalHook for event capture. It just forwards to the main class.
  */
-class AVR_ArchAVR_Timer::CaptureHook : public AVR_SignalHook {
+class ArchAVR_Timer::CaptureHook : public SignalHook {
 
 public:
 
-    CaptureHook(AVR_ArchAVR_Timer& timer) : m_timer(timer) {}
+    CaptureHook(ArchAVR_Timer& timer) : m_timer(timer) {}
     virtual ~CaptureHook() {}
 
     virtual void raised(const signal_data_t& data, uint16_t sigid) override
@@ -44,7 +48,7 @@ public:
 
 private:
 
-    AVR_ArchAVR_Timer& m_timer;
+    ArchAVR_Timer& m_timer;
 
 };
 
@@ -53,13 +57,13 @@ private:
  * Implementation of the structure that hold configuration and data for each
  * OutputCompare module
  */
-struct AVR_ArchAVR_Timer::OutputCompareChannel {
+struct ArchAVR_Timer::OutputCompareChannel {
 
     const CFG::OC_config_t& config;
     CFG::COM_config_t mode;
     uint16_t reg;
     unsigned char state;
-    AVR_InterruptFlag intflag;
+    InterruptFlag intflag;
 
     OutputCompareChannel(const CFG::OC_config_t& cfg)
     :config(cfg)
@@ -79,8 +83,8 @@ struct AVR_ArchAVR_Timer::OutputCompareChannel {
 };
 
 
-AVR_ArchAVR_Timer::AVR_ArchAVR_Timer(int num, const CFG& config)
-:AVR_Peripheral(AVR_IOCTL_TIMER('_', 0x30 + num))
+ArchAVR_Timer::ArchAVR_Timer(int num, const CFG& config)
+:Peripheral(AVR_IOCTL_TIMER('_', 0x30 + num))
 ,m_config(config)
 ,m_icr(0)
 ,m_temp(0)
@@ -105,7 +109,7 @@ AVR_ArchAVR_Timer::AVR_ArchAVR_Timer(int num, const CFG& config)
 }
 
 
-AVR_ArchAVR_Timer::~AVR_ArchAVR_Timer()
+ArchAVR_Timer::~ArchAVR_Timer()
 {
     delete m_capt_hook;
 
@@ -114,9 +118,9 @@ AVR_ArchAVR_Timer::~AVR_ArchAVR_Timer()
 }
 
 
-bool AVR_ArchAVR_Timer::init(AVR_Device& device)
+bool ArchAVR_Timer::init(Device& device)
 {
-    bool status = AVR_Peripheral::init(device);
+    bool status = Peripheral::init(device);
 
     add_ioreg(m_config.rb_clock.addr);
     add_ioreg(m_config.rbc_mode);
@@ -169,7 +173,7 @@ bool AVR_ArchAVR_Timer::init(AVR_Device& device)
 }
 
 
-void AVR_ArchAVR_Timer::reset()
+void ArchAVR_Timer::reset()
 {
     m_temp = 0;
     m_mode = m_config.modes[0];
@@ -190,7 +194,7 @@ void AVR_ArchAVR_Timer::reset()
 }
 
 
-bool AVR_ArchAVR_Timer::ctlreq(uint16_t req, ctlreq_data_t* data)
+bool ArchAVR_Timer::ctlreq(uint16_t req, ctlreq_data_t* data)
 {
     if (req == AVR_CTLREQ_GET_SIGNAL) {
         data->data = &m_signal;
@@ -207,7 +211,7 @@ bool AVR_ArchAVR_Timer::ctlreq(uint16_t req, ctlreq_data_t* data)
     return false;
 }
 
-uint8_t AVR_ArchAVR_Timer::ioreg_read_handler(reg_addr_t addr, uint8_t value)
+uint8_t ArchAVR_Timer::ioreg_read_handler(reg_addr_t addr, uint8_t value)
 {
     //reading of interrupt flags
     if (addr == m_config.reg_int_flag)
@@ -238,7 +242,7 @@ uint8_t AVR_ArchAVR_Timer::ioreg_read_handler(reg_addr_t addr, uint8_t value)
 }
 
 
-void AVR_ArchAVR_Timer::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
+void ArchAVR_Timer::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
     bool do_reschedule = false;
     bool do_com_reconfig = false;
@@ -287,7 +291,7 @@ void AVR_ArchAVR_Timer::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t
             }
             else if (addr == oc->config.rb_force.addr && oc->config.rb_force.extract(data.value)) {
                 if (!m_mode.disable_foc)
-                    change_OC_state(i, AVR_TimerCounter::Event_Compare);
+                    change_OC_state(i, TimerCounter::Event_Compare);
                 clear_ioreg(oc->config.rb_force);
                 break;
             }
@@ -304,11 +308,11 @@ void AVR_ArchAVR_Timer::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t
             if (cfg) {
                 m_counter.set_tick_source(cfg->source);
                 logger().dbg("Clock changed to 0x%02x", cfg->source);
-                if (cfg->source == AVR_TimerCounter::Tick_Timer)
+                if (cfg->source == TimerCounter::Tick_Timer)
                     m_timer.set_prescaler(m_clk_ps_max, cfg->div);
             } else {
                 logger().dbg("Unsupported clock setting: 0x%02x", reg_val);
-                m_counter.set_tick_source(AVR_TimerCounter::Tick_Stopped);
+                m_counter.set_tick_source(TimerCounter::Tick_Stopped);
             }
             do_reschedule = true;
         }
@@ -319,8 +323,8 @@ void AVR_ArchAVR_Timer::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t
             if (mode_cfg) {
                 m_mode = *mode_cfg;
                 m_counter.set_slope_mode(m_mode.double_slope ?
-                                         AVR_TimerCounter::Slope_Double :
-                                         AVR_TimerCounter::Slope_Up);
+                                         TimerCounter::Slope_Double :
+                                         TimerCounter::Slope_Up);
                 update_top();
                 logger().dbg("New mode setting: 0x%02x", reg_val);
             } else {
@@ -368,7 +372,7 @@ void AVR_ArchAVR_Timer::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t
 }
 
 
-void AVR_ArchAVR_Timer::update_top()
+void ArchAVR_Timer::update_top()
 {
     long top;
     switch(m_mode.top) {
@@ -390,7 +394,7 @@ void AVR_ArchAVR_Timer::update_top()
 }
 
 
-CFG::COM_config_t AVR_ArchAVR_Timer::get_COM_config(uint8_t regval)
+CFG::COM_config_t ArchAVR_Timer::get_COM_config(uint8_t regval)
 {
     const std::vector<CFG::COM_config_t>& com_config = m_config.com_modes[m_mode.com_variant];
     auto com = find_reg_config_p<CFG::COM_config_t>(com_config, regval);
@@ -417,7 +421,7 @@ static inline bool COM_active(CFG::COM com, uint32_t output_index)
 /*
  * Determine if an OC is active. It is if any of its COM modes is active.
  */
-bool AVR_ArchAVR_Timer::output_active(CFG::COM_config_t& mode, uint32_t output_index)
+bool ArchAVR_Timer::output_active(CFG::COM_config_t& mode, uint32_t output_index)
 {
     return COM_active(mode.up, output_index) ||
            COM_active(mode.down, output_index) ||
@@ -426,20 +430,20 @@ bool AVR_ArchAVR_Timer::output_active(CFG::COM_config_t& mode, uint32_t output_i
 }
 
 
-void AVR_ArchAVR_Timer::raised(const signal_data_t& sigdata, uint16_t __unused)
+void ArchAVR_Timer::raised(const signal_data_t& sigdata, uint16_t __unused)
 {
-    if (sigdata.sigid == AVR_TimerCounter::Signal_Event) {
+    if (sigdata.sigid == TimerCounter::Signal_Event) {
         uint8_t event_flags = sigdata.data.as_uint();
         bool raise_ovf = false;
 
         //If the MAX value has been reached
-        if (event_flags & AVR_TimerCounter::Event_Max) {
+        if (event_flags & TimerCounter::Event_Max) {
             if (m_mode.ovf == CFG::OVF_SetOnMax)
                 raise_ovf = true;
         }
 
         //If the TOP value has been reached
-        if (event_flags & AVR_TimerCounter::Event_Top) {
+        if (event_flags & TimerCounter::Event_Top) {
             if (m_mode.ocr == CFG::OCR_UpdateOnTop) {
                 for (uint32_t i = 0; i < m_oc_channels.size(); ++i)
                     m_counter.set_comp_value(i, m_oc_channels[i]->reg);
@@ -454,7 +458,7 @@ void AVR_ArchAVR_Timer::raised(const signal_data_t& sigdata, uint16_t __unused)
             //Process the OC channels, only if OCRx != TOP, otherwise
             //it would be called twice as the signal Signal_CompMatch
             //would also be raised in the same cycle
-            if (!(event_flags & AVR_TimerCounter::Event_Compare)) {
+            if (!(event_flags & TimerCounter::Event_Compare)) {
                 for (uint32_t i = 0; i < m_oc_channels.size(); ++i)
                     change_OC_state(i, event_flags);
             }
@@ -462,7 +466,7 @@ void AVR_ArchAVR_Timer::raised(const signal_data_t& sigdata, uint16_t __unused)
         }
 
         //If the BOTTOM value has been reached
-        if (event_flags & AVR_TimerCounter::Event_Bottom) {
+        if (event_flags & TimerCounter::Event_Bottom) {
             if (m_mode.ocr == CFG::OCR_UpdateOnBottom) {
                 for (uint32_t i = 0; i < m_oc_channels.size(); ++i)
                     m_counter.set_comp_value(i, m_oc_channels[i]->reg);
@@ -475,7 +479,7 @@ void AVR_ArchAVR_Timer::raised(const signal_data_t& sigdata, uint16_t __unused)
                 raise_ovf = true;
 
             //Ditto as Event_Top
-            if (!(event_flags & AVR_TimerCounter::Event_Compare)) {
+            if (!(event_flags & TimerCounter::Event_Compare)) {
                 for (uint32_t i = 0; i < m_oc_channels.size(); ++i)
                     change_OC_state(i, event_flags);
             }
@@ -489,7 +493,7 @@ void AVR_ArchAVR_Timer::raised(const signal_data_t& sigdata, uint16_t __unused)
         }
     }
 
-    else if (sigdata.sigid == AVR_TimerCounter::Signal_CompMatch) {
+    else if (sigdata.sigid == TimerCounter::Signal_CompMatch) {
         change_OC_state(sigdata.index, sigdata.data.as_uint());
         //Raise the corresponding interrupt flag
         m_oc_channels[sigdata.index]->intflag.set_flag();
@@ -497,7 +501,7 @@ void AVR_ArchAVR_Timer::raised(const signal_data_t& sigdata, uint16_t __unused)
 }
 
 
-void AVR_ArchAVR_Timer::change_OC_state(uint32_t index, uint8_t event_flags)
+void ArchAVR_Timer::change_OC_state(uint32_t index, uint8_t event_flags)
 {
     OutputCompareChannel* oc = m_oc_channels[index];
 
@@ -508,7 +512,7 @@ void AVR_ArchAVR_Timer::change_OC_state(uint32_t index, uint8_t event_flags)
     bool do_set = false;
     bool do_toggle = false;
 
-    if (event_flags & AVR_TimerCounter::Event_Compare) {
+    if (event_flags & TimerCounter::Event_Compare) {
         if (m_counter.countdown()) {
             do_clear |= oc->mode.down == CFG::COM_Clear;
             do_set |= oc->mode.down == CFG::COM_Set;
@@ -520,13 +524,13 @@ void AVR_ArchAVR_Timer::change_OC_state(uint32_t index, uint8_t event_flags)
         }
     }
 
-    if (event_flags & AVR_TimerCounter::Event_Top) {
+    if (event_flags & TimerCounter::Event_Top) {
         do_clear |= oc->mode.top == CFG::COM_Clear;
         do_set |= oc->mode.top == CFG::COM_Set;
         do_toggle |= oc->mode.top == CFG::COM_Toggle;
     }
 
-    if (event_flags & AVR_TimerCounter::Event_Bottom) {
+    if (event_flags & TimerCounter::Event_Bottom) {
         do_clear |= oc->mode.bottom == CFG::COM_Clear;
         do_set |= oc->mode.bottom == CFG::COM_Set;
         do_toggle |= oc->mode.bottom == CFG::COM_Toggle;
@@ -547,7 +551,7 @@ void AVR_ArchAVR_Timer::change_OC_state(uint32_t index, uint8_t event_flags)
 }
 
 
-void AVR_ArchAVR_Timer::capt_raised()
+void ArchAVR_Timer::capt_raised()
 {
     //If no ICR is registered, the Input Capture function is unavailable
     if (!m_config.reg_icr.valid()) return;

@@ -24,12 +24,14 @@
 #include "arch_avr_wdt.h"
 #include "core/sim_device.h"
 
+YASIMAVR_USING_NAMESPACE
+
 
 //=======================================================================================
 /*
  * Constructor of a watchdog timer
  */
-AVR_ArchAVR_WDT::AVR_ArchAVR_WDT(const AVR_ArchAVR_WDT_Config& config)
+ArchAVR_WDT::ArchAVR_WDT(const ArchAVR_WDT_Config& config)
 :m_config(config)
 ,m_unlock_cycle(UINT64_MAX)
 {}
@@ -37,9 +39,9 @@ AVR_ArchAVR_WDT::AVR_ArchAVR_WDT(const AVR_ArchAVR_WDT_Config& config)
 /*
  * Initialisation of a watchdog timer
  */
-bool AVR_ArchAVR_WDT::init(AVR_Device& device)
+bool ArchAVR_WDT::init(Device& device)
 {
-    bool status = AVR_WatchdogTimer::init(device);
+    bool status = WatchdogTimer::init(device);
 
     add_ioreg(m_config.reg_wdt);
 
@@ -48,20 +50,20 @@ bool AVR_ArchAVR_WDT::init(AVR_Device& device)
     return status;
 }
 
-void AVR_ArchAVR_WDT::reset()
+void ArchAVR_WDT::reset()
 {
     //Check if the watchdog reset flag is set. If it is, WDE is forced to 1
     //and the watchdog timer is activated with default delay settings.
     ctlreq_data_t reqdata;
     if (device()->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_RESET_FLAG, &reqdata)) {
-        if (reqdata.data.as_uint() & AVR_Device::Reset_WDT) {
+        if (reqdata.data.as_uint() & Device::Reset_WDT) {
             set_ioreg(m_config.reg_wdt, m_config.bm_reset_enable);
             configure_timer(true, 0);
         }
     }
 }
 
-void AVR_ArchAVR_WDT::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
+void ArchAVR_WDT::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
     bool change_enable = m_config.bm_chg_enable.extract(data.value);
     bool rst_enable = m_config.bm_reset_enable.extract(data.value);
@@ -93,7 +95,7 @@ void AVR_ArchAVR_WDT::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& 
         clear_ioreg(m_config.reg_wdt, m_config.bm_int_flag);
 }
 
-void AVR_ArchAVR_WDT::configure_timer(bool enable, uint8_t delay_index)
+void ArchAVR_WDT::configure_timer(bool enable, uint8_t delay_index)
 {
     if (enable) {
         uint32_t clk_factor = device()->frequency() / m_config.clock_frequency;
@@ -104,7 +106,7 @@ void AVR_ArchAVR_WDT::configure_timer(bool enable, uint8_t delay_index)
     }
 }
 
-void AVR_ArchAVR_WDT::timeout()
+void ArchAVR_WDT::timeout()
 {
     uint8_t reg_value = read_ioreg(m_config.reg_wdt);
     bool rst_enable = m_config.bm_reset_enable.extract(reg_value);
@@ -126,13 +128,13 @@ void AVR_ArchAVR_WDT::timeout()
     //cycle to complete beforehand. The state of the device would be
     //inconsistent otherwise.
     else {
-        ctlreq_data_t reqdata = { .data = AVR_Device::Reset_WDT };
+        ctlreq_data_t reqdata = { .data = Device::Reset_WDT };
         device()->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_RESET, &reqdata);
     }
 }
 
 
-void AVR_ArchAVR_WDT::interrupt_ack_handler(int_vect_t vector)
+void ArchAVR_WDT::interrupt_ack_handler(int_vect_t vector)
 {
     //Datasheet: "Executing the corresponding interrupt vector will clear WDIE and WDIF"
     clear_ioreg(m_config.reg_wdt, m_config.bm_int_flag);

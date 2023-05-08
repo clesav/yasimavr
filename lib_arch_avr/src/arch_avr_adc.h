@@ -29,13 +29,15 @@
 #include "ioctrl_common/sim_timer.h"
 #include "ioctrl_common/sim_vref.h"
 
+YASIMAVR_BEGIN_NAMESPACE
+
 
 //=======================================================================================
 
-struct AVR_ArchAVR_ADC_Config {
+struct ArchAVR_ADC_Config {
 
     struct reference_config_t : base_reg_config_t {
-        AVR_IO_VREF::Source source;
+        IO_VREF::Source source;
     };
 
     enum Trigger {
@@ -48,7 +50,7 @@ struct AVR_ArchAVR_ADC_Config {
         Trigger trigger;
     };
 
-    std::vector<AVR_IO_ADC::channel_config_t> channels;
+    std::vector<IO_ADC::channel_config_t> channels;
     std::vector<reference_config_t> references;
     std::vector<uint16_t> clk_ps_factors;
     std::vector<trigger_config_t> triggers;
@@ -77,20 +79,20 @@ struct AVR_ArchAVR_ADC_Config {
 };
 
 
-class DLL_EXPORT AVR_ArchAVR_ADC : public AVR_IO_ADC,
-                                   public AVR_Peripheral,
-                                   public AVR_SignalHook {
+class DLL_EXPORT ArchAVR_ADC : public IO_ADC,
+                                   public Peripheral,
+                                   public SignalHook {
 
 public:
 
-    AVR_ArchAVR_ADC(int num, const AVR_ArchAVR_ADC_Config& config);
+    ArchAVR_ADC(int num, const ArchAVR_ADC_Config& config);
 
-    virtual bool init(AVR_Device& device) override;
+    virtual bool init(Device& device) override;
     virtual void reset() override;
     virtual bool ctlreq(uint16_t req, ctlreq_data_t* data) override;
     virtual uint8_t ioreg_read_handler(reg_addr_t addr, uint8_t value) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
-    virtual void sleep(bool on, AVR_SleepMode mode) override;
+    virtual void sleep(bool on, SleepMode mode) override;
     virtual void raised(const signal_data_t& sigdata, uint16_t hooktag) override;
 
 private:
@@ -103,7 +105,7 @@ private:
         ADC_PendingRaise,
     };
 
-    const AVR_ArchAVR_ADC_Config& m_config;
+    const ArchAVR_ADC_Config& m_config;
 
     //Step of the conversion
     State m_state;
@@ -111,10 +113,10 @@ private:
     //It has impact on the timing
     bool m_first;
 
-    AVR_ArchAVR_ADC_Config::Trigger m_trigger;
+    ArchAVR_ADC_Config::Trigger m_trigger;
 
     //Timer to simulate the conversion cycle duration
-    AVR_PrescaledTimer m_timer;
+    PrescaledTimer m_timer;
 
     //Simulated device temperature value in deg Celsius
     double m_temperature;
@@ -127,10 +129,10 @@ private:
     int16_t m_conv_value;
 
     //Signal raised at various steps of the conversion
-    AVR_Signal m_signal;
+    Signal m_signal;
 
     //Interrupt flag raised at the completion of a conversion
-    AVR_InterruptFlag m_intflag;
+    InterruptFlag m_intflag;
 
     void start_conversion_cycle();
     void reset_prescaler();
@@ -140,5 +142,8 @@ private:
     void write_digital_value();
 
 };
+
+
+YASIMAVR_END_NAMESPACE
 
 #endif //__YASIMAVR_AVR_ADC_H__

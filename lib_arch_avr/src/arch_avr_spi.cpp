@@ -24,6 +24,8 @@
 #include "arch_avr_spi.h"
 #include "core/sim_pin.h"
 
+YASIMAVR_USING_NAMESPACE
+
 
 //=======================================================================================
 
@@ -33,17 +35,17 @@
 const uint32_t ClockFactors[] = {4, 16, 64, 128};
 
 
-AVR_ArchAVR_SPI::AVR_ArchAVR_SPI(uint8_t num, const AVR_ArchAVR_SPI_Config& config)
-:AVR_Peripheral(AVR_IOCTL_SPI(0x30 + num))
+ArchAVR_SPI::ArchAVR_SPI(uint8_t num, const ArchAVR_SPI_Config& config)
+:Peripheral(AVR_IOCTL_SPI(0x30 + num))
 ,m_config(config)
 ,m_pin_select(nullptr)
 ,m_pin_selected(false)
 ,m_intflag(true)
 {}
 
-bool AVR_ArchAVR_SPI::init(AVR_Device& device)
+bool ArchAVR_SPI::init(Device& device)
 {
-    bool status = AVR_Peripheral::init(device);
+    bool status = Peripheral::init(device);
 
     add_ioreg(m_config.reg_data);
     add_ioreg(m_config.rb_enable);
@@ -69,21 +71,21 @@ bool AVR_ArchAVR_SPI::init(AVR_Device& device)
     return status;
 }
 
-void AVR_ArchAVR_SPI::reset()
+void ArchAVR_SPI::reset()
 {
     m_spi.reset();
     m_pin_selected = false;
     update_framerate();
 }
 
-bool AVR_ArchAVR_SPI::ctlreq(uint16_t req, ctlreq_data_t* data)
+bool ArchAVR_SPI::ctlreq(uint16_t req, ctlreq_data_t* data)
 {
     if (req == AVR_CTLREQ_GET_SIGNAL) {
         data->data = &m_spi.signal();
         return true;
     }
     else if (req == AVR_CTLREQ_SPI_ADD_CLIENT) {
-        AVR_SPI_Client* client = reinterpret_cast<AVR_SPI_Client*>(data->data.as_ptr());
+        SPI_Client* client = reinterpret_cast<SPI_Client*>(data->data.as_ptr());
         if (client)
             m_spi.add_client(*client);
         return true;
@@ -101,7 +103,7 @@ bool AVR_ArchAVR_SPI::ctlreq(uint16_t req, ctlreq_data_t* data)
     return false;
 }
 
-uint8_t AVR_ArchAVR_SPI::ioreg_read_handler(reg_addr_t addr, uint8_t value)
+uint8_t ArchAVR_SPI::ioreg_read_handler(reg_addr_t addr, uint8_t value)
 {
     if (addr == m_config.reg_data) {
         value = m_spi.pop_rx();
@@ -112,7 +114,7 @@ uint8_t AVR_ArchAVR_SPI::ioreg_read_handler(reg_addr_t addr, uint8_t value)
     return value;
 }
 
-void AVR_ArchAVR_SPI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
+void ArchAVR_SPI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
     //Writing data to the DATA register with SPE set triggers a transfer.
     if (addr == m_config.reg_data && test_ioreg(m_config.rb_enable)) {
@@ -140,24 +142,24 @@ void AVR_ArchAVR_SPI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& 
         m_spi.set_host_mode(m_config.rb_mode.extract(data.value));
 }
 
-void AVR_ArchAVR_SPI::raised(const signal_data_t& sigdata, uint16_t hooktag)
+void ArchAVR_SPI::raised(const signal_data_t& sigdata, uint16_t hooktag)
 {
-    if (sigdata.sigid != AVR_Pin::Signal_DigitalStateChange) return;
+    if (sigdata.sigid != Pin::Signal_DigitalStateChange) return;
 
     //On completion of a transfer, raise the interrupt flag
     if (hooktag == HOOKTAG_SPI) {
-        if (sigdata.sigid == AVR_IO_SPI::Signal_HostTfrComplete ||
-            sigdata.sigid == AVR_IO_SPI::Signal_ClientTfrComplete)
+        if (sigdata.sigid == IO_SPI::Signal_HostTfrComplete ||
+            sigdata.sigid == IO_SPI::Signal_ClientTfrComplete)
             m_intflag.set_flag();
     }
     //Signal of pin state change, check if we're selected
     else if (hooktag == HOOKTAG_PIN) {
-        m_pin_selected = (sigdata.data.as_uint() == AVR_Pin::State_Low);
+        m_pin_selected = (sigdata.data.as_uint() == Pin::State_Low);
         m_spi.set_selected(m_pin_selected && test_ioreg(m_config.rb_enable));
     }
 }
 
-void AVR_ArchAVR_SPI::update_framerate()
+void ArchAVR_SPI::update_framerate()
 {
     uint8_t clk_setting = read_ioreg(m_config.rb_clock);
     uint32_t clk_factor = ClockFactors[clk_setting];
