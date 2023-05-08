@@ -24,23 +24,11 @@
 #ifndef __YASIMAVR_TYPES_H__
 #define __YASIMAVR_TYPES_H__
 
+#include "sim_globals.h"
 #include <stdint.h>
 #include <string>
 #include <vector>
 
-#ifdef YASIMAVR_DLL
-    #ifdef _MSC_VER
-        #define DLL_EXPORT __declspec(dllexport)
-    #else
-        #define DLL_EXPORT __attribute__((__visibility__("default")))
-    #endif
-#else
-    #ifdef _MSC_VER
-        #define DLL_EXPORT __declspec(dllimport)
-    #else
-        #define DLL_EXPORT
-    #endif
-#endif
 
 //cycle counts are signed to have -1 as invalid value
 //That leaves 63 bits to count cycles, which at a MCU frequency of 20MHz
