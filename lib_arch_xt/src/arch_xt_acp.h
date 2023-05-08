@@ -30,6 +30,8 @@
 #include "core/sim_interrupt.h"
 #include "core/sim_pin.h"
 
+YASIMAVR_BEGIN_NAMESPACE
+
 
 //=======================================================================================
 /*
@@ -47,10 +49,10 @@
  *      - Pin output
  */
 
-struct AVR_ArchXT_ACP_Config {
+struct ArchXT_ACP_Config {
 
-    std::vector<AVR_IO_ACP::channel_config_t> pos_channels;
-    std::vector<AVR_IO_ACP::channel_config_t> neg_channels;
+    std::vector<IO_ACP::channel_config_t> pos_channels;
+    std::vector<IO_ACP::channel_config_t> neg_channels;
 
     uint32_t vref_channel;
     reg_addr_t reg_base;
@@ -58,40 +60,43 @@ struct AVR_ArchXT_ACP_Config {
 
 };
 
-class DLL_EXPORT AVR_ArchXT_ACP : public AVR_IO_ACP,
-                                  public AVR_Peripheral,
-                                  public AVR_SignalHook {
+class DLL_EXPORT ArchXT_ACP : public IO_ACP,
+                              public Peripheral,
+                              public SignalHook {
 
 public:
 
-    AVR_ArchXT_ACP(int num, const AVR_ArchXT_ACP_Config& config);
+    ArchXT_ACP(int num, const ArchXT_ACP_Config& config);
 
-    virtual bool init(AVR_Device& device) override;
+    virtual bool init(Device& device) override;
     virtual void reset() override;
     virtual bool ctlreq(uint16_t req, ctlreq_data_t* data) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
-    virtual void sleep(bool on, AVR_SleepMode mode) override;
+    virtual void sleep(bool on, SleepMode mode) override;
     virtual void raised(const signal_data_t& sigdata, uint16_t hooktag) override;
 
 private:
 
-    const AVR_ArchXT_ACP_Config& m_config;
-    AVR_InterruptFlag m_intflag;
-    AVR_DataSignal m_signal;
+    const ArchXT_ACP_Config& m_config;
+    InterruptFlag m_intflag;
+    DataSignal m_signal;
     //Pointer to the VREF signal to obtain ACP voltage reference updates
-    AVR_DataSignal* m_vref_signal;
-    AVR_DataSignalMux m_pos_mux;
-    AVR_DataSignalMux m_neg_mux;
+    DataSignal* m_vref_signal;
+    DataSignalMux m_pos_mux;
+    DataSignalMux m_neg_mux;
     //Boolean indicating if the peripheral is disabled by the current sleep mode
     bool m_sleeping;
     //Hysteresis value
     double m_hysteresis;
 
-    bool register_channels(AVR_DataSignalMux& mux, const std::vector<channel_config_t>& channels);
+    bool register_channels(DataSignalMux& mux, const std::vector<channel_config_t>& channels);
     void update_DAC();
     void update_hysteresis();
     void update_output();
 
 };
+
+
+YASIMAVR_END_NAMESPACE
 
 #endif //__YASIMAVR_XT_ACOMP_H__

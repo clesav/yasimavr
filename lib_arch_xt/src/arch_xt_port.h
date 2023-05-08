@@ -27,6 +27,8 @@
 #include "core/sim_interrupt.h"
 #include "ioctrl_common/sim_port.h"
 
+YASIMAVR_BEGIN_NAMESPACE
+
 
 //=======================================================================================
 /*
@@ -34,7 +36,7 @@
  * AVIO_IO_Port class
  */
 
-struct AVR_ArchXT_PortConfig {
+struct ArchXT_PortConfig {
 
     reg_addr_t reg_base_port;
     reg_addr_t reg_base_vport;
@@ -42,28 +44,31 @@ struct AVR_ArchXT_PortConfig {
 };
 
 
-class DLL_EXPORT AVR_ArchXT_Port : public AVR_IO_Port, public AVR_InterruptHandler {
+class DLL_EXPORT ArchXT_Port : public IO_Port, public InterruptHandler {
 
 public:
 
-    AVR_ArchXT_Port(char name, const AVR_ArchXT_PortConfig& config);
+    ArchXT_Port(char name, const ArchXT_PortConfig& config);
 
-    virtual bool init(AVR_Device& device) override;
+    virtual bool init(Device& device) override;
     virtual void reset() override;
     virtual uint8_t ioreg_read_handler(reg_addr_t addr, uint8_t value) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
 
 protected:
 
-    virtual void pin_state_changed(uint8_t num, AVR_Pin::State state) override;
+    virtual void pin_state_changed(uint8_t num, Pin::State state) override;
 
 private:
 
-    const AVR_ArchXT_PortConfig& m_config;
+    const ArchXT_PortConfig& m_config;
     uint8_t m_port_value;
     uint8_t m_dir_value;
 
     void update_pin_states();
 };
+
+
+YASIMAVR_END_NAMESPACE
 
 #endif //__YASIMAVR_XT_PORT_H__

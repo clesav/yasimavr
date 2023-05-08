@@ -26,6 +26,8 @@
 #include "arch_xt_io_utils.h"
 #include "core/sim_device.h"
 
+YASIMAVR_USING_NAMESPACE
+
 
 //=======================================================================================
 
@@ -38,8 +40,8 @@
 
 //=======================================================================================
 
-AVR_ArchXT_TWI::AVR_ArchXT_TWI(uint8_t num, const AVR_ArchXT_TWI_Config& config)
-:AVR_Peripheral(AVR_IOCTL_TWI(0x30 + num))
+ArchXT_TWI::ArchXT_TWI(uint8_t num, const ArchXT_TWI_Config& config)
+:Peripheral(AVR_IOCTL_TWI(0x30 + num))
 ,m_config(config)
 ,m_has_address(false)
 ,m_has_master_rx_data(false)
@@ -48,9 +50,9 @@ AVR_ArchXT_TWI::AVR_ArchXT_TWI(uint8_t num, const AVR_ArchXT_TWI_Config& config)
 ,m_intflag_slave(false)
 {}
 
-bool AVR_ArchXT_TWI::init(AVR_Device& device)
+bool ArchXT_TWI::init(Device& device)
 {
-    bool status = AVR_Peripheral::init(device);
+    bool status = Peripheral::init(device);
 
     add_ioreg(REG_ADDR(CTRLA), TWI_SDASETUP_bm);
     add_ioreg(REG_ADDR(DUALCTRL), 0); //Dual ctrl not implemented
@@ -88,7 +90,7 @@ bool AVR_ArchXT_TWI::init(AVR_Device& device)
     return status;
 }
 
-void AVR_ArchXT_TWI::reset()
+void ArchXT_TWI::reset()
 {
     m_twi.reset();
     m_has_address = false;
@@ -96,7 +98,7 @@ void AVR_ArchXT_TWI::reset()
     m_has_slave_rx_data = false;
 }
 
-bool AVR_ArchXT_TWI::ctlreq(uint16_t req, ctlreq_data_t* data)
+bool ArchXT_TWI::ctlreq(uint16_t req, ctlreq_data_t* data)
 {
     if (req == AVR_CTLREQ_GET_SIGNAL) {
         data->data = &m_twi.signal();
@@ -110,7 +112,7 @@ bool AVR_ArchXT_TWI::ctlreq(uint16_t req, ctlreq_data_t* data)
     return false;
 }
 
-uint8_t AVR_ArchXT_TWI::ioreg_read_handler(reg_addr_t addr, uint8_t value)
+uint8_t ArchXT_TWI::ioreg_read_handler(reg_addr_t addr, uint8_t value)
 {
     reg_addr_t reg_ofs = addr - m_config.reg_base;
 
@@ -144,7 +146,7 @@ uint8_t AVR_ArchXT_TWI::ioreg_read_handler(reg_addr_t addr, uint8_t value)
     return value;
 }
 
-void AVR_ArchXT_TWI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
+void ArchXT_TWI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
     reg_addr_t reg_ofs = addr - m_config.reg_base;
 
@@ -178,7 +180,7 @@ void AVR_ArchXT_TWI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& d
 
         uint8_t mcmd = data.value & TWI_MCMD_gm;
         //Acknowledgment Action, if MCMD is not zero and the master part is in the relevant state
-        if (mcmd && m_twi.master_state() == AVR_IO_TWI::State_RX_Ack) {
+        if (mcmd && m_twi.master_state() == IO_TWI::State_RX_Ack) {
             bool ack = (data.value & TWI_ACKACT_bm) == TWI_ACKACT_ACK_gc;
             m_twi.set_master_ack(ack);
         }
@@ -303,14 +305,14 @@ void AVR_ArchXT_TWI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& d
 
 }
 
-void AVR_ArchXT_TWI::raised(const signal_data_t& sigdata, uint16_t __unused)
+void ArchXT_TWI::raised(const signal_data_t& sigdata, uint16_t __unused)
 {
     switch (sigdata.sigid) {
 
-        case AVR_IO_TWI::Signal_BusStateChange: {
+        case IO_TWI::Signal_BusStateChange: {
             uint8_t bus_state = 0;
             switch(sigdata.data.as_uint()) {
-                case AVR_IO_TWI::Bus_Idle: {
+                case IO_TWI::Bus_Idle: {
                     bus_state = TWI_BUSSTATE_IDLE_gc;
                     //If we had written an address, but the bus was busy,
                     //we can now start a transaction
@@ -334,10 +336,10 @@ void AVR_ArchXT_TWI::raised(const signal_data_t& sigdata, uint16_t __unused)
 
                 } break;
 
-                case AVR_IO_TWI::Bus_Busy:
+                case IO_TWI::Bus_Busy:
                     bus_state = TWI_BUSSTATE_BUSY_gc; break;
 
-                case AVR_IO_TWI::Bus_Owned:
+                case IO_TWI::Bus_Owned:
                     bus_state = TWI_BUSSTATE_OWNER_gc; break;
             }
 
@@ -346,7 +348,7 @@ void AVR_ArchXT_TWI::raised(const signal_data_t& sigdata, uint16_t __unused)
 
         } break;
 
-        case AVR_IO_TWI::Signal_Address: { //slave side only
+        case IO_TWI::Signal_Address: { //slave side only
 
             //Test the address with the match logic and set the ACK/NACK response
             uint8_t addr_rw = sigdata.data.as_uint();
@@ -364,14 +366,14 @@ void AVR_ArchXT_TWI::raised(const signal_data_t& sigdata, uint16_t __unused)
 
         } break;
 
-        case AVR_IO_TWI::Signal_AddrAck: { //Master side only
+        case IO_TWI::Signal_AddrAck: { //Master side only
 
             if (sigdata.data.as_uint()) {
                 //the address has been ACK'ed
                 CLEAR_IOREG(MSTATUS, TWI_RXACK);
                 //If it's a READ operation, continue by reading the first byte
                 //If it's WRITE, hold the bus
-                if (m_twi.master_state() & AVR_IO_TWI::StateFlag_Tx)
+                if (m_twi.master_state() & IO_TWI::StateFlag_Tx)
                     SET_IOREG(MSTATUS, TWI_CLKHOLD);
                 else
                     m_twi.start_master_rx();
@@ -385,9 +387,9 @@ void AVR_ArchXT_TWI::raised(const signal_data_t& sigdata, uint16_t __unused)
 
         } break;
 
-        case AVR_IO_TWI::Signal_TxComplete: {
+        case IO_TWI::Signal_TxComplete: {
 
-            if (sigdata.index == AVR_IO_TWI::Cpt_Master) {
+            if (sigdata.index == IO_TWI::Cpt_Master) {
 
                 //Update the status flags and raise the interrupt
                 WRITE_IOREG_B(MSTATUS, TWI_RXACK, !sigdata.data.as_uint());
@@ -405,8 +407,8 @@ void AVR_ArchXT_TWI::raised(const signal_data_t& sigdata, uint16_t __unused)
 
         } break;
 
-        case AVR_IO_TWI::Signal_RxComplete: {
-            if (sigdata.index == AVR_IO_TWI::Cpt_Master) {
+        case IO_TWI::Signal_RxComplete: {
+            if (sigdata.index == IO_TWI::Cpt_Master) {
 
                 //Saves the received byte in the data register
                 WRITE_IOREG(MDATA, sigdata.data.as_uint());
@@ -429,7 +431,7 @@ void AVR_ArchXT_TWI::raised(const signal_data_t& sigdata, uint16_t __unused)
     }
 }
 
-void AVR_ArchXT_TWI::set_master_enabled(bool enabled)
+void ArchXT_TWI::set_master_enabled(bool enabled)
 {
     if (enabled) {
         m_twi.set_master_enabled(true);
@@ -443,21 +445,21 @@ void AVR_ArchXT_TWI::set_master_enabled(bool enabled)
     }
 }
 
-void AVR_ArchXT_TWI::clear_master_status()
+void ArchXT_TWI::clear_master_status()
 {
     bitmask_t bm = bitmask_t(0, TWI_BUSERR_bm | TWI_ARBLOST_bm | TWI_CLKHOLD_bm);
     clear_ioreg(REG_ADDR(MSTATUS), bm);
     m_intflag_master.clear_flag();
 }
 
-void AVR_ArchXT_TWI::clear_slave_status()
+void ArchXT_TWI::clear_slave_status()
 {
     bitmask_t bm = bitmask_t(0, TWI_BUSERR_bm | TWI_COLL_bm | TWI_CLKHOLD_bm);
     clear_ioreg(REG_ADDR(SSTATUS), bm);
     m_intflag_slave.clear_flag();
 }
 
-bool AVR_ArchXT_TWI::address_match(uint8_t bus_address)
+bool ArchXT_TWI::address_match(uint8_t bus_address)
 {
     //if PMEN is set, all addresses are recognized
     if (TEST_IOREG(SCTRLA, TWI_PMEN))

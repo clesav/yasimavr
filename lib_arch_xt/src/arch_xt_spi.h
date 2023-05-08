@@ -24,9 +24,10 @@
 #ifndef __YASIMAVR_XT_SPI_H__
 #define __YASIMAVR_XT_SPI_H__
 
-
 #include "ioctrl_common/sim_spi.h"
 #include "core/sim_interrupt.h"
+
+YASIMAVR_BEGIN_NAMESPACE
 
 
 //=======================================================================================
@@ -43,7 +44,7 @@
  *  for supported CTLREQs, see sim_spi.h
  */
 
-struct AVR_ArchXT_SPI_Config {
+struct ArchXT_SPI_Config {
 
     reg_addr_t reg_base;
     uint32_t pin_select;
@@ -51,13 +52,13 @@ struct AVR_ArchXT_SPI_Config {
 
 };
 
-class DLL_EXPORT AVR_ArchXT_SPI : public AVR_Peripheral, public AVR_SignalHook {
+class DLL_EXPORT ArchXT_SPI : public Peripheral, public SignalHook {
 
 public:
 
-    AVR_ArchXT_SPI(uint8_t num, const AVR_ArchXT_SPI_Config& config);
+    ArchXT_SPI(uint8_t num, const ArchXT_SPI_Config& config);
 
-    virtual bool init(AVR_Device& device) override;
+    virtual bool init(Device& device) override;
     virtual void reset() override;
     virtual bool ctlreq(uint16_t req, ctlreq_data_t* data) override;
     virtual uint8_t ioreg_read_handler(reg_addr_t addr, uint8_t value) override;
@@ -66,15 +67,18 @@ public:
 
 private:
 
-    const AVR_ArchXT_SPI_Config& m_config;
+    const ArchXT_SPI_Config& m_config;
 
-    AVR_IO_SPI m_spi;
+    IO_SPI m_spi;
 
-    AVR_Pin* m_pin_select;
+    Pin* m_pin_select;
     bool m_pin_selected;
 
-    AVR_InterruptFlag m_intflag;
+    InterruptFlag m_intflag;
 
 };
+
+
+YASIMAVR_END_NAMESPACE
 
 #endif //__YASIMAVR_XT_SPI_H__

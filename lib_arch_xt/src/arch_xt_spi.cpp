@@ -25,6 +25,8 @@
 #include "arch_xt_io.h"
 #include "arch_xt_io_utils.h"
 
+YASIMAVR_USING_NAMESPACE
+
 
 //=======================================================================================
 
@@ -43,17 +45,17 @@ const uint32_t ClockFactors[] = {4, 16, 64, 128};
 
 //=======================================================================================
 
-AVR_ArchXT_SPI::AVR_ArchXT_SPI(uint8_t num, const AVR_ArchXT_SPI_Config& config)
-:AVR_Peripheral(AVR_IOCTL_SPI(0x30 + num))
+ArchXT_SPI::ArchXT_SPI(uint8_t num, const ArchXT_SPI_Config& config)
+:Peripheral(AVR_IOCTL_SPI(0x30 + num))
 ,m_config(config)
 ,m_pin_select(nullptr)
 ,m_pin_selected(false)
 ,m_intflag(false)
 {}
 
-bool AVR_ArchXT_SPI::init(AVR_Device& device)
+bool ArchXT_SPI::init(Device& device)
 {
-    bool status = AVR_Peripheral::init(device);
+    bool status = Peripheral::init(device);
 
     add_ioreg(REG_ADDR(CTRLA), SPI_DORD_bm | SPI_MASTER_bm | SPI_CLK2X_bm |
                                SPI_PRESC_gm | SPI_ENABLE_bm);
@@ -83,21 +85,21 @@ bool AVR_ArchXT_SPI::init(AVR_Device& device)
     return status;
 }
 
-void AVR_ArchXT_SPI::reset()
+void ArchXT_SPI::reset()
 {
     m_spi.reset();
     m_pin_selected = false;
     m_intflag.update_from_ioreg();
 }
 
-bool AVR_ArchXT_SPI::ctlreq(uint16_t req, ctlreq_data_t* data)
+bool ArchXT_SPI::ctlreq(uint16_t req, ctlreq_data_t* data)
 {
     if (req == AVR_CTLREQ_GET_SIGNAL) {
         data->data = &m_spi.signal();
         return true;
     }
     else if (req == AVR_CTLREQ_SPI_ADD_CLIENT) {
-        AVR_SPI_Client* client = reinterpret_cast<AVR_SPI_Client*>(data->data.as_ptr());
+        SPI_Client* client = reinterpret_cast<SPI_Client*>(data->data.as_ptr());
         if (client)
             m_spi.add_client(*client);
         return true;
@@ -115,7 +117,7 @@ bool AVR_ArchXT_SPI::ctlreq(uint16_t req, ctlreq_data_t* data)
     return false;
 }
 
-uint8_t AVR_ArchXT_SPI::ioreg_read_handler(reg_addr_t addr, uint8_t value)
+uint8_t ArchXT_SPI::ioreg_read_handler(reg_addr_t addr, uint8_t value)
 {
     reg_addr_t reg_ofs = addr - m_config.reg_base;
 
@@ -128,7 +130,7 @@ uint8_t AVR_ArchXT_SPI::ioreg_read_handler(reg_addr_t addr, uint8_t value)
     return value;
 }
 
-void AVR_ArchXT_SPI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
+void ArchXT_SPI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
     reg_addr_t reg_ofs = addr - m_config.reg_base;
 
@@ -159,16 +161,16 @@ void AVR_ArchXT_SPI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& d
     }
 }
 
-void AVR_ArchXT_SPI::raised(const signal_data_t& sigdata, uint16_t hooktag)
+void ArchXT_SPI::raised(const signal_data_t& sigdata, uint16_t hooktag)
 {
     if (hooktag == HOOKTAG_SPI) {
-        if (sigdata.sigid == AVR_IO_SPI::Signal_HostTfrComplete ||
-            sigdata.sigid == AVR_IO_SPI::Signal_ClientTfrComplete)
+        if (sigdata.sigid == IO_SPI::Signal_HostTfrComplete ||
+            sigdata.sigid == IO_SPI::Signal_ClientTfrComplete)
             m_intflag.set_flag();
     }
     else if (hooktag == HOOKTAG_PIN) {
-        if (sigdata.sigid != AVR_Pin::Signal_DigitalStateChange) {
-            m_pin_selected = (sigdata.data.as_uint() == AVR_Pin::State_Low);
+        if (sigdata.sigid != Pin::Signal_DigitalStateChange) {
+            m_pin_selected = (sigdata.data.as_uint() == Pin::State_Low);
             m_spi.set_selected(m_pin_selected && TEST_IOREG(CTRLA, SPI_ENABLE));
         }
     }

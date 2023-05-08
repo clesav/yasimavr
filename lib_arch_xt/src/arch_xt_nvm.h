@@ -28,6 +28,9 @@
 #include "core/sim_interrupt.h"
 #include "core/sim_memory.h"
 
+YASIMAVR_BEGIN_NAMESPACE
+
+
 //=======================================================================================
 /*
  * Implementation of a USERROW controller for XT core series
@@ -36,19 +39,19 @@
  */
 
 
-class DLL_EXPORT AVR_ArchXT_USERROW : public AVR_Peripheral {
+class DLL_EXPORT ArchXT_USERROW : public Peripheral {
 
 public:
 
-    explicit AVR_ArchXT_USERROW(reg_addr_t base);
+    explicit ArchXT_USERROW(reg_addr_t base);
 
-    virtual bool init(AVR_Device& device) override;
+    virtual bool init(Device& device) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
 
 private:
 
     const reg_addr_t m_reg_base;
-    AVR_NonVolatileMemory* m_userrow;
+    NonVolatileMemory* m_userrow;
 
 };
 
@@ -61,18 +64,18 @@ private:
  */
 
 
-class DLL_EXPORT AVR_ArchXT_Fuses : public AVR_Peripheral {
+class DLL_EXPORT ArchXT_Fuses : public Peripheral {
 
 public:
 
-    explicit AVR_ArchXT_Fuses(reg_addr_t base);
+    explicit ArchXT_Fuses(reg_addr_t base);
 
-    virtual bool init(AVR_Device& device) override;
+    virtual bool init(Device& device) override;
 
 private:
 
     const reg_addr_t m_reg_base;
-    AVR_NonVolatileMemory* m_fuses;
+    NonVolatileMemory* m_fuses;
 
 };
 
@@ -88,7 +91,7 @@ private:
  *   - internally, AVR_CTLREQ_NVM_WRITE is supported to receive NVM write to the page buffer
  */
 
-struct AVR_ArchXT_NVM_Config {
+struct ArchXT_NVM_Config {
 
     reg_addr_t reg_base;
 
@@ -106,14 +109,14 @@ struct AVR_ArchXT_NVM_Config {
 
 };
 
-class DLL_EXPORT AVR_ArchXT_NVM : public AVR_Peripheral {
+class DLL_EXPORT ArchXT_NVM : public Peripheral {
 
 public:
 
-    explicit AVR_ArchXT_NVM(const AVR_ArchXT_NVM_Config& config);
-    virtual ~AVR_ArchXT_NVM();
+    explicit ArchXT_NVM(const ArchXT_NVM_Config& config);
+    virtual ~ArchXT_NVM();
 
-    virtual bool init(AVR_Device& device) override;
+    virtual bool init(Device& device) override;
     virtual void reset() override;
     virtual bool ctlreq(uint16_t req, ctlreq_data_t* data) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
@@ -139,7 +142,7 @@ private:
         State_Halting,
     };
 
-    const AVR_ArchXT_NVM_Config& m_config;
+    const ArchXT_NVM_Config& m_config;
     State m_state;
     uint8_t* m_buffer;
     uint8_t* m_bufset;
@@ -147,9 +150,9 @@ private:
     mem_addr_t m_page;
     Timer* m_timer;
 
-    AVR_InterruptFlag m_ee_intflag;
+    InterruptFlag m_ee_intflag;
 
-    AVR_NonVolatileMemory* get_memory(int nvm_index);
+    NonVolatileMemory* get_memory(int nvm_index);
     void clear_buffer();
     void write_nvm(const NVM_request_t& nvm_req);
     void execute_command(Command cmd);
@@ -157,5 +160,8 @@ private:
     void timer_next();
 
 };
+
+
+YASIMAVR_END_NAMESPACE
 
 #endif //__YASIMAVR_XT_NVM_H__

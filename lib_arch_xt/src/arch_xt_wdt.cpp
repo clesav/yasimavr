@@ -25,6 +25,8 @@
 #include "arch_xt_io.h"
 #include "core/sim_device.h"
 
+YASIMAVR_USING_NAMESPACE
+
 
 //=======================================================================================
 
@@ -40,13 +42,13 @@
 /*
  * Constructor of a generic watchdog timer
  */
-AVR_ArchXT_WDT::AVR_ArchXT_WDT(const AVR_ArchXT_WDT_Config& config)
+ArchXT_WDT::ArchXT_WDT(const ArchXT_WDT_Config& config)
 :m_config(config)
 {}
 
-bool AVR_ArchXT_WDT::init(AVR_Device& device)
+bool ArchXT_WDT::init(Device& device)
 {
-    bool status = AVR_WatchdogTimer::init(device);
+    bool status = WatchdogTimer::init(device);
 
     add_ioreg(REG_ADDR(CTRLA), WDT_PERIOD_gm | WDT_WINDOW_gm);
     //STATUS not implemented
@@ -54,7 +56,7 @@ bool AVR_ArchXT_WDT::init(AVR_Device& device)
     return status;
 }
 
-void AVR_ArchXT_WDT::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
+void ArchXT_WDT::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
     uint32_t clk_factor = device()->frequency() / m_config.clock_frequency;
     uint8_t win_start_index = (data.value & WDT_WINDOW_gm) >> WDT_WINDOW_gp;
@@ -64,11 +66,11 @@ void AVR_ArchXT_WDT::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& d
     set_timer(win_start, win_end, clk_factor);
 }
 
-void AVR_ArchXT_WDT::timeout()
+void ArchXT_WDT::timeout()
 {
     //Trigger the reset. Don't call reset() because we want the current
     //cycle to complete beforehand. The state of the device would be
     //inconsistent otherwise.
-    ctlreq_data_t reqdata = { .data = AVR_Device::Reset_WDT };
+    ctlreq_data_t reqdata = { .data = Device::Reset_WDT };
     device()->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_RESET, &reqdata);
 }

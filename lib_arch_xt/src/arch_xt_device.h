@@ -29,10 +29,12 @@
 #include "core/sim_interrupt.h"
 #include "core/sim_types.h"
 
+YASIMAVR_BEGIN_NAMESPACE
+
 
 //=======================================================================================
 
-struct AVR_ArchXT_CoreConfig : AVR_CoreConfiguration {
+struct ArchXT_CoreConfig : CoreConfiguration {
 
     mem_addr_t              flashstart_ds;      //first address of the flash in the data space
     mem_addr_t              flashend_ds;        //last address of the flash in the data space
@@ -47,21 +49,21 @@ struct AVR_ArchXT_CoreConfig : AVR_CoreConfiguration {
 
 //=======================================================================================
 
-typedef AVR_DeviceConfiguration AVR_ArchXT_DeviceConfig;
+typedef DeviceConfiguration ArchXT_DeviceConfig;
 
 
 //=======================================================================================
 
-class DLL_EXPORT AVR_ArchXT_Core : public AVR_Core {
+class DLL_EXPORT ArchXT_Core : public Core {
 
 public:
 
-    enum AVR_ArchXT_NVM {
+    enum ArchXT_NVM {
         NVM_EEPROM = NVM_ArchDefined,
         NVM_USERROW = NVM_ArchDefined + 1,
     };
 
-    explicit AVR_ArchXT_Core(const AVR_ArchXT_CoreConfig& variant);
+    explicit ArchXT_Core(const ArchXT_CoreConfig& variant);
 
 protected:
 
@@ -73,34 +75,37 @@ protected:
 
 private:
 
-    AVR_NonVolatileMemory m_eeprom;
-    AVR_NonVolatileMemory m_userrow;
+    NonVolatileMemory m_eeprom;
+    NonVolatileMemory m_userrow;
 
-friend class AVR_ArchXT_Device;
+friend class ArchXT_Device;
 
 };
 
 
 //=======================================================================================
 
-class DLL_EXPORT AVR_ArchXT_Device : public AVR_Device {
+class DLL_EXPORT ArchXT_Device : public Device {
 
 public:
 
-    explicit AVR_ArchXT_Device(const AVR_ArchXT_DeviceConfig& config);
-    virtual ~AVR_ArchXT_Device();
+    explicit ArchXT_Device(const ArchXT_DeviceConfig& config);
+    virtual ~ArchXT_Device();
 
 protected:
 
     virtual bool core_ctlreq(uint16_t req, ctlreq_data_t* reqdata) override;
 
     //Override to load the EEPROM and the USERROW
-    virtual bool program(const AVR_Firmware& firmware) override;
+    virtual bool program(const Firmware& firmware) override;
 
 private:
 
-    AVR_ArchXT_Core m_core_impl;
+    ArchXT_Core m_core_impl;
 
 };
+
+
+YASIMAVR_END_NAMESPACE
 
 #endif //__YASIMAVR_XT_DEVICE_H__

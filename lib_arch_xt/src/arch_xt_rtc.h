@@ -28,10 +28,12 @@
 #include "core/sim_interrupt.h"
 #include "ioctrl_common/sim_timer.h"
 
+YASIMAVR_BEGIN_NAMESPACE
+
 
 //=======================================================================================
 /*
- * AVR_ArchXT_RTC is the implementation of a Real-Time Clock for the XT core series
+ * ArchXT_RTC is the implementation of a Real-Time Clock for the XT core series
  * This includes a Periodic Interrupt Timer system
  * Unsupported features:
  *      - External clock source
@@ -40,7 +42,7 @@
  *      - Synchronization Busy flags
  */
 
-struct AVR_ArchXT_RTC_Config {
+struct ArchXT_RTC_Config {
 
     enum RTC_ClockSource {
         Clock_32kHz,
@@ -60,34 +62,34 @@ struct AVR_ArchXT_RTC_Config {
 };
 
 
-class DLL_EXPORT AVR_ArchXT_RTC : public AVR_Peripheral {
+class DLL_EXPORT ArchXT_RTC : public Peripheral {
 
 public:
 
-    explicit AVR_ArchXT_RTC(const AVR_ArchXT_RTC_Config& config);
-    virtual ~AVR_ArchXT_RTC();
+    explicit ArchXT_RTC(const ArchXT_RTC_Config& config);
+    virtual ~ArchXT_RTC();
 
-    virtual bool init(AVR_Device& device) override;
+    virtual bool init(Device& device) override;
     virtual void reset() override;
     virtual uint8_t ioreg_read_handler(reg_addr_t addr, uint8_t value) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
-    virtual void sleep(bool on, AVR_SleepMode mode) override;
+    virtual void sleep(bool on, SleepMode mode) override;
 
 private:
 
-    const AVR_ArchXT_RTC_Config& m_config;
+    const ArchXT_RTC_Config& m_config;
 
     uint8_t m_clk_mode;
 
     //***** prescaled timer, one for each counter *****
-    AVR_PrescaledTimer m_rtc_timer;
-    AVR_PrescaledTimer m_pit_timer;
-    AVR_TimerCounter m_rtc_counter;
-    AVR_TimerCounter m_pit_counter;
+    PrescaledTimer m_rtc_timer;
+    PrescaledTimer m_pit_timer;
+    TimerCounter m_rtc_counter;
+    TimerCounter m_pit_counter;
 
     //***** Interrupt flags *****
-    AVR_InterruptFlag m_rtc_intflag;
-    AVR_InterruptFlag m_pit_intflag;
+    InterruptFlag m_rtc_intflag;
+    InterruptFlag m_pit_intflag;
 
     //***** Timer signal hook implementation *****
     class TimerHook;
@@ -100,5 +102,8 @@ private:
     void configure_timers();
 
 };
+
+
+YASIMAVR_END_NAMESPACE
 
 #endif

@@ -26,6 +26,9 @@
 #include "arch_xt_io_utils.h"
 #include "core/sim_sleep.h"
 
+YASIMAVR_USING_NAMESPACE
+
+
 //=======================================================================================
 
 #define REG_ADDR(reg) \
@@ -35,8 +38,8 @@
     offsetof(USART_t, reg)
 
 
-AVR_ArchXT_USART::AVR_ArchXT_USART(uint8_t num, const AVR_ArchXT_USART_Config& config)
-:AVR_Peripheral(AVR_IOCTL_UART(0x30 + num))
+ArchXT_USART::ArchXT_USART(uint8_t num, const ArchXT_USART_Config& config)
+:Peripheral(AVR_IOCTL_UART(0x30 + num))
 ,m_config(config)
 ,m_rxc_intflag(false)
 ,m_txc_intflag(false)
@@ -45,9 +48,9 @@ AVR_ArchXT_USART::AVR_ArchXT_USART(uint8_t num, const AVR_ArchXT_USART_Config& c
     m_endpoint = { &m_uart.signal(), &m_uart };
 }
 
-bool AVR_ArchXT_USART::init(AVR_Device& device)
+bool ArchXT_USART::init(Device& device)
 {
-    bool status = AVR_Peripheral::init(device);
+    bool status = Peripheral::init(device);
 
     add_ioreg(REG_ADDR(RXDATAL), USART_DATA_gm, true);
     add_ioreg(REG_ADDR(RXDATAH), 0, true);
@@ -87,14 +90,14 @@ bool AVR_ArchXT_USART::init(AVR_Device& device)
     return status;
 }
 
-void AVR_ArchXT_USART::reset()
+void ArchXT_USART::reset()
 {
     m_uart.reset();
     SET_IOREG(STATUS, USART_DREIF);
     update_framerate();
 }
 
-bool AVR_ArchXT_USART::ctlreq(uint16_t req, ctlreq_data_t* data)
+bool ArchXT_USART::ctlreq(uint16_t req, ctlreq_data_t* data)
 {
     if (req == AVR_CTLREQ_GET_SIGNAL) {
         data->data = &m_uart.signal();
@@ -108,7 +111,7 @@ bool AVR_ArchXT_USART::ctlreq(uint16_t req, ctlreq_data_t* data)
     return false;
 }
 
-uint8_t AVR_ArchXT_USART::ioreg_read_handler(reg_addr_t addr, uint8_t value)
+uint8_t ArchXT_USART::ioreg_read_handler(reg_addr_t addr, uint8_t value)
 {
     reg_addr_t reg_ofs = addr - m_config.reg_base;
 
@@ -121,7 +124,7 @@ uint8_t AVR_ArchXT_USART::ioreg_read_handler(reg_addr_t addr, uint8_t value)
     return value;
 }
 
-void AVR_ArchXT_USART::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
+void ArchXT_USART::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
     reg_addr_t reg_ofs = addr - m_config.reg_base;
 
@@ -175,38 +178,38 @@ void AVR_ArchXT_USART::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t&
     }
 }
 
-void AVR_ArchXT_USART::raised(const signal_data_t& sigdata, uint16_t __unused)
+void ArchXT_USART::raised(const signal_data_t& sigdata, uint16_t __unused)
 {
-    if (sigdata.sigid == AVR_IO_UART::Signal_TX_Start) {
+    if (sigdata.sigid == IO_UART::Signal_TX_Start) {
         //Notification that the pending frame has been pushed to the shift register
         //to be emitted. The TX buffer is now empty so raise the DRE interrupt.
         m_txe_intflag.set_flag();
         logger().dbg("TX started, raising DRE");
     }
 
-    else if (sigdata.sigid == AVR_IO_UART::Signal_TX_Complete && sigdata.data.as_uint()) {
+    else if (sigdata.sigid == IO_UART::Signal_TX_Complete && sigdata.data.as_uint()) {
         //Notification that the frame in the shift register has been emitted
         //Raise the TXC interrupt.
         m_txc_intflag.set_flag();
         logger().dbg("TX complete, raising TXC");
     }
 
-    else if (sigdata.sigid == AVR_IO_UART::Signal_RX_Start) {
+    else if (sigdata.sigid == IO_UART::Signal_RX_Start) {
         //If the Start-of-Frame detection is enabled, raise the RXS flag
-        if (TEST_IOREG(CTRLB, USART_SFDEN) && device()->sleep_mode() == AVR_SleepMode::Standby) {
+        if (TEST_IOREG(CTRLB, USART_SFDEN) && device()->sleep_mode() == SleepMode::Standby) {
             m_rxc_intflag.set_flag(USART_RXSIF_bm);
             logger().dbg("RX start, raising RXS");
         }
     }
 
-    else if (sigdata.sigid == AVR_IO_UART::Signal_RX_Complete && sigdata.data.as_uint()) {
+    else if (sigdata.sigid == IO_UART::Signal_RX_Complete && sigdata.data.as_uint()) {
         //Raise the RX completion flag
         m_rxc_intflag.set_flag(USART_RXCIF_bm);
         logger().dbg("RX complete, raising RXC");
     }
 }
 
-void AVR_ArchXT_USART::update_framerate()
+void ArchXT_USART::update_framerate()
 {
     //From datasheet (normal speed mode) : (Fbaud = Fclk * 64 / (16 * reg_baud))
     //Expressed in delay rather than frequency: bit_delay = Tbaud / Tclk = reg_baud / 4
@@ -220,9 +223,9 @@ void AVR_ArchXT_USART::update_framerate()
 /*
 * The USART is paused for modes above Standby and in Standby if the Start-Frame Detection feature is not enabled
 */
-void AVR_ArchXT_USART::sleep(bool on, AVR_SleepMode mode)
+void ArchXT_USART::sleep(bool on, SleepMode mode)
 {
-    if (mode > AVR_SleepMode::Standby || (mode == AVR_SleepMode::Standby && !TEST_IOREG(CTRLB, USART_SFDEN))) {
+    if (mode > SleepMode::Standby || (mode == SleepMode::Standby && !TEST_IOREG(CTRLB, USART_SFDEN))) {
         if (on)
             logger().dbg("Pausing");
         else

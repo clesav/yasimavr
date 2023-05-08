@@ -28,10 +28,12 @@
 #include "core/sim_interrupt.h"
 #include "ioctrl_common/sim_timer.h"
 
+YASIMAVR_BEGIN_NAMESPACE
+
 
 //=======================================================================================
 /*
- * AVR_ArchXT_TimerB is the implementation of a Timer/Counter type B for the XT core series
+ * ArchXT_TimerB is the implementation of a Timer/Counter type B for the XT core series
  * Only the Periodic Interrupt mode is currently implemented
  * Other unsupported features:
  *      - Event control and input
@@ -41,41 +43,44 @@
  *      - Synchronize Update (SYNCUPD)
  */
 
-struct AVR_ArchXT_TimerB_Config {
+struct ArchXT_TimerB_Config {
 
     reg_addr_t reg_base;
     int_vect_t iv_capt;
 
 };
 
-class DLL_EXPORT AVR_ArchXT_TimerB : public AVR_Peripheral, public AVR_SignalHook {
+class DLL_EXPORT ArchXT_TimerB : public Peripheral, public SignalHook {
 
 public:
 
-    AVR_ArchXT_TimerB(int num, const AVR_ArchXT_TimerB_Config& config);
+    ArchXT_TimerB(int num, const ArchXT_TimerB_Config& config);
 
-    //Override of AVR_Peripheral callbacks
-    virtual bool init(AVR_Device& device) override;
+    //Override of Peripheral callbacks
+    virtual bool init(Device& device) override;
     virtual void reset() override;
     virtual uint8_t ioreg_read_handler(reg_addr_t addr, uint8_t value) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
-    virtual void sleep(bool on, AVR_SleepMode mode) override;
+    virtual void sleep(bool on, SleepMode mode) override;
     //Override of Hook callback
     virtual void raised(const signal_data_t& data, uint16_t sigid) override;
 
 private:
 
-    const AVR_ArchXT_TimerB_Config& m_config;
+    const ArchXT_TimerB_Config& m_config;
 
     uint8_t m_clk_mode;
 
     //***** Interrupt flag management *****
-    AVR_InterruptFlag m_intflag;
+    InterruptFlag m_intflag;
 
     //***** Timer management *****
-    AVR_PrescaledTimer m_timer;
-    AVR_TimerCounter m_counter;
+    PrescaledTimer m_timer;
+    TimerCounter m_counter;
 
 };
 
-#endif
+
+YASIMAVR_END_NAMESPACE
+
+#endif //__YASIMAVR_XT_TIMER_B_H__
