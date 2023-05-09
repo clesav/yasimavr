@@ -21,8 +21,7 @@
 
 //=======================================================================================
 
-
-class AVR_Pin : public AVR_SignalHook /NoDefaultCtors/ {
+class Pin : public SignalHook /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "core/sim_pin.h"
 %End
@@ -44,18 +43,18 @@ public:
         Signal_AnalogValueChange    /PyName=AnalogValueChange/,
     };
 
-    static const char* StateName(AVR_Pin::State state);
+    static const char* StateName(Pin::State state);
 
-    AVR_Pin(uint32_t);
+    Pin(uint32_t);
 
-    void set_external_state(AVR_Pin::State state);
+    void set_external_state(Pin::State state);
     void set_external_analog_value(double v);
     uint32_t id() const;
-    AVR_Pin::State state() const;
-    AVR_Pin::State digital_state() const;
+    Pin::State state() const;
+    Pin::State digital_state() const;
     double analog_value() const;
 
-    AVR_DataSignal& signal();
+    DataSignal& signal();
 
     virtual void raised(const signal_data_t&, uint16_t);
 

@@ -21,17 +21,16 @@
 
 //=======================================================================================
 
-
-class AVR_IO_Port : public AVR_Peripheral, public AVR_SignalHook /NoDefaultCtors/ {
+class IO_Port : public Peripheral, public SignalHook /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "ioctrl_common/sim_port.h"
 %End
 
 public:
 
-    AVR_IO_Port(char name);
+    IO_Port(char name);
 
-    virtual bool init(AVR_Device&);
+    virtual bool init(Device&);
     virtual void reset();
     virtual bool ctlreq(uint16_t, ctlreq_data_t*);
     virtual void raised(const signal_data_t&, uint16_t);
@@ -39,7 +38,7 @@ public:
 protected:
 
     uint8_t pin_mask() const;
-    void set_pin_internal_state(uint8_t, AVR_Pin::State);
-    virtual void pin_state_changed(uint8_t, AVR_Pin::State);
+    void set_pin_internal_state(uint8_t, Pin::State);
+    virtual void pin_state_changed(uint8_t, Pin::State);
 
 };

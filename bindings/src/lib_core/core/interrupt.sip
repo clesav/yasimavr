@@ -30,14 +30,15 @@ const int16_t INTERRUPT_NONE = -1;
 
 %End
 
+
+//=======================================================================================
+
 const uint16_t CTLREQ_INTR_REGISTER;
 const uint16_t CTLREQ_INTR_RAISE;
 const int16_t INTERRUPT_NONE;
 
 
-//=======================================================================================
-
-class AVR_InterruptController : public AVR_Peripheral /Abstract/ {
+class InterruptController : public Peripheral /Abstract/ {
 %TypeHeaderCode
 #include "core/sim_interrupt.h"
 %End
@@ -56,25 +57,23 @@ public:
         State_RaisedFromSleep       /PyName=RaisedFromSleep/,
     };
 
-    AVR_InterruptController(unsigned int);
+    InterruptController(unsigned int);
 
     virtual void reset();
     virtual bool ctlreq(uint16_t, ctlreq_data_t*);
-    virtual void sleep(bool, AVR_SleepMode);
+    virtual void sleep(bool, SleepMode);
 
 };
 
 
-//=======================================================================================
-
-class AVR_InterruptHandler /NoDefaultCtors/ {
+class InterruptHandler /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "core/sim_interrupt.h"
 %End
 
 public:
 
-    AVR_InterruptHandler();
+    InterruptHandler();
 
     void raise_interrupt(int_vect_t) const;
     void cancel_interrupt(int_vect_t) const;
@@ -83,18 +82,16 @@ public:
 };
 
 
-//=======================================================================================
-
-class AVR_InterruptFlag : public AVR_InterruptHandler /NoDefaultCtors/ {
+class InterruptFlag : public InterruptHandler /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "core/sim_interrupt.h"
 %End
 
 public:
 
-    AVR_InterruptFlag(bool);
+    InterruptFlag(bool);
 
-    bool init(AVR_Device&, const regbit_t&, const regbit_t&, int_vect_t);
+    bool init(Device&, const regbit_t&, const regbit_t&, int_vect_t);
     int update_from_ioreg();
     bool set_flag(uint8_t = 0xFF);
     bool clear_flag(uint8_t = 0xFF);

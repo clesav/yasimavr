@@ -21,14 +21,14 @@
 
 //=======================================================================================
 
-class AVR_CycleTimer {
+class CycleTimer {
 %TypeHeaderCode
 #include "core/sim_cycle_timer.h"
 %End
 
 public:
 
-    AVR_CycleTimer();
+    CycleTimer();
 
     bool scheduled() const;
 
@@ -37,23 +37,23 @@ public:
 };
 
 
-class AVR_CycleManager /NoDefaultCtors/ {
+class CycleManager /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "core/sim_cycle_timer.h"
 %End
 
 public:
 
-    AVR_CycleManager();
+    CycleManager();
 
     cycle_count_t cycle() const;
     void increment_cycle(cycle_count_t);
 
-    void schedule(AVR_CycleTimer&, cycle_count_t);
-    void delay(AVR_CycleTimer&, cycle_count_t);
-    void cancel(AVR_CycleTimer&);
-    void pause(AVR_CycleTimer&);
-    void resume(AVR_CycleTimer&);
+    void schedule(CycleTimer&, cycle_count_t);
+    void delay(CycleTimer&, cycle_count_t);
+    void cancel(CycleTimer&);
+    void pause(CycleTimer&);
+    void resume(CycleTimer&);
     void process_timers();
     cycle_count_t next_when() const;
 

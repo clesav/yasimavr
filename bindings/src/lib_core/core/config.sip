@@ -21,7 +21,7 @@
 
 //=======================================================================================
 
-struct AVR_CoreConfiguration {
+struct CoreConfiguration {
 %TypeHeaderCode
 #include "core/sim_config.h"
 %End
@@ -48,12 +48,12 @@ struct AVR_CoreConfiguration {
 };
 
 
-struct AVR_DeviceConfiguration /NoDefaultCtors/ {
+struct DeviceConfiguration /NoDefaultCtors/ {
 
     std::string                     name;
-    AVR_CoreConfiguration&          core;
+    CoreConfiguration&              core;
     StdStringVector                 pins;
 
-    AVR_DeviceConfiguration(AVR_CoreConfiguration&);
+    DeviceConfiguration(CoreConfiguration&);
 
 };

@@ -52,15 +52,15 @@
 };
 
 
-class AVR_NonVolatileMemory /NoDefaultCtors/ {
+class NonVolatileMemory /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "core/sim_memory.h"
 %End
 
 public:
 
-    AVR_NonVolatileMemory(size_t, const std::string = "");
-    AVR_NonVolatileMemory(const AVR_NonVolatileMemory&);
+    NonVolatileMemory(size_t, const std::string = "");
+    NonVolatileMemory(const NonVolatileMemory&);
 
     size_t size() const;
     const std::string& name() const;

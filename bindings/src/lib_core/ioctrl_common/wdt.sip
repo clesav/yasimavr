@@ -21,15 +21,14 @@
 
 //=======================================================================================
 
-
-class AVR_WatchdogTimer : public AVR_Peripheral /NoDefaultCtors/ {
+class WatchdogTimer : public Peripheral /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "ioctrl_common/sim_wdt.h"
 %End
 
 public:
 
-    AVR_WatchdogTimer();
+    WatchdogTimer();
 
     void reset();
     bool ctlreq(uint16_t, ctlreq_data_t*);

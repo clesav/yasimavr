@@ -21,17 +21,17 @@
 
 //=======================================================================================
 
-class AVR_PrescaledTimer : public AVR_CycleTimer /NoDefaultCtors/ {
+class PrescaledTimer : public CycleTimer /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "ioctrl_common/sim_timer.h"
 %End
 
 public:
 
-    AVR_PrescaledTimer();
-    virtual ~AVR_PrescaledTimer();
+    PrescaledTimer();
+    virtual ~PrescaledTimer();
 
-    void init(AVR_CycleManager&, AVR_Logger&);
+    void init(CycleManager&, Logger&);
     void reset();
     void set_prescaler(uint32_t, uint32_t);
     uint32_t prescaler_factor() const;
@@ -42,10 +42,10 @@ public:
 
     virtual cycle_count_t next(cycle_count_t);
 
-    AVR_Signal& signal();
+    Signal& signal();
 
-    void register_chained_timer(AVR_PrescaledTimer&);
-    void unregister_chained_timer(AVR_PrescaledTimer&);
+    void register_chained_timer(PrescaledTimer&);
+    void unregister_chained_timer(PrescaledTimer&);
 
     static int ticks_to_event(int, int, int);
 
@@ -54,7 +54,7 @@ public:
 
 //=======================================================================================
 
-class AVR_TimerCounter /NoDefaultCtors/ {
+class TimerCounter /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "ioctrl_common/sim_timer.h"
 %End
@@ -85,7 +85,7 @@ public:
         Signal_CompMatch    /PyName=CompMatch/,
     };
 
-    AVR_TimerCounter(AVR_PrescaledTimer&, long, uint32_t);
+    TimerCounter(PrescaledTimer&, long, uint32_t);
 
     long wrap() const;
 
@@ -112,9 +112,9 @@ public:
 
     bool countdown() const;
 
-    AVR_Signal& signal();
-    AVR_SignalHook& ext_tick_hook();
+    Signal& signal();
+    SignalHook& ext_tick_hook();
 
-    void set_logger(AVR_Logger* logger);
+    void set_logger(Logger* logger);
 
 };

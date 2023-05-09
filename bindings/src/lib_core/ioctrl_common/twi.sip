@@ -29,6 +29,9 @@ const uint16_t CTLREQ_TWI_ENDPOINT = AVR_CTLREQ_TWI_ENDPOINT;
 
 %End
 
+
+//=======================================================================================
+
 const uint16_t CTLREQ_TWI_ENDPOINT;
 
 class TWI_Packet {
@@ -110,14 +113,14 @@ public:
 
     TWI_Bus();
 
-    AVR_Signal& signal();
+    Signal& signal();
 
     void add_endpoint(TWI_Endpoint&);
     void remove_endpoint(TWI_Endpoint&);
 
 };
 
-class AVR_IO_TWI : public TWI_Endpoint /NoDefaultCtors/ {
+class IO_TWI : public TWI_Endpoint /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "ioctrl_common/sim_twi.h"
 %End
@@ -166,11 +169,11 @@ public:
         State_RX_Ack            /PyName=RX_Ack/,
     };
 
-    AVR_IO_TWI();
+    IO_TWI();
 
-    void init(AVR_CycleManager&, AVR_Logger&);
+    void init(CycleManager&, Logger&);
     void reset();
-    AVR_Signal& signal();
+    Signal& signal();
 
     void set_master_enabled(bool);
     void set_bit_delay(cycle_count_t);
@@ -186,8 +189,8 @@ public:
     bool start_slave_rx();
     void set_slave_ack(bool);
 
-    AVR_IO_TWI::State master_state() const;
-    AVR_IO_TWI::State slave_state() const;
+    IO_TWI::State master_state() const;
+    IO_TWI::State slave_state() const;
 
 protected:
 

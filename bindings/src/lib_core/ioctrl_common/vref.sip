@@ -21,7 +21,6 @@
 
 //=======================================================================================
 
-
 %ModuleCode
 
 #include "ioctrl_common/sim_vref.h"
@@ -31,11 +30,14 @@ const uint16_t CTLREQ_VREF_SET = AVR_CTLREQ_VREF_SET;
 
 %End
 
+
+//=======================================================================================
+
 const uint16_t CTLREQ_VREF_GET;
 const uint16_t CTLREQ_VREF_SET;
 
 
-class AVR_IO_VREF : public AVR_Peripheral /Abstract/ {
+class IO_VREF : public Peripheral /Abstract/ {
 %TypeHeaderCode
 #include "ioctrl_common/sim_vref.h"
 %End
@@ -55,7 +57,7 @@ public:
         Signal_VCCChange            /PyName=VCCChange/,
     };
 
-    AVR_IO_VREF(size_t ref_count);
+    IO_VREF(size_t ref_count);
 
     bool active() const;
 
