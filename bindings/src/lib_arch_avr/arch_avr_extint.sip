@@ -21,7 +21,7 @@
 
 //=======================================================================================
 
-struct AVR_ArchAVR_ExtIntConfig {
+struct ArchAVR_ExtIntConfig {
 %TypeHeaderCode
 #include "arch_avr_extint.h"
 #include "utils/buffer_utils.h"
@@ -85,9 +85,8 @@ struct AVR_ArchAVR_ExtIntConfig {
 
 };
 
-class AVR_ArchAVR_ExtInt : public AVR_Peripheral,
-                           public AVR_InterruptHandler
-                           /NoDefaultCtors/ {
+
+class ArchAVR_ExtInt : public Peripheral, public InterruptHandler /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_avr_extint.h"
 %End
@@ -99,9 +98,9 @@ public:
         Signal_PinChange    /PyName=PinChange/,
     };
 
-    AVR_ArchAVR_ExtInt(const AVR_ArchAVR_ExtIntConfig& /KeepReference/);
+    ArchAVR_ExtInt(const ArchAVR_ExtIntConfig& /KeepReference/);
 
-    virtual bool init(AVR_Device&);
+    virtual bool init(Device&);
     virtual void reset();
     virtual bool ctlreq(uint16_t req, ctlreq_data_t*);
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);

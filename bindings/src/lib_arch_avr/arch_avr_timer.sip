@@ -34,7 +34,9 @@ const uint16_t CTLREQ_TMR_GET_EXTCLK_HOOK;
 const uint16_t CTLREQ_TMR_GET_CAPT_HOOK;
 
 
-struct AVR_ArchAVR_TimerConfig {
+//=======================================================================================
+
+struct ArchAVR_TimerConfig {
 %TypeHeaderCode
 #include "arch_avr_timer.h"
 %End
@@ -67,7 +69,7 @@ struct AVR_ArchAVR_TimerConfig {
     };
 
     struct clock_config_t : base_reg_config_t {
-        AVR_TimerCounter::TickSource source;
+        TimerCounter::TickSource source;
         unsigned int div;
     };
 
@@ -84,47 +86,47 @@ struct AVR_ArchAVR_TimerConfig {
     };
 
     struct COM_config_t : base_reg_config_t {
-        AVR_ArchAVR_TimerConfig::COM up;
-        AVR_ArchAVR_TimerConfig::COM down;
-        AVR_ArchAVR_TimerConfig::COM bottom;
-        AVR_ArchAVR_TimerConfig::COM top;
+        ArchAVR_TimerConfig::COM up;
+        ArchAVR_TimerConfig::COM down;
+        ArchAVR_TimerConfig::COM bottom;
+        ArchAVR_TimerConfig::COM top;
     };
 
     struct mode_config_t : base_reg_config_t {
-        AVR_ArchAVR_TimerConfig::OVF ovf;
-        AVR_ArchAVR_TimerConfig::Top top;
+        ArchAVR_TimerConfig::OVF ovf;
+        ArchAVR_TimerConfig::Top top;
         unsigned int fixed_top_exp;
-        AVR_ArchAVR_TimerConfig::OCR ocr;
+        ArchAVR_TimerConfig::OCR ocr;
         bool double_slope;
         bool disable_foc;
         unsigned int com_variant;
     };
 
     bool is_16bits;
-    std::vector<AVR_ArchAVR_TimerConfig::clock_config_t> clocks;
-    std::vector<AVR_ArchAVR_TimerConfig::mode_config_t> modes;
-    std::vector<AVR_ArchAVR_TimerConfig::OC_config_t> oc_channels;
+    std::vector<ArchAVR_TimerConfig::clock_config_t> clocks;
+    std::vector<ArchAVR_TimerConfig::mode_config_t> modes;
+    std::vector<ArchAVR_TimerConfig::OC_config_t> oc_channels;
     regbit_t rb_clock;
     regbit_compound_t rbc_mode;
     reg_addr_t reg_cnt;
     reg_addr_t reg_icr;
     reg_addr_t reg_int_enable;
     reg_addr_t reg_int_flag;
-    AVR_ArchAVR_TimerConfig::vector_config_t vect_ovf;
-    AVR_ArchAVR_TimerConfig::vector_config_t vect_icr;
+    ArchAVR_TimerConfig::vector_config_t vect_ovf;
+    ArchAVR_TimerConfig::vector_config_t vect_icr;
 
     SIP_PYLIST com_modes {
     %GetCode
         PyObject* l = PyList_New(sipCpp->com_modes.size());
-        AVR_ArchAVR_TimerConfig::COM_variant_t* COM_variant;
+        ArchAVR_TimerConfig::COM_variant_t* COM_variant;
         for (size_t i = 0; i < sipCpp->com_modes.size(); ++i) {
             COM_variant = &sipCpp->com_modes[i];
             PyObject* ll = PyList_New(COM_variant->size());
             PyList_SET_ITEM(l, i, ll);
             for (size_t j = 0; j < COM_variant->size(); ++j) {
-                AVR_ArchAVR_TimerConfig::COM_config_t* cfg = &(*COM_variant)[j];
+                ArchAVR_TimerConfig::COM_config_t* cfg = &(*COM_variant)[j];
                 PyObject* pycfg = sipConvertFromType(cfg,
-                                                     sipType_AVR_ArchAVR_TimerConfig_COM_config_t,
+                                                     sipType_ArchAVR_TimerConfig_COM_config_t,
                                                      SIP_NULLPTR);
                 PyList_SET_ITEM(ll, j, pycfg);
             }
@@ -134,19 +136,19 @@ struct AVR_ArchAVR_TimerConfig {
     %SetCode
         PyObject* iter1 = PyObject_GetIter(sipPy);
         if (iter1) {
-            std::vector<std::vector<AVR_ArchAVR_TimerConfig::COM_config_t>> com_modes;
+            std::vector<std::vector<ArchAVR_TimerConfig::COM_config_t>> com_modes;
             PyObject* item1;
             while ((item1 = PyIter_Next(iter1)) != NULL) {
                 PyObject* iter2 = PyObject_GetIter(item1);
                 if (iter2) {
                     PyObject* item2;
-                    std::vector<AVR_ArchAVR_TimerConfig::COM_config_t> com_variant;
+                    std::vector<ArchAVR_TimerConfig::COM_config_t> com_variant;
                     while ((item2 = PyIter_Next(iter2)) != NULL) {
                         void* sipCfg = sipForceConvertToType(item2,
-                                                             sipType_AVR_ArchAVR_TimerConfig_COM_config_t,
+                                                             sipType_ArchAVR_TimerConfig_COM_config_t,
                                                              SIP_NULLPTR, SIP_NOT_NONE, SIP_NULLPTR, &sipErr);
                         if (sipErr) break;
-                        com_variant.push_back(*reinterpret_cast<AVR_ArchAVR_TimerConfig::COM_config_t*>(sipCfg));
+                        com_variant.push_back(*reinterpret_cast<ArchAVR_TimerConfig::COM_config_t*>(sipCfg));
                     }
                     Py_DECREF(iter2);
                     if (sipErr) break;
@@ -172,9 +174,7 @@ struct AVR_ArchAVR_TimerConfig {
 };
 
 
-class AVR_ArchAVR_Timer : public AVR_Peripheral,
-                          public AVR_SignalHook
-                          /NoDefaultCtors/ {
+class ArchAVR_Timer : public Peripheral, public SignalHook /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_avr_timer.h"
 %End
@@ -188,9 +188,9 @@ public:
         Signal_Capt             /PyName=Capt/
     };
 
-    AVR_ArchAVR_Timer(int, const AVR_ArchAVR_TimerConfig& /KeepReference/);
+    ArchAVR_Timer(int, const ArchAVR_TimerConfig& /KeepReference/);
 
-    virtual bool init(AVR_Device&);
+    virtual bool init(Device&);
     virtual void reset();
     virtual bool ctlreq(uint16_t, ctlreq_data_t*);
     virtual uint8_t ioreg_read_handler(reg_addr_t, uint8_t);

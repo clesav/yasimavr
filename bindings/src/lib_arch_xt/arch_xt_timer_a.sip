@@ -29,13 +29,14 @@ const uint8_t TCA_CMP_CHANNEL_COUNT = AVR_TCA_CMP_CHANNEL_COUNT;
 
 %End
 
+
+//=======================================================================================
+
 const uint16_t CTLREQ_TCA_REGISTER_TCB;
 const uint8_t TCA_CMP_CHANNEL_COUNT;
 
 
-//=======================================================================================
-
-struct AVR_ArchXT_TimerA_Config {
+struct ArchXT_TimerA_Config {
 %TypeHeaderCode
 #include "arch_xt_timer_a.h"
 %End
@@ -54,21 +55,21 @@ struct AVR_ArchXT_TimerA_Config {
 };
 
 
-class AVR_ArchXT_TimerA : public AVR_Peripheral, public AVR_SignalHook /NoDefaultCtors/ {
+class ArchXT_TimerA : public Peripheral, public SignalHook /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_xt_timer_a.h"
 %End
 
 public:
 
-    AVR_ArchXT_TimerA(const AVR_ArchXT_TimerA_Config& /KeepReference/);
+    ArchXT_TimerA(const ArchXT_TimerA_Config& /KeepReference/);
 
-    virtual bool init(AVR_Device&);
+    virtual bool init(Device&);
     virtual void reset();
     virtual bool ctlreq(uint16_t, ctlreq_data_t*);
     virtual uint8_t ioreg_read_handler(reg_addr_t, uint8_t);
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
-    virtual void sleep(bool, AVR_SleepMode);
+    virtual void sleep(bool, SleepMode);
     virtual void raised(const signal_data_t&, uint16_t);
 
 };

@@ -21,7 +21,7 @@
 
 //=======================================================================================
 
-struct AVR_ArchAVR_PortConfig {
+struct ArchAVR_PortConfig {
 %TypeHeaderCode
 #include "arch_avr_port.h"
 %End
@@ -33,16 +33,16 @@ struct AVR_ArchAVR_PortConfig {
 };
 
 
-class AVR_ArchAVR_Port : public AVR_IO_Port /NoDefaultCtors/ {
+class ArchAVR_Port : public IO_Port /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_avr_port.h"
 %End
 
 public:
 
-    AVR_ArchAVR_Port(const AVR_ArchAVR_PortConfig& /KeepReference/);
+    ArchAVR_Port(const ArchAVR_PortConfig& /KeepReference/);
 
-    virtual bool init(AVR_Device&);
+    virtual bool init(Device&);
     virtual void reset();
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
 

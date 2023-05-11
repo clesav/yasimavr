@@ -34,13 +34,13 @@ const uint16_t CTLREQ_ACP_GET_DAC;
 
 //=======================================================================================
 
-struct AVR_ArchXT_ACP_Config {
+struct ArchXT_ACP_Config {
 %TypeHeaderCode
 #include "arch_xt_acp.h"
 %End
 
-    std::vector<AVR_IO_ACP::channel_config_t> pos_channels;
-    std::vector<AVR_IO_ACP::channel_config_t> neg_channels;
+    std::vector<IO_ACP::channel_config_t> pos_channels;
+    std::vector<IO_ACP::channel_config_t> neg_channels;
 
     uint32_t vref_channel;
     reg_addr_t reg_base;
@@ -49,23 +49,20 @@ struct AVR_ArchXT_ACP_Config {
 };
 
 
-class AVR_ArchXT_ACP : public AVR_IO_ACP,
-                       public AVR_Peripheral,
-                       public AVR_SignalHook
-                       /NoDefaultCtors/ {
+class ArchXT_ACP : public IO_ACP, public Peripheral, public SignalHook /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_xt_acp.h"
 %End
 
 public:
 
-    AVR_ArchXT_ACP(int, const AVR_ArchXT_ACP_Config& /KeepReference/);
+    ArchXT_ACP(int, const ArchXT_ACP_Config& /KeepReference/);
 
-    virtual bool init(AVR_Device&);
+    virtual bool init(Device&);
     virtual void reset();
     virtual bool ctlreq(uint16_t, ctlreq_data_t*);
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
-    virtual void sleep(bool, AVR_SleepMode);
+    virtual void sleep(bool, SleepMode);
     virtual void raised(const signal_data_t&, uint16_t);
 
 };

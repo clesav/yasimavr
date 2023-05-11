@@ -21,7 +21,7 @@
 
 //=======================================================================================
 
-struct AVR_ArchXT_USART_Config {
+struct ArchXT_USART_Config {
 %TypeHeaderCode
 #include "arch_xt_usart.h"
 %End
@@ -35,21 +35,21 @@ struct AVR_ArchXT_USART_Config {
 };
 
 
-class AVR_ArchXT_USART : public AVR_Peripheral, public AVR_SignalHook /NoDefaultCtors/ {
+class ArchXT_USART : public Peripheral, public SignalHook /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_xt_usart.h"
 %End
 
 public:
 
-    AVR_ArchXT_USART(uint8_t, const AVR_ArchXT_USART_Config& /KeepReference/);
+    ArchXT_USART(uint8_t, const ArchXT_USART_Config& /KeepReference/);
 
-    virtual bool init(AVR_Device&);
+    virtual bool init(Device&);
     virtual void reset();
     virtual bool ctlreq(uint16_t, ctlreq_data_t*);
     virtual uint8_t ioreg_read_handler(reg_addr_t, uint8_t);
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
-    virtual void sleep(bool, AVR_SleepMode);
+    virtual void sleep(bool, SleepMode);
     virtual void raised(const signal_data_t&, uint16_t);
 
 };

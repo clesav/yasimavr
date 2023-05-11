@@ -21,7 +21,7 @@
 
 //=======================================================================================
 
-struct AVR_ArchXT_TimerB_Config {
+struct ArchXT_TimerB_Config {
 %TypeHeaderCode
 #include "arch_xt_timer_b.h"
 %End
@@ -32,21 +32,21 @@ struct AVR_ArchXT_TimerB_Config {
 };
 
 
-class AVR_ArchXT_TimerB : public AVR_Peripheral, public AVR_SignalHook /NoDefaultCtors/ {
+class ArchXT_TimerB : public Peripheral, public SignalHook /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_xt_timer_b.h"
 %End
 
 public:
 
-    AVR_ArchXT_TimerB(int, const AVR_ArchXT_TimerB_Config& /KeepReference/);
+    ArchXT_TimerB(int, const ArchXT_TimerB_Config& /KeepReference/);
 
-    virtual bool init(AVR_Device&);
+    virtual bool init(Device&);
     virtual void reset();
     virtual bool ctlreq(uint16_t, ctlreq_data_t*);
     virtual uint8_t ioreg_read_handler(reg_addr_t, uint8_t);
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
-    virtual void sleep(bool, AVR_SleepMode);
+    virtual void sleep(bool, SleepMode);
     virtual void raised(const signal_data_t&, uint16_t);
 
 };

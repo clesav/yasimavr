@@ -21,7 +21,7 @@
 
 //=======================================================================================
 
-struct AVR_ArchAVR_USART_Config {
+struct ArchAVR_USART_Config {
 %TypeHeaderCode
 #include "arch_avr_usart.h"
 %End
@@ -48,16 +48,16 @@ struct AVR_ArchAVR_USART_Config {
 };
 
 
-class AVR_ArchAVR_USART : public AVR_Peripheral, public AVR_SignalHook /NoDefaultCtors/ {
+class ArchAVR_USART : public Peripheral, public SignalHook /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_avr_usart.h"
 %End
 
 public:
 
-    AVR_ArchAVR_USART(uint8_t, const AVR_ArchAVR_USART_Config& /KeepReference/);
+    ArchAVR_USART(uint8_t, const ArchAVR_USART_Config& /KeepReference/);
 
-    virtual bool init(AVR_Device&);
+    virtual bool init(Device&);
     virtual void reset();
     virtual bool ctlreq(uint16_t, ctlreq_data_t*);
     virtual uint8_t ioreg_read_handler(reg_addr_t, uint8_t);

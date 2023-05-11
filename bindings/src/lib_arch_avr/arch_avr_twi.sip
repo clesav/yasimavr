@@ -21,7 +21,7 @@
 
 //=======================================================================================
 
-struct AVR_ArchAVR_TWI_Config {
+struct ArchAVR_TWI_Config {
 %TypeHeaderCode
 #include "arch_avr_twi.h"
 %End
@@ -48,16 +48,16 @@ struct AVR_ArchAVR_TWI_Config {
 };
 
 
-class AVR_ArchAVR_TWI : public AVR_Peripheral, public AVR_SignalHook /NoDefaultCtors/ {
+class ArchAVR_TWI : public Peripheral, public SignalHook /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_avr_twi.h"
 %End
 
 public:
 
-    AVR_ArchAVR_TWI(uint8_t, const AVR_ArchAVR_TWI_Config& /KeepReference/);
+    ArchAVR_TWI(uint8_t, const ArchAVR_TWI_Config& /KeepReference/);
 
-    virtual bool init(AVR_Device&);
+    virtual bool init(Device&);
     virtual void reset();
     virtual bool ctlreq(uint16_t, ctlreq_data_t*);
     virtual uint8_t ioreg_read_handler(reg_addr_t, uint8_t);

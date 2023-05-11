@@ -21,7 +21,7 @@
 
 //=======================================================================================
 
-struct AVR_ArchAVR_SPI_Config {
+struct ArchAVR_SPI_Config {
 %TypeHeaderCode
 #include "arch_avr_spi.h"
 %End
@@ -43,16 +43,16 @@ struct AVR_ArchAVR_SPI_Config {
 };
 
 
-class AVR_ArchAVR_SPI : public AVR_Peripheral, public AVR_SignalHook /NoDefaultCtors/ {
+class ArchAVR_SPI : public Peripheral, public SignalHook /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_avr_spi.h"
 %End
 
 public:
 
-    AVR_ArchAVR_SPI(uint8_t, const AVR_ArchAVR_SPI_Config& /KeepReference/);
+    ArchAVR_SPI(uint8_t, const ArchAVR_SPI_Config& /KeepReference/);
 
-    virtual bool init(AVR_Device&);
+    virtual bool init(Device&);
     virtual void reset();
     virtual bool ctlreq(uint16_t, ctlreq_data_t*);
     virtual uint8_t ioreg_read_handler(reg_addr_t, uint8_t);

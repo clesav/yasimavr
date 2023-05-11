@@ -21,7 +21,7 @@
 
 //=======================================================================================
 
-struct AVR_ArchXT_RTC_Config {
+struct ArchXT_RTC_Config {
 %TypeHeaderCode
 #include "arch_xt_rtc.h"
 %End
@@ -35,26 +35,27 @@ struct AVR_ArchXT_RTC_Config {
         RTC_ClockSource source;
     };
 
-    std::vector<AVR_ArchXT_RTC_Config::clksel_config_t> clocks;
+    std::vector<ArchXT_RTC_Config::clksel_config_t> clocks;
     reg_addr_t reg_base;
     int_vect_t iv_rtc;
     int_vect_t iv_pit;
 
 };
 
-class AVR_ArchXT_RTC : public AVR_Peripheral /NoDefaultCtors/ {
+
+class ArchXT_RTC : public Peripheral /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_xt_rtc.h"
 %End
 
 public:
 
-    AVR_ArchXT_RTC(const AVR_ArchXT_RTC_Config& /KeepReference/);
+    ArchXT_RTC(const ArchXT_RTC_Config& /KeepReference/);
 
-    virtual bool init(AVR_Device&);
+    virtual bool init(Device&);
     virtual void reset();
     virtual uint8_t ioreg_read_handler(reg_addr_t, uint8_t);
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
-    virtual void sleep(bool, AVR_SleepMode);
+    virtual void sleep(bool, SleepMode);
 
 };

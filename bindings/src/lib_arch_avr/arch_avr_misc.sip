@@ -21,28 +21,26 @@
 
 //=======================================================================================
 
-class AVR_ArchAVR_VREF : public AVR_IO_VREF /NoDefaultCtors/ {
+class ArchAVR_VREF : public IO_VREF /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_avr_misc.h"
 %End
 
 public:
 
-    AVR_ArchAVR_VREF(double);
+    ArchAVR_VREF(double);
 
 };
 
 
-//=======================================================================================
-
-class AVR_ArchAVR_Interrupt : public AVR_InterruptController /NoDefaultCtors/ {
+class ArchAVR_Interrupt : public InterruptController /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_avr_misc.h"
 %End
 
 public:
 
-    AVR_ArchAVR_Interrupt(unsigned int);
+    ArchAVR_Interrupt(unsigned int);
 
 protected:
 
@@ -51,9 +49,7 @@ protected:
 };
 
 
-//=======================================================================================
-
-struct AVR_ArchAVR_Misc_Config {
+struct ArchAVR_Misc_Config {
 %TypeHeaderCode
 #include "arch_avr_misc.h"
 %End
@@ -63,15 +59,15 @@ struct AVR_ArchAVR_Misc_Config {
 };
 
 
-class AVR_ArchAVR_MiscRegCtrl : public AVR_Peripheral /NoDefaultCtors/ {
+class ArchAVR_MiscRegCtrl : public Peripheral /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_avr_misc.h"
 %End
 
 public:
 
-    AVR_ArchAVR_MiscRegCtrl(const AVR_ArchAVR_Misc_Config& /KeepReference/);
+    ArchAVR_MiscRegCtrl(const ArchAVR_Misc_Config& /KeepReference/);
 
-    virtual bool init(AVR_Device& device);
+    virtual bool init(Device& device);
 
 };
