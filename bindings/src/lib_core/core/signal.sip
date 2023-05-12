@@ -49,7 +49,9 @@ public:
 class Signal {
 %TypeHeaderCode
 #include "core/sim_signal.h"
+%End
 
+%TypeCode
 extern void fill_vardata_with_pyobj(vardata_t* d, PyObject* obj);
 %End
 
@@ -79,7 +81,9 @@ public:
 class DataSignal : public Signal {
 %TypeHeaderCode
 #include "core/sim_signal.h"
+%End
 
+%TypeCode
 extern void fill_vardata_with_pyobj(vardata_t* d, PyObject* obj);
 %End
 

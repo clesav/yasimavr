@@ -35,6 +35,11 @@ typedef unsigned short          uint16_t;
 typedef short                   int16_t;
 typedef unsigned char           uint8_t /PyInt/;
 
+%UnitPostIncludeCode
+#include "core/sim_globals.h"
+YASIMAVR_USING_NAMESPACE
+%End
+
 %Include support/stdvector.sip
 %Include support/stdstring.sip
 

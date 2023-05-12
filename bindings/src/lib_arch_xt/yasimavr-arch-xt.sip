@@ -29,6 +29,11 @@
 
 %DefaultEncoding(name = "UTF-8")
 
+%UnitPostIncludeCode
+#include "core/sim_globals.h"
+YASIMAVR_USING_NAMESPACE
+%End
+
 //=======================================================================================
 
 %Include arch_xt_acp.sip
