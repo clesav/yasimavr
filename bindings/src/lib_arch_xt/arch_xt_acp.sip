@@ -34,13 +34,13 @@ const uint16_t CTLREQ_ACP_GET_DAC;
 
 //=======================================================================================
 
-struct ArchXT_ACP_Config {
+struct ArchXT_ACPConfig {
 %TypeHeaderCode
 #include "arch_xt_acp.h"
 %End
 
-    std::vector<IO_ACP::channel_config_t> pos_channels;
-    std::vector<IO_ACP::channel_config_t> neg_channels;
+    std::vector<ACP::channel_config_t> pos_channels;
+    std::vector<ACP::channel_config_t> neg_channels;
 
     uint32_t vref_channel;
     reg_addr_t reg_base;
@@ -49,14 +49,14 @@ struct ArchXT_ACP_Config {
 };
 
 
-class ArchXT_ACP : public IO_ACP, public Peripheral, public SignalHook /NoDefaultCtors/ {
+class ArchXT_ACP : public ACP, public Peripheral, public SignalHook /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_xt_acp.h"
 %End
 
 public:
 
-    ArchXT_ACP(int, const ArchXT_ACP_Config& /KeepReference/);
+    ArchXT_ACP(int, const ArchXT_ACPConfig& /KeepReference/);
 
     virtual bool init(Device&);
     virtual void reset();

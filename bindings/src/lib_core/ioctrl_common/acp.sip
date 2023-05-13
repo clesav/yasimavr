@@ -22,7 +22,7 @@
 
 //=======================================================================================
 
-class IO_ACP /Abstract/ {
+class ACP /Abstract/ {
 %TypeHeaderCode
 #include "ioctrl_common/sim_acp.h"
 %End
@@ -35,7 +35,7 @@ public:
     };
 
      struct channel_config_t : base_reg_config_t {
-        IO_ACP::Channel type;
+        ACP::Channel type;
         uint32_t pin;
     };
 

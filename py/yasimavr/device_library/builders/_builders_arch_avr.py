@@ -271,7 +271,7 @@ def _acp_convertor(cfg, attr, yml_val, per_desc):
     if attr == 'mux_pins':
         py_pins = []
         for reg_value, item in yml_val.items():
-            mux_cfg = _archlib.ArchAVR_ACP_Config.mux_config_t()
+            mux_cfg = _archlib.ArchAVR_ACPConfig.mux_config_t()
             mux_cfg.reg_value = reg_value
             mux_cfg.pin = _corelib.str_to_id(item)
             py_pins.append(mux_cfg)
@@ -289,7 +289,7 @@ def _acp_convertor(cfg, attr, yml_val, per_desc):
 
 
 def _get_acp_builder():
-    cfg_builder = PeripheralConfigBuilder(_archlib.ArchAVR_ACP_Config, _acp_convertor)
+    cfg_builder = PeripheralConfigBuilder(_archlib.ArchAVR_ACPConfig, _acp_convertor)
     return IndexedPeripheralBuilder(_archlib.ArchAVR_ACP, cfg_builder)
 
 

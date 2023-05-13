@@ -21,8 +21,8 @@
 
 //=======================================================================================
 
-#ifndef __YASIMAVR_IO_ACP_H__
-#define __YASIMAVR_IO_ACP_H__
+#ifndef __YASIMAVR_ACP_H__
+#define __YASIMAVR_ACP_H__
 
 #include "../core/sim_peripheral.h"
 
@@ -33,7 +33,7 @@ YASIMAVR_BEGIN_NAMESPACE
 /*
  * Configuration enumerations and structures
 */
-class DLL_EXPORT IO_ACP {
+class DLL_EXPORT ACP {
 
 public:
 
@@ -57,4 +57,4 @@ public:
 
 YASIMAVR_END_NAMESPACE
 
-#endif //__YASIMAVR_IO_ACP_H__
+#endif //__YASIMAVR_ACP_H__

@@ -37,7 +37,7 @@ YASIMAVR_USING_NAMESPACE
 #define REG_OFS(reg) \
     offsetof(AC_t, reg)
 
-typedef ArchXT_ACP_Config cfg_t;
+typedef ArchXT_ACPConfig cfg_t;
 
 
 enum HookTag {

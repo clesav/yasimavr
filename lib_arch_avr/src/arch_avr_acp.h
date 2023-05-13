@@ -41,7 +41,7 @@ YASIMAVR_BEGIN_NAMESPACE
  */
 
 
-struct ArchAVR_ACP_Config {
+struct ArchAVR_ACPConfig {
 
     struct mux_config_t : base_reg_config_t {
         uint32_t pin;
@@ -66,13 +66,13 @@ struct ArchAVR_ACP_Config {
 };
 
 
-class DLL_EXPORT ArchAVR_ACP : public IO_ACP,
+class DLL_EXPORT ArchAVR_ACP : public ACP,
                                public Peripheral,
                                public SignalHook {
 
 public:
 
-    ArchAVR_ACP(int num, const ArchAVR_ACP_Config& config);
+    ArchAVR_ACP(int num, const ArchAVR_ACPConfig& config);
 
     virtual bool init(Device& device) override;
     virtual void reset() override;
@@ -82,7 +82,7 @@ public:
 
 private:
 
-    const ArchAVR_ACP_Config& m_config;
+    const ArchAVR_ACPConfig& m_config;
     InterruptFlag m_intflag;
     DataSignalMux m_pos_mux;
     DataSignalMux m_neg_mux;

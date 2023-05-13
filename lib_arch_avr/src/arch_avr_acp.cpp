@@ -41,7 +41,7 @@ enum {
 };
 
 
-ArchAVR_ACP::ArchAVR_ACP(int num, const ArchAVR_ACP_Config& config)
+ArchAVR_ACP::ArchAVR_ACP(int num, const ArchAVR_ACPConfig& config)
 :Peripheral(AVR_IOCTL_ACP(0x30 + num))
 ,m_config(config)
 ,m_intflag(true)
@@ -173,7 +173,7 @@ void ArchAVR_ACP::change_neg_channel()
 {
     if (test_ioreg(m_config.rb_mux_enable) && !test_ioreg(m_config.rb_adc_enable)) {
         uint8_t mux_regval = read_ioreg(m_config.rb_mux);
-        int mux_index = find_reg_config<ArchAVR_ACP_Config::mux_config_t>(m_config.mux_pins, mux_regval);
+        int mux_index = find_reg_config<ArchAVR_ACPConfig::mux_config_t>(m_config.mux_pins, mux_regval);
         if (mux_index < 0) {
             device()->crash(CRASH_BAD_CTL_IO, "ACP: Invalid mux configuration");
             return;

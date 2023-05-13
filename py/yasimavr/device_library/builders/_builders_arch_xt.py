@@ -258,7 +258,7 @@ def _acp_convertor(cfg, attr, yml_val, per_desc):
     if attr in ('pos_channels', 'neg_channels'):
         py_chans = []
         for reg_value, item in yml_val.items():
-            chan_cfg = _corelib.IO_ACP.channel_config_t()
+            chan_cfg = _corelib.ACP.channel_config_t()
             chan_cfg.reg_value = reg_value
             if isinstance(item, list):
                 chan_type = item[0]
@@ -267,7 +267,7 @@ def _acp_convertor(cfg, attr, yml_val, per_desc):
             else:
                 chan_type = item
 
-            chan_cfg.type = _corelib.IO_ACP.Channel[chan_type]
+            chan_cfg.type = _corelib.ACP.Channel[chan_type]
             py_chans.append(chan_cfg)
 
         setattr(cfg, attr, py_chans)
@@ -277,7 +277,7 @@ def _acp_convertor(cfg, attr, yml_val, per_desc):
 
 
 def _get_acp_builder():
-    _ACP_ConfigBuilder = PeripheralConfigBuilder(_archlib.ArchXT_ACP_Config, _acp_convertor)
+    _ACP_ConfigBuilder = PeripheralConfigBuilder(_archlib.ArchXT_ACPConfig, _acp_convertor)
     return IndexedPeripheralBuilder(_archlib.ArchXT_ACP, _ACP_ConfigBuilder)
 
 

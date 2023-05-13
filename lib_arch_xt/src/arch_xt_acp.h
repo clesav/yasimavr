@@ -49,10 +49,10 @@ YASIMAVR_BEGIN_NAMESPACE
  *      - Pin output
  */
 
-struct ArchXT_ACP_Config {
+struct ArchXT_ACPConfig {
 
-    std::vector<IO_ACP::channel_config_t> pos_channels;
-    std::vector<IO_ACP::channel_config_t> neg_channels;
+    std::vector<ACP::channel_config_t> pos_channels;
+    std::vector<ACP::channel_config_t> neg_channels;
 
     uint32_t vref_channel;
     reg_addr_t reg_base;
@@ -60,13 +60,13 @@ struct ArchXT_ACP_Config {
 
 };
 
-class DLL_EXPORT ArchXT_ACP : public IO_ACP,
+class DLL_EXPORT ArchXT_ACP : public ACP,
                               public Peripheral,
                               public SignalHook {
 
 public:
 
-    ArchXT_ACP(int num, const ArchXT_ACP_Config& config);
+    ArchXT_ACP(int num, const ArchXT_ACPConfig& config);
 
     virtual bool init(Device& device) override;
     virtual void reset() override;
@@ -77,7 +77,7 @@ public:
 
 private:
 
-    const ArchXT_ACP_Config& m_config;
+    const ArchXT_ACPConfig& m_config;
     InterruptFlag m_intflag;
     DataSignal m_signal;
     //Pointer to the VREF signal to obtain ACP voltage reference updates

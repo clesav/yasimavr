@@ -21,7 +21,7 @@
 
 //=======================================================================================
 
-struct ArchAVR_ACP_Config {
+struct ArchAVR_ACPConfig {
 %TypeHeaderCode
 #include "arch_avr_acp.h"
 %End
@@ -30,7 +30,7 @@ struct ArchAVR_ACP_Config {
         uint32_t pin;
     };
 
-    std::vector<ArchAVR_ACP_Config::mux_config_t> mux_pins;
+    std::vector<ArchAVR_ACPConfig::mux_config_t> mux_pins;
 
     uint32_t pos_pin;
     uint32_t neg_pin;
@@ -50,14 +50,14 @@ struct ArchAVR_ACP_Config {
 };
 
 
-class ArchAVR_ACP : public IO_ACP, public Peripheral, public SignalHook /NoDefaultCtors/ {
+class ArchAVR_ACP : public ACP, public Peripheral, public SignalHook /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_avr_acp.h"
 %End
 
 public:
 
-    ArchAVR_ACP(int, const ArchAVR_ACP_Config& /KeepReference/);
+    ArchAVR_ACP(int, const ArchAVR_ACPConfig& /KeepReference/);
 
     virtual bool init(Device&);
     virtual void reset();
