@@ -23,7 +23,7 @@ from yasimavr.lib import core as _corelib
 __all__ = ['Formatter', 'VCD_Recorder']
 
 
-class Formatter(_corelib.AVR_SignalHook):
+class Formatter(_corelib.SignalHook):
     """Generic formatter class.
 
     A formatter is a signal hook connected to receive data changes and
@@ -76,7 +76,7 @@ class Formatter(_corelib.AVR_SignalHook):
         return None
 
 
-    #Reimplementation of AVR_SignalHook, to filter, format and record
+    #Reimplementation of SignalHook, to filter, format and record
     #the value associated to the signal
     def raised(self, sigdata, hooktag):
         try:
@@ -92,8 +92,8 @@ class _PinDigitalFormatter(Formatter):
     """Formatter specialised for the digital state of GPIO pins.
     """
 
-    _SIGID = _corelib.AVR_Pin.SignalId.DigitalStateChange
-    _PinState = _corelib.AVR_Pin.State
+    _SIGID = _corelib.Pin.SignalId.DigitalStateChange
+    _PinState = _corelib.Pin.State
 
     def __init__(self, pin):
         super().__init__('tri', 1, None)
@@ -145,7 +145,7 @@ class _SignalFormatter(Formatter):
 
 class _InterruptFormatter(Formatter):
 
-    _State = _corelib.AVR_InterruptController.State
+    _State = _corelib.InterruptController.State
 
     def __init__(self, vector):
         super().__init__('tri', 1, False)
@@ -193,10 +193,10 @@ class VCD_Recorder:
 
 
     def add_digital_pin(self, pin, var_name=''):
-        """Register a new VCD variable for a AVR_Pin instance.
+        """Register a new VCD variable for a Pin instance.
 
         parameters:
-            pin: AVR_Pin object
+            pin: Pin object
             var_name: optional variable name, defaults to the pin identifier
         """
 
@@ -222,7 +222,7 @@ class VCD_Recorder:
         port_id = _corelib.IOCTL_PORT(port_name)
         ok, req = self._simloop.device().ctlreq(port_id, _corelib.CTLREQ_GET_SIGNAL)
         if ok:
-            sig = req.data.as_ptr(_corelib.AVR_Signal)
+            sig = req.data.as_ptr(_corelib.Signal)
             formatter = _PortFormatter(sig)
             formatter.register(self, var_name)
             self._formatters[var_name] = formatter
@@ -243,7 +243,7 @@ class VCD_Recorder:
 
         ok, d = self._simloop.device().ctlreq(_corelib.IOCTL_INTR, _corelib.CTLREQ_GET_SIGNAL)
         if ok:
-            sig = d.data.as_ptr(_corelib.AVR_Signal)
+            sig = d.data.as_ptr(_corelib.Signal)
             formatter = _InterruptFormatter(vector)
             sig.connect_hook(formatter)
             formatter.register(self, var_name)

@@ -39,8 +39,8 @@ def base_config_builder(per_descriptor):
 #Interrupt management configuration
 
 def _get_cpuint_builder():
-    _CpuIntConfigBuilder = PeripheralConfigBuilder(_archlib.AVR_ArchXT_IntCtrl_Config)
-    return PeripheralBuilder(_archlib.AVR_ArchXT_IntCtrl, _CpuIntConfigBuilder)
+    _CpuIntConfigBuilder = PeripheralConfigBuilder(_archlib.ArchXT_IntCtrl_Config)
+    return PeripheralBuilder(_archlib.ArchXT_IntCtrl, _CpuIntConfigBuilder)
 
 
 #========================================================================================
@@ -52,7 +52,7 @@ def _slpctrl_convertor(cfg, attr, yml_val, per_desc):
         for mode_reg_value, mode_name in yml_val.items():
             mode_cfg = _corelib.AVR_SleepConfig.mode_config_t()
             mode_cfg.reg_value = mode_reg_value
-            mode_cfg.mode = _corelib.AVR_SleepMode[mode_name]
+            mode_cfg.mode = _corelib.SleepMode[mode_name]
 
             int_mask = per_desc.device.interrupt_map.sleep_mask[mode_name]
             mode_cfg.int_mask = int_mask + [0] * (16 - len(int_mask)) #padding to length=16
@@ -81,31 +81,31 @@ def _get_clkctrl_builder():
 #RST controller configuration
 
 def _get_rstctrl_builder():
-    return PeripheralBuilder(_archlib.AVR_ArchXT_ResetCtrl, base_config_builder)
+    return PeripheralBuilder(_archlib.ArchXT_ResetCtrl, base_config_builder)
 
 
 #========================================================================================
 #NVM controller configuration
 
 def _get_nvmctrl_builder():
-    _NVMCtrlConfigBuilder = PeripheralConfigBuilder(_archlib.AVR_ArchXT_NVM_Config)
-    return PeripheralBuilder(_archlib.AVR_ArchXT_NVM, _NVMCtrlConfigBuilder)
+    _NVMCtrlConfigBuilder = PeripheralConfigBuilder(_archlib.ArchXT_NVM_Config)
+    return PeripheralBuilder(_archlib.ArchXT_NVM, _NVMCtrlConfigBuilder)
 
 
 #========================================================================================
 #Misc controller configuration
 
 def _get_misc_builder():
-    _MiscConfigBuilder = PeripheralConfigBuilder(_archlib.AVR_ArchXT_Misc_Config)
-    return PeripheralBuilder(_archlib.AVR_ArchXT_MiscRegCtrl, _MiscConfigBuilder)
+    _MiscConfigBuilder = PeripheralConfigBuilder(_archlib.ArchXT_Misc_Config)
+    return PeripheralBuilder(_archlib.ArchXT_MiscRegCtrl, _MiscConfigBuilder)
 
 
 #========================================================================================
 #Port management configuration
 
 def _get_port_builder():
-    _PortConfigBuilder = PeripheralConfigBuilder(_archlib.AVR_ArchXT_PortConfig)
-    return LetteredPeripheralBuilder(_archlib.AVR_ArchXT_Port, _PortConfigBuilder)
+    _PortConfigBuilder = PeripheralConfigBuilder(_archlib.ArchXT_PortConfig)
+    return LetteredPeripheralBuilder(_archlib.ArchXT_Port, _PortConfigBuilder)
 
 
 #========================================================================================
@@ -128,16 +128,16 @@ def _tca_convertor(cfg, attr, yml_val, per_desc):
 
 
 def _get_tca_builder():
-    _TCA_ConfigBuilder = PeripheralConfigBuilder(_archlib.AVR_ArchXT_TimerA_Config, _tca_convertor)
-    return PeripheralBuilder(_archlib.AVR_ArchXT_TimerA, _TCA_ConfigBuilder)
+    _TCA_ConfigBuilder = PeripheralConfigBuilder(_archlib.ArchXT_TimerA_Config, _tca_convertor)
+    return PeripheralBuilder(_archlib.ArchXT_TimerA, _TCA_ConfigBuilder)
 
 
 #========================================================================================
 #TCB management configuration
 
 def _get_tcb_builder():
-    _TCB_ConfigBuilder = PeripheralConfigBuilder(_archlib.AVR_ArchXT_TimerB_Config)
-    return IndexedPeripheralBuilder(_archlib.AVR_ArchXT_TimerB,_TCB_ConfigBuilder)
+    _TCB_ConfigBuilder = PeripheralConfigBuilder(_archlib.ArchXT_TimerB_Config)
+    return IndexedPeripheralBuilder(_archlib.ArchXT_TimerB,_TCB_ConfigBuilder)
 
 
 #========================================================================================
@@ -147,9 +147,9 @@ def _rtc_convertor(cfg, attr, yml_val, per_desc):
     if attr == 'clocks':
         py_clocks = []
         for yml_clk in yml_val:
-            clksel_cfg = _archlib.AVR_ArchXT_RTC_Config.clksel_config_t()
+            clksel_cfg = _archlib.ArchXT_RTC_Config.clksel_config_t()
             clksel_cfg.reg_value = yml_clk[0]
-            clksel_cfg.source = _archlib.AVR_ArchXT_RTC_Config.RTC_ClockSource[yml_clk[1]]
+            clksel_cfg.source = _archlib.ArchXT_RTC_Config.RTC_ClockSource[yml_clk[1]]
             py_clocks.append(clksel_cfg)
 
         cfg.clocks = py_clocks
@@ -159,8 +159,8 @@ def _rtc_convertor(cfg, attr, yml_val, per_desc):
 
 
 def _get_rtc_builder():
-    _RTC_ConfigBuilder = PeripheralConfigBuilder(_archlib.AVR_ArchXT_RTC_Config, _rtc_convertor)
-    return PeripheralBuilder(_archlib.AVR_ArchXT_RTC, _RTC_ConfigBuilder)
+    _RTC_ConfigBuilder = PeripheralConfigBuilder(_archlib.ArchXT_RTC_Config, _rtc_convertor)
+    return PeripheralBuilder(_archlib.ArchXT_RTC, _RTC_ConfigBuilder)
 
 
 #========================================================================================
@@ -170,21 +170,21 @@ def _vref_convertor(cfg, attr, yml_val, per_desc):
     if attr == 'channels':
         py_chans = []
         for index, item in enumerate(yml_val):
-            chan_cfg = _archlib.AVR_ArchXT_VREF_Config.channel_t()
+            chan_cfg = _archlib.ArchXT_VREF_Config.channel_t()
             chan_cfg.index = index
             chan_cfg.rb_select = convert_to_regbit(item['rb_select'], per_desc)
 
             ref_cfg_list = []
             for reg_value, chan_ref in enumerate(item['references']):
-                chan_ref_cfg = _archlib.AVR_ArchXT_VREF_Config.reference_config_t()
+                chan_ref_cfg = _archlib.ArchXT_VREF_Config.reference_config_t()
                 chan_ref_cfg.reg_value = reg_value
 
                 if chan_ref == 'AVCC':
-                    chan_ref_cfg.source = _corelib.AVR_IO_VREF.Source.AVCC
+                    chan_ref_cfg.source = _corelib.IO_VREF.Source.AVCC
                 elif chan_ref == 'AREF':
-                    chan_ref_cfg.source = _corelib.AVR_IO_VREF.Source.AREF
+                    chan_ref_cfg.source = _corelib.IO_VREF.Source.AREF
                 elif chan_ref is not None:
-                    chan_ref_cfg.source = _corelib.AVR_IO_VREF.Source.Internal
+                    chan_ref_cfg.source = _corelib.IO_VREF.Source.Internal
                     chan_ref_cfg.level = float(chan_ref)
 
                 ref_cfg_list.append(chan_ref_cfg)
@@ -199,8 +199,8 @@ def _vref_convertor(cfg, attr, yml_val, per_desc):
 
 
 def _get_vref_builder():
-    _VREF_ConfigBuilder = PeripheralConfigBuilder(_archlib.AVR_ArchXT_VREF_Config, _vref_convertor)
-    return PeripheralBuilder(_archlib.AVR_ArchXT_VREF, _VREF_ConfigBuilder)
+    _VREF_ConfigBuilder = PeripheralConfigBuilder(_archlib.ArchXT_VREF_Config, _vref_convertor)
+    return PeripheralBuilder(_archlib.ArchXT_VREF, _VREF_ConfigBuilder)
 
 
 #========================================================================================
@@ -210,7 +210,7 @@ def _adc_convertor(cfg, attr, yml_val, per_desc):
     if attr == 'channels':
         py_chans = []
         for reg_value, item in yml_val.items():
-            chan_cfg = _corelib.AVR_IO_ADC.channel_config_t()
+            chan_cfg = _corelib.IO_ADC.channel_config_t()
             chan_cfg.reg_value = reg_value
             if isinstance(item, list):
                 chan_type = item[0]
@@ -221,7 +221,7 @@ def _adc_convertor(cfg, attr, yml_val, per_desc):
             else:
                 chan_type = item
 
-            chan_cfg.type = _corelib.AVR_IO_ADC.Channel[chan_type]
+            chan_cfg.type = _corelib.IO_ADC.Channel[chan_type]
             py_chans.append(chan_cfg)
 
         cfg.channels = py_chans
@@ -229,9 +229,9 @@ def _adc_convertor(cfg, attr, yml_val, per_desc):
     elif attr == 'references':
         py_refs = []
         for reg_value, item in yml_val.items():
-            ref_cfg = _archlib.AVR_ArchXT_ADC_Config.reference_config_t()
+            ref_cfg = _archlib.ArchXT_ADC_Config.reference_config_t()
             ref_cfg.reg_value = reg_value
-            ref_cfg.source = _corelib.AVR_IO_VREF.Source[item]
+            ref_cfg.source = _corelib.IO_VREF.Source[item]
             py_refs.append(ref_cfg)
 
         cfg.references = py_refs
@@ -247,8 +247,8 @@ def _adc_convertor(cfg, attr, yml_val, per_desc):
 
 
 def _get_adc_builder():
-    _ADC_ConfigBuilder = PeripheralConfigBuilder(_archlib.AVR_ArchXT_ADC_Config, _adc_convertor)
-    return IndexedPeripheralBuilder(_archlib.AVR_ArchXT_ADC, _ADC_ConfigBuilder)
+    _ADC_ConfigBuilder = PeripheralConfigBuilder(_archlib.ArchXT_ADC_Config, _adc_convertor)
+    return IndexedPeripheralBuilder(_archlib.ArchXT_ADC, _ADC_ConfigBuilder)
 
 
 #========================================================================================
@@ -258,7 +258,7 @@ def _acp_convertor(cfg, attr, yml_val, per_desc):
     if attr in ('pos_channels', 'neg_channels'):
         py_chans = []
         for reg_value, item in yml_val.items():
-            chan_cfg = _corelib.AVR_IO_ACP.channel_config_t()
+            chan_cfg = _corelib.IO_ACP.channel_config_t()
             chan_cfg.reg_value = reg_value
             if isinstance(item, list):
                 chan_type = item[0]
@@ -267,7 +267,7 @@ def _acp_convertor(cfg, attr, yml_val, per_desc):
             else:
                 chan_type = item
 
-            chan_cfg.type = _corelib.AVR_IO_ACP.Channel[chan_type]
+            chan_cfg.type = _corelib.IO_ACP.Channel[chan_type]
             py_chans.append(chan_cfg)
 
         setattr(cfg, attr, py_chans)
@@ -277,16 +277,16 @@ def _acp_convertor(cfg, attr, yml_val, per_desc):
 
 
 def _get_acp_builder():
-    _ACP_ConfigBuilder = PeripheralConfigBuilder(_archlib.AVR_ArchXT_ACP_Config, _acp_convertor)
-    return IndexedPeripheralBuilder(_archlib.AVR_ArchXT_ACP, _ACP_ConfigBuilder)
+    _ACP_ConfigBuilder = PeripheralConfigBuilder(_archlib.ArchXT_ACP_Config, _acp_convertor)
+    return IndexedPeripheralBuilder(_archlib.ArchXT_ACP, _ACP_ConfigBuilder)
 
 
 #========================================================================================
 #USART management configuration
 
 def _get_usart_builder():
-    _USART_ConfigBuilder = PeripheralConfigBuilder(_archlib.AVR_ArchXT_USART_Config)
-    return IndexedPeripheralBuilder(_archlib.AVR_ArchXT_USART, _USART_ConfigBuilder)
+    _USART_ConfigBuilder = PeripheralConfigBuilder(_archlib.ArchXT_USART_Config)
+    return IndexedPeripheralBuilder(_archlib.ArchXT_USART, _USART_ConfigBuilder)
 
 
 #========================================================================================
@@ -304,35 +304,35 @@ def _spi_convertor(cfg, attr, yml_val, per_desc):
 
 
 def _get_spi_builder():
-    _SPI_ConfigBuilder = PeripheralConfigBuilder(_archlib.AVR_ArchXT_SPI_Config, _spi_convertor)
-    return IndexedPeripheralBuilder(_archlib.AVR_ArchXT_SPI, _SPI_ConfigBuilder)
+    _SPI_ConfigBuilder = PeripheralConfigBuilder(_archlib.ArchXT_SPI_Config, _spi_convertor)
+    return IndexedPeripheralBuilder(_archlib.ArchXT_SPI, _SPI_ConfigBuilder)
 
 
 #========================================================================================
 #TWI management configuration
 
 def _get_twi_builder():
-    _TWI_ConfigBuilder = PeripheralConfigBuilder(_archlib.AVR_ArchXT_TWI_Config)
-    return IndexedPeripheralBuilder(_archlib.AVR_ArchXT_TWI, _TWI_ConfigBuilder)
+    _TWI_ConfigBuilder = PeripheralConfigBuilder(_archlib.ArchXT_TWI_Config)
+    return IndexedPeripheralBuilder(_archlib.ArchXT_TWI, _TWI_ConfigBuilder)
 
 
 #========================================================================================
 #FUSES configuration
 
 def _get_fuses_builder():
-    return PeripheralBuilder(_archlib.AVR_ArchXT_Fuses, base_config_builder)
+    return PeripheralBuilder(_archlib.ArchXT_Fuses, base_config_builder)
 
 
 #========================================================================================
 #USERROW configuration
 
 def _get_userrow_builder():
-    return PeripheralBuilder(_archlib.AVR_ArchXT_USERROW, base_config_builder)
+    return PeripheralBuilder(_archlib.ArchXT_USERROW, base_config_builder)
 
 
 #========================================================================================
 
-class XT_BaseDevice(_archlib.AVR_ArchXT_Device):
+class XT_BaseDevice(_archlib.ArchXT_Device):
 
     def __init__(self, dev_descriptor, builder):
         super().__init__(builder.get_device_config())
@@ -342,7 +342,7 @@ class XT_BaseDevice(_archlib.AVR_ArchXT_Device):
 
 class XT_DeviceBuilder(DeviceBuilder):
 
-    #Dictionary for the builder getters for Mega0/1 peripherals
+    #Dictionary for the builder getters for XT core peripherals
     _per_builder_getters = {
         'CPU': None,
         'CPUINT': _get_cpuint_builder,
@@ -368,7 +368,7 @@ class XT_DeviceBuilder(DeviceBuilder):
     }
 
     def _build_core_config(self, dev_desc):
-        cfg = _archlib.AVR_ArchXT_CoreConfig()
+        cfg = _archlib.ArchXT_CoreConfig()
 
         cfg.attributes = get_core_attributes(dev_desc)
 
@@ -393,7 +393,7 @@ class XT_DeviceBuilder(DeviceBuilder):
         return cfg
 
     def _build_device_config(self, dev_desc, core_cfg):
-        cfg = _archlib.AVR_ArchXT_DeviceConfig(core_cfg)
+        cfg = _archlib.ArchXT_DeviceConfig(core_cfg)
         cfg.name = dev_desc.name
         cfg.pins = dev_desc.pins
         return cfg

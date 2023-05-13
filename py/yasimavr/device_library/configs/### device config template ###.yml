@@ -28,7 +28,7 @@ aliasof: atmegayyyy
 
 #Architecture used
 #Supported values are defined in descriptors.py
-architecture: Mega0
+architecture: XT
 
 #Definition of the memory map
 memory:

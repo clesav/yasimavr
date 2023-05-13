@@ -29,12 +29,12 @@ import io
 
 import yasimavr.lib.core as _corelib
 
-_UART_SignalId = _corelib.AVR_IO_UART.SignalId
+_UART_SignalId = _corelib.IO_UART.SignalId
 
 
 class UartIO(io.RawIOBase):
 
-    class _TxHook(_corelib.AVR_SignalHook):
+    class _TxHook(_corelib.SignalHook):
 
         def __init__(self):
             super(UartIO._TxHook, self).__init__()
@@ -64,7 +64,7 @@ class UartIO(io.RawIOBase):
             self._endpoint.tx_signal.connect_hook(self._rx_hook)
 
         if 'w' in mode:
-            self._tx_signal = _corelib.AVR_Signal()
+            self._tx_signal = _corelib.Signal()
             self._tx_signal.connect_hook(self._endpoint.rx_hook)
 
         self._mode = mode

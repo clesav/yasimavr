@@ -191,7 +191,7 @@ def get_core_attributes(dev_desc):
     result = 0
     for lib_flag_name, yml_flag_name in _core_attrs_map.items():
         if dev_desc.core_attributes[yml_flag_name]:
-            result |= _corelib.AVR_CoreConfiguration.Attributes[lib_flag_name]
+            result |= _corelib.CoreConfiguration.Attributes[lib_flag_name]
 
     return result
 
