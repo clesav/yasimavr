@@ -200,7 +200,6 @@ void ArchAVR_ACP::update_state()
         m_intflag.set_flag();
         m_out_signal.raise_u(Signal_Output, new_state);
     }
-
 }
 
 

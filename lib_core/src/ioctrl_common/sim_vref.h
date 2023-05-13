@@ -38,7 +38,7 @@ YASIMAVR_BEGIN_NAMESPACE
 //AVR_CTLREQ_GET_SIGNAL is not implemented
 
 //Request sent by the ADC to the VREF controller to obtain the VREF.
-//The index shall be set to the required source (one of AVR_IO_VREF::Source enum values)
+//The index shall be set to the required source (one of IO_VREF::Source enum values)
 //On returning, the value 'd' contains the voltage value
 //Except for VCC which is returned in absolute volts, all values are returned as a ratio of VCC
 #define AVR_CTLREQ_VREF_GET             1

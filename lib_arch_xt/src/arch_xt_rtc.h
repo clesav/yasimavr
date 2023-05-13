@@ -106,4 +106,4 @@ private:
 
 YASIMAVR_END_NAMESPACE
 
-#endif
+#endif //__YASIMAVR_XT_RTC_H__

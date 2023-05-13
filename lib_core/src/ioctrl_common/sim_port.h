@@ -45,7 +45,7 @@ public:
     //Constructor of the port. The name is the upper case letter identifying the port.
     explicit IO_Port(char name);
 
-    //Implementation of AVR_Peripheral callbacks
+    //Implementation of Peripheral callbacks
     virtual bool init(Device& device) override;
     virtual void reset() override;
     virtual bool ctlreq(uint16_t req, ctlreq_data_t* data) override;

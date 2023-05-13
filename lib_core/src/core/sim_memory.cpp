@@ -171,8 +171,8 @@ void NonVolatileMemory::spm_write(unsigned char v, size_t pos)
 }
 
 void NonVolatileMemory::spm_write(const unsigned char* buf,
-                                      const unsigned char* bufset,
-                                      size_t base, size_t len)
+                                  const unsigned char* bufset,
+                                  size_t base, size_t len)
 {
     if (!m_size || !len) return;
 

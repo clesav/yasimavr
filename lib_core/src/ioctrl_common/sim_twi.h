@@ -45,7 +45,7 @@ YASIMAVR_BEGIN_NAMESPACE
  *    of information between mater and slave.
  *  - TWI_Endpoint is an abstract interface defining a generic device connected to a TWI bus.
  *  - TWI_Bus defines a central object to circulate packets between multiple endpoints.
- *  - AVR_IO_TWI is an implementation of a TWI interface for an AVR MCU, as generic
+ *  - IO_TWI is an implementation of a TWI interface for an AVR MCU, as generic
  *    as possible. It manages master and slave operations independently and communicates
  *    with upper layers via signals.
  */

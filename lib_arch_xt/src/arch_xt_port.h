@@ -66,6 +66,7 @@ private:
     uint8_t m_dir_value;
 
     void update_pin_states();
+
 };
 
 

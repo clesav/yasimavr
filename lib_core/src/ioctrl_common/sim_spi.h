@@ -37,9 +37,9 @@ YASIMAVR_BEGIN_NAMESPACE
 /*
  * CTLREQ definitions
 */
-//Request to add a SPI client interface. data must be set to a AVR_SPI_Client object pointer
+//Request to add a SPI client interface. data must be set to a SPI_Client object pointer
 #define AVR_CTLREQ_SPI_ADD_CLIENT       1
-//Request to obtain a pointer to the SPI interface as a AVR_SPI_Client object
+//Request to obtain a pointer to the SPI interface as a SPI_Client object
 #define AVR_CTLREQ_SPI_CLIENT           2
 //Request to manually select the SPI interface when configured as a client.
 //data must be set to an unsigned integer value (0 = deselected, other values = selected)

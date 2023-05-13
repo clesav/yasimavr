@@ -98,7 +98,7 @@ private:
 
 };
 
+
 YASIMAVR_END_NAMESPACE
 
-
-#endif
+#endif //__YASIMAVR_AVR_USART_H__

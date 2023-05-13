@@ -80,8 +80,8 @@ struct ArchAVR_ADC_Config {
 
 
 class DLL_EXPORT ArchAVR_ADC : public IO_ADC,
-                                   public Peripheral,
-                                   public SignalHook {
+                               public Peripheral,
+                               public SignalHook {
 
 public:
 
