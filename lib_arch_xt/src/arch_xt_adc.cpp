@@ -263,7 +263,7 @@ void ArchXT_ADC::read_analog_value()
 
         case Channel_IntRef: {
             ctlreq_data_t reqdata = { .data = m_config.vref_channel,
-                                      .index = IO_VREF::Source_Internal };
+                                      .index = VREF::Source_Internal };
             if (!device()->ctlreq(AVR_IOCTL_VREF, AVR_CTLREQ_VREF_GET, &reqdata))
                 _crash("ADC: Unable to obtain the internal reference voltage value");
             raw_value = reqdata.data.as_double();
@@ -280,7 +280,7 @@ void ArchXT_ADC::read_analog_value()
             double temp_volt = m_config.temp_cal_coef * (m_temperature - 25.0) + m_config.temp_cal_25C;
             //The temperature measure obtained is in absolute voltage values.
             //We need to make it relative to VCC
-            ctlreq_data_t reqdata = { .index = IO_VREF::Source_VCC };
+            ctlreq_data_t reqdata = { .index = VREF::Source_VCC };
             if (!device()->ctlreq(AVR_IOCTL_VREF, AVR_CTLREQ_VREF_GET, &reqdata))
                 _crash("ADC: Unable to obtain the VCC voltage value");
             raw_value = temp_volt / reqdata.data.as_double();

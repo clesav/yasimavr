@@ -196,7 +196,7 @@ void ArchXT_ACP::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 */
 void ArchXT_ACP::update_DAC()
 {
-    vardata_t vref = m_vref_signal->data(IO_VREF::Signal_IntRefChange, m_config.vref_channel);
+    vardata_t vref = m_vref_signal->data(VREF::Signal_IntRefChange, m_config.vref_channel);
     double dac_value = vref.as_double() * READ_IOREG(DACREF) / 256.0;
     m_signal.raise_d(Signal_DAC, dac_value);
 }
@@ -214,7 +214,7 @@ void ArchXT_ACP::update_hysteresis()
     double hyst_volt = Hysteresis[lp_mode_sel][hyst_mode_sel];
 
     //Convert to a value relative to VCC and store the value
-    vardata_t vcc = m_vref_signal->data(IO_VREF::Source_VCC);
+    vardata_t vcc = m_vref_signal->data(VREF::Source_VCC);
     if (vcc.as_double())
         m_hysteresis = hyst_volt / vcc.as_double();
     else
@@ -292,11 +292,11 @@ void ArchXT_ACP::update_output()
 void ArchXT_ACP::raised(const signal_data_t& sigdata, uint16_t hooktag)
 {
     if (hooktag == HookTag_VREF) {
-        if (sigdata.sigid == IO_VREF::Signal_IntRefChange && sigdata.index == m_config.vref_channel) {
+        if (sigdata.sigid == VREF::Signal_IntRefChange && sigdata.index == m_config.vref_channel) {
             update_DAC();
             update_output();
         }
-        else if (sigdata.sigid == IO_VREF::Signal_VCCChange) {
+        else if (sigdata.sigid == VREF::Signal_VCCChange) {
             update_hysteresis();
             update_output();
         }

@@ -37,7 +37,7 @@ YASIMAVR_BEGIN_NAMESPACE
 struct ArchAVR_ADCConfig {
 
     struct reference_config_t : base_reg_config_t {
-        IO_VREF::Source source;
+        VREF::Source source;
     };
 
     enum Trigger {

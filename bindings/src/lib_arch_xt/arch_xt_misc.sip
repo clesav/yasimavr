@@ -35,36 +35,36 @@ const uint16_t CTLREQ_WRITE_SIGROW = AVR_CTLREQ_WRITE_SIGROW;
 const uint16_t CTLREQ_WRITE_SIGROW;
 
 
-struct ArchXT_VREF_Config {
+struct ArchXT_VREFConfig {
 %TypeHeaderCode
 #include "arch_xt_misc.h"
 %End
 
     struct reference_config_t : base_reg_config_t {
-        IO_VREF::Source source;
+        VREF::Source source;
         double level;
     };
 
     struct channel_t {
         regbit_t rb_select;
-        std::vector<ArchXT_VREF_Config::reference_config_t> references;
+        std::vector<ArchXT_VREFConfig::reference_config_t> references;
     };
 
-    std::vector<ArchXT_VREF_Config::channel_t> channels;
+    std::vector<ArchXT_VREFConfig::channel_t> channels;
 
     reg_addr_t reg_base;
 
 };
 
 
-class ArchXT_VREF : public IO_VREF /NoDefaultCtors/ {
+class ArchXT_VREF : public VREF /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_xt_misc.h"
 %End
 
 public:
 
-    ArchXT_VREF(const ArchXT_VREF_Config& /KeepReference/);
+    ArchXT_VREF(const ArchXT_VREFConfig& /KeepReference/);
 
     virtual bool init(Device&);
     virtual void reset();

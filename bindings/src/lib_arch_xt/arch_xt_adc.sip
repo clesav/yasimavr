@@ -27,7 +27,7 @@ struct ArchXT_ADCConfig {
 %End
 
     struct reference_config_t : base_reg_config_t {
-        IO_VREF::Source source;
+        VREF::Source source;
     };
 
     std::vector<ADC::channel_config_t> channels;

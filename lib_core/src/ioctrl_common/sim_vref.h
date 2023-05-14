@@ -21,8 +21,8 @@
 
 //=======================================================================================
 
-#ifndef __YASIMAVR_IO_VREF_H__
-#define __YASIMAVR_IO_VREF_H__
+#ifndef __YASIMAVR_VREF_H__
+#define __YASIMAVR_VREF_H__
 
 #include "../core/sim_peripheral.h"
 #include "../core/sim_types.h"
@@ -38,7 +38,7 @@ YASIMAVR_BEGIN_NAMESPACE
 //AVR_CTLREQ_GET_SIGNAL is not implemented
 
 //Request sent by the ADC to the VREF controller to obtain the VREF.
-//The index shall be set to the required source (one of IO_VREF::Source enum values)
+//The index shall be set to the required source (one of VREF::Source enum values)
 //On returning, the value 'd' contains the voltage value
 //Except for VCC which is returned in absolute volts, all values are returned as a ratio of VCC
 #define AVR_CTLREQ_VREF_GET             1
@@ -57,7 +57,7 @@ YASIMAVR_BEGIN_NAMESPACE
  * Note that setting VCC in the firmware is required for using any analog feature of a MCU.
  * Failing to do so will trigger a device crash
  */
-class DLL_EXPORT IO_VREF : public Peripheral {
+class DLL_EXPORT VREF : public Peripheral {
 
 public:
 
@@ -74,7 +74,7 @@ public:
         Signal_VCCChange,
     };
 
-    explicit IO_VREF(uint32_t ref_count);
+    explicit VREF(uint32_t ref_count);
 
     bool active() const;
 
@@ -100,7 +100,7 @@ private:
 
 };
 
-inline bool IO_VREF::active() const
+inline bool VREF::active() const
 {
     return m_vcc;
 }
@@ -108,4 +108,4 @@ inline bool IO_VREF::active() const
 
 YASIMAVR_END_NAMESPACE
 
-#endif //__YASIMAVR_IO_VREF_H__
+#endif //__YASIMAVR_VREF_H__

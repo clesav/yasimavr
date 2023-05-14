@@ -36,14 +36,14 @@ YASIMAVR_USING_NAMESPACE
     (m_config.reg_base + offsetof(VREF_t, reg))
 
 
-ArchXT_VREF::ArchXT_VREF(const ArchXT_VREF_Config& config)
-:IO_VREF(config.channels.size())
+ArchXT_VREF::ArchXT_VREF(const ArchXT_VREFConfig& config)
+:VREF(config.channels.size())
 ,m_config(config)
 {}
 
 bool ArchXT_VREF::init(Device& device)
 {
-    bool status = IO_VREF::init(device);
+    bool status = VREF::init(device);
 
     add_ioreg(VREF_REG_ADDR(CTRLB));
 
@@ -64,7 +64,7 @@ void ArchXT_VREF::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
 {
     //Iterate over all the channels, and update if impacted by the register change
     for (uint32_t ch_ix = 0; ch_ix < m_config.channels.size(); ++ch_ix) {
-        const ArchXT_VREF_Config::channel_t& ch = m_config.channels[ch_ix];
+        const ArchXT_VREFConfig::channel_t& ch = m_config.channels[ch_ix];
         if (addr == ch.rb_select.addr && ch.rb_select.extract(data.anyedge())) {
             //Extract the selection value for this channel
             uint8_t reg_value = ch.rb_select.extract(data.value);
@@ -75,7 +75,7 @@ void ArchXT_VREF::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
 
 void ArchXT_VREF::set_channel_reference(uint32_t index, uint8_t reg_value)
 {
-    typedef ArchXT_VREF_Config::reference_config_t vref_cfg_t;
+    typedef ArchXT_VREFConfig::reference_config_t vref_cfg_t;
 
     //Find the corresponding reference setting from the configuration
     auto vref_cfg = find_reg_config_p<vref_cfg_t>(m_config.channels[index].references, reg_value);

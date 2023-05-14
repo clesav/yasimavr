@@ -35,7 +35,7 @@ YASIMAVR_BEGIN_NAMESPACE
  * Implementation of a Voltage Reference controller for AVR series
  */
 
-class DLL_EXPORT ArchAVR_VREF : public IO_VREF {
+class DLL_EXPORT ArchAVR_VREF : public VREF {
 
 public:
 

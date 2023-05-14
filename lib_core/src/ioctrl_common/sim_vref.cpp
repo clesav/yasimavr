@@ -29,7 +29,7 @@ YASIMAVR_USING_NAMESPACE
 
 //=======================================================================================
 
-IO_VREF::IO_VREF(uint32_t ref_count)
+VREF::VREF(uint32_t ref_count)
 :Peripheral(AVR_IOCTL_VREF)
 ,m_vcc(0.0)
 ,m_aref(0.0)
@@ -48,7 +48,7 @@ IO_VREF::IO_VREF(uint32_t ref_count)
         m_signal.set_data(Signal_IntRefChange, 0.0, i);
 }
 
-bool IO_VREF::ctlreq(uint16_t req, ctlreq_data_t* data)
+bool VREF::ctlreq(uint16_t req, ctlreq_data_t* data)
 {
     if (req == AVR_CTLREQ_GET_SIGNAL) {
         data->data = &m_signal;
@@ -105,7 +105,7 @@ bool IO_VREF::ctlreq(uint16_t req, ctlreq_data_t* data)
     return false;
 }
 
-void IO_VREF::set_reference(uint32_t index, Source source, double voltage)
+void VREF::set_reference(uint32_t index, Source source, double voltage)
 {
     ref_t r;
     if (source == Source_VCC || source == Source_AVCC)
@@ -122,7 +122,7 @@ void IO_VREF::set_reference(uint32_t index, Source source, double voltage)
 }
 
 //Returns a reference as an absolute voltage value
-double IO_VREF::reference(uint32_t index) const
+double VREF::reference(uint32_t index) const
 {
     if (index < m_references.size() && m_vcc) {
         ref_t r = m_references[index];

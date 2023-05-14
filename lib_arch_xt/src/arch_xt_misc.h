@@ -36,10 +36,10 @@ YASIMAVR_BEGIN_NAMESPACE
  * Implementation of a Voltage Reference controller for XT core series
  */
 
-struct ArchXT_VREF_Config {
+struct ArchXT_VREFConfig {
 
     struct reference_config_t : base_reg_config_t {
-        IO_VREF::Source source;
+        VREF::Source source;
         double level;
     };
 
@@ -54,11 +54,11 @@ struct ArchXT_VREF_Config {
 
 };
 
-class DLL_EXPORT ArchXT_VREF : public IO_VREF {
+class DLL_EXPORT ArchXT_VREF : public VREF {
 
 public:
 
-    explicit ArchXT_VREF(const ArchXT_VREF_Config& config);
+    explicit ArchXT_VREF(const ArchXT_VREFConfig& config);
 
     virtual bool init(Device&) override;
     virtual void reset() override;
@@ -66,7 +66,7 @@ public:
 
 private:
 
-    const ArchXT_VREF_Config& m_config;
+    const ArchXT_VREFConfig& m_config;
 
     void set_channel_reference(uint32_t index, uint8_t reg_value);
 

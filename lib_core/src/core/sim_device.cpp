@@ -229,11 +229,11 @@ bool Device::load_firmware(const Firmware& firmware)
     //Send the power supply voltage from the firmware to the VREF controller (if it exists)
     bool analog_ok = false;
     if (firmware.vcc > 0.0) {
-        ctlreq_data_t reqdata = { .data = firmware.vcc, .index = IO_VREF::Source_VCC, };
+        ctlreq_data_t reqdata = { .data = firmware.vcc, .index = VREF::Source_VCC, };
         analog_ok = ctlreq(AVR_IOCTL_VREF, AVR_CTLREQ_VREF_SET, &reqdata);
         if (analog_ok) {
             //Send the analog voltage reference from the firmware to the VREF controller
-            reqdata.index = IO_VREF::Source_AREF;
+            reqdata.index = VREF::Source_AREF;
             reqdata.data = firmware.aref;
             ctlreq(AVR_IOCTL_VREF, AVR_CTLREQ_VREF_SET, &reqdata);
         } else {

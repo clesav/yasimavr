@@ -170,21 +170,21 @@ def _vref_convertor(cfg, attr, yml_val, per_desc):
     if attr == 'channels':
         py_chans = []
         for index, item in enumerate(yml_val):
-            chan_cfg = _archlib.ArchXT_VREF_Config.channel_t()
+            chan_cfg = _archlib.ArchXT_VREFConfig.channel_t()
             chan_cfg.index = index
             chan_cfg.rb_select = convert_to_regbit(item['rb_select'], per_desc)
 
             ref_cfg_list = []
             for reg_value, chan_ref in enumerate(item['references']):
-                chan_ref_cfg = _archlib.ArchXT_VREF_Config.reference_config_t()
+                chan_ref_cfg = _archlib.ArchXT_VREFConfig.reference_config_t()
                 chan_ref_cfg.reg_value = reg_value
 
                 if chan_ref == 'AVCC':
-                    chan_ref_cfg.source = _corelib.IO_VREF.Source.AVCC
+                    chan_ref_cfg.source = _corelib.VREF.Source.AVCC
                 elif chan_ref == 'AREF':
-                    chan_ref_cfg.source = _corelib.IO_VREF.Source.AREF
+                    chan_ref_cfg.source = _corelib.VREF.Source.AREF
                 elif chan_ref is not None:
-                    chan_ref_cfg.source = _corelib.IO_VREF.Source.Internal
+                    chan_ref_cfg.source = _corelib.VREF.Source.Internal
                     chan_ref_cfg.level = float(chan_ref)
 
                 ref_cfg_list.append(chan_ref_cfg)
@@ -199,8 +199,8 @@ def _vref_convertor(cfg, attr, yml_val, per_desc):
 
 
 def _get_vref_builder():
-    _VREF_ConfigBuilder = PeripheralConfigBuilder(_archlib.ArchXT_VREF_Config, _vref_convertor)
-    return PeripheralBuilder(_archlib.ArchXT_VREF, _VREF_ConfigBuilder)
+    _VREFConfigBuilder = PeripheralConfigBuilder(_archlib.ArchXT_VREFConfig, _vref_convertor)
+    return PeripheralBuilder(_archlib.ArchXT_VREF, _VREFConfigBuilder)
 
 
 #========================================================================================
@@ -231,7 +231,7 @@ def _adc_convertor(cfg, attr, yml_val, per_desc):
         for reg_value, item in yml_val.items():
             ref_cfg = _archlib.ArchXT_ADCConfig.reference_config_t()
             ref_cfg.reg_value = reg_value
-            ref_cfg.source = _corelib.IO_VREF.Source[item]
+            ref_cfg.source = _corelib.VREF.Source[item]
             py_refs.append(ref_cfg)
 
         cfg.references = py_refs

@@ -21,7 +21,7 @@
 
 //=======================================================================================
 
-class ArchAVR_VREF : public IO_VREF /NoDefaultCtors/ {
+class ArchAVR_VREF : public VREF /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_avr_misc.h"
 %End

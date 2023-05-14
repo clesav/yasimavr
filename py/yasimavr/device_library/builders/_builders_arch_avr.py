@@ -234,7 +234,7 @@ def _adc_convertor(cfg, attr, yml_val, per_desc):
         for reg_value, item in yml_val.items():
             ref_cfg = _archlib.ArchAVR_ADCConfig.reference_config_t()
             ref_cfg.reg_value = reg_value
-            ref_cfg.source = _corelib.IO_VREF.Source[item]
+            ref_cfg.source = _corelib.VREF.Source[item]
             py_refs.append(ref_cfg)
 
         cfg.references = py_refs

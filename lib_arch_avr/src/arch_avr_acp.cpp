@@ -91,7 +91,7 @@ bool ArchAVR_ACP::init(Device& device)
         logger().err("No voltage reference signal");
         return false;
     }
-    m_pos_mux.add_mux(*vref_sig, IO_VREF::Signal_IntRefChange);
+    m_pos_mux.add_mux(*vref_sig, VREF::Signal_IntRefChange);
 
     //Connect the mux pins to the negative input mux
     for (size_t i = 0; i < m_config.mux_pins.size(); ++i) {
