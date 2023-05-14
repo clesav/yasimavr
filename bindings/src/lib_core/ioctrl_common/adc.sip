@@ -36,7 +36,7 @@ const uint16_t CTLREQ_ADC_TRIGGER;
 
 //=======================================================================================
 
-class IO_ADC /Abstract/ {
+class ADC /Abstract/ {
 %TypeHeaderCode
 #include "ioctrl_common/sim_adc.h"
 %End
@@ -55,7 +55,7 @@ public:
 
     struct channel_config_t : base_reg_config_t {
 
-        IO_ADC::Channel type;
+        ADC::Channel type;
         uint32_t pin_p;
         uint32_t pin_n;
         char per_num;

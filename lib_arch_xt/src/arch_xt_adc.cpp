@@ -39,7 +39,7 @@ YASIMAVR_USING_NAMESPACE
 #define REG_OFS(reg) \
     reg_addr_t(offsetof(ADC_t, reg))
 
-#define CFG ArchXT_ADC_Config
+#define CFG ArchXT_ADCConfig
 
 static const uint32_t ADC_Prescaler_Max = 256;
 

@@ -34,7 +34,7 @@ YASIMAVR_BEGIN_NAMESPACE
 
 //=======================================================================================
 
-struct ArchAVR_ADC_Config {
+struct ArchAVR_ADCConfig {
 
     struct reference_config_t : base_reg_config_t {
         IO_VREF::Source source;
@@ -50,7 +50,7 @@ struct ArchAVR_ADC_Config {
         Trigger trigger;
     };
 
-    std::vector<IO_ADC::channel_config_t> channels;
+    std::vector<ADC::channel_config_t> channels;
     std::vector<reference_config_t> references;
     std::vector<uint16_t> clk_ps_factors;
     std::vector<trigger_config_t> triggers;
@@ -79,13 +79,13 @@ struct ArchAVR_ADC_Config {
 };
 
 
-class DLL_EXPORT ArchAVR_ADC : public IO_ADC,
+class DLL_EXPORT ArchAVR_ADC : public ADC,
                                public Peripheral,
                                public SignalHook {
 
 public:
 
-    ArchAVR_ADC(int num, const ArchAVR_ADC_Config& config);
+    ArchAVR_ADC(int num, const ArchAVR_ADCConfig& config);
 
     virtual bool init(Device& device) override;
     virtual void reset() override;
@@ -105,7 +105,7 @@ private:
         ADC_PendingRaise,
     };
 
-    const ArchAVR_ADC_Config& m_config;
+    const ArchAVR_ADCConfig& m_config;
 
     //Step of the conversion
     State m_state;
@@ -113,7 +113,7 @@ private:
     //It has impact on the timing
     bool m_first;
 
-    ArchAVR_ADC_Config::Trigger m_trigger;
+    ArchAVR_ADCConfig::Trigger m_trigger;
 
     //Timer to simulate the conversion cycle duration
     PrescaledTimer m_timer;

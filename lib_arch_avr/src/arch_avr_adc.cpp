@@ -29,7 +29,7 @@ YASIMAVR_USING_NAMESPACE
 
 //=======================================================================================
 
-#define CFG ArchAVR_ADC_Config
+#define CFG ArchAVR_ADCConfig
 
 static const uint32_t ADC_PrescalerMax = 128;
 

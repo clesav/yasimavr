@@ -21,7 +21,7 @@
 
 //=======================================================================================
 
-struct ArchXT_ADC_Config {
+struct ArchXT_ADCConfig {
 %TypeHeaderCode
 #include "arch_xt_adc.h"
 %End
@@ -30,8 +30,8 @@ struct ArchXT_ADC_Config {
         IO_VREF::Source source;
     };
 
-    std::vector<IO_ADC::channel_config_t> channels;
-    std::vector<ArchXT_ADC_Config::reference_config_t> references;
+    std::vector<ADC::channel_config_t> channels;
+    std::vector<ArchXT_ADCConfig::reference_config_t> references;
     uint32_t vref_channel;
     UnsignedInt16Vector clk_ps_factors;
     uint16_t clk_ps_max;
@@ -48,14 +48,14 @@ struct ArchXT_ADC_Config {
 };
 
 
-class ArchXT_ADC : public IO_ADC, public Peripheral, public SignalHook /NoDefaultCtors/ {
+class ArchXT_ADC : public ADC, public Peripheral, public SignalHook /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_xt_adc.h"
 %End
 
 public:
 
-    ArchXT_ADC(int, const ArchXT_ADC_Config& /KeepReference/);
+    ArchXT_ADC(int, const ArchXT_ADCConfig& /KeepReference/);
 
     virtual bool init(Device&);
     virtual void reset();

@@ -21,7 +21,7 @@
 
 //=======================================================================================
 
-struct ArchAVR_ADC_Config {
+struct ArchAVR_ADCConfig {
 %TypeHeaderCode
 #include "arch_avr_adc.h"
 %End
@@ -37,13 +37,13 @@ struct ArchAVR_ADC_Config {
     };
 
     struct trigger_config_t : base_reg_config_t {
-        ArchAVR_ADC_Config::Trigger trigger;
+        ArchAVR_ADCConfig::Trigger trigger;
     };
 
-    std::vector<IO_ADC::channel_config_t> channels;
-    std::vector<ArchAVR_ADC_Config::reference_config_t> references;
+    std::vector<ADC::channel_config_t> channels;
+    std::vector<ArchAVR_ADCConfig::reference_config_t> references;
     UnsignedInt16Vector clk_ps_factors;
-    std::vector<ArchAVR_ADC_Config::trigger_config_t> triggers;
+    std::vector<ArchAVR_ADCConfig::trigger_config_t> triggers;
 
     uint32_t vref_channel;
 
@@ -69,14 +69,14 @@ struct ArchAVR_ADC_Config {
 };
 
 
-class ArchAVR_ADC : public IO_ADC, public Peripheral, public SignalHook /NoDefaultCtors/ {
+class ArchAVR_ADC : public ADC, public Peripheral, public SignalHook /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_avr_adc.h"
 %End
 
 public:
 
-    ArchAVR_ADC(int, const ArchAVR_ADC_Config& /KeepReference/);
+    ArchAVR_ADC(int, const ArchAVR_ADCConfig& /KeepReference/);
 
     virtual bool init(Device&);
     virtual void reset();

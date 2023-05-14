@@ -47,13 +47,13 @@ YASIMAVR_BEGIN_NAMESPACE
  * by using the request AVR_CTLREQ_ADC_TRIGGER.
  */
 
-struct ArchXT_ADC_Config {
+struct ArchXT_ADCConfig {
 
     struct reference_config_t : base_reg_config_t {
         IO_VREF::Source source;
     };
 
-    std::vector<IO_ADC::channel_config_t> channels;
+    std::vector<ADC::channel_config_t> channels;
     std::vector<reference_config_t> references;
     uint32_t vref_channel;
     std::vector<uint16_t> clk_ps_factors;
@@ -70,13 +70,13 @@ struct ArchXT_ADC_Config {
 
 };
 
-class DLL_EXPORT ArchXT_ADC : public IO_ADC,
+class DLL_EXPORT ArchXT_ADC : public ADC,
                               public Peripheral,
                               public SignalHook {
 
 public:
 
-    ArchXT_ADC(int num, const ArchXT_ADC_Config& config);
+    ArchXT_ADC(int num, const ArchXT_ADCConfig& config);
 
     virtual bool init(Device& device) override;
     virtual void reset() override;
@@ -96,7 +96,7 @@ private:
         ADC_PendingRaise,
     };
 
-    const ArchXT_ADC_Config& m_config;
+    const ArchXT_ADCConfig& m_config;
     State m_state;
     bool m_first;
     PrescaledTimer m_timer;

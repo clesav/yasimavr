@@ -212,15 +212,15 @@ def _adc_convertor(cfg, attr, yml_val, per_desc):
     if attr == 'channels':
         py_channels = []
         for reg_value, item in yml_val.items():
-            chan_cfg = _corelib.IO_ADC.channel_config_t()
+            chan_cfg = _corelib.ADC.channel_config_t()
             chan_cfg.reg_value = reg_value
             if isinstance(item, list):
-                chan_cfg.type = _corelib.IO_ADC.Channel[item[0]]
+                chan_cfg.type = _corelib.ADC.Channel[item[0]]
                 chan_cfg.pin_p = _corelib.str_to_id(item[1])
                 chan_cfg.pin_n = _corelib.str_to_id(item[2]) if len(item) > 2 else 0
                 chan_cfg.gain = int(item[3]) if len(item) > 3 else 1
             else:
-                chan_cfg.type = _corelib.IO_ADC.Channel[item]
+                chan_cfg.type = _corelib.ADC.Channel[item]
                 chan_cfg.pin_p = 0
                 chan_cfg.pin_n = 0
                 chan_cfg.gain = 1
@@ -232,7 +232,7 @@ def _adc_convertor(cfg, attr, yml_val, per_desc):
     elif attr == 'references':
         py_refs = []
         for reg_value, item in yml_val.items():
-            ref_cfg = _archlib.ArchAVR_ADC_Config.reference_config_t()
+            ref_cfg = _archlib.ArchAVR_ADCConfig.reference_config_t()
             ref_cfg.reg_value = reg_value
             ref_cfg.source = _corelib.IO_VREF.Source[item]
             py_refs.append(ref_cfg)
@@ -245,9 +245,9 @@ def _adc_convertor(cfg, attr, yml_val, per_desc):
     elif attr == 'triggers':
         py_triggers = []
         for reg_value, item in yml_val.items():
-            trig_cfg = _archlib.ArchAVR_ADC_Config.trigger_config_t()
+            trig_cfg = _archlib.ArchAVR_ADCConfig.trigger_config_t()
             trig_cfg.reg_value = reg_value
-            trig_cfg.trig_type = _archlib.ArchAVR_ADC_Config.Trigger[item]
+            trig_cfg.trig_type = _archlib.ArchAVR_ADCConfig.Trigger[item]
             py_triggers.append(trig_cfg)
 
         cfg.triggers = py_triggers
@@ -260,7 +260,7 @@ def _adc_convertor(cfg, attr, yml_val, per_desc):
 
 
 def _get_adc_builder():
-    cfg_builder = PeripheralConfigBuilder(_archlib.ArchAVR_ADC_Config, _adc_convertor)
+    cfg_builder = PeripheralConfigBuilder(_archlib.ArchAVR_ADCConfig, _adc_convertor)
     return IndexedPeripheralBuilder(_archlib.ArchAVR_ADC, cfg_builder)
 
 
