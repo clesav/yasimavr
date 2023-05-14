@@ -33,7 +33,7 @@ struct ArchAVR_PortConfig {
 };
 
 
-class ArchAVR_Port : public IO_Port /NoDefaultCtors/ {
+class ArchAVR_Port : public Port /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_avr_port.h"
 %End

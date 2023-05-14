@@ -32,7 +32,7 @@ YASIMAVR_USING_NAMESPACE
  * Constructor of a GPIO port
  */
 ArchAVR_Port::ArchAVR_Port(const ArchAVR_PortConfig& config)
-:IO_Port(config.name)
+:Port(config.name)
 ,m_config(config)
 ,m_portr_value(0)
 ,m_ddr_value(0)
@@ -43,7 +43,7 @@ ArchAVR_Port::ArchAVR_Port(const ArchAVR_PortConfig& config)
  */
 bool ArchAVR_Port::init(Device& device)
 {
-    bool status = IO_Port::init(device);
+    bool status = Port::init(device);
 
     add_ioreg(m_config.reg_port, pin_mask());
     add_ioreg(m_config.reg_pin, pin_mask());
@@ -57,7 +57,7 @@ bool ArchAVR_Port::init(Device& device)
  */
 void ArchAVR_Port::reset()
 {
-    IO_Port::reset();
+    Port::reset();
 
     m_portr_value = 0;
     m_ddr_value = 0;
@@ -107,8 +107,8 @@ void ArchAVR_Port::update_pin_states(uint8_t portr, uint8_t ddr)
  */
 void ArchAVR_Port::pin_state_changed(uint8_t num, Pin::State state)
 {
-    IO_Port::pin_state_changed(num, state);
-    //The SHORTED case is taken care of by IO_Port
+    Port::pin_state_changed(num, state);
+    //The SHORTED case is taken care of by Port
     if (state != Pin::State_Shorted) {
         bool new_value = (state == Pin::State_High) ? 1 : 0;
         write_ioreg(m_config.reg_pin, num, new_value);

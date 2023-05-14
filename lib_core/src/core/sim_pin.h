@@ -29,7 +29,7 @@
 
 YASIMAVR_BEGIN_NAMESPACE
 
-class IO_Port;
+class Port;
 
 
 //=======================================================================================
@@ -92,7 +92,7 @@ public:
 
 private:
 
-    friend class IO_Port;
+    friend class Port;
 
     uint32_t m_id;
     State m_ext_state;

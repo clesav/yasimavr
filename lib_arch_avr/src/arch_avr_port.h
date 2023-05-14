@@ -44,7 +44,7 @@ struct ArchAVR_PortConfig {
 };
 
 
-class DLL_EXPORT ArchAVR_Port : public IO_Port {
+class DLL_EXPORT ArchAVR_Port : public Port {
 
 public:
 

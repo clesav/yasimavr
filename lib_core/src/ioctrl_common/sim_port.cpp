@@ -29,7 +29,7 @@ YASIMAVR_USING_NAMESPACE
 
 //=======================================================================================
 
-IO_Port::IO_Port(char name)
+Port::Port(char name)
 :Peripheral(AVR_IOCTL_PORT(name))
 ,m_name(name)
 ,m_pins(8)
@@ -41,7 +41,7 @@ IO_Port::IO_Port(char name)
  * In initialisation, construct the pin mask by looking up for pins names
  * Pcx where c is the port letter and x is 0 to 7
  */
-bool IO_Port::init(Device& device)
+bool Port::init(Device& device)
 {
     bool status = Peripheral::init(device);
 
@@ -63,7 +63,7 @@ bool IO_Port::init(Device& device)
 /*
  * On reset, we set the internal state of all the pins to floating
  */
-void IO_Port::reset()
+void Port::reset()
 {
     uint8_t pinmask = m_pinmask;
     for (int i = 0; i < 8; ++i) {
@@ -79,7 +79,7 @@ void IO_Port::reset()
 /*
  * The one supported request is 0 (get signal)
  */
-bool IO_Port::ctlreq(uint16_t req, ctlreq_data_t* data)
+bool Port::ctlreq(uint16_t req, ctlreq_data_t* data)
 {
     if (req == AVR_CTLREQ_GET_SIGNAL) {
         data->data = &m_signal;
@@ -91,7 +91,7 @@ bool IO_Port::ctlreq(uint16_t req, ctlreq_data_t* data)
 /*
  * Set the pin internal state and raise the signal
  */
-void IO_Port::set_pin_internal_state(uint8_t num, Pin::State state)
+void Port::set_pin_internal_state(uint8_t num, Pin::State state)
 {
     if (num < 8 && ((m_pinmask >> num) & 1)) {
         logger().dbg("Pin %d set to %s", num, Pin::StateName(state));
@@ -100,7 +100,7 @@ void IO_Port::set_pin_internal_state(uint8_t num, Pin::State state)
     }
 }
 
-void IO_Port::raised(const signal_data_t& sigdata, uint16_t hooktag)
+void Port::raised(const signal_data_t& sigdata, uint16_t hooktag)
 {
     if (sigdata.sigid == Pin::Signal_DigitalStateChange) {
         Pin::State pin_state = (Pin::State) sigdata.data.as_uint();
@@ -112,7 +112,7 @@ void IO_Port::raised(const signal_data_t& sigdata, uint16_t hooktag)
 /*
  * On pin state change, handle the SHORTED case. A request is sent to the core
  */
-void IO_Port::pin_state_changed(uint8_t num, Pin::State state)
+void Port::pin_state_changed(uint8_t num, Pin::State state)
 {
     logger().dbg("Detected Pin %d change to %s", num, Pin::StateName(state));
     if (state == Pin::State_Shorted) {

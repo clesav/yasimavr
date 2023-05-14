@@ -48,7 +48,7 @@ YASIMAVR_USING_NAMESPACE
 //=======================================================================================
 
 ArchXT_Port::ArchXT_Port(char name, const ArchXT_PortConfig& config)
-:IO_Port(name)
+:Port(name)
 ,m_config(config)
 ,m_port_value(0)
 ,m_dir_value(0)
@@ -56,7 +56,7 @@ ArchXT_Port::ArchXT_Port(char name, const ArchXT_PortConfig& config)
 
 bool ArchXT_Port::init(Device& device)
 {
-    bool status = IO_Port::init(device);
+    bool status = Port::init(device);
 
     add_ioreg(PORT_REG_ADDR(DIR));
     add_ioreg(PORT_REG_ADDR(DIRSET));
@@ -91,7 +91,7 @@ bool ArchXT_Port::init(Device& device)
 
 void ArchXT_Port::reset()
 {
-    IO_Port::reset();
+    Port::reset();
     m_port_value = 0;
     m_dir_value = 0;
 }
@@ -247,7 +247,7 @@ void ArchXT_Port::update_pin_states()
 
 void ArchXT_Port::pin_state_changed(uint8_t num, Pin::State state)
 {
-    IO_Port::pin_state_changed(num, state);
+    Port::pin_state_changed(num, state);
     if (state == Pin::State_Shorted) return;
 
     //Extract the current and new pin boolean state and if there's no change, we return

@@ -33,7 +33,7 @@ YASIMAVR_BEGIN_NAMESPACE
 //=======================================================================================
 /*
  * Implementation of a GPIO port controller for XT core series, based on the generic
- * AVIO_IO_Port class
+ * Port class
  */
 
 struct ArchXT_PortConfig {
@@ -41,10 +41,11 @@ struct ArchXT_PortConfig {
     reg_addr_t reg_base_port;
     reg_addr_t reg_base_vport;
     int_vect_t iv_port;
+
 };
 
 
-class DLL_EXPORT ArchXT_Port : public IO_Port, public InterruptHandler {
+class DLL_EXPORT ArchXT_Port : public Port, public InterruptHandler {
 
 public:
 

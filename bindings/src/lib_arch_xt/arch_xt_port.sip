@@ -33,7 +33,7 @@ struct ArchXT_PortConfig {
 };
 
 
-class ArchXT_Port : public IO_Port /NoDefaultCtors/ {
+class ArchXT_Port : public Port /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_xt_port.h"
 %End

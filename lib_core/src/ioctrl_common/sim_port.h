@@ -33,17 +33,17 @@ YASIMAVR_BEGIN_NAMESPACE
 
 //=======================================================================================
 /*
- * IO_Port implements a GPIO port controller for up to 8 bits
+ * Port implements a GPIO port controller for up to 8 bits
  * the exact number of pins is determined by the device configuration
  * An initialization, the port will lookup all possible ports with the letter
  * (e.g. port 'B' will lookup all pins named 'PBx' (x=0 to 7)
  */
-class DLL_EXPORT IO_Port : public Peripheral, public SignalHook {
+class DLL_EXPORT Port : public Peripheral, public SignalHook {
 
 public:
 
     //Constructor of the port. The name is the upper case letter identifying the port.
-    explicit IO_Port(char name);
+    explicit Port(char name);
 
     //Implementation of Peripheral callbacks
     virtual bool init(Device& device) override;
@@ -71,7 +71,7 @@ private:
 
 };
 
-inline uint8_t IO_Port::pin_mask() const
+inline uint8_t Port::pin_mask() const
 {
     return m_pinmask;
 }

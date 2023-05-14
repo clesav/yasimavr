@@ -21,14 +21,14 @@
 
 //=======================================================================================
 
-class IO_Port : public Peripheral, public SignalHook /NoDefaultCtors/ {
+class Port : public Peripheral, public SignalHook /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "ioctrl_common/sim_port.h"
 %End
 
 public:
 
-    IO_Port(char name);
+    Port(char name);
 
     virtual bool init(Device&);
     virtual void reset();
