@@ -21,7 +21,7 @@
 
 //=======================================================================================
 
-struct ArchXT_TWI_Config {
+struct ArchXT_TWIConfig {
 %TypeHeaderCode
 #include "arch_xt_twi.h"
 %End
@@ -40,7 +40,7 @@ class ArchXT_TWI : public Peripheral, public SignalHook /NoDefaultCtors/ {
 
 public:
 
-    ArchXT_TWI(uint8_t, const ArchXT_TWI_Config& /KeepReference/);
+    ArchXT_TWI(uint8_t, const ArchXT_TWIConfig& /KeepReference/);
 
     virtual bool init(Device&);
     virtual void reset();

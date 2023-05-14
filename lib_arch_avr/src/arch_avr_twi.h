@@ -42,7 +42,7 @@ YASIMAVR_BEGIN_NAMESPACE
  *  for supported CTLREQs, see sim_spi.h
  */
 
-struct ArchAVR_TWI_Config {
+struct ArchAVR_TWIConfig {
 
     std::vector<unsigned int> ps_factors;
 
@@ -69,7 +69,7 @@ class DLL_EXPORT ArchAVR_TWI : public Peripheral, public SignalHook {
 
 public:
 
-    ArchAVR_TWI(uint8_t num, const ArchAVR_TWI_Config& config);
+    ArchAVR_TWI(uint8_t num, const ArchAVR_TWIConfig& config);
 
     virtual bool init(Device& device) override;
     virtual void reset() override;
@@ -79,9 +79,9 @@ public:
 
 private:
 
-    const ArchAVR_TWI_Config& m_config;
+    const ArchAVR_TWIConfig& m_config;
 
-    IO_TWI m_twi;
+    TWI m_twi;
     bool m_gencall;
     bool m_rx;
 

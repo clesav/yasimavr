@@ -41,7 +41,7 @@ YASIMAVR_BEGIN_NAMESPACE
  *  for supported CTLREQs, see sim_spi.h
  */
 
-struct ArchXT_TWI_Config {
+struct ArchXT_TWIConfig {
 
     reg_addr_t reg_base;
     int_vect_t iv_master;
@@ -53,7 +53,7 @@ class DLL_EXPORT ArchXT_TWI : public Peripheral, public SignalHook {
 
 public:
 
-    ArchXT_TWI(uint8_t num, const ArchXT_TWI_Config& config);
+    ArchXT_TWI(uint8_t num, const ArchXT_TWIConfig& config);
 
     virtual bool init(Device& device) override;
     virtual void reset() override;
@@ -64,9 +64,9 @@ public:
 
 private:
 
-    const ArchXT_TWI_Config& m_config;
+    const ArchXT_TWIConfig& m_config;
 
-    IO_TWI m_twi;
+    TWI m_twi;
     bool m_has_address;
     bool m_has_master_rx_data;
     bool m_has_slave_rx_data;

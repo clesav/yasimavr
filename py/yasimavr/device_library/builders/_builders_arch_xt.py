@@ -312,8 +312,8 @@ def _get_spi_builder():
 #TWI management configuration
 
 def _get_twi_builder():
-    _TWI_ConfigBuilder = PeripheralConfigBuilder(_archlib.ArchXT_TWI_Config)
-    return IndexedPeripheralBuilder(_archlib.ArchXT_TWI, _TWI_ConfigBuilder)
+    _TWIConfigBuilder = PeripheralConfigBuilder(_archlib.ArchXT_TWIConfig)
+    return IndexedPeripheralBuilder(_archlib.ArchXT_TWI, _TWIConfigBuilder)
 
 
 #========================================================================================

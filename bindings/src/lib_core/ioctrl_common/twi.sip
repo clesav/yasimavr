@@ -34,7 +34,7 @@ const uint16_t CTLREQ_TWI_ENDPOINT = AVR_CTLREQ_TWI_ENDPOINT;
 
 const uint16_t CTLREQ_TWI_ENDPOINT;
 
-class TWI_Packet {
+class TWIPacket {
 %TypeHeaderCode
 #include "ioctrl_common/sim_twi.h"
 %End
@@ -64,38 +64,38 @@ public:
     uint8_t ack;
     uint8_t hold;
 
-    TWI_Packet();
+    TWIPacket();
 
 };
 
 
-class TWI_Endpoint /NoDefaultCtors/ {
+class TWIEndPoint /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "ioctrl_common/sim_twi.h"
 %End
 
 public:
 
-    TWI_Endpoint();
+    TWIEndPoint();
 
-    TWI_Bus* bus() const;
+    TWIBus* bus() const;
 
 protected:
 
     bool acquire_bus();
     void release_bus();
-    void send_packet(TWI_Packet&);
-    void end_packet(TWI_Packet&);
+    void send_packet(TWIPacket&);
+    void end_packet(TWIPacket&);
 
-    virtual void packet(TWI_Packet&) = 0;
-    virtual void packet_ended(TWI_Packet&) = 0;
+    virtual void packet(TWIPacket&) = 0;
+    virtual void packet_ended(TWIPacket&) = 0;
     virtual void bus_acquired() = 0;
     virtual void bus_released() = 0;
 
 };
 
 
-class TWI_Bus /NoDefaultCtors/ {
+class TWIBus /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "ioctrl_common/sim_twi.h"
 %End
@@ -111,16 +111,16 @@ public:
         Signal_Stop         /PyName=Stop/,
     };
 
-    TWI_Bus();
+    TWIBus();
 
     Signal& signal();
 
-    void add_endpoint(TWI_Endpoint&);
-    void remove_endpoint(TWI_Endpoint&);
+    void add_endpoint(TWIEndPoint&);
+    void remove_endpoint(TWIEndPoint&);
 
 };
 
-class IO_TWI : public TWI_Endpoint /NoDefaultCtors/ {
+class TWI : public TWIEndPoint /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "ioctrl_common/sim_twi.h"
 %End
@@ -169,7 +169,7 @@ public:
         State_RX_Ack            /PyName=RX_Ack/,
     };
 
-    IO_TWI();
+    TWI();
 
     void init(CycleManager&, Logger&);
     void reset();
@@ -189,13 +189,13 @@ public:
     bool start_slave_rx();
     void set_slave_ack(bool);
 
-    IO_TWI::State master_state() const;
-    IO_TWI::State slave_state() const;
+    TWI::State master_state() const;
+    TWI::State slave_state() const;
 
 protected:
 
-    virtual void packet(TWI_Packet&);
-    virtual void packet_ended(TWI_Packet&);
+    virtual void packet(TWIPacket&);
+    virtual void packet_ended(TWIPacket&);
     virtual void bus_acquired();
     virtual void bus_released();
 

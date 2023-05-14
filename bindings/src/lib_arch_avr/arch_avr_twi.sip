@@ -21,7 +21,7 @@
 
 //=======================================================================================
 
-struct ArchAVR_TWI_Config {
+struct ArchAVR_TWIConfig {
 %TypeHeaderCode
 #include "arch_avr_twi.h"
 %End
@@ -55,7 +55,7 @@ class ArchAVR_TWI : public Peripheral, public SignalHook /NoDefaultCtors/ {
 
 public:
 
-    ArchAVR_TWI(uint8_t, const ArchAVR_TWI_Config& /KeepReference/);
+    ArchAVR_TWI(uint8_t, const ArchAVR_TWIConfig& /KeepReference/);
 
     virtual bool init(Device&);
     virtual void reset();

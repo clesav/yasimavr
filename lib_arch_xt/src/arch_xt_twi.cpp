@@ -40,7 +40,7 @@ YASIMAVR_USING_NAMESPACE
 
 //=======================================================================================
 
-ArchXT_TWI::ArchXT_TWI(uint8_t num, const ArchXT_TWI_Config& config)
+ArchXT_TWI::ArchXT_TWI(uint8_t num, const ArchXT_TWIConfig& config)
 :Peripheral(AVR_IOCTL_TWI(0x30 + num))
 ,m_config(config)
 ,m_has_address(false)
@@ -180,7 +180,7 @@ void ArchXT_TWI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 
         uint8_t mcmd = data.value & TWI_MCMD_gm;
         //Acknowledgment Action, if MCMD is not zero and the master part is in the relevant state
-        if (mcmd && m_twi.master_state() == IO_TWI::State_RX_Ack) {
+        if (mcmd && m_twi.master_state() == TWI::State_RX_Ack) {
             bool ack = (data.value & TWI_ACKACT_bm) == TWI_ACKACT_ACK_gc;
             m_twi.set_master_ack(ack);
         }
@@ -309,10 +309,10 @@ void ArchXT_TWI::raised(const signal_data_t& sigdata, uint16_t __unused)
 {
     switch (sigdata.sigid) {
 
-        case IO_TWI::Signal_BusStateChange: {
+        case TWI::Signal_BusStateChange: {
             uint8_t bus_state = 0;
             switch(sigdata.data.as_uint()) {
-                case IO_TWI::Bus_Idle: {
+                case TWI::Bus_Idle: {
                     bus_state = TWI_BUSSTATE_IDLE_gc;
                     //If we had written an address, but the bus was busy,
                     //we can now start a transaction
@@ -336,10 +336,10 @@ void ArchXT_TWI::raised(const signal_data_t& sigdata, uint16_t __unused)
 
                 } break;
 
-                case IO_TWI::Bus_Busy:
+                case TWI::Bus_Busy:
                     bus_state = TWI_BUSSTATE_BUSY_gc; break;
 
-                case IO_TWI::Bus_Owned:
+                case TWI::Bus_Owned:
                     bus_state = TWI_BUSSTATE_OWNER_gc; break;
             }
 
@@ -348,7 +348,7 @@ void ArchXT_TWI::raised(const signal_data_t& sigdata, uint16_t __unused)
 
         } break;
 
-        case IO_TWI::Signal_Address: { //slave side only
+        case TWI::Signal_Address: { //slave side only
 
             //Test the address with the match logic and set the ACK/NACK response
             uint8_t addr_rw = sigdata.data.as_uint();
@@ -366,14 +366,14 @@ void ArchXT_TWI::raised(const signal_data_t& sigdata, uint16_t __unused)
 
         } break;
 
-        case IO_TWI::Signal_AddrAck: { //Master side only
+        case TWI::Signal_AddrAck: { //Master side only
 
             if (sigdata.data.as_uint()) {
                 //the address has been ACK'ed
                 CLEAR_IOREG(MSTATUS, TWI_RXACK);
                 //If it's a READ operation, continue by reading the first byte
                 //If it's WRITE, hold the bus
-                if (m_twi.master_state() & IO_TWI::StateFlag_Tx)
+                if (m_twi.master_state() & TWI::StateFlag_Tx)
                     SET_IOREG(MSTATUS, TWI_CLKHOLD);
                 else
                     m_twi.start_master_rx();
@@ -387,9 +387,9 @@ void ArchXT_TWI::raised(const signal_data_t& sigdata, uint16_t __unused)
 
         } break;
 
-        case IO_TWI::Signal_TxComplete: {
+        case TWI::Signal_TxComplete: {
 
-            if (sigdata.index == IO_TWI::Cpt_Master) {
+            if (sigdata.index == TWI::Cpt_Master) {
 
                 //Update the status flags and raise the interrupt
                 WRITE_IOREG_B(MSTATUS, TWI_RXACK, !sigdata.data.as_uint());
@@ -407,8 +407,8 @@ void ArchXT_TWI::raised(const signal_data_t& sigdata, uint16_t __unused)
 
         } break;
 
-        case IO_TWI::Signal_RxComplete: {
-            if (sigdata.index == IO_TWI::Cpt_Master) {
+        case TWI::Signal_RxComplete: {
+            if (sigdata.index == TWI::Cpt_Master) {
 
                 //Saves the received byte in the data register
                 WRITE_IOREG(MDATA, sigdata.data.as_uint());

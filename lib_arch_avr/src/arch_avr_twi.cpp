@@ -75,7 +75,7 @@ YASIMAVR_USING_NAMESPACE
 
 //=======================================================================================
 
-ArchAVR_TWI::ArchAVR_TWI(uint8_t num, const ArchAVR_TWI_Config& config)
+ArchAVR_TWI::ArchAVR_TWI(uint8_t num, const ArchAVR_TWIConfig& config)
 :Peripheral(AVR_IOCTL_TWI(0x30 + num))
 ,m_config(config)
 ,m_gencall(false)
@@ -171,26 +171,26 @@ void ArchAVR_TWI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
             //if TWSTA=0 and TWSTO=0
             else {
                 switch (m_twi.master_state()) {
-                    case IO_TWI::State_Waiting: {
+                    case TWI::State_Waiting: {
                         //Clearing TWSTA when queueing for bus ownership resets
                         //the arbitration logic
                         m_twi.set_master_enabled(false);
                         m_twi.set_master_enabled(true);
                     } break;
 
-                    case IO_TWI::State_Addr: {
+                    case TWI::State_Addr: {
                         //send address+RW, they are stored in the Data register
                         uint8_t sla = read_ioreg(m_config.reg_data);
                         m_rx = sla & 1;
                         m_twi.send_address(sla >> 1, m_rx);
                     } break;
 
-                    case IO_TWI::State_TX: {
+                    case TWI::State_TX: {
                         uint8_t tx_data = read_ioreg(m_config.reg_data);
                         m_twi.start_master_tx(tx_data);
                     } break;
 
-                    case IO_TWI::State_RX: {
+                    case TWI::State_RX: {
                         m_twi.start_master_rx();
                     } break;
 
@@ -214,10 +214,10 @@ void ArchAVR_TWI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
         //The data register is writable only when either the master or the slave part
         //is active and not busy.
         //In any other case, we must restore the previous register content.
-        IO_TWI::State ms = m_twi.master_state();
-        IO_TWI::State ss = m_twi.slave_state();
-        if ((!(ms & IO_TWI::StateFlag_Active) || (ms & IO_TWI::StateFlag_Busy)) &&
-            (!(ss & IO_TWI::StateFlag_Active) || (ss & IO_TWI::StateFlag_Busy)))
+        TWI::State ms = m_twi.master_state();
+        TWI::State ss = m_twi.slave_state();
+        if ((!(ms & TWI::StateFlag_Active) || (ms & TWI::StateFlag_Busy)) &&
+            (!(ss & TWI::StateFlag_Active) || (ss & TWI::StateFlag_Busy)))
             write_ioreg(m_config.reg_data, data.old);
     }
 
@@ -231,20 +231,20 @@ void ArchAVR_TWI::raised(const signal_data_t& sigdata, uint16_t hooktag)
 
     switch (sigdata.sigid) {
 
-        case IO_TWI::Signal_BusStateChange: {
-            if (sigdata.data.as_uint() == IO_TWI::Bus_Idle) {
+        case TWI::Signal_BusStateChange: {
+            if (sigdata.data.as_uint() == TWI::Bus_Idle) {
                 if (start) {
                     if (m_twi.start_transfer())
                         set_intflag(TWI_START);
                 }
 
-                if (m_twi.slave_state() & IO_TWI::StateFlag_Active)
+                if (m_twi.slave_state() & TWI::StateFlag_Active)
                     set_intflag(TWI_SRX_STOP_RESTART);
 
             }
         } break;
 
-        case IO_TWI::Signal_Address: { //slave side only
+        case TWI::Signal_Address: { //slave side only
             //The data register stores the byte received (address + rw)
             uint8_t addr_rw = sigdata.data.as_uint();
             write_ioreg(m_config.reg_data, addr_rw);
@@ -277,10 +277,10 @@ void ArchAVR_TWI::raised(const signal_data_t& sigdata, uint16_t hooktag)
 
         } break;
 
-        case IO_TWI::Signal_AddrAck: { //Master side only
+        case TWI::Signal_AddrAck: { //Master side only
 
             uint8_t status;
-            if (sigdata.data.as_uint() == TWI_Packet::Ack)
+            if (sigdata.data.as_uint() == TWIPacket::Ack)
                 status = m_rx ? TWI_MRX_ADR_ACK : TWI_MTX_ADR_ACK;
             else
                 status = m_rx ? TWI_MRX_ADR_NACK : TWI_MTX_ADR_NACK;
@@ -289,14 +289,14 @@ void ArchAVR_TWI::raised(const signal_data_t& sigdata, uint16_t hooktag)
 
         } break;
 
-        case IO_TWI::Signal_TxComplete: {
+        case TWI::Signal_TxComplete: {
 
             bool acken = test_ioreg(m_config.reg_ctrl, m_config.bm_ack_enable);
             uint8_t status;
-            if (sigdata.index == IO_TWI::Cpt_Master) //master side
-                status = (sigdata.data.as_uint() == TWI_Packet::Ack) ? TWI_MTX_DATA_ACK : TWI_MTX_DATA_NACK;
+            if (sigdata.index == TWI::Cpt_Master) //master side
+                status = (sigdata.data.as_uint() == TWIPacket::Ack) ? TWI_MTX_DATA_ACK : TWI_MTX_DATA_NACK;
             else { //slave
-                if (sigdata.data.as_uint() == TWI_Packet::Nack)
+                if (sigdata.data.as_uint() == TWIPacket::Nack)
                     status = TWI_STX_DATA_NACK;
                 else if (acken)
                     status = TWI_STX_DATA_ACK;
@@ -308,14 +308,14 @@ void ArchAVR_TWI::raised(const signal_data_t& sigdata, uint16_t hooktag)
 
         } break;
 
-        case IO_TWI::Signal_RxComplete: {
+        case TWI::Signal_RxComplete: {
 
             //Save the received byte in the data register
             write_ioreg(m_config.reg_data, sigdata.data.as_uint());
             //Set the status and reply automatically with ACK or NACK depending on TWIEA
             bool acken = test_ioreg(m_config.reg_ctrl, m_config.bm_ack_enable);
             bool status;
-            if (sigdata.index == IO_TWI::Cpt_Master) {
+            if (sigdata.index == TWI::Cpt_Master) {
                 m_twi.set_master_ack(acken);
                 if (acken)
                     status = TWI_MRX_DATA_ACK;
