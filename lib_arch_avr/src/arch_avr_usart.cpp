@@ -28,7 +28,7 @@ YASIMAVR_USING_NAMESPACE
 
 //=======================================================================================
 
-ArchAVR_USART::ArchAVR_USART(uint8_t num, const ArchAVR_USART_Config& config)
+ArchAVR_USART::ArchAVR_USART(uint8_t num, const ArchAVR_USARTConfig& config)
 :Peripheral(AVR_IOCTL_UART(0x30 + num))
 ,m_config(config)
 ,m_rxc_intflag(false)
@@ -159,15 +159,15 @@ void ArchAVR_USART::raised(const signal_data_t& sigdata, uint16_t __unused)
 {
     //If a frame emission is started, it means the TX buffer is empty
     //so raise the TXE (DRE) flag
-    if (sigdata.sigid == IO_UART::Signal_TX_Start)
+    if (sigdata.sigid == UART::Signal_TX_Start)
         m_txe_intflag.set_flag();
 
     //If a frame is successfully emitted, raise the TXC flag
-    else if (sigdata.sigid == IO_UART::Signal_TX_Complete && sigdata.data.as_uint())
+    else if (sigdata.sigid == UART::Signal_TX_Complete && sigdata.data.as_uint())
         m_txc_intflag.set_flag();
 
     //If a frame is successfully received, raise the RXC flag
-    else if (sigdata.sigid == IO_UART::Signal_RX_Complete && sigdata.data.as_uint())
+    else if (sigdata.sigid == UART::Signal_RX_Complete && sigdata.data.as_uint())
         m_rxc_intflag.set_flag();
 }
 

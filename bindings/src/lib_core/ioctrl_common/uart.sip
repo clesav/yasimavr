@@ -35,7 +35,7 @@ const uint16_t CTLREQ_UART_ENDPOINT = AVR_CTLREQ_UART_ENDPOINT;
 const uint16_t CTLREQ_UART_ENDPOINT;
 
 
-struct UART_EndPoint {
+struct UARTEndPoint {
 %TypeHeaderCode
 #include "ioctrl_common/sim_uart.h"
 %End
@@ -46,7 +46,7 @@ struct UART_EndPoint {
 };
 
 
-class IO_UART : public SignalHook /NoDefaultCtors/ {
+class UART : public SignalHook /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "ioctrl_common/sim_uart.h"
 %End
@@ -63,8 +63,8 @@ public:
         Signal_RX_Complete      /PyName=RX_Complete/,
     };
 
-    IO_UART();
-    virtual ~IO_UART();
+    UART();
+    virtual ~UART();
 
     void init(CycleManager&, Logger&);
     void reset();

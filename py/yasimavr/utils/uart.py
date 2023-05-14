@@ -29,7 +29,7 @@ import io
 
 import yasimavr.lib.core as _corelib
 
-_UART_SignalId = _corelib.IO_UART.SignalId
+_UART_SignalId = _corelib.UART.SignalId
 
 
 class UartIO(io.RawIOBase):
@@ -56,7 +56,7 @@ class UartIO(io.RawIOBase):
         if not ok:
             raise ValueError('Endpoint of UART port ' + portnum + ' not found')
 
-        self._endpoint = reqdata.data.as_ptr(_corelib.UART_EndPoint)
+        self._endpoint = reqdata.data.as_ptr(_corelib.UARTEndPoint)
 
         #Create the signal hook and connect to the endpoint
         if 'r' in mode:

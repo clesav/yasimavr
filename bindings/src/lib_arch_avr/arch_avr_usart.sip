@@ -21,7 +21,7 @@
 
 //=======================================================================================
 
-struct ArchAVR_USART_Config {
+struct ArchAVR_USARTConfig {
 %TypeHeaderCode
 #include "arch_avr_usart.h"
 %End
@@ -55,7 +55,7 @@ class ArchAVR_USART : public Peripheral, public SignalHook /NoDefaultCtors/ {
 
 public:
 
-    ArchAVR_USART(uint8_t, const ArchAVR_USART_Config& /KeepReference/);
+    ArchAVR_USART(uint8_t, const ArchAVR_USARTConfig& /KeepReference/);
 
     virtual bool init(Device&);
     virtual void reset();

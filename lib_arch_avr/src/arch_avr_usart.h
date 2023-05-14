@@ -47,7 +47,7 @@ YASIMAVR_BEGIN_NAMESPACE
  *      data in and out (see sim_uart.h)
  */
 
-struct ArchAVR_USART_Config {
+struct ArchAVR_USARTConfig {
 
     reg_addr_t reg_data;            //Data register address
 
@@ -74,7 +74,7 @@ class DLL_EXPORT ArchAVR_USART : public Peripheral, public SignalHook {
 
 public:
 
-    ArchAVR_USART(uint8_t num, const ArchAVR_USART_Config& config);
+    ArchAVR_USART(uint8_t num, const ArchAVR_USARTConfig& config);
 
     virtual bool init(Device& device) override;
     virtual void reset() override;
@@ -85,10 +85,10 @@ public:
 
 private:
 
-    const ArchAVR_USART_Config& m_config;
+    const ArchAVR_USARTConfig& m_config;
 
-    IO_UART m_uart;
-    UART_EndPoint m_endpoint;
+    UART m_uart;
+    UARTEndPoint m_endpoint;
 
     InterruptFlag m_rxc_intflag;
     InterruptFlag m_txc_intflag;

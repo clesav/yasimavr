@@ -50,7 +50,7 @@ YASIMAVR_BEGIN_NAMESPACE
  *      data in and out (see sim_uart.h)
  */
 
-struct ArchXT_USART_Config {
+struct ArchXT_USARTConfig {
 
     reg_addr_t reg_base;
 
@@ -64,7 +64,7 @@ class DLL_EXPORT ArchXT_USART : public Peripheral, public SignalHook {
 
 public:
 
-    ArchXT_USART(uint8_t num, const ArchXT_USART_Config& config);
+    ArchXT_USART(uint8_t num, const ArchXT_USARTConfig& config);
 
     virtual bool init(Device& device) override;
     virtual void reset() override;
@@ -76,10 +76,10 @@ public:
 
 private:
 
-    const ArchXT_USART_Config& m_config;
+    const ArchXT_USARTConfig& m_config;
 
-    IO_UART m_uart;
-    UART_EndPoint m_endpoint;
+    UART m_uart;
+    UARTEndPoint m_endpoint;
 
     InterruptFlag m_rxc_intflag;
     InterruptFlag m_txc_intflag;

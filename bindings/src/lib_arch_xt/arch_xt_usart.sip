@@ -21,7 +21,7 @@
 
 //=======================================================================================
 
-struct ArchXT_USART_Config {
+struct ArchXT_USARTConfig {
 %TypeHeaderCode
 #include "arch_xt_usart.h"
 %End
@@ -42,7 +42,7 @@ class ArchXT_USART : public Peripheral, public SignalHook /NoDefaultCtors/ {
 
 public:
 
-    ArchXT_USART(uint8_t, const ArchXT_USART_Config& /KeepReference/);
+    ArchXT_USART(uint8_t, const ArchXT_USARTConfig& /KeepReference/);
 
     virtual bool init(Device&);
     virtual void reset();

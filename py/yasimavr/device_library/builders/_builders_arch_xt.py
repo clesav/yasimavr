@@ -285,8 +285,8 @@ def _get_acp_builder():
 #USART management configuration
 
 def _get_usart_builder():
-    _USART_ConfigBuilder = PeripheralConfigBuilder(_archlib.ArchXT_USART_Config)
-    return IndexedPeripheralBuilder(_archlib.ArchXT_USART, _USART_ConfigBuilder)
+    _USARTConfigBuilder = PeripheralConfigBuilder(_archlib.ArchXT_USARTConfig)
+    return IndexedPeripheralBuilder(_archlib.ArchXT_USART, _USARTConfigBuilder)
 
 
 #========================================================================================

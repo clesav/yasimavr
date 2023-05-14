@@ -21,8 +21,8 @@
 
 //=======================================================================================
 
-#ifndef __YASIMAVR_IO_UART_H__
-#define __YASIMAVR_IO_UART_H__
+#ifndef __YASIMAVR_UART_H__
+#define __YASIMAVR_UART_H__
 
 #include "../core/sim_types.h"
 #include "../core/sim_device.h"
@@ -38,14 +38,14 @@ YASIMAVR_BEGIN_NAMESPACE
 */
 //Request that can be used by external code to access the end point of a UART interface
 //which can then be used to send & receive data via signaling both ways
-//The data.p is set to the UART_EndPoint structure to connect to.
+//The data.p is set to the UARTEndPoint structure to connect to.
 #define AVR_CTLREQ_UART_ENDPOINT        1
 
 
 /*
  * Structure exchanged with CTLREQ_UART_ENDPOINT
 */
-struct UART_EndPoint {
+struct UARTEndPoint {
 
     Signal* tx_signal;
     SignalHook* rx_hook;
@@ -81,7 +81,7 @@ struct UART_EndPoint {
  * The signal UART_RX_Complete are emitted at the end of a reception, with data = 1 if the frame
  * if kept or data = 0 if canceled or discarded
  */
-class DLL_EXPORT IO_UART : public SignalHook {
+class DLL_EXPORT UART : public SignalHook {
 
 public:
 
@@ -110,8 +110,8 @@ public:
         Signal_RX_Complete,
     };
 
-    IO_UART();
-    virtual ~IO_UART();
+    UART();
+    virtual ~UART();
 
     //Initialise the interface. the device will be used for timer related operations
     void init(CycleManager& cycle_manager, Logger& logger);
@@ -166,8 +166,8 @@ public:
     void set_paused(bool enabled);
 
     //Disable copy semantics
-    IO_UART(const IO_UART&) = delete;
-    IO_UART& operator=(const IO_UART&) = delete;
+    UART(const UART&) = delete;
+    UART& operator=(const UART&) = delete;
 
 protected:
 
@@ -234,42 +234,42 @@ private:
 
 };
 
-inline Signal& IO_UART::signal()
+inline Signal& UART::signal()
 {
     return m_signal;
 }
 
-inline unsigned int IO_UART::rx_available() const
+inline unsigned int UART::rx_available() const
 {
     return m_rx_count;
 }
 
-inline void IO_UART::set_frame_delay(cycle_count_t delay)
+inline void UART::set_frame_delay(cycle_count_t delay)
 {
     m_delay = delay ? delay : 1;
 }
 
-inline unsigned int IO_UART::tx_pending() const
+inline unsigned int UART::tx_pending() const
 {
     return m_tx_buffer.size() ? (m_tx_buffer.size() - 1) : 0;
 }
 
-inline bool IO_UART::has_tx_collision() const
+inline bool UART::has_tx_collision() const
 {
     return m_tx_collision;
 }
 
-inline void IO_UART::clear_tx_collision()
+inline void UART::clear_tx_collision()
 {
     m_tx_collision = false;
 }
 
-inline bool IO_UART::has_rx_overflow() const
+inline bool UART::has_rx_overflow() const
 {
     return m_rx_overflow;
 }
 
-inline void IO_UART::clear_rx_overflow()
+inline void UART::clear_rx_overflow()
 {
     m_rx_overflow = false;
 }
@@ -277,4 +277,4 @@ inline void IO_UART::clear_rx_overflow()
 
 YASIMAVR_END_NAMESPACE
 
-#endif //__YASIMAVR_IO_UART_H__
+#endif //__YASIMAVR_UART_H__

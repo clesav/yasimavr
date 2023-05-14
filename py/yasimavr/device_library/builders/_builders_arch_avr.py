@@ -316,7 +316,7 @@ def _usart_convertor(cfg, attr, yml_val, per_desc):
 
 
 def _get_usart_builder():
-    cfg_builder = PeripheralConfigBuilder(_archlib.ArchAVR_USART_Config, _usart_convertor)
+    cfg_builder = PeripheralConfigBuilder(_archlib.ArchAVR_USARTConfig, _usart_convertor)
     return IndexedPeripheralBuilder(_archlib.ArchAVR_USART, cfg_builder)
 
 
