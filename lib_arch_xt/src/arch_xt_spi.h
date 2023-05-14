@@ -44,7 +44,7 @@ YASIMAVR_BEGIN_NAMESPACE
  *  for supported CTLREQs, see sim_spi.h
  */
 
-struct ArchXT_SPI_Config {
+struct ArchXT_SPIConfig {
 
     reg_addr_t reg_base;
     uint32_t pin_select;
@@ -56,7 +56,7 @@ class DLL_EXPORT ArchXT_SPI : public Peripheral, public SignalHook {
 
 public:
 
-    ArchXT_SPI(uint8_t num, const ArchXT_SPI_Config& config);
+    ArchXT_SPI(uint8_t num, const ArchXT_SPIConfig& config);
 
     virtual bool init(Device& device) override;
     virtual void reset() override;
@@ -67,9 +67,9 @@ public:
 
 private:
 
-    const ArchXT_SPI_Config& m_config;
+    const ArchXT_SPIConfig& m_config;
 
-    IO_SPI m_spi;
+    SPI m_spi;
 
     Pin* m_pin_select;
     bool m_pin_selected;

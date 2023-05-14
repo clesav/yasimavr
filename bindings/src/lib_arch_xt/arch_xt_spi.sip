@@ -21,7 +21,7 @@
 
 //=======================================================================================
 
-struct ArchXT_SPI_Config {
+struct ArchXT_SPIConfig {
 %TypeHeaderCode
 #include "arch_xt_spi.h"
 %End
@@ -40,7 +40,7 @@ class ArchXT_SPI : public Peripheral, public SignalHook /NoDefaultCtors/ {
 
 public:
 
-    ArchXT_SPI(uint8_t, const ArchXT_SPI_Config& /KeepReference/);
+    ArchXT_SPI(uint8_t, const ArchXT_SPIConfig& /KeepReference/);
 
     virtual bool init(Device&);
     virtual void reset();

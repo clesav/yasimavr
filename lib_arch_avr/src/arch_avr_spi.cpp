@@ -35,7 +35,7 @@ YASIMAVR_USING_NAMESPACE
 const uint32_t ClockFactors[] = {4, 16, 64, 128};
 
 
-ArchAVR_SPI::ArchAVR_SPI(uint8_t num, const ArchAVR_SPI_Config& config)
+ArchAVR_SPI::ArchAVR_SPI(uint8_t num, const ArchAVR_SPIConfig& config)
 :Peripheral(AVR_IOCTL_SPI(0x30 + num))
 ,m_config(config)
 ,m_pin_select(nullptr)
@@ -85,7 +85,7 @@ bool ArchAVR_SPI::ctlreq(uint16_t req, ctlreq_data_t* data)
         return true;
     }
     else if (req == AVR_CTLREQ_SPI_ADD_CLIENT) {
-        SPI_Client* client = reinterpret_cast<SPI_Client*>(data->data.as_ptr());
+        SPIClient* client = reinterpret_cast<SPIClient*>(data->data.as_ptr());
         if (client)
             m_spi.add_client(*client);
         return true;
@@ -148,8 +148,8 @@ void ArchAVR_SPI::raised(const signal_data_t& sigdata, uint16_t hooktag)
 
     //On completion of a transfer, raise the interrupt flag
     if (hooktag == HOOKTAG_SPI) {
-        if (sigdata.sigid == IO_SPI::Signal_HostTfrComplete ||
-            sigdata.sigid == IO_SPI::Signal_ClientTfrComplete)
+        if (sigdata.sigid == SPI::Signal_HostTfrComplete ||
+            sigdata.sigid == SPI::Signal_ClientTfrComplete)
             m_intflag.set_flag();
     }
     //Signal of pin state change, check if we're selected

@@ -304,8 +304,8 @@ def _spi_convertor(cfg, attr, yml_val, per_desc):
 
 
 def _get_spi_builder():
-    _SPI_ConfigBuilder = PeripheralConfigBuilder(_archlib.ArchXT_SPI_Config, _spi_convertor)
-    return IndexedPeripheralBuilder(_archlib.ArchXT_SPI, _SPI_ConfigBuilder)
+    _SPIConfigBuilder = PeripheralConfigBuilder(_archlib.ArchXT_SPIConfig, _spi_convertor)
+    return IndexedPeripheralBuilder(_archlib.ArchXT_SPI, _SPIConfigBuilder)
 
 
 #========================================================================================

@@ -28,24 +28,24 @@ YASIMAVR_USING_NAMESPACE
 
 //=======================================================================================
 
-SPI_Client::SPI_Client()
+SPIClient::SPIClient()
 :m_host(nullptr)
 {}
 
-SPI_Client::SPI_Client(const SPI_Client& other)
-:SPI_Client()
+SPIClient::SPIClient(const SPIClient& other)
+:SPIClient()
 {
     if (other.m_host)
         other.m_host->add_client(*this);
 }
 
-SPI_Client::~SPI_Client()
+SPIClient::~SPIClient()
 {
     if (m_host)
         m_host->remove_client(*this);
 }
 
-SPI_Client& SPI_Client::operator=(const SPI_Client& other)
+SPIClient& SPIClient::operator=(const SPIClient& other)
 {
     if (m_host)
         m_host->remove_client(*this);
@@ -57,7 +57,7 @@ SPI_Client& SPI_Client::operator=(const SPI_Client& other)
 }
 
 
-IO_SPI::IO_SPI()
+SPI::SPI()
 :m_cycle_manager(nullptr)
 ,m_logger(nullptr)
 ,m_delay(1)
@@ -70,13 +70,13 @@ IO_SPI::IO_SPI()
 ,m_rx_limit(0)
 {}
 
-void IO_SPI::init(CycleManager& cycle_manager, Logger& logger)
+void SPI::init(CycleManager& cycle_manager, Logger& logger)
 {
     m_cycle_manager = &cycle_manager;
     m_logger = &logger;
 }
 
-void IO_SPI::reset()
+void SPI::reset()
 {
     m_delay = 1;
     m_is_host = false;
@@ -92,18 +92,18 @@ void IO_SPI::reset()
     m_cycle_manager->cancel(*this);
 }
 
-void IO_SPI::set_host_mode(bool mode)
+void SPI::set_host_mode(bool mode)
 {
     m_is_host = mode;
 }
 
-void IO_SPI::add_client(SPI_Client& client)
+void SPI::add_client(SPIClient& client)
 {
     m_clients.push_back(&client);
     client.m_host = this;
 }
 
-void IO_SPI::remove_client(SPI_Client& client)
+void SPI::remove_client(SPIClient& client)
 {
     for (auto it = m_clients.begin(); it != m_clients.end(); ++it) {
         if (*it == &client) {
@@ -114,12 +114,12 @@ void IO_SPI::remove_client(SPI_Client& client)
     }
 }
 
-void IO_SPI::set_selected(bool selected)
+void SPI::set_selected(bool selected)
 {
     m_selected = selected;
 }
 
-void IO_SPI::set_frame_delay(cycle_count_t delay)
+void SPI::set_frame_delay(cycle_count_t delay)
 {
     m_delay = delay;
 }
@@ -127,7 +127,7 @@ void IO_SPI::set_frame_delay(cycle_count_t delay)
 /*
  * Set the TX buffer limit and trim the buffer if necessary
  */
-void IO_SPI::set_tx_buffer_limit(size_t limit)
+void SPI::set_tx_buffer_limit(size_t limit)
 {
     m_tx_limit = limit;
     while (limit > 0 && m_tx_buffer.size() > limit)
@@ -137,7 +137,7 @@ void IO_SPI::set_tx_buffer_limit(size_t limit)
 /*
  * Set the RX buffer limit and trim the buffer if necessary
  */
-void IO_SPI::set_rx_buffer_limit(size_t limit)
+void SPI::set_rx_buffer_limit(size_t limit)
 {
     m_rx_limit = limit;
     while (limit > 0 && m_rx_buffer.size() > limit)
@@ -148,7 +148,7 @@ void IO_SPI::set_rx_buffer_limit(size_t limit)
  * Push a 8-bits frame to be transmitted
  * Start the transfer if it's not already in progress
  */
-void IO_SPI::push_tx(uint8_t frame)
+void SPI::push_tx(uint8_t frame)
 {
     if (m_tx_limit > 0 && m_tx_buffer.size() == m_tx_limit)
         return;
@@ -162,7 +162,7 @@ void IO_SPI::push_tx(uint8_t frame)
 /*
  * Cancel all pending and current transfers
  */
-void IO_SPI::cancel_tx()
+void SPI::cancel_tx()
 {
     m_tx_buffer.clear();
 
@@ -179,7 +179,7 @@ void IO_SPI::cancel_tx()
     }
 }
 
-uint8_t IO_SPI::pop_rx()
+uint8_t SPI::pop_rx()
 {
     if (m_rx_buffer.size()) {
         uint8_t frame = m_rx_buffer.front();
@@ -191,14 +191,14 @@ uint8_t IO_SPI::pop_rx()
     }
 }
 
-void IO_SPI::start_transfer_as_host()
+void SPI::start_transfer_as_host()
 {
     uint8_t mosi_frame = m_tx_buffer.front();
     m_tx_buffer.pop_front();
 
     //Find the selected client
     m_selected_client = nullptr;
-    for (SPI_Client* client : m_clients) {
+    for (SPIClient* client : m_clients) {
         if (client->selected()) {
             m_selected_client = client;
             break;
@@ -228,7 +228,7 @@ void IO_SPI::start_transfer_as_host()
     }
 }
 
-cycle_count_t IO_SPI::next(cycle_count_t when)
+cycle_count_t SPI::next(cycle_count_t when)
 {
     if (m_selected_client) {
         m_selected_client->end_transfer(true);
@@ -252,12 +252,12 @@ cycle_count_t IO_SPI::next(cycle_count_t when)
  * Implementation of the SPI client interface
  */
 
-bool IO_SPI::selected() const
+bool SPI::selected() const
 {
     return m_selected;
 }
 
-uint8_t IO_SPI::start_transfer(uint8_t mosi_frame)
+uint8_t SPI::start_transfer(uint8_t mosi_frame)
 {
     if (m_is_host || !m_selected || m_tfr_in_progress)
         return 0xFF;
@@ -284,7 +284,7 @@ uint8_t IO_SPI::start_transfer(uint8_t mosi_frame)
     return miso_frame;
 }
 
-void IO_SPI::end_transfer(bool ok)
+void SPI::end_transfer(bool ok)
 {
     if (!m_tfr_in_progress) return;
     m_tfr_in_progress = false;

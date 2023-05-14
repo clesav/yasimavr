@@ -21,7 +21,7 @@
 
 //=======================================================================================
 
-struct ArchAVR_SPI_Config {
+struct ArchAVR_SPIConfig {
 %TypeHeaderCode
 #include "arch_avr_spi.h"
 %End
@@ -50,7 +50,7 @@ class ArchAVR_SPI : public Peripheral, public SignalHook /NoDefaultCtors/ {
 
 public:
 
-    ArchAVR_SPI(uint8_t, const ArchAVR_SPI_Config& /KeepReference/);
+    ArchAVR_SPI(uint8_t, const ArchAVR_SPIConfig& /KeepReference/);
 
     virtual bool init(Device&);
     virtual void reset();
