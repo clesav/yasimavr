@@ -39,8 +39,8 @@ def base_config_builder(per_descriptor):
 #Interrupt management configuration
 
 def _get_cpuint_builder():
-    _CpuIntConfigBuilder = PeripheralConfigBuilder(_archlib.ArchXT_IntCtrl_Config)
-    return PeripheralBuilder(_archlib.ArchXT_IntCtrl, _CpuIntConfigBuilder)
+    cfg_builder = PeripheralConfigBuilder(_archlib.ArchXT_IntCtrlConfig)
+    return PeripheralBuilder(_archlib.ArchXT_IntCtrl, cfg_builder)
 
 
 #========================================================================================
@@ -66,8 +66,8 @@ def _slpctrl_convertor(cfg, attr, yml_val, per_desc):
 
 
 def _get_slpctrl_builder():
-    _SleepConfigBuilder = PeripheralConfigBuilder(_corelib.AVR_SleepConfig, _slpctrl_convertor)
-    return PeripheralBuilder(_corelib.AVR_SleepController, _SleepConfigBuilder)
+    cfg_builder = PeripheralConfigBuilder(_corelib.AVR_SleepConfig, _slpctrl_convertor)
+    return PeripheralBuilder(_corelib.AVR_SleepController, cfg_builder)
 
 
 #========================================================================================
@@ -88,24 +88,24 @@ def _get_rstctrl_builder():
 #NVM controller configuration
 
 def _get_nvmctrl_builder():
-    _NVMCtrlConfigBuilder = PeripheralConfigBuilder(_archlib.ArchXT_NVM_Config)
-    return PeripheralBuilder(_archlib.ArchXT_NVM, _NVMCtrlConfigBuilder)
+    cfg_builder = PeripheralConfigBuilder(_archlib.ArchXT_NVMConfig)
+    return PeripheralBuilder(_archlib.ArchXT_NVM, cfg_builder)
 
 
 #========================================================================================
 #Misc controller configuration
 
 def _get_misc_builder():
-    _MiscConfigBuilder = PeripheralConfigBuilder(_archlib.ArchXT_Misc_Config)
-    return PeripheralBuilder(_archlib.ArchXT_MiscRegCtrl, _MiscConfigBuilder)
+    cfg_builder = PeripheralConfigBuilder(_archlib.ArchXT_MiscConfig)
+    return PeripheralBuilder(_archlib.ArchXT_MiscRegCtrl, cfg_builder)
 
 
 #========================================================================================
 #Port management configuration
 
 def _get_port_builder():
-    _PortConfigBuilder = PeripheralConfigBuilder(_archlib.ArchXT_PortConfig)
-    return LetteredPeripheralBuilder(_archlib.ArchXT_Port, _PortConfigBuilder)
+    cfg_builder = PeripheralConfigBuilder(_archlib.ArchXT_PortConfig)
+    return LetteredPeripheralBuilder(_archlib.ArchXT_Port, cfg_builder)
 
 
 #========================================================================================
@@ -128,16 +128,16 @@ def _tca_convertor(cfg, attr, yml_val, per_desc):
 
 
 def _get_tca_builder():
-    _TCA_ConfigBuilder = PeripheralConfigBuilder(_archlib.ArchXT_TimerA_Config, _tca_convertor)
-    return PeripheralBuilder(_archlib.ArchXT_TimerA, _TCA_ConfigBuilder)
+    cfg_builder = PeripheralConfigBuilder(_archlib.ArchXT_TimerAConfig, _tca_convertor)
+    return PeripheralBuilder(_archlib.ArchXT_TimerA, cfg_builder)
 
 
 #========================================================================================
 #TCB management configuration
 
 def _get_tcb_builder():
-    _TCB_ConfigBuilder = PeripheralConfigBuilder(_archlib.ArchXT_TimerB_Config)
-    return IndexedPeripheralBuilder(_archlib.ArchXT_TimerB,_TCB_ConfigBuilder)
+    cfg_builder = PeripheralConfigBuilder(_archlib.ArchXT_TimerBConfig)
+    return IndexedPeripheralBuilder(_archlib.ArchXT_TimerB,cfg_builder)
 
 
 #========================================================================================
@@ -147,9 +147,9 @@ def _rtc_convertor(cfg, attr, yml_val, per_desc):
     if attr == 'clocks':
         py_clocks = []
         for yml_clk in yml_val:
-            clksel_cfg = _archlib.ArchXT_RTC_Config.clksel_config_t()
+            clksel_cfg = _archlib.ArchXT_RTCConfig.clksel_config_t()
             clksel_cfg.reg_value = yml_clk[0]
-            clksel_cfg.source = _archlib.ArchXT_RTC_Config.RTC_ClockSource[yml_clk[1]]
+            clksel_cfg.source = _archlib.ArchXT_RTCConfig.RTC_ClockSource[yml_clk[1]]
             py_clocks.append(clksel_cfg)
 
         cfg.clocks = py_clocks
@@ -159,8 +159,8 @@ def _rtc_convertor(cfg, attr, yml_val, per_desc):
 
 
 def _get_rtc_builder():
-    _RTC_ConfigBuilder = PeripheralConfigBuilder(_archlib.ArchXT_RTC_Config, _rtc_convertor)
-    return PeripheralBuilder(_archlib.ArchXT_RTC, _RTC_ConfigBuilder)
+    cfg_builder = PeripheralConfigBuilder(_archlib.ArchXT_RTCConfig, _rtc_convertor)
+    return PeripheralBuilder(_archlib.ArchXT_RTC, cfg_builder)
 
 
 #========================================================================================
@@ -199,8 +199,8 @@ def _vref_convertor(cfg, attr, yml_val, per_desc):
 
 
 def _get_vref_builder():
-    _VREFConfigBuilder = PeripheralConfigBuilder(_archlib.ArchXT_VREFConfig, _vref_convertor)
-    return PeripheralBuilder(_archlib.ArchXT_VREF, _VREFConfigBuilder)
+    cfg_builder = PeripheralConfigBuilder(_archlib.ArchXT_VREFConfig, _vref_convertor)
+    return PeripheralBuilder(_archlib.ArchXT_VREF, cfg_builder)
 
 
 #========================================================================================
@@ -247,8 +247,8 @@ def _adc_convertor(cfg, attr, yml_val, per_desc):
 
 
 def _get_adc_builder():
-    _ADCConfigBuilder = PeripheralConfigBuilder(_archlib.ArchXT_ADCConfig, _adc_convertor)
-    return IndexedPeripheralBuilder(_archlib.ArchXT_ADC, _ADCConfigBuilder)
+    cfg_builder = PeripheralConfigBuilder(_archlib.ArchXT_ADCConfig, _adc_convertor)
+    return IndexedPeripheralBuilder(_archlib.ArchXT_ADC, cfg_builder)
 
 
 #========================================================================================
@@ -277,16 +277,16 @@ def _acp_convertor(cfg, attr, yml_val, per_desc):
 
 
 def _get_acp_builder():
-    _ACP_ConfigBuilder = PeripheralConfigBuilder(_archlib.ArchXT_ACPConfig, _acp_convertor)
-    return IndexedPeripheralBuilder(_archlib.ArchXT_ACP, _ACP_ConfigBuilder)
+    cfg_builder = PeripheralConfigBuilder(_archlib.ArchXT_ACPConfig, _acp_convertor)
+    return IndexedPeripheralBuilder(_archlib.ArchXT_ACP, cfg_builder)
 
 
 #========================================================================================
 #USART management configuration
 
 def _get_usart_builder():
-    _USARTConfigBuilder = PeripheralConfigBuilder(_archlib.ArchXT_USARTConfig)
-    return IndexedPeripheralBuilder(_archlib.ArchXT_USART, _USARTConfigBuilder)
+    cfg_builder = PeripheralConfigBuilder(_archlib.ArchXT_USARTConfig)
+    return IndexedPeripheralBuilder(_archlib.ArchXT_USART, cfg_builder)
 
 
 #========================================================================================
@@ -304,16 +304,16 @@ def _spi_convertor(cfg, attr, yml_val, per_desc):
 
 
 def _get_spi_builder():
-    _SPIConfigBuilder = PeripheralConfigBuilder(_archlib.ArchXT_SPIConfig, _spi_convertor)
-    return IndexedPeripheralBuilder(_archlib.ArchXT_SPI, _SPIConfigBuilder)
+    cfg_builder = PeripheralConfigBuilder(_archlib.ArchXT_SPIConfig, _spi_convertor)
+    return IndexedPeripheralBuilder(_archlib.ArchXT_SPI, cfg_builder)
 
 
 #========================================================================================
 #TWI management configuration
 
 def _get_twi_builder():
-    _TWIConfigBuilder = PeripheralConfigBuilder(_archlib.ArchXT_TWIConfig)
-    return IndexedPeripheralBuilder(_archlib.ArchXT_TWI, _TWIConfigBuilder)
+    cfg_builder = PeripheralConfigBuilder(_archlib.ArchXT_TWIConfig)
+    return IndexedPeripheralBuilder(_archlib.ArchXT_TWI, cfg_builder)
 
 
 #========================================================================================

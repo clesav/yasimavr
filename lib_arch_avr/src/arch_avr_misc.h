@@ -66,7 +66,7 @@ protected:
  * Implementation of a interrupt controller for AVR series
  */
 
-struct ArchAVR_Misc_Config {
+struct ArchAVR_MiscConfig {
 
     std::vector<reg_addr_t> gpior;
 
@@ -77,13 +77,13 @@ class DLL_EXPORT ArchAVR_MiscRegCtrl : public Peripheral {
 
 public:
 
-    explicit ArchAVR_MiscRegCtrl(const ArchAVR_Misc_Config& config);
+    explicit ArchAVR_MiscRegCtrl(const ArchAVR_MiscConfig& config);
 
     virtual bool init(Device& device) override;
 
 private:
 
-    const ArchAVR_Misc_Config& m_config;
+    const ArchAVR_MiscConfig& m_config;
 
 };
 

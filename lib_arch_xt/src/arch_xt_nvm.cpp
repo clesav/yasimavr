@@ -136,7 +136,7 @@ private:
 };
 
 
-ArchXT_NVM::ArchXT_NVM(const ArchXT_NVM_Config& config)
+ArchXT_NVM::ArchXT_NVM(const ArchXT_NVMConfig& config)
 :Peripheral(AVR_IOCTL_NVM)
 ,m_config(config)
 ,m_state(State_Idle)

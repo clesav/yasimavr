@@ -43,7 +43,7 @@ YASIMAVR_BEGIN_NAMESPACE
  *      - Synchronize Update (SYNCUPD)
  */
 
-struct ArchXT_TimerB_Config {
+struct ArchXT_TimerBConfig {
 
     reg_addr_t reg_base;
     int_vect_t iv_capt;
@@ -54,7 +54,7 @@ class DLL_EXPORT ArchXT_TimerB : public Peripheral, public SignalHook {
 
 public:
 
-    ArchXT_TimerB(int num, const ArchXT_TimerB_Config& config);
+    ArchXT_TimerB(int num, const ArchXT_TimerBConfig& config);
 
     //Override of Peripheral callbacks
     virtual bool init(Device& device) override;
@@ -67,7 +67,7 @@ public:
 
 private:
 
-    const ArchXT_TimerB_Config& m_config;
+    const ArchXT_TimerBConfig& m_config;
 
     uint8_t m_clk_mode;
 

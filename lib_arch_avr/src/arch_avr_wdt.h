@@ -35,7 +35,7 @@ YASIMAVR_BEGIN_NAMESPACE
  * Implementation of a Watchdog Timer for AVR series
  */
 
-struct ArchAVR_WDT_Config {
+struct ArchAVR_WDTConfig {
 
     uint32_t clock_frequency;
     std::vector<uint32_t> delays;
@@ -56,7 +56,7 @@ class DLL_EXPORT ArchAVR_WDT : public WatchdogTimer, public InterruptHandler {
 
 public:
 
-    explicit ArchAVR_WDT(const ArchAVR_WDT_Config& config);
+    explicit ArchAVR_WDT(const ArchAVR_WDTConfig& config);
 
     virtual bool init(Device& device) override;
     virtual void reset() override;
@@ -70,7 +70,7 @@ protected:
 private:
 
     //Device variant configuration
-    const ArchAVR_WDT_Config& m_config;
+    const ArchAVR_WDTConfig& m_config;
     //cycle number when the register have been unlocked for modification
     cycle_count_t m_unlock_cycle;
 

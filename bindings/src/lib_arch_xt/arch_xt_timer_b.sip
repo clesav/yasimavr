@@ -21,7 +21,7 @@
 
 //=======================================================================================
 
-struct ArchXT_TimerB_Config {
+struct ArchXT_TimerBConfig {
 %TypeHeaderCode
 #include "arch_xt_timer_b.h"
 %End
@@ -39,7 +39,7 @@ class ArchXT_TimerB : public Peripheral, public SignalHook /NoDefaultCtors/ {
 
 public:
 
-    ArchXT_TimerB(int, const ArchXT_TimerB_Config& /KeepReference/);
+    ArchXT_TimerB(int, const ArchXT_TimerBConfig& /KeepReference/);
 
     virtual bool init(Device&);
     virtual void reset();

@@ -42,7 +42,7 @@ YASIMAVR_BEGIN_NAMESPACE
  *      - Synchronization Busy flags
  */
 
-struct ArchXT_RTC_Config {
+struct ArchXT_RTCConfig {
 
     enum RTC_ClockSource {
         Clock_32kHz,
@@ -66,7 +66,7 @@ class DLL_EXPORT ArchXT_RTC : public Peripheral {
 
 public:
 
-    explicit ArchXT_RTC(const ArchXT_RTC_Config& config);
+    explicit ArchXT_RTC(const ArchXT_RTCConfig& config);
     virtual ~ArchXT_RTC();
 
     virtual bool init(Device& device) override;
@@ -77,7 +77,7 @@ public:
 
 private:
 
-    const ArchXT_RTC_Config& m_config;
+    const ArchXT_RTCConfig& m_config;
 
     uint8_t m_clk_mode;
 

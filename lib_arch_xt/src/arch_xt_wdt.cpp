@@ -42,7 +42,7 @@ YASIMAVR_USING_NAMESPACE
 /*
  * Constructor of a generic watchdog timer
  */
-ArchXT_WDT::ArchXT_WDT(const ArchXT_WDT_Config& config)
+ArchXT_WDT::ArchXT_WDT(const ArchXT_WDTConfig& config)
 :m_config(config)
 {}
 

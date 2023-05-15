@@ -95,7 +95,7 @@ enum InterruptPriority {
 #define INT_REG_ADDR(reg) \
     (m_config.reg_base + offsetof(CPUINT_t, reg))
 
-ArchXT_IntCtrl::ArchXT_IntCtrl(const ArchXT_IntCtrl_Config& config)
+ArchXT_IntCtrl::ArchXT_IntCtrl(const ArchXT_IntCtrlConfig& config)
 :InterruptController(config.vector_count)
 ,m_config(config)
 {}
@@ -248,7 +248,7 @@ void ArchXT_ResetCtrl::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t&
 #define SIGROW_MEM_OFS      3
 #define SIGROW_MEM_SIZE     (sizeof(SIGROW_t) - SIGROW_MEM_OFS)
 
-ArchXT_MiscRegCtrl::ArchXT_MiscRegCtrl(const ArchXT_Misc_Config& config)
+ArchXT_MiscRegCtrl::ArchXT_MiscRegCtrl(const ArchXT_MiscConfig& config)
 :Peripheral(AVR_ID('M', 'I', 'S', 'C'))
 ,m_config(config)
 {

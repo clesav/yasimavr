@@ -73,7 +73,7 @@ public:
 };
 
 
-struct ArchXT_IntCtrl_Config {
+struct ArchXT_IntCtrlConfig {
 %TypeHeaderCode
 #include "arch_xt_misc.h"
 %End
@@ -91,7 +91,7 @@ class ArchXT_IntCtrl : public InterruptController /NoDefaultCtors/ {
 
 public:
 
-    ArchXT_IntCtrl(const ArchXT_IntCtrl_Config& /KeepReference/);
+    ArchXT_IntCtrl(const ArchXT_IntCtrlConfig& /KeepReference/);
 
     virtual bool init(Device&);
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
@@ -121,7 +121,7 @@ public:
 };
 
 
-struct ArchXT_Misc_Config {
+struct ArchXT_MiscConfig {
 %TypeHeaderCode
 #include "arch_xt_misc.h"
 %End
@@ -142,7 +142,7 @@ class ArchXT_MiscRegCtrl : public Peripheral /NoDefaultCtors/ {
 
 public:
 
-    ArchXT_MiscRegCtrl(const ArchXT_Misc_Config& /KeepReference/);
+    ArchXT_MiscRegCtrl(const ArchXT_MiscConfig& /KeepReference/);
 
     virtual bool init(Device&);
     virtual void reset();

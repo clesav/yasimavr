@@ -43,7 +43,7 @@ YASIMAVR_USING_NAMESPACE
 static const uint16_t PrescalerFactors[8] = { 1, 2, 4, 8, 16, 64, 256, 1024 };
 
 
-ArchXT_TimerA::ArchXT_TimerA(const ArchXT_TimerA_Config& config)
+ArchXT_TimerA::ArchXT_TimerA(const ArchXT_TimerAConfig& config)
 :Peripheral(AVR_IOCTL_TIMER('A', '0'))
 ,m_config(config)
 ,m_cnt(0)

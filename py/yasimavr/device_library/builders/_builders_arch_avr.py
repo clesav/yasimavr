@@ -78,7 +78,7 @@ def _misc_convertor(cfg, attr, yml_val, per_desc):
 
 
 def _get_misc_builder():
-    cfg_builder = PeripheralConfigBuilder(_archlib.ArchAVR_Misc_Config, _misc_convertor)
+    cfg_builder = PeripheralConfigBuilder(_archlib.ArchAVR_MiscConfig, _misc_convertor)
     return PeripheralBuilder(_archlib.ArchAVR_MiscRegCtrl, cfg_builder)
 
 

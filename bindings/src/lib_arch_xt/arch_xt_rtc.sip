@@ -21,7 +21,7 @@
 
 //=======================================================================================
 
-struct ArchXT_RTC_Config {
+struct ArchXT_RTCConfig {
 %TypeHeaderCode
 #include "arch_xt_rtc.h"
 %End
@@ -35,7 +35,7 @@ struct ArchXT_RTC_Config {
         RTC_ClockSource source;
     };
 
-    std::vector<ArchXT_RTC_Config::clksel_config_t> clocks;
+    std::vector<ArchXT_RTCConfig::clksel_config_t> clocks;
     reg_addr_t reg_base;
     int_vect_t iv_rtc;
     int_vect_t iv_pit;
@@ -50,7 +50,7 @@ class ArchXT_RTC : public Peripheral /NoDefaultCtors/ {
 
 public:
 
-    ArchXT_RTC(const ArchXT_RTC_Config& /KeepReference/);
+    ArchXT_RTC(const ArchXT_RTCConfig& /KeepReference/);
 
     virtual bool init(Device&);
     virtual void reset();

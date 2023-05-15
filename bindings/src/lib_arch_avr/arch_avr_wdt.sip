@@ -21,7 +21,7 @@
 
 //=======================================================================================
 
-struct ArchAVR_WDT_Config {
+struct ArchAVR_WDTConfig {
 %TypeHeaderCode
 #include "arch_avr_wdt.h"
 %End
@@ -48,7 +48,7 @@ class ArchAVR_WDT : public WatchdogTimer, public InterruptHandler /NoDefaultCtor
 
 public:
 
-    ArchAVR_WDT(const ArchAVR_WDT_Config& /KeepReference/);
+    ArchAVR_WDT(const ArchAVR_WDTConfig& /KeepReference/);
 
     virtual bool init(Device&);
     virtual void reset();

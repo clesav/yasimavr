@@ -59,7 +59,7 @@ class ArchXT_TimerB;
  *      - Timer command for forced update/restart
  */
 
-struct ArchXT_TimerA_Config {
+struct ArchXT_TimerAConfig {
 
     reg_addr_t reg_base;
 
@@ -72,7 +72,7 @@ class DLL_EXPORT ArchXT_TimerA : public Peripheral, public SignalHook {
 
 public:
 
-    explicit ArchXT_TimerA(const ArchXT_TimerA_Config& config);
+    explicit ArchXT_TimerA(const ArchXT_TimerAConfig& config);
 
     //Override of Peripheral callbacks
     virtual bool init(Device& device) override;
@@ -86,7 +86,7 @@ public:
 
 private:
 
-    const ArchXT_TimerA_Config& m_config;
+    const ArchXT_TimerAConfig& m_config;
 
     //***** Clock management *****
     std::vector<ArchXT_TimerB*> m_synched_timers;

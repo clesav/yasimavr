@@ -49,7 +49,7 @@ protected:
 };
 
 
-struct ArchAVR_Misc_Config {
+struct ArchAVR_MiscConfig {
 %TypeHeaderCode
 #include "arch_avr_misc.h"
 %End
@@ -66,7 +66,7 @@ class ArchAVR_MiscRegCtrl : public Peripheral /NoDefaultCtors/ {
 
 public:
 
-    ArchAVR_MiscRegCtrl(const ArchAVR_Misc_Config& /KeepReference/);
+    ArchAVR_MiscRegCtrl(const ArchAVR_MiscConfig& /KeepReference/);
 
     virtual bool init(Device& device);
 

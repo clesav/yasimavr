@@ -48,7 +48,7 @@ static const char* ClockSourceNames[3] = {
 };
 
 
-ArchXT_TimerB::ArchXT_TimerB(int num, const ArchXT_TimerB_Config& config)
+ArchXT_TimerB::ArchXT_TimerB(int num, const ArchXT_TimerBConfig& config)
 :Peripheral(AVR_IOCTL_TIMER('B', 0x30 + num))
 ,m_config(config)
 ,m_clk_mode(TIMER_CLOCK_DISABLED)

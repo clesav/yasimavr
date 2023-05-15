@@ -82,7 +82,7 @@ private:
  *      - Interrupt Vector Select feature
  */
 
-struct ArchXT_IntCtrl_Config {
+struct ArchXT_IntCtrlConfig {
 
     unsigned int vector_count;
     reg_addr_t reg_base;
@@ -94,7 +94,7 @@ class DLL_EXPORT ArchXT_IntCtrl : public InterruptController {
 
 public:
 
-    explicit ArchXT_IntCtrl(const ArchXT_IntCtrl_Config& config);
+    explicit ArchXT_IntCtrl(const ArchXT_IntCtrlConfig& config);
 
     virtual bool init(Device& device) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
@@ -107,7 +107,7 @@ protected:
 
 private:
 
-    const ArchXT_IntCtrl_Config& m_config;
+    const ArchXT_IntCtrlConfig& m_config;
 
 };
 
@@ -148,7 +148,7 @@ private:
 #define AVR_CTLREQ_WRITE_SIGROW         1
 
 
-struct ArchXT_Misc_Config {
+struct ArchXT_MiscConfig {
 
     reg_addr_t reg_base_gpior;
     unsigned int gpior_count;
@@ -165,7 +165,7 @@ class DLL_EXPORT ArchXT_MiscRegCtrl : public Peripheral {
 
 public:
 
-    ArchXT_MiscRegCtrl(const ArchXT_Misc_Config& config);
+    ArchXT_MiscRegCtrl(const ArchXT_MiscConfig& config);
     virtual ~ArchXT_MiscRegCtrl();
 
     virtual bool init(Device& device) override;
@@ -176,7 +176,7 @@ public:
 
 private:
 
-    const ArchXT_Misc_Config& m_config;
+    const ArchXT_MiscConfig& m_config;
     uint8_t* m_sigrow;
 
 };

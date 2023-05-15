@@ -34,7 +34,7 @@ YASIMAVR_BEGIN_NAMESPACE
  * Implementation of a Watchdog Timer for XT core series
  */
 
-struct ArchXT_WDT_Config {
+struct ArchXT_WDTConfig {
 
     uint32_t clock_frequency;
     std::vector<uint32_t> delays;
@@ -48,7 +48,7 @@ class DLL_EXPORT ArchXT_WDT : public WatchdogTimer {
 
 public:
 
-    explicit ArchXT_WDT(const ArchXT_WDT_Config& config);
+    explicit ArchXT_WDT(const ArchXT_WDTConfig& config);
 
     virtual bool init(Device& device) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
@@ -59,7 +59,7 @@ protected:
 
 private:
 
-    const ArchXT_WDT_Config& m_config;
+    const ArchXT_WDTConfig& m_config;
 
 };
 

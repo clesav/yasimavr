@@ -36,7 +36,7 @@ const uint16_t CTLREQ_TCA_REGISTER_TCB;
 const uint8_t TCA_CMP_CHANNEL_COUNT;
 
 
-struct ArchXT_TimerA_Config {
+struct ArchXT_TimerAConfig {
 %TypeHeaderCode
 #include "arch_xt_timer_a.h"
 %End
@@ -62,7 +62,7 @@ class ArchXT_TimerA : public Peripheral, public SignalHook /NoDefaultCtors/ {
 
 public:
 
-    ArchXT_TimerA(const ArchXT_TimerA_Config& /KeepReference/);
+    ArchXT_TimerA(const ArchXT_TimerAConfig& /KeepReference/);
 
     virtual bool init(Device&);
     virtual void reset();

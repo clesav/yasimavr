@@ -39,7 +39,7 @@ YASIMAVR_USING_NAMESPACE
 #define REG_OFS(reg) \
     offsetof(RTC_t, reg)
 
-typedef ArchXT_RTC_Config CFG;
+typedef ArchXT_RTCConfig CFG;
 
 #define PRESCALER_MAX 32678
 

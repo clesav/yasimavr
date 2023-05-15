@@ -49,7 +49,7 @@ public:
 };
 
 
-struct ArchXT_NVM_Config {
+struct ArchXT_NVMConfig {
 %TypeHeaderCode
 #include "arch_xt_nvm.h"
 %End
@@ -78,7 +78,7 @@ class ArchXT_NVM : public Peripheral /NoDefaultCtors/ {
 
 public:
 
-    ArchXT_NVM(const ArchXT_NVM_Config& /KeepReference/);
+    ArchXT_NVM(const ArchXT_NVMConfig& /KeepReference/);
 
     virtual bool init(Device&);
     virtual void reset();

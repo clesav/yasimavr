@@ -21,7 +21,7 @@
 
 //=======================================================================================
 
-struct ArchXT_WDT_Config {
+struct ArchXT_WDTConfig {
 %TypeHeaderCode
 #include "arch_xt_wdt.h"
 %End
@@ -41,7 +41,7 @@ class ArchXT_WDT : public WatchdogTimer /NoDefaultCtors/ {
 
 public:
 
-    ArchXT_WDT(const ArchXT_WDT_Config& /KeepReference/);
+    ArchXT_WDT(const ArchXT_WDTConfig& /KeepReference/);
 
     virtual bool init(Device&);
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);

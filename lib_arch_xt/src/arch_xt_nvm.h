@@ -91,7 +91,7 @@ private:
  *   - internally, AVR_CTLREQ_NVM_WRITE is supported to receive NVM write to the page buffer
  */
 
-struct ArchXT_NVM_Config {
+struct ArchXT_NVMConfig {
 
     reg_addr_t reg_base;
 
@@ -113,7 +113,7 @@ class DLL_EXPORT ArchXT_NVM : public Peripheral {
 
 public:
 
-    explicit ArchXT_NVM(const ArchXT_NVM_Config& config);
+    explicit ArchXT_NVM(const ArchXT_NVMConfig& config);
     virtual ~ArchXT_NVM();
 
     virtual bool init(Device& device) override;
@@ -142,7 +142,7 @@ private:
         State_Halting,
     };
 
-    const ArchXT_NVM_Config& m_config;
+    const ArchXT_NVMConfig& m_config;
     State m_state;
     uint8_t* m_buffer;
     uint8_t* m_bufset;

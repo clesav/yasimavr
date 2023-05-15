@@ -31,7 +31,7 @@ YASIMAVR_USING_NAMESPACE
 /*
  * Constructor of a watchdog timer
  */
-ArchAVR_WDT::ArchAVR_WDT(const ArchAVR_WDT_Config& config)
+ArchAVR_WDT::ArchAVR_WDT(const ArchAVR_WDTConfig& config)
 :m_config(config)
 ,m_unlock_cycle(UINT64_MAX)
 {}
