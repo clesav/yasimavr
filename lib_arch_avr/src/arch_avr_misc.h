@@ -48,11 +48,11 @@ public:
 /*
  * Implementation of a interrupt controller for AVR series
  */
-class DLL_EXPORT ArchAVR_Interrupt : public InterruptController {
+class DLL_EXPORT ArchAVR_IntCtrl : public InterruptController {
 
 public:
 
-    ArchAVR_Interrupt(unsigned int size);
+    explicit ArchAVR_IntCtrl(unsigned int size);
 
 protected:
 

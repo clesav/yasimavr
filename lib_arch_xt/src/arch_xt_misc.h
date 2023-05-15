@@ -94,7 +94,7 @@ class DLL_EXPORT ArchXT_IntCtrl : public InterruptController {
 
 public:
 
-    ArchXT_IntCtrl(const ArchXT_IntCtrl_Config& config);
+    explicit ArchXT_IntCtrl(const ArchXT_IntCtrl_Config& config);
 
     virtual bool init(Device& device) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;

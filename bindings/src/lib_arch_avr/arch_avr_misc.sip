@@ -33,14 +33,14 @@ public:
 };
 
 
-class ArchAVR_Interrupt : public InterruptController /NoDefaultCtors/ {
+class ArchAVR_IntCtrl : public InterruptController /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_avr_misc.h"
 %End
 
 public:
 
-    ArchAVR_Interrupt(unsigned int);
+    ArchAVR_IntCtrl(unsigned int);
 
 protected:
 

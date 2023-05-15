@@ -38,7 +38,7 @@ def _get_intctrl_builder():
     def _get_vector_count(per_desc):
         return len(per_desc.device.interrupt_map.vectors)
 
-    return PeripheralBuilder(_archlib.ArchAVR_Interrupt, _get_vector_count)
+    return PeripheralBuilder(_archlib.ArchAVR_IntCtrl, _get_vector_count)
 
 
 #========================================================================================

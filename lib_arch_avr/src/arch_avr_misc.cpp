@@ -37,11 +37,11 @@ ArchAVR_VREF::ArchAVR_VREF(double band_gap)
 
 //=======================================================================================
 
-ArchAVR_Interrupt::ArchAVR_Interrupt(unsigned int size)
+ArchAVR_IntCtrl::ArchAVR_IntCtrl(unsigned int size)
 :InterruptController(size)
 {}
 
-int_vect_t ArchAVR_Interrupt::get_next_irq() const
+int_vect_t ArchAVR_IntCtrl::get_next_irq() const
 {
     for (int_vect_t i = 0; i < intr_count(); ++i) {
         if (interrupt_raised(i))
