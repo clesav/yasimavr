@@ -203,7 +203,7 @@ def _init_VCD():
 def _run_syncloop():
     global _simloop
 
-    _simloop = _corelib.AVR_SimLoop(_device)
+    _simloop = _corelib.SimLoop(_device)
     _simloop.set_fast_mode(True)
 
     _load_firmware()
@@ -221,7 +221,7 @@ def _run_asyncloop(args):
 
     global _simloop
 
-    _simloop = _corelib.AVR_AsyncSimLoop(_device)
+    _simloop = _corelib.AsyncSimLoop(_device)
     _simloop.set_fast_mode(True)
 
     _load_firmware()

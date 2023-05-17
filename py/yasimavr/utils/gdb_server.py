@@ -90,7 +90,7 @@ class GDB_Stub:
             self._device = simloop.device()
             self._ownloop = False
         elif device is not None:
-            self._simloop = AVR_AsyncSimLoop(device)
+            self._simloop = AsyncSimLoop(device)
             self._device = device
             self._ownloop = True
         else:
@@ -212,11 +212,11 @@ class GDB_Stub:
 
     def __run_simloop_join_thread(self):
         #Wait until the simloop stop
-        while self._simloop.state() not in (AVR_AsyncSimLoop.State.Stopped,
-                                            AVR_AsyncSimLoop.State.Done):
+        while self._simloop.state() not in (AsyncSimLoop.State.Stopped,
+                                            AsyncSimLoop.State.Done):
             time.sleep(0.001)
 
-        if self._simloop.state() == AVR_AsyncSimLoop.State.Done:
+        if self._simloop.state() == AsyncSimLoop.State.Done:
             self.__send_reply('W01')
         else:
             self.__send_reply('S05')
@@ -322,7 +322,7 @@ class GDB_Stub:
 
 
     def __handle_cmd_status(self):
-        if self._simloop.state() == AVR_AsyncSimLoop.State.Done:
+        if self._simloop.state() == AsyncSimLoop.State.Done:
             self.__send_reply('X01')
         else:
             self.__send_reply('S05')

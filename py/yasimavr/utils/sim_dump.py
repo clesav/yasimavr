@@ -219,13 +219,13 @@ def _serialize_simloop(simloop, dumper):
     _serialize_device(simloop.device(), dumper)
 
 
-def sim_dump(simloop : corelib.AVR_AbstractSimLoop, stream : io.TextIOBase = None) -> 'str|None':
+def sim_dump(simloop : corelib.AbstractSimLoop, stream : io.TextIOBase = None) -> 'str|None':
     '''
     usage: sim_dump(simloop, stream = None) -> str | None
 
     Dumps the current state of a simulation into a I/O stream.
 
-    simloop : instance of AVR_AbstractSimLoop to dump
+    simloop : instance of AbstractSimLoop to dump
     stream : writable TextIOBase instance or None
     If stream is None, the state is dumped into a string and the string is returned.
     If stream is not None, the state is written into it and None is returned.

@@ -166,7 +166,7 @@ class VCD_Recorder:
     signals.
 
     parameters:
-        simloop: simulation loop object (AVR_AbstractSimLoop instance)
+        simloop: simulation loop object (AbstractSimLoop instance)
         file: file path of the VCD record
         kwargs: other arguments passed on to the underlying VCDWriter object
                 see pyvcd documentation for details

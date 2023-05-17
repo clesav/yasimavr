@@ -50,7 +50,7 @@ def _slpctrl_convertor(cfg, attr, yml_val, per_desc):
     if attr == 'modes':
         py_modes = []
         for mode_reg_value, mode_name in yml_val.items():
-            mode_cfg = _corelib.AVR_SleepConfig.mode_config_t()
+            mode_cfg = _corelib.SleepConfig.mode_config_t()
             mode_cfg.reg_value = mode_reg_value
             mode_cfg.mode = _corelib.SleepMode[mode_name]
 
@@ -66,8 +66,8 @@ def _slpctrl_convertor(cfg, attr, yml_val, per_desc):
 
 
 def _get_slpctrl_builder():
-    cfg_builder = PeripheralConfigBuilder(_corelib.AVR_SleepConfig, _slpctrl_convertor)
-    return PeripheralBuilder(_corelib.AVR_SleepController, cfg_builder)
+    cfg_builder = PeripheralConfigBuilder(_corelib.SleepConfig, _slpctrl_convertor)
+    return PeripheralBuilder(_corelib.SleepController, cfg_builder)
 
 
 #========================================================================================
