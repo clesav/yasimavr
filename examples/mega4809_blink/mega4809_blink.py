@@ -13,48 +13,48 @@ class LED(QtWidgets.QWidget):
     state changes. When it happens, it repaints the LED, represented
     by a filled circle.
     '''
-    
+
     #Is it necessary that the led state changes transit via a Qt signal
     #because the notification is raised in a thread different to the main
     #Qt application thread. The Qt signal/slot system takes care of the
     #synchronisation
     sig_pin_changed = QtCore.pyqtSignal(bool)
-    
-	
+
+
     def __init__(self, parent, pin):
         '''
         Initialisation of a LED widget.
         parent : the Qt window containing the widget
         pin : a AVR_Pin object to which the LED connects.'''
-        
+
         super().__init__(parent)
-        
+
         #Create a hook and connect it to the pin
-        self.hook = corelib.AVR_CallableSignalHook(self._pin_signal_raised)
+        self.hook = corelib.CallableSignalHook(self._pin_signal_raised)
         pin.signal().connect_hook(self.hook)
         #Default state: OFF
         self.state = False
         #Connect our signal to our slot for synchronisation
         self.sig_pin_changed.connect(self._slot_pin_changed)
-    
-    
+
+
     def _pin_signal_raised(self, sigdata, _):
         #Filter on digital state changes
-        if sigdata.sigid == corelib.AVR_Pin.SignalId.DigitalStateChange:
+        if sigdata.sigid == corelib.Pin.SignalId.DigitalStateChange:
             #Obtain the new pin state and emit the widget signal
             pin_state = sigdata.data.as_uint()
             #turn on the LED only if the pin is driven high
-            led_state = (pin_state == corelib.AVR_Pin.State.High)
+            led_state = (pin_state == corelib.Pin.State.High)
             self.sig_pin_changed.emit(led_state)
-    
-    
+
+
     #Slot receiving the LED state changes. Store the new state ON/OFF
     #and call for a repaint
     def _slot_pin_changed(self, state):
         self.state = state
         self.repaint()
-    
-    
+
+
     #Override of QWidget to draw the LED
     def paintEvent(self, event):
         #Draw a filled circle of 40 pixel diameter in the center of the widget area
@@ -67,25 +67,25 @@ class LED(QtWidgets.QWidget):
 
 
 def main():
-    
-    #Uncomment this to have the device trace
-    #corelib.AVR_StandardLogger.set_level(corelib.AVR_DeviceLogger.LOG_TRACE)
-    
+
     #Create a new MCU model ATMega4809
     device = load_device('atmega4809')
-    
+
+    #Uncomment this to have the device trace
+    #device.logger().set_level(corelib.Logger.Level.Trace)
+
     #Create a asynchronous simulation loop for this device
-    simloop = corelib.AVR_AsyncSimLoop(device)
-    
+    simloop = corelib.AsyncSimLoop(device)
+
     #Load the firmware with a MCU clock of 1MHz
     fw_path = os.path.join(os.path.dirname(__file__), 'mega4809_blink_fw.elf')
-    firmware = corelib.AVR_Firmware.read_elf(fw_path)
+    firmware = corelib.Firmware.read_elf(fw_path)
     firmware.frequency = 1000000
     device.load_firmware(firmware)
-    
+
     #Pin to which the LED will be connected
     pin = device.find_pin('PB0')
-    
+
     #Qt initialisation
     qt_app = QtWidgets.QApplication([])
     window = QtWidgets.QMainWindow()
@@ -93,19 +93,19 @@ def main():
     widget = LED(window, pin)
     window.setCentralWidget(widget)
     window.show()
-    
+
     #Start a separate thread to run the simulation loop
     simloop_thread = threading.Thread(target=simloop.run)
     simloop_thread.start()
-    
+
     #The loop is initialised in the Stopped state so the first thing
     #to do is to order it to run continuously
     with simloop:
         simloop.loop_continue()
-    
+
     #Enter the main GUI event loop of Qt
     qt_app.exec_()
-    
+
     #On leaving the application, stop the simloop
     #The thread will terminate.
     with simloop:
