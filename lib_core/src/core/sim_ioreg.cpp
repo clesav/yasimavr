@@ -23,6 +23,8 @@
 
 #include "sim_ioreg.h"
 
+YASIMAVR_USING_NAMESPACE
+
 
 //=======================================================================================
 enum REG_Flags {
@@ -35,11 +37,12 @@ enum REG_Flags {
  * Dispatcher is a class for the few registers that are shared between several
  * peripherals. It is allocated automatically by the IOREG instances
  */
-class AVR_IO_RegDispatcher : public AVR_IO_RegHandler {
+
+class IO_RegDispatcher : public IO_RegHandler {
 
 public:
 
-    void add_handler(AVR_IO_RegHandler& handler)
+    void add_handler(IO_RegHandler& handler)
     {
         for (auto h : m_handlers)
             if (h == &handler) return;
@@ -62,14 +65,14 @@ public:
 
 private:
 
-    std::vector<AVR_IO_RegHandler*> m_handlers;
+    std::vector<IO_RegHandler*> m_handlers;
 
 };
 
 
 //=======================================================================================
 
-AVR_IO_Register::AVR_IO_Register(bool core_reg)
+IO_Register::IO_Register(bool core_reg)
 :m_value(0)
 ,m_handler(nullptr)
 ,m_flags(core_reg ? Reg_Flag_Core : 0)
@@ -77,33 +80,33 @@ AVR_IO_Register::AVR_IO_Register(bool core_reg)
 ,m_ro_mask(0)
 {}
 
-AVR_IO_Register::AVR_IO_Register(const AVR_IO_Register& other)
+IO_Register::IO_Register(const IO_Register& other)
 :m_value(other.m_value)
 ,m_flags(other.m_flags)
 ,m_use_mask(other.m_use_mask)
 ,m_ro_mask(other.m_ro_mask)
 {
     if (m_flags & Reg_Flag_Dispatcher)
-        m_handler = new AVR_IO_RegDispatcher(*static_cast<AVR_IO_RegDispatcher*>(other.m_handler));
+        m_handler = new IO_RegDispatcher(*static_cast<IO_RegDispatcher*>(other.m_handler));
     else
         m_handler = other.m_handler;
 }
 
-AVR_IO_Register::~AVR_IO_Register()
+IO_Register::~IO_Register()
 {
     if (m_flags & Reg_Flag_Dispatcher)
-        delete static_cast<AVR_IO_RegDispatcher*>(m_handler);
+        delete static_cast<IO_RegDispatcher*>(m_handler);
 }
 
-void AVR_IO_Register::set_handler(AVR_IO_RegHandler& handler, uint8_t use_mask, uint8_t ro_mask)
+void IO_Register::set_handler(IO_RegHandler& handler, uint8_t use_mask, uint8_t ro_mask)
 {
     if (m_flags & Reg_Flag_Dispatcher) {
-        AVR_IO_RegDispatcher* dispatcher = static_cast<AVR_IO_RegDispatcher*>(m_handler);
+        IO_RegDispatcher* dispatcher = static_cast<IO_RegDispatcher*>(m_handler);
         dispatcher->add_handler(handler);
     }
     else if (m_handler) {
         if (&handler != m_handler) {
-            AVR_IO_RegDispatcher* dispatcher = new AVR_IO_RegDispatcher();
+            IO_RegDispatcher* dispatcher = new IO_RegDispatcher();
             dispatcher->add_handler(*m_handler);
             dispatcher->add_handler(handler);
             m_handler = dispatcher;
@@ -118,7 +121,7 @@ void AVR_IO_Register::set_handler(AVR_IO_RegHandler& handler, uint8_t use_mask, 
     m_ro_mask |= ro_mask;
 }
 
-uint8_t AVR_IO_Register::cpu_read(reg_addr_t addr)
+uint8_t IO_Register::cpu_read(reg_addr_t addr)
 {
     if (m_handler)
         m_value = m_handler->ioreg_read_handler(addr, m_value);
@@ -126,7 +129,7 @@ uint8_t AVR_IO_Register::cpu_read(reg_addr_t addr)
     return m_value;
 }
 
-bool AVR_IO_Register::cpu_write(reg_addr_t addr, uint8_t value)
+bool IO_Register::cpu_write(reg_addr_t addr, uint8_t value)
 {
     if (m_handler) {
         //Are we trying to write any read-only or unused bit with a '1' ?
@@ -146,12 +149,12 @@ bool AVR_IO_Register::cpu_write(reg_addr_t addr, uint8_t value)
     }
 }
 
-uint8_t AVR_IO_Register::ioctl_read(reg_addr_t addr)
+uint8_t IO_Register::ioctl_read(reg_addr_t addr)
 {
     return m_value;
 }
 
-void AVR_IO_Register::ioctl_write(reg_addr_t addr, uint8_t value)
+void IO_Register::ioctl_write(reg_addr_t addr, uint8_t value)
 {
     m_value = value;
 }

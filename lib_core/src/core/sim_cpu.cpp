@@ -32,6 +32,8 @@
 #include "sim_debug.h"
 #include "sim_device.h"
 
+YASIMAVR_USING_NAMESPACE
+
 
 //=======================================================================================
 
@@ -204,7 +206,7 @@ static const char* sreg_to_str(const uint8_t* sreg, char* sreg_str)
 #ifdef YASIMAVR_USE_TRACE
 
 #define TRACE_OP(f, args...) \
-    m_device->logger().log(AVR_Logger::Level_Trace, "PC=0x%04X SREG=%s | " f, \
+    m_device->logger().log(Logger::Level_Trace, "PC=0x%04X SREG=%s | " f, \
                            m_pc, \
                            sreg_to_str(m_sreg, sreg_str), \
                            ##args)
@@ -227,7 +229,7 @@ static bool _is_instruction_32_bits(uint16_t opcode)
 }
 
 //Main instruction interpreter, copied from the simavr project with some adaptation
-cycle_count_t AVR_Core::run_instruction()
+cycle_count_t Core::run_instruction()
 {
 
     if (m_pc > m_config.flashend) {
@@ -1032,7 +1034,7 @@ cycle_count_t AVR_Core::run_instruction()
 
 //=======================================================================================
 
-void AVR_Core::dbg_insert_breakpoint(breakpoint_t& bp)
+void Core::dbg_insert_breakpoint(breakpoint_t& bp)
 {
     //Obtain the size of the targeted opcode
     uint32_t curr_opcode = get_flash16le(bp.addr);
@@ -1044,7 +1046,7 @@ void AVR_Core::dbg_insert_breakpoint(breakpoint_t& bp)
     m_flash.dbg_write(AVR_BREAK_OPCODE >> 8, bp.addr + 1);
 }
 
-void AVR_Core::dbg_remove_breakpoint(breakpoint_t& bp)
+void Core::dbg_remove_breakpoint(breakpoint_t& bp)
 {
     //Restore the original instruction in flash
     m_flash.dbg_write(bp.instr, bp.addr, bp.instr_len);

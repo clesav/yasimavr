@@ -28,7 +28,9 @@
 #include "sim_types.h"
 #include "sim_signal.h"
 
-class AVR_InterruptHandler;
+YASIMAVR_BEGIN_NAMESPACE
+
+class InterruptHandler;
 
 //=======================================================================================
 /*
@@ -42,7 +44,7 @@ class AVR_InterruptHandler;
 
 //Request sent to by any peripheral to register an interrupt vector
 //The index shall be the interrupt vector index
-//The value 'p' shall be the corresponding AVR_InterruptHandler object
+//The value 'p' shall be the corresponding InterruptHandler object
 //Notes:
 //   . a vector can only be registered once
 //   . the vector 0 cannot be registered
@@ -58,15 +60,15 @@ class AVR_InterruptHandler;
 
 //=======================================================================================
 /*
- * Class AVR_InterruptController
+ * Class InterruptController
  * Peripheral implementation of a generic interrupt controller
  * It manages an interrupt vector table that the CPU can access to know if a interrupt
  * routine should be executed.
  * The arbitration of priorities between vectors is left to concrete sub-classes.
 */
-class DLL_EXPORT AVR_InterruptController : public AVR_Peripheral {
+class DLL_EXPORT InterruptController : public Peripheral {
 
-    friend class AVR_InterruptHandler;
+    friend class InterruptHandler;
 
 public:
 
@@ -91,12 +93,12 @@ public:
 
     //===== Constructor/destructor =====
     //Construct the controller with the given vector table size
-    explicit AVR_InterruptController(unsigned int size);
+    explicit InterruptController(unsigned int size);
 
     //===== Override of IO_CTL virtual methods =====
     virtual void reset() override;
     virtual bool ctlreq(uint16_t req, ctlreq_data_t* data) override;
-    virtual void sleep(bool on, AVR_SleepMode mode) override;
+    virtual void sleep(bool on, SleepMode mode) override;
 
     //===== Interface API for the CPU =====
     //Returns a vector index if there is an IRQ raised, AVR_INTERRUPT_NONE if not.
@@ -130,7 +132,7 @@ private:
     struct interrupt_t {
         bool used;
         bool raised;
-        AVR_InterruptHandler* handler;
+        InterruptHandler* handler;
 
         interrupt_t();
     };
@@ -139,25 +141,25 @@ private:
     std::vector<interrupt_t> m_interrupts;
     //Variable holding the vector to be executed next
     int_vect_t m_irq_vector;
-    AVR_Signal m_signal;
+    Signal m_signal;
 
     //Interface for the interrupt handlers
     void raise_interrupt(int_vect_t vector);
     void cancel_interrupt(int_vect_t vector);
-    void disconnect_handler(AVR_InterruptHandler* handler);
+    void disconnect_handler(InterruptHandler* handler);
 };
 
-inline int_vect_t AVR_InterruptController::cpu_get_irq() const
+inline int_vect_t InterruptController::cpu_get_irq() const
 {
     return m_irq_vector;
 }
 
-inline int_vect_t AVR_InterruptController::intr_count() const
+inline int_vect_t InterruptController::intr_count() const
 {
     return m_interrupts.size();
 }
 
-inline bool AVR_InterruptController::interrupt_raised(unsigned int vector) const
+inline bool InterruptController::interrupt_raised(unsigned int vector) const
 {
     return m_interrupts[vector].raised;
 }
@@ -165,19 +167,19 @@ inline bool AVR_InterruptController::interrupt_raised(unsigned int vector) const
 
 //=======================================================================================
 /*
- * Class AVR_InterruptHandler
+ * Class InterruptHandler
  * Abstract interface to a interrupt controller
  * It allows to raise (or cancel) an interrupt
  * The same handler can be used for several interrupts.
 */
-class DLL_EXPORT AVR_InterruptHandler {
+class DLL_EXPORT InterruptHandler {
 
-    friend class AVR_InterruptController;
+    friend class InterruptController;
 
 public:
 
-    AVR_InterruptHandler();
-    virtual ~AVR_InterruptHandler();
+    InterruptHandler();
+    virtual ~InterruptHandler();
 
     //Controlling method for raising (or cancelling) interrupts
     //It can actually raise any interrupt so long as it has been
@@ -190,29 +192,29 @@ public:
     virtual void interrupt_ack_handler(int_vect_t vector);
 
     //Disable copy semantics
-    AVR_InterruptHandler(const AVR_InterruptHandler&) = delete;
-    AVR_InterruptHandler& operator=(const AVR_InterruptHandler&) = delete;
+    InterruptHandler(const InterruptHandler&) = delete;
+    InterruptHandler& operator=(const InterruptHandler&) = delete;
 
 private:
 
-    AVR_InterruptController* m_intctl;
+    InterruptController* m_intctl;
 
 };
 
 
 //=======================================================================================
 /*
- * Class AVR_InterruptFlag
+ * Class InterruptFlag
  * Generic helper to manage an Interrupt Flag/Enable in a I/O register
 */
-class DLL_EXPORT AVR_InterruptFlag : public AVR_InterruptHandler {
+class DLL_EXPORT InterruptFlag : public InterruptHandler {
 
 public:
 
-    explicit AVR_InterruptFlag(bool clear_on_ack);
+    explicit InterruptFlag(bool clear_on_ack);
 
     //Init allocates the resources required. Returns true on success
-    bool init(AVR_Device& device, const regbit_t& rb_enable, const regbit_t& rb_flag, int_vect_t vector);
+    bool init(Device& device, const regbit_t& rb_enable, const regbit_t& rb_flag, int_vect_t vector);
 
     int update_from_ioreg();
 
@@ -232,16 +234,19 @@ private:
     int_vect_t m_vector;
     bool m_raised;
 
-    AVR_IO_Register* m_flag_reg;
-    AVR_IO_Register* m_enable_reg;
+    IO_Register* m_flag_reg;
+    IO_Register* m_enable_reg;
 
     bool flag_raised() const;
 
 };
 
-inline bool AVR_InterruptFlag::raised() const
+inline bool InterruptFlag::raised() const
 {
     return m_raised;
 }
+
+
+YASIMAVR_END_NAMESPACE
 
 #endif //__YASIMAVR_INTERRUPT_H__

@@ -29,6 +29,8 @@
 #include "core/sim_pin.h"
 #include "core/sim_types.h"
 
+YASIMAVR_BEGIN_NAMESPACE
+
 
 //=======================================================================================
 
@@ -42,7 +44,7 @@
  * Implementation of a External Interrupt controller for AVR series
  */
 
-struct AVR_ArchAVR_ExtIntConfig {
+struct ArchAVR_ExtIntConfig {
 
     uint32_t extint_pins[EXTINT_PIN_COUNT];
     uint32_t pcint_pins[PCINT_PIN_COUNT];
@@ -58,9 +60,9 @@ struct AVR_ArchAVR_ExtIntConfig {
 };
 
 
-class DLL_EXPORT AVR_ArchAVR_ExtInt : public AVR_Peripheral,
-                                      public AVR_InterruptHandler,
-                                      public AVR_SignalHook {
+class DLL_EXPORT ArchAVR_ExtInt : public Peripheral,
+                                  public InterruptHandler,
+                                  public SignalHook {
 
 public:
 
@@ -69,9 +71,9 @@ public:
         Signal_PinChange
     };
 
-    explicit AVR_ArchAVR_ExtInt(const AVR_ArchAVR_ExtIntConfig& config);
+    explicit ArchAVR_ExtInt(const ArchAVR_ExtIntConfig& config);
 
-    virtual bool init(AVR_Device& device) override;
+    virtual bool init(Device& device) override;
     virtual void reset() override;
     virtual bool ctlreq(uint16_t req, ctlreq_data_t* data) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
@@ -81,9 +83,9 @@ public:
 
 private:
 
-    const AVR_ArchAVR_ExtIntConfig& m_config;
+    const ArchAVR_ExtIntConfig& m_config;
     //Signals that get raised when an external interrupt condition is detected
-    AVR_Signal m_signal;
+    Signal m_signal;
     //Backup copies of pin states to detect edges
     uint8_t m_extint_pin_value;
     uint8_t m_pcint_pin_value[PCINT_BANK_COUNT];
@@ -91,5 +93,8 @@ private:
     uint8_t get_extint_mode(uint8_t pin) const;
 
 };
+
+
+YASIMAVR_END_NAMESPACE
 
 #endif //__YASIMAVR_AVR_EXTINT_H__

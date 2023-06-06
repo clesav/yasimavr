@@ -31,7 +31,7 @@ import threading
 import socketserver
 import time
 import os, sys
-from yasimavr.lib.core import AVR_DeviceDebugProbe, AVR_AsyncSimLoop, AVR_Device
+from yasimavr.lib.core import DeviceDebugProbe, AsyncSimLoop, Device
 
 
 #Templates for query replies and register descriptions
@@ -90,13 +90,13 @@ class GDB_Stub:
             self._device = simloop.device()
             self._ownloop = False
         elif device is not None:
-            self._simloop = AVR_AsyncSimLoop(device)
+            self._simloop = AsyncSimLoop(device)
             self._device = device
             self._ownloop = True
         else:
             raise ValueError('device and simloop cannot be both None')
 
-        self._probe = AVR_DeviceDebugProbe()
+        self._probe = DeviceDebugProbe()
         self._probe.attach(self._device)
 
         self._server = _GDB_StubServer(conn_point, self)
@@ -113,7 +113,7 @@ class GDB_Stub:
         self._probe.detach()
         self._simloop = simloop
         self._device = simloop.device()
-        self._probe = AVR_DeviceDebugProbe()
+        self._probe = DeviceDebugProbe()
         self._probe.attach(self._device)
 
 
@@ -212,11 +212,11 @@ class GDB_Stub:
 
     def __run_simloop_join_thread(self):
         #Wait until the simloop stop
-        while self._simloop.state() not in (AVR_AsyncSimLoop.State.Stopped,
-                                            AVR_AsyncSimLoop.State.Done):
+        while self._simloop.state() not in (AsyncSimLoop.State.Stopped,
+                                            AsyncSimLoop.State.Done):
             time.sleep(0.001)
 
-        if self._simloop.state() == AVR_AsyncSimLoop.State.Done:
+        if self._simloop.state() == AsyncSimLoop.State.Done:
             self.__send_reply('W01')
         else:
             self.__send_reply('S05')
@@ -306,7 +306,7 @@ class GDB_Stub:
                     self._probe.reset_device()
             elif rcmd == 'halt':
                 with self._simloop:
-                    self._probe.set_device_state(AVR_Device.State.Stopped)
+                    self._probe.set_device_state(Device.State.Stopped)
 
             self.__send_reply('OK')
 
@@ -322,7 +322,7 @@ class GDB_Stub:
 
 
     def __handle_cmd_status(self):
-        if self._simloop.state() == AVR_AsyncSimLoop.State.Done:
+        if self._simloop.state() == AsyncSimLoop.State.Done:
             self.__send_reply('X01')
         else:
             self.__send_reply('S05')
@@ -465,7 +465,7 @@ class GDB_Stub:
 
     def __handle_cmd_continue(self):
         with self._simloop:
-            self._probe.set_device_state(AVR_Device.State.Running)
+            self._probe.set_device_state(Device.State.Running)
             self._simloop.loop_continue()
 
         self.__start_simloop_join_thread()
@@ -473,7 +473,7 @@ class GDB_Stub:
 
     def __handle_cmd_step(self):
         with self._simloop:
-            self._probe.set_device_state(AVR_Device.State.Running)
+            self._probe.set_device_state(Device.State.Running)
             self._simloop.loop_step()
 
         self.__start_simloop_join_thread()
@@ -505,11 +505,11 @@ class GDB_Stub:
             addr = int(args[1], 16) & 0xffffff
             size = int(args[2], 16)
 
-            flags = AVR_DeviceDebugProbe.WatchpointFlags.Break
+            flags = DeviceDebugProbe.WatchpointFlags.Break
             if args[0] in ('2', '4'):
-                flags |= AVR_DeviceDebugProbe.WatchpointFlags.Write
+                flags |= DeviceDebugProbe.WatchpointFlags.Write
             if args[0] in ('3', '4'):
-                flags |= AVR_DeviceDebugProbe.WatchpointFlags.Read
+                flags |= DeviceDebugProbe.WatchpointFlags.Read
 
             if 0x800000 <= addr < 0x810000:
                 self._probe.insert_watchpoint(addr - 0x800000, size, flags)
@@ -533,9 +533,9 @@ class GDB_Stub:
 
             flags = 0
             if args[0] in ('2', '4'):
-                flags |= AVR_DeviceDebugProbe.WatchpointFlags.Write
+                flags |= DeviceDebugProbe.WatchpointFlags.Write
             if args[0] in ('3', '4'):
-                flags |= AVR_DeviceDebugProbe.WatchpointFlags.Read
+                flags |= DeviceDebugProbe.WatchpointFlags.Read
 
             if 0x800000 <= addr < 0x810000:
                 self._probe.remove_watchpoint(addr - 0x800000, flags)

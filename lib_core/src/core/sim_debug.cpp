@@ -26,6 +26,11 @@
 #include "sim_core.h"
 #include <cstring>
 
+YASIMAVR_USING_NAMESPACE
+
+
+//=======================================================================================
+
 #define ADJUST_ADDR_LEN(addr, len, end) \
     if ((addr) > (end))                    \
         (addr) = (end);                    \
@@ -37,29 +42,29 @@
 
 //=======================================================================================
 
-AVR_DeviceDebugProbe::AVR_DeviceDebugProbe()
+DeviceDebugProbe::DeviceDebugProbe()
 :m_device(nullptr)
 ,m_primary(nullptr)
 {}
 
-AVR_DeviceDebugProbe::AVR_DeviceDebugProbe(AVR_Device& device)
-:AVR_DeviceDebugProbe()
+DeviceDebugProbe::DeviceDebugProbe(Device& device)
+:DeviceDebugProbe()
 {
     attach(device);
 }
 
-AVR_DeviceDebugProbe::AVR_DeviceDebugProbe(const AVR_DeviceDebugProbe& probe)
-:AVR_DeviceDebugProbe()
+DeviceDebugProbe::DeviceDebugProbe(const DeviceDebugProbe& probe)
+:DeviceDebugProbe()
 {
     *this = probe;
 }
 
-AVR_DeviceDebugProbe::~AVR_DeviceDebugProbe()
+DeviceDebugProbe::~DeviceDebugProbe()
 {
     detach();
 }
 
-AVR_DeviceDebugProbe& AVR_DeviceDebugProbe::operator=(const AVR_DeviceDebugProbe& other)
+DeviceDebugProbe& DeviceDebugProbe::operator=(const DeviceDebugProbe& other)
 {
     if (other.attached())
         attach(*other.device());
@@ -69,7 +74,7 @@ AVR_DeviceDebugProbe& AVR_DeviceDebugProbe::operator=(const AVR_DeviceDebugProbe
     return *this;
 }
 
-void AVR_DeviceDebugProbe::attach(AVR_Device& device)
+void DeviceDebugProbe::attach(Device& device)
 {
     if (m_device == &device)
         return;
@@ -77,7 +82,7 @@ void AVR_DeviceDebugProbe::attach(AVR_Device& device)
     if (m_device)
         detach();
 
-    AVR_Core& core = device.core();
+    Core& core = device.core();
 
     if (core.m_debug_probe) {
         //Attach this as secondary
@@ -91,13 +96,13 @@ void AVR_DeviceDebugProbe::attach(AVR_Device& device)
     m_device = &device;
 }
 
-void AVR_DeviceDebugProbe::attach(AVR_DeviceDebugProbe& probe)
+void DeviceDebugProbe::attach(DeviceDebugProbe& probe)
 {
     if (probe.attached())
         attach(*probe.device());
 }
 
-void AVR_DeviceDebugProbe::detach()
+void DeviceDebugProbe::detach()
 {
     if (m_primary) {
         //If this is a secondary probe, detach from the primary
@@ -118,7 +123,7 @@ void AVR_DeviceDebugProbe::detach()
             //all secondaries (except the first one), all breakpoints and all watchpoints.
 
             //Extract the secondary probe that gets promoted
-            AVR_DeviceDebugProbe* new_primary = m_secondaries[0];
+            DeviceDebugProbe* new_primary = m_secondaries[0];
             m_secondaries.erase(m_secondaries.begin());
 
             //Promote to primary role
@@ -152,117 +157,117 @@ void AVR_DeviceDebugProbe::detach()
     m_device = nullptr;
 }
 
-void AVR_DeviceDebugProbe::reset_device() const
+void DeviceDebugProbe::reset_device() const
 {
     if (m_device)
         m_device->reset();
 }
 
-void AVR_DeviceDebugProbe::set_device_state(AVR_Device::State state) const
+void DeviceDebugProbe::set_device_state(Device::State state) const
 {
     if (m_device)
         m_device->set_state(state);
 }
 
-void AVR_DeviceDebugProbe::write_gpreg(unsigned int num, uint8_t value) const
+void DeviceDebugProbe::write_gpreg(unsigned int num, uint8_t value) const
 {
     if (m_device)
         m_device->core().m_regs[num] = value;
 }
 
-uint8_t AVR_DeviceDebugProbe::read_gpreg(unsigned int num) const
+uint8_t DeviceDebugProbe::read_gpreg(unsigned int num) const
 {
     if (!m_device) return 0;
     return m_device->core().m_regs[num];
 }
 
-void AVR_DeviceDebugProbe::write_sreg(uint8_t value) const
+void DeviceDebugProbe::write_sreg(uint8_t value) const
 {
     if (m_device)
         m_device->core().write_sreg(value);
 }
 
-uint8_t AVR_DeviceDebugProbe::read_sreg() const
+uint8_t DeviceDebugProbe::read_sreg() const
 {
     if (!m_device) return 0;
     return m_device->core().read_sreg();
 }
 
-void AVR_DeviceDebugProbe::write_sp(uint16_t value) const
+void DeviceDebugProbe::write_sp(uint16_t value) const
 {
     if (m_device)
         m_device->core().write_sp(value);
 }
 
-uint16_t AVR_DeviceDebugProbe::read_sp() const
+uint16_t DeviceDebugProbe::read_sp() const
 {
     if (!m_device) return 0;
     return m_device->core().read_sp();
 }
 
-void AVR_DeviceDebugProbe::write_pc(uint32_t value) const
+void DeviceDebugProbe::write_pc(uint32_t value) const
 {
     if (m_device)
         m_device->core().m_pc = value;
 }
 
-uint32_t AVR_DeviceDebugProbe::read_pc() const
+uint32_t DeviceDebugProbe::read_pc() const
 {
     if (!m_device) return 0;
     return m_device->core().m_pc;
 }
 
-void AVR_DeviceDebugProbe::write_ioreg(reg_addr_t addr, uint8_t value) const
+void DeviceDebugProbe::write_ioreg(reg_addr_t addr, uint8_t value) const
 {
     if (!m_device) return;
 
-    AVR_Core& core = m_device->core();
+    Core& core = m_device->core();
     const uint16_t iosize = core.config().ioend - core.config().iostart + 1;
 
     if (addr == R_SREG) {
         core.write_sreg(value);
     }
     else if (addr < iosize) {
-        AVR_IO_Register *ioreg = core.m_ioregs[addr];
+        IO_Register *ioreg = core.m_ioregs[addr];
         if (ioreg)
             ioreg->cpu_write(addr, value);
     }
 }
 
-uint8_t AVR_DeviceDebugProbe::read_ioreg(reg_addr_t addr) const
+uint8_t DeviceDebugProbe::read_ioreg(reg_addr_t addr) const
 {
     if (!m_device) return 0;
 
-    AVR_Core& core = m_device->core();
+    Core& core = m_device->core();
     const uint16_t iosize = core.config().ioend - core.config().iostart + 1;
 
     if (addr == R_SREG) {
         return core.read_sreg();
     }
     else if (addr < iosize) {
-        AVR_IO_Register *ioreg = core.m_ioregs[addr];
+        IO_Register *ioreg = core.m_ioregs[addr];
         if (ioreg)
             return ioreg->cpu_read(addr);
     }
     return 0;
 }
 
-void AVR_DeviceDebugProbe::write_flash(flash_addr_t addr, const uint8_t* buf, flash_addr_t len) const
+void DeviceDebugProbe::write_flash(flash_addr_t addr, const uint8_t* buf, flash_addr_t len) const
 {
     if (!m_device) return;
 
-    AVR_Core& core = m_device->core();
+    Core& core = m_device->core();
 
     ADJUST_ADDR_LEN(addr, len, core.config().flashend);
 
     core.m_flash.dbg_write(buf, addr, len);
 }
 
-flash_addr_t AVR_DeviceDebugProbe::read_flash(flash_addr_t addr, uint8_t* buf, flash_addr_t len) const
+flash_addr_t DeviceDebugProbe::read_flash(flash_addr_t addr, uint8_t* buf, flash_addr_t len) const
 {
     if (!m_device) return 0;
 
-    AVR_Core& core = m_device->core();
+    Core& core = m_device->core();
 
     ADJUST_ADDR_LEN(addr, len, core.config().flashend);
 
@@ -271,34 +276,34 @@ flash_addr_t AVR_DeviceDebugProbe::read_flash(flash_addr_t addr, uint8_t* buf, f
     return len;
 }
 
-void AVR_DeviceDebugProbe::write_data(mem_addr_t addr, const uint8_t* buf, mem_addr_t len) const
+void DeviceDebugProbe::write_data(mem_addr_t addr, const uint8_t* buf, mem_addr_t len) const
 {
     if (!m_device) return;
 
     //We need to momentarily disable the crash triggered by bad I/O access
     //as we copy the I/O registers as a block
-    bool badioopt = m_device->test_option(AVR_Device::Option_IgnoreBadCpuIO);
-    m_device->set_option(AVR_Device::Option_IgnoreBadCpuIO, true);
+    bool badioopt = m_device->test_option(Device::Option_IgnoreBadCpuIO);
+    m_device->set_option(Device::Option_IgnoreBadCpuIO, true);
 
     m_device->core().dbg_write_data(addr, buf, len);
 
-    m_device->set_option(AVR_Device::Option_IgnoreBadCpuIO, badioopt);
+    m_device->set_option(Device::Option_IgnoreBadCpuIO, badioopt);
 }
 
-void AVR_DeviceDebugProbe::read_data(mem_addr_t addr, uint8_t* buf, mem_addr_t len) const
+void DeviceDebugProbe::read_data(mem_addr_t addr, uint8_t* buf, mem_addr_t len) const
 {
     if (!m_device) return;
 
     //Same as write_data()
-    bool badioopt = m_device->test_option(AVR_Device::Option_IgnoreBadCpuIO);
-    m_device->set_option(AVR_Device::Option_IgnoreBadCpuIO, true);
+    bool badioopt = m_device->test_option(Device::Option_IgnoreBadCpuIO);
+    m_device->set_option(Device::Option_IgnoreBadCpuIO, true);
 
     m_device->core().dbg_read_data(addr, buf, len);
 
-    m_device->set_option(AVR_Device::Option_IgnoreBadCpuIO, badioopt);
+    m_device->set_option(Device::Option_IgnoreBadCpuIO, badioopt);
 }
 
-void AVR_DeviceDebugProbe::insert_breakpoint(flash_addr_t addr)
+void DeviceDebugProbe::insert_breakpoint(flash_addr_t addr)
 {
     if (!m_device) return;
 
@@ -311,7 +316,7 @@ void AVR_DeviceDebugProbe::insert_breakpoint(flash_addr_t addr)
     }
 }
 
-void AVR_DeviceDebugProbe::remove_breakpoint(flash_addr_t addr)
+void DeviceDebugProbe::remove_breakpoint(flash_addr_t addr)
 {
     if (!m_device) return;
 
@@ -327,7 +332,7 @@ void AVR_DeviceDebugProbe::remove_breakpoint(flash_addr_t addr)
     }
 }
 
-void AVR_DeviceDebugProbe::insert_watchpoint(mem_addr_t addr, mem_addr_t len, int flags)
+void DeviceDebugProbe::insert_watchpoint(mem_addr_t addr, mem_addr_t len, int flags)
 {
     if (!m_device) return;
 
@@ -345,7 +350,7 @@ void AVR_DeviceDebugProbe::insert_watchpoint(mem_addr_t addr, mem_addr_t len, in
     }
 }
 
-void AVR_DeviceDebugProbe::remove_watchpoint(mem_addr_t addr, int flags)
+void DeviceDebugProbe::remove_watchpoint(mem_addr_t addr, int flags)
 {
     if (!m_device) return;
 
@@ -364,7 +369,7 @@ void AVR_DeviceDebugProbe::remove_watchpoint(mem_addr_t addr, int flags)
     }
 }
 
-void AVR_DeviceDebugProbe::notify_watchpoint(watchpoint_t& wp, int event, mem_addr_t addr, uint8_t value)
+void DeviceDebugProbe::notify_watchpoint(watchpoint_t& wp, int event, mem_addr_t addr, uint8_t value)
 {
     //If the watchpoint flag is set to Break, halt the CPU, only if this is the primary probe
     if (!m_primary && (wp.flags & Watchpoint_Break)) {
@@ -382,7 +387,7 @@ void AVR_DeviceDebugProbe::notify_watchpoint(watchpoint_t& wp, int event, mem_ad
 }
 
 //Notification when the CPU reads from the RAM. Check if there's a watchpoint associated with the address.
-void AVR_DeviceDebugProbe::_cpu_notify_data_read(mem_addr_t addr, uint8_t value)
+void DeviceDebugProbe::_cpu_notify_data_read(mem_addr_t addr, uint8_t value)
 {
     for (auto& [_, wp] : m_watchpoints) {
         if (addr >= wp.addr && addr < (wp.addr + wp.len) && (wp.flags & Watchpoint_Read)) {
@@ -393,7 +398,7 @@ void AVR_DeviceDebugProbe::_cpu_notify_data_read(mem_addr_t addr, uint8_t value)
 }
 
 //Notification when the CPU writes into the RAM. Check if there's a watchpoint associated with the address.
-void AVR_DeviceDebugProbe::_cpu_notify_data_write(mem_addr_t addr, uint8_t value)
+void DeviceDebugProbe::_cpu_notify_data_write(mem_addr_t addr, uint8_t value)
 {
     for (auto& [_, wp] : m_watchpoints) {
         if (addr >= wp.addr && addr < (wp.addr + wp.len) && (wp.flags & Watchpoint_Write)) {
@@ -404,6 +409,6 @@ void AVR_DeviceDebugProbe::_cpu_notify_data_write(mem_addr_t addr, uint8_t value
 }
 
 //For future use maybe
-void AVR_DeviceDebugProbe::_cpu_notify_jump(flash_addr_t addr) {}
-void AVR_DeviceDebugProbe::_cpu_notify_call(flash_addr_t addr) {}
-void AVR_DeviceDebugProbe::_cpu_notify_ret() {}
+void DeviceDebugProbe::_cpu_notify_jump(flash_addr_t addr) {}
+void DeviceDebugProbe::_cpu_notify_call(flash_addr_t addr) {}
+void DeviceDebugProbe::_cpu_notify_ret() {}

@@ -32,11 +32,13 @@
 #include <string>
 #include <map>
 
-class AVR_IO_Register;
-class AVR_Device;
-class AVR_Firmware;
-class AVR_InterruptController;
-class AVR_DeviceDebugProbe;
+YASIMAVR_BEGIN_NAMESPACE
+
+class IO_Register;
+class Device;
+class Firmware;
+class InterruptController;
+class DeviceDebugProbe;
 
 
 //=======================================================================================
@@ -85,10 +87,10 @@ struct breakpoint_t {
  * Implementation of the AVR core CPU
  * This is an abstract class. Concrete sub-classes define the memory map.
 */
-class DLL_EXPORT AVR_Core {
+class DLL_EXPORT Core {
 
-    friend class AVR_Device;
-    friend class AVR_DeviceDebugProbe;
+    friend class Device;
+    friend class DeviceDebugProbe;
 
 public:
 
@@ -100,18 +102,18 @@ public:
         NVM_GetCount = 0xFFFF,
     };
 
-    explicit AVR_Core(const AVR_CoreConfiguration& config);
-    virtual ~AVR_Core();
+    explicit Core(const CoreConfiguration& config);
+    virtual ~Core();
 
-    const AVR_CoreConfiguration& config() const;
+    const CoreConfiguration& config() const;
 
-    bool init(AVR_Device& device);
+    bool init(Device& device);
 
     void reset();
 
     int exec_cycle();
 
-    AVR_IO_Register* get_ioreg(reg_addr_t addr);
+    IO_Register* get_ioreg(reg_addr_t addr);
 
     //Peripheral access to the I/O registers
     uint8_t ioctl_read_ioreg(reg_addr_t addr);
@@ -120,34 +122,34 @@ public:
     void start_interrupt_inhibit(unsigned int count);
 
     //Disable copy semantics
-    AVR_Core(const AVR_Core&) = delete;
-    AVR_Core& operator=(const AVR_Core&) = delete;
+    Core(const Core&) = delete;
+    Core& operator=(const Core&) = delete;
 
 protected:
 
     //Reference to the configuration structure, set at construction
-    const AVR_CoreConfiguration& m_config;
+    const CoreConfiguration& m_config;
     //Pointer to the device, set by init()
-    AVR_Device* m_device;
+    Device* m_device;
     //Value of the 32 general registers
     uint8_t m_regs[32];
     //array of the I/O registers
     //We don't actually allocate any register until the peripherals ask for it
-    std::vector<AVR_IO_Register*> m_ioregs;
+    std::vector<IO_Register*> m_ioregs;
     //Pointer to the array representing the device memories.
     uint8_t* m_sram;
     //Non-volatile memory model for the flash.
-    AVR_NonVolatileMemory m_flash;
+    NonVolatileMemory m_flash;
     //Non-volatile memory model for the fuse bits.
-    AVR_NonVolatileMemory m_fuses;
+    NonVolatileMemory m_fuses;
     //PC variable, expressed in 8-bits (unlike the actual device PC)
     flash_addr_t m_pc;
     //Counter to inhibit interrupts for a given number of instructions
     unsigned int m_int_inhib_counter;
     //Signal that is raised when the interrupt counter reaches zero
-    //AVR_Signal m_int_inhib_signal;
+    //Signal m_int_inhib_signal;
     //Pointer to the generic debug probe
-    AVR_DeviceDebugProbe* m_debug_probe;
+    DeviceDebugProbe* m_debug_probe;
 
     //CPU access to I/O registers in I/O address space
     uint8_t cpu_read_ioreg(reg_addr_t addr);
@@ -166,10 +168,10 @@ protected:
 
     inline bool use_extended_addressing() const
     {
-        return m_config.attributes & AVR_CoreConfiguration::ExtendedAddressing;
+        return m_config.attributes & CoreConfiguration::ExtendedAddressing;
     }
 
-    //===== Debugging management (used by AVR_DeviceDebugProbe) =====
+    //===== Debugging management (used by DeviceDebugProbe) =====
 
     //Debug probe access to memory data in blocks
     virtual void dbg_read_data(mem_addr_t start, uint8_t* buf, mem_addr_t len) = 0;
@@ -184,7 +186,7 @@ private:
     //Status register variable
     uint8_t m_sreg[8];
     //Direct pointer to the interrupt controller. We don't use the ctlreq framework for performance
-    AVR_InterruptController* m_intrctl;
+    InterruptController* m_intrctl;
 
     //Helpers for managing the SREG register
     uint8_t read_sreg();
@@ -204,7 +206,7 @@ private:
 
 };
 
-inline const AVR_CoreConfiguration& AVR_Core::config() const
+inline const CoreConfiguration& Core::config() const
 {
     return m_config;
 }
@@ -213,5 +215,8 @@ bool data_space_map(mem_addr_t addr, mem_addr_t len,
                     mem_addr_t blockstart, mem_addr_t blockend,
                     mem_addr_t* bufofs, mem_addr_t* blockofs,
                     mem_addr_t* blocklen);
+
+
+YASIMAVR_END_NAMESPACE
 
 #endif //__YASIMAVR_CORE_H__

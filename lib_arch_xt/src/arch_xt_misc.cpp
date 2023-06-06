@@ -27,6 +27,8 @@
 #include "core/sim_device.h"
 #include <cstring>
 
+YASIMAVR_USING_NAMESPACE
+
 
 //=======================================================================================
 
@@ -34,14 +36,14 @@
     (m_config.reg_base + offsetof(VREF_t, reg))
 
 
-AVR_ArchXT_VREF::AVR_ArchXT_VREF(const AVR_ArchXT_VREF_Config& config)
-:AVR_IO_VREF(config.channels.size())
+ArchXT_VREF::ArchXT_VREF(const ArchXT_VREFConfig& config)
+:VREF(config.channels.size())
 ,m_config(config)
 {}
 
-bool AVR_ArchXT_VREF::init(AVR_Device& device)
+bool ArchXT_VREF::init(Device& device)
 {
-    bool status = AVR_IO_VREF::init(device);
+    bool status = VREF::init(device);
 
     add_ioreg(VREF_REG_ADDR(CTRLB));
 
@@ -51,18 +53,18 @@ bool AVR_ArchXT_VREF::init(AVR_Device& device)
     return status;
 }
 
-void AVR_ArchXT_VREF::reset()
+void ArchXT_VREF::reset()
 {
     //Set each reference channel to the reset value
     for (uint32_t index = 0; index < m_config.channels.size(); ++index)
         set_channel_reference(index, 0);
 }
 
-void AVR_ArchXT_VREF::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
+void ArchXT_VREF::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
     //Iterate over all the channels, and update if impacted by the register change
     for (uint32_t ch_ix = 0; ch_ix < m_config.channels.size(); ++ch_ix) {
-        const AVR_ArchXT_VREF_Config::channel_t& ch = m_config.channels[ch_ix];
+        const ArchXT_VREFConfig::channel_t& ch = m_config.channels[ch_ix];
         if (addr == ch.rb_select.addr && ch.rb_select.extract(data.anyedge())) {
             //Extract the selection value for this channel
             uint8_t reg_value = ch.rb_select.extract(data.value);
@@ -71,9 +73,9 @@ void AVR_ArchXT_VREF::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& 
     }
 }
 
-void AVR_ArchXT_VREF::set_channel_reference(uint32_t index, uint8_t reg_value)
+void ArchXT_VREF::set_channel_reference(uint32_t index, uint8_t reg_value)
 {
-    typedef AVR_ArchXT_VREF_Config::reference_config_t vref_cfg_t;
+    typedef ArchXT_VREFConfig::reference_config_t vref_cfg_t;
 
     //Find the corresponding reference setting from the configuration
     auto vref_cfg = find_reg_config_p<vref_cfg_t>(m_config.channels[index].references, reg_value);
@@ -93,14 +95,14 @@ enum InterruptPriority {
 #define INT_REG_ADDR(reg) \
     (m_config.reg_base + offsetof(CPUINT_t, reg))
 
-AVR_ArchXT_IntCtrl::AVR_ArchXT_IntCtrl(const AVR_ArchXT_IntCtrl_Config& config)
-:AVR_InterruptController(config.vector_count)
+ArchXT_IntCtrl::ArchXT_IntCtrl(const ArchXT_IntCtrlConfig& config)
+:InterruptController(config.vector_count)
 ,m_config(config)
 {}
 
-bool AVR_ArchXT_IntCtrl::init(AVR_Device& device)
+bool ArchXT_IntCtrl::init(Device& device)
 {
-    bool status = AVR_InterruptController::init(device);
+    bool status = InterruptController::init(device);
 
     //CTRLA not implemented
     add_ioreg(INT_REG_ADDR(STATUS));
@@ -110,12 +112,12 @@ bool AVR_ArchXT_IntCtrl::init(AVR_Device& device)
     return status;
 }
 
-void AVR_ArchXT_IntCtrl::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
+void ArchXT_IntCtrl::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
     update_irq();
 }
 
-void AVR_ArchXT_IntCtrl::cpu_ack_irq(int_vect_t vector)
+void ArchXT_IntCtrl::cpu_ack_irq(int_vect_t vector)
 {
     //When a interrupt is acked (its routine is about to be executed),
     //set the corresponding priority level flag
@@ -125,12 +127,12 @@ void AVR_ArchXT_IntCtrl::cpu_ack_irq(int_vect_t vector)
         set_ioreg(INT_REG_ADDR(STATUS), priority_bit);
     }
 
-    AVR_InterruptController::cpu_ack_irq(vector);
+    InterruptController::cpu_ack_irq(vector);
 
     set_interrupt_raised(vector, true);
 }
 
-int_vect_t AVR_ArchXT_IntCtrl::get_next_irq() const
+int_vect_t ArchXT_IntCtrl::get_next_irq() const
 {
     uint8_t status_ex = read_ioreg(INT_REG_ADDR(STATUS));
 
@@ -161,7 +163,7 @@ int_vect_t AVR_ArchXT_IntCtrl::get_next_irq() const
     return AVR_INTERRUPT_NONE;
 }
 
-void AVR_ArchXT_IntCtrl::cpu_reti()
+void ArchXT_IntCtrl::cpu_reti()
 {
     //The priority level flag must be cleared
     uint8_t status_ex = read_ioreg(INT_REG_ADDR(STATUS));
@@ -171,7 +173,7 @@ void AVR_ArchXT_IntCtrl::cpu_reti()
         clear_ioreg(INT_REG_ADDR(STATUS), IntrPriorityLevel0);
     }
 
-    AVR_InterruptController::cpu_reti();
+    InterruptController::cpu_reti();
 }
 
 //=======================================================================================
@@ -182,15 +184,15 @@ void AVR_ArchXT_IntCtrl::cpu_reti()
 /*
  * Constructor of a reset controller
  */
-AVR_ArchXT_ResetCtrl::AVR_ArchXT_ResetCtrl(reg_addr_t base)
-:AVR_Peripheral(AVR_IOCTL_RST)
+ArchXT_ResetCtrl::ArchXT_ResetCtrl(reg_addr_t base)
+:Peripheral(AVR_IOCTL_RST)
 ,m_base_reg(base)
 ,m_rst_flags(0)
 {}
 
-bool AVR_ArchXT_ResetCtrl::init(AVR_Device& device)
+bool ArchXT_ResetCtrl::init(Device& device)
 {
-    bool status = AVR_Peripheral::init(device);
+    bool status = Peripheral::init(device);
 
     add_ioreg(RST_REG_ADDR(RSTFR));
     add_ioreg(RST_REG_ADDR(SWRR));
@@ -198,30 +200,30 @@ bool AVR_ArchXT_ResetCtrl::init(AVR_Device& device)
     return status;
 }
 
-void AVR_ArchXT_ResetCtrl::reset()
+void ArchXT_ResetCtrl::reset()
 {
     //Request the value of the reset flags from the device and set the bits of the
     //register RSTFR accordingly
     ctlreq_data_t reqdata;
     if (device()->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_RESET_FLAG, &reqdata)) {
         int flags = reqdata.data.as_int();
-        if (flags & AVR_Device::Reset_BOD)
+        if (flags & Device::Reset_BOD)
             m_rst_flags |= RSTCTRL_BORF_bm;
-        if (flags & AVR_Device::Reset_WDT)
+        if (flags & Device::Reset_WDT)
             m_rst_flags |= RSTCTRL_WDRF_bm;
-        if (flags & AVR_Device::Reset_Ext)
+        if (flags & Device::Reset_Ext)
             m_rst_flags |= RSTCTRL_EXTRF_bm;
-        if (flags & AVR_Device::Reset_SW)
+        if (flags & Device::Reset_SW)
             m_rst_flags |= RSTCTRL_SWRF_bm;
         //On a Power On reset, all the other reset flag bits must be cleared
-        if (flags & AVR_Device::Reset_PowerOn)
+        if (flags & Device::Reset_PowerOn)
             m_rst_flags = RSTCTRL_PORF_bm;
 
         write_ioreg(RST_REG_ADDR(RSTFR), m_rst_flags);
     }
 }
 
-void AVR_ArchXT_ResetCtrl::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
+void ArchXT_ResetCtrl::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
     if (addr == RST_REG_ADDR(RSTFR)) {
         //Clears the flags to which '1' is written
@@ -231,7 +233,7 @@ void AVR_ArchXT_ResetCtrl::ioreg_write_handler(reg_addr_t addr, const ioreg_writ
     else if (addr == RST_REG_ADDR(SWRR)){
         //Writing a '1' to SWRE bit triggers a software reset
         if (data.value & RSTCTRL_SWRE_bm) {
-            ctlreq_data_t reqdata = { .data = AVR_Device::Reset_SW };
+            ctlreq_data_t reqdata = { .data = Device::Reset_SW };
             device()->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_RESET, &reqdata);
         }
     }
@@ -246,22 +248,22 @@ void AVR_ArchXT_ResetCtrl::ioreg_write_handler(reg_addr_t addr, const ioreg_writ
 #define SIGROW_MEM_OFS      3
 #define SIGROW_MEM_SIZE     (sizeof(SIGROW_t) - SIGROW_MEM_OFS)
 
-AVR_ArchXT_MiscRegCtrl::AVR_ArchXT_MiscRegCtrl(const AVR_ArchXT_Misc_Config& config)
-:AVR_Peripheral(AVR_ID('M', 'I', 'S', 'C'))
+ArchXT_MiscRegCtrl::ArchXT_MiscRegCtrl(const ArchXT_MiscConfig& config)
+:Peripheral(AVR_ID('M', 'I', 'S', 'C'))
 ,m_config(config)
 {
     m_sigrow = (uint8_t*) malloc(SIGROW_MEM_SIZE);
     memset(m_sigrow, 0x00, SIGROW_MEM_SIZE);
 }
 
-AVR_ArchXT_MiscRegCtrl::~AVR_ArchXT_MiscRegCtrl()
+ArchXT_MiscRegCtrl::~ArchXT_MiscRegCtrl()
 {
     free(m_sigrow);
 }
 
-bool AVR_ArchXT_MiscRegCtrl::init(AVR_Device& device)
+bool ArchXT_MiscRegCtrl::init(Device& device)
 {
-    bool status = AVR_Peripheral::init(device);
+    bool status = Peripheral::init(device);
 
     add_ioreg(CCP);
 
@@ -292,7 +294,7 @@ bool AVR_ArchXT_MiscRegCtrl::init(AVR_Device& device)
     return status;
 }
 
-void AVR_ArchXT_MiscRegCtrl::reset()
+void ArchXT_MiscRegCtrl::reset()
 {
     write_ioreg(m_config.reg_revid, MCU_REVID);
     write_ioreg(SIGROW_REG_ADDR(DEVICEID0), m_config.dev_id & 0xFF);
@@ -300,7 +302,7 @@ void AVR_ArchXT_MiscRegCtrl::reset()
     write_ioreg(SIGROW_REG_ADDR(DEVICEID2), (m_config.dev_id >> 16) & 0xFF);
 }
 
-bool AVR_ArchXT_MiscRegCtrl::ctlreq(uint16_t req, ctlreq_data_t* data)
+bool ArchXT_MiscRegCtrl::ctlreq(uint16_t req, ctlreq_data_t* data)
 {
     if (req == AVR_CTLREQ_WRITE_SIGROW) {
         memcpy(m_sigrow, data->data.as_ptr(), SIGROW_MEM_SIZE);
@@ -309,7 +311,7 @@ bool AVR_ArchXT_MiscRegCtrl::ctlreq(uint16_t req, ctlreq_data_t* data)
     return false;
 }
 
-uint8_t AVR_ArchXT_MiscRegCtrl::ioreg_read_handler(reg_addr_t addr, uint8_t value)
+uint8_t ArchXT_MiscRegCtrl::ioreg_read_handler(reg_addr_t addr, uint8_t value)
 {
     if (addr >= m_config.reg_base_sigrow &&
         addr < reg_addr_t(m_config.reg_base_sigrow + sizeof(SIGROW_t))) {
@@ -322,7 +324,7 @@ uint8_t AVR_ArchXT_MiscRegCtrl::ioreg_read_handler(reg_addr_t addr, uint8_t valu
     return value;
 }
 
-void AVR_ArchXT_MiscRegCtrl::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
+void ArchXT_MiscRegCtrl::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
     if (addr == CCP) {
         if (data.value == CCP_SPM_gc || data.value == CCP_IOREG_gc) {

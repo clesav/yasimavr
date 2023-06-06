@@ -21,7 +21,7 @@
 
 //=======================================================================================
 
-struct AVR_ArchAVR_WDT_Config {
+struct ArchAVR_WDTConfig {
 %TypeHeaderCode
 #include "arch_avr_wdt.h"
 %End
@@ -41,18 +41,16 @@ struct AVR_ArchAVR_WDT_Config {
 
 };
 
-class AVR_ArchAVR_WDT : public AVR_WatchdogTimer,
-                        public AVR_InterruptHandler
-                        /NoDefaultCtors/ {
+class ArchAVR_WDT : public WatchdogTimer, public InterruptHandler /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_avr_wdt.h"
 %End
 
 public:
 
-    AVR_ArchAVR_WDT(const AVR_ArchAVR_WDT_Config& /KeepReference/);
+    ArchAVR_WDT(const ArchAVR_WDTConfig& /KeepReference/);
 
-    virtual bool init(AVR_Device&);
+    virtual bool init(Device&);
     virtual void reset();
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
     virtual void interrupt_ack_handler(int_vect_t);

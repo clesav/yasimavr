@@ -27,6 +27,8 @@
 #include "sim_types.h"
 #include <vector>
 
+YASIMAVR_BEGIN_NAMESPACE
+
 
 //=======================================================================================
 
@@ -64,11 +66,11 @@ struct ioreg_write_t {
  * The handler is notified when the register is accessed by the CPU
  * It is meant to be implemented by I/O peripherals
  */
-class DLL_EXPORT AVR_IO_RegHandler {
+class DLL_EXPORT IO_RegHandler {
 
 public:
 
-    virtual ~AVR_IO_RegHandler() = default;
+    virtual ~IO_RegHandler() = default;
 
     virtual uint8_t ioreg_read_handler(reg_addr_t addr, uint8_t value) = 0;
 
@@ -84,22 +86,22 @@ public:
  *  Peripherals can be added as handlers to a register to be notified of
  *  accesses (read or write) by the CPU
  */
-class DLL_EXPORT AVR_IO_Register {
+class DLL_EXPORT IO_Register {
 
 public:
 
-    explicit AVR_IO_Register(bool core_reg=false);
+    explicit IO_Register(bool core_reg=false);
     //Copy constructor
-    AVR_IO_Register(const AVR_IO_Register& other);
+    IO_Register(const IO_Register& other);
     //Destructor
-    ~AVR_IO_Register();
+    ~IO_Register();
 
     //Simple inline interface to access the value
     uint8_t value() const;
     void set(uint8_t value);
 
     //Add a handler to this register
-    void set_handler(AVR_IO_RegHandler& handler, uint8_t use_mask, uint8_t ro_mask);
+    void set_handler(IO_RegHandler& handler, uint8_t use_mask, uint8_t ro_mask);
 
     //CPU interface for read/write operation on this register
     uint8_t cpu_read(reg_addr_t addr);
@@ -114,14 +116,14 @@ public:
     void ioctl_write(reg_addr_t addr, uint8_t value);
 
     //Disable copy assignments
-    AVR_IO_Register& operator=(const AVR_IO_Register&) = delete;
+    IO_Register& operator=(const IO_Register&) = delete;
 
 private:
 
     //Contains the current 8-bits value of this register
     uint8_t m_value;
     //Pointer to the register handler, which is called notified when the register is accessed by the CPU
-    AVR_IO_RegHandler *m_handler;
+    IO_RegHandler *m_handler;
     //Flag set
     uint8_t m_flags;
     //8-bits mask indicating which bits of the register are used
@@ -131,14 +133,17 @@ private:
 
 };
 
-inline uint8_t AVR_IO_Register::value() const
+inline uint8_t IO_Register::value() const
 {
     return m_value;
 }
 
-inline void AVR_IO_Register::set(uint8_t value)
+inline void IO_Register::set(uint8_t value)
 {
     m_value = value;
 }
+
+
+YASIMAVR_END_NAMESPACE
 
 #endif //__YASIMAVR_IOREG_H__

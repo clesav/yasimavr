@@ -28,6 +28,9 @@
 #include "../core/sim_signal.h"
 #include "../core/sim_device.h"
 
+YASIMAVR_BEGIN_NAMESPACE
+
+
 //=======================================================================================
 /*
  * Generic implementation of a clock cycle timer, used by the peripherals TCx, WDT, RTC
@@ -40,7 +43,7 @@
  *  The class doesn't not have any tick counter as such. it only generates ticks that user objects
  *  can use to increment or decrement a counter. The meaning of the timeout signal is also left
  *  to users.
- *  The timeout is transmitted though a AVR_Signal, available via 'signal()' and raised in 2 ways:
+ *  The timeout is transmitted though a Signal, available via 'signal()' and raised in 2 ways:
  *   - When the programmed timeout delay is reached
  *   - When 'update()' is called, and enough clock cycles have passed, resulting in at least one tick.
  *  If the nb of ticks is enough to reach the set delay, the signal data index is set to 1.
@@ -48,15 +51,15 @@
  *  Timers can be daisy-chained, so that the prescaler output of a timer feeds into the
  *  prescaler of another.
  */
-class AVR_PrescaledTimer : public AVR_CycleTimer {
+class PrescaledTimer : public CycleTimer {
 
 public:
 
-    AVR_PrescaledTimer();
-    virtual ~AVR_PrescaledTimer();
+    PrescaledTimer();
+    virtual ~PrescaledTimer();
 
     //Initialise the timer, must be called once during initialisation phases
-    void init(AVR_CycleManager& cycle_manager, AVR_Logger& logger);
+    void init(CycleManager& cycle_manager, Logger& logger);
     //Reset the timer. Both stages are reset and disabled
     void reset();
     //Configure the prescaler:
@@ -80,25 +83,25 @@ public:
     //Ticks may be generated and the signal may be raised if enough cycles have passed
     void update(cycle_count_t when = INVALID_CYCLE);
 
-    //Callback override from AVR_CycleTimer
+    //Callback override from CycleTimer
     virtual cycle_count_t next(cycle_count_t when) override;
 
     //Returns the signal that is raised with ticks
-    AVR_Signal& signal();
+    Signal& signal();
 
-    void register_chained_timer(AVR_PrescaledTimer& timer);
-    void unregister_chained_timer(AVR_PrescaledTimer& timer);
+    void register_chained_timer(PrescaledTimer& timer);
+    void unregister_chained_timer(PrescaledTimer& timer);
 
     static int ticks_to_event(int counter, int event, int wrap);
 
     //Disable copy semantics
-    AVR_PrescaledTimer(const AVR_PrescaledTimer&) = delete;
-    AVR_PrescaledTimer& operator=(const AVR_PrescaledTimer&) = delete;
+    PrescaledTimer(const PrescaledTimer&) = delete;
+    PrescaledTimer& operator=(const PrescaledTimer&) = delete;
 
 private:
 
-    AVR_CycleManager* m_cycle_manager;
-    AVR_Logger* m_logger;
+    CycleManager* m_cycle_manager;
+    Logger* m_logger;
 
     //***** Prescaler management *****
     uint32_t m_ps_max;                  //Max value of the prescaler
@@ -112,11 +115,11 @@ private:
     bool m_paused;                      //Boolean indicating if the timer is paused
     bool m_updating;                    //Boolean used to avoid infinite updating reentrance
     cycle_count_t m_update_cycle;       //Cycle number of the last update
-    AVR_Signal m_signal;                //Signal raised for processing ticks
+    Signal m_signal;                //Signal raised for processing ticks
 
     //***** Timer chain management *****
-    std::vector<AVR_PrescaledTimer*> m_chained_timers;
-    AVR_PrescaledTimer* m_parent_timer;
+    std::vector<PrescaledTimer*> m_chained_timers;
+    PrescaledTimer* m_parent_timer;
 
     void reschedule();
     void update_timer(cycle_count_t when);
@@ -128,17 +131,17 @@ private:
 
 };
 
-inline uint32_t AVR_PrescaledTimer::prescaler_factor() const
+inline uint32_t PrescaledTimer::prescaler_factor() const
 {
     return m_ps_factor;
 }
 
-inline uint32_t AVR_PrescaledTimer::timer_delay() const
+inline uint32_t PrescaledTimer::timer_delay() const
 {
     return m_delay;
 }
 
-inline AVR_Signal& AVR_PrescaledTimer::signal()
+inline Signal& PrescaledTimer::signal()
 {
     return m_signal;
 }
@@ -156,7 +159,7 @@ inline AVR_Signal& AVR_PrescaledTimer::signal()
  * to the user.
  */
 
-class DLL_EXPORT AVR_TimerCounter {
+class DLL_EXPORT TimerCounter {
 
 public:
 
@@ -188,8 +191,8 @@ public:
         Signal_CompMatch,
     };
 
-    AVR_TimerCounter(AVR_PrescaledTimer& timer, long wrap, uint32_t comp_count);
-    ~AVR_TimerCounter();
+    TimerCounter(PrescaledTimer& timer, long wrap, uint32_t comp_count);
+    ~TimerCounter();
 
     long wrap() const;
 
@@ -216,14 +219,14 @@ public:
 
     bool countdown() const;
 
-    AVR_Signal& signal();
-    AVR_SignalHook& ext_tick_hook();
+    Signal& signal();
+    SignalHook& ext_tick_hook();
 
-    void set_logger(AVR_Logger* logger);
+    void set_logger(Logger* logger);
 
     //no copy semantics
-    AVR_TimerCounter(const AVR_TimerCounter&) = delete;
-    AVR_TimerCounter& operator=(const AVR_TimerCounter&) = delete;
+    TimerCounter(const TimerCounter&) = delete;
+    TimerCounter& operator=(const TimerCounter&) = delete;
 
 private:
 
@@ -254,15 +257,15 @@ private:
     //List of compare units
     std::vector<CompareUnit> m_cmp;
     //Event timer engine
-    AVR_PrescaledTimer& m_timer;
+    PrescaledTimer& m_timer;
     //Flag variable storing the next event type(s)
     uint8_t m_next_event_type;
     //Signal management
-    AVR_DataSignal m_signal;
+    DataSignal m_signal;
     TimerHook* m_timer_hook;
     ExtTickHook* m_ext_hook;
     //Logging
-    AVR_Logger* m_logger;
+    Logger* m_logger;
 
     long delay_to_event();
     void timer_raised(const signal_data_t& sigdata);
@@ -272,54 +275,57 @@ private:
 
 };
 
-inline long AVR_TimerCounter::wrap() const
+inline long TimerCounter::wrap() const
 {
     return m_wrap;
 }
 
-inline AVR_TimerCounter::TickSource AVR_TimerCounter::tick_source() const
+inline TimerCounter::TickSource TimerCounter::tick_source() const
 {
     return m_source;
 }
 
-inline long AVR_TimerCounter::top() const
+inline long TimerCounter::top() const
 {
     return m_top;
 }
 
-inline AVR_TimerCounter::SlopeMode AVR_TimerCounter::slope_mode() const
+inline TimerCounter::SlopeMode TimerCounter::slope_mode() const
 {
     return m_slope;
 }
 
-inline long AVR_TimerCounter::counter() const
+inline long TimerCounter::counter() const
 {
     return m_counter;
 }
 
-inline long AVR_TimerCounter::comp_value(uint32_t index) const
+inline long TimerCounter::comp_value(uint32_t index) const
 {
     return m_cmp[index].value;
 }
 
-inline bool AVR_TimerCounter::comp_enabled(uint32_t index) const
+inline bool TimerCounter::comp_enabled(uint32_t index) const
 {
     return m_cmp[index].enabled;
 }
 
-inline bool AVR_TimerCounter::countdown() const
+inline bool TimerCounter::countdown() const
 {
     return m_countdown;
 }
 
-inline AVR_Signal& AVR_TimerCounter::signal()
+inline Signal& TimerCounter::signal()
 {
     return m_signal;
 }
 
-inline AVR_SignalHook& AVR_TimerCounter::ext_tick_hook()
+inline SignalHook& TimerCounter::ext_tick_hook()
 {
-    return *reinterpret_cast<AVR_SignalHook*>(m_ext_hook);
+    return *reinterpret_cast<SignalHook*>(m_ext_hook);
 }
+
+
+YASIMAVR_END_NAMESPACE
 
 #endif //__YASIMAVR_IO_TIMER_H__

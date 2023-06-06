@@ -24,6 +24,8 @@
 #include "sim_memory.h"
 #include <cstring>
 
+YASIMAVR_USING_NAMESPACE
+
 //=======================================================================================
 
 #define ADJUST_BASE_LEN(base, len, size)    \
@@ -33,7 +35,7 @@
         (len) = (size) - (base);
 
 
-AVR_NonVolatileMemory::AVR_NonVolatileMemory(size_t size, const std::string& name)
+NonVolatileMemory::NonVolatileMemory(size_t size, const std::string& name)
 :m_size(size)
 ,m_name(name)
 {
@@ -47,7 +49,7 @@ AVR_NonVolatileMemory::AVR_NonVolatileMemory(size_t size, const std::string& nam
     }
 }
 
-AVR_NonVolatileMemory::~AVR_NonVolatileMemory()
+NonVolatileMemory::~NonVolatileMemory()
 {
     if (m_size) {
         free(m_memory);
@@ -56,19 +58,19 @@ AVR_NonVolatileMemory::~AVR_NonVolatileMemory()
 }
 
 
-AVR_NonVolatileMemory::AVR_NonVolatileMemory(const AVR_NonVolatileMemory& other)
-:AVR_NonVolatileMemory(0, nullptr)
+NonVolatileMemory::NonVolatileMemory(const NonVolatileMemory& other)
+:NonVolatileMemory(0, nullptr)
 {
     *this = other;
 }
 
 
-void AVR_NonVolatileMemory::erase()
+void NonVolatileMemory::erase()
 {
     erase(0, m_size);
 }
 
-void AVR_NonVolatileMemory::erase(size_t base, size_t len)
+void NonVolatileMemory::erase(size_t base, size_t len)
 {
     if (!m_size || !len) return;
 
@@ -78,7 +80,7 @@ void AVR_NonVolatileMemory::erase(size_t base, size_t len)
     memset(m_tag + base, 0, len);
 }
 
-void AVR_NonVolatileMemory::erase(const unsigned char* buf, size_t pos, size_t len)
+void NonVolatileMemory::erase(const unsigned char* buf, size_t pos, size_t len)
 {
     if (!m_size || !len) return;
 
@@ -92,7 +94,7 @@ void AVR_NonVolatileMemory::erase(const unsigned char* buf, size_t pos, size_t l
     }
 }
 
-bool AVR_NonVolatileMemory::program(const mem_block_t& mem_block, size_t base)
+bool NonVolatileMemory::program(const mem_block_t& mem_block, size_t base)
 {
     if (!m_size) return false;
     if (!mem_block.size) return true;
@@ -109,12 +111,12 @@ bool AVR_NonVolatileMemory::program(const mem_block_t& mem_block, size_t base)
     return (bool) size;
 }
 
-mem_block_t AVR_NonVolatileMemory::block() const
+mem_block_t NonVolatileMemory::block() const
 {
     return block(0, m_size);
 }
 
-mem_block_t AVR_NonVolatileMemory::block(size_t base, size_t size) const
+mem_block_t NonVolatileMemory::block(size_t base, size_t size) const
 {
     mem_block_t b;
 
@@ -126,7 +128,7 @@ mem_block_t AVR_NonVolatileMemory::block(size_t base, size_t size) const
     return b;
 }
 
-int AVR_NonVolatileMemory::dbg_read(size_t pos) const
+int NonVolatileMemory::dbg_read(size_t pos) const
 {
     if (pos < m_size)
         return m_memory[pos];
@@ -134,7 +136,7 @@ int AVR_NonVolatileMemory::dbg_read(size_t pos) const
         return -1;
 }
 
-size_t AVR_NonVolatileMemory::dbg_read(unsigned char* buf, size_t base, size_t len) const
+size_t NonVolatileMemory::dbg_read(unsigned char* buf, size_t base, size_t len) const
 {
     if (!m_size || !len) return 0;
 
@@ -145,13 +147,13 @@ size_t AVR_NonVolatileMemory::dbg_read(unsigned char* buf, size_t base, size_t l
     return len;
 }
 
-void AVR_NonVolatileMemory::dbg_write(unsigned char v, size_t pos)
+void NonVolatileMemory::dbg_write(unsigned char v, size_t pos)
 {
     if (pos < m_size)
         m_memory[pos] = v;
 }
 
-void AVR_NonVolatileMemory::dbg_write(const unsigned char* buf, size_t base, size_t len)
+void NonVolatileMemory::dbg_write(const unsigned char* buf, size_t base, size_t len)
 {
     if (!m_size || !len) return;
 
@@ -160,7 +162,7 @@ void AVR_NonVolatileMemory::dbg_write(const unsigned char* buf, size_t base, siz
     memcpy(m_memory + base, buf, len);
 }
 
-void AVR_NonVolatileMemory::spm_write(unsigned char v, size_t pos)
+void NonVolatileMemory::spm_write(unsigned char v, size_t pos)
 {
     if (pos < m_size) {
         m_memory[pos] &= v;
@@ -168,9 +170,9 @@ void AVR_NonVolatileMemory::spm_write(unsigned char v, size_t pos)
     }
 }
 
-void AVR_NonVolatileMemory::spm_write(const unsigned char* buf,
-                                      const unsigned char* bufset,
-                                      size_t base, size_t len)
+void NonVolatileMemory::spm_write(const unsigned char* buf,
+                                  const unsigned char* bufset,
+                                  size_t base, size_t len)
 {
     if (!m_size || !len) return;
 
@@ -185,7 +187,7 @@ void AVR_NonVolatileMemory::spm_write(const unsigned char* buf,
 }
 
 
-AVR_NonVolatileMemory& AVR_NonVolatileMemory::operator=(const AVR_NonVolatileMemory& other)
+NonVolatileMemory& NonVolatileMemory::operator=(const NonVolatileMemory& other)
 {
     if (m_size) {
         free(m_memory);

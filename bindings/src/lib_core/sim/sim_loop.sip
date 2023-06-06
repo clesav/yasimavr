@@ -21,8 +21,7 @@
 
 //=======================================================================================
 
-
-class AVR_AbstractSimLoop /NoDefaultCtors, Abstract/ {
+class AbstractSimLoop /NoDefaultCtors, Abstract/ {
 %TypeHeaderCode
 #include "sim/sim_loop.h"
 %End
@@ -37,23 +36,23 @@ public:
         State_Done          /PyName=Done/,
     };
 
-    AVR_AbstractSimLoop(AVR_Device&);
+    AbstractSimLoop(Device&);
 
-    AVR_AbstractSimLoop::State state() const;
+    AbstractSimLoop::State state() const;
     cycle_count_t cycle() const;
-    AVR_CycleManager& cycle_manager();
-    const AVR_Device& device() const /NoCopy/;
+    CycleManager& cycle_manager();
+    const Device& device() const /NoCopy/;
 
 };
 
-class AVR_SimLoop : public AVR_AbstractSimLoop /NoDefaultCtors/ {
+class SimLoop : public AbstractSimLoop /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "sim/sim_loop.h"
 %End
 
 public:
 
-    AVR_SimLoop(AVR_Device&);
+    SimLoop(Device&);
 
     void set_fast_mode(bool);
     void run(cycle_count_t = 0) /ReleaseGIL/;
@@ -61,14 +60,14 @@ public:
 };
 
 
-class AVR_AsyncSimLoop : public AVR_AbstractSimLoop /NoDefaultCtors/ {
+class AsyncSimLoop : public AbstractSimLoop /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "sim/sim_loop.h"
 %End
 
 public:
 
-    AVR_AsyncSimLoop(AVR_Device&);
+    AsyncSimLoop(Device&);
 
     void set_fast_mode(bool);
 

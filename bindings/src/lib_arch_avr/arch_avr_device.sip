@@ -21,34 +21,34 @@
 
 //=======================================================================================
 
-struct AVR_ArchAVR_CoreConfig : public AVR_CoreConfiguration {
+struct ArchAVR_CoreConfig : public CoreConfiguration {
 %TypeHeaderCode
 #include "arch_avr_device.h"
 %End
 };
 
-struct AVR_ArchAVR_DeviceConfig : public AVR_DeviceConfiguration /NoDefaultCtors/ {
+struct ArchAVR_DeviceConfig : public DeviceConfiguration /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_avr_device.h"
 %End
 
-    AVR_ArchAVR_DeviceConfig(AVR_ArchAVR_CoreConfig&);
+    ArchAVR_DeviceConfig(ArchAVR_CoreConfig&);
 
 };
 
 
-class AVR_ArchAVR_Core : public AVR_Core /NoDefaultCtors/ {
+class ArchAVR_Core : public Core /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_avr_device.h"
 %End
 
 public:
 
-    enum AVR_ArchAVR_NVM /BaseType=IntEnum/ {
+    enum ArchAVR_NVM /BaseType=IntEnum/ {
         NVM_EEPROM          /PyName=EEPROM/,
     };
 
-    AVR_ArchAVR_Core(const AVR_ArchAVR_CoreConfig& /KeepReference/);
+    ArchAVR_Core(const ArchAVR_CoreConfig& /KeepReference/);
 
 protected:
 
@@ -58,14 +58,14 @@ protected:
 };
 
 
-class AVR_ArchAVR_Device : public AVR_Device /NoDefaultCtors/ {
+class ArchAVR_Device : public Device /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_avr_device.h"
 %End
 
 public:
 
-    AVR_ArchAVR_Device(const AVR_ArchAVR_DeviceConfig& /KeepReference/);
+    ArchAVR_Device(const ArchAVR_DeviceConfig& /KeepReference/);
 
     SIP_PYOBJECT __str__();
     %MethodCode

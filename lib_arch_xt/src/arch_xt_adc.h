@@ -30,6 +30,8 @@
 #include "ioctrl_common/sim_timer.h"
 #include "ioctrl_common/sim_vref.h"
 
+YASIMAVR_BEGIN_NAMESPACE
+
 
 //=======================================================================================
 /*
@@ -45,13 +47,13 @@
  * by using the request AVR_CTLREQ_ADC_TRIGGER.
  */
 
-struct AVR_ArchXT_ADC_Config {
+struct ArchXT_ADCConfig {
 
     struct reference_config_t : base_reg_config_t {
-        AVR_IO_VREF::Source source;
+        VREF::Source source;
     };
 
-    std::vector<AVR_IO_ADC::channel_config_t> channels;
+    std::vector<ADC::channel_config_t> channels;
     std::vector<reference_config_t> references;
     uint32_t vref_channel;
     std::vector<uint16_t> clk_ps_factors;
@@ -68,20 +70,20 @@ struct AVR_ArchXT_ADC_Config {
 
 };
 
-class DLL_EXPORT AVR_ArchXT_ADC : public AVR_IO_ADC,
-                                  public AVR_Peripheral,
-                                  public AVR_SignalHook {
+class DLL_EXPORT ArchXT_ADC : public ADC,
+                              public Peripheral,
+                              public SignalHook {
 
 public:
 
-    AVR_ArchXT_ADC(int num, const AVR_ArchXT_ADC_Config& config);
+    ArchXT_ADC(int num, const ArchXT_ADCConfig& config);
 
-    virtual bool init(AVR_Device& device) override;
+    virtual bool init(Device& device) override;
     virtual void reset() override;
     virtual bool ctlreq(uint16_t req, ctlreq_data_t* data) override;
     virtual uint8_t ioreg_read_handler(reg_addr_t addr, uint8_t value) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
-    virtual void sleep(bool on, AVR_SleepMode mode) override;
+    virtual void sleep(bool on, SleepMode mode) override;
     virtual void raised(const signal_data_t& data, uint16_t sigid) override;
 
 private:
@@ -94,10 +96,10 @@ private:
         ADC_PendingRaise,
     };
 
-    const AVR_ArchXT_ADC_Config& m_config;
+    const ArchXT_ADCConfig& m_config;
     State m_state;
     bool m_first;
-    AVR_PrescaledTimer m_timer;
+    PrescaledTimer m_timer;
     double m_temperature;
     uint8_t m_latched_ch_mux;
     uint8_t m_latched_ref_mux;
@@ -105,13 +107,16 @@ private:
     uint16_t m_result;
     uint16_t m_win_lothres;
     uint16_t m_win_hithres;
-    AVR_InterruptFlag m_res_intflag;
-    AVR_InterruptFlag m_cmp_intflag;
-    AVR_Signal m_signal;
+    InterruptFlag m_res_intflag;
+    InterruptFlag m_cmp_intflag;
+    Signal m_signal;
 
     void start_conversion_cycle();
     void read_analog_value();
 
 };
+
+
+YASIMAVR_END_NAMESPACE
 
 #endif //__YASIMAVR_XT_ADC_H__

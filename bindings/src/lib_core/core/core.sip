@@ -21,7 +21,7 @@
 
 //=======================================================================================
 
-enum AVR_SREG_Bits {
+enum SREG_Bits {
     SREG_C,
     SREG_Z,
     SREG_N,
@@ -33,7 +33,7 @@ enum AVR_SREG_Bits {
 };
 
 
-enum AVR_StdRegisters {
+enum StdRegisters {
     R_XL, R_XH,
     R_YL, R_YH,
     R_ZL, R_ZH,
@@ -65,7 +65,7 @@ struct breakpoint_t {
 };
 
 
-class AVR_Core /Abstract/ {
+class Core /Abstract/ {
 %TypeHeaderCode
 #include "core/sim_core.h"
 %End
@@ -80,12 +80,12 @@ public:
         NVM_GetCount        /PyName=GetCount/,
     };
 
-    AVR_Core(const AVR_CoreConfiguration&);
+    Core(const CoreConfiguration&);
 
-    bool init(AVR_Device&);
+    bool init(Device&);
     void reset();
     int exec_cycle();
-    AVR_IO_Register* get_ioreg(reg_addr_t);
+    IO_Register* get_ioreg(reg_addr_t);
     uint8_t ioctl_read_ioreg(reg_addr_t);
     void ioctl_write_ioreg(const regbit_t&, uint8_t);
 

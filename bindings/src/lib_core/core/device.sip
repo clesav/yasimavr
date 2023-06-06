@@ -36,7 +36,7 @@ enum {
 
 %End
 
-enum AVR_CoreCrashCodes {
+enum CoreCrashCodes {
     Crash_PC_Overflow,
     Crash_SP_Overflow,
     Crash_Bad_CPU_IO,
@@ -47,7 +47,7 @@ enum AVR_CoreCrashCodes {
 };
 
 
-class AVR_Device /NoDefaultCtors/ {
+class Device /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "core/sim_device.h"
 %End
@@ -83,21 +83,21 @@ public:
         Option_InfiniteLoopDetect
     };
 
-    AVR_Device(AVR_Core&, const AVR_DeviceConfiguration&);
+    Device(Core&, const DeviceConfiguration&);
 
-    AVR_Core& core() const;
+    Core& core() const;
 
-    void set_option(AVR_Device::Option, bool);
-    bool test_option(AVR_Device::Option) const;
+    void set_option(Device::Option, bool);
+    bool test_option(Device::Option) const;
 
-    const AVR_DeviceConfiguration& config() const /NoCopy/;
-    AVR_Device::State state() const;
+    const DeviceConfiguration& config() const /NoCopy/;
+    Device::State state() const;
     cycle_count_t cycle() const;
-    AVR_SleepMode sleep_mode() const;
+    SleepMode sleep_mode() const;
     uint32_t frequency() const;
 
-    void init(AVR_CycleManager&)
-        [bool(AVR_CycleManager&)];
+    void init(CycleManager&)
+        [bool(CycleManager&)];
     %MethodCode
         if (!sipCpp->init(*a0)) {
             PyErr_SetString(PyExc_Exception, "Device initialisation failed");
@@ -105,8 +105,8 @@ public:
         }
     %End
 
-    void load_firmware(const AVR_Firmware&)
-        [bool(const AVR_Firmware&)];
+    void load_firmware(const Firmware&)
+        [bool(const Firmware&)];
     %MethodCode
         if (!sipCpp->load_firmware(*a0)) {
             PyErr_SetString(PyExc_Exception, "Device firmware load failed");
@@ -114,15 +114,15 @@ public:
         }
     %End
 
-    void reset(uint8_t = AVR_Device::Reset_PowerOn);
+    void reset(uint8_t = Device::Reset_PowerOn);
 
     cycle_count_t exec_cycle();
 
-    void attach_peripheral(AVR_Peripheral& /Transfer/);
-    void add_ioreg_handler(reg_addr_t, AVR_IO_RegHandler&, uint8_t = 0x00);
-    void add_ioreg_handler(const regbit_t&, AVR_IO_RegHandler&, bool = false);
-    AVR_Peripheral* find_peripheral(const char*);
-    AVR_Peripheral* find_peripheral(uint32_t);
+    void attach_peripheral(Peripheral& /Transfer/);
+    void add_ioreg_handler(reg_addr_t, IO_RegHandler&, uint8_t = 0x00);
+    void add_ioreg_handler(const regbit_t&, IO_RegHandler&, bool = false);
+    Peripheral* find_peripheral(const char*);
+    Peripheral* find_peripheral(uint32_t);
 
     SIP_PYTUPLE ctlreq(uint32_t, uint16_t, ctlreq_data_t* = NULL) /TypeHint="Tuple[bool, ctlreq_data_t]"/
         [bool(uint32_t, uint16_t, ctlreq_data_t*)];
@@ -140,13 +140,13 @@ public:
         sipRes = sipBuildResult(0, "(bD)", status, d, sipType_ctlreq_data_t, transferObj);
     %End
 
-    AVR_CycleManager* cycle_manager();
+    CycleManager* cycle_manager();
 
-    AVR_Pin* find_pin(const char*);
-    AVR_Pin* find_pin(uint32_t);
+    Pin* find_pin(const char*);
+    Pin* find_pin(uint32_t);
 
-    AVR_LogHandler& log_handler();
-    AVR_Logger& logger();
+    LogHandler& log_handler();
+    Logger& logger();
 
     void crash(uint16_t, const char*);
 

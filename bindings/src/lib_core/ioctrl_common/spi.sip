@@ -36,15 +36,17 @@ const uint16_t CTLREQ_SPI_CLIENT;
 const uint16_t CTLREQ_SPI_SELECT;
 
 
-class AVR_SPI_Client {
+//=======================================================================================
+
+class SPIClient {
 %TypeHeaderCode
 #include "ioctrl_common/sim_spi.h"
 %End
 
 public:
 
-    AVR_SPI_Client();
-    AVR_SPI_Client(const AVR_SPI_Client&);
+    SPIClient();
+    SPIClient(const SPIClient&);
 
     virtual bool selected() const = 0;
     virtual uint8_t start_transfer(uint8_t mosi_frame) = 0;
@@ -53,7 +55,7 @@ public:
 };
 
 
-class AVR_IO_SPI : public AVR_SPI_Client, public AVR_CycleTimer /NoDefaultCtors/ {
+class SPI : public SPIClient, public CycleTimer /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "ioctrl_common/sim_spi.h"
 %End
@@ -67,16 +69,16 @@ public:
         Signal_ClientTfrComplete    /PyName=ClientTfrComplete/,
     };
 
-    AVR_IO_SPI();
+    SPI();
 
-    void init(AVR_CycleManager&, AVR_Logger&);
+    void init(CycleManager&, Logger&);
     void reset();
     void set_host_mode(bool);
     bool is_host_mode() const;
-    AVR_Signal& signal();
+    Signal& signal();
     void set_frame_delay(cycle_count_t);
-    void add_client(AVR_SPI_Client&);
-    void remove_client(AVR_SPI_Client&);
+    void add_client(SPIClient&);
+    void remove_client(SPIClient&);
     void set_selected(bool);
     void set_tx_buffer_limit(size_t);
     void push_tx(uint8_t);

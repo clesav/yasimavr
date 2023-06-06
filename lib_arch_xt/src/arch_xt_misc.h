@@ -28,16 +28,18 @@
 #include "core/sim_types.h"
 #include "ioctrl_common/sim_vref.h"
 
+YASIMAVR_BEGIN_NAMESPACE
+
 
 //=======================================================================================
 /*
  * Implementation of a Voltage Reference controller for XT core series
  */
 
-struct AVR_ArchXT_VREF_Config {
+struct ArchXT_VREFConfig {
 
     struct reference_config_t : base_reg_config_t {
-        AVR_IO_VREF::Source source;
+        VREF::Source source;
         double level;
     };
 
@@ -52,19 +54,19 @@ struct AVR_ArchXT_VREF_Config {
 
 };
 
-class DLL_EXPORT AVR_ArchXT_VREF : public AVR_IO_VREF {
+class DLL_EXPORT ArchXT_VREF : public VREF {
 
 public:
 
-    explicit AVR_ArchXT_VREF(const AVR_ArchXT_VREF_Config& config);
+    explicit ArchXT_VREF(const ArchXT_VREFConfig& config);
 
-    virtual bool init(AVR_Device&) override;
+    virtual bool init(Device&) override;
     virtual void reset() override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
 
 private:
 
-    const AVR_ArchXT_VREF_Config& m_config;
+    const ArchXT_VREFConfig& m_config;
 
     void set_channel_reference(uint32_t index, uint8_t reg_value);
 
@@ -80,7 +82,7 @@ private:
  *      - Interrupt Vector Select feature
  */
 
-struct AVR_ArchXT_IntCtrl_Config {
+struct ArchXT_IntCtrlConfig {
 
     unsigned int vector_count;
     reg_addr_t reg_base;
@@ -88,13 +90,13 @@ struct AVR_ArchXT_IntCtrl_Config {
 };
 
 
-class DLL_EXPORT AVR_ArchXT_IntCtrl : public AVR_InterruptController {
+class DLL_EXPORT ArchXT_IntCtrl : public InterruptController {
 
 public:
 
-    AVR_ArchXT_IntCtrl(const AVR_ArchXT_IntCtrl_Config& config);
+    explicit ArchXT_IntCtrl(const ArchXT_IntCtrlConfig& config);
 
-    virtual bool init(AVR_Device& device) override;
+    virtual bool init(Device& device) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
     virtual void cpu_reti() override;
 
@@ -105,7 +107,7 @@ protected:
 
 private:
 
-    const AVR_ArchXT_IntCtrl_Config& m_config;
+    const ArchXT_IntCtrlConfig& m_config;
 
 };
 
@@ -118,13 +120,13 @@ private:
  *  - Software reset (register SWRR)
  */
 
-class DLL_EXPORT AVR_ArchXT_ResetCtrl : public AVR_Peripheral {
+class DLL_EXPORT ArchXT_ResetCtrl : public Peripheral {
 
 public:
 
-    AVR_ArchXT_ResetCtrl(reg_addr_t base);
+    ArchXT_ResetCtrl(reg_addr_t base);
 
-    virtual bool init(AVR_Device& device) override;
+    virtual bool init(Device& device) override;
     virtual void reset() override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
 
@@ -146,7 +148,7 @@ private:
 #define AVR_CTLREQ_WRITE_SIGROW         1
 
 
-struct AVR_ArchXT_Misc_Config {
+struct ArchXT_MiscConfig {
 
     reg_addr_t reg_base_gpior;
     unsigned int gpior_count;
@@ -159,14 +161,14 @@ struct AVR_ArchXT_Misc_Config {
 };
 
 
-class DLL_EXPORT AVR_ArchXT_MiscRegCtrl : public AVR_Peripheral {
+class DLL_EXPORT ArchXT_MiscRegCtrl : public Peripheral {
 
 public:
 
-    AVR_ArchXT_MiscRegCtrl(const AVR_ArchXT_Misc_Config& config);
-    virtual ~AVR_ArchXT_MiscRegCtrl();
+    ArchXT_MiscRegCtrl(const ArchXT_MiscConfig& config);
+    virtual ~ArchXT_MiscRegCtrl();
 
-    virtual bool init(AVR_Device& device) override;
+    virtual bool init(Device& device) override;
     virtual void reset() override;
     virtual bool ctlreq(uint16_t req, ctlreq_data_t* data) override;
     virtual uint8_t ioreg_read_handler(reg_addr_t addr, uint8_t value) override;
@@ -174,9 +176,12 @@ public:
 
 private:
 
-    const AVR_ArchXT_Misc_Config& m_config;
+    const ArchXT_MiscConfig& m_config;
     uint8_t* m_sigrow;
 
 };
+
+
+YASIMAVR_END_NAMESPACE
 
 #endif //__YASIMAVR_XT_MISC_H__

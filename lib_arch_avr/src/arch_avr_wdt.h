@@ -28,13 +28,14 @@
 #include "core/sim_interrupt.h"
 #include "ioctrl_common/sim_wdt.h"
 
+YASIMAVR_BEGIN_NAMESPACE
 
 //=======================================================================================
 /*
  * Implementation of a Watchdog Timer for AVR series
  */
 
-struct AVR_ArchAVR_WDT_Config {
+struct ArchAVR_WDTConfig {
 
     uint32_t clock_frequency;
     std::vector<uint32_t> delays;
@@ -51,13 +52,13 @@ struct AVR_ArchAVR_WDT_Config {
 
 };
 
-class DLL_EXPORT AVR_ArchAVR_WDT : public AVR_WatchdogTimer, public AVR_InterruptHandler {
+class DLL_EXPORT ArchAVR_WDT : public WatchdogTimer, public InterruptHandler {
 
 public:
 
-    explicit AVR_ArchAVR_WDT(const AVR_ArchAVR_WDT_Config& config);
+    explicit ArchAVR_WDT(const ArchAVR_WDTConfig& config);
 
-    virtual bool init(AVR_Device& device) override;
+    virtual bool init(Device& device) override;
     virtual void reset() override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
     virtual void interrupt_ack_handler(int_vect_t vector) override;
@@ -69,12 +70,15 @@ protected:
 private:
 
     //Device variant configuration
-    const AVR_ArchAVR_WDT_Config& m_config;
+    const ArchAVR_WDTConfig& m_config;
     //cycle number when the register have been unlocked for modification
     cycle_count_t m_unlock_cycle;
 
     void configure_timer(bool enable, uint8_t delay_index);
 
 };
+
+
+YASIMAVR_END_NAMESPACE
 
 #endif //__YASIMAVR_AVR_WDT_H__

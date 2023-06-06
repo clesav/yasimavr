@@ -21,8 +21,8 @@
 
 //=======================================================================================
 
-#ifndef __YASIMAVR_IO_TWI_H__
-#define __YASIMAVR_IO_TWI_H__
+#ifndef __YASIMAVR_TWI_H__
+#define __YASIMAVR_TWI_H__
 
 #include "../core/sim_types.h"
 #include "../core/sim_signal.h"
@@ -30,6 +30,8 @@
 #include "../core/sim_device.h"
 #include <deque>
 #include <vector>
+
+YASIMAVR_BEGIN_NAMESPACE
 
 
 //=======================================================================================
@@ -39,11 +41,11 @@
  * It does not support arbitration beyond the START condition and (currently) is not
  * multi-thread safe.
  * It is implemented by 4 classes:
- *  - TWI_Packet defines a packet circulating on a bus simulating the successive exchange
+ *  - TWIPacket defines a packet circulating on a bus simulating the successive exchange
  *    of information between mater and slave.
- *  - TWI_Endpoint is an abstract interface defining a generic device connected to a TWI bus.
- *  - TWI_Bus defines a central object to circulate packets between multiple endpoints.
- *  - AVR_IO_TWI is an implementation of a TWI interface for an AVR MCU, as generic
+ *  - TWIEndPoint is an abstract interface defining a generic device connected to a TWI bus.
+ *  - TWIBus defines a central object to circulate packets between multiple endpoints.
+ *  - TWI is an implementation of a TWI interface for an AVR MCU, as generic
  *    as possible. It manages master and slave operations independently and communicates
  *    with upper layers via signals.
  */
@@ -52,13 +54,13 @@
 /*
  * CTLREQ definitions
 */
-//Request to get the TWI endpoint. data->p must be pointing at a TWI_Endpoint
+//Request to get the TWI endpoint. data->p must be pointing at a TWIEndPoint
 #define AVR_CTLREQ_TWI_ENDPOINT     1
 
 
 //=======================================================================================
 
-class DLL_EXPORT TWI_Packet {
+class DLL_EXPORT TWIPacket {
 
 public:
 
@@ -92,24 +94,24 @@ public:
              hold: 1,
              unused: 11;
 
-    TWI_Packet();
+    TWIPacket();
 
 };
 
-class TWI_Bus;
+class TWIBus;
 
-class DLL_EXPORT TWI_Endpoint {
+class DLL_EXPORT TWIEndPoint {
 
 public:
 
-    TWI_Endpoint();
-    virtual ~TWI_Endpoint();
+    TWIEndPoint();
+    virtual ~TWIEndPoint();
 
-    inline TWI_Bus* bus() const { return m_bus; }
+    inline TWIBus* bus() const { return m_bus; }
 
     //Disable copy semantics
-    TWI_Endpoint(const TWI_Endpoint&) = delete;
-    TWI_Endpoint& operator=(const TWI_Endpoint&) = delete;
+    TWIEndPoint(const TWIEndPoint&) = delete;
+    TWIEndPoint& operator=(const TWIEndPoint&) = delete;
 
 protected:
 
@@ -118,15 +120,15 @@ protected:
     //Used by a master endpoint to release ownship of the bus
     void release_bus();
     //Used by a endpoint to send a packet on the bus
-    void send_packet(TWI_Packet& packet);
+    void send_packet(TWIPacket& packet);
     //Used by a endpoint to end a 'long' packet
-    void end_packet(TWI_Packet& packet);
+    void end_packet(TWIPacket& packet);
 
     //*********************************
 
     //Called by the bus to transmit a packet.
-    virtual void packet(TWI_Packet& packet) = 0;
-    virtual void packet_ended(TWI_Packet& packet) = 0;
+    virtual void packet(TWIPacket& packet) = 0;
+    virtual void packet_ended(TWIPacket& packet) = 0;
     //Called by the bus to signal that the bus is acquired
     virtual void bus_acquired() = 0;
     //Called by the bus to signal that the bus is released
@@ -134,14 +136,14 @@ protected:
 
 private:
 
-    friend class TWI_Bus;
+    friend class TWIBus;
 
-    TWI_Bus* m_bus;
+    TWIBus* m_bus;
 
 };
 
 
-class DLL_EXPORT TWI_Bus {
+class DLL_EXPORT TWIBus {
 
 public:
 
@@ -167,29 +169,29 @@ public:
         Signal_Stop,
     };
 
-    TWI_Bus();
-    ~TWI_Bus();
+    TWIBus();
+    ~TWIBus();
 
-    AVR_Signal& signal();
+    Signal& signal();
 
-    void add_endpoint(TWI_Endpoint& endpoint);
-    void remove_endpoint(TWI_Endpoint& endpoint);
+    void add_endpoint(TWIEndPoint& endpoint);
+    void remove_endpoint(TWIEndPoint& endpoint);
 
     //Disable copy semantics
-    TWI_Bus(const TWI_Bus&) = delete;
-    TWI_Bus& operator=(const TWI_Bus&) = delete;
+    TWIBus(const TWIBus&) = delete;
+    TWIBus& operator=(const TWIBus&) = delete;
 
 private:
 
-    friend class TWI_Endpoint;
+    friend class TWIEndPoint;
 
-    AVR_Signal m_signal;
+    Signal m_signal;
     //List of all the endpoints connected to this bus
-    std::vector<TWI_Endpoint*> m_endpoints;
+    std::vector<TWIEndPoint*> m_endpoints;
     //Pointer to the master currently owning the bus
-    TWI_Endpoint* m_master;
+    TWIEndPoint* m_master;
     //Pointer to the currently active slave
-    TWI_Endpoint* m_slave;
+    TWIEndPoint* m_slave;
     //When a ADDR packet is circulating, and slaves delayed
     //their ACK response by holding the bus, this is the counter
     //of expected ACK.
@@ -199,24 +201,24 @@ private:
     //endpoint is the calling host.
     //Returns true if ownership has been granted of false if the bus
     //is busy.
-    bool acquire(TWI_Endpoint* endpoint);
+    bool acquire(TWIEndPoint* endpoint);
     //Called by the bus owner to relinquish ownership of the bus
     //at the end of a transfer.
-    void release(TWI_Endpoint* endpoint);
+    void release(TWIEndPoint* endpoint);
     //Called by an enpoint transmitter (slave or master)
-    void send_packet(TWI_Endpoint& src, TWI_Packet& p);
+    void send_packet(TWIEndPoint& src, TWIPacket& p);
     //Called by the bus owner to notify the end of a long packet
-    void end_packet(TWI_Endpoint& src, TWI_Packet& p);
+    void end_packet(TWIEndPoint& src, TWIPacket& p);
 
 };
 
-inline AVR_Signal& TWI_Bus::signal()
+inline Signal& TWIBus::signal()
 {
     return m_signal;
 }
 
 
-class DLL_EXPORT AVR_IO_TWI : public TWI_Endpoint {
+class DLL_EXPORT TWI : public TWIEndPoint {
 
 public:
 
@@ -234,10 +236,10 @@ public:
         //bit 0 is the RW flag, bits 1 to 7 contain the address
         Signal_Address,
         //Master only signal. Emitted when received a address ACK/NACK
-        //from a slave. sigdata.u is set to TWI_Packet::Ack or TWI_Packet::Nack
+        //from a slave. sigdata.u is set to TWIPacket::Ack or TWIPacket::Nack
         Signal_AddrAck,
         //Emitted when a data transmission complete, i.e. the ACK/NACK has been
-        //received in return. sigdata.u is set to TWI_Packet::Ack or TWI_Packet::Nack.
+        //received in return. sigdata.u is set to TWIPacket::Ack or TWIPacket::Nack.
         Signal_TxComplete,
         //Emitted when a data reception completed. sigdata.u is set to the data byte
         //received. A ACK/NACK has not been sent in return yet.
@@ -297,16 +299,16 @@ public:
         State_RX_Ack        = 0xC7,
     };
 
-    AVR_IO_TWI();
-    virtual ~AVR_IO_TWI();
+    TWI();
+    virtual ~TWI();
 
     //Initialise the interface. the device will be used for timer related operations
-    void init(AVR_CycleManager& cycle_manager, AVR_Logger& logger);
+    void init(CycleManager& cycle_manager, Logger& logger);
 
     //Reset the interface cancel any transaction
     void reset();
 
-    AVR_Signal& signal();
+    Signal& signal();
 
     void set_master_enabled(bool enabled);
     void set_bit_delay(cycle_count_t delay);
@@ -347,13 +349,13 @@ public:
     State slave_state() const;
 
     //Disable copy semantics
-    AVR_IO_TWI(const AVR_IO_TWI&) = delete;
-    AVR_IO_TWI& operator=(const AVR_IO_TWI&) = delete;
+    TWI(const TWI&) = delete;
+    TWI& operator=(const TWI&) = delete;
 
 protected:
 
-    virtual void packet(TWI_Packet& packet) override;
-    virtual void packet_ended(TWI_Packet& packet) override;
+    virtual void packet(TWIPacket& packet) override;
+    virtual void packet_ended(TWIPacket& packet) override;
     virtual void bus_acquired() override;
     virtual void bus_released() override;
 
@@ -362,17 +364,17 @@ private:
     class Timer;
     friend class Timer;
 
-    AVR_CycleManager* m_cycle_manager;
-    AVR_Logger* m_logger;
+    CycleManager* m_cycle_manager;
+    Logger* m_logger;
 
-    AVR_Signal m_signal;
+    Signal m_signal;
     signal_data_t m_deferred_sigdata;
     bool m_has_deferred_raise;
     Timer* m_timer;
     bool m_timer_updating;
     cycle_count_t m_timer_next_when;
 
-    TWI_Packet m_current_packet;
+    TWIPacket m_current_packet;
 
     uint8_t m_tx_data;
 
@@ -391,19 +393,22 @@ private:
 
 };
 
-inline AVR_Signal& AVR_IO_TWI::signal()
+inline Signal& TWI::signal()
 {
     return m_signal;
 }
 
-inline AVR_IO_TWI::State AVR_IO_TWI::master_state() const
+inline TWI::State TWI::master_state() const
 {
     return m_mst_state;
 }
 
-inline AVR_IO_TWI::State AVR_IO_TWI::slave_state() const
+inline TWI::State TWI::slave_state() const
 {
     return m_slv_state;
 }
 
-#endif //__YASIMAVR_IO_TWI_H__
+
+YASIMAVR_END_NAMESPACE
+
+#endif //__YASIMAVR_TWI_H__

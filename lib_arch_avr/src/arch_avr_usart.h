@@ -27,6 +27,8 @@
 #include "core/sim_interrupt.h"
 #include "ioctrl_common/sim_uart.h"
 
+YASIMAVR_BEGIN_NAMESPACE
+
 
 //=======================================================================================
 /*
@@ -45,7 +47,7 @@
  *      data in and out (see sim_uart.h)
  */
 
-struct AVR_ArchAVR_USART_Config {
+struct ArchAVR_USARTConfig {
 
     reg_addr_t reg_data;            //Data register address
 
@@ -68,13 +70,13 @@ struct AVR_ArchAVR_USART_Config {
 
 };
 
-class DLL_EXPORT AVR_ArchAVR_USART : public AVR_Peripheral, public AVR_SignalHook {
+class DLL_EXPORT ArchAVR_USART : public Peripheral, public SignalHook {
 
 public:
 
-    AVR_ArchAVR_USART(uint8_t num, const AVR_ArchAVR_USART_Config& config);
+    ArchAVR_USART(uint8_t num, const ArchAVR_USARTConfig& config);
 
-    virtual bool init(AVR_Device& device) override;
+    virtual bool init(Device& device) override;
     virtual void reset() override;
     virtual bool ctlreq(uint16_t req, ctlreq_data_t* data) override;
     virtual uint8_t ioreg_read_handler(reg_addr_t addr, uint8_t value) override;
@@ -83,17 +85,20 @@ public:
 
 private:
 
-    const AVR_ArchAVR_USART_Config& m_config;
+    const ArchAVR_USARTConfig& m_config;
 
-    AVR_IO_UART m_uart;
-    UART_EndPoint m_endpoint;
+    UART m_uart;
+    UARTEndPoint m_endpoint;
 
-    AVR_InterruptFlag m_rxc_intflag;
-    AVR_InterruptFlag m_txc_intflag;
-    AVR_InterruptFlag m_txe_intflag;
+    InterruptFlag m_rxc_intflag;
+    InterruptFlag m_txc_intflag;
+    InterruptFlag m_txe_intflag;
 
     void update_framerate();
 
 };
 
-#endif
+
+YASIMAVR_END_NAMESPACE
+
+#endif //__YASIMAVR_AVR_USART_H__

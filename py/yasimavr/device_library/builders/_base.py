@@ -191,7 +191,7 @@ def get_core_attributes(dev_desc):
     result = 0
     for lib_flag_name, yml_flag_name in _core_attrs_map.items():
         if dev_desc.core_attributes[yml_flag_name]:
-            result |= _corelib.AVR_CoreConfiguration.Attributes[lib_flag_name]
+            result |= _corelib.CoreConfiguration.Attributes[lib_flag_name]
 
     return result
 
@@ -251,7 +251,7 @@ def dummy_config_builder(per_descriptor):
 
     py_regs = []
     for yml_item in yml_cfg['regs']:
-        reg_cfg = _corelib.AVR_DummyController.dummy_register_t()
+        reg_cfg = _corelib.DummyController.dummy_register_t()
         if isinstance(yml_item, list):
             reg_name, reg_reset = yml_item
         else:
@@ -332,11 +332,11 @@ class LetteredPeripheralBuilder(PeripheralBuilder):
 class DummyPeripheralBuilder(PeripheralBuilder):
 
     '''Specialisation of PeripheralBuilder for dummy peripherals (
-    using the AVR_DummyController model) requiring the CTLID.
+    using the DummyController model) requiring the CTLID.
     '''
 
     def __init__(self, ctl_id):
-        super().__init__(_corelib.AVR_DummyController, dummy_config_builder)
+        super().__init__(_corelib.DummyController, dummy_config_builder)
         self._ctl_id = ctl_id
 
     def _get_build_args(self, per_name, per_config):

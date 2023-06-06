@@ -26,13 +26,15 @@
 
 #include "ioctrl_common/sim_wdt.h"
 
+YASIMAVR_BEGIN_NAMESPACE
+
 
 //=======================================================================================
 /*
  * Implementation of a Watchdog Timer for XT core series
  */
 
-struct AVR_ArchXT_WDT_Config {
+struct ArchXT_WDTConfig {
 
     uint32_t clock_frequency;
     std::vector<uint32_t> delays;
@@ -42,13 +44,13 @@ struct AVR_ArchXT_WDT_Config {
 };
 
 
-class DLL_EXPORT AVR_ArchXT_WDT : public AVR_WatchdogTimer {
+class DLL_EXPORT ArchXT_WDT : public WatchdogTimer {
 
 public:
 
-    explicit AVR_ArchXT_WDT(const AVR_ArchXT_WDT_Config& config);
+    explicit ArchXT_WDT(const ArchXT_WDTConfig& config);
 
-    virtual bool init(AVR_Device& device) override;
+    virtual bool init(Device& device) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
 
 protected:
@@ -57,8 +59,11 @@ protected:
 
 private:
 
-    const AVR_ArchXT_WDT_Config& m_config;
+    const ArchXT_WDTConfig& m_config;
 
 };
+
+
+YASIMAVR_END_NAMESPACE
 
 #endif //__YASIMAVR_XT_WDT_H__

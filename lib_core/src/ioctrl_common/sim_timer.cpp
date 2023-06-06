@@ -23,10 +23,12 @@
 
 #include "sim_timer.h"
 
+YASIMAVR_USING_NAMESPACE
+
 
 //=======================================================================================
 
-AVR_PrescaledTimer::AVR_PrescaledTimer()
+PrescaledTimer::PrescaledTimer()
 :m_cycle_manager(nullptr)
 ,m_logger(nullptr)
 ,m_ps_max(1)
@@ -39,22 +41,22 @@ AVR_PrescaledTimer::AVR_PrescaledTimer()
 ,m_parent_timer(nullptr)
 {}
 
-AVR_PrescaledTimer::~AVR_PrescaledTimer()
+PrescaledTimer::~PrescaledTimer()
 {
     if (m_parent_timer)
         m_parent_timer->unregister_chained_timer(*this);
 
-    for (AVR_PrescaledTimer* timer : m_chained_timers)
+    for (PrescaledTimer* timer : m_chained_timers)
         timer->m_parent_timer = nullptr;
 }
 
-void AVR_PrescaledTimer::init(AVR_CycleManager& cycle_manager, AVR_Logger& logger)
+void PrescaledTimer::init(CycleManager& cycle_manager, Logger& logger)
 {
     m_cycle_manager = &cycle_manager;
     m_logger = &logger;
 }
 
-void AVR_PrescaledTimer::reset()
+void PrescaledTimer::reset()
 {
     m_ps_max = 1;
     m_ps_factor = 0;
@@ -65,7 +67,7 @@ void AVR_PrescaledTimer::reset()
         m_cycle_manager->cancel(*this);
 }
 
-void AVR_PrescaledTimer::set_prescaler(uint32_t ps_max, uint32_t ps_factor)
+void PrescaledTimer::set_prescaler(uint32_t ps_max, uint32_t ps_factor)
 {
     if (!m_updating) update(m_cycle_manager->cycle());
 
@@ -81,21 +83,21 @@ void AVR_PrescaledTimer::set_prescaler(uint32_t ps_max, uint32_t ps_factor)
     if (!m_updating) reschedule();
 }
 
-void AVR_PrescaledTimer::set_paused(bool paused)
+void PrescaledTimer::set_paused(bool paused)
 {
     if (!m_updating) update();
     m_paused = paused;
     if (!m_updating) reschedule();
 }
 
-void AVR_PrescaledTimer::set_timer_delay(uint32_t delay)
+void PrescaledTimer::set_timer_delay(uint32_t delay)
 {
     if (!m_updating) update();
     m_delay = delay;
     if (!m_updating) reschedule();
 }
 
-void AVR_PrescaledTimer::reschedule()
+void PrescaledTimer::reschedule()
 {
     cycle_count_t when;
 
@@ -114,7 +116,7 @@ void AVR_PrescaledTimer::reschedule()
         m_cycle_manager->cancel(*this);
 }
 
-void AVR_PrescaledTimer::update(cycle_count_t when)
+void PrescaledTimer::update(cycle_count_t when)
 {
     if (m_updating) return;
     m_updating = true;
@@ -130,7 +132,7 @@ void AVR_PrescaledTimer::update(cycle_count_t when)
     m_updating = false;
 }
 
-void AVR_PrescaledTimer::update_timer(cycle_count_t when)
+void PrescaledTimer::update_timer(cycle_count_t when)
 {
     //Number of clock cycles since the last update
     cycle_count_t dt = when - m_update_cycle;
@@ -143,7 +145,7 @@ void AVR_PrescaledTimer::update_timer(cycle_count_t when)
     }
 }
 
-void AVR_PrescaledTimer::process_cycles(cycle_count_t cycles)
+void PrescaledTimer::process_cycles(cycle_count_t cycles)
 {
     if (m_ps_factor && !m_paused)
         m_logger->dbg("Prescaled timer processing cycles dt=%lld", cycles);
@@ -160,7 +162,7 @@ void AVR_PrescaledTimer::process_cycles(cycle_count_t cycles)
         cycle_count_t ticks = (cycles + m_ps_counter % m_ps_factor) / m_ps_factor;
 
         //Process the chained timers
-        for (AVR_PrescaledTimer* timer : m_chained_timers)
+        for (PrescaledTimer* timer : m_chained_timers)
             timer->process_cycles(ticks);
 
         //If not enough cycles to generate any tick or the timer is disabled,
@@ -208,13 +210,13 @@ void AVR_PrescaledTimer::process_cycles(cycle_count_t cycles)
  * the prescaler) of this timer or any of the chained timers.
  * If the timer has a parent, the parent prescaler is factored in.
  */
-cycle_count_t AVR_PrescaledTimer::calculate_when(cycle_count_t when)
+cycle_count_t PrescaledTimer::calculate_when(cycle_count_t when)
 {
     cycle_count_t delay = calculate_delay();
     return (delay > 0) ? (when + delay) : 0;
 }
 
-cycle_count_t AVR_PrescaledTimer::calculate_delay()
+cycle_count_t PrescaledTimer::calculate_delay()
 {
     cycle_count_t cycles = 0;
 
@@ -222,7 +224,7 @@ cycle_count_t AVR_PrescaledTimer::calculate_delay()
         if (m_delay)
             cycles = convert_ticks_to_cycles(m_delay);
 
-        for (AVR_PrescaledTimer* timer : m_chained_timers) {
+        for (PrescaledTimer* timer : m_chained_timers) {
             cycle_count_t c = timer->calculate_delay();
             if (c > 0 && (cycles == 0 || c < cycles))
                 cycles = c;
@@ -232,7 +234,7 @@ cycle_count_t AVR_PrescaledTimer::calculate_delay()
     return cycles;
 }
 
-cycle_count_t AVR_PrescaledTimer::convert_ticks_to_cycles(cycle_count_t ticks)
+cycle_count_t PrescaledTimer::convert_ticks_to_cycles(cycle_count_t ticks)
 {
     cycle_count_t cycles = 0;
 
@@ -252,7 +254,7 @@ cycle_count_t AVR_PrescaledTimer::convert_ticks_to_cycles(cycle_count_t ticks)
 /*
  * Callback from the cycle timer processing. Update the counters and reschedule for the next timeout
  */
-cycle_count_t AVR_PrescaledTimer::next(cycle_count_t when)
+cycle_count_t PrescaledTimer::next(cycle_count_t when)
 {
     update(when);
     return calculate_when(when);
@@ -261,7 +263,7 @@ cycle_count_t AVR_PrescaledTimer::next(cycle_count_t when)
 /*
  * Methods adding or removing a chained timer
  */
-void AVR_PrescaledTimer::register_chained_timer(AVR_PrescaledTimer& timer)
+void PrescaledTimer::register_chained_timer(PrescaledTimer& timer)
 {
     if (!m_updating) update();
 
@@ -271,7 +273,7 @@ void AVR_PrescaledTimer::register_chained_timer(AVR_PrescaledTimer& timer)
     if (!m_updating) reschedule();
 }
 
-void AVR_PrescaledTimer::unregister_chained_timer(AVR_PrescaledTimer& timer)
+void PrescaledTimer::unregister_chained_timer(PrescaledTimer& timer)
 {
     if (!m_updating) update();
 
@@ -287,7 +289,7 @@ void AVR_PrescaledTimer::unregister_chained_timer(AVR_PrescaledTimer& timer)
     if (!m_updating) reschedule();
 }
 
-int AVR_PrescaledTimer::ticks_to_event(int counter, int event, int wrap)
+int PrescaledTimer::ticks_to_event(int counter, int event, int wrap)
 {
     int ticks = event - counter + 1;
     if (ticks <= 0)
@@ -301,11 +303,11 @@ int AVR_PrescaledTimer::ticks_to_event(int counter, int event, int wrap)
 /*
  * Implementation of a SignalHook for external clocking. It just forwards to the main class.
  */
-class AVR_TimerCounter::TimerHook : public AVR_SignalHook {
+class TimerCounter::TimerHook : public SignalHook {
 
 public:
 
-    TimerHook(AVR_TimerCounter& timer) : m_timer(timer) {}
+    TimerHook(TimerCounter& timer) : m_timer(timer) {}
 
     virtual void raised(const signal_data_t& sigdata, uint16_t hooktag) override
     {
@@ -314,7 +316,7 @@ public:
 
 private:
 
-    AVR_TimerCounter& m_timer;
+    TimerCounter& m_timer;
 
 };
 
@@ -322,11 +324,11 @@ private:
 /*
  * Implementation of a SignalHook for external clocking. It just forwards to the main class.
  */
-class AVR_TimerCounter::ExtTickHook : public AVR_SignalHook {
+class TimerCounter::ExtTickHook : public SignalHook {
 
 public:
 
-    ExtTickHook(AVR_TimerCounter& timer) : m_timer(timer) {}
+    ExtTickHook(TimerCounter& timer) : m_timer(timer) {}
 
     virtual void raised(const signal_data_t& sigdata, uint16_t hooktag) override
     {
@@ -335,12 +337,12 @@ public:
 
 private:
 
-    AVR_TimerCounter& m_timer;
+    TimerCounter& m_timer;
 
 };
 
 
-AVR_TimerCounter::AVR_TimerCounter(AVR_PrescaledTimer& timer, long wrap, uint32_t comp_count)
+TimerCounter::TimerCounter(PrescaledTimer& timer, long wrap, uint32_t comp_count)
 :m_wrap(wrap)
 ,m_counter(0)
 ,m_top(wrap - 1)
@@ -359,20 +361,20 @@ AVR_TimerCounter::AVR_TimerCounter(AVR_PrescaledTimer& timer, long wrap, uint32_
 }
 
 
-AVR_TimerCounter::~AVR_TimerCounter()
+TimerCounter::~TimerCounter()
 {
     delete m_timer_hook;
     delete m_ext_hook;
 }
 
 
-void AVR_TimerCounter::set_logger(AVR_Logger* logger)
+void TimerCounter::set_logger(Logger* logger)
 {
     m_logger = logger;
 }
 
 
-void AVR_TimerCounter::reset()
+void TimerCounter::reset()
 {
     m_source = Tick_Stopped;
     m_slope = Slope_Up;
@@ -387,7 +389,7 @@ void AVR_TimerCounter::reset()
 }
 
 
-void AVR_TimerCounter::reschedule()
+void TimerCounter::reschedule()
 {
     if (m_source == Tick_Timer)
         m_timer.set_timer_delay(delay_to_event());
@@ -396,19 +398,19 @@ void AVR_TimerCounter::reschedule()
 }
 
 
-void AVR_TimerCounter::set_tick_source(TickSource src)
+void TimerCounter::set_tick_source(TickSource src)
 {
     m_source = src;
 }
 
 
-void AVR_TimerCounter::set_top(long top)
+void TimerCounter::set_top(long top)
 {
     m_top = top;
 }
 
 
-void AVR_TimerCounter::set_slope_mode(SlopeMode mode)
+void TimerCounter::set_slope_mode(SlopeMode mode)
 {
     m_slope = mode;
 
@@ -419,29 +421,29 @@ void AVR_TimerCounter::set_slope_mode(SlopeMode mode)
 }
 
 
-void AVR_TimerCounter::set_counter(long value)
+void TimerCounter::set_counter(long value)
 {
     m_counter = value;
 }
 
 
-void AVR_TimerCounter::set_comp_value(uint32_t index, long value)
+void TimerCounter::set_comp_value(uint32_t index, long value)
 {
     m_cmp[index].value = value;
 }
 
-void AVR_TimerCounter::set_comp_enabled(uint32_t index, bool enable)
+void TimerCounter::set_comp_enabled(uint32_t index, bool enable)
 {
     m_cmp[index].enabled = enable;
 }
 
 
-long AVR_TimerCounter::ticks_to_event(long event)
+long TimerCounter::ticks_to_event(long event)
 {
     if (m_countdown)
-        return AVR_PrescaledTimer::ticks_to_event(event, m_counter, m_wrap);
+        return PrescaledTimer::ticks_to_event(event, m_counter, m_wrap);
     else
-        return AVR_PrescaledTimer::ticks_to_event(m_counter, event, m_wrap);
+        return PrescaledTimer::ticks_to_event(m_counter, event, m_wrap);
 }
 
 
@@ -452,7 +454,7 @@ long AVR_TimerCounter::ticks_to_event(long event)
  * 2st step : store in 'm_next_event_type' the combination of flags TimerEventType corresponding
  *            to the event, or combination thereof, reached at 'ticks_to_next_event'.
  */
-long AVR_TimerCounter::delay_to_event()
+long TimerCounter::delay_to_event()
 {
     //Ticks count to reach MAX, i.e. the max value of the counter.
     //Only relevant if counting up
@@ -507,7 +509,7 @@ long AVR_TimerCounter::delay_to_event()
  * Callback from the internal prescaled timer
  * Process the timer ticks, by updating the counter
  */
-void AVR_TimerCounter::timer_raised(const signal_data_t& sigdata)
+void TimerCounter::timer_raised(const signal_data_t& sigdata)
 {
     if (m_logger)
         m_logger->dbg("Updating counters");
@@ -521,7 +523,7 @@ void AVR_TimerCounter::timer_raised(const signal_data_t& sigdata)
  * Determine the events that should be raised for the current value of
  * the counter, then process one tick.
  */
-void AVR_TimerCounter::extclock_raised()
+void TimerCounter::extclock_raised()
 {
     if (m_source != Tick_External) return;
 
@@ -550,7 +552,7 @@ void AVR_TimerCounter::extclock_raised()
  * Processes the timer clock ticks to update the counter and raise
  * the signals for any event reached.
  */
-void AVR_TimerCounter::process_ticks(long ticks, bool event_reached)
+void TimerCounter::process_ticks(long ticks, bool event_reached)
 {
     //Update the counter according to the direction
     if (m_countdown)

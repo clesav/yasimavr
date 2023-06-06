@@ -21,7 +21,7 @@
 
 //=======================================================================================
 
-struct AVR_ArchXT_PortConfig {
+struct ArchXT_PortConfig {
 %TypeHeaderCode
 #include "arch_xt_port.h"
 %End
@@ -33,22 +33,22 @@ struct AVR_ArchXT_PortConfig {
 };
 
 
-class AVR_ArchXT_Port : public AVR_IO_Port /NoDefaultCtors/ {
+class ArchXT_Port : public Port /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_xt_port.h"
 %End
 
 public:
 
-    AVR_ArchXT_Port(char, const AVR_ArchXT_PortConfig& /KeepReference/);
+    ArchXT_Port(char, const ArchXT_PortConfig& /KeepReference/);
 
-    virtual bool init(AVR_Device&);
+    virtual bool init(Device&);
     virtual void reset();
     virtual uint8_t ioreg_read_handler(reg_addr_t, uint8_t);
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
 
 protected:
 
-    virtual void pin_state_changed(uint8_t, AVR_Pin::State);
+    virtual void pin_state_changed(uint8_t, Pin::State);
 
 };

@@ -21,7 +21,7 @@
 
 //=======================================================================================
 
-enum class AVR_SleepMode /BaseType=IntEnum/ {
+enum class SleepMode /BaseType=IntEnum/ {
     Invalid,
     Active,
     Pseudo,
@@ -33,17 +33,17 @@ enum class AVR_SleepMode /BaseType=IntEnum/ {
     PowerSave,
 };
 
-const char* SleepModeName(AVR_SleepMode);
+const char* SleepModeName(SleepMode);
 
 
-struct AVR_SleepConfig {
+struct SleepConfig {
 %TypeHeaderCode
 #include "core/sim_sleep.h"
 #include "utils/buffer_utils.h"
 %End
 
     struct mode_config_t : base_reg_config_t {
-        AVR_SleepMode mode;
+        SleepMode mode;
 
         SIP_PYBUFFER int_mask {
             %GetCode
@@ -56,22 +56,22 @@ struct AVR_SleepConfig {
 
     };
 
-    std::vector<AVR_SleepConfig::mode_config_t> modes;
+    std::vector<SleepConfig::mode_config_t> modes;
     regbit_t rb_mode;
     regbit_t rb_enable;
 };
 
 
-class AVR_SleepController : public AVR_Peripheral, public AVR_SignalHook /NoDefaultCtors/ {
+class SleepController : public Peripheral, public SignalHook /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "core/sim_sleep.h"
 %End
 
 public:
 
-    AVR_SleepController(const AVR_SleepConfig&);
+    SleepController(const SleepConfig&);
 
-    virtual bool init(AVR_Device&);
+    virtual bool init(Device&);
     virtual bool ctlreq(uint16_t, ctlreq_data_t*);
     virtual void raised(const signal_data_t&, uint16_t);
 

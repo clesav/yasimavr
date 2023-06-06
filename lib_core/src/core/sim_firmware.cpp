@@ -28,10 +28,12 @@
 #include <stdio.h>
 #include <cstring>
 
+YASIMAVR_USING_NAMESPACE
+
 
 //=======================================================================================
 
-AVR_Firmware::AVR_Firmware()
+Firmware::Firmware()
 :variant("")
 ,frequency(0)
 ,vcc(0.0)
@@ -41,13 +43,13 @@ AVR_Firmware::AVR_Firmware()
 ,m_bsssize(0)
 {}
 
-AVR_Firmware::AVR_Firmware(const AVR_Firmware& other)
-:AVR_Firmware()
+Firmware::Firmware(const Firmware& other)
+:Firmware()
 {
     *this = other;
 }
 
-AVR_Firmware::~AVR_Firmware()
+Firmware::~Firmware()
 {
     for (auto it = m_blocks.begin(); it != m_blocks.end(); ++it) {
         for (Block& b : it->second)
@@ -68,24 +70,24 @@ static Elf32_Phdr* elf_find_phdr(Elf32_Phdr* phdr_table, size_t phdr_count, GElf
     return nullptr;
 }
 
-AVR_Firmware* AVR_Firmware::read_elf(const std::string& filename)
+Firmware* Firmware::read_elf(const std::string& filename)
 {
     Elf32_Ehdr elf_header;          // ELF header
     Elf *elf = nullptr;                // Our Elf pointer for libelf
     std::FILE *file;                // File Descriptor
 
     if ((file = fopen(filename.c_str(), "rb")) == nullptr) {
-        AVR_global_logger().err("Unable to open ELF file '%s'", filename.c_str());
+        global_logger().err("Unable to open ELF file '%s'", filename.c_str());
         return nullptr;
     }
 
     if (fread(&elf_header, sizeof(elf_header), 1, file) == 0) {
-        AVR_global_logger().err("Unable to read ELF file '%s'", filename.c_str());
+        global_logger().err("Unable to read ELF file '%s'", filename.c_str());
         fclose(file);
         return nullptr;
     }
 
-    AVR_Firmware *firmware = new AVR_Firmware();
+    Firmware *firmware = new Firmware();
     int fd = fileno(file);
 
     /* this is actually mandatory !! otherwise elf_begin() fails */
@@ -174,19 +176,19 @@ AVR_Firmware* AVR_Firmware::read_elf(const std::string& filename)
             firmware->m_blocks["user_signatures"].push_back(b);
         }
         else {
-            AVR_global_logger().err("Firmware section unknown: '%s'", name);
+            global_logger().err("Firmware section unknown: '%s'", name);
         }
     }
 
     elf_end(elf);
     fclose(file);
 
-    AVR_global_logger().dbg("Firmware read from ELF file '%s'", filename.c_str());
+    global_logger().dbg("Firmware read from ELF file '%s'", filename.c_str());
 
     return firmware;
 }
 
-void AVR_Firmware::add_block(const std::string& name, const mem_block_t& block, size_t base)
+void Firmware::add_block(const std::string& name, const mem_block_t& block, size_t base)
 {
     //Make a deep copy of the memory block
     mem_block_t mb;
@@ -198,13 +200,13 @@ void AVR_Firmware::add_block(const std::string& name, const mem_block_t& block, 
     m_blocks[name].push_back(b);
 }
 
-bool AVR_Firmware::has_memory(const std::string& name) const
+bool Firmware::has_memory(const std::string& name) const
 {
     return m_blocks.find(name) != m_blocks.end();
 }
 
 
-size_t AVR_Firmware::memory_size(const std::string& name) const
+size_t Firmware::memory_size(const std::string& name) const
 {
     auto it = m_blocks.find(name);
     if (it == m_blocks.end())
@@ -218,7 +220,7 @@ size_t AVR_Firmware::memory_size(const std::string& name) const
 }
 
 
-std::vector<AVR_Firmware::Block> AVR_Firmware::blocks(const std::string& name) const
+std::vector<Firmware::Block> Firmware::blocks(const std::string& name) const
 {
     auto it = m_blocks.find(name);
     if (it == m_blocks.end())
@@ -227,7 +229,7 @@ std::vector<AVR_Firmware::Block> AVR_Firmware::blocks(const std::string& name) c
         return it->second;
 }
 
-bool AVR_Firmware::load_memory(const std::string& name, AVR_NonVolatileMemory& memory) const
+bool Firmware::load_memory(const std::string& name, NonVolatileMemory& memory) const
 {
     bool status = true;
 
@@ -237,7 +239,7 @@ bool AVR_Firmware::load_memory(const std::string& name, AVR_NonVolatileMemory& m
     return status;
 }
 
-AVR_Firmware& AVR_Firmware::operator=(const AVR_Firmware& other)
+Firmware& Firmware::operator=(const Firmware& other)
 {
     for (auto it = m_blocks.begin(); it != m_blocks.end(); ++it) {
         for (Block& b : it->second)

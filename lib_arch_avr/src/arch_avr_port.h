@@ -26,13 +26,15 @@
 
 #include "ioctrl_common/sim_port.h"
 
+YASIMAVR_BEGIN_NAMESPACE
+
 
 //=======================================================================================
 /*
  * Implementation of a GPIO port controller for AVR series
  */
 
-struct AVR_ArchAVR_PortConfig {
+struct ArchAVR_PortConfig {
 
     char name;
     reg_addr_t reg_port;
@@ -42,28 +44,31 @@ struct AVR_ArchAVR_PortConfig {
 };
 
 
-class DLL_EXPORT AVR_ArchAVR_Port : public AVR_IO_Port {
+class DLL_EXPORT ArchAVR_Port : public Port {
 
 public:
 
-    explicit AVR_ArchAVR_Port(const AVR_ArchAVR_PortConfig& config);
+    explicit ArchAVR_Port(const ArchAVR_PortConfig& config);
 
-    virtual bool init(AVR_Device& device) override;
+    virtual bool init(Device& device) override;
     virtual void reset() override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
 
 protected:
 
-    virtual void pin_state_changed(uint8_t num, AVR_Pin::State state) override;
+    virtual void pin_state_changed(uint8_t num, Pin::State state) override;
 
 private:
 
-    const AVR_ArchAVR_PortConfig& m_config;
+    const ArchAVR_PortConfig& m_config;
     uint8_t m_portr_value;
     uint8_t m_ddr_value;
 
     void update_pin_states(uint8_t new_portr, uint8_t new_ddr);
 
 };
+
+
+YASIMAVR_END_NAMESPACE
 
 #endif //__YASIMAVR_AVR_PORT_H__

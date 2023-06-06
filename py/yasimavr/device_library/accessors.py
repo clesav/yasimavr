@@ -21,7 +21,7 @@
 This module defines Accessor classes that allow to read and write
 directly to I/O registers with a 'user-friendly' syntax.
 It uses the descriptor classes to translate read/write field values
-to/from raw bit values and uses a AVR_DeviceDebugProbe to access
+to/from raw bit values and uses a DeviceDebugProbe to access
 the registers
 
 These classes are mainly meant for debugging purposes, either
@@ -364,12 +364,12 @@ class DeviceAccessor:
                     device model instance
         '''
 
-        if isinstance(arg, _corelib.AVR_DeviceDebugProbe):
+        if isinstance(arg, _corelib.DeviceDebugProbe):
             self._probe = arg
             if not self._probe.attached():
                 raise Exception('the probe is not attached to a device')
-        elif isinstance(arg, _corelib.AVR_Device):
-            self._probe = _corelib.AVR_DeviceDebugProbe(arg)
+        elif isinstance(arg, _corelib.Device):
+            self._probe = _corelib.DeviceDebugProbe(arg)
         else:
             raise TypeError('First arg must be a device or a attached probe')
 

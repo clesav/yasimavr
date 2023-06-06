@@ -27,6 +27,8 @@
 #include "core/sim_device.h"
 #include "core/sim_sleep.h"
 
+YASIMAVR_USING_NAMESPACE
+
 
 //=======================================================================================
 //Macros definition to access the registers of the controller
@@ -37,7 +39,7 @@
 #define REG_OFS(reg) \
     offsetof(RTC_t, reg)
 
-typedef AVR_ArchXT_RTC_Config CFG;
+typedef ArchXT_RTCConfig CFG;
 
 #define PRESCALER_MAX 32678
 
@@ -51,11 +53,11 @@ enum RTC_Mode {
 
 //=======================================================================================
 
-class AVR_ArchXT_RTC::TimerHook : public AVR_SignalHook {
+class ArchXT_RTC::TimerHook : public SignalHook {
 
 public:
 
-    explicit TimerHook(AVR_ArchXT_RTC& ctl) : m_ctl(ctl) {}
+    explicit TimerHook(ArchXT_RTC& ctl) : m_ctl(ctl) {}
 
     virtual void raised(const signal_data_t& sigdata, uint16_t hooktag) override {
         if (hooktag)
@@ -66,13 +68,13 @@ public:
 
 private:
 
-    AVR_ArchXT_RTC& m_ctl;
+    ArchXT_RTC& m_ctl;
 
 };
 
 
-AVR_ArchXT_RTC::AVR_ArchXT_RTC(const CFG& config)
-:AVR_Peripheral(AVR_IOCTL_RTC)
+ArchXT_RTC::ArchXT_RTC(const CFG& config)
+:Peripheral(AVR_IOCTL_RTC)
 ,m_config(config)
 ,m_clk_mode(RTC_Disabled)
 ,m_rtc_counter(m_rtc_timer, 0x10000, 1)
@@ -85,14 +87,14 @@ AVR_ArchXT_RTC::AVR_ArchXT_RTC(const CFG& config)
     m_pit_counter.signal().connect_hook(m_timer_hook, 1);
 }
 
-AVR_ArchXT_RTC::~AVR_ArchXT_RTC()
+ArchXT_RTC::~ArchXT_RTC()
 {
     delete m_timer_hook;
 }
 
-bool AVR_ArchXT_RTC::init(AVR_Device& device)
+bool ArchXT_RTC::init(Device& device)
 {
-    bool status = AVR_Peripheral::init(device);
+    bool status = Peripheral::init(device);
 
     add_ioreg(REG_ADDR(CTRLA), RTC_RUNSTDBY_bm | RTC_PRESCALER_gm | RTC_CORREN_bm | RTC_RTCEN_bm);
     add_ioreg(REG_ADDR(STATUS), RTC_CMPBUSY_bm | RTC_PERBUSY_bm | RTC_CNTBUSY_bm | RTC_CTRLABUSY_bm, true);
@@ -131,7 +133,7 @@ bool AVR_ArchXT_RTC::init(AVR_Device& device)
     return status;
 }
 
-void AVR_ArchXT_RTC::reset()
+void ArchXT_RTC::reset()
 {
     m_clk_mode = RTC_Disabled;
     write_ioreg(REG_ADDR(PERL), 0xFF);
@@ -142,7 +144,7 @@ void AVR_ArchXT_RTC::reset()
     m_pit_counter.reset();
 }
 
-uint8_t AVR_ArchXT_RTC::ioreg_read_handler(reg_addr_t addr, uint8_t value)
+uint8_t ArchXT_RTC::ioreg_read_handler(reg_addr_t addr, uint8_t value)
 {
     reg_addr_t reg_ofs = addr - m_config.reg_base;
 
@@ -180,7 +182,7 @@ uint8_t AVR_ArchXT_RTC::ioreg_read_handler(reg_addr_t addr, uint8_t value)
     return value;
 }
 
-void AVR_ArchXT_RTC::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
+void ArchXT_RTC::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
     const reg_addr_t reg_ofs = addr - m_config.reg_base;
     bool do_reconfigure = false;
@@ -273,7 +275,7 @@ void AVR_ArchXT_RTC::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& d
         configure_timers();
 }
 
-void AVR_ArchXT_RTC::configure_timers()
+void ArchXT_RTC::configure_timers()
 {
     if (m_clk_mode) {
         //Read and configure the clock source
@@ -296,8 +298,8 @@ void AVR_ArchXT_RTC::configure_timers()
         m_pit_timer.set_prescaler(ps_max, f);
 
         //Set the RTC and PIT counters mode
-        m_rtc_counter.set_tick_source((m_clk_mode | RTC_Enabled) ? AVR_TimerCounter::Tick_Timer : AVR_TimerCounter::Tick_Stopped);
-        m_pit_counter.set_tick_source((m_clk_mode | PIT_Enabled) ? AVR_TimerCounter::Tick_Timer : AVR_TimerCounter::Tick_Stopped);
+        m_rtc_counter.set_tick_source((m_clk_mode | RTC_Enabled) ? TimerCounter::Tick_Timer : TimerCounter::Tick_Stopped);
+        m_pit_counter.set_tick_source((m_clk_mode | PIT_Enabled) ? TimerCounter::Tick_Timer : TimerCounter::Tick_Stopped);
 
     } else {
 
@@ -310,41 +312,41 @@ void AVR_ArchXT_RTC::configure_timers()
 /*
  *  Callback when entering sleep mode
  */
-void AVR_ArchXT_RTC::sleep(bool on, AVR_SleepMode mode)
+void ArchXT_RTC::sleep(bool on, SleepMode mode)
 {
     //The RTC timer is paused for sleep modes above Standby and in Standby if RTC_RUNSTDBY is not set
     //The PIT timer is not affected by sleep modes
-    if (mode > AVR_SleepMode::Standby || (mode == AVR_SleepMode::Standby && !TEST_IOREG(CTRLA, RTC_RUNSTDBY)))
+    if (mode > SleepMode::Standby || (mode == SleepMode::Standby && !TEST_IOREG(CTRLA, RTC_RUNSTDBY)))
         m_rtc_timer.set_paused(on);
 }
 
 /*
  *  Callbacks for the prescaled timers
  */
-void AVR_ArchXT_RTC::rtc_hook_raised(const signal_data_t& sigdata)
+void ArchXT_RTC::rtc_hook_raised(const signal_data_t& sigdata)
 {
-    if (sigdata.sigid != AVR_TimerCounter::Signal_Event)
+    if (sigdata.sigid != TimerCounter::Signal_Event)
         return;
 
     uint8_t event_type = sigdata.data.as_uint();
 
-    if (event_type & AVR_TimerCounter::Event_Top) {
+    if (event_type & TimerCounter::Event_Top) {
         if (m_rtc_intflag.set_flag(RTC_OVF_bm))
             logger().dbg("RTC triggering OVF interrupt");
     }
 
-    if (event_type & AVR_TimerCounter::Event_Compare) {
+    if (event_type & TimerCounter::Event_Compare) {
         if (m_rtc_intflag.set_flag(RTC_CMP_bm))
             logger().dbg("RTC triggering CMP interrupt");
     }
 }
 
-void AVR_ArchXT_RTC::pit_hook_raised(const signal_data_t& sigdata)
+void ArchXT_RTC::pit_hook_raised(const signal_data_t& sigdata)
 {
-    if (sigdata.sigid != AVR_TimerCounter::Signal_Event)
+    if (sigdata.sigid != TimerCounter::Signal_Event)
         return;
 
-    if (sigdata.data.as_uint() & AVR_TimerCounter::Event_Top) {
+    if (sigdata.data.as_uint() & TimerCounter::Event_Top) {
         if (m_pit_intflag.set_flag(RTC_PI_bm))
             logger().dbg("PIT triggering interrupt");
     }

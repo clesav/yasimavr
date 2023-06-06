@@ -27,12 +27,14 @@
 #include "sim_types.h"
 #include <vector>
 
+YASIMAVR_BEGIN_NAMESPACE
+
 
 //=======================================================================================
 /*
  *Structure holding core configuration parameters such as memory sizes
  */
-struct AVR_CoreConfiguration {
+struct CoreConfiguration {
 
     enum Attributes {
         //Set if flash addresses use more than 16 bits
@@ -64,14 +66,17 @@ struct AVR_CoreConfiguration {
 /*
  *Structure holding device configuration parameters
  */
-struct AVR_DeviceConfiguration {
+struct DeviceConfiguration {
 
     std::string                         name;
-    AVR_CoreConfiguration&              core;
+    CoreConfiguration&                  core;
     std::vector<std::string>            pins;
 
-    inline explicit AVR_DeviceConfiguration(AVR_CoreConfiguration& _core) : core(_core) {}
+    inline explicit DeviceConfiguration(CoreConfiguration& _core) : core(_core) {}
 
 };
+
+
+YASIMAVR_END_NAMESPACE
 
 #endif //__YASIMAVR_CONFIG_H__

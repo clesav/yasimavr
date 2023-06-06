@@ -27,15 +27,17 @@
 #include "core/sim_firmware.h"
 #include <cstring>
 
+YASIMAVR_USING_NAMESPACE
+
 
 //=======================================================================================
 
-AVR_ArchAVR_Core::AVR_ArchAVR_Core(const AVR_ArchAVR_CoreConfig& config)
-:AVR_Core(config)
+ArchAVR_Core::ArchAVR_Core(const ArchAVR_CoreConfig& config)
+:Core(config)
 ,m_eeprom(config.eepromend ? (config.eepromend + 1) : 0, "eeprom")
 {}
 
-uint8_t AVR_ArchAVR_Core::cpu_read_data(mem_addr_t data_addr)
+uint8_t ArchAVR_Core::cpu_read_data(mem_addr_t data_addr)
 {
     uint8_t value = 0;
 
@@ -48,7 +50,7 @@ uint8_t AVR_ArchAVR_Core::cpu_read_data(mem_addr_t data_addr)
     else if (data_addr >= m_config.ramstart && data_addr <= m_config.ramend) {
         value = m_sram[data_addr - m_config.ramstart];
     }
-    else if (!m_device->test_option(AVR_Device::Option_IgnoreBadCpuIO)) {
+    else if (!m_device->test_option(Device::Option_IgnoreBadCpuIO)) {
         m_device->logger().err("CPU reading an invalid data address: 0x%04x", data_addr);
         m_device->crash(CRASH_BAD_CPU_IO, "Bad data address");
     }
@@ -59,7 +61,7 @@ uint8_t AVR_ArchAVR_Core::cpu_read_data(mem_addr_t data_addr)
     return value;
 }
 
-void AVR_ArchAVR_Core::cpu_write_data(mem_addr_t data_addr, uint8_t value)
+void ArchAVR_Core::cpu_write_data(mem_addr_t data_addr, uint8_t value)
 {
     if (data_addr < 32) {
         m_regs[data_addr] = value;
@@ -70,7 +72,7 @@ void AVR_ArchAVR_Core::cpu_write_data(mem_addr_t data_addr, uint8_t value)
     else if (data_addr >= m_config.ramstart && data_addr <= m_config.ramend) {
         m_sram[data_addr - m_config.ramstart] = value;
     }
-    else if (!m_device->test_option(AVR_Device::Option_IgnoreBadCpuIO)) {
+    else if (!m_device->test_option(Device::Option_IgnoreBadCpuIO)) {
         m_device->logger().err("CPU writing an invalid data address: 0x%04x", data_addr);
         m_device->crash(CRASH_BAD_CPU_IO, "Bad data address");
     }
@@ -79,7 +81,7 @@ void AVR_ArchAVR_Core::cpu_write_data(mem_addr_t data_addr, uint8_t value)
         m_debug_probe->_cpu_notify_data_write(data_addr, value);
 }
 
-void AVR_ArchAVR_Core::dbg_read_data(mem_addr_t addr, uint8_t* buf, mem_addr_t len)
+void ArchAVR_Core::dbg_read_data(mem_addr_t addr, uint8_t* buf, mem_addr_t len)
 {
     std::memset(buf, 0x00, len);
 
@@ -99,7 +101,7 @@ void AVR_ArchAVR_Core::dbg_read_data(mem_addr_t addr, uint8_t* buf, mem_addr_t l
 
 }
 
-void AVR_ArchAVR_Core::dbg_write_data(mem_addr_t addr, const uint8_t* buf, mem_addr_t len)
+void ArchAVR_Core::dbg_write_data(mem_addr_t addr, const uint8_t* buf, mem_addr_t len)
 {
     mem_addr_t bufofs, blockofs;
     mem_addr_t n;
@@ -119,37 +121,37 @@ void AVR_ArchAVR_Core::dbg_write_data(mem_addr_t addr, const uint8_t* buf, mem_a
 
 //=======================================================================================
 
-AVR_ArchAVR_Device::AVR_ArchAVR_Device(const AVR_ArchAVR_DeviceConfig& config)
-:AVR_Device(m_core_impl, config)
+ArchAVR_Device::ArchAVR_Device(const ArchAVR_DeviceConfig& config)
+:Device(m_core_impl, config)
 ,m_core_impl(config.core)
 {}
 
 
-AVR_ArchAVR_Device::~AVR_ArchAVR_Device()
+ArchAVR_Device::~ArchAVR_Device()
 {
     erase_peripherals();
 }
 
 
-bool AVR_ArchAVR_Device::core_ctlreq(uint16_t req, ctlreq_data_t* reqdata)
+bool ArchAVR_Device::core_ctlreq(uint16_t req, ctlreq_data_t* reqdata)
 {
     if (req == AVR_CTLREQ_CORE_NVM) {
-        if (reqdata->index == AVR_ArchAVR_Core::NVM_EEPROM)
+        if (reqdata->index == ArchAVR_Core::NVM_EEPROM)
             reqdata->data = &(m_core_impl.m_eeprom);
-        else if (reqdata->index == AVR_Core::NVM_GetCount)
-            reqdata->data = (unsigned int) (AVR_Core::NVM_CommonCount + 1);
+        else if (reqdata->index == Core::NVM_GetCount)
+            reqdata->data = (unsigned int) (Core::NVM_CommonCount + 1);
         else
-            return AVR_Device::core_ctlreq(req, reqdata);
+            return Device::core_ctlreq(req, reqdata);
 
         return true;
     } else {
-        return AVR_Device::core_ctlreq(req, reqdata);
+        return Device::core_ctlreq(req, reqdata);
     }
 }
 
-bool AVR_ArchAVR_Device::program(const AVR_Firmware& firmware)
+bool ArchAVR_Device::program(const Firmware& firmware)
 {
-    if (!AVR_Device::program(firmware))
+    if (!Device::program(firmware))
         return false;
 
     if (firmware.has_memory("eeprom")) {

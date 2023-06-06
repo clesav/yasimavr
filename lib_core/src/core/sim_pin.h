@@ -27,17 +27,19 @@
 #include "sim_types.h"
 #include "sim_signal.h"
 
-class AVR_IO_Port;
+YASIMAVR_BEGIN_NAMESPACE
+
+class Port;
 
 
 //=======================================================================================
 /*
- * AVR_Pin represents a external pad of the MCU used for GPIO.
+ * Pin represents a external pad of the MCU used for GPIO.
  * The pin has two electrical states given by the external circuit and the internal circuit
  * It is resolved into a single electrical state. In case of conflict, the SHORTED state is
  * set.
  */
-class DLL_EXPORT AVR_Pin : public AVR_SignalHook {
+class DLL_EXPORT Pin : public SignalHook {
 
 public:
 
@@ -68,7 +70,7 @@ public:
     static const char* StateName(State state);
 
     //Constructor of the pin. The ID should be a unique identifier of the pad for the MCU.
-    explicit AVR_Pin(uint32_t id);
+    explicit Pin(uint32_t id);
 
     //Interface for controlling the pad from external code
     void set_external_state(State state);
@@ -83,21 +85,21 @@ public:
     //Resolved analog voltage value at the pin, in interval [0;1]
     double analog_value() const;
     //Signal raised for state/value changes
-    AVR_DataSignal& signal();
+    DataSignal& signal();
 
-    //Implementation of the AVR_SignalHook interface to receive changes
+    //Implementation of the SignalHook interface to receive changes
     virtual void raised(const signal_data_t& sigdata, uint16_t hooktag) override;
 
 private:
 
-    friend class AVR_IO_Port;
+    friend class Port;
 
     uint32_t m_id;
     State m_ext_state;
     State m_int_state;
     State m_resolved_state;
     double m_analog_value;
-    AVR_DataSignal m_signal;
+    DataSignal m_signal;
 
     State resolve_state();
 
@@ -105,19 +107,22 @@ private:
 
 };
 
-inline uint32_t AVR_Pin::id() const
+inline uint32_t Pin::id() const
 {
     return m_id;
 };
 
-inline AVR_Pin::State AVR_Pin::state() const
+inline Pin::State Pin::state() const
 {
     return m_resolved_state;
 };
 
-inline AVR_DataSignal& AVR_Pin::signal()
+inline DataSignal& Pin::signal()
 {
     return m_signal;
 }
+
+
+YASIMAVR_END_NAMESPACE
 
 #endif //__YASIMAVR_PIN_H__

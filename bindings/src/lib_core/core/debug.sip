@@ -21,7 +21,7 @@
 
 //=======================================================================================
 
-class AVR_DeviceDebugProbe {
+class DeviceDebugProbe {
 %TypeHeaderCode
 #include "core/sim_debug.h"
 #include "utils/buffer_utils.h"
@@ -36,19 +36,19 @@ public:
         Watchpoint_Break         /PyName=Break/
     };
 
-    AVR_DeviceDebugProbe();
-    AVR_DeviceDebugProbe(AVR_Device&);
-    AVR_DeviceDebugProbe(const AVR_DeviceDebugProbe&);
+    DeviceDebugProbe();
+    DeviceDebugProbe(Device&);
+    DeviceDebugProbe(const DeviceDebugProbe&);
 
-    AVR_Device* device() const;
+    Device* device() const;
 
-    void attach(AVR_Device&);
-    void attach(AVR_DeviceDebugProbe&);
+    void attach(Device&);
+    void attach(DeviceDebugProbe&);
     void detach();
     bool attached() const;
 
     void reset_device() const;
-    void set_device_state(AVR_Device::State) const;
+    void set_device_state(Device::State) const;
 
     void write_gpreg(unsigned int, uint8_t) const;
     uint8_t read_gpreg(unsigned int) const;
@@ -114,6 +114,6 @@ public:
 
     void insert_watchpoint(mem_addr_t, mem_addr_t, int);
     void remove_watchpoint(mem_addr_t, int);
-    AVR_Signal& watchpoint_signal();
+    Signal& watchpoint_signal();
 
 };

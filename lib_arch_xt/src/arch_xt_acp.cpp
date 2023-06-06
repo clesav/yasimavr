@@ -27,6 +27,7 @@
 #include "core/sim_sleep.h"
 #include "core/sim_device.h"
 
+YASIMAVR_USING_NAMESPACE
 
 //=======================================================================================
 
@@ -36,7 +37,7 @@
 #define REG_OFS(reg) \
     offsetof(AC_t, reg)
 
-typedef AVR_ArchXT_ACP_Config cfg_t;
+typedef ArchXT_ACPConfig cfg_t;
 
 
 enum HookTag {
@@ -54,8 +55,8 @@ const double Hysteresis[2][4] = {
 };
 
 
-AVR_ArchXT_ACP::AVR_ArchXT_ACP(int num, const cfg_t& config)
-:AVR_Peripheral(AVR_IOCTL_ACP(0x30 + num))
+ArchXT_ACP::ArchXT_ACP(int num, const cfg_t& config)
+:Peripheral(AVR_IOCTL_ACP(0x30 + num))
 ,m_config(config)
 ,m_intflag(false)
 ,m_vref_signal(nullptr)
@@ -66,9 +67,9 @@ AVR_ArchXT_ACP::AVR_ArchXT_ACP(int num, const cfg_t& config)
     m_signal.set_data(Signal_DAC, 0.0);
 }
 
-bool AVR_ArchXT_ACP::init(AVR_Device& device)
+bool ArchXT_ACP::init(Device& device)
 {
-    bool status = AVR_Peripheral::init(device);
+    bool status = Peripheral::init(device);
 
     add_ioreg(REG_ADDR(CTRLA));
     add_ioreg(REG_ADDR(MUXCTRLA), AC_INVERT_bm | AC_MUXPOS_gm | AC_MUXNEG_gm);
@@ -82,7 +83,7 @@ bool AVR_ArchXT_ACP::init(AVR_Device& device)
                              DEF_REGBIT_B(STATUS, AC_CMP),
                              m_config.iv_cmp);
 
-    m_vref_signal = dynamic_cast<AVR_DataSignal*>(get_signal(AVR_IOCTL_VREF));
+    m_vref_signal = dynamic_cast<DataSignal*>(get_signal(AVR_IOCTL_VREF));
     if (m_vref_signal)
         m_vref_signal->connect_hook(this, HookTag_VREF);
     else
@@ -97,14 +98,14 @@ bool AVR_ArchXT_ACP::init(AVR_Device& device)
     return status;
 }
 
-bool AVR_ArchXT_ACP::register_channels(AVR_DataSignalMux& mux, const std::vector<channel_config_t>& channels)
+bool ArchXT_ACP::register_channels(DataSignalMux& mux, const std::vector<channel_config_t>& channels)
 {
     for (auto channel : channels) {
         switch(channel.type) {
             case Channel_Pin: {
-                AVR_Pin* pin = device()->find_pin(channel.pin);
+                Pin* pin = device()->find_pin(channel.pin);
                 if (pin)
-                    mux.add_mux(pin->signal(), AVR_Pin::Signal_AnalogValueChange);
+                    mux.add_mux(pin->signal(), Pin::Signal_AnalogValueChange);
                 else
                     return false;
             } break;
@@ -118,7 +119,7 @@ bool AVR_ArchXT_ACP::register_channels(AVR_DataSignalMux& mux, const std::vector
     return true;
 }
 
-void AVR_ArchXT_ACP::reset()
+void ArchXT_ACP::reset()
 {
     m_sleeping = false;
     m_intflag.update_from_ioreg();
@@ -129,7 +130,7 @@ void AVR_ArchXT_ACP::reset()
     update_output();
 }
 
-bool AVR_ArchXT_ACP::ctlreq(uint16_t req, ctlreq_data_t* data)
+bool ArchXT_ACP::ctlreq(uint16_t req, ctlreq_data_t* data)
 {
     if (req == AVR_CTLREQ_GET_SIGNAL) {
         data->data = &m_signal;
@@ -145,7 +146,7 @@ bool AVR_ArchXT_ACP::ctlreq(uint16_t req, ctlreq_data_t* data)
 }
 
 //I/O register callback reimplementation
-void AVR_ArchXT_ACP::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
+void ArchXT_ACP::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
     reg_addr_t reg_ofs = addr - m_config.reg_base;
 
@@ -193,15 +194,15 @@ void AVR_ArchXT_ACP::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& d
 /*
 * Update the DAC value and raise the corresponding signal
 */
-void AVR_ArchXT_ACP::update_DAC()
+void ArchXT_ACP::update_DAC()
 {
-    vardata_t vref = m_vref_signal->data(AVR_IO_VREF::Signal_IntRefChange, m_config.vref_channel);
+    vardata_t vref = m_vref_signal->data(VREF::Signal_IntRefChange, m_config.vref_channel);
     double dac_value = vref.as_double() * READ_IOREG(DACREF) / 256.0;
     m_signal.raise_d(Signal_DAC, dac_value);
 }
 
 
-void AVR_ArchXT_ACP::update_hysteresis()
+void ArchXT_ACP::update_hysteresis()
 {
     if (!TEST_IOREG(CTRLA, AC_ENABLE))
         return;
@@ -213,14 +214,14 @@ void AVR_ArchXT_ACP::update_hysteresis()
     double hyst_volt = Hysteresis[lp_mode_sel][hyst_mode_sel];
 
     //Convert to a value relative to VCC and store the value
-    vardata_t vcc = m_vref_signal->data(AVR_IO_VREF::Source_VCC);
+    vardata_t vcc = m_vref_signal->data(VREF::Source_VCC);
     if (vcc.as_double())
         m_hysteresis = hyst_volt / vcc.as_double();
     else
         device()->crash(CRASH_BAD_CTL_IO, "ACP: Invalid VCC value");
 }
 
-void AVR_ArchXT_ACP::update_output()
+void ArchXT_ACP::update_output()
 {
     logger().dbg("Updating output");
 
@@ -288,14 +289,14 @@ void AVR_ArchXT_ACP::update_output()
 /*
 * Callback from the pin signal hook.
 */
-void AVR_ArchXT_ACP::raised(const signal_data_t& sigdata, uint16_t hooktag)
+void ArchXT_ACP::raised(const signal_data_t& sigdata, uint16_t hooktag)
 {
     if (hooktag == HookTag_VREF) {
-        if (sigdata.sigid == AVR_IO_VREF::Signal_IntRefChange && sigdata.index == m_config.vref_channel) {
+        if (sigdata.sigid == VREF::Signal_IntRefChange && sigdata.index == m_config.vref_channel) {
             update_DAC();
             update_output();
         }
-        else if (sigdata.sigid == AVR_IO_VREF::Signal_VCCChange) {
+        else if (sigdata.sigid == VREF::Signal_VCCChange) {
             update_hysteresis();
             update_output();
         }
@@ -308,8 +309,8 @@ void AVR_ArchXT_ACP::raised(const signal_data_t& sigdata, uint16_t hooktag)
 /*
 * Sleep management
 */
-void AVR_ArchXT_ACP::sleep(bool on, AVR_SleepMode mode)
+void ArchXT_ACP::sleep(bool on, SleepMode mode)
 {
-    if (mode > AVR_SleepMode::Standby || (mode == AVR_SleepMode::Standby && !TEST_IOREG(CTRLA, AC_RUNSTDBY)))
+    if (mode > SleepMode::Standby || (mode == SleepMode::Standby && !TEST_IOREG(CTRLA, AC_RUNSTDBY)))
         m_sleeping = on;
 }

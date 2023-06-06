@@ -29,51 +29,51 @@ const uint16_t CTLREQ_WRITE_SIGROW = AVR_CTLREQ_WRITE_SIGROW;
 
 %End
 
-const uint16_t CTLREQ_WRITE_SIGROW;
-
 
 //=======================================================================================
 
-struct AVR_ArchXT_VREF_Config {
+const uint16_t CTLREQ_WRITE_SIGROW;
+
+
+struct ArchXT_VREFConfig {
 %TypeHeaderCode
 #include "arch_xt_misc.h"
 %End
 
     struct reference_config_t : base_reg_config_t {
-        AVR_IO_VREF::Source source;
+        VREF::Source source;
         double level;
     };
 
     struct channel_t {
         regbit_t rb_select;
-        std::vector<AVR_ArchXT_VREF_Config::reference_config_t> references;
+        std::vector<ArchXT_VREFConfig::reference_config_t> references;
     };
 
-    std::vector<AVR_ArchXT_VREF_Config::channel_t> channels;
+    std::vector<ArchXT_VREFConfig::channel_t> channels;
 
     reg_addr_t reg_base;
 
 };
 
-class AVR_ArchXT_VREF : public AVR_IO_VREF /NoDefaultCtors/ {
+
+class ArchXT_VREF : public VREF /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_xt_misc.h"
 %End
 
 public:
 
-    AVR_ArchXT_VREF(const AVR_ArchXT_VREF_Config& /KeepReference/);
+    ArchXT_VREF(const ArchXT_VREFConfig& /KeepReference/);
 
-    virtual bool init(AVR_Device&);
+    virtual bool init(Device&);
     virtual void reset();
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
 
 };
 
 
-//=======================================================================================
-
-struct AVR_ArchXT_IntCtrl_Config {
+struct ArchXT_IntCtrlConfig {
 %TypeHeaderCode
 #include "arch_xt_misc.h"
 %End
@@ -83,16 +83,17 @@ struct AVR_ArchXT_IntCtrl_Config {
 
 };
 
-class AVR_ArchXT_IntCtrl : public AVR_InterruptController /NoDefaultCtors/ {
+
+class ArchXT_IntCtrl : public InterruptController /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_xt_misc.h"
 %End
 
 public:
 
-    AVR_ArchXT_IntCtrl(const AVR_ArchXT_IntCtrl_Config& /KeepReference/);
+    ArchXT_IntCtrl(const ArchXT_IntCtrlConfig& /KeepReference/);
 
-    virtual bool init(AVR_Device&);
+    virtual bool init(Device&);
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
     virtual void cpu_reti();
 
@@ -104,27 +105,23 @@ protected:
 };
 
 
-//=======================================================================================
-
-class AVR_ArchXT_ResetCtrl : public AVR_Peripheral /NoDefaultCtors/ {
+class ArchXT_ResetCtrl : public Peripheral /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_xt_misc.h"
 %End
 
 public:
 
-    AVR_ArchXT_ResetCtrl(reg_addr_t);
+    ArchXT_ResetCtrl(reg_addr_t);
 
-    virtual bool init(AVR_Device&);
+    virtual bool init(Device&);
     virtual void reset();
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
 
 };
 
 
-//=======================================================================================
-
-struct AVR_ArchXT_Misc_Config {
+struct ArchXT_MiscConfig {
 %TypeHeaderCode
 #include "arch_xt_misc.h"
 %End
@@ -137,16 +134,17 @@ struct AVR_ArchXT_Misc_Config {
 
 };
 
-class AVR_ArchXT_MiscRegCtrl : public AVR_Peripheral /NoDefaultCtors/ {
+
+class ArchXT_MiscRegCtrl : public Peripheral /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_xt_misc.h"
 %End
 
 public:
 
-    AVR_ArchXT_MiscRegCtrl(const AVR_ArchXT_Misc_Config& /KeepReference/);
+    ArchXT_MiscRegCtrl(const ArchXT_MiscConfig& /KeepReference/);
 
-    virtual bool init(AVR_Device&);
+    virtual bool init(Device&);
     virtual void reset();
     virtual bool ctlreq(uint16_t, ctlreq_data_t*);
     virtual uint8_t ioreg_read_handler(reg_addr_t, uint8_t);

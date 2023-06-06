@@ -24,16 +24,18 @@
 #include "arch_avr_adc.h"
 #include "core/sim_sleep.h"
 
-
-#define CFG AVR_ArchAVR_ADC_Config
-
-static const uint32_t ADC_PrescalerMax = 128;
+YASIMAVR_USING_NAMESPACE
 
 
 //=======================================================================================
 
-AVR_ArchAVR_ADC::AVR_ArchAVR_ADC(int num, const CFG& config)
-:AVR_Peripheral(AVR_IOCTL_ADC(0x30 + num))
+#define CFG ArchAVR_ADCConfig
+
+static const uint32_t ADC_PrescalerMax = 128;
+
+
+ArchAVR_ADC::ArchAVR_ADC(int num, const CFG& config)
+:Peripheral(AVR_IOCTL_ADC(0x30 + num))
 ,m_config(config)
 ,m_state(ADC_Disabled)
 ,m_first(true)
@@ -46,9 +48,9 @@ AVR_ArchAVR_ADC::AVR_ArchAVR_ADC(int num, const CFG& config)
 {}
 
 
-bool AVR_ArchAVR_ADC::init(AVR_Device& device)
+bool ArchAVR_ADC::init(Device& device)
 {
-    bool status = AVR_Peripheral::init(device);
+    bool status = Peripheral::init(device);
 
     add_ioreg(m_config.reg_datal);
     add_ioreg(m_config.reg_datah);
@@ -75,7 +77,7 @@ bool AVR_ArchAVR_ADC::init(AVR_Device& device)
     return status;
 }
 
-void AVR_ArchAVR_ADC::reset()
+void ArchAVR_ADC::reset()
 {
     m_state = ADC_Disabled;
     m_first = true;
@@ -84,7 +86,7 @@ void AVR_ArchAVR_ADC::reset()
     m_timer.reset();
 }
 
-bool AVR_ArchAVR_ADC::ctlreq(uint16_t req, ctlreq_data_t* data)
+bool ArchAVR_ADC::ctlreq(uint16_t req, ctlreq_data_t* data)
 {
     if (req == AVR_CTLREQ_GET_SIGNAL) {
         data->data = &m_signal;
@@ -108,7 +110,7 @@ bool AVR_ArchAVR_ADC::ctlreq(uint16_t req, ctlreq_data_t* data)
 //=======================================================================================
 //I/O register callback reimplementation
 
-uint8_t AVR_ArchAVR_ADC::ioreg_read_handler(reg_addr_t addr, uint8_t value)
+uint8_t ArchAVR_ADC::ioreg_read_handler(reg_addr_t addr, uint8_t value)
 {
     //The ADSC bit is dynamic, reading 1 if a conversion is in progress
     if (addr == m_config.rb_start.addr)
@@ -117,7 +119,7 @@ uint8_t AVR_ArchAVR_ADC::ioreg_read_handler(reg_addr_t addr, uint8_t value)
     return value;
 }
 
-void AVR_ArchAVR_ADC::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
+void ArchAVR_ADC::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
     if (addr == m_config.rb_enable.addr) {
         //Positive edge on the enable bit (ADEN).
@@ -168,7 +170,7 @@ void AVR_ArchAVR_ADC::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& 
 //=======================================================================================
 //Conversion timing management
 
-void AVR_ArchAVR_ADC::reset_prescaler()
+void ArchAVR_ADC::reset_prescaler()
 {
     m_timer.reset();
 
@@ -179,7 +181,7 @@ void AVR_ArchAVR_ADC::reset_prescaler()
 /*
  * Method that starts a conversion cycle
  */
-void AVR_ArchAVR_ADC::start_conversion_cycle()
+void ArchAVR_ADC::start_conversion_cycle()
 {
     logger().dbg("Starting a conversion cycle");
 
@@ -208,7 +210,7 @@ void AVR_ArchAVR_ADC::start_conversion_cycle()
         return; \
     } while(0);
 
-void AVR_ArchAVR_ADC::read_analog_value()
+void ArchAVR_ADC::read_analog_value()
 {
     logger().dbg("Reading analog value");
 
@@ -235,15 +237,15 @@ void AVR_ArchAVR_ADC::read_analog_value()
     switch(ch_config->type) {
 
         case Channel_SingleEnded: {
-            AVR_Pin* p = device()->find_pin(ch_config->pin_p);
+            Pin* p = device()->find_pin(ch_config->pin_p);
             if (!p) _crash("ADC: Invalid pin configuration");
             raw_value = p->analog_value();
         } break;
 
         case Channel_Differential: {
-            AVR_Pin* p = device()->find_pin(ch_config->pin_p);
+            Pin* p = device()->find_pin(ch_config->pin_p);
             if (!p) _crash("ADC: Invalid pin configuration");
-            AVR_Pin* n = device()->find_pin(ch_config->pin_n);
+            Pin* n = device()->find_pin(ch_config->pin_n);
             if (!n) _crash("ADC: Invalid pin configuration");
             raw_value = p->analog_value() - n->analog_value();
             bipolar = test_ioreg(m_config.rb_bipolar);
@@ -260,7 +262,7 @@ void AVR_ArchAVR_ADC::read_analog_value()
             double temp_volt = m_config.temp_cal_coef * (m_temperature - 25.0) + m_config.temp_cal_25C;
             //The temperature measure obtained is in absolute voltage values.
             //We need to make it relative to VCC
-            ctlreq_data_t reqdata = { .index = AVR_IO_VREF::Source_VCC };
+            ctlreq_data_t reqdata = { .index = VREF::Source_VCC };
             if (!device()->ctlreq(AVR_IOCTL_VREF, AVR_CTLREQ_VREF_GET, &reqdata))
                 _crash("ADC: Unable to obtain the VCC voltage value");
             raw_value = temp_volt / reqdata.data.as_double();
@@ -291,7 +293,7 @@ void AVR_ArchAVR_ADC::read_analog_value()
 }
 
 
-void AVR_ArchAVR_ADC::raised(const signal_data_t& sigdata, uint16_t __unused)
+void ArchAVR_ADC::raised(const signal_data_t& sigdata, uint16_t __unused)
 {
     if (sigdata.index != 1) return;
 
@@ -335,7 +337,7 @@ void AVR_ArchAVR_ADC::raised(const signal_data_t& sigdata, uint16_t __unused)
  * Method that stores the converted value in the data registers according to the
  * left adjust settings
  */
-void AVR_ArchAVR_ADC::write_digital_value()
+void ArchAVR_ADC::write_digital_value()
 {
     uint8_t sign = (m_conv_value < 0 ? 1 : 0);
     uint16_t v = (m_conv_value < 0 ? -m_conv_value : m_conv_value);
@@ -359,9 +361,9 @@ void AVR_ArchAVR_ADC::write_digital_value()
 /*
 * The ADC is paused for modes above ADC Noise Reduction.
 */
-void AVR_ArchAVR_ADC::sleep(bool on, AVR_SleepMode mode)
+void ArchAVR_ADC::sleep(bool on, SleepMode mode)
 {
-    if (mode > AVR_SleepMode::ADC) {
+    if (mode > SleepMode::ADC) {
         if (on)
             logger().dbg("Pausing");
         else

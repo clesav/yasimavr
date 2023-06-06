@@ -21,7 +21,6 @@
 
 //=======================================================================================
 
-
 %ModuleCode
 
 #include "core/sim_peripheral.h"
@@ -92,6 +91,9 @@ const uint16_t CTLREQ_SLEEP_PSEUDO     = AVR_CTLREQ_SLEEP_PSEUDO;
 
 %End
 
+
+//=======================================================================================
+
 const uint32_t IOCTL_CORE;
 const uint32_t IOCTL_WTDG;
 const uint32_t IOCTL_INTR;
@@ -128,6 +130,7 @@ const uint16_t CTLREQ_NVM_WRITE;
 const uint16_t CTLREQ_SLEEP_CALL;
 const uint16_t CTLREQ_SLEEP_PSEUDO;
 
+
 struct NVM_request_t {
 %TypeHeaderCode
 #include "core/sim_peripheral.h"
@@ -140,8 +143,6 @@ struct NVM_request_t {
 
 };
 
-
-//=======================================================================================
 
 struct ctlreq_data_t {
 %TypeHeaderCode
@@ -163,30 +164,30 @@ struct base_reg_config_t {
 };
 
 
-class AVR_Peripheral : public AVR_IO_RegHandler /NoDefaultCtors/ {
+class Peripheral : public IO_RegHandler /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "core/sim_peripheral.h"
 %End
 
 public:
 
-    AVR_Peripheral(uint32_t);
+    Peripheral(uint32_t);
 
     uint32_t id() const;
     std::string name() const /Factory/;
 
-    virtual bool init(AVR_Device&);
+    virtual bool init(Device&);
     virtual void reset();
     virtual bool ctlreq(uint16_t, ctlreq_data_t*);
     virtual uint8_t ioreg_read_handler(reg_addr_t, uint8_t);
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
-    virtual void sleep(bool on, AVR_SleepMode mode);
+    virtual void sleep(bool on, SleepMode mode);
 
 protected:
 
-    AVR_Device* device() const;
+    Device* device() const;
 
-    AVR_Logger& logger();
+    Logger& logger();
 
     void add_ioreg(const regbit_t&, bool = false);
     void add_ioreg(const regbit_compound_t&, bool = false);
@@ -221,14 +222,14 @@ protected:
     void clear_ioreg(reg_addr_t, const bitmask_t&);
     void clear_ioreg(const regbit_t&, uint8_t);
 
-    bool register_interrupt(int_vect_t, AVR_InterruptHandler&) const;
+    bool register_interrupt(int_vect_t, InterruptHandler&) const;
 
-    AVR_Signal* get_signal(uint32_t) const;
+    Signal* get_signal(uint32_t) const;
 
 };
 
 
-class AVR_DummyController : public AVR_Peripheral /NoDefaultCtors/ {
+class DummyController : public Peripheral /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "core/sim_peripheral.h"
 %End
@@ -240,9 +241,9 @@ public:
         uint8_t reset;
     };
 
-    AVR_DummyController(uint32_t, const std::vector<AVR_DummyController::dummy_register_t>&);
+    DummyController(uint32_t, const std::vector<DummyController::dummy_register_t>&);
 
-    virtual bool init(AVR_Device&);
+    virtual bool init(Device&);
     virtual void reset();
 
 };

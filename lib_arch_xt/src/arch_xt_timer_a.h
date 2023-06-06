@@ -28,7 +28,9 @@
 #include "core/sim_interrupt.h"
 #include "ioctrl_common/sim_timer.h"
 
-class AVR_ArchXT_TimerB;
+YASIMAVR_BEGIN_NAMESPACE
+
+class ArchXT_TimerB;
 
 
 //=======================================================================================
@@ -57,7 +59,7 @@ class AVR_ArchXT_TimerB;
  *      - Timer command for forced update/restart
  */
 
-struct AVR_ArchXT_TimerA_Config {
+struct ArchXT_TimerAConfig {
 
     reg_addr_t reg_base;
 
@@ -66,28 +68,28 @@ struct AVR_ArchXT_TimerA_Config {
 
 };
 
-class DLL_EXPORT AVR_ArchXT_TimerA : public AVR_Peripheral, public AVR_SignalHook {
+class DLL_EXPORT ArchXT_TimerA : public Peripheral, public SignalHook {
 
 public:
 
-    explicit AVR_ArchXT_TimerA(const AVR_ArchXT_TimerA_Config& config);
+    explicit ArchXT_TimerA(const ArchXT_TimerAConfig& config);
 
-    //Override of AVR_Peripheral callbacks
-    virtual bool init(AVR_Device& device) override;
+    //Override of Peripheral callbacks
+    virtual bool init(Device& device) override;
     virtual void reset() override;
     virtual bool ctlreq(uint16_t req, ctlreq_data_t* data) override;
     virtual uint8_t ioreg_read_handler(reg_addr_t addr, uint8_t value) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
-    virtual void sleep(bool on, AVR_SleepMode mode) override;
+    virtual void sleep(bool on, SleepMode mode) override;
     //Override of Hook callback
     virtual void raised(const signal_data_t& sigdata, uint16_t sigid) override;
 
 private:
 
-    const AVR_ArchXT_TimerA_Config& m_config;
+    const ArchXT_TimerAConfig& m_config;
 
     //***** Clock management *****
-    std::vector<AVR_ArchXT_TimerB*> m_synched_timers;
+    std::vector<ArchXT_TimerB*> m_synched_timers;
 
     //***** Counters *****
     uint16_t m_cnt;                                 //Current counter register value
@@ -100,11 +102,11 @@ private:
     uint8_t m_next_event_type;
 
     //***** Interrupt and signal management *****
-    AVR_InterruptFlag m_ovf_intflag;
-    AVR_InterruptFlag m_cmp_intflags[AVR_TCA_CMP_CHANNEL_COUNT];
+    InterruptFlag m_ovf_intflag;
+    InterruptFlag m_cmp_intflags[AVR_TCA_CMP_CHANNEL_COUNT];
 
     //***** Counter management *****
-    AVR_PrescaledTimer m_timer;
+    PrescaledTimer m_timer;
 
     uint32_t delay_to_event();
     void update_16bits_buffers();
@@ -112,4 +114,6 @@ private:
 };
 
 
-#endif
+YASIMAVR_END_NAMESPACE
+
+#endif //__YASIMAVR_XT_TIMER_A_H__

@@ -21,7 +21,6 @@
 
 //=======================================================================================
 
-
 typedef int64_t         cycle_count_t;
 typedef uint32_t        mem_addr_t;
 typedef uint32_t        flash_addr_t;
@@ -83,6 +82,7 @@ public:
         return 0;
     %End
 };
+
 
 const reg_addr_t INVALID_REGISTER;
 

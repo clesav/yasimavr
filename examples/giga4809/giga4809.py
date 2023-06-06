@@ -1,5 +1,5 @@
 from yasimavr import device_library
-from yasimavr.lib.core import AVR_SimLoop, AVR_Firmware
+from yasimavr.lib.core import SimLoop, Firmware
 from yasimavr.utils.sim_dump import sim_dump
 
 #Create a bespoke device descriptor from the custom YAML file
@@ -9,11 +9,10 @@ desc = device_library.DeviceDescriptor.create_from_file('atgiga4809.yml')
 dev = device_library.load_device_from_config(desc)
 
 #Create a simulation loop, an accessor and load the test firmware
-simloop = AVR_SimLoop(dev)
+simloop = SimLoop(dev)
 dev_acc = device_library.DeviceAccessor(dev)
 
-#Load the test firmware 
-fw = AVR_Firmware.read_elf('../../test/fw/unittest_4809.elf')
+fw = Firmware.read_elf('../../test/fw/unittest_4809.elf')
 fw.frequency = 1000
 dev.load_firmware(fw)
 

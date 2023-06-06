@@ -28,6 +28,8 @@
 #include "core/sim_interrupt.h"
 #include "ioctrl_common/sim_twi.h"
 
+YASIMAVR_BEGIN_NAMESPACE
+
 
 //=======================================================================================
 /*
@@ -40,7 +42,7 @@
  *  for supported CTLREQs, see sim_spi.h
  */
 
-struct AVR_ArchAVR_TWI_Config {
+struct ArchAVR_TWIConfig {
 
     std::vector<unsigned int> ps_factors;
 
@@ -63,13 +65,13 @@ struct AVR_ArchAVR_TWI_Config {
 
 };
 
-class DLL_EXPORT AVR_ArchAVR_TWI : public AVR_Peripheral, public AVR_SignalHook {
+class DLL_EXPORT ArchAVR_TWI : public Peripheral, public SignalHook {
 
 public:
 
-    AVR_ArchAVR_TWI(uint8_t num, const AVR_ArchAVR_TWI_Config& config);
+    ArchAVR_TWI(uint8_t num, const ArchAVR_TWIConfig& config);
 
-    virtual bool init(AVR_Device& device) override;
+    virtual bool init(Device& device) override;
     virtual void reset() override;
     virtual bool ctlreq(uint16_t req, ctlreq_data_t *data) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
@@ -77,18 +79,21 @@ public:
 
 private:
 
-    const AVR_ArchAVR_TWI_Config& m_config;
+    const ArchAVR_TWIConfig& m_config;
 
-    AVR_IO_TWI m_twi;
+    TWI m_twi;
     bool m_gencall;
     bool m_rx;
 
-    AVR_InterruptFlag m_intflag;
+    InterruptFlag m_intflag;
 
     void set_intflag(uint8_t status);
     void clear_intflag();
     bool address_match(uint8_t address);
 
 };
+
+
+YASIMAVR_END_NAMESPACE
 
 #endif //__YASIMAVR_AVR_TWI_H__

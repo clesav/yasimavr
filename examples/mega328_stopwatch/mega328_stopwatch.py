@@ -19,13 +19,13 @@ global simloop
 simloop = None
 
 class Number(QtWidgets.QLCDNumber):
-    
+
     #Is it necessary that the led state changes transit via a Qt signal
     #because the notification is raised in a thread different to the main
     #Qt application thread. The Qt signal/slot system takes care of the
     #synchronisation
     sig_pin_changed = Qt.pyqtSignal(list)
-    
+
     def __init__(self, parent, device, port_name):
         '''
         Initialisation of a LCD number widget with 2 digits.
@@ -33,49 +33,49 @@ class Number(QtWidgets.QLCDNumber):
         device : a AVR_Device whose pins the LCD connects to.
         port_name : name of the GPIO port of the device to connect to
         '''
-        
+
         #Initialise the QLCDNumber instance with 2 digits
         super().__init__(2, parent)
-        
-        #Obtain a list of the 7 first pins of the port given in argument 
+
+        #Obtain a list of the 7 first pins of the port given in argument
         self.pins = [device.find_pin('P' + port_name + str(i)) for i in range(7)]
-        
+
         #Create a hook and connect it to the signal of each pin in the list above
-        self.hook = corelib.AVR_CallableSignalHook(self._pin_signal_raised)
+        self.hook = corelib.CallableSignalHook(self._pin_signal_raised)
         for i, pin in enumerate(self.pins):
             pin.signal().connect_hook(self.hook, i)
-        
+
         #List storing the value given by the pin state
         self.pin_values = [0] * len(self.pins)
-        
+
         #Connect our signal to our slot for synchronisation
         self.sig_pin_changed.connect(self._slot_pin_changed)
-    
-    
+
+
     #Callback called on a signal raise from any of the 7 output pins
     #The pin_index value (0 to 7) gives the pin that actually raised the signal
     def _pin_signal_raised(self, sigdata, pin_index):
         #Filter on digital state changes
-        if sigdata.sigid == corelib.AVR_Pin.SignalId.DigitalStateChange:
-            
+        if sigdata.sigid == corelib.Pin.SignalId.DigitalStateChange:
+
             #Store the new pin state, extracted from the signal data
-            if sigdata.data.as_uint() == corelib.AVR_Pin.State.High:
+            if sigdata.data.as_uint() == corelib.Pin.State.High:
                 self.pin_values[pin_index] = 1
             else:
                 self.pin_values[pin_index] = 0
-            
+
             #Emit the signal to indicate a change of value
             self.sig_pin_changed.emit(self.pin_values)
-    
-    
+
+
     #Slot receiving the pin state changes
     def _slot_pin_changed(self, pin_values):
-        
+
         #Compile the bits from the 7 pins into a single integer
         bin_value = 0
         for i, v in enumerate(pin_values):
             bin_value += v << i
-        
+
         #Display the binary value (replace it by a double dash if the value
         #is over the limit)
         if bin_value >= 100:
@@ -94,67 +94,67 @@ class Button(QtWidgets.QPushButton):
         self.pressed.connect(self.press_button)
         #A release will set the pin floating
         self.released.connect(self.release_button)
-    
+
     def press_button(self):
         with simloop:
-            self.pin.set_external_state(corelib.AVR_Pin.State.Low)
+            self.pin.set_external_state(corelib.Pin.State.Low)
             #simloop.loop_continue()
-    
+
     def release_button(self):
         with simloop:
-            self.pin.set_external_state(corelib.AVR_Pin.State.Floating)
+            self.pin.set_external_state(corelib.Pin.State.Floating)
             #simloop.loop_continue()
 
 
 def main():
-    
-    #Uncomment this to have the device trace
-    #corelib.AVR_StandardLogger.set_level(corelib.AVR_DeviceLogger.LOG_TRACE)
-    
+
     #Create a new MCU model ATMega328
     device = load_device('atmega328')
-    
+
+    #Uncomment this to have the device trace
+    #device.logger().set_level(corelib.Logger.Level.Trace)
+
     #Create a asynchronous simulation loop for this device
     global simloop
-    simloop = corelib.AVR_AsyncSimLoop(device)
-    
+    simloop = corelib.AsyncSimLoop(device)
+
     #Load the firmware with a MCU clock of 16MHz
     fw_path = os.path.join(os.path.dirname(__file__), 'mega328_stopwatch_fw.elf')
-    firmware = corelib.AVR_Firmware.read_elf(fw_path)
+    firmware = corelib.Firmware.read_elf(fw_path)
     firmware.frequency = 16000000
     device.load_firmware(firmware)
-    
+
     #Pin to which the button will be connected
     pin_button = device.find_pin('PB7')
-    
+
     #GUI construction
     qt_app = QtWidgets.QApplication([])
     window = QtWidgets.QMainWindow()
     window.resize(300, 300)
     mainWidget = QtWidgets.QWidget()
     window.setCentralWidget(mainWidget)
-    
+
     number = Number(window, device, 'B')
     button = Button(window, pin_button)
-    
+
     layout = QtWidgets.QVBoxLayout(mainWidget)
     layout.addWidget(number)
     layout.addWidget(button)
-    
+
     window.show()
-    
+
     #Start a separate thread to run the simulation loop
     simloop_thread = threading.Thread(target=simloop.run)
     simloop_thread.start()
-    
+
     #The loop is initialised in the Stopped state so the first thing
     #to do is to order it to run continuously
     with simloop:
         simloop.loop_continue()
-    
+
     #Enter the main GUI event loop of Qt
     qt_app.exec_()
-    
+
     #On leaving the application, stop the simloop
     #The thread will terminate.
     with simloop:

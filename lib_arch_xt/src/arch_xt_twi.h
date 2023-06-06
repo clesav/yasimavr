@@ -24,9 +24,10 @@
 #ifndef __YASIMAVR_XT_TWI_H__
 #define __YASIMAVR_XT_TWI_H__
 
-
 #include "core/sim_interrupt.h"
 #include "ioctrl_common/sim_twi.h"
+
+YASIMAVR_BEGIN_NAMESPACE
 
 
 //=======================================================================================
@@ -40,7 +41,7 @@
  *  for supported CTLREQs, see sim_spi.h
  */
 
-struct AVR_ArchXT_TWI_Config {
+struct ArchXT_TWIConfig {
 
     reg_addr_t reg_base;
     int_vect_t iv_master;
@@ -48,13 +49,13 @@ struct AVR_ArchXT_TWI_Config {
 
 };
 
-class DLL_EXPORT AVR_ArchXT_TWI : public AVR_Peripheral, public AVR_SignalHook {
+class DLL_EXPORT ArchXT_TWI : public Peripheral, public SignalHook {
 
 public:
 
-    AVR_ArchXT_TWI(uint8_t num, const AVR_ArchXT_TWI_Config& config);
+    ArchXT_TWI(uint8_t num, const ArchXT_TWIConfig& config);
 
-    virtual bool init(AVR_Device& device) override;
+    virtual bool init(Device& device) override;
     virtual void reset() override;
     virtual bool ctlreq(uint16_t req, ctlreq_data_t* data) override;
     virtual uint8_t ioreg_read_handler(reg_addr_t addr, uint8_t value) override;
@@ -63,15 +64,15 @@ public:
 
 private:
 
-    const AVR_ArchXT_TWI_Config& m_config;
+    const ArchXT_TWIConfig& m_config;
 
-    AVR_IO_TWI m_twi;
+    TWI m_twi;
     bool m_has_address;
     bool m_has_master_rx_data;
     bool m_has_slave_rx_data;
 
-    AVR_InterruptFlag m_intflag_master;
-    AVR_InterruptFlag m_intflag_slave;
+    InterruptFlag m_intflag_master;
+    InterruptFlag m_intflag_slave;
 
     void set_master_enabled(bool enabled);
     void clear_master_status();
@@ -79,5 +80,8 @@ private:
     bool address_match(uint8_t address);
 
 };
+
+
+YASIMAVR_END_NAMESPACE
 
 #endif //__YASIMAVR_XT_TWI_H__

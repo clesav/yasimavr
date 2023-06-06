@@ -27,6 +27,8 @@
 #include "sim_types.h"
 #include <deque>
 
+YASIMAVR_BEGIN_NAMESPACE
+
 
 //=======================================================================================
 /*
@@ -34,17 +36,17 @@
  * be called at a certain cycle
  */
 
-class AVR_CycleManager;
+class CycleManager;
 
-class DLL_EXPORT AVR_CycleTimer {
+class DLL_EXPORT CycleTimer {
 
 public:
 
-    AVR_CycleTimer();
+    CycleTimer();
     //Copy constructor
-    AVR_CycleTimer(const AVR_CycleTimer& other);
+    CycleTimer(const CycleTimer& other);
     //Destructor: ensures the timer is removed from the manager
-    virtual ~AVR_CycleTimer();
+    virtual ~CycleTimer();
 
     inline bool scheduled() const { return !!m_manager; }
 
@@ -57,14 +59,14 @@ public:
     virtual cycle_count_t next(cycle_count_t when) = 0;
 
     //Copy assignment
-    AVR_CycleTimer& operator=(const AVR_CycleTimer& other);
+    CycleTimer& operator=(const CycleTimer& other);
 
 private:
 
-    friend class AVR_CycleManager;
+    friend class CycleManager;
 
     //Pointer to the cycle manager when the timer is scheduled. Null when not scheduled.
-    AVR_CycleManager* m_manager;
+    CycleManager* m_manager;
 
 };
 
@@ -76,30 +78,30 @@ private:
  * the overall cycle-level accuracy of the simulation is not guaranteed.
  * It it a counter guaranteed to start at 0 and always increasing.
  */
-class DLL_EXPORT AVR_CycleManager {
+class DLL_EXPORT CycleManager {
 
 public:
 
-    AVR_CycleManager();
-    ~AVR_CycleManager();
+    CycleManager();
+    ~CycleManager();
 
     cycle_count_t cycle() const;
     void increment_cycle(cycle_count_t count);
 
     //Adds a new timer and schedule it for call at 'when'
-    void schedule(AVR_CycleTimer& timer, cycle_count_t when);
+    void schedule(CycleTimer& timer, cycle_count_t when);
 
-    void delay(AVR_CycleTimer& timer, cycle_count_t delay);
+    void delay(CycleTimer& timer, cycle_count_t delay);
 
     //Remove a timer from the queue. No-op if the timer is not scheduled.
-    void cancel(AVR_CycleTimer& timer);
+    void cancel(CycleTimer& timer);
 
     //Pause a timer for call. It means the timer stays in the queue but won't be called
     //until it's resumed. The delay until the timer 'when' is conserved during the pause.
-    void pause(AVR_CycleTimer& timer);
+    void pause(CycleTimer& timer);
 
     //Resumes a paused timer
-    void resume(AVR_CycleTimer& timer);
+    void resume(CycleTimer& timer);
 
     //Process the timers for the current cycle
     void process_timers();
@@ -109,12 +111,12 @@ public:
     cycle_count_t next_when() const;
 
     //no copy semantics
-    AVR_CycleManager(const AVR_CycleManager&) = delete;
-    AVR_CycleManager& operator=(const AVR_CycleManager&) = delete;
+    CycleManager(const CycleManager&) = delete;
+    CycleManager& operator=(const CycleManager&) = delete;
 
 private:
 
-    friend class AVR_CycleTimer;
+    friend class CycleTimer;
 
     //Structure holding information on a cycle timer when it's in the cycle queue
     struct TimerSlot;
@@ -126,15 +128,18 @@ private:
     void add_to_queue(TimerSlot* slot);
 
     //Utility to remove a timer from the queue.
-    TimerSlot* pop_from_queue(AVR_CycleTimer& timer);
+    TimerSlot* pop_from_queue(CycleTimer& timer);
 
-    void copy_slot(const AVR_CycleTimer& src, AVR_CycleTimer& dst);
+    void copy_slot(const CycleTimer& src, CycleTimer& dst);
 
 };
 
-inline cycle_count_t AVR_CycleManager::cycle() const
+inline cycle_count_t CycleManager::cycle() const
 {
     return m_cycle;
 }
+
+
+YASIMAVR_END_NAMESPACE
 
 #endif //__YASIMAVR_CYCLE_TIMER_H__

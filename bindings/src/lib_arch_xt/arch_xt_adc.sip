@@ -21,17 +21,17 @@
 
 //=======================================================================================
 
-struct AVR_ArchXT_ADC_Config {
+struct ArchXT_ADCConfig {
 %TypeHeaderCode
 #include "arch_xt_adc.h"
 %End
 
     struct reference_config_t : base_reg_config_t {
-        AVR_IO_VREF::Source source;
+        VREF::Source source;
     };
 
-    std::vector<AVR_IO_ADC::channel_config_t> channels;
-    std::vector<AVR_ArchXT_ADC_Config::reference_config_t> references;
+    std::vector<ADC::channel_config_t> channels;
+    std::vector<ArchXT_ADCConfig::reference_config_t> references;
     uint32_t vref_channel;
     UnsignedInt16Vector clk_ps_factors;
     uint16_t clk_ps_max;
@@ -48,24 +48,21 @@ struct AVR_ArchXT_ADC_Config {
 };
 
 
-class AVR_ArchXT_ADC : public AVR_IO_ADC,
-                       public AVR_Peripheral,
-                       public AVR_SignalHook
-                       /NoDefaultCtors/ {
+class ArchXT_ADC : public ADC, public Peripheral, public SignalHook /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_xt_adc.h"
 %End
 
 public:
 
-    AVR_ArchXT_ADC(int, const AVR_ArchXT_ADC_Config& /KeepReference/);
+    ArchXT_ADC(int, const ArchXT_ADCConfig& /KeepReference/);
 
-    virtual bool init(AVR_Device&);
+    virtual bool init(Device&);
     virtual void reset();
     virtual bool ctlreq(uint16_t, ctlreq_data_t*);
     virtual uint8_t ioreg_read_handler(reg_addr_t, uint8_t);
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
-    virtual void sleep(bool, AVR_SleepMode);
+    virtual void sleep(bool, SleepMode);
     virtual void raised(const signal_data_t&, uint16_t);
 
 };

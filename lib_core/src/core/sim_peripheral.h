@@ -28,10 +28,12 @@
 #include "sim_signal.h"
 #include "sim_logger.h"
 
-class AVR_Device;
-class AVR_InterruptHandler;
-class AVR_CycleTimer;
-enum class AVR_SleepMode;
+YASIMAVR_BEGIN_NAMESPACE
+
+class Device;
+class InterruptHandler;
+class CycleTimer;
+enum class SleepMode;
 
 
 //=======================================================================================
@@ -156,15 +158,15 @@ const T* find_reg_config_p(const std::vector<T>& v, uint64_t reg_value)
 
 //=======================================================================================
 /*
- * Class AVR_Peripheral
+ * Class Peripheral
  * Abstract class defining a framework for MCU peripherals
  */
-class DLL_EXPORT AVR_Peripheral: public AVR_IO_RegHandler {
+class DLL_EXPORT Peripheral: public IO_RegHandler {
 
 public:
 
-    explicit AVR_Peripheral(uint32_t id);
-    virtual ~AVR_Peripheral();
+    explicit Peripheral(uint32_t id);
+    virtual ~Peripheral();
 
     uint32_t id() const;
     std::string name() const;
@@ -172,7 +174,7 @@ public:
     //Callback method called when the device is initialised. This is where the peripheral can
     //allocate its I/O registers, interrupts or connect signals
     //The return boolean indicates the success of all allocations
-    virtual bool init(AVR_Device& device);
+    virtual bool init(Device& device);
 
     //Callback method called when the device is reset. Note that resetting I/O registers is only
     //necessary here if their reset value is not zero.
@@ -195,19 +197,19 @@ public:
 
     //Callback method called when the device enters or exits a sleep mode.
     //'on' is true when entering a sleep mode, false when exiting it.
-    //'mode' is one of the enum AVR_SleepMode values
-    virtual void sleep(bool on, AVR_SleepMode mode);
+    //'mode' is one of the enum SleepMode values
+    virtual void sleep(bool on, SleepMode mode);
 
     //Disable copy semantics
-    AVR_Peripheral(const AVR_Peripheral&) = delete;
-    AVR_Peripheral& operator=(const AVR_Peripheral&) = delete;
+    Peripheral(const Peripheral&) = delete;
+    Peripheral& operator=(const Peripheral&) = delete;
 
 protected:
 
     //Access to the device. It is null before init() is called
-    AVR_Device* device() const;
+    Device* device() const;
 
-    AVR_Logger& logger();
+    Logger& logger();
 
     void add_ioreg(const regbit_t& rb, bool readonly = false);
     void add_ioreg(const regbit_compound_t& rbc, bool readonly = false);
@@ -246,115 +248,115 @@ protected:
     void clear_ioreg(const regbit_t& rb, uint8_t bit);
 
     //Helper function to register an interrupt vector
-    bool register_interrupt(int_vect_t vector, AVR_InterruptHandler& handler) const;
+    bool register_interrupt(int_vect_t vector, InterruptHandler& handler) const;
 
     //Helper function to obtain a pointer to a signal from another peripheral
-    AVR_Signal* get_signal(uint32_t ctl_id) const;
+    Signal* get_signal(uint32_t ctl_id) const;
 
 private:
 
     uint32_t m_id;
-    AVR_Device* m_device;
-    AVR_Logger m_logger;
+    Device* m_device;
+    Logger m_logger;
 
 };
 
-inline uint32_t AVR_Peripheral::id() const
+inline uint32_t Peripheral::id() const
 {
     return m_id;
 }
 
-inline AVR_Device *AVR_Peripheral::device() const
+inline Device *Peripheral::device() const
 {
     return m_device;
 }
 
-inline AVR_Logger& AVR_Peripheral::logger()
+inline Logger& Peripheral::logger()
 {
     return m_logger;
 }
 
-inline uint8_t AVR_Peripheral::read_ioreg(const regbit_t& rb) const
+inline uint8_t Peripheral::read_ioreg(const regbit_t& rb) const
 {
     return rb.extract(read_ioreg(rb.addr));
 }
 
-inline uint8_t AVR_Peripheral::read_ioreg(reg_addr_t reg, const bitmask_t& bm) const
+inline uint8_t Peripheral::read_ioreg(reg_addr_t reg, const bitmask_t& bm) const
 {
     return bm.extract(read_ioreg(reg));
 }
 
-inline bool AVR_Peripheral::test_ioreg(reg_addr_t reg, uint8_t bit) const
+inline bool Peripheral::test_ioreg(reg_addr_t reg, uint8_t bit) const
 {
     return read_ioreg(regbit_t(reg, bit));
 }
 
-inline bool AVR_Peripheral::test_ioreg(reg_addr_t reg, const bitmask_t& bm) const
+inline bool Peripheral::test_ioreg(reg_addr_t reg, const bitmask_t& bm) const
 {
     return !!read_ioreg(regbit_t(reg, bm));
 }
 
-inline bool AVR_Peripheral::test_ioreg(const regbit_t& rb, uint8_t bit) const
+inline bool Peripheral::test_ioreg(const regbit_t& rb, uint8_t bit) const
 {
     return !!read_ioreg(regbit_t(rb.addr, rb.bit + bit));
 }
 
-inline void AVR_Peripheral::set_ioreg(const regbit_t& rb)
+inline void Peripheral::set_ioreg(const regbit_t& rb)
 {
     write_ioreg(rb, 0xFF);
 }
 
-inline void AVR_Peripheral::set_ioreg(reg_addr_t reg, uint8_t bit)
+inline void Peripheral::set_ioreg(reg_addr_t reg, uint8_t bit)
 {
     set_ioreg(regbit_t(reg, bit));
 }
 
-inline void AVR_Peripheral::set_ioreg(reg_addr_t reg, const bitmask_t& bm)
+inline void Peripheral::set_ioreg(reg_addr_t reg, const bitmask_t& bm)
 {
     set_ioreg(regbit_t(reg, bm));
 }
 
-inline void AVR_Peripheral::set_ioreg(const regbit_t& rb, uint8_t bit)
+inline void Peripheral::set_ioreg(const regbit_t& rb, uint8_t bit)
 {
     set_ioreg(regbit_t(rb.addr, rb.bit + bit));
 }
 
-inline void AVR_Peripheral::clear_ioreg(const regbit_t& rb)
+inline void Peripheral::clear_ioreg(const regbit_t& rb)
 {
     write_ioreg(rb, 0x00);
 }
 
-inline void AVR_Peripheral::clear_ioreg(const reg_addr_t reg)
+inline void Peripheral::clear_ioreg(const reg_addr_t reg)
 {
     write_ioreg(reg, 0x00);
 }
 
-inline void AVR_Peripheral::clear_ioreg(reg_addr_t reg, uint8_t bit)
+inline void Peripheral::clear_ioreg(reg_addr_t reg, uint8_t bit)
 {
     clear_ioreg(regbit_t(reg, bit));
 }
 
-inline void AVR_Peripheral::clear_ioreg(reg_addr_t reg, const bitmask_t& bm)
+inline void Peripheral::clear_ioreg(reg_addr_t reg, const bitmask_t& bm)
 {
     clear_ioreg(regbit_t(reg, bm));
 }
 
-inline void AVR_Peripheral::clear_ioreg(const regbit_t& rb, uint8_t bit)
+inline void Peripheral::clear_ioreg(const regbit_t& rb, uint8_t bit)
 {
     clear_ioreg(regbit_t(rb.addr, rb.bit + bit));
 }
 
-inline void AVR_Peripheral::write_ioreg(reg_addr_t reg, uint8_t value)
+inline void Peripheral::write_ioreg(reg_addr_t reg, uint8_t value)
 {
     write_ioreg(regbit_t(reg), value);
 }
 
-inline void AVR_Peripheral::write_ioreg(reg_addr_t reg, const bitmask_t& bm, uint8_t value)
+inline void Peripheral::write_ioreg(reg_addr_t reg, const bitmask_t& bm, uint8_t value)
 {
     write_ioreg(regbit_t(reg, bm), value);
 }
 
-inline void AVR_Peripheral::write_ioreg(reg_addr_t reg, uint8_t bit, uint8_t value)
+inline void Peripheral::write_ioreg(reg_addr_t reg, uint8_t bit, uint8_t value)
 {
     write_ioreg(regbit_t(reg, bit), value);
 }
@@ -362,11 +364,11 @@ inline void AVR_Peripheral::write_ioreg(reg_addr_t reg, uint8_t bit, uint8_t val
 
 //=======================================================================================
 /*
- * Class AVR_DummyController
+ * Class DummyController
  * Class defining a dummy peripheral. It does nothing but adding I/O registers.
  */
 
-class DLL_EXPORT AVR_DummyController : public AVR_Peripheral {
+class DLL_EXPORT DummyController : public Peripheral {
 
 public:
 
@@ -375,9 +377,9 @@ public:
         uint8_t reset;
     };
 
-    AVR_DummyController(uint32_t id, const std::vector<dummy_register_t>& regs);
+    DummyController(uint32_t id, const std::vector<dummy_register_t>& regs);
 
-    virtual bool init(AVR_Device& device) override;
+    virtual bool init(Device& device) override;
     virtual void reset() override;
 
 private:
@@ -386,5 +388,7 @@ private:
 
 };
 
+
+YASIMAVR_END_NAMESPACE
 
 #endif //__YASIMAVR_PERIPHERAL_H__

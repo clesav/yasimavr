@@ -21,35 +21,35 @@
 
 //=======================================================================================
 
-class AVR_ArchXT_USERROW : public AVR_Peripheral /NoDefaultCtors/ {
+class ArchXT_USERROW : public Peripheral /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_xt_nvm.h"
 %End
 
 public:
 
-    AVR_ArchXT_USERROW(reg_addr_t);
+    ArchXT_USERROW(reg_addr_t);
 
-    virtual bool init(AVR_Device&);
+    virtual bool init(Device&);
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
 };
 
 
-class AVR_ArchXT_Fuses : public AVR_Peripheral /NoDefaultCtors/ {
+class ArchXT_Fuses : public Peripheral /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_xt_nvm.h"
 %End
 
 public:
 
-    AVR_ArchXT_Fuses(reg_addr_t);
+    ArchXT_Fuses(reg_addr_t);
 
-    virtual bool init(AVR_Device&);
+    virtual bool init(Device&);
 
 };
 
 
-struct AVR_ArchXT_NVM_Config {
+struct ArchXT_NVMConfig {
 %TypeHeaderCode
 #include "arch_xt_nvm.h"
 %End
@@ -71,16 +71,16 @@ struct AVR_ArchXT_NVM_Config {
 };
 
 
-class AVR_ArchXT_NVM : public AVR_Peripheral /NoDefaultCtors/ {
+class ArchXT_NVM : public Peripheral /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_xt_nvm.h"
 %End
 
 public:
 
-    AVR_ArchXT_NVM(const AVR_ArchXT_NVM_Config& /KeepReference/);
+    ArchXT_NVM(const ArchXT_NVMConfig& /KeepReference/);
 
-    virtual bool init(AVR_Device&);
+    virtual bool init(Device&);
     virtual void reset();
     virtual bool ctlreq(uint16_t, ctlreq_data_t*);
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);

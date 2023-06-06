@@ -26,18 +26,20 @@
 #include "core/sim_firmware.h"
 #include <cstring>
 
+YASIMAVR_USING_NAMESPACE
+
 
 //=======================================================================================
 
-AVR_ArchXT_Core::AVR_ArchXT_Core(const AVR_ArchXT_CoreConfig& config)
-:AVR_Core(config)
+ArchXT_Core::ArchXT_Core(const ArchXT_CoreConfig& config)
+:Core(config)
 ,m_eeprom(config.eepromend ? (config.eepromend + 1) : 0, "eeprom")
 ,m_userrow(config.userrowend ? (config.userrowend + 1) : 0, "userrow")
 {}
 
-uint8_t AVR_ArchXT_Core::cpu_read_data(mem_addr_t data_addr)
+uint8_t ArchXT_Core::cpu_read_data(mem_addr_t data_addr)
 {
-    const AVR_ArchXT_CoreConfig& cfg = reinterpret_cast<const AVR_ArchXT_CoreConfig&>(m_config);
+    const ArchXT_CoreConfig& cfg = reinterpret_cast<const ArchXT_CoreConfig&>(m_config);
     uint8_t value = 0;
 
     if (data_addr <= cfg.ioend) {
@@ -52,7 +54,7 @@ uint8_t AVR_ArchXT_Core::cpu_read_data(mem_addr_t data_addr)
     else if (data_addr >= cfg.flashstart_ds && data_addr <= cfg.flashend_ds) {
         value = cpu_read_flash(data_addr - cfg.flashstart_ds);
     }
-    else if (!m_device->test_option(AVR_Device::Option_IgnoreBadCpuIO)) {
+    else if (!m_device->test_option(Device::Option_IgnoreBadCpuIO)) {
         m_device->logger().err("CPU reading an invalid data address: 0x%04x", data_addr);
         m_device->crash(CRASH_BAD_CPU_IO, "Bad data address");
     }
@@ -63,9 +65,9 @@ uint8_t AVR_ArchXT_Core::cpu_read_data(mem_addr_t data_addr)
     return value;
 }
 
-void AVR_ArchXT_Core::cpu_write_data(mem_addr_t data_addr, uint8_t value)
+void ArchXT_Core::cpu_write_data(mem_addr_t data_addr, uint8_t value)
 {
-    const AVR_ArchXT_CoreConfig& cfg = reinterpret_cast<const AVR_ArchXT_CoreConfig&>(m_config);
+    const ArchXT_CoreConfig& cfg = reinterpret_cast<const ArchXT_CoreConfig&>(m_config);
 
     if (data_addr <= cfg.ioend) {
         cpu_write_ioreg(data_addr, value);
@@ -97,7 +99,7 @@ void AVR_ArchXT_Core::cpu_write_data(mem_addr_t data_addr, uint8_t value)
         ctlreq_data_t d = { .data = &nvm_req };
         m_device->ctlreq(AVR_IOCTL_NVM, AVR_CTLREQ_NVM_WRITE, &d);
     }
-    else if (!m_device->test_option(AVR_Device::Option_IgnoreBadCpuIO)) {
+    else if (!m_device->test_option(Device::Option_IgnoreBadCpuIO)) {
         m_device->logger().err("CPU writing an invalid data address: 0x%04x", data_addr);
         m_device->crash(CRASH_BAD_CPU_IO, "Bad data address");
     }
@@ -106,9 +108,9 @@ void AVR_ArchXT_Core::cpu_write_data(mem_addr_t data_addr, uint8_t value)
         m_debug_probe->_cpu_notify_data_write(data_addr, value);
 }
 
-void AVR_ArchXT_Core::dbg_read_data(mem_addr_t addr, uint8_t* buf, mem_addr_t len)
+void ArchXT_Core::dbg_read_data(mem_addr_t addr, uint8_t* buf, mem_addr_t len)
 {
-    const AVR_ArchXT_CoreConfig& cfg = reinterpret_cast<const AVR_ArchXT_CoreConfig&>(m_config);
+    const ArchXT_CoreConfig& cfg = reinterpret_cast<const ArchXT_CoreConfig&>(m_config);
 
     std::memset(buf, 0x00, len);
 
@@ -134,9 +136,9 @@ void AVR_ArchXT_Core::dbg_read_data(mem_addr_t addr, uint8_t* buf, mem_addr_t le
     }
 }
 
-void AVR_ArchXT_Core::dbg_write_data(mem_addr_t addr, const uint8_t* buf, mem_addr_t len)
+void ArchXT_Core::dbg_write_data(mem_addr_t addr, const uint8_t* buf, mem_addr_t len)
 {
-    const AVR_ArchXT_CoreConfig& cfg = reinterpret_cast<const AVR_ArchXT_CoreConfig&>(m_config);
+    const ArchXT_CoreConfig& cfg = reinterpret_cast<const ArchXT_CoreConfig&>(m_config);
 
     mem_addr_t bufofs, blockofs;
     uint32_t n;
@@ -163,39 +165,39 @@ void AVR_ArchXT_Core::dbg_write_data(mem_addr_t addr, const uint8_t* buf, mem_ad
 
 //=======================================================================================
 
-AVR_ArchXT_Device::AVR_ArchXT_Device(const AVR_ArchXT_DeviceConfig& config)
-:AVR_Device(m_core_impl, config)
-,m_core_impl(reinterpret_cast<const AVR_ArchXT_CoreConfig&>(config.core))
+ArchXT_Device::ArchXT_Device(const ArchXT_DeviceConfig& config)
+:Device(m_core_impl, config)
+,m_core_impl(reinterpret_cast<const ArchXT_CoreConfig&>(config.core))
 {}
 
 
-AVR_ArchXT_Device::~AVR_ArchXT_Device()
+ArchXT_Device::~ArchXT_Device()
 {
     erase_peripherals();
 }
 
 
-bool AVR_ArchXT_Device::core_ctlreq(uint16_t req, ctlreq_data_t* reqdata)
+bool ArchXT_Device::core_ctlreq(uint16_t req, ctlreq_data_t* reqdata)
 {
     if (req == AVR_CTLREQ_CORE_NVM) {
-        if (reqdata->index == AVR_ArchXT_Core::NVM_EEPROM)
+        if (reqdata->index == ArchXT_Core::NVM_EEPROM)
             reqdata->data = &(m_core_impl.m_eeprom);
-        else if (reqdata->index == AVR_ArchXT_Core::NVM_USERROW)
+        else if (reqdata->index == ArchXT_Core::NVM_USERROW)
             reqdata->data = &(m_core_impl.m_userrow);
-        else if (reqdata->index == AVR_Core::NVM_GetCount)
-            reqdata->data = (unsigned int) (AVR_Core::NVM_CommonCount + 2);
+        else if (reqdata->index == Core::NVM_GetCount)
+            reqdata->data = (unsigned int) (Core::NVM_CommonCount + 2);
         else
-            return AVR_Device::core_ctlreq(req, reqdata);
+            return Device::core_ctlreq(req, reqdata);
 
         return true;
     } else {
-        return AVR_Device::core_ctlreq(req, reqdata);
+        return Device::core_ctlreq(req, reqdata);
     }
 }
 
-bool AVR_ArchXT_Device::program(const AVR_Firmware& firmware)
+bool ArchXT_Device::program(const Firmware& firmware)
 {
-    if (!AVR_Device::program(firmware))
+    if (!Device::program(firmware))
         return false;
 
     if (firmware.has_memory("eeprom")) {

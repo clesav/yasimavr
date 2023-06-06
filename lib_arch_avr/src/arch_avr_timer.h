@@ -28,6 +28,8 @@
 #include "core/sim_interrupt.h"
 #include "ioctrl_common/sim_timer.h"
 
+YASIMAVR_BEGIN_NAMESPACE
+
 
 //=======================================================================================
 /*
@@ -53,7 +55,7 @@
 #define AVR_CTLREQ_TMR_GET_CAPT_HOOK          2
 
 
-struct AVR_ArchAVR_TimerConfig {
+struct ArchAVR_TimerConfig {
 
     enum COM {
         COM_NoChange = 0,
@@ -83,8 +85,8 @@ struct AVR_ArchAVR_TimerConfig {
     };
 
     struct clock_config_t : base_reg_config_t {
-        AVR_TimerCounter::TickSource source;      //Clock source
-        unsigned int div;                         //Prescaler factor
+        TimerCounter::TickSource source;      //Clock source
+        unsigned int div;                     //Prescaler factor
     };
 
     struct vector_config_t {
@@ -155,7 +157,7 @@ struct AVR_ArchAVR_TimerConfig {
 };
 
 
-class DLL_EXPORT AVR_ArchAVR_Timer : public AVR_Peripheral, public AVR_SignalHook {
+class DLL_EXPORT ArchAVR_Timer : public Peripheral, public SignalHook {
 
 public:
 
@@ -172,10 +174,10 @@ public:
         Signal_Capt
     };
 
-    AVR_ArchAVR_Timer(int num, const AVR_ArchAVR_TimerConfig& config);
-    ~AVR_ArchAVR_Timer();
+    ArchAVR_Timer(int num, const ArchAVR_TimerConfig& config);
+    ~ArchAVR_Timer();
 
-    virtual bool init(AVR_Device& device) override;
+    virtual bool init(Device& device) override;
     virtual void reset() override;
     virtual bool ctlreq(uint16_t req, ctlreq_data_t* data) override;
     virtual uint8_t ioreg_read_handler(reg_addr_t addr, uint8_t value) override;
@@ -191,7 +193,7 @@ private:
     struct OutputCompareChannel;
     friend struct OutputCompareChannel;
 
-    const AVR_ArchAVR_TimerConfig& m_config;
+    const ArchAVR_TimerConfig& m_config;
 
     //***** Clock management *****
     uint16_t m_clk_ps_max;              //Max value counted by the clock prescaler
@@ -200,26 +202,29 @@ private:
     //Temporary register when the CPU is reading 16-bits registers
     uint8_t m_temp;
     //Current timer/counter mode
-    AVR_ArchAVR_TimerConfig::mode_config_t m_mode;
+    ArchAVR_TimerConfig::mode_config_t m_mode;
     //List of output compare modules
     std::vector<OutputCompareChannel*> m_oc_channels;
     //Event timer engine
-    AVR_PrescaledTimer m_timer;
+    PrescaledTimer m_timer;
     //Timer counter engine
-    AVR_TimerCounter m_counter;
+    TimerCounter m_counter;
     //Interrupt and signal management
-    AVR_InterruptFlag m_intflag_ovf;
-    AVR_InterruptFlag m_intflag_icr;
-    AVR_DataSignal m_signal;
+    InterruptFlag m_intflag_ovf;
+    InterruptFlag m_intflag_icr;
+    DataSignal m_signal;
     CaptureHook* m_capt_hook;
 
     void update_top();
     void capt_raised();
-    AVR_ArchAVR_TimerConfig::COM_config_t get_COM_config(uint8_t regval);
+    ArchAVR_TimerConfig::COM_config_t get_COM_config(uint8_t regval);
     void process_ticks(unsigned int ticks, bool event_reached);
     void change_OC_state(uint32_t index, uint8_t event_flags);
-    bool output_active(AVR_ArchAVR_TimerConfig::COM_config_t& mode, uint32_t output_index);
+    bool output_active(ArchAVR_TimerConfig::COM_config_t& mode, uint32_t output_index);
 
 };
+
+
+YASIMAVR_END_NAMESPACE
 
 #endif //__YASIMAVR_AVR_TIMER_H__

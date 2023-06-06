@@ -30,12 +30,15 @@
 #include "core/sim_types.h"
 #include "core/sim_memory.h"
 
+YASIMAVR_BEGIN_NAMESPACE
+
+
 //=======================================================================================
 //Variant configuration structure. Nothing to add compared to generic ones
 //so we just use typedef
 
-typedef AVR_CoreConfiguration AVR_ArchAVR_CoreConfig;
-typedef AVR_DeviceConfiguration AVR_ArchAVR_DeviceConfig;
+typedef CoreConfiguration ArchAVR_CoreConfig;
+typedef DeviceConfiguration ArchAVR_DeviceConfig;
 
 
 //=======================================================================================
@@ -43,15 +46,15 @@ typedef AVR_DeviceConfiguration AVR_ArchAVR_DeviceConfig;
  * Implementation of a CPU core for AVR series
  * The main addition is to handle the address mapping in data space
  */
-class DLL_EXPORT AVR_ArchAVR_Core : public AVR_Core {
+class DLL_EXPORT ArchAVR_Core : public Core {
 
 public:
 
-    enum AVR_ArchAVR_NVM {
+    enum ArchAVR_NVM {
         NVM_EEPROM = NVM_ArchDefined,
     };
 
-    explicit AVR_ArchAVR_Core(const AVR_ArchAVR_CoreConfig& config);
+    explicit ArchAVR_Core(const ArchAVR_CoreConfig& config);
 
 protected:
 
@@ -63,9 +66,9 @@ protected:
 
 private:
 
-    AVR_NonVolatileMemory m_eeprom;
+    NonVolatileMemory m_eeprom;
 
-friend class AVR_ArchAVR_Device;
+friend class ArchAVR_Device;
 
 };
 
@@ -74,24 +77,27 @@ friend class AVR_ArchAVR_Device;
 /*
  * Implementation of a MCU for AVR series
  */
-class DLL_EXPORT AVR_ArchAVR_Device : public AVR_Device {
+class DLL_EXPORT ArchAVR_Device : public Device {
 
 public:
 
-    explicit AVR_ArchAVR_Device(const AVR_ArchAVR_DeviceConfig& config);
-    virtual ~AVR_ArchAVR_Device();
+    explicit ArchAVR_Device(const ArchAVR_DeviceConfig& config);
+    virtual ~ArchAVR_Device();
 
 protected:
 
     virtual bool core_ctlreq(uint16_t req, ctlreq_data_t* reqdata) override;
 
     //Override to load the EEPROM
-    virtual bool program(const AVR_Firmware& firmware) override;
+    virtual bool program(const Firmware& firmware) override;
 
 private:
 
-    AVR_ArchAVR_Core m_core_impl;
+    ArchAVR_Core m_core_impl;
 
 };
+
+
+YASIMAVR_END_NAMESPACE
 
 #endif //__YASIMAVR_AVR_DEVICE_H__

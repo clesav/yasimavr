@@ -23,11 +23,13 @@
 
 #include "arch_avr_misc.h"
 
+YASIMAVR_USING_NAMESPACE
+
 
 //=======================================================================================
 
-AVR_ArchAVR_VREF::AVR_ArchAVR_VREF(double band_gap)
-:AVR_IO_VREF(1)
+ArchAVR_VREF::ArchAVR_VREF(double band_gap)
+:VREF(1)
 {
     set_reference(0, Source_Internal, band_gap);
 }
@@ -35,11 +37,11 @@ AVR_ArchAVR_VREF::AVR_ArchAVR_VREF(double band_gap)
 
 //=======================================================================================
 
-AVR_ArchAVR_Interrupt::AVR_ArchAVR_Interrupt(unsigned int size)
-:AVR_InterruptController(size)
+ArchAVR_IntCtrl::ArchAVR_IntCtrl(unsigned int size)
+:InterruptController(size)
 {}
 
-int_vect_t AVR_ArchAVR_Interrupt::get_next_irq() const
+int_vect_t ArchAVR_IntCtrl::get_next_irq() const
 {
     for (int_vect_t i = 0; i < intr_count(); ++i) {
         if (interrupt_raised(i))
@@ -51,14 +53,14 @@ int_vect_t AVR_ArchAVR_Interrupt::get_next_irq() const
 
 //=======================================================================================
 
-AVR_ArchAVR_MiscRegCtrl::AVR_ArchAVR_MiscRegCtrl(const AVR_ArchAVR_Misc_Config& config)
-:AVR_Peripheral(AVR_ID('M', 'I', 'S', 'C'))
+ArchAVR_MiscRegCtrl::ArchAVR_MiscRegCtrl(const ArchAVR_MiscConfig& config)
+:Peripheral(AVR_ID('M', 'I', 'S', 'C'))
 ,m_config(config)
 {}
 
-bool AVR_ArchAVR_MiscRegCtrl::init(AVR_Device& device)
+bool ArchAVR_MiscRegCtrl::init(Device& device)
 {
-    bool status = AVR_Peripheral::init(device);
+    bool status = Peripheral::init(device);
 
     for (uint16_t r : m_config.gpior)
         add_ioreg(r);

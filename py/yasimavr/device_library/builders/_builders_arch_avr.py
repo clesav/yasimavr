@@ -38,7 +38,7 @@ def _get_intctrl_builder():
     def _get_vector_count(per_desc):
         return len(per_desc.device.interrupt_map.vectors)
 
-    return PeripheralBuilder(_archlib.AVR_ArchAVR_Interrupt, _get_vector_count)
+    return PeripheralBuilder(_archlib.ArchAVR_IntCtrl, _get_vector_count)
 
 
 #========================================================================================
@@ -48,9 +48,9 @@ def _slpctrl_convertor(cfg, attr, yml_val, per_desc):
     if attr == 'modes':
         py_modes = []
         for mode_reg_value, mode_name in yml_val.items():
-            mode_cfg = _corelib.AVR_SleepConfig.mode_config_t()
+            mode_cfg = _corelib.SleepConfig.mode_config_t()
             mode_cfg.reg_value = mode_reg_value
-            mode_cfg.mode = _corelib.AVR_SleepMode[mode_name]
+            mode_cfg.mode = _corelib.SleepMode[mode_name]
 
             int_mask = per_desc.device.interrupt_map.sleep_mask[mode_name]
             mode_cfg.int_mask = int_mask + [0] * (16 - len(int_mask)) #padding to length=16
@@ -63,8 +63,8 @@ def _slpctrl_convertor(cfg, attr, yml_val, per_desc):
         raise Exception('Converter not implemented for ' + attr)
 
 def _get_slpctrl_builder():
-    cfg_builder = PeripheralConfigBuilder(_corelib.AVR_SleepConfig, _slpctrl_convertor)
-    return PeripheralBuilder(_corelib.AVR_SleepController, cfg_builder)
+    cfg_builder = PeripheralConfigBuilder(_corelib.SleepConfig, _slpctrl_convertor)
+    return PeripheralBuilder(_corelib.SleepController, cfg_builder)
 
 
 #========================================================================================
@@ -78,15 +78,15 @@ def _misc_convertor(cfg, attr, yml_val, per_desc):
 
 
 def _get_misc_builder():
-    cfg_builder = PeripheralConfigBuilder(_archlib.AVR_ArchAVR_Misc_Config, _misc_convertor)
-    return PeripheralBuilder(_archlib.AVR_ArchAVR_MiscRegCtrl, cfg_builder)
+    cfg_builder = PeripheralConfigBuilder(_archlib.ArchAVR_MiscConfig, _misc_convertor)
+    return PeripheralBuilder(_archlib.ArchAVR_MiscRegCtrl, cfg_builder)
 
 
 #========================================================================================
 #General I/O port configuration
 
 def _get_port_config(per_desc):
-    cfg = _archlib.AVR_ArchAVR_PortConfig()
+    cfg = _archlib.ArchAVR_PortConfig()
     cfg.name = per_desc.name[-1]
     cfg.reg_port = per_desc.reg_address('PORT')
     cfg.reg_pin = per_desc.reg_address('PIN')
@@ -95,7 +95,7 @@ def _get_port_config(per_desc):
 
 
 def _get_port_builder():
-    return PeripheralBuilder(_archlib.AVR_ArchAVR_Port, _get_port_config)
+    return PeripheralBuilder(_archlib.ArchAVR_Port, _get_port_config)
 
 
 #========================================================================================
@@ -117,8 +117,8 @@ def _extint_convertor(cfg, attr, yml_val, per_desc):
 
 
 def _get_extint_builder():
-    cfg_builder = PeripheralConfigBuilder(_archlib.AVR_ArchAVR_ExtIntConfig, _extint_convertor)
-    return PeripheralBuilder(_archlib.AVR_ArchAVR_ExtInt, cfg_builder)
+    cfg_builder = PeripheralConfigBuilder(_archlib.ArchAVR_ExtIntConfig, _extint_convertor)
+    return PeripheralBuilder(_archlib.ArchAVR_ExtInt, cfg_builder)
 
 
 #========================================================================================
@@ -126,14 +126,14 @@ def _get_extint_builder():
 
 def _timer_convertor(cfg, attr, yml_val, per_desc):
 
-    CFG = _archlib.AVR_ArchAVR_TimerConfig
+    CFG = _archlib.ArchAVR_TimerConfig
 
     if attr == 'clocks':
         py_clocks = []
         for reg_value, clk_cfg_yml in yml_val.items():
-            clk_cfg = _archlib.AVR_ArchAVR_TimerConfig.clock_config_t()
+            clk_cfg = _archlib.ArchAVR_TimerConfig.clock_config_t()
             clk_cfg.reg_value = reg_value
-            clk_cfg.source = _corelib.AVR_TimerCounter.TickSource[clk_cfg_yml[0]]
+            clk_cfg.source = _corelib.TimerCounter.TickSource[clk_cfg_yml[0]]
             clk_cfg.div = clk_cfg_yml[1] if len(clk_cfg_yml) > 1 else 1
             py_clocks.append(clk_cfg)
         cfg.clocks = py_clocks
@@ -184,7 +184,7 @@ def _timer_convertor(cfg, attr, yml_val, per_desc):
         for variant_opt in yml_val:
             variant_cfg = []
             for reg_value, raw_opt in variant_opt.items():
-                com_cfg = _archlib.AVR_ArchAVR_TimerConfig.COM_config_t()
+                com_cfg = _archlib.ArchAVR_TimerConfig.COM_config_t()
                 com_cfg.reg_value = reg_value
                 com_cfg.up = convert_enum_member(CFG.COM, raw_opt & 0x0F)
                 com_cfg.down = convert_enum_member(CFG.COM, (raw_opt >> 4) & 0x0F)
@@ -201,8 +201,8 @@ def _timer_convertor(cfg, attr, yml_val, per_desc):
 
 
 def _get_timer_builder():
-    cfg_builder = PeripheralConfigBuilder(_archlib.AVR_ArchAVR_TimerConfig, _timer_convertor)
-    return IndexedPeripheralBuilder(_archlib.AVR_ArchAVR_Timer, cfg_builder)
+    cfg_builder = PeripheralConfigBuilder(_archlib.ArchAVR_TimerConfig, _timer_convertor)
+    return IndexedPeripheralBuilder(_archlib.ArchAVR_Timer, cfg_builder)
 
 
 #========================================================================================
@@ -212,15 +212,15 @@ def _adc_convertor(cfg, attr, yml_val, per_desc):
     if attr == 'channels':
         py_channels = []
         for reg_value, item in yml_val.items():
-            chan_cfg = _corelib.AVR_IO_ADC.channel_config_t()
+            chan_cfg = _corelib.ADC.channel_config_t()
             chan_cfg.reg_value = reg_value
             if isinstance(item, list):
-                chan_cfg.type = _corelib.AVR_IO_ADC.Channel[item[0]]
+                chan_cfg.type = _corelib.ADC.Channel[item[0]]
                 chan_cfg.pin_p = _corelib.str_to_id(item[1])
                 chan_cfg.pin_n = _corelib.str_to_id(item[2]) if len(item) > 2 else 0
                 chan_cfg.gain = int(item[3]) if len(item) > 3 else 1
             else:
-                chan_cfg.type = _corelib.AVR_IO_ADC.Channel[item]
+                chan_cfg.type = _corelib.ADC.Channel[item]
                 chan_cfg.pin_p = 0
                 chan_cfg.pin_n = 0
                 chan_cfg.gain = 1
@@ -232,9 +232,9 @@ def _adc_convertor(cfg, attr, yml_val, per_desc):
     elif attr == 'references':
         py_refs = []
         for reg_value, item in yml_val.items():
-            ref_cfg = _archlib.AVR_ArchAVR_ADC_Config.reference_config_t()
+            ref_cfg = _archlib.ArchAVR_ADCConfig.reference_config_t()
             ref_cfg.reg_value = reg_value
-            ref_cfg.source = _corelib.AVR_IO_VREF.Source[item]
+            ref_cfg.source = _corelib.VREF.Source[item]
             py_refs.append(ref_cfg)
 
         cfg.references = py_refs
@@ -245,9 +245,9 @@ def _adc_convertor(cfg, attr, yml_val, per_desc):
     elif attr == 'triggers':
         py_triggers = []
         for reg_value, item in yml_val.items():
-            trig_cfg = _archlib.AVR_ArchAVR_ADC_Config.trigger_config_t()
+            trig_cfg = _archlib.ArchAVR_ADCConfig.trigger_config_t()
             trig_cfg.reg_value = reg_value
-            trig_cfg.trig_type = _archlib.AVR_ArchAVR_ADC_Config.Trigger[item]
+            trig_cfg.trig_type = _archlib.ArchAVR_ADCConfig.Trigger[item]
             py_triggers.append(trig_cfg)
 
         cfg.triggers = py_triggers
@@ -260,8 +260,8 @@ def _adc_convertor(cfg, attr, yml_val, per_desc):
 
 
 def _get_adc_builder():
-    cfg_builder = PeripheralConfigBuilder(_archlib.AVR_ArchAVR_ADC_Config, _adc_convertor)
-    return IndexedPeripheralBuilder(_archlib.AVR_ArchAVR_ADC, cfg_builder)
+    cfg_builder = PeripheralConfigBuilder(_archlib.ArchAVR_ADCConfig, _adc_convertor)
+    return IndexedPeripheralBuilder(_archlib.ArchAVR_ADC, cfg_builder)
 
 
 #========================================================================================
@@ -271,7 +271,7 @@ def _acp_convertor(cfg, attr, yml_val, per_desc):
     if attr == 'mux_pins':
         py_pins = []
         for reg_value, item in yml_val.items():
-            mux_cfg = _archlib.AVR_ArchAVR_ACP_Config.mux_config_t()
+            mux_cfg = _archlib.ArchAVR_ACPConfig.mux_config_t()
             mux_cfg.reg_value = reg_value
             mux_cfg.pin = _corelib.str_to_id(item)
             py_pins.append(mux_cfg)
@@ -289,8 +289,8 @@ def _acp_convertor(cfg, attr, yml_val, per_desc):
 
 
 def _get_acp_builder():
-    cfg_builder = PeripheralConfigBuilder(_archlib.AVR_ArchAVR_ACP_Config, _acp_convertor)
-    return IndexedPeripheralBuilder(_archlib.AVR_ArchAVR_ACP, cfg_builder)
+    cfg_builder = PeripheralConfigBuilder(_archlib.ArchAVR_ACPConfig, _acp_convertor)
+    return IndexedPeripheralBuilder(_archlib.ArchAVR_ACP, cfg_builder)
 
 
 #========================================================================================
@@ -301,7 +301,7 @@ def _get_vref_bandgap(per_desc):
 
 
 def _get_vref_builder():
-    return PeripheralBuilder(_archlib.AVR_ArchAVR_VREF, _get_vref_bandgap)
+    return PeripheralBuilder(_archlib.ArchAVR_VREF, _get_vref_bandgap)
 
 
 #========================================================================================
@@ -316,13 +316,13 @@ def _usart_convertor(cfg, attr, yml_val, per_desc):
 
 
 def _get_usart_builder():
-    cfg_builder = PeripheralConfigBuilder(_archlib.AVR_ArchAVR_USART_Config, _usart_convertor)
-    return IndexedPeripheralBuilder(_archlib.AVR_ArchAVR_USART, cfg_builder)
+    cfg_builder = PeripheralConfigBuilder(_archlib.ArchAVR_USARTConfig, _usart_convertor)
+    return IndexedPeripheralBuilder(_archlib.ArchAVR_USART, cfg_builder)
 
 
 #========================================================================================
 
-class AVR_BaseDevice(_archlib.AVR_ArchAVR_Device):
+class AVR_BaseDevice(_archlib.ArchAVR_Device):
 
     def __init__(self, dev_descriptor, builder):
         super().__init__(builder.get_device_config())
@@ -350,7 +350,7 @@ class AVR_DeviceBuilder(DeviceBuilder):
     }
 
     def _build_core_config(self, dev_desc):
-        cfg = _archlib.AVR_ArchAVR_CoreConfig()
+        cfg = _archlib.ArchAVR_CoreConfig()
         cfg.attributes = get_core_attributes(dev_desc)
         cfg.iostart, cfg.ioend = dev_desc.mem_spaces['data'].segments['io']
         cfg.ramstart, cfg.ramend = dev_desc.mem_spaces['data'].segments['ram']
@@ -363,7 +363,7 @@ class AVR_DeviceBuilder(DeviceBuilder):
         return cfg
 
     def _build_device_config(self, dev_desc, core_cfg):
-        cfg = _archlib.AVR_ArchAVR_DeviceConfig(core_cfg)
+        cfg = _archlib.ArchAVR_DeviceConfig(core_cfg)
         cfg.name = dev_desc.name
         cfg.pins = dev_desc.pins
         return cfg

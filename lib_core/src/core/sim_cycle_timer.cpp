@@ -23,28 +23,30 @@
 
 #include "sim_cycle_timer.h"
 
+YASIMAVR_USING_NAMESPACE
+
 
 //=======================================================================================
 
-AVR_CycleTimer::AVR_CycleTimer()
+CycleTimer::CycleTimer()
 :m_manager(nullptr)
 {}
 
 
-AVR_CycleTimer::~AVR_CycleTimer()
+CycleTimer::~CycleTimer()
 {
     if (m_manager)
         m_manager->cancel(*this);
 }
 
 
-AVR_CycleTimer::AVR_CycleTimer(const AVR_CycleTimer& other)
+CycleTimer::CycleTimer(const CycleTimer& other)
 {
     *this = other;
 }
 
 
-AVR_CycleTimer& AVR_CycleTimer::operator=(const AVR_CycleTimer& other)
+CycleTimer& CycleTimer::operator=(const CycleTimer& other)
 {
     if (m_manager)
         m_manager->cancel(*this);
@@ -56,9 +58,9 @@ AVR_CycleTimer& AVR_CycleTimer::operator=(const AVR_CycleTimer& other)
 }
 
 
-struct AVR_CycleManager::TimerSlot {
+struct CycleManager::TimerSlot {
     //Pointer to the timer
-    AVR_CycleTimer* timer;
+    CycleTimer* timer;
 
     //When the timer is running, it's the absolute cycle when the timer should be called
     //When the timer is paused, it's the remaining delay until a call
@@ -69,12 +71,12 @@ struct AVR_CycleManager::TimerSlot {
 };
 
 
-AVR_CycleManager::AVR_CycleManager()
+CycleManager::CycleManager()
 :m_cycle(0)
 {}
 
 
-AVR_CycleManager::~AVR_CycleManager()
+CycleManager::~CycleManager()
 {
     //Destroys the cycle timer slots
     for (auto it = m_timer_slots.begin(); it != m_timer_slots.end(); ++it) {
@@ -87,13 +89,13 @@ AVR_CycleManager::~AVR_CycleManager()
 }
 
 
-void AVR_CycleManager::increment_cycle(cycle_count_t count)
+void CycleManager::increment_cycle(cycle_count_t count)
 {
     m_cycle += count;
 }
 
 
-void AVR_CycleManager::add_to_queue(TimerSlot* slot)
+void CycleManager::add_to_queue(TimerSlot* slot)
 {
     for (auto it = m_timer_slots.begin(); it != m_timer_slots.end(); ++it) {
         if ((slot->when < (*it)->when) || (*it)->paused) {
@@ -105,7 +107,7 @@ void AVR_CycleManager::add_to_queue(TimerSlot* slot)
 }
 
 
-AVR_CycleManager::TimerSlot* AVR_CycleManager::pop_from_queue(AVR_CycleTimer& timer)
+CycleManager::TimerSlot* CycleManager::pop_from_queue(CycleTimer& timer)
 {
     for (auto it = m_timer_slots.begin(); it != m_timer_slots.end(); ++it) {
         TimerSlot* slot = *it;
@@ -118,7 +120,7 @@ AVR_CycleManager::TimerSlot* AVR_CycleManager::pop_from_queue(AVR_CycleTimer& ti
 }
 
 
-void AVR_CycleManager::schedule(AVR_CycleTimer& timer, cycle_count_t when)
+void CycleManager::schedule(CycleTimer& timer, cycle_count_t when)
 {
     if (when < 0) return;
 
@@ -133,14 +135,14 @@ void AVR_CycleManager::schedule(AVR_CycleTimer& timer, cycle_count_t when)
 }
 
 
-void AVR_CycleManager::delay(AVR_CycleTimer& timer, cycle_count_t delay)
+void CycleManager::delay(CycleTimer& timer, cycle_count_t delay)
 {
     if (delay > 0)
         schedule(timer, m_cycle + delay);
 }
 
 
-void AVR_CycleManager::cancel(AVR_CycleTimer& timer)
+void CycleManager::cancel(CycleTimer& timer)
 {
     TimerSlot* slot = pop_from_queue(timer);
     if (slot) {
@@ -150,7 +152,7 @@ void AVR_CycleManager::cancel(AVR_CycleTimer& timer)
 }
 
 
-void AVR_CycleManager::pause(AVR_CycleTimer& timer)
+void CycleManager::pause(CycleTimer& timer)
 {
     TimerSlot* slot = pop_from_queue(timer);
     if (slot) {
@@ -163,7 +165,7 @@ void AVR_CycleManager::pause(AVR_CycleTimer& timer)
 }
 
 
-void AVR_CycleManager::resume(AVR_CycleTimer& timer)
+void CycleManager::resume(CycleTimer& timer)
 {
     TimerSlot* slot = pop_from_queue(timer);
     if (slot) {
@@ -176,7 +178,7 @@ void AVR_CycleManager::resume(AVR_CycleTimer& timer)
 }
 
 
-void AVR_CycleManager::process_timers()
+void CycleManager::process_timers()
 {
     //Loops until either the timer queue is empty or the front timer is paused or its 'when' is in the future
     while(!m_timer_slots.empty()) {
@@ -207,7 +209,7 @@ void AVR_CycleManager::process_timers()
 }
 
 
-cycle_count_t AVR_CycleManager::next_when() const
+cycle_count_t CycleManager::next_when() const
 {
     if (m_timer_slots.empty())
         return INVALID_CYCLE;
@@ -220,7 +222,7 @@ cycle_count_t AVR_CycleManager::next_when() const
 }
 
 
-void AVR_CycleManager::copy_slot(const AVR_CycleTimer& src, AVR_CycleTimer& dst)
+void CycleManager::copy_slot(const CycleTimer& src, CycleTimer& dst)
 {
     for (auto it = m_timer_slots.begin(); it != m_timer_slots.end(); ++it) {
         TimerSlot* src_slot = *it;

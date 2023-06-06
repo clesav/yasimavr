@@ -23,11 +23,13 @@
 
 #include "arch_avr_usart.h"
 
+YASIMAVR_USING_NAMESPACE
+
 
 //=======================================================================================
 
-AVR_ArchAVR_USART::AVR_ArchAVR_USART(uint8_t num, const AVR_ArchAVR_USART_Config& config)
-:AVR_Peripheral(AVR_IOCTL_UART(0x30 + num))
+ArchAVR_USART::ArchAVR_USART(uint8_t num, const ArchAVR_USARTConfig& config)
+:Peripheral(AVR_IOCTL_UART(0x30 + num))
 ,m_config(config)
 ,m_rxc_intflag(false)
 ,m_txc_intflag(true)
@@ -36,9 +38,9 @@ AVR_ArchAVR_USART::AVR_ArchAVR_USART(uint8_t num, const AVR_ArchAVR_USART_Config
     m_endpoint = { &m_uart.signal(), &m_uart };
 }
 
-bool AVR_ArchAVR_USART::init(AVR_Device& device)
+bool ArchAVR_USART::init(Device& device)
 {
-    bool status = AVR_Peripheral::init(device);
+    bool status = Peripheral::init(device);
 
     add_ioreg(m_config.reg_data);
     add_ioreg(m_config.rb_rx_enable);
@@ -77,14 +79,14 @@ bool AVR_ArchAVR_USART::init(AVR_Device& device)
     return status;
 }
 
-void AVR_ArchAVR_USART::reset()
+void ArchAVR_USART::reset()
 {
     m_uart.reset();
     set_ioreg(m_config.rb_txe_flag);
     update_framerate();
 }
 
-bool AVR_ArchAVR_USART::ctlreq(uint16_t req, ctlreq_data_t* data)
+bool ArchAVR_USART::ctlreq(uint16_t req, ctlreq_data_t* data)
 {
     if (req == AVR_CTLREQ_GET_SIGNAL) {
         data->data = &m_uart.signal();
@@ -98,7 +100,7 @@ bool AVR_ArchAVR_USART::ctlreq(uint16_t req, ctlreq_data_t* data)
     return false;
 }
 
-uint8_t AVR_ArchAVR_USART::ioreg_read_handler(reg_addr_t addr, uint8_t value)
+uint8_t ArchAVR_USART::ioreg_read_handler(reg_addr_t addr, uint8_t value)
 {
     if (addr == m_config.reg_data) {
         value = m_uart.pop_rx();
@@ -109,7 +111,7 @@ uint8_t AVR_ArchAVR_USART::ioreg_read_handler(reg_addr_t addr, uint8_t value)
     return value;
 }
 
-void AVR_ArchAVR_USART::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
+void ArchAVR_USART::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
     //Writing data to the DATA register trigger a emit.
     if (addr == m_config.reg_data && test_ioreg(m_config.rb_tx_enable)) {
@@ -153,23 +155,23 @@ void AVR_ArchAVR_USART::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t
 
 }
 
-void AVR_ArchAVR_USART::raised(const signal_data_t& sigdata, uint16_t __unused)
+void ArchAVR_USART::raised(const signal_data_t& sigdata, uint16_t __unused)
 {
     //If a frame emission is started, it means the TX buffer is empty
     //so raise the TXE (DRE) flag
-    if (sigdata.sigid == AVR_IO_UART::Signal_TX_Start)
+    if (sigdata.sigid == UART::Signal_TX_Start)
         m_txe_intflag.set_flag();
 
     //If a frame is successfully emitted, raise the TXC flag
-    else if (sigdata.sigid == AVR_IO_UART::Signal_TX_Complete && sigdata.data.as_uint())
+    else if (sigdata.sigid == UART::Signal_TX_Complete && sigdata.data.as_uint())
         m_txc_intflag.set_flag();
 
     //If a frame is successfully received, raise the RXC flag
-    else if (sigdata.sigid == AVR_IO_UART::Signal_RX_Complete && sigdata.data.as_uint())
+    else if (sigdata.sigid == UART::Signal_RX_Complete && sigdata.data.as_uint())
         m_rxc_intflag.set_flag();
 }
 
-void AVR_ArchAVR_USART::update_framerate()
+void ArchAVR_USART::update_framerate()
 {
     //Prescaler counter value
     uint16_t brr = read_ioreg(m_config.reg_baud);

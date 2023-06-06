@@ -23,10 +23,12 @@
 
 #include "sim_twi.h"
 
+YASIMAVR_USING_NAMESPACE
+
 
 //=======================================================================================
 
-TWI_Packet::TWI_Packet()
+TWIPacket::TWIPacket()
 :cmd(Cmd_Invalid)
 ,addr(0)
 ,rw(0)
@@ -36,72 +38,72 @@ TWI_Packet::TWI_Packet()
 ,unused(0)
 {}
 
-static void fill_address_packet(TWI_Packet& packet, uint8_t a, bool rw_)
+static void fill_address_packet(TWIPacket& packet, uint8_t a, bool rw_)
 {
-    packet.cmd = TWI_Packet::Cmd_Address;
+    packet.cmd = TWIPacket::Cmd_Address;
     packet.addr = a;
-    packet.rw = rw_ ? TWI_Packet::Read : TWI_Packet::Write;
+    packet.rw = rw_ ? TWIPacket::Read : TWIPacket::Write;
     packet.data = 0;
-    packet.ack = TWI_Packet::Nack;
+    packet.ack = TWIPacket::Nack;
     packet.hold = 0;
 }
 
-static void fill_addr_ack_packet(TWI_Packet& packet, bool ack)
+static void fill_addr_ack_packet(TWIPacket& packet, bool ack)
 {
-    packet.cmd = TWI_Packet::Cmd_AddrAck;
-    packet.ack = ack ? TWI_Packet::Ack : TWI_Packet::Nack;
+    packet.cmd = TWIPacket::Cmd_AddrAck;
+    packet.ack = ack ? TWIPacket::Ack : TWIPacket::Nack;
 }
 
-static void fill_write_req_packet(TWI_Packet& packet, uint8_t d)
+static void fill_write_req_packet(TWIPacket& packet, uint8_t d)
 {
-    packet.cmd = TWI_Packet::Cmd_DataRequest;
-    packet.rw = TWI_Packet::Write;
+    packet.cmd = TWIPacket::Cmd_DataRequest;
+    packet.rw = TWIPacket::Write;
     packet.data = d;
-    packet.ack = TWI_Packet::Nack;
+    packet.ack = TWIPacket::Nack;
     packet.hold = 0;
 }
 
-static void fill_write_packet(TWI_Packet& packet)
+static void fill_write_packet(TWIPacket& packet)
 {
-    packet.cmd = TWI_Packet::Cmd_Data;
-    packet.rw = TWI_Packet::Write;
+    packet.cmd = TWIPacket::Cmd_Data;
+    packet.rw = TWIPacket::Write;
     packet.data = 0;
-    packet.ack = TWI_Packet::Nack;
+    packet.ack = TWIPacket::Nack;
     packet.hold = 0;
 }
 
-static void fill_read_req_packet(TWI_Packet& packet)
+static void fill_read_req_packet(TWIPacket& packet)
 {
-    packet.cmd = TWI_Packet::Cmd_DataRequest;
-    packet.rw = TWI_Packet::Read;
+    packet.cmd = TWIPacket::Cmd_DataRequest;
+    packet.rw = TWIPacket::Read;
     packet.data = 0;
-    packet.ack = TWI_Packet::Nack;
+    packet.ack = TWIPacket::Nack;
     packet.hold = 0;
 }
 
- void fill_read_packet(TWI_Packet& packet, uint8_t d)
+ void fill_read_packet(TWIPacket& packet, uint8_t d)
  {
-    packet.cmd = TWI_Packet::Cmd_Data;
-    packet.rw = TWI_Packet::Read;
+    packet.cmd = TWIPacket::Cmd_Data;
+    packet.rw = TWIPacket::Read;
     packet.data = 0;
-    packet.ack = TWI_Packet::Nack;
+    packet.ack = TWIPacket::Nack;
     packet.hold = 0;
  }
 
 
 //=======================================================================================
 
-TWI_Endpoint::TWI_Endpoint()
+TWIEndPoint::TWIEndPoint()
 :m_bus(nullptr)
 {}
 
-TWI_Endpoint::~TWI_Endpoint()
+TWIEndPoint::~TWIEndPoint()
 {
     if (m_bus)
         m_bus->remove_endpoint(*this);
 }
 
-bool TWI_Endpoint::acquire_bus()
+bool TWIEndPoint::acquire_bus()
 {
     if (m_bus)
         return m_bus->acquire(this);
@@ -109,19 +111,19 @@ bool TWI_Endpoint::acquire_bus()
         return false;
 }
 
-void TWI_Endpoint::release_bus()
+void TWIEndPoint::release_bus()
 {
     if (m_bus)
         m_bus->release(this);
 }
 
-void TWI_Endpoint::send_packet(TWI_Packet& packet)
+void TWIEndPoint::send_packet(TWIPacket& packet)
 {
     if (m_bus)
         m_bus->send_packet(*this, packet);
 }
 
-void TWI_Endpoint::end_packet(TWI_Packet& packet)
+void TWIEndPoint::end_packet(TWIPacket& packet)
 {
     if (m_bus)
         m_bus->end_packet(*this, packet);
@@ -130,19 +132,19 @@ void TWI_Endpoint::end_packet(TWI_Packet& packet)
 
 //=======================================================================================
 
-TWI_Bus::TWI_Bus()
+TWIBus::TWIBus()
 :m_master(nullptr)
 ,m_slave(nullptr)
 ,m_expected_ack(0)
 {}
 
-TWI_Bus::~TWI_Bus()
+TWIBus::~TWIBus()
 {
-    for (TWI_Endpoint* endpoint : m_endpoints)
+    for (TWIEndPoint* endpoint : m_endpoints)
         endpoint->m_bus = nullptr;
 }
 
-void TWI_Bus::add_endpoint(TWI_Endpoint& endpoint)
+void TWIBus::add_endpoint(TWIEndPoint& endpoint)
 {
     if (!m_master) {
         for (auto it = m_endpoints.begin(); it != m_endpoints.end(); ++it) {
@@ -154,7 +156,7 @@ void TWI_Bus::add_endpoint(TWI_Endpoint& endpoint)
     }
 }
 
-void TWI_Bus::remove_endpoint(TWI_Endpoint& endpoint)
+void TWIBus::remove_endpoint(TWIEndPoint& endpoint)
 {
     if (!m_master) {
         for (auto it = m_endpoints.begin(); it != m_endpoints.end(); ++it) {
@@ -167,7 +169,7 @@ void TWI_Bus::remove_endpoint(TWI_Endpoint& endpoint)
     }
 }
 
-bool TWI_Bus::acquire(TWI_Endpoint* endpoint)
+bool TWIBus::acquire(TWIEndPoint* endpoint)
 {
     m_slave = nullptr;
     if (m_master && m_master != endpoint) {
@@ -185,7 +187,7 @@ bool TWI_Bus::acquire(TWI_Endpoint* endpoint)
     }
 }
 
-void TWI_Bus::release(TWI_Endpoint* endpoint)
+void TWIBus::release(TWIEndPoint* endpoint)
 {
     if (endpoint == m_master) {
         m_master = nullptr;
@@ -199,11 +201,11 @@ void TWI_Bus::release(TWI_Endpoint* endpoint)
     }
 }
 
-void TWI_Bus::send_packet(TWI_Endpoint& src, TWI_Packet& packet)
+void TWIBus::send_packet(TWIEndPoint& src, TWIPacket& packet)
 {
     switch(packet.cmd) {
 
-        case TWI_Packet::Cmd_Address: {
+        case TWIPacket::Cmd_Address: {
             for (auto endpoint : m_endpoints)
                 endpoint->packet(packet);
 
@@ -212,14 +214,14 @@ void TWI_Bus::send_packet(TWI_Endpoint& src, TWI_Packet& packet)
 
         } break;
 
-        case TWI_Packet::Cmd_AddrAck: {
+        case TWIPacket::Cmd_AddrAck: {
 
             //if not expecting any further AddrAck, the packet can be ignored
             if (m_expected_ack) {
                 --m_expected_ack;
                 //If the source endpoint has set the ack flag, select it as the
                 //active slave
-                if (packet.ack == TWI_Packet::Ack)
+                if (packet.ack == TWIPacket::Ack)
                     m_slave = &src;
                 //If there's a selected slave or this was the last expected ack
                 //the packet can be forwarded to the master
@@ -232,18 +234,18 @@ void TWI_Bus::send_packet(TWI_Endpoint& src, TWI_Packet& packet)
 
         } break;
 
-        case TWI_Packet::Cmd_DataRequest:
+        case TWIPacket::Cmd_DataRequest:
             m_slave->packet(packet);
             if (!packet.hold)
                 m_signal.raise(Signal_Data, &packet);
             break;
 
-        case TWI_Packet::Cmd_Data:
+        case TWIPacket::Cmd_Data:
             m_master->packet(packet);
             m_signal.raise(Signal_Data, &packet);
             break;
 
-        case TWI_Packet::Cmd_DataAck:
+        case TWIPacket::Cmd_DataAck:
             if (&src == m_master)
                 m_slave->packet(packet);
             else
@@ -255,11 +257,11 @@ void TWI_Bus::send_packet(TWI_Endpoint& src, TWI_Packet& packet)
     }
 }
 
-void TWI_Bus::end_packet(TWI_Endpoint& src, TWI_Packet& packet)
+void TWIBus::end_packet(TWIEndPoint& src, TWIPacket& packet)
 {
     switch(packet.cmd) {
 
-        case TWI_Packet::Cmd_Address: {
+        case TWIPacket::Cmd_Address: {
 
             //Forward the packet to every endpoint on the bus,
             //including the source, in case it wants to do a loopback
@@ -268,7 +270,7 @@ void TWI_Bus::end_packet(TWI_Endpoint& src, TWI_Packet& packet)
             for (auto endpoint : m_endpoints) {
                 //Send the endpoint a temporary copy of the current packet.
                 //The endpoint should configure the 'ack' and 'hold' bits
-                TWI_Packet p = packet;
+                TWIPacket p = packet;
                 endpoint->packet_ended(p);
 
                 //If the receiving endpoint doesn't want to hold the bus
@@ -279,9 +281,9 @@ void TWI_Bus::end_packet(TWI_Endpoint& src, TWI_Packet& packet)
 
                     //If the receiving endpoint has set the ack flag,
                     //select it as the active slave
-                    if (!m_slave && p.ack == TWI_Packet::Ack) {
+                    if (!m_slave && p.ack == TWIPacket::Ack) {
                         m_slave = endpoint;
-                        packet.ack = TWI_Packet::Ack;
+                        packet.ack = TWIPacket::Ack;
                         packet.hold = 0;
                         //We don't need to process the AddrAck packets
                         //from the other endpoint
@@ -293,17 +295,17 @@ void TWI_Bus::end_packet(TWI_Endpoint& src, TWI_Packet& packet)
             //If no slave selected yet, reply with Nack and if
             //further AddrAck packets are expected, hold the bus
             if (!m_slave) {
-                packet.ack = TWI_Packet::Nack;
+                packet.ack = TWIPacket::Nack;
                 packet.hold = m_expected_ack ? 1 : 0;
             }
 
         } break;
 
-        case TWI_Packet::Cmd_DataRequest:
+        case TWIPacket::Cmd_DataRequest:
             m_slave->packet_ended(packet);
             break;
 
-        case TWI_Packet::Cmd_Data:
+        case TWIPacket::Cmd_Data:
             m_slave->packet_ended(packet);
             break;
     }
@@ -315,11 +317,11 @@ void TWI_Bus::end_packet(TWI_Endpoint& src, TWI_Packet& packet)
 
 //=======================================================================================
 
-class AVR_IO_TWI::Timer : public AVR_CycleTimer {
+class TWI::Timer : public CycleTimer {
 
 public:
 
-    Timer(AVR_IO_TWI& ctl) : m_ctl(ctl) {}
+    Timer(TWI& ctl) : m_ctl(ctl) {}
 
     virtual cycle_count_t next(cycle_count_t when) override
     {
@@ -328,33 +330,33 @@ public:
 
 private:
 
-    AVR_IO_TWI& m_ctl;
+    TWI& m_ctl;
 
 };
 
 
-inline bool State_Active(AVR_IO_TWI::State state)
+inline bool State_Active(TWI::State state)
 {
-    return (state & AVR_IO_TWI::StateFlag_Active);
+    return (state & TWI::StateFlag_Active);
 }
 
-inline bool State_Busy(AVR_IO_TWI::State state)
+inline bool State_Busy(TWI::State state)
 {
-    return (state & AVR_IO_TWI::StateFlag_Busy);
+    return (state & TWI::StateFlag_Busy);
 }
 
-inline bool State_Data(AVR_IO_TWI::State state)
+inline bool State_Data(TWI::State state)
 {
-    return (state & AVR_IO_TWI::StateFlag_Data);
+    return (state & TWI::StateFlag_Data);
 }
 
-inline bool State_Tx(AVR_IO_TWI::State state)
+inline bool State_Tx(TWI::State state)
 {
-    return (state & AVR_IO_TWI::StateFlag_Tx);
+    return (state & TWI::StateFlag_Tx);
 }
 
 
-AVR_IO_TWI::AVR_IO_TWI()
+TWI::TWI()
 :m_cycle_manager(nullptr)
 ,m_logger(nullptr)
 ,m_has_deferred_raise(false)
@@ -369,18 +371,18 @@ AVR_IO_TWI::AVR_IO_TWI()
     m_timer = new Timer(*this);
 }
 
-AVR_IO_TWI::~AVR_IO_TWI()
+TWI::~TWI()
 {
     delete m_timer;
 }
 
-void AVR_IO_TWI::init(AVR_CycleManager& cycle_manager, AVR_Logger& logger)
+void TWI::init(CycleManager& cycle_manager, Logger& logger)
 {
     m_cycle_manager = &cycle_manager;
     m_logger = &logger;
 }
 
-void AVR_IO_TWI::reset()
+void TWI::reset()
 {
     m_has_deferred_raise = false;
 
@@ -403,7 +405,7 @@ void AVR_IO_TWI::reset()
  * Master operations
  */
 
-void AVR_IO_TWI::set_master_enabled(bool enabled)
+void TWI::set_master_enabled(bool enabled)
 {
     if (m_mst_state != State_Disabled && !enabled) {
         if (State_Active(m_mst_state))
@@ -418,18 +420,18 @@ void AVR_IO_TWI::set_master_enabled(bool enabled)
     }
 }
 
-void AVR_IO_TWI::set_master_state(State new_state)
+void TWI::set_master_state(State new_state)
 {
     m_mst_state = new_state;
     m_signal.raise_u(Signal_StateChange, new_state, Cpt_Master);
 }
 
-void AVR_IO_TWI::set_bit_delay(cycle_count_t delay)
+void TWI::set_bit_delay(cycle_count_t delay)
 {
     m_bitdelay = delay;
 }
 
-bool AVR_IO_TWI::start_transfer()
+bool TWI::start_transfer()
 {
     //Illegal to be here if not idle
     if (m_mst_state != State_Idle)
@@ -448,7 +450,7 @@ bool AVR_IO_TWI::start_transfer()
     }
 }
 
-bool AVR_IO_TWI::send_address(uint8_t remote_addr, bool rw)
+bool TWI::send_address(uint8_t remote_addr, bool rw)
 {
     if (!State_Active(m_mst_state) || State_Busy(m_mst_state))
         return false;
@@ -464,7 +466,7 @@ bool AVR_IO_TWI::send_address(uint8_t remote_addr, bool rw)
     return true;
 }
 
-void AVR_IO_TWI::end_transfer()
+void TWI::end_transfer()
 {
     if (State_Active(m_mst_state) && !State_Busy(m_mst_state)) {
         set_master_state(State_Idle);
@@ -473,7 +475,7 @@ void AVR_IO_TWI::end_transfer()
     }
 }
 
-bool AVR_IO_TWI::start_master_tx(uint8_t data)
+bool TWI::start_master_tx(uint8_t data)
 {
     if (m_mst_state != State_TX)
         return false;
@@ -495,7 +497,7 @@ bool AVR_IO_TWI::start_master_tx(uint8_t data)
     return true;
 }
 
-bool AVR_IO_TWI::start_master_rx()
+bool TWI::start_master_rx()
 {
     if (m_mst_state != State_RX)
         return false;
@@ -517,12 +519,12 @@ bool AVR_IO_TWI::start_master_rx()
     return true;
 }
 
-void AVR_IO_TWI::set_master_ack(bool ack)
+void TWI::set_master_ack(bool ack)
 {
     if (m_mst_state == State_RX_Ack) {
         //Prepare and send the ReadAck packet
-        m_current_packet.cmd = TWI_Packet::Cmd_DataAck;
-        m_current_packet.ack = ack ? TWI_Packet::Ack : TWI_Packet::Nack;
+        m_current_packet.cmd = TWIPacket::Cmd_DataAck;
+        m_current_packet.ack = ack ? TWIPacket::Ack : TWIPacket::Nack;
         send_packet(m_current_packet);
         //If acked, transit to RX to read the next data byte
         //If nacked, the only valid next moves are a new Address packet
@@ -531,7 +533,7 @@ void AVR_IO_TWI::set_master_ack(bool ack)
     }
 }
 
-void AVR_IO_TWI::start_timer(cycle_count_t delay)
+void TWI::start_timer(cycle_count_t delay)
 {
     if (m_timer_updating)
         m_timer_next_when = m_cycle_manager->cycle() + delay;
@@ -539,14 +541,14 @@ void AVR_IO_TWI::start_timer(cycle_count_t delay)
         m_cycle_manager->delay(*m_timer, delay);
 }
 
-cycle_count_t AVR_IO_TWI::timer_next(cycle_count_t when)
+cycle_count_t TWI::timer_next(cycle_count_t when)
 {
     m_timer_updating = true;
     m_timer_next_when = 0;
 
     //Process any deferred signal to raise
     //The reason signals are deferred when raised outside the cycle timer callback
-    //is to avoid TWI_Bus callbacks directly calling TWI_Bus functions as it
+    //is to avoid TWIBus callbacks directly calling TWIBus functions as it
     //may lead to infinite loops or deadlocks
     if (m_has_deferred_raise) {
         m_logger->dbg("Deferred signal raise, id=%d", m_deferred_sigdata.sigid);
@@ -606,7 +608,7 @@ cycle_count_t AVR_IO_TWI::timer_next(cycle_count_t when)
     return m_timer_next_when;
 }
 
-void AVR_IO_TWI::defer_signal_raise(uint16_t sigid, uint32_t index, uint32_t u)
+void TWI::defer_signal_raise(uint16_t sigid, uint32_t index, uint32_t u)
 {
     signal_data_t sig = { .sigid = sigid, .index = index, .data = u };
     m_deferred_sigdata = sig;
@@ -619,10 +621,10 @@ void AVR_IO_TWI::defer_signal_raise(uint16_t sigid, uint32_t index, uint32_t u)
  * Slave operations
  */
 
-void AVR_IO_TWI::set_slave_enabled(bool enabled)
+void TWI::set_slave_enabled(bool enabled)
 {
     if (m_slv_state != State_Disabled && !enabled) {
-        TWI_Packet packet = m_current_packet;
+        TWIPacket packet = m_current_packet;
 
         if (m_slv_state == State_TX_Req) {
             fill_read_packet(packet, 0xFF);
@@ -633,8 +635,8 @@ void AVR_IO_TWI::set_slave_enabled(bool enabled)
             send_packet(packet);
         }
         else if (m_slv_state == State_RX_Ack) {
-            packet.cmd = TWI_Packet::Cmd_DataAck;
-            packet.ack = TWI_Packet::Nack;
+            packet.cmd = TWIPacket::Cmd_DataAck;
+            packet.ack = TWIPacket::Nack;
             send_packet(packet);
         }
         else if (m_slv_state == State_Addr_Busy && m_slv_hold) {
@@ -649,13 +651,13 @@ void AVR_IO_TWI::set_slave_enabled(bool enabled)
     }
 }
 
-void AVR_IO_TWI::set_slave_state(State new_state)
+void TWI::set_slave_state(State new_state)
 {
     m_slv_state = new_state;
     m_signal.raise_u(Signal_StateChange, new_state, Cpt_Slave);
 }
 
-bool AVR_IO_TWI::start_slave_tx(uint8_t data)
+bool TWI::start_slave_tx(uint8_t data)
 {
     if (m_slv_state == State_TX) {
         m_tx_data = data;
@@ -665,7 +667,7 @@ bool AVR_IO_TWI::start_slave_tx(uint8_t data)
     else if (m_slv_state == State_TX_Req) {
         m_tx_data = data;
         m_slv_hold = false;
-        TWI_Packet packet = m_current_packet;
+        TWIPacket packet = m_current_packet;
         fill_read_packet(packet, data);
         send_packet(packet);
         set_slave_state(State_TX_Busy);
@@ -676,7 +678,7 @@ bool AVR_IO_TWI::start_slave_tx(uint8_t data)
     }
 }
 
-bool AVR_IO_TWI::start_slave_rx()
+bool TWI::start_slave_rx()
 {
     if (m_slv_state == State_RX) {
         m_slv_hold = false;
@@ -684,7 +686,7 @@ bool AVR_IO_TWI::start_slave_rx()
     }
     else if (m_slv_state == State_RX_Req) {
         m_slv_hold = false;
-        TWI_Packet packet = m_current_packet;
+        TWIPacket packet = m_current_packet;
         fill_write_packet(packet);
         send_packet(packet);
         set_slave_state(State_RX_Busy);
@@ -695,14 +697,14 @@ bool AVR_IO_TWI::start_slave_rx()
     }
 }
 
-void AVR_IO_TWI::set_slave_ack(bool ack)
+void TWI::set_slave_ack(bool ack)
 {
     if (m_slv_state == State_Addr_Busy) {
 
         //In Addr_Busy state, the master is expecting an ACK/NACK for an address
-        TWI_Packet packet = m_current_packet;
-        packet.cmd = TWI_Packet::Cmd_AddrAck;
-        packet.ack = ack ? TWI_Packet::Ack : TWI_Packet::Nack;
+        TWIPacket packet = m_current_packet;
+        packet.cmd = TWIPacket::Cmd_AddrAck;
+        packet.ack = ack ? TWIPacket::Ack : TWIPacket::Nack;
         send_packet(packet);
 
         //If acked, transit to data TX or RX state depending on the RW bit of the packet
@@ -717,9 +719,9 @@ void AVR_IO_TWI::set_slave_ack(bool ack)
     else if (m_slv_state == State_RX_Ack) {
 
         //In RX_Ack state, the master is expecting an ACK/NACK after a Data Write
-        TWI_Packet packet = m_current_packet;
-        packet.cmd = TWI_Packet::Cmd_DataAck;
-        packet.ack = ack ? TWI_Packet::Ack : TWI_Packet::Nack;
+        TWIPacket packet = m_current_packet;
+        packet.cmd = TWIPacket::Cmd_DataAck;
+        packet.ack = ack ? TWIPacket::Ack : TWIPacket::Nack;
         send_packet(packet);
 
         //If acked, transit to RX state to wait for the next Data Write
@@ -739,14 +741,14 @@ void AVR_IO_TWI::set_slave_ack(bool ack)
  * Endpoint interface reimplementation
  */
 
-void AVR_IO_TWI::packet(TWI_Packet& packet)
+void TWI::packet(TWIPacket& packet)
 {
     m_logger->dbg("Packet received Command=%d", packet.cmd);
 
     switch(packet.cmd) {
 
         //Received a address packet (slave side)
-        case TWI_Packet::Cmd_Address: {
+        case TWIPacket::Cmd_Address: {
 
             if (m_slv_state == State_Idle || State_Active(m_slv_state)) {
                 //Set the state in address receiving / address match
@@ -756,7 +758,7 @@ void AVR_IO_TWI::packet(TWI_Packet& packet)
         } break;
 
         //Received an address ack packet (master side)
-        case TWI_Packet::Cmd_AddrAck: {
+        case TWIPacket::Cmd_AddrAck: {
 
             if (m_mst_state == State_Addr_Busy) {
                 //If no ack, go the Addr state to wait for the next
@@ -776,7 +778,7 @@ void AVR_IO_TWI::packet(TWI_Packet& packet)
         } break;
 
         //Received a data request (slave side)
-        case TWI_Packet::Cmd_DataRequest: {
+        case TWIPacket::Cmd_DataRequest: {
 
             if (m_slv_state == State_TX) {
                 set_slave_state(m_slv_hold ? State_TX_Req : State_TX_Busy);
@@ -792,7 +794,7 @@ void AVR_IO_TWI::packet(TWI_Packet& packet)
         //Received a Data packet (master side)
         //Only start a timer, the actual processing
         //is done at the end of the long packet
-        case TWI_Packet::Cmd_Data: {
+        case TWIPacket::Cmd_Data: {
 
             if (m_mst_state == State_TX_Req) {
                 set_master_state(State_TX_Busy);
@@ -806,12 +808,12 @@ void AVR_IO_TWI::packet(TWI_Packet& packet)
         } break;
 
         //Received a Data Ack packet (master or slave side)
-        case TWI_Packet::Cmd_DataAck: {
+        case TWIPacket::Cmd_DataAck: {
 
             if (m_mst_state == State_TX_Ack) {
                 //If the slave replied ACK, it's expecting another byte.
                 //If it replied NACK, the transfer will end
-                if (packet.ack == TWI_Packet::Ack)
+                if (packet.ack == TWIPacket::Ack)
                     set_master_state(State_TX);
                 else
                     set_master_state(State_Addr);
@@ -822,7 +824,7 @@ void AVR_IO_TWI::packet(TWI_Packet& packet)
             if (m_slv_state == State_TX_Ack) {
                 //If the master replied ACK, it's expecting another byte.
                 //If it replied NACK, the transfer will end
-                if (packet.ack == TWI_Packet::Ack) {
+                if (packet.ack == TWIPacket::Ack) {
                     set_slave_state(State_TX);
                     m_slv_hold = true;
                 } else {
@@ -838,14 +840,14 @@ void AVR_IO_TWI::packet(TWI_Packet& packet)
     m_current_packet = packet;
 }
 
-void AVR_IO_TWI::packet_ended(TWI_Packet& packet)
+void TWI::packet_ended(TWIPacket& packet)
 {
     m_logger->dbg("Packet ended, Command=%d", packet.cmd);
 
     //Upon receiving a packet end for an address (slave only),
     //hold the bus and send the address to the higher layer to
     //match it and provide a ACK/NACK status via 'set_slave_ack'
-    if (packet.cmd == TWI_Packet::Cmd_Address) {
+    if (packet.cmd == TWIPacket::Cmd_Address) {
         if (m_slv_state == State_Addr_Busy) {
             packet.hold = 1;
             uint8_t u = (packet.addr << 1) | packet.rw;
@@ -858,8 +860,8 @@ void AVR_IO_TWI::packet_ended(TWI_Packet& packet)
     //A Data packet is always long
     //If the Datarequest packet is long, it's because the hold flag
     //wasn't set in "packet()"
-    else if (packet.cmd == TWI_Packet::Cmd_DataRequest ||
-             packet.cmd == TWI_Packet::Cmd_Data) {
+    else if (packet.cmd == TWIPacket::Cmd_DataRequest ||
+             packet.cmd == TWIPacket::Cmd_Data) {
 
         //In TX, fill the packet data and check the hold bit that
         //indicates if the master can already ACK/NACK the data.
@@ -886,7 +888,7 @@ void AVR_IO_TWI::packet_ended(TWI_Packet& packet)
     m_current_packet = packet;
 }
 
-void AVR_IO_TWI::bus_acquired()
+void TWI::bus_acquired()
 {
     m_logger->dbg("Bus acquired");
 
@@ -896,7 +898,7 @@ void AVR_IO_TWI::bus_acquired()
     }
 }
 
-void AVR_IO_TWI::bus_released()
+void TWI::bus_released()
 {
     m_logger->dbg("Bus released");
 

@@ -21,7 +21,6 @@
 
 //=======================================================================================
 
-
 struct ioreg_write_t {
 %TypeHeaderCode
 #include "core/sim_ioreg.h"
@@ -37,7 +36,7 @@ struct ioreg_write_t {
 };
 
 
-class AVR_IO_RegHandler {
+class IO_RegHandler {
 %TypeHeaderCode
 #include "core/sim_ioreg.h"
 %End
@@ -50,20 +49,20 @@ public:
 };
 
 
-class AVR_IO_Register {
+class IO_Register {
 %TypeHeaderCode
 #include "core/sim_ioreg.h"
 %End
 
 public:
 
-    AVR_IO_Register(bool=false);
-    AVR_IO_Register(const AVR_IO_Register&);
+    IO_Register(bool=false);
+    IO_Register(const IO_Register&);
 
     uint8_t value() const;
     void set(uint8_t);
 
-    void set_handler(AVR_IO_RegHandler&, uint8_t, uint8_t);
+    void set_handler(IO_RegHandler&, uint8_t, uint8_t);
 
     uint8_t cpu_read(reg_addr_t);
     bool cpu_write(reg_addr_t, uint8_t);
@@ -73,6 +72,6 @@ public:
 
 private:
 
-    AVR_IO_Register& operator=(const AVR_IO_Register&);
+    IO_Register& operator=(const IO_Register&);
 
 };

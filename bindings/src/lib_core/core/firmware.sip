@@ -21,10 +21,9 @@
 
 //=======================================================================================
 
-class AVR_Firmware {
+class Firmware {
 %TypeHeaderCode
 #include "core/sim_firmware.h"
-
 %End
 
 public:
@@ -43,16 +42,16 @@ public:
 
     reg_addr_t console_register;
 
-    AVR_Firmware();
-    AVR_Firmware(const AVR_Firmware& other);
+    Firmware();
+    Firmware(const Firmware& other);
 
-    static AVR_Firmware* read_elf(const std::string&);
+    static Firmware* read_elf(const std::string&);
 
     void add_block(const std::string&, const mem_block_t&, size_t = 0);
     bool has_memory(const std::string&) const;
     size_t memory_size(const std::string&) const;
-    std::vector<AVR_Firmware::Block> blocks(const std::string&) const;
-    bool load_memory(const std::string&, AVR_NonVolatileMemory&) const;
+    std::vector<Firmware::Block> blocks(const std::string&) const;
+    bool load_memory(const std::string&, NonVolatileMemory&) const;
     mem_addr_t datasize() const;
     mem_addr_t bsssize() const;
 

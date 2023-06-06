@@ -27,9 +27,11 @@
 #include "sim_types.h"
 #include <stddef.h>
 
+YASIMAVR_BEGIN_NAMESPACE
+
 //=======================================================================================
 /*
- * AVR_NonVolatileMemory represents a block of NVM in a AVR chip
+ * NonVolatileMemory represents a block of NVM in a AVR chip
  */
 
 struct mem_block_t {
@@ -40,16 +42,16 @@ struct mem_block_t {
 };
 
 
-class DLL_EXPORT AVR_NonVolatileMemory {
+class DLL_EXPORT NonVolatileMemory {
 
 public:
 
     //Base contructor: construct an unprogrammed NVM
-    explicit AVR_NonVolatileMemory(size_t size, const std::string& name = "");
+    explicit NonVolatileMemory(size_t size, const std::string& name = "");
     //Copy constructor
-    AVR_NonVolatileMemory(const AVR_NonVolatileMemory& other);
+    NonVolatileMemory(const NonVolatileMemory& other);
     //Destructor
-    ~AVR_NonVolatileMemory();
+    ~NonVolatileMemory();
 
     size_t size() const;
     const std::string& name() const;
@@ -85,7 +87,7 @@ public:
     void spm_write(const unsigned char* buf, const unsigned char* bufset, size_t base, size_t len);
 
     //Copy assignment
-    AVR_NonVolatileMemory& operator=(const AVR_NonVolatileMemory& other);
+    NonVolatileMemory& operator=(const NonVolatileMemory& other);
 
 private:
 
@@ -96,24 +98,27 @@ private:
 
 };
 
-inline size_t AVR_NonVolatileMemory::size() const
+inline size_t NonVolatileMemory::size() const
 {
     return m_size;
 }
 
-inline const std::string& AVR_NonVolatileMemory::name() const
+inline const std::string& NonVolatileMemory::name() const
 {
     return m_name;
 }
 
-inline bool AVR_NonVolatileMemory::programmed(size_t pos) const
+inline bool NonVolatileMemory::programmed(size_t pos) const
 {
     return m_tag[pos];
 }
 
-inline uint8_t AVR_NonVolatileMemory::operator[](size_t pos) const
+inline uint8_t NonVolatileMemory::operator[](size_t pos) const
 {
     return m_memory[pos];
 }
+
+
+YASIMAVR_END_NAMESPACE
 
 #endif //__YASIMAVR_MEMORY_H__

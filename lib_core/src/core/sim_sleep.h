@@ -28,6 +28,7 @@
 #include "sim_signal.h"
 #include "sim_types.h"
 
+YASIMAVR_BEGIN_NAMESPACE
 
 //=======================================================================================
 /*
@@ -45,7 +46,7 @@
 /*
  *Definition of generic sleep modes
 */
-enum class AVR_SleepMode {
+enum class SleepMode {
     Invalid,
     Active,
     Pseudo,
@@ -57,7 +58,7 @@ enum class AVR_SleepMode {
     PowerSave,
 };
 
-const char* SleepModeName(AVR_SleepMode mode);
+const char* SleepModeName(SleepMode mode);
 
 
 //=======================================================================================
@@ -71,10 +72,10 @@ const char* SleepModeName(AVR_SleepMode mode);
  * the Device
 */
 
-struct AVR_SleepConfig {
+struct SleepConfig {
 
     struct mode_config_t : base_reg_config_t {
-        AVR_SleepMode mode;
+        SleepMode mode;
         //Bitset that indicates for each vector of the device vector map
         //if the corresponding interrupt can wake up the device from this sleep mode
         uint8_t int_mask[16];
@@ -86,22 +87,25 @@ struct AVR_SleepConfig {
 };
 
 
-class DLL_EXPORT AVR_SleepController : public AVR_Peripheral, public AVR_SignalHook {
+class DLL_EXPORT SleepController : public Peripheral, public SignalHook {
 
 public:
 
-    explicit AVR_SleepController(const AVR_SleepConfig& config);
+    explicit SleepController(const SleepConfig& config);
 
-    virtual bool init(AVR_Device& device) override;
+    virtual bool init(Device& device) override;
     virtual bool ctlreq(uint16_t req, ctlreq_data_t* data) override;
     virtual void raised(const signal_data_t& data, uint16_t __unused) override;
 
 private:
 
-    const AVR_SleepConfig& m_config;
+    const SleepConfig& m_config;
     //Index of the current sleep mode in the configuration mode map
     uint8_t m_mode_index;
 
 };
+
+
+YASIMAVR_END_NAMESPACE
 
 #endif //__YASIMAVR_SLEEP_H__

@@ -27,6 +27,8 @@
 #include "ioctrl_common/sim_spi.h"
 #include "core/sim_interrupt.h"
 
+YASIMAVR_BEGIN_NAMESPACE
+
 
 //=======================================================================================
 /*
@@ -39,7 +41,7 @@
  *  for supported CTLREQs, see sim_spi.h
  */
 
-struct AVR_ArchAVR_SPI_Config {
+struct ArchAVR_SPIConfig {
 
     reg_addr_t reg_data;
 
@@ -57,13 +59,13 @@ struct AVR_ArchAVR_SPI_Config {
 
 };
 
-class DLL_EXPORT AVR_ArchAVR_SPI : public AVR_Peripheral, public AVR_SignalHook {
+class DLL_EXPORT ArchAVR_SPI : public Peripheral, public SignalHook {
 
 public:
 
-    AVR_ArchAVR_SPI(uint8_t num, const AVR_ArchAVR_SPI_Config& config);
+    ArchAVR_SPI(uint8_t num, const ArchAVR_SPIConfig& config);
 
-    virtual bool init(AVR_Device& device) override;
+    virtual bool init(Device& device) override;
     virtual void reset() override;
     virtual bool ctlreq(uint16_t req, ctlreq_data_t* data) override;
     virtual uint8_t ioreg_read_handler(reg_addr_t addr, uint8_t value) override;
@@ -72,17 +74,20 @@ public:
 
 private:
 
-    const AVR_ArchAVR_SPI_Config& m_config;
+    const ArchAVR_SPIConfig& m_config;
 
-    AVR_IO_SPI m_spi;
+    SPI m_spi;
 
-    AVR_Pin* m_pin_select;
+    Pin* m_pin_select;
     bool m_pin_selected;
 
-    AVR_InterruptFlag m_intflag;
+    InterruptFlag m_intflag;
 
     void update_framerate();
 
 };
+
+
+YASIMAVR_END_NAMESPACE
 
 #endif //__YASIMAVR_AVR_SPI_H__

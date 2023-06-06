@@ -21,13 +21,13 @@
 
 //=======================================================================================
 
-struct AVR_ArchAVR_ADC_Config {
+struct ArchAVR_ADCConfig {
 %TypeHeaderCode
 #include "arch_avr_adc.h"
 %End
 
     struct reference_config_t : base_reg_config_t {
-        AVR_IO_VREF::Source source;
+        VREF::Source source;
     };
 
     enum Trigger {
@@ -37,13 +37,13 @@ struct AVR_ArchAVR_ADC_Config {
     };
 
     struct trigger_config_t : base_reg_config_t {
-        AVR_ArchAVR_ADC_Config::Trigger trigger;
+        ArchAVR_ADCConfig::Trigger trigger;
     };
 
-    std::vector<AVR_IO_ADC::channel_config_t> channels;
-    std::vector<AVR_ArchAVR_ADC_Config::reference_config_t> references;
+    std::vector<ADC::channel_config_t> channels;
+    std::vector<ArchAVR_ADCConfig::reference_config_t> references;
     UnsignedInt16Vector clk_ps_factors;
-    std::vector<AVR_ArchAVR_ADC_Config::trigger_config_t> triggers;
+    std::vector<ArchAVR_ADCConfig::trigger_config_t> triggers;
 
     uint32_t vref_channel;
 
@@ -69,24 +69,21 @@ struct AVR_ArchAVR_ADC_Config {
 };
 
 
-class AVR_ArchAVR_ADC : public AVR_IO_ADC,
-                        public AVR_Peripheral,
-                        public AVR_SignalHook
-                        /NoDefaultCtors/ {
+class ArchAVR_ADC : public ADC, public Peripheral, public SignalHook /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_avr_adc.h"
 %End
 
 public:
 
-    AVR_ArchAVR_ADC(int, const AVR_ArchAVR_ADC_Config& /KeepReference/);
+    ArchAVR_ADC(int, const ArchAVR_ADCConfig& /KeepReference/);
 
-    virtual bool init(AVR_Device&);
+    virtual bool init(Device&);
     virtual void reset();
     virtual bool ctlreq(uint16_t, ctlreq_data_t*);
     virtual uint8_t ioreg_read_handler(reg_addr_t, uint8_t);
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
-    virtual void sleep(bool, AVR_SleepMode);
+    virtual void sleep(bool, SleepMode);
     virtual void raised(const signal_data_t&, uint16_t);
 
 };

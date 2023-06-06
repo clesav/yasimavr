@@ -33,33 +33,35 @@ struct signal_data_t {
 };
 
 
-class AVR_SignalHook {
+class SignalHook {
 %TypeHeaderCode
 #include "core/sim_signal.h"
 %End
 
 public:
 
-    virtual ~AVR_SignalHook();
+    virtual ~SignalHook();
     virtual void raised(const signal_data_t&, uint16_t) = 0;
 
 };
 
 
-class AVR_Signal {
+class Signal {
 %TypeHeaderCode
 #include "core/sim_signal.h"
+%End
 
+%TypeCode
 extern void fill_vardata_with_pyobj(vardata_t* d, PyObject* obj);
 %End
 
 public:
 
-    AVR_Signal();
-    AVR_Signal(const AVR_Signal&);
+    Signal();
+    Signal(const Signal&);
 
-    void connect_hook(AVR_SignalHook*, uint16_t = 0);
-    void disconnect_hook(AVR_SignalHook*);
+    void connect_hook(SignalHook*, uint16_t = 0);
+    void disconnect_hook(SignalHook*);
 
     void raise() /PyName=raise_/;
     virtual void raise(const signal_data_t&) /PyName=raise_/;
@@ -76,10 +78,12 @@ public:
 };
 
 
-class AVR_DataSignal : public AVR_Signal {
+class DataSignal : public Signal {
 %TypeHeaderCode
 #include "core/sim_signal.h"
+%End
 
+%TypeCode
 extern void fill_vardata_with_pyobj(vardata_t* d, PyObject* obj);
 %End
 
@@ -104,27 +108,27 @@ public:
 };
 
 
-class AVR_CallableSignalHook : public AVR_SignalHook {
+class CallableSignalHook : public SignalHook {
 %TypeHeaderCode
 #include "core/sim_signal.h"
 %End
 
 %TypeCode
-class AVR_CallableSignalHook : public AVR_SignalHook {
+class CallableSignalHook : public SignalHook {
 
 public:
 
-    AVR_CallableSignalHook(PyObject* callback)
+    CallableSignalHook(PyObject* callback)
     :m_callback(callback)
     {
         Py_INCREF(m_callback);
     }
 
-    AVR_CallableSignalHook(const AVR_CallableSignalHook& other)
-    :AVR_CallableSignalHook(other.m_callback)
+    CallableSignalHook(const CallableSignalHook& other)
+    :CallableSignalHook(other.m_callback)
     {}
 
-    virtual ~AVR_CallableSignalHook()
+    virtual ~CallableSignalHook()
     {
         Py_DECREF(m_callback);
     }
@@ -145,7 +149,7 @@ public:
         PyGILState_Release(pystate);
     }
 
-    AVR_CallableSignalHook& operator=(const AVR_CallableSignalHook& other)
+    CallableSignalHook& operator=(const CallableSignalHook& other)
     {
         Py_DECREF(m_callback);
         m_callback = other.m_callback;
@@ -162,31 +166,31 @@ private:
 
 public:
 
-    AVR_CallableSignalHook(SIP_PYCALLABLE);
-    AVR_CallableSignalHook(const AVR_CallableSignalHook&);
+    CallableSignalHook(SIP_PYCALLABLE);
+    CallableSignalHook(const CallableSignalHook&);
 
     virtual void raised(const signal_data_t&, uint16_t) final;
 
 };
 
 
-class AVR_DataSignalMux : public AVR_SignalHook {
+class DataSignalMux : public SignalHook {
 %TypeHeaderCode
 #include "core/sim_signal.h"
 %End
 
 public:
 
-    AVR_DataSignalMux();
+    DataSignalMux();
 
     virtual void raised(const signal_data_t&, uint16_t);
 
     size_t add_mux();
-    size_t add_mux(AVR_DataSignal&);
-    size_t add_mux(AVR_DataSignal&, uint16_t);
-    size_t add_mux(AVR_DataSignal&, uint16_t, uint32_t);
+    size_t add_mux(DataSignal&);
+    size_t add_mux(DataSignal&, uint16_t);
+    size_t add_mux(DataSignal&, uint16_t, uint32_t);
 
-    AVR_DataSignal& signal();
+    DataSignal& signal();
 
     void set_selection(size_t);
     size_t selected_index() const;

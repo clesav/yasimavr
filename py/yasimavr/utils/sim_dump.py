@@ -22,7 +22,7 @@ import io
 from ..lib import core as corelib
 from ..device_library.accessors import DeviceAccessor
 
-__all__ = ['simdump']
+__all__ = ['sim_dump']
 
 
 class _Dumper:
@@ -133,7 +133,7 @@ def _serialize_RAM(device, probe, dumper):
 
 def _serialize_NVM(device, dumper):
     reqdata = corelib.ctlreq_data_t()
-    reqdata.index = corelib.AVR_Core.NVM.GetCount
+    reqdata.index = corelib.Core.NVM.GetCount
     device.ctlreq(corelib.IOCTL_CORE, corelib.CTLREQ_CORE_NVM, reqdata)
     nvm_count = reqdata.data.as_uint()
 
@@ -141,7 +141,7 @@ def _serialize_NVM(device, dumper):
         reqdata = corelib.ctlreq_data_t()
         reqdata.index = i
         device.ctlreq(corelib.IOCTL_CORE, corelib.CTLREQ_CORE_NVM, reqdata)
-        nvm = reqdata.data.as_ptr(corelib.AVR_NonVolatileMemory)
+        nvm = reqdata.data.as_ptr(corelib.NonVolatileMemory)
         if nvm:
             dumper.dump_nvm(nvm)
 
@@ -169,7 +169,7 @@ def _serialize_pins(device, dumper):
 
     for pin_name in device.config().pins:
         pin = device.find_pin(pin_name)
-        if pin.state() == corelib.AVR_Pin.State.Analog:
+        if pin.state() == corelib.Pin.State.Analog:
             s = 'Analog V=' + str(pin.analog_value())
         else:
             s = pin.state()._name_
@@ -187,7 +187,7 @@ def _serialize_device(device, dumper):
     dumper['Frequency (Hz)'] = device.frequency()
 
     dumper.inc_level('Options')
-    for dev_option in corelib.AVR_Device.Option:
+    for dev_option in corelib.Device.Option:
         dumper[dev_option._name_] = device.test_option(dev_option)
     dumper.dec_level()
 
@@ -195,7 +195,7 @@ def _serialize_device(device, dumper):
 
     _serialize_pins(device, dumper)
 
-    probe = corelib.AVR_DeviceDebugProbe(device)
+    probe = corelib.DeviceDebugProbe(device)
 
     _serialize_CPU(probe, dumper)
     _serialize_registers(probe, dumper)
@@ -219,13 +219,13 @@ def _serialize_simloop(simloop, dumper):
     _serialize_device(simloop.device(), dumper)
 
 
-def sim_dump(simloop : corelib.AVR_AbstractSimLoop, stream : io.TextIOBase = None) -> 'str|None':
+def sim_dump(simloop : corelib.AbstractSimLoop, stream : io.TextIOBase = None) -> 'str|None':
     '''
     usage: sim_dump(simloop, stream = None) -> str | None
 
     Dumps the current state of a simulation into a I/O stream.
 
-    simloop : instance of AVR_AbstractSimLoop to dump
+    simloop : instance of AbstractSimLoop to dump
     stream : writable TextIOBase instance or None
     If stream is None, the state is dumped into a string and the string is returned.
     If stream is not None, the state is written into it and None is returned.

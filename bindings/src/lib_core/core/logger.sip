@@ -22,7 +22,7 @@
 
 //=======================================================================================
 
-class AVR_LogWriter {
+class LogWriter {
 %TypeHeaderCode
 #include "core/sim_logger.h"
 %End
@@ -31,33 +31,29 @@ public:
 
     virtual void write(cycle_count_t, int, uint32_t, const char*, std::va_list);
 
-    static AVR_LogWriter* default_writer();
+    static LogWriter* default_writer();
 
 };
 
 
-//=======================================================================================
-
-class AVR_LogHandler {
+class LogHandler {
 %TypeHeaderCode
 #include "core/sim_logger.h"
 %End
 
 public:
 
-    AVR_LogHandler();
+    LogHandler();
 
-    void init(AVR_CycleManager&);
+    void init(CycleManager&);
 
-    void set_writer(AVR_LogWriter&);
-    AVR_LogWriter& writer();
+    void set_writer(LogWriter&);
+    LogWriter& writer();
 
 };
 
 
-//=======================================================================================
-
-class AVR_Logger {
+class Logger {
 %TypeHeaderCode
 #include "core/sim_logger.h"
 %End
@@ -73,14 +69,14 @@ public:
         Level_Trace           /PyName=Trace/,
     };
 
-    AVR_Logger(uint32_t, AVR_LogHandler&);
-    AVR_Logger(uint32_t, AVR_Logger* = NULL);
+    Logger(uint32_t, LogHandler&);
+    Logger(uint32_t, Logger* = NULL);
 
     void set_level(int);
     int level() const;
 
-    void set_parent(AVR_Logger*);
-    AVR_Logger* parent() const;
+    void set_parent(Logger*);
+    Logger* parent() const;
 
     void log(int, const char*, ...);
 
@@ -97,6 +93,8 @@ protected:
 
 };
 
-AVR_Logger& AVR_global_logger();
+
+Logger& global_logger();
+
 
 class std::va_list;

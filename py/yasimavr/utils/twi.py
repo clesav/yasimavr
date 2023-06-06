@@ -26,7 +26,7 @@ a TWI Endpoint that can be used for simple TWI/I2C part simulation.
 import yasimavr.lib.core as _corelib
 
 
-class TWI_Slave(_corelib.TWI_Endpoint):
+class TWI_Slave(_corelib.TWIEndPoint):
 
     def __init__(self, address):
         super().__init__()
@@ -81,32 +81,32 @@ class TWI_Slave(_corelib.TWI_Endpoint):
     def rw(self):
         '''Boolean indicating the type of operation (True=read, False=write)
         The value is only relevant when active == True'''
-        return (self._rw == _corelib.TWI_Packet.Read)
+        return (self._rw == _corelib.TWIPacket.Read)
 
 
-    #TWI_Endpoint override
+    #TWIEndPoint override
     def packet(self, packet):
         pass
 
 
-    #TWI_Endpoint override
+    #TWIEndPoint override
     def packet_ended(self, packet):
-        if packet.cmd == _corelib.TWI_Packet.Cmd.Address:
+        if packet.cmd == _corelib.TWIPacket.Cmd.Address:
             try:
                 self._active = self.match_address(packet.addr, packet.rw)
             except Exception:
                 self._active = False
 
             if self._active:
-                packet.ack = _corelib.TWI_Packet.Ack
+                packet.ack = _corelib.TWIPacket.Ack
                 self._rw = packet.rw
             else:
-                packet.ack = _corelib.TWI_Packet.Nack
+                packet.ack = _corelib.TWIPacket.Nack
 
             packet.hold = 0
 
-        elif packet.cmd == _corelib.TWI_Packet.Cmd.DataRequest and self._active:
-            if self._rw == _corelib.TWI_Packet.Read:
+        elif packet.cmd == _corelib.TWIPacket.Cmd.DataRequest and self._active:
+            if self._rw == _corelib.TWIPacket.Read:
                 try:
                     packet.data = self.read_handler()
                 except Exception:
@@ -117,16 +117,16 @@ class TWI_Slave(_corelib.TWI_Endpoint):
                 except Exception:
                     ack = False
 
-                packet.ack = _corelib.TWI_Packet.Ack if ack else _corelib.TWI_Packet.Nack
+                packet.ack = _corelib.TWIPacket.Ack if ack else _corelib.TWIPacket.Nack
 
             packet.hold = 0
 
 
-    #TWI_Endpoint override
+    #TWIEndPoint override
     def bus_acquired(self):
         pass
 
 
-    #TWI_Endpoint override
+    #TWIEndPoint override
     def bus_released(self):
         self._active = False

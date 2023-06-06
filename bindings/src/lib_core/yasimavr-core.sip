@@ -27,7 +27,6 @@
 
 %DefaultEncoding(name = "UTF-8")
 
-
 typedef unsigned long long      uint64_t;
 typedef long long               int64_t;
 typedef unsigned int            uint32_t;
@@ -35,6 +34,11 @@ typedef int                     int32_t;
 typedef unsigned short          uint16_t;
 typedef short                   int16_t;
 typedef unsigned char           uint8_t /PyInt/;
+
+%UnitPostIncludeCode
+#include "core/sim_globals.h"
+YASIMAVR_USING_NAMESPACE
+%End
 
 %Include support/stdvector.sip
 %Include support/stdstring.sip

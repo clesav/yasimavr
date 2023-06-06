@@ -29,6 +29,8 @@
 #include <vector>
 #include <unordered_map>
 
+YASIMAVR_BEGIN_NAMESPACE
+
 
 //=======================================================================================
 /*
@@ -48,61 +50,61 @@ struct signal_data_t {
  * Generic hook class to connect to a signal in order to receive notifications
  * To be used, reimplement raised() to use the data from the signal
  */
-class AVR_Signal;
+class Signal;
 
-class AVR_SignalHook {
+class SignalHook {
 
 public:
 
-    AVR_SignalHook() = default;
+    SignalHook() = default;
     //Copy constructor: to ensure the connection with signals is consistent
-    AVR_SignalHook(const AVR_SignalHook&);
+    SignalHook(const SignalHook&);
     //No move constructor
-    AVR_SignalHook(const AVR_SignalHook&&) = delete;
+    SignalHook(const SignalHook&&) = delete;
     //Destructor: severs all connections with signals
-    virtual ~AVR_SignalHook();
+    virtual ~SignalHook();
 
     virtual void raised(const signal_data_t& sigdata, uint16_t hooktag) = 0;
 
     //Copy assignment : copy all signal connections
-    AVR_SignalHook& operator=(const AVR_SignalHook&);
+    SignalHook& operator=(const SignalHook&);
     //No move assignment
-    AVR_SignalHook& operator=(const AVR_SignalHook&&) = delete;
+    SignalHook& operator=(const SignalHook&&) = delete;
 
 private:
 
-    friend class AVR_Signal;
+    friend class Signal;
 
-    std::vector<AVR_Signal*> m_signals;
+    std::vector<Signal*> m_signals;
 
 };
 
 
 //=======================================================================================
 /*
- * AVR_Signal is a means for point-to-point communication and notification
+ * Signal is a means for point-to-point communication and notification
  * across the simulator.
  * It is similar in use to simavr's IRQs
 */
-class DLL_EXPORT AVR_Signal {
+class DLL_EXPORT Signal {
 
 public:
 
-    AVR_Signal();
+    Signal();
     //Copy constructor
-    AVR_Signal(const AVR_Signal& other);
+    Signal(const Signal& other);
     //No move constructor
-    AVR_Signal(const AVR_Signal&&) = delete;
+    Signal(const Signal&&) = delete;
     //Destructor: severs all connections with hooks
-    virtual ~AVR_Signal();
+    virtual ~Signal();
 
     ////The hooktag is an arbitrary value that only has a meaning
     //for the hook and is passed though by the signal when calling
     //the hook's "raised()". It can be useful when a single hook
     //connects to several signals, in order to differentiate which
     //one the raise comes from.
-    void connect_hook(AVR_SignalHook* hook, uint16_t hooktag = 0);
-    void disconnect_hook(AVR_SignalHook* hook);
+    void connect_hook(SignalHook* hook, uint16_t hooktag = 0);
+    void disconnect_hook(SignalHook* hook);
 
     virtual void raise(const signal_data_t& sigdata);
     //Raise a signal with default data
@@ -118,33 +120,33 @@ public:
     void raise_d(uint16_t sigid, double d, uint32_t index = 0);
 
     //Copy assignment
-    AVR_Signal& operator=(const AVR_Signal&);
+    Signal& operator=(const Signal&);
     //No move assignment
-    AVR_Signal& operator=(const AVR_Signal&&) = delete;
+    Signal& operator=(const Signal&&) = delete;
 
 private:
 
-    friend class AVR_SignalHook;
+    friend class SignalHook;
 
     //Flag used to avoid nested raises
     bool m_busy;
 
     struct hook_slot_t {
-        AVR_SignalHook* hook;
+        SignalHook* hook;
         uint16_t tag;
     };
 
     std::vector<hook_slot_t> m_hooks;
 
-    int hook_index(const AVR_SignalHook* hook) const;
-    int signal_index(const AVR_SignalHook* hook) const;
+    int hook_index(const SignalHook* hook) const;
+    int signal_index(const SignalHook* hook) const;
 
 };
 
 
 //=======================================================================================
 
-class DLL_EXPORT AVR_DataSignal : public AVR_Signal {
+class DLL_EXPORT DataSignal : public Signal {
 
 public:
 
@@ -175,20 +177,20 @@ private:
 
 //=======================================================================================
 
-class DLL_EXPORT AVR_DataSignalMux : public AVR_SignalHook {
+class DLL_EXPORT DataSignalMux : public SignalHook {
 
 public:
 
-    AVR_DataSignalMux();
+    DataSignalMux();
 
     virtual void raised(const signal_data_t& sigdata, uint16_t hooktag) override;
 
     size_t add_mux();
-    size_t add_mux(AVR_DataSignal& signal);
-    size_t add_mux(AVR_DataSignal& signal, uint16_t sigid_filt);
-    size_t add_mux(AVR_DataSignal& signal, uint16_t sigid_filt, uint32_t ix_filt);
+    size_t add_mux(DataSignal& signal);
+    size_t add_mux(DataSignal& signal, uint16_t sigid_filt);
+    size_t add_mux(DataSignal& signal, uint16_t sigid_filt, uint32_t ix_filt);
 
-    AVR_DataSignal& signal();
+    DataSignal& signal();
 
     void set_selection(size_t index);
     size_t selected_index() const;
@@ -197,7 +199,7 @@ public:
 private:
 
     struct mux_item_t {
-        AVR_DataSignal* signal;
+        DataSignal* signal;
         uint16_t sigid_filt;
         uint32_t index_filt;
         uint8_t filt_mask;
@@ -207,26 +209,29 @@ private:
     };
 
     std::vector<mux_item_t> m_items;
-    AVR_DataSignal m_signal;
+    DataSignal m_signal;
     size_t m_sel_index;
 
     size_t add_mux(mux_item_t& item);
 
 };
 
-inline AVR_DataSignal& AVR_DataSignalMux::signal()
+inline DataSignal& DataSignalMux::signal()
 {
     return m_signal;
 }
 
-inline size_t AVR_DataSignalMux::selected_index() const
+inline size_t DataSignalMux::selected_index() const
 {
     return m_sel_index;
 }
 
-inline bool AVR_DataSignalMux::connected() const
+inline bool DataSignalMux::connected() const
 {
     return (m_sel_index < m_items.size()) ? !!m_items[m_sel_index].signal : false;
 }
+
+
+YASIMAVR_END_NAMESPACE
 
 #endif //__YASIMAVR_SIGNAL_H__

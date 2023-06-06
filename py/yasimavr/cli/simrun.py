@@ -116,12 +116,12 @@ class _WatchDataTrace(Formatter):
 
         self._addr = addr
 
-        f = _corelib.AVR_DeviceDebugProbe.WatchpointFlags
+        f = _corelib.DeviceDebugProbe.WatchpointFlags
         _probe.insert_watchpoint(addr, 1, f.Write | f.Signal)
         _probe.watchpoint_signal().connect_hook(self)
 
     def filter(self, sigdata, hooktag):
-        return (sigdata.sigid == _corelib.AVR_DeviceDebugProbe.WatchpointFlags.Write and \
+        return (sigdata.sigid == _corelib.DeviceDebugProbe.WatchpointFlags.Write and \
                 sigdata.index == self._addr)
 
     def format(self, sigdata, hooktag):
@@ -135,7 +135,7 @@ def _print_list_cores():
 def _load_firmware():
     global _firmware
 
-    _firmware = _corelib.AVR_Firmware.read_elf(_run_args.firmware)
+    _firmware = _corelib.Firmware.read_elf(_run_args.firmware)
     if not _firmware:
         raise Exception('Reading the firmware failed')
 
@@ -172,7 +172,7 @@ def _init_VCD():
         elif kind == 'data':
             global _probe
             if _probe is None:
-                _probe = _corelib.AVR_DeviceDebugProbe(_device)
+                _probe = _corelib.DeviceDebugProbe(_device)
 
             addr = int(params[0], 16)
             name = hex(addr) if len(params[0]) < 2 else params[1]
@@ -193,7 +193,7 @@ def _init_VCD():
             ok, d = _device.ctlreq(_corelib.str_to_id(ctlid), _corelib.CTLREQ_GET_SIGNAL)
             if not ok:
                 raise Exception('Unable to obtain the peripheral signal')
-            sig = d.data.as_ptr(_corelib.AVR_Signal)
+            sig = d.data.as_ptr(_corelib.Signal)
             _vcd_out.add_signal(sig, name, size, sigid, sigindex)
 
         else:
@@ -203,7 +203,7 @@ def _init_VCD():
 def _run_syncloop():
     global _simloop
 
-    _simloop = _corelib.AVR_SimLoop(_device)
+    _simloop = _corelib.SimLoop(_device)
     _simloop.set_fast_mode(True)
 
     _load_firmware()
@@ -221,7 +221,7 @@ def _run_asyncloop(args):
 
     global _simloop
 
-    _simloop = _corelib.AVR_AsyncSimLoop(_device)
+    _simloop = _corelib.AsyncSimLoop(_device)
     _simloop.set_fast_mode(True)
 
     _load_firmware()
@@ -263,10 +263,10 @@ def main(args=None):
     _device = load_device(_run_args.mcu, _run_args.verbose > 1)
 
     #Set the verbose level
-    log_level = _corelib.AVR_Logger.Level.Silent + _run_args.verbose
-    if log_level > _corelib.AVR_Logger.Level.Trace:
-        _corelib.AVR_Logger.Level.Trace
-    _corelib.AVR_global_logger().set_level(log_level)
+    log_level = _corelib.Logger.Level.Silent + _run_args.verbose
+    if log_level > _corelib.Logger.Level.Trace:
+        log_level = _corelib.Logger.Level.Trace
+    _corelib.global_logger().set_level(log_level)
     _device.logger().set_level(log_level)
 
     try:

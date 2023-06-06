@@ -28,6 +28,8 @@
 #include "arch_xt_io_utils.h"
 #include "core/sim_sleep.h"
 
+YASIMAVR_USING_NAMESPACE
+
 
 //=======================================================================================
 
@@ -37,13 +39,13 @@
 #define REG_OFS(reg) \
     reg_addr_t(offsetof(ADC_t, reg))
 
-#define CFG AVR_ArchXT_ADC_Config
+#define CFG ArchXT_ADCConfig
 
 static const uint32_t ADC_Prescaler_Max = 256;
 
 
-AVR_ArchXT_ADC::AVR_ArchXT_ADC(int num, const CFG& config)
-:AVR_Peripheral(AVR_IOCTL_ADC(0x30 + num))
+ArchXT_ADC::ArchXT_ADC(int num, const CFG& config)
+:Peripheral(AVR_IOCTL_ADC(0x30 + num))
 ,m_config(config)
 ,m_state(ADC_Disabled)
 ,m_first(false)
@@ -58,9 +60,9 @@ AVR_ArchXT_ADC::AVR_ArchXT_ADC(int num, const CFG& config)
 ,m_cmp_intflag(false)
 {}
 
-bool AVR_ArchXT_ADC::init(AVR_Device& device)
+bool ArchXT_ADC::init(Device& device)
 {
-    bool status = AVR_Peripheral::init(device);
+    bool status = Peripheral::init(device);
 
     add_ioreg(REG_ADDR(CTRLA), ADC_RUNSTBY_bm | ADC_RESSEL_bm | ADC_FREERUN_bm | ADC_ENABLE_bm);
     add_ioreg(REG_ADDR(CTRLB), ADC_SAMPNUM_gm);
@@ -98,7 +100,7 @@ bool AVR_ArchXT_ADC::init(AVR_Device& device)
     return status;
 }
 
-void AVR_ArchXT_ADC::reset()
+void ArchXT_ADC::reset()
 {
     m_state = ADC_Disabled;
     m_result = 0;
@@ -107,7 +109,7 @@ void AVR_ArchXT_ADC::reset()
     m_timer.reset();
 }
 
-bool AVR_ArchXT_ADC::ctlreq(uint16_t req, ctlreq_data_t* data)
+bool ArchXT_ADC::ctlreq(uint16_t req, ctlreq_data_t* data)
 {
     if (req == AVR_CTLREQ_GET_SIGNAL) {
         data->data = &m_signal;
@@ -128,7 +130,7 @@ bool AVR_ArchXT_ADC::ctlreq(uint16_t req, ctlreq_data_t* data)
 
 //I/O register callback reimplementation
 
-uint8_t AVR_ArchXT_ADC::ioreg_read_handler(reg_addr_t addr, uint8_t value)
+uint8_t ArchXT_ADC::ioreg_read_handler(reg_addr_t addr, uint8_t value)
 {
     //The STCONV bit is dynamic, reading 1 if a conversion is in progress
     if (addr == REG_ADDR(COMMAND))
@@ -137,7 +139,7 @@ uint8_t AVR_ArchXT_ADC::ioreg_read_handler(reg_addr_t addr, uint8_t value)
     return value;
 }
 
-void AVR_ArchXT_ADC::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
+void ArchXT_ADC::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
     reg_addr_t reg_ofs = addr - m_config.reg_base;
 
@@ -183,7 +185,7 @@ void AVR_ArchXT_ADC::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& d
 /*
  * Method that starts a conversion cycle
  */
-void AVR_ArchXT_ADC::start_conversion_cycle()
+void ArchXT_ADC::start_conversion_cycle()
 {
     logger().dbg("Starting a conversion cycle");
 
@@ -217,7 +219,7 @@ void AVR_ArchXT_ADC::start_conversion_cycle()
         return; \
     } while(0);
 
-void AVR_ArchXT_ADC::read_analog_value()
+void ArchXT_ADC::read_analog_value()
 {
     logger().dbg("Reading analog value");
 
@@ -246,22 +248,22 @@ void AVR_ArchXT_ADC::read_analog_value()
     switch(ch_config->type) {
 
         case Channel_SingleEnded: {
-            AVR_Pin* p = device()->find_pin(ch_config->pin_p);
+            Pin* p = device()->find_pin(ch_config->pin_p);
             if (!p) _crash("ADC: Invalid pin configuration");
             raw_value = p->analog_value();
         } break;
 
         case Channel_Differential: {
-            AVR_Pin* p = device()->find_pin(ch_config->pin_p);
+            Pin* p = device()->find_pin(ch_config->pin_p);
             if (!p) _crash("ADC: Invalid pin configuration");
-            AVR_Pin* n = device()->find_pin(ch_config->pin_n);
+            Pin* n = device()->find_pin(ch_config->pin_n);
             if (!n) _crash("ADC: Invalid pin configuration");
             raw_value = p->analog_value() - n->analog_value();
         } break;
 
         case Channel_IntRef: {
             ctlreq_data_t reqdata = { .data = m_config.vref_channel,
-                                      .index = AVR_IO_VREF::Source_Internal };
+                                      .index = VREF::Source_Internal };
             if (!device()->ctlreq(AVR_IOCTL_VREF, AVR_CTLREQ_VREF_GET, &reqdata))
                 _crash("ADC: Unable to obtain the internal reference voltage value");
             raw_value = reqdata.data.as_double();
@@ -278,7 +280,7 @@ void AVR_ArchXT_ADC::read_analog_value()
             double temp_volt = m_config.temp_cal_coef * (m_temperature - 25.0) + m_config.temp_cal_25C;
             //The temperature measure obtained is in absolute voltage values.
             //We need to make it relative to VCC
-            ctlreq_data_t reqdata = { .index = AVR_IO_VREF::Source_VCC };
+            ctlreq_data_t reqdata = { .index = VREF::Source_VCC };
             if (!device()->ctlreq(AVR_IOCTL_VREF, AVR_CTLREQ_VREF_GET, &reqdata))
                 _crash("ADC: Unable to obtain the VCC voltage value");
             raw_value = temp_volt / reqdata.data.as_double();
@@ -314,7 +316,7 @@ void AVR_ArchXT_ADC::read_analog_value()
 * First, we perform the actual analog read.
 * Second, we store it in the data register and raise the interrupt flag
 */
-void AVR_ArchXT_ADC::raised(const signal_data_t& data, uint16_t sigid)
+void ArchXT_ADC::raised(const signal_data_t& data, uint16_t sigid)
 {
     if (data.index != 1) return;
 
@@ -420,9 +422,9 @@ void AVR_ArchXT_ADC::raised(const signal_data_t& data, uint16_t sigid)
 /*
 * The ADC is paused for modes above Standby and in Standby if RUNSTBY is not set
 */
-void AVR_ArchXT_ADC::sleep(bool on, AVR_SleepMode mode)
+void ArchXT_ADC::sleep(bool on, SleepMode mode)
 {
-    if (mode > AVR_SleepMode::Standby || (mode == AVR_SleepMode::Standby && !TEST_IOREG(CTRLA, ADC_RUNSTBY))) {
+    if (mode > SleepMode::Standby || (mode == SleepMode::Standby && !TEST_IOREG(CTRLA, ADC_RUNSTBY))) {
         if (on)
             logger().dbg("Pausing");
         else
