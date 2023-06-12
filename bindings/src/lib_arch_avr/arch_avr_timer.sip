@@ -181,7 +181,7 @@ class ArchAVR_Timer : public Peripheral, public SignalHook /NoDefaultCtors/ {
 
 public:
 
-    enum Signal /BaseType=IntEnum/ {
+    enum SignalId /BaseType=IntEnum/ {
         Signal_OVF              /PyName=OVF/,
         Signal_CompMatch        /PyName=CompMatch/,
         Signal_CompOutput       /PyName=CompOutput/,

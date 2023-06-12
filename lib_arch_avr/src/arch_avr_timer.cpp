@@ -62,6 +62,7 @@ struct ArchAVR_Timer::OutputCompareChannel {
     const CFG::OC_config_t& config;
     CFG::COM_config_t mode;
     uint16_t reg;
+    bool active;
     unsigned char state;
     InterruptFlag intflag;
 
@@ -69,6 +70,7 @@ struct ArchAVR_Timer::OutputCompareChannel {
     :config(cfg)
     ,mode({CFG::COM_NoChange, CFG::COM_NoChange, CFG::COM_NoChange, CFG::COM_NoChange })
     ,reg(0)
+    ,active(false)
     ,state(false)
     ,intflag(true)
     {}
@@ -76,7 +78,8 @@ struct ArchAVR_Timer::OutputCompareChannel {
     void reset()
     {
         reg = 0;
-        state = 0;
+        active = false;
+        state = false;
         intflag.update_from_ioreg();
     }
 
@@ -190,6 +193,8 @@ void ArchAVR_Timer::reset()
     for (uint32_t i = 0; i < m_oc_channels.size(); ++i) {
         m_oc_channels[i]->reset();
         m_signal.set_data(Signal_CompOutput, vardata_t(0), i);
+
+        m_counter.set_comp_enabled(i,  true);
     }
 }
 
@@ -358,10 +363,9 @@ void ArchAVR_Timer::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& da
         for (uint32_t i = 0; i < m_oc_channels.size(); ++i) {
             OutputCompareChannel* oc = m_oc_channels[i];
             oc->mode = get_COM_config(read_ioreg(oc->config.rb_mode));
-            bool oc_active = output_active(oc->mode, i);
-            m_counter.set_comp_enabled(i, oc_active);
+            oc->active = output_active(oc->mode, i);
             //If the ocm is inactive, ensure the output level is reset
-            if (!oc_active)
+            if (!oc->active)
                 m_signal.raise_u(Signal_CompOutput, 0, i);
         }
         do_reschedule = true;
@@ -504,6 +508,7 @@ void ArchAVR_Timer::raised(const signal_data_t& sigdata, uint16_t __unused)
 void ArchAVR_Timer::change_OC_state(uint32_t index, uint8_t event_flags)
 {
     OutputCompareChannel* oc = m_oc_channels[index];
+    if (!oc->active) return;
 
     //Determine the action to perform on the Output Compare state depending
     //on the COM settings
