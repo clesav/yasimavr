@@ -192,7 +192,7 @@ void ArchAVR_Timer::reset()
 
     for (uint32_t i = 0; i < m_oc_channels.size(); ++i) {
         m_oc_channels[i]->reset();
-        m_signal.set_data(Signal_CompOutput, vardata_t(0), i);
+        m_signal.raise(signal_data_t{Signal_CompOutput, i, vardata_t()});
 
         m_counter.set_comp_enabled(i,  true);
     }
@@ -215,6 +215,7 @@ bool ArchAVR_Timer::ctlreq(uint16_t req, ctlreq_data_t* data)
     }
     return false;
 }
+
 
 uint8_t ArchAVR_Timer::ioreg_read_handler(reg_addr_t addr, uint8_t value)
 {
@@ -363,10 +364,14 @@ void ArchAVR_Timer::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& da
         for (uint32_t i = 0; i < m_oc_channels.size(); ++i) {
             OutputCompareChannel* oc = m_oc_channels[i];
             oc->mode = get_COM_config(read_ioreg(oc->config.rb_mode));
+            bool old_active = oc->active;
             oc->active = output_active(oc->mode, i);
             //If the ocm is inactive, ensure the output level is reset
-            if (!oc->active)
-                m_signal.raise_u(Signal_CompOutput, 0, i);
+            if (old_active && !oc->active)
+                m_signal.raise(signal_data_t{Signal_CompOutput, i, vardata_t()});
+            //If the ocm is activated, ensure the output level is up-to-date
+            else if (oc->active && !old_active)
+                m_signal.raise_u(Signal_CompOutput, oc->state, i);
         }
         do_reschedule = true;
     }

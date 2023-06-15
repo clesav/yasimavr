@@ -167,8 +167,9 @@ public:
         //Signal raised on a Compare Match event. The index indicates which channel
         //(0='A', 1='B', etc...), no data is carried.
         Signal_CompMatch,
-        //Signal raised with the Compare Output value. The index indicates which channel
-        //(0='A', 1='B', etc...), no data is carried.
+        //Signal raised with the Compare Output state.
+        //The index indicates which channel (0='A', 1='B', etc...)
+        //The data is the state (0 or 1) or invalid data if the channel is disabled.
         Signal_CompOutput,
         //Signal raised on a Input Capture event, no data is carried.
         Signal_Capt
