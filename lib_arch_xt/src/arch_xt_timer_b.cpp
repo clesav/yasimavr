@@ -93,6 +93,7 @@ void ArchXT_TimerB::reset()
     m_timer.reset();
     m_counter.reset();
     m_counter.set_top(0);
+    m_counter.set_tick_source(TimerCounter::Tick_Timer);
 }
 
 uint8_t ArchXT_TimerB::ioreg_read_handler(reg_addr_t addr, uint8_t value)
