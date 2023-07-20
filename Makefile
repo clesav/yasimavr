@@ -22,7 +22,9 @@ DEL_FILE      = del /q
 
 LIB_TARGET_DIR   = py\yasimavr\lib
 
-all: libs py-bindings
+all: release
+
+release: libs py-bindings
 
 libs: lib-core \
 	  lib-arch-avr \
@@ -40,45 +42,43 @@ clean: lib-core-clean \
 	   py-bindings-clean
 	-cd "$(LIB_TARGET_DIR)" && $(DEL_FILE) *.*
 
+
 lib-core: FORCE
-	cd "lib_core\Release" && $(MAKE) -f Makefile all
+	cd "lib_core" && $(MAKE) release
 	@if not exist "$(LIB_TARGET_DIR)" mkdir "$(LIB_TARGET_DIR)"
 	$(COPY) "lib_core\Release\yasimavr_core.dll" "$(LIB_TARGET_DIR)"
 
 lib-core-debug: FORCE
-	cd "lib_core\Debug" && $(MAKE) -f Makefile all
+	cd "lib_core" && $(MAKE) debug
 	@if not exist "$(LIB_TARGET_DIR)" mkdir "$(LIB_TARGET_DIR)"
 	$(COPY) "lib_core\Debug\yasimavr_core.dll" "$(LIB_TARGET_DIR)"
 
 lib-core-clean: FORCE
-	-cd "lib_core\Release" && $(MAKE) -f Makefile clean
-	-cd "lib_core\Debug" && $(MAKE) -f Makefile clean
+	-cd "lib_core" && $(MAKE) clean
 
 
 lib-arch-avr: lib-core
-	cd lib_arch_avr\Release && $(MAKE) -f Makefile all
+	cd lib_arch_avr && $(MAKE) release
 	$(COPY) "lib_arch_avr\Release\yasimavr_arch_avr.dll" "$(LIB_TARGET_DIR)"
 
 lib-arch-avr-debug: lib-core-debug
-	cd lib_arch_avr\Debug && $(MAKE) -f Makefile all
+	cd lib_arch_avr && $(MAKE) debug
 	$(COPY) "lib_arch_avr\Debug\yasimavr_arch_avr.dll" "$(LIB_TARGET_DIR)"
 
 lib-arch-avr-clean: FORCE
-	-cd "lib_arch_avr\Release" && $(MAKE) -f Makefile clean
-	-cd "lib_arch_avr\Debug" && $(MAKE) -f Makefile clean
+	-cd "lib_arch_avr" && $(MAKE) clean
 
 
 lib-arch-xt: lib-core
-	cd lib_arch_xt\Release && $(MAKE) -f Makefile all
+	cd lib_arch_xt && $(MAKE) release
 	$(COPY) "lib_arch_xt\Release\yasimavr_arch_xt.dll" "$(LIB_TARGET_DIR)"
 
 lib-arch-xt-debug: lib-core-debug
-	cd lib_arch_xt\Debug && $(MAKE) -f Makefile all
+	cd lib_arch_xt && $(MAKE) debug
 	$(COPY) "lib_arch_xt\Debug\yasimavr_arch_xt.dll" "$(LIB_TARGET_DIR)"
 
 lib-arch-xt-clean: FORCE
-	-cd "lib_arch_xt\Release" && $(MAKE) -f Makefile clean
-	-cd "lib_arch_xt\Debug" && $(MAKE) -f Makefile clean
+	-cd "lib_arch_xt" && $(MAKE) clean
 
 
 py-bindings: libs
