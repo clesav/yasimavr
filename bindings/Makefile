@@ -62,7 +62,9 @@ clean: FORCE
 	-rmdir /q /s siplib
 	-del Release\*.pyd
 	-del Release\*.pyi
+	-rmdir Release
 	-del Debug\*.pyd
 	-del Debug\*.pyi
+	-rmdir Debug
 
 FORCE:

@@ -1,0 +1,74 @@
+# Makefile for yasimavr_arch_xt library
+#
+# Copyright 2023 Clement Savergne <csavergne@yahoo.com>
+#
+# This file is part of yasim-avr.
+#
+# yasim-avr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# yasim-avr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
+
+MAKE_DIR := mkdir
+RM_FILE := del
+RM_DIR := rmdir /q /s
+
+BUILD_DIR := Release
+BUILD_ARTIFACT_NAME := yasimavr_arch_xt.dll
+
+-include Makefile-defs
+
+CPP_ARGS := -std=c++17 -O3 -Wall -c -fmessage-length=0 -fvisibility=hidden
+CPP_DEFS := -DYASIMAVR_DLL
+
+BUILD_ARTIFACT = $(BUILD_DIR)/$(BUILD_ARTIFACT_NAME)
+BUILD_ARTIFACT_BKSL = $(subst /,\,$(BUILD_ARTIFACT))
+
+#Target definitions
+
+# All Target
+all: build
+
+# Main-build Target
+build: build-dirs $(BUILD_ARTIFACT)
+
+build-dirs:
+	@if not exist "$(BUILD_DIR)" $(MAKE_DIR) "$(BUILD_DIR)"
+
+# Linker invocations
+$(BUILD_ARTIFACT): $(OBJS) Makefile-release
+	@echo 'Building target: $@'
+	@echo 'Invoking: MinGW C++ Linker'
+	g++ -shared -L"../lib_core/Release" -o "$(BUILD_ARTIFACT)" $(OBJS) -lyasimavr_core
+	@echo 'Finished building target: $@'
+	@echo ' '
+
+# Compiler invocation
+$(BUILD_DIR)/%.o: src/%.cpp Makefile-release
+	@echo 'Building file: $<'
+	@echo 'Invoking: GCC C++ Compiler'
+	g++ $(CPP_ARGS) $(CPP_DEFS) $(CPP_INCS) -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" -o "$@" "$<"
+	@echo 'Finished building: $<'
+	@echo ' '
+
+ifneq ($(MAKECMDGOALS),clean)
+-include $(CPP_DEPS)
+endif
+
+# Clean target
+clean:
+	-$(RM_FILE) $(subst /,\,$(BUILD_ARTIFACT))
+	-$(RM_FILE) $(subst /,\,$(OBJS))
+	-$(RM_FILE) $(subst /,\,$(CPP_DEPS))
+	-$(RM_DIR) $(BUILD_DIR)
+	-@echo ' '
+
+.PHONY: all clean build build-dirs
