@@ -37,7 +37,7 @@ siplib: sipdirs
 
 bindings: siplib
 	$(COPY_FILE) src\pyproject.Release.toml sipgen\pyproject.toml
-	$(COPY_FILE) src\project.py sipgen
+	$(COPY_FILE) project.py sipgen
 	cd sipgen && sip-build
 	$(COPY_FILE) sipgen\gen\core\yasimavr\lib\core.pyd Release
 	$(COPY_FILE) sipgen\gen\core\core.pyi Release
@@ -48,7 +48,7 @@ bindings: siplib
 
 bindings-debug: siplib
 	$(COPY_FILE) src\pyproject.Debug.toml sipgen\pyproject.toml
-	$(COPY_FILE) src\project.py sipgen
+	$(COPY_FILE) project.py sipgen
 	cd sipgen && sip-build --tracing --gdb --no-line-directive
 	$(COPY_FILE) sipgen\gen\core\yasimavr\lib\core.pyd Debug
 	$(COPY_FILE) sipgen\gen\core\core.pyi Debug

@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=61.0",
+			"wheel",
+			"sip >=6, <7"]
+build-backend = "setuptools.build_meta"
+
+
+[project]
+name = "yasimavr"
+version = "0.0.1"
+authors = [
+	{ name = "Clement Savergne", email = "csavergne@yahoo.com" },
+]
+description = "Yet Another SIMulator for AVR"
+readme = "README.md"
+requires-python = ">=3.7"
+dependencies = ["pyYAML", "pyvcd"]
+
+
+[tool.setuptools]
+packages = [
+	"yasimavr",
+	"yasimavr.lib",
+	"yasimavr.utils",
+	"yasimavr.device_library",
+	"yasimavr.device_library.builders",
+	"yasimavr.device_library.configs",
+	"yasimavr.cli"
+]
+package-dir = {"yasimavr" = "py/yasimavr"}
+include-package-data = true
+zip-safe = false

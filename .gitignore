@@ -40,3 +40,8 @@
 *.asm
 *.elf
 *.hex
+
+# Build directories
+build
+dist
+yasimavr.egg-info

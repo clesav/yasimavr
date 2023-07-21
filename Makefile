@@ -40,7 +40,6 @@ clean: lib-core-clean \
 	   lib-arch-avr-clean \
 	   lib-arch-xt-clean \
 	   py-bindings-clean
-	-cd "$(LIB_TARGET_DIR)" && $(DEL_FILE) *.*
 
 
 lib-core: FORCE
@@ -91,6 +90,5 @@ py-bindings-debug: libs-debug
 
 py-bindings-clean: FORCE
 	-cd bindings && $(MAKE) clean
-
 
 FORCE:
