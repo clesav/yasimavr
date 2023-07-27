@@ -94,3 +94,5 @@ CPP_DEPS := \
 	$(BUILD_DIR)/sim/sim_loop.d
 
 CPP_INCS :=
+
+ARTIFACT_NAME := yasimavr_core

@@ -17,22 +17,53 @@
 # You should have received a copy of the GNU General Public License
 # along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
 
-MAKE_DIR := mkdir
-RM_FILE := del
-RM_DIR := rmdir /q /s
+ifeq ($(OS),Windows_NT)
+    detected_OS := Windows
+else
+    detected_OS := $(shell uname)
+endif
+
+ifeq ($(OS),Windows_NT)
+	MAKE_DIR := mkdir
+	RM_FILE := del
+	RM_DIR := rmdir /q /s
+	ARTIFACT_PREFIX := 
+	ARTIFACT_EXT := dll
+else
+	MAKE_DIR := mkdir -p
+	RM_FILE := rm
+	RM_DIR := rm -r
+	ARTIFACT_PREFIX := lib
+	ARTIFACT_EXT := so
+endif
 
 BUILD_DIR := Debug
-BUILD_ARTIFACT_NAME := yasimavr_arch_xt.dll
 
 -include Makefile-defs
 
 CPP_ARGS := -std=c++17 -O0 -g3 -w -Wall -c -fmessage-length=0 -fvisibility=hidden
 CPP_DEFS := -DYASIMAVR_USE_TRACE -DYASIMAVR_DLL
 
-BUILD_ARTIFACT = $(BUILD_DIR)/$(BUILD_ARTIFACT_NAME)
-BUILD_ARTIFACT_BKSL = $(subst /,\,$(BUILD_ARTIFACT))
+
+BUILD_ARTIFACT = $(BUILD_DIR)/$(ARTIFACT_PREFIX)$(ARTIFACT_NAME).$(ARTIFACT_EXT)
+
+
+ifeq ($(OS),Windows_NT)
+	BUILD_ARTIFACT_BKSL = $(subst /,\,$(BUILD_ARTIFACT))
+	OBJS_BKSL = $(subst /,\,$(OBJS))
+	CPP_DEPS_BKSL = $(subst /,\,$(CPP_DEPS))
+else
+	BUILD_ARTIFACT_BKSL = $(BUILD_ARTIFACT)
+	OBJS_BKSL = $(OBJS)
+	CPP_DEPS_BKSL = $(CPP_DEPS)
+endif
+
 
 #Target definitions
+
+define make_dir =
+-@if not exist "$^" mkdir "$^"
+endef
 
 # All Target
 all: build
@@ -41,10 +72,10 @@ all: build
 build: build-dirs $(BUILD_ARTIFACT)
 
 build-dirs:
-	@if not exist "$(BUILD_DIR)" $(MAKE_DIR) "$(BUILD_DIR)"
+	-@$(MAKE_DIR) "$(BUILD_DIR)"
 
 # Linker invocations
-$(BUILD_ARTIFACT): $(OBJS) Makefile-debug
+$(BUILD_ARTIFACT): $(OBJS) $(MAKEFILE)
 	@echo 'Building target: $@'
 	@echo 'Invoking: MinGW C++ Linker'
 	g++ -shared -L"../lib_core/Debug" -o "$(BUILD_ARTIFACT)" $(OBJS) -lyasimavr_core
@@ -52,7 +83,7 @@ $(BUILD_ARTIFACT): $(OBJS) Makefile-debug
 	@echo ' '
 
 # Compiler invocation
-$(BUILD_DIR)/%.o: src/%.cpp Makefile-debug
+$(BUILD_DIR)/%.o: src/%.cpp $(MAKEFILE)
 	@echo 'Building file: $<'
 	@echo 'Invoking: GCC C++ Compiler'
 	g++ $(CPP_ARGS) $(CPP_DEFS) $(CPP_INCS) -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" -o "$@" "$<"
@@ -65,10 +96,10 @@ endif
 
 # Clean target
 clean:
-	-$(RM_FILE) $(subst /,\,$(BUILD_ARTIFACT))
-	-$(RM_FILE) $(subst /,\,$(OBJS))
-	-$(RM_FILE) $(subst /,\,$(CPP_DEPS))
+	-$(RM_FILE) $(BUILD_ARTIFACT_BKSL)
+	-$(RM_FILE) $(OBJS_BKSL)
+	-$(RM_FILE) $(CPP_DEPS_BKSL)
 	-$(RM_DIR) $(BUILD_DIR)
 	-@echo ' '
 
-.PHONY: all clean build build-dirs
+.PHONY: all clean build

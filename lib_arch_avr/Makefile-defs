@@ -59,3 +59,5 @@ CPP_DEPS := \
 
 CPP_INCS := \
 	-I"../lib_core/src"
+
+ARTIFACT_NAME := yasimavr_arch_avr
