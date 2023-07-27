@@ -73,6 +73,7 @@ class DLL_EXPORT ArchXT_TimerA : public Peripheral, public SignalHook {
 public:
 
     explicit ArchXT_TimerA(const ArchXT_TimerAConfig& config);
+    virtual ~ArchXT_TimerA();
 
     //Override of Peripheral callbacks
     virtual bool init(Device& device) override;
@@ -103,7 +104,7 @@ private:
 
     //***** Interrupt and signal management *****
     InterruptFlag m_ovf_intflag;
-    InterruptFlag m_cmp_intflags[AVR_TCA_CMP_CHANNEL_COUNT];
+    InterruptFlag* m_cmp_intflags[AVR_TCA_CMP_CHANNEL_COUNT];
 
     //***** Counter management *****
     PrescaledTimer m_timer;

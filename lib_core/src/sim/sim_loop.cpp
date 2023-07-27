@@ -25,6 +25,7 @@
 #include "../core/sim_debug.h"
 #include <unistd.h>
 #include <chrono>
+#include <climits>
 
 YASIMAVR_USING_NAMESPACE
 
