@@ -28,11 +28,13 @@ ifeq ($(detected_OS),Windows)
 	RM_FILE := del
 	RM_DIR := rmdir /q /s
 	COPY_FILE := copy /y
+	LIB_EXT := pyd
 else
 	MAKE_DIR := mkdir -p
 	RM_FILE := rm
 	RM_DIR := rm -r
 	COPY_FILE := cp
+	LIB_EXT := so
 endif
 
 
@@ -65,9 +67,9 @@ bindings: siplib
 	$(COPY_FILE) $(SRC_DIR_BKSL)pyproject.Release.toml $(SIPGEN_DIR_BKSL)pyproject.toml
 	$(COPY_FILE) project.py sipgen
 	cd sipgen && sip-build
-	$(COPY_FILE) $(SIPGEN_DIR_BKSL)*.pyd Release
+	$(COPY_FILE) $(SIPGEN_DIR_BKSL)*.$(LIB_EXT) Release
 	$(COPY_FILE) $(SIPGEN_DIR_BKSL)*.pyi Release
-	$(COPY_FILE) $(SIPLIB_DIR_BKSL)_sip*.pyd Release
+	$(COPY_FILE) $(SIPLIB_DIR_BKSL)_sip*.$(LIB_EXT) Release
 
 bindings-debug: siplib
 	-@$(MAKE_DIR) sipgen
@@ -75,9 +77,9 @@ bindings-debug: siplib
 	$(COPY_FILE) $(SRC_DIR_BKSL)pyproject.Debug.toml $(SIPGEN_DIR_BKSL)pyproject.toml
 	$(COPY_FILE) project.py sipgen
 	cd sipgen && sip-build --tracing --gdb --no-line-directive
-	$(COPY_FILE) $(SIPGEN_DIR_BKSL)*.pyd Debug
+	$(COPY_FILE) $(SIPGEN_DIR_BKSL)*.$(LIB_EXT) Debug
 	$(COPY_FILE) $(SIPGEN_DIR_BKSL)*.pyi Debug
-	$(COPY_FILE) $(SIPLIB_DIR_BKSL)_sip*.pyd Debug
+	$(COPY_FILE) $(SIPLIB_DIR_BKSL)_sip*.$(LIB_EXT) Debug
 
 clean: FORCE
 	-$(RM_DIR) sipgen

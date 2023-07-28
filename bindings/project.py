@@ -32,7 +32,7 @@ The python debug libraries are still needed for linking though.
 '''
 
 import os
-
+import shutil
 from sipbuild import Project, Option, SetuptoolsBuilder
 
 
@@ -84,3 +84,8 @@ class yasimavr_bindings_builder(SetuptoolsBuilder):
             self._strip_line_directives(buildable)
 
         super()._build_extension_module(buildable)
+        
+        for installable in buildable.installables:
+            for f in installable.files:
+                if os.path.splitext(f)[1] in ('.pyd', '.pyi', '.so'):
+                    shutil.copy(f, '.')
