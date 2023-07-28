@@ -18,9 +18,9 @@
 # along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
 
 ifeq ($(OS),Windows_NT)
-    detected_OS := Windows
+	detected_OS := Windows
 else
-    detected_OS := $(shell uname)
+	detected_OS := $(shell uname)
 endif
 
 ifeq ($(detected_OS),Windows)
