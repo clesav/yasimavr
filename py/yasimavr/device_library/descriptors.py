@@ -33,7 +33,7 @@ from yaml import load as _yaml_load
 try:
     from yaml import CLoader as _YAMLLoader
 except ImportError:
-    from yaml import _YAMLLoader
+    from yaml import SafeLoader as _YAMLLoader
 
 
 Architectures = ['AVR', 'XT']
