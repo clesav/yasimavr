@@ -29,7 +29,8 @@ class LogWriter {
 
 public:
 
-    virtual void write(cycle_count_t, int, uint32_t, const char*, std::va_list);
+    virtual void write(cycle_count_t, int, uint32_t, const char*, std::va_list&)
+        [void (cycle_count_t, int, uint32_t, const char*, std::va_list)];
 
     static LogWriter* default_writer();
 
@@ -88,8 +89,11 @@ protected:
 
     uint32_t id() const;
 
-    void filtered_write(int, const char*, std::va_list);
-    void write(int, uint32_t, const char*, std::va_list);
+    void filtered_write(int, const char*, std::va_list&)
+        [void (int, const char*, std::va_list)];
+
+    void write(int, uint32_t, const char*, std::va_list&)
+        [void (int, uint32_t, const char*, std::va_list)];
 
 };
 
