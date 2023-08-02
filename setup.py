@@ -1,3 +1,12 @@
+NAME = "yasimavr"
+VERSION = "0.0.1"
+DESCRIPTION = "Yet Another SIMulator for AVR"
+LICENSE = "GPLv3"
+AUTHOR = "Clement Savergne"
+AUTHOR_EMAIL = "csavergne@yahoo.com"
+URL = "https://github.com/clesav/yasimavr"
+
+
 import glob
 import os
 import shutil
@@ -37,7 +46,7 @@ GCC_ARGS = [
 
 #Reimplementation of bindings_builder and bindings_project
 #Here, we just want to generate the source code from the SIP files
-#and create the Extension instances and and leave the compilation
+#and create the Extension instances. We leave the compilation
 #and linking to classic setuptools
 class _BindingsSubPackageBuilder(yasimavr_bindings_builder):
 
@@ -48,7 +57,7 @@ class _BindingsSubPackageBuilder(yasimavr_bindings_builder):
 
     def build(self):
         '''build override: just generate the source code and convert
-        to Extenson instances
+        to Extension instances
         '''
         self._generate_bindings()
         self._generate_scripts()
@@ -101,6 +110,7 @@ class _BindingsSubPackageBuilder(yasimavr_bindings_builder):
                         library_dirs=buildable.library_dirs,
                         py_limited_api=buildable.uses_limited_api)
 
+        #Add an extra attribute for the pep484 file
         if buildable.bindings.pep484_pyi:
             pyi_filename = buildable.target + '.pyi'
             ext.pyi_file = os.path.join(buildable.build_dir, pyi_filename)
@@ -152,6 +162,14 @@ class yasimavr_build_ext(build_ext):
                 lib_name_for_linker = os.path.splitext(s + ext_suffix)[0]
                 ext.libraries.remove(lib_name)
                 ext.libraries.append(lib_name_for_linker)
+
+                #Library objects are built shared in NT and static everywhere else
+                #For static libraries, library references aren't transitives, so we
+                #copy references across.
+                if os.name != 'nt' and isinstance(lib_ext, Library):
+                    for sub_lib_name in lib_ext.libraries:
+                        if sub_lib_name not in ext.libraries:
+                            ext.libraries.append(sub_lib_name)
 
 
     def finalize_options(self):
@@ -220,8 +238,10 @@ class yasimavr_build_ext(build_ext):
         #Copy the PEP484 files
         for ext in sip_project.builder.ext_modules:
             if ext.pyi_file:
-                pyd_path = self.get_ext_fullpath(ext.name)
-                pyi_path = os.path.join(os.path.dirname(pyd_path), os.path.basename(ext.pyi_file))
+                ext_path = self.get_ext_fullpath(ext.name)
+                ext_dir = os.path.dirname(ext_path)
+                self.mkpath(ext_dir)
+                pyi_path = os.path.join(ext_dir, os.path.basename(ext.pyi_file))
                 self.copy_file(ext.pyi_file, pyi_path)
 
         #=====================================================================
@@ -233,6 +253,32 @@ class yasimavr_build_ext(build_ext):
 
 
 setup(
+    name = NAME,
+    version = VERSION,
+    description = DESCRIPTION,
+    long_description = open("README.md").read(),
+    author = AUTHOR,
+    author_email = AUTHOR_EMAIL,
+    license = LICENSE,
+    license_files = ["LICENSE"],
+    url = URL,
+
+    python_requires = ">=3.7",
+    platforms = "Any",
+    dependencies = ["pyYAML", "pyvcd"],
+
+    packages = [
+        "yasimavr",
+        "yasimavr.lib",
+        "yasimavr.utils",
+        "yasimavr.device_library",
+        "yasimavr.device_library.builders",
+        "yasimavr.device_library.configs",
+        "yasimavr.cli"
+    ],
+    package_dir = {"yasimavr" : "py/yasimavr"},
+    include_package_data = True,
+
     ext_modules = [
         Library(name='yasimavr.lib._core',
                 sources=CORE_LIB_SOURCES,
@@ -252,6 +298,7 @@ setup(
                 libraries=['yasimavr.lib._core'],
                 extra_compile_args=GCC_ARGS),
     ],
+
     cmdclass = {
         'build_ext': yasimavr_build_ext,
     },
