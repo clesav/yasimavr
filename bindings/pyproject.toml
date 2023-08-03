@@ -31,8 +31,8 @@ sip-file = "src/lib_core/yasimavr-core.sip"
 include-dirs = ["../lib_core/src",
                 "src"]
 sources = ["src/utils/buffer_utils.c"]
-libraries = ["yasimavr.lib._core"]
-#library-dirs = ["../lib_core/Release"]
+libraries = ["yasimavr_core"]
+library-dirs = ["yasimavr/lib"]
 pep484-pyi = true
 protected-is-public = false
 
@@ -43,8 +43,9 @@ include-dirs = ["../lib_core/src",
                 "../lib_arch_avr/src",
                 "src"]
 sources = ["src/utils/buffer_utils.c"]
-libraries = ["yasimavr.lib._core",
-             "yasimavr.lib._arch_avr"]
+libraries = ["yasimavr_core",
+             "yasimavr_arch_avr"]
+library-dirs = ["yasimavr/lib"]
 pep484-pyi = true
 protected-is-public = false
 
@@ -54,8 +55,9 @@ sip-file = "src/lib_arch_xt/yasimavr-arch-xt.sip"
 include-dirs = ["../lib_core/src",
                 "../lib_arch_xt/src",
                 "../src"]
-libraries = ["yasimavr.lib._core",
-             "yasimavr.lib._arch_xt"]
+libraries = ["yasimavr_core",
+             "yasimavr_arch_xt"]
+library-dirs = ["yasimavr/lib"]
 pep484-pyi = true
 protected-is-public = false
 

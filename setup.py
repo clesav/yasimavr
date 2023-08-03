@@ -1,11 +1,22 @@
 NAME = "yasimavr"
-VERSION = "0.0.1"
+VERSION = "0.0.2"
 DESCRIPTION = "Yet Another SIMulator for AVR"
 LICENSE = "GPLv3"
-AUTHOR = "Clement Savergne"
+AUTHOR = "C. Savergne"
 AUTHOR_EMAIL = "csavergne@yahoo.com"
 URL = "https://github.com/clesav/yasimavr"
-
+CLASSIFIERS = [
+    'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
+    'Natural Language :: English',
+    'Operating System :: OS Independent',
+    'Programming Language :: C++',
+    'Programming Language :: Python :: 3.7',
+    'Programming Language :: Python :: 3.8',
+    'Programming Language :: Python :: 3.9',
+    'Programming Language :: Python :: 3.10',
+    'Topic :: Scientific/Engineering',
+]
+KEYWORDS = 'avr simavr'
 
 import glob
 import os
@@ -15,7 +26,7 @@ import dataclasses
 
 from setuptools import setup, Extension
 from setuptools.extension import Library
-from setuptools.command.build_ext import build_ext
+from setuptools.command.build_ext import build_ext, libtype
 from distutils.sysconfig import get_config_var
 
 from sipbuild.module import module as sip_module
@@ -153,36 +164,18 @@ class _BindingsSubPackageProject(yasimavr_bindings_project):
 class yasimavr_build_ext(build_ext):
 
 
-    def _resolve_libraries(self, ext):
-        '''Utility function to handle dynamic library reference for linking
-        A library referenced such as 'foo.bar' is for example converted
-        into foo/libbar.cp37-win_amd64.dll.a
-        That is designed for dependence between libraries/extensions built in
-        the same setup
-        '''
-        for lib_name in ext.libraries[:]:
-            #If a library referenced for linking is also to be built by this command
-            if lib_name in self.ext_map:
-                #Add the directory of the library to library_dirs
-                lib_ext = self.ext_map[lib_name]
-                lib_path = os.path.dirname(self.get_ext_fullpath(lib_ext.name))
-                if lib_path not in ext.library_dirs:
-                    ext.library_dirs.append(lib_path)
+    def get_ext_filename(self, fullname):
+        #Override of the normal behavior, in order to avoid adding the
+        #ext suffix with compatibility tags to the filename for C++ shared libraries
+        #because they do not depend on Python.
+        if fullname in self.ext_map:
+            ext = self.ext_map[fullname]
+            if isinstance(ext, Library):
+                filename = os.path.join(*fullname.split('.'))
+                shlibname = self.shlib_compiler.library_filename(filename, libtype)
+                return shlibname
 
-                #Add the library filename to libraries in a way that is recognized by the linker
-                ext_suffix = get_config_var('EXT_SUFFIX')
-                s = lib_ext.name.split('.')[-1]
-                lib_name_for_linker = os.path.splitext(s + ext_suffix)[0]
-                ext.libraries.remove(lib_name)
-                ext.libraries.append(lib_name_for_linker)
-
-                #Library objects are built shared in NT and static everywhere else
-                #For static libraries, library references aren't transitives, so we
-                #copy references across.
-                if os.name != 'nt' and isinstance(lib_ext, Library):
-                    for sub_lib_name in lib_ext.libraries:
-                        if sub_lib_name not in ext.libraries:
-                            ext.libraries.append(sub_lib_name)
+        return super().get_ext_filename(fullname)
 
 
     def finalize_options(self):
@@ -194,9 +187,6 @@ class yasimavr_build_ext(build_ext):
         self.swig_opts = None
 
         super().finalize_options()
-
-        for ext in self.distribution.ext_modules:
-            self._resolve_libraries(ext)
 
 
     def run(self):
@@ -292,10 +282,12 @@ setup(
     license = LICENSE,
     license_files = ["LICENSE"],
     url = URL,
+    classifiers = CLASSIFIERS,
+    keywords = KEYWORDS,
 
     python_requires = ">=3.7",
     platforms = "Any",
-    dependencies = ["pyYAML", "pyvcd"],
+    install_requires = ["pyYAML", "pyvcd"],
 
     packages = [
         "yasimavr",
@@ -310,22 +302,24 @@ setup(
     include_package_data = True,
 
     ext_modules = [
-        Library(name='yasimavr.lib._core',
+        Library(name='yasimavr.lib.yasimavr_core',
                 sources=LIBRARIES['core'].get_sources(),
                 libraries=['elf'],
                 define_macros=[('YASIMAVR_DLL', None)],
                 extra_compile_args=GCC_ARGS),
 
-        Library(name='yasimavr.lib._arch_avr',
+        Library(name='yasimavr.lib.yasimavr_arch_avr',
                 sources=LIBRARIES['arch_avr'].get_sources(),
                 include_dirs=['lib_core/src'],
-                libraries=['yasimavr.lib._core'],
+                libraries=['yasimavr_core'],
+                library_dirs = ['yasimavr/lib'],
                 extra_compile_args=GCC_ARGS),
 
-        Library(name='yasimavr.lib._arch_xt',
+        Library(name='yasimavr.lib.yasimavr_arch_xt',
                 sources=LIBRARIES['arch_xt'].get_sources(),
                 include_dirs=['lib_core/src'],
-                libraries=['yasimavr.lib._core'],
+                libraries=['yasimavr_core'],
+                library_dirs = ['yasimavr/lib'],
                 extra_compile_args=GCC_ARGS),
     ],
 

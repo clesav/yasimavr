@@ -12,21 +12,18 @@ It is composed of 2 layers:
 - a Python layer to handle the configuration, utilities, data recording, and external
 components
 
+Compilation
 ------------
-Compilation Requirements:
-- MinGW64 (latest)
-- libelf
-- Python >= 3.7
+libelf is required to compile the shared libraries.
 
 The python bindings for the C++ librairies are built with the SIP tool from RiverbankComputing
 (https://www.riverbankcomputing.com)
 
+Thanks
 ------------
 Quite a few ideas in this software - and even big chunks of code - originate from simavr.
 (https://github.com/buserror/simavr)
 Big thanks to the simavr authors for this great tool !
-
-Some examples are provided 
 
 Supported IOs
 --------------
@@ -36,7 +33,7 @@ Supported IOs
 - USART
 
 Supported Cores (very easy to add new ones!)
---------------
+--------------------------------------------
 + ATMega328
 + ATMega 0-series (ATmega808/809/1608/1609/3208/3209/4808/4809)
 + more to come...
@@ -46,6 +43,9 @@ How to use
 _yasimavr_ can be used as a Python package to run a prepared simulation script.
 (See the examples for how it looks like)
 
-It also supports direct command line run : _python -m yasimavr [options] [firmware]_
+It also supports direct command line run python -m yasimavr [options] [firmware]
 
-For the list of command line options, execute _python -m yasimavr -h_
+For the list of command line options, execute python -m yasimavr -h
+
+Some simple script examples are available here:
+https://github.com/clesav/yasimavr/tree/main/examples
