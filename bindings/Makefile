@@ -17,52 +17,75 @@
 # You should have received a copy of the GNU General Public License
 # along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
 
-COPY_FILE = copy /y
+ifeq ($(OS),Windows_NT)
+	detected_OS := Windows
+else
+	detected_OS := $(shell uname)
+endif
+
+ifeq ($(detected_OS),Windows)
+	MAKE_DIR := mkdir
+	RM_FILE := del
+	RM_DIR := rmdir /q /s
+	COPY_FILE := copy /y
+	LIB_EXT := pyd
+else
+	MAKE_DIR := mkdir -p
+	RM_FILE := rm
+	RM_DIR := rm -r
+	COPY_FILE := cp
+	LIB_EXT := so
+endif
+
+
+SIPLIB_DIR := siplib/sip/yasimavr/lib/
+SIPGEN_DIR := sipgen/
+SRC_DIR = src/
+ifeq ($(detected_OS),Windows)
+	SIPLIB_DIR_BKSL = $(subst /,\,$(SIPLIB_DIR))
+	SIPGEN_DIR_BKSL = $(subst /,\,$(SIPGEN_DIR))
+	SRC_DIR_BKSL = $(subst /,\,$(SRC_DIR))
+else
+	SIPLIB_DIR_BKSL = $(SIPLIB_DIR)
+	SIPGEN_DIR_BKSL = $(SIPGEN_DIR)
+	SRC_DIR_BKSL = $(SRC_DIR)
+endif
+
 
 all: siplib bindings
 
 debug: siplib bindings-debug
 
-sipdirs: FORCE
-	@if not exist siplib mkdir siplib
-	@if not exist sipgen mkdir sipgen
-	@if not exist Release mkdir Release
-	@if not exist Debug mkdir Debug
-
-siplib: sipdirs
+siplib: FORCE
+	-@$(MAKE_DIR) siplib
 	cd src && python generate_siplib.py
-	cd siplib\sip && python setup.py build --build-lib "."
-	copy /y siplib\sip\yasimavr\lib\_sip*.pyd Release
-	copy /y siplib\sip\yasimavr\lib\_sip*.pyd Debug
+	cd siplib/sip && python -B setup.py build --build-lib "."
 
 bindings: siplib
-	$(COPY_FILE) src\pyproject.Release.toml sipgen\pyproject.toml
-	$(COPY_FILE) src\project.py sipgen
+	-@$(MAKE_DIR) sipgen
+	-@$(MAKE_DIR) Release
+	$(COPY_FILE) $(SRC_DIR_BKSL)pyproject.Release.toml $(SIPGEN_DIR_BKSL)pyproject.toml
+	$(COPY_FILE) project.py sipgen
 	cd sipgen && sip-build
-	$(COPY_FILE) sipgen\gen\core\yasimavr\lib\core.pyd Release
-	$(COPY_FILE) sipgen\gen\core\core.pyi Release
-	$(COPY_FILE) sipgen\gen\arch_avr\yasimavr\lib\arch_avr.pyd Release
-	$(COPY_FILE) sipgen\gen\arch_avr\arch_avr.pyi Release
-	$(COPY_FILE) sipgen\gen\arch_xt\yasimavr\lib\arch_xt.pyd Release
-	$(COPY_FILE) sipgen\gen\arch_xt\arch_xt.pyi Release
+	$(COPY_FILE) $(SIPGEN_DIR_BKSL)*.$(LIB_EXT) Release
+	$(COPY_FILE) $(SIPGEN_DIR_BKSL)*.pyi Release
+	$(COPY_FILE) $(SIPLIB_DIR_BKSL)_sip*.$(LIB_EXT) Release
 
 bindings-debug: siplib
-	$(COPY_FILE) src\pyproject.Debug.toml sipgen\pyproject.toml
-	$(COPY_FILE) src\project.py sipgen
+	-@$(MAKE_DIR) sipgen
+	-@$(MAKE_DIR) Debug
+	$(COPY_FILE) $(SRC_DIR_BKSL)pyproject.Debug.toml $(SIPGEN_DIR_BKSL)pyproject.toml
+	$(COPY_FILE) project.py sipgen
 	cd sipgen && sip-build --tracing --gdb --no-line-directive
-	$(COPY_FILE) sipgen\gen\core\yasimavr\lib\core.pyd Debug
-	$(COPY_FILE) sipgen\gen\core\core.pyi Debug
-	$(COPY_FILE) sipgen\gen\arch_avr\yasimavr\lib\arch_avr.pyd Debug
-	$(COPY_FILE) sipgen\gen\arch_avr\arch_avr.pyi Debug
-	$(COPY_FILE) sipgen\gen\arch_xt\yasimavr\lib\arch_xt.pyd Debug
-	$(COPY_FILE) sipgen\gen\arch_xt\arch_xt.pyi Debug
+	$(COPY_FILE) $(SIPGEN_DIR_BKSL)*.$(LIB_EXT) Debug
+	$(COPY_FILE) $(SIPGEN_DIR_BKSL)*.pyi Debug
+	$(COPY_FILE) $(SIPLIB_DIR_BKSL)_sip*.$(LIB_EXT) Debug
 
 clean: FORCE
-	-rmdir /q /s sipgen
-	-rmdir /q /s siplib
-	-del Release\*.pyd
-	-del Release\*.pyi
-	-del Debug\*.pyd
-	-del Debug\*.pyi
+	-$(RM_DIR) sipgen
+	-$(RM_DIR) siplib
+	-$(RM_DIR) Release
+	-$(RM_DIR) Debug
+	-$(RM_DIR) __pycache__
 
 FORCE:

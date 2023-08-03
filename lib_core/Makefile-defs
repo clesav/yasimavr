@@ -1,0 +1,98 @@
+# Makefile for yasimavr_core library
+#
+# Copyright 2023 Clement Savergne <csavergne@yahoo.com>
+#
+# This file is part of yasim-avr.
+#
+# yasim-avr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# yasim-avr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
+
+# All of the sources participating in the build are defined here
+CPP_SRCS := \
+	src/core/sim_core.cpp \
+	src/core/sim_cpu.cpp \
+	src/core/sim_cycle_timer.cpp \
+	src/core/sim_debug.cpp \
+	src/core/sim_device.cpp \
+	src/core/sim_firmware.cpp \
+	src/core/sim_interrupt.cpp \
+	src/core/sim_ioreg.cpp \
+	src/core/sim_logger.cpp \
+	src/core/sim_memory.cpp \
+	src/core/sim_peripheral.cpp \
+	src/core/sim_pin.cpp \
+	src/core/sim_signal.cpp \
+	src/core/sim_sleep.cpp \
+	src/core/sim_types.cpp \
+	src/ioctrl_common/sim_port.cpp \
+	src/ioctrl_common/sim_spi.cpp \
+	src/ioctrl_common/sim_timer.cpp \
+	src/ioctrl_common/sim_twi.cpp \
+	src/ioctrl_common/sim_uart.cpp \
+	src/ioctrl_common/sim_vref.cpp \
+	src/ioctrl_common/sim_wdt.cpp \
+	src/sim/sim_loop.o
+
+OBJS := \
+	$(BUILD_DIR)/core/sim_core.o \
+	$(BUILD_DIR)/core/sim_cpu.o \
+	$(BUILD_DIR)/core/sim_cycle_timer.o \
+	$(BUILD_DIR)/core/sim_debug.o \
+	$(BUILD_DIR)/core/sim_device.o \
+	$(BUILD_DIR)/core/sim_firmware.o \
+	$(BUILD_DIR)/core/sim_interrupt.o \
+	$(BUILD_DIR)/core/sim_ioreg.o \
+	$(BUILD_DIR)/core/sim_logger.o \
+	$(BUILD_DIR)/core/sim_memory.o \
+	$(BUILD_DIR)/core/sim_peripheral.o \
+	$(BUILD_DIR)/core/sim_pin.o \
+	$(BUILD_DIR)/core/sim_signal.o \
+	$(BUILD_DIR)/core/sim_sleep.o \
+	$(BUILD_DIR)/core/sim_types.o \
+	$(BUILD_DIR)/ioctrl_common/sim_port.o \
+	$(BUILD_DIR)/ioctrl_common/sim_spi.o \
+	$(BUILD_DIR)/ioctrl_common/sim_timer.o \
+	$(BUILD_DIR)/ioctrl_common/sim_twi.o \
+	$(BUILD_DIR)/ioctrl_common/sim_uart.o \
+	$(BUILD_DIR)/ioctrl_common/sim_vref.o \
+	$(BUILD_DIR)/ioctrl_common/sim_wdt.o \
+	$(BUILD_DIR)/sim/sim_loop.o
+
+CPP_DEPS := \
+	$(BUILD_DIR)/core/sim_core.d \
+	$(BUILD_DIR)/core/sim_cpu.d \
+	$(BUILD_DIR)/core/sim_cycle_timer.d \
+	$(BUILD_DIR)/core/sim_debug.d \
+	$(BUILD_DIR)/core/sim_device.d \
+	$(BUILD_DIR)/core/sim_firmware.d \
+	$(BUILD_DIR)/core/sim_interrupt.d \
+	$(BUILD_DIR)/core/sim_ioreg.d \
+	$(BUILD_DIR)/core/sim_logger.d \
+	$(BUILD_DIR)/core/sim_memory.d \
+	$(BUILD_DIR)/core/sim_peripheral.d \
+	$(BUILD_DIR)/core/sim_pin.d \
+	$(BUILD_DIR)/core/sim_signal.d \
+	$(BUILD_DIR)/core/sim_sleep.d \
+	$(BUILD_DIR)/core/sim_types.d \
+	$(BUILD_DIR)/ioctrl_common/sim_port.d \
+	$(BUILD_DIR)/ioctrl_common/sim_spi.d \
+	$(BUILD_DIR)/ioctrl_common/sim_timer.d \
+	$(BUILD_DIR)/ioctrl_common/sim_twi.d \
+	$(BUILD_DIR)/ioctrl_common/sim_uart.d \
+	$(BUILD_DIR)/ioctrl_common/sim_vref.d \
+	$(BUILD_DIR)/ioctrl_common/sim_wdt.d \
+	$(BUILD_DIR)/sim/sim_loop.d
+
+CPP_INCS :=
+
+ARTIFACT_NAME := yasimavr_core

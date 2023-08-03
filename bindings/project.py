@@ -19,20 +19,24 @@
 
 
 '''
-This module's sole purpose is to add an option '--gdb' to sip-build
-This option allows to make a debug version of the bindings without
+This module's sole purpose is to add two options to sip-build:
+
+'--gdb': This option allows to make a debug version of the bindings without
 having to run the building script with a debug version of python.
 It's achieved by setting the debug flag after code generation
 but before compilation.
 The python debug libraries are still needed for linking though.
+
+'--no-line-directive': This option strips the generated code of all
+#line preprocessor directives, making it slightly easier to debug the bindings
 '''
 
 import os
-import sys
+import shutil
+from sipbuild import Project, Option, SetuptoolsBuilder
 
-from sipbuild import Project, Option, DistutilsBuilder
 
-class yasimavr_project(Project):
+class yasimavr_bindings_project(Project):
 
     def get_options(self):
         options = super().get_options()
@@ -53,23 +57,35 @@ class yasimavr_project(Project):
 
         return options
 
-class yasimavr_builder(DistutilsBuilder):
+
+class yasimavr_bindings_builder(SetuptoolsBuilder):
+
+    def _strip_line_directives(self, buildable):
+        for fp_src in buildable.sources:
+            if not os.path.basename(fp_src).startswith('sip'): continue
+
+            lines = open(fp_src).readlines()
+            new_lines = [line
+                         for line in lines
+                         if not line.startswith('#line ')]
+
+            f = open(fp_src, 'w')
+            for line in new_lines:
+                f.write(line)
+            f.close()
+
 
     def _build_extension_module(self, buildable):
         buildable.debug = self.project.gdb
 
+        #If the no-line-directive option is set, strip all generated
+        #source files of any line starting by the #line preprocessor directive
         if self.project.no_line_directive:
-            for fp_src in buildable.sources:
-                if not os.path.basename(fp_src).startswith('sip'): continue
-
-                lines = open(fp_src).readlines()
-                new_lines = [line
-                             for line in lines
-                             if not line.startswith('#line ')]
-
-                f = open(fp_src, 'w')
-                for line in new_lines:
-                    f.write(line)
-                f.close()
+            self._strip_line_directives(buildable)
 
         super()._build_extension_module(buildable)
+        
+        for installable in buildable.installables:
+            for f in installable.files:
+                if os.path.splitext(f)[1] in ('.pyd', '.pyi', '.so'):
+                    shutil.copy(f, '.')

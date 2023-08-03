@@ -51,12 +51,16 @@ ArchXT_TimerA::ArchXT_TimerA(const ArchXT_TimerAConfig& config)
 ,m_perbuf(0)
 ,m_next_event_type(0)
 ,m_ovf_intflag(false)
-,m_cmp_intflags{
-    InterruptFlag(false),
-    InterruptFlag(false),
-    InterruptFlag(false),
+{
+    for (int i = 0; i < AVR_TCA_CMP_CHANNEL_COUNT; ++i)
+        m_cmp_intflags[i] = new InterruptFlag(false);
 }
-{}
+
+ArchXT_TimerA::~ArchXT_TimerA()
+{
+    for (int i = 0; i < AVR_TCA_CMP_CHANNEL_COUNT; ++i)
+        delete m_cmp_intflags[i];
+}
 
 bool ArchXT_TimerA::init(Device& device)
 {
@@ -104,10 +108,10 @@ bool ArchXT_TimerA::init(Device& device)
                                  m_config.iv_ovf);
 
     for (int i = 0; i < AVR_TCA_CMP_CHANNEL_COUNT; ++i)
-        status &= m_cmp_intflags[i].init(device,
-                                         regbit_t(REG_ADDR(INTCTRL), TCA_SINGLE_CMP0_bp + i),
-                                         regbit_t(REG_ADDR(INTFLAGS), TCA_SINGLE_CMP0_bp + i),
-                                         m_config.ivs_cmp[i]);
+        status &= m_cmp_intflags[i]->init(device,
+                                          regbit_t(REG_ADDR(INTCTRL), TCA_SINGLE_CMP0_bp + i),
+                                          regbit_t(REG_ADDR(INTFLAGS), TCA_SINGLE_CMP0_bp + i),
+                                          m_config.ivs_cmp[i]);
 
     m_timer.init(*device.cycle_manager(), logger());
     m_timer.signal().connect_hook(this);
@@ -285,7 +289,7 @@ void ArchXT_TimerA::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& da
     else if (reg_ofs == REG_OFS(INTCTRL)) {
         m_ovf_intflag.update_from_ioreg();
         for (int i = 0; i < AVR_TCA_CMP_CHANNEL_COUNT; ++i)
-            m_cmp_intflags[i].update_from_ioreg();
+            m_cmp_intflags[i]->update_from_ioreg();
     }
 
     //If we're writing a 1 to a interrupt flag bit, it clears the bit and cancels the interrupt
@@ -294,7 +298,7 @@ void ArchXT_TimerA::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& da
         m_ovf_intflag.clear_flag(EXTRACT_B(data.value, TCA_SINGLE_OVF));
         for (int i = 0; i < AVR_TCA_CMP_CHANNEL_COUNT; ++i) {
             bitmask_t bm = bitmask_t(TCA_SINGLE_CMP0_bp + i);
-            m_cmp_intflags[i].clear_flag(bm.extract(data.value));
+            m_cmp_intflags[i]->clear_flag(bm.extract(data.value));
         }
     }
 
@@ -361,7 +365,7 @@ void ArchXT_TimerA::raised(const signal_data_t& sigdata, uint16_t __unused)
 
     for (int i = 0; i < AVR_TCA_CMP_CHANNEL_COUNT; ++i) {
         if (m_next_event_type & (TimerEventComp0 << i))
-            m_cmp_intflags[i].set_flag();
+            m_cmp_intflags[i]->set_flag();
     }
 
     //Reconfigure the timer delay to the next event

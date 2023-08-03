@@ -35,6 +35,7 @@ libraries = ["yasimavr_core"]
 library-dirs = ["../../lib_core/Release"]
 pep484-pyi = true
 protected-is-public = false
+extra-link-args = ["-Wl,-rpath=${ORIGIN}"]
 
 
 [tool.sip.bindings.yasimavr-arch-avr]
@@ -49,6 +50,7 @@ library-dirs = ["../../lib_core/Release",
                 "../../lib_arch_avr/Release"]
 pep484-pyi = true
 protected-is-public = false
+extra-link-args = ["-Wl,-rpath=${ORIGIN}"]
 
 
 [tool.sip.bindings.yasimavr-arch-xt]
@@ -62,12 +64,13 @@ library-dirs = ["../../lib_core/Release",
                 "../../lib_arch_xt/Release"]
 pep484-pyi = true
 protected-is-public = false
+extra-link-args = ["-Wl,-rpath=${ORIGIN}"]
 
 
 [tool.sip.project]
 name = "yasimavr"
 sip-module = "yasimavr.lib._sip"
-#builder-factory = "project.py"
+builder-factory = "project.py"
 build-dir = "./gen"
 verbose = true
 distinfo = false

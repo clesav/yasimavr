@@ -1,0 +1,31 @@
+#Excluded pycache
+global-exclude *.pyc
+
+#Headers for the shared libraries
+recursive-include lib_core/src *.h
+recursive-include lib_arch_avr/src *.h
+recursive-include lib_arch_xt/src *.h
+
+#Makefiles for the shared libraries and bindings, not used to package the distribution
+include Makefile
+include lib_core/Makefile
+include lib_core/Makefile-defs
+include lib_core/Makefile-debug
+include lib_core/Makefile-release
+include lib_arch_avr/Makefile
+include lib_arch_avr/Makefile-defs
+include lib_arch_avr/Makefile-debug
+include lib_arch_avr/Makefile-release
+include lib_arch_xt/Makefile
+include lib_arch_xt/Makefile-defs
+include lib_arch_xt/Makefile-debug
+include lib_arch_xt/Makefile-release
+
+#Files to build the bindings
+recursive-include bindings/src *.sip *.c *.h *.py *.toml
+include bindings/project.py
+include bindings/pyproject.toml
+include bindings/Makefile
+
+#Device configuration files, are part of the wheel
+recursive-include py/yasimavr/device_library *.yml

@@ -1,0 +1,121 @@
+# Makefile for yasimavr_core library
+#
+# Copyright 2023 Clement Savergne <csavergne@yahoo.com>
+#
+# This file is part of yasim-avr.
+#
+# yasim-avr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# yasim-avr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
+
+ifeq ($(OS),Windows_NT)
+	detected_OS := Windows
+else
+	detected_OS := $(shell uname)
+endif
+
+ifeq ($(OS),Windows_NT)
+	MAKE_DIR := mkdir
+	RM_FILE := del
+	RM_DIR := rmdir /q /s
+	ARTIFACT_PREFIX :=
+	ARTIFACT_EXT := dll
+else
+	MAKE_DIR := mkdir -p
+	RM_FILE := rm
+	RM_DIR := rm -r
+	ARTIFACT_PREFIX := lib
+	ARTIFACT_EXT := so
+endif
+
+
+BUILD_DIR := Debug
+
+-include Makefile-defs
+
+CPP_ARGS := -std=c++17 -O0 -g3 -w -Wall -c -fmessage-length=0 -fvisibility=hidden
+CPP_DEFS := -DYASIMAVR_USE_TRACE -DYASIMAVR_DLL
+
+
+BUILD_ARTIFACT = $(BUILD_DIR)/$(ARTIFACT_PREFIX)$(ARTIFACT_NAME).$(ARTIFACT_EXT)
+
+
+ifeq ($(OS),Windows_NT)
+	BUILD_ARTIFACT_BKSL = $(subst /,\,$(BUILD_ARTIFACT))
+	OBJS_BKSL = $(subst /,\,$(OBJS))
+	CPP_DEPS_BKSL = $(subst /,\,$(CPP_DEPS))
+else
+	BUILD_ARTIFACT_BKSL = $(BUILD_ARTIFACT)
+	OBJS_BKSL = $(OBJS)
+	CPP_DEPS_BKSL = $(CPP_DEPS)
+endif
+
+
+#Target definitions
+
+# All Target
+all: build
+
+# Main-build Target
+build: build-dirs $(BUILD_ARTIFACT)
+
+build-dirs:
+	-@$(MAKE_DIR) "$(BUILD_DIR)"
+	-@$(MAKE_DIR) "$(BUILD_DIR)/core"
+	-@$(MAKE_DIR) "$(BUILD_DIR)/ioctrl_common"
+	-@$(MAKE_DIR) "$(BUILD_DIR)/sim"
+
+# Linker invocations
+$(BUILD_ARTIFACT): $(OBJS) $(MAKEFILE)
+	@echo 'Building target: $@'
+	@echo 'Invoking: GCC C++ Linker'
+	g++ -shared -o "$(BUILD_ARTIFACT)" $(OBJS) -lelf
+	@echo 'Finished building target: $@'
+	@echo ' '
+
+# Compiler invocation for the core directory
+$(BUILD_DIR)/core/%.o: src/core/%.cpp $(MAKEFILE)
+	@echo 'Building file: $<'
+	@echo 'Invoking: GCC C++ Compiler'
+	g++ $(CPP_ARGS) $(CPP_DEFS) $(CPP_INCS) -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" -o "$@" "$<"
+	@echo 'Finished building: $<'
+	@echo ' '
+
+# Compiler invocation for the ioctrl_common directory
+$(BUILD_DIR)/ioctrl_common/%.o: src/ioctrl_common/%.cpp $(MAKEFILE)
+	@echo 'Building file: $<'
+	@echo 'Invoking: GCC C++ Compiler'
+	g++ $(CPP_ARGS) $(CPP_DEFS) $(CPP_INCS) -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" -o "$@" "$<"
+	@echo 'Finished building: $<'
+	@echo ' '
+
+# Compiler invocation for the sim directory
+$(BUILD_DIR)/sim/%.o: src/sim/%.cpp $(MAKEFILE)
+	@echo 'Building file: $<'
+	@echo 'Invoking: GCC C++ Compiler'
+	g++ $(CPP_ARGS) $(CPP_DEFS) $(CPP_INCS) -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" -o "$@" "$<"
+	@echo 'Finished building: $<'
+	@echo ' '
+
+ifneq ($(MAKECMDGOALS),clean)
+-include $(CPP_DEPS)
+endif
+
+# Clean target
+clean:
+	-$(RM_FILE) $(BUILD_ARTIFACT_BKSL)
+	-$(RM_FILE) $(OBJS_BKSL)
+	-$(RM_FILE) $(CPP_DEPS_BKSL)
+	-$(RM_DIR) $(BUILD_DIR)
+	-@echo ' '
+
+.PHONY: all clean build build-dirs

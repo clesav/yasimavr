@@ -1,0 +1,63 @@
+# Makefile for yasimavr_arch_avr library
+#
+# Copyright 2023 Clement Savergne <csavergne@yahoo.com>
+#
+# This file is part of yasim-avr.
+#
+# yasim-avr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# yasim-avr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
+
+# All of the sources participating in the build are defined here
+CPP_SRCS := \
+	src/arch_avr_acp.cpp \
+	src/arch_avr_adc.cpp \
+	src/arch_avr_device.cpp \
+	src/arch_avr_extint.cpp \
+	src/arch_avr_misc.cpp \
+	src/arch_avr_port.cpp \
+	src/arch_avr_spi.cpp \
+	src/arch_avr_timer.cpp \
+	src/arch_avr_twi.cpp \
+	src/arch_avr_usart.cpp \
+	src/arch_avr_wdt.cpp
+
+OBJS := \
+	$(BUILD_DIR)/arch_avr_acp.o \
+	$(BUILD_DIR)/arch_avr_adc.o \
+	$(BUILD_DIR)/arch_avr_device.o \
+	$(BUILD_DIR)/arch_avr_extint.o \
+	$(BUILD_DIR)/arch_avr_misc.o \
+	$(BUILD_DIR)/arch_avr_port.o \
+	$(BUILD_DIR)/arch_avr_spi.o \
+	$(BUILD_DIR)/arch_avr_timer.o \
+	$(BUILD_DIR)/arch_avr_twi.o \
+	$(BUILD_DIR)/arch_avr_usart.o \
+	$(BUILD_DIR)/arch_avr_wdt.o
+
+CPP_DEPS := \
+	$(BUILD_DIR)/arch_avr_acp.d \
+	$(BUILD_DIR)/arch_avr_adc.d \
+	$(BUILD_DIR)/arch_avr_device.d \
+	$(BUILD_DIR)/arch_avr_extint.d \
+	$(BUILD_DIR)/arch_avr_misc.d \
+	$(BUILD_DIR)/arch_avr_port.d \
+	$(BUILD_DIR)/arch_avr_spi.d \
+	$(BUILD_DIR)/arch_avr_timer.d \
+	$(BUILD_DIR)/arch_avr_twi.d \
+	$(BUILD_DIR)/arch_avr_usart.d \
+	$(BUILD_DIR)/arch_avr_wdt.d
+
+CPP_INCS := \
+	-I"../lib_core/src"
+
+ARTIFACT_NAME := yasimavr_arch_avr

@@ -1,0 +1,69 @@
+# Makefile for yasimavr_arch_xt library
+#
+# Copyright 2023 Clement Savergne <csavergne@yahoo.com>
+#
+# This file is part of yasim-avr.
+#
+# yasim-avr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# yasim-avr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
+
+# All of the sources participating in the build are defined here
+CPP_SRCS := \
+	src/arch_xt_acp.cpp \
+	src/arch_xt_adc.cpp \
+	src/arch_xt_device.cpp \
+	src/arch_xt_misc.cpp \
+	src/arch_xt_nvm.cpp \
+	src/arch_xt_port.cpp \
+	src/arch_xt_rtc.cpp \
+	src/arch_xt_spi.cpp \
+	src/arch_xt_timer_a.cpp \
+	src/arch_xt_timer_b.cpp \
+	src/arch_xt_twi.cpp \
+	src/arch_xt_usart.cpp \
+	src/arch_xt_wdt.cpp
+
+OBJS := \
+	$(BUILD_DIR)/arch_xt_acp.o \
+	$(BUILD_DIR)/arch_xt_adc.o \
+	$(BUILD_DIR)/arch_xt_device.o \
+	$(BUILD_DIR)/arch_xt_misc.o \
+	$(BUILD_DIR)/arch_xt_nvm.o \
+	$(BUILD_DIR)/arch_xt_port.o \
+	$(BUILD_DIR)/arch_xt_rtc.o \
+	$(BUILD_DIR)/arch_xt_spi.o \
+	$(BUILD_DIR)/arch_xt_timer_a.o \
+	$(BUILD_DIR)/arch_xt_timer_b.o \
+	$(BUILD_DIR)/arch_xt_twi.o \
+	$(BUILD_DIR)/arch_xt_usart.o \
+	$(BUILD_DIR)/arch_xt_wdt.o
+
+CPP_DEPS := \
+	$(BUILD_DIR)/arch_xt_acp.d \
+	$(BUILD_DIR)/arch_xt_adc.d \
+	$(BUILD_DIR)/arch_xt_device.d \
+	$(BUILD_DIR)/arch_xt_misc.d \
+	$(BUILD_DIR)/arch_xt_nvm.d \
+	$(BUILD_DIR)/arch_xt_port.d \
+	$(BUILD_DIR)/arch_xt_rtc.d \
+	$(BUILD_DIR)/arch_xt_spi.d \
+	$(BUILD_DIR)/arch_xt_timer_a.d \
+	$(BUILD_DIR)/arch_xt_timer_b.d \
+	$(BUILD_DIR)/arch_xt_twi.d \
+	$(BUILD_DIR)/arch_xt_usart.d \
+	$(BUILD_DIR)/arch_xt_wdt.d
+
+CPP_INCS := \
+	-I"../lib_core/src"
+
+ARTIFACT_NAME := yasimavr_arch_xt
