@@ -11,6 +11,7 @@ import glob
 import os
 import shutil
 import sys
+import dataclasses
 
 from setuptools import setup, Extension
 from setuptools.extension import Library
@@ -28,14 +29,26 @@ if p not in sys.path:
 from bindings.project import yasimavr_bindings_project, yasimavr_bindings_builder
 
 
-def _find_lib_sources(p, ext):
-    src = glob.glob(os.path.join(p, '**/*' + ext), recursive=True)
-    return [os.path.normpath(p) for p in src]
+@dataclasses.dataclass
+class LibraryData:
+    name: str
+    src_path : str
 
+    def get_sources(self):
+        src = glob.glob(os.path.join(self.src_path, '**/*.cpp'), recursive=True)
+        src = [os.path.normpath(p) for p in src]
+        return src
 
-CORE_LIB_SOURCES = _find_lib_sources('lib_core/src', '.cpp')
-ARCH_AVR_LIB_SOURCES = _find_lib_sources('lib_arch_avr/src', '.cpp')
-ARCH_XT_LIB_SOURCES = _find_lib_sources('lib_arch_xt/src', '.cpp')
+    def get_headers(self):
+        hdr = glob.glob(os.path.join(self.src_path, '**/*.h'), recursive=True)
+        hdr = [os.path.normpath(p) for p in hdr]
+        return hdr
+
+LIBRARIES = {
+    'core': LibraryData('core', 'lib_core/src'),
+    'arch_avr': LibraryData('arch_avr', 'lib_arch_avr/src'),
+    'arch_xt': LibraryData('arch_xt', 'lib_arch_xt/src'),
+}
 
 GCC_ARGS = [
     '-std=c++17',
@@ -235,7 +248,14 @@ class yasimavr_build_ext(build_ext):
         #Add on-the-fly the binding extension modules to be built
         self.distribution.ext_modules.extend(sip_project.builder.ext_modules)
 
+        #=====================================================================
+        #Re-finalize the setup
+        ##=====================================================================
+        self.finalize_options()
+
+        #=====================================================================
         #Copy the PEP484 files
+        #=====================================================================
         for ext in sip_project.builder.ext_modules:
             if ext.pyi_file:
                 ext_path = self.get_ext_fullpath(ext.name)
@@ -245,10 +265,20 @@ class yasimavr_build_ext(build_ext):
                 self.copy_file(ext.pyi_file, pyi_path)
 
         #=====================================================================
-        #Re-finalize the setup and run
+        #Copy the header files in the include folder
         ##=====================================================================
-        self.finalize_options()
+        include_dir = os.path.dirname(self.get_ext_fullpath(NAME + '.include._'))
+        for lib in LIBRARIES.values():
+            hdr_list = lib.get_headers()
+            for hdr in hdr_list:
+                hdr_path = os.path.relpath(hdr, lib.src_path)
+                hdr_pkg_path = os.path.join(include_dir, lib.name, hdr_path)
+                self.mkpath(os.path.dirname(hdr_pkg_path))
+                self.copy_file(hdr, hdr_pkg_path)
 
+        #=====================================================================
+        #run
+        ##=====================================================================
         super().run()
 
 
@@ -281,19 +311,19 @@ setup(
 
     ext_modules = [
         Library(name='yasimavr.lib._core',
-                sources=CORE_LIB_SOURCES,
+                sources=LIBRARIES['core'].get_sources(),
                 libraries=['elf'],
                 define_macros=[('YASIMAVR_DLL', None)],
                 extra_compile_args=GCC_ARGS),
 
         Library(name='yasimavr.lib._arch_avr',
-                sources=ARCH_AVR_LIB_SOURCES,
+                sources=LIBRARIES['arch_avr'].get_sources(),
                 include_dirs=['lib_core/src'],
                 libraries=['yasimavr.lib._core'],
                 extra_compile_args=GCC_ARGS),
 
         Library(name='yasimavr.lib._arch_xt',
-                sources=ARCH_XT_LIB_SOURCES,
+                sources=LIBRARIES['arch_xt'].get_sources(),
                 include_dirs=['lib_core/src'],
                 libraries=['yasimavr.lib._core'],
                 extra_compile_args=GCC_ARGS),
