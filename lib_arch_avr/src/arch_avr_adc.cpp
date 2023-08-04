@@ -293,7 +293,7 @@ void ArchAVR_ADC::read_analog_value()
 }
 
 
-void ArchAVR_ADC::raised(const signal_data_t& sigdata, uint16_t __unused)
+void ArchAVR_ADC::raised(const signal_data_t& sigdata, int)
 {
     if (sigdata.index != 1) return;
 

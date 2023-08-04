@@ -84,7 +84,7 @@ public:
     virtual uint8_t ioreg_read_handler(reg_addr_t addr, uint8_t value) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
     virtual void sleep(bool on, SleepMode mode) override;
-    virtual void raised(const signal_data_t& data, uint16_t sigid) override;
+    virtual void raised(const signal_data_t& sigdata, int hooktag) override;
 
 private:
 

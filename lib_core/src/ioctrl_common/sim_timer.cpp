@@ -309,7 +309,7 @@ public:
 
     TimerHook(TimerCounter& timer) : m_timer(timer) {}
 
-    virtual void raised(const signal_data_t& sigdata, uint16_t hooktag) override
+    virtual void raised(const signal_data_t& sigdata, int) override
     {
         m_timer.timer_raised(sigdata);
     }
@@ -330,7 +330,7 @@ public:
 
     ExtTickHook(TimerCounter& timer) : m_timer(timer) {}
 
-    virtual void raised(const signal_data_t& sigdata, uint16_t hooktag) override
+    virtual void raised(const signal_data_t&, int) override
     {
         m_timer.extclock_raised();
     }

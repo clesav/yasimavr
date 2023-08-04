@@ -349,7 +349,7 @@ uint32_t ArchXT_TimerA::delay_to_event()
     return (uint32_t)ticks_to_next_event;
 }
 
-void ArchXT_TimerA::raised(const signal_data_t& sigdata, uint16_t __unused)
+void ArchXT_TimerA::raised(const signal_data_t& sigdata, int)
 {
     m_cnt += sigdata.data.as_uint();
 

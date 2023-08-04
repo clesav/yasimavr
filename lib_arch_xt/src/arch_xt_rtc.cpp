@@ -59,7 +59,7 @@ public:
 
     explicit TimerHook(ArchXT_RTC& ctl) : m_ctl(ctl) {}
 
-    virtual void raised(const signal_data_t& sigdata, uint16_t hooktag) override {
+    virtual void raised(const signal_data_t& sigdata, int hooktag) override {
         if (hooktag)
             m_ctl.pit_hook_raised(sigdata);
         else

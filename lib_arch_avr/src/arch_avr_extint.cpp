@@ -170,7 +170,7 @@ void ArchAVR_ExtInt::interrupt_ack_handler(int_vect_t vector)
     }
 }
 
-void ArchAVR_ExtInt::raised(const signal_data_t& sigdata, uint16_t hooktag)
+void ArchAVR_ExtInt::raised(const signal_data_t& sigdata, int hooktag)
 {
     if (sigdata.sigid != Pin::Signal_DigitalStateChange) return;
 

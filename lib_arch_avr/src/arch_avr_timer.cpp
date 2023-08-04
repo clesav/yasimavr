@@ -41,7 +41,7 @@ public:
     CaptureHook(ArchAVR_Timer& timer) : m_timer(timer) {}
     virtual ~CaptureHook() {}
 
-    virtual void raised(const signal_data_t& data, uint16_t sigid) override
+    virtual void raised(const signal_data_t&, int) override
     {
         m_timer.capt_raised();
     }
@@ -439,7 +439,7 @@ bool ArchAVR_Timer::output_active(CFG::COM_config_t& mode, uint32_t output_index
 }
 
 
-void ArchAVR_Timer::raised(const signal_data_t& sigdata, uint16_t __unused)
+void ArchAVR_Timer::raised(const signal_data_t& sigdata, int)
 {
     if (sigdata.sigid == TimerCounter::Signal_Event) {
         uint8_t event_flags = sigdata.data.as_uint();

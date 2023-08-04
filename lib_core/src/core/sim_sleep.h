@@ -95,7 +95,7 @@ public:
 
     virtual bool init(Device& device) override;
     virtual bool ctlreq(uint16_t req, ctlreq_data_t* data) override;
-    virtual void raised(const signal_data_t& data, uint16_t __unused) override;
+    virtual void raised(const signal_data_t& sigdata, int hooktag) override;
 
 private:
 

@@ -289,7 +289,7 @@ void ArchXT_ACP::update_output()
 /*
 * Callback from the pin signal hook.
 */
-void ArchXT_ACP::raised(const signal_data_t& sigdata, uint16_t hooktag)
+void ArchXT_ACP::raised(const signal_data_t& sigdata, int hooktag)
 {
     if (hooktag == HookTag_VREF) {
         if (sigdata.sigid == VREF::Signal_IntRefChange && sigdata.index == m_config.vref_channel) {

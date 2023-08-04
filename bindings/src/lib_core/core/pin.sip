@@ -56,6 +56,6 @@ public:
 
     DataSignal& signal();
 
-    virtual void raised(const signal_data_t&, uint16_t);
+    virtual void raised(const signal_data_t&, int);
 
 };

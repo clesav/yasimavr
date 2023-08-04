@@ -291,7 +291,7 @@ void UART::add_rx_frame(uint8_t frame)
  * Reimplementation of Signal::Hook to receive
  * data
  */
-void UART::raised(const signal_data_t& sigdata, uint16_t id)
+void UART::raised(const signal_data_t& sigdata, int)
 {
     if (sigdata.sigid == Signal_DataFrame) {
         m_logger->dbg("RX frame received");

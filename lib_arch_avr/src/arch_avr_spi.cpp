@@ -142,7 +142,7 @@ void ArchAVR_SPI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
         m_spi.set_host_mode(m_config.rb_mode.extract(data.value));
 }
 
-void ArchAVR_SPI::raised(const signal_data_t& sigdata, uint16_t hooktag)
+void ArchAVR_SPI::raised(const signal_data_t& sigdata, int hooktag)
 {
     if (sigdata.sigid != Pin::Signal_DigitalStateChange) return;
 

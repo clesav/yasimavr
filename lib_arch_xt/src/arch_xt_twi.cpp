@@ -305,7 +305,7 @@ void ArchXT_TWI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 
 }
 
-void ArchXT_TWI::raised(const signal_data_t& sigdata, uint16_t __unused)
+void ArchXT_TWI::raised(const signal_data_t& sigdata, int)
 {
     switch (sigdata.sigid) {
 

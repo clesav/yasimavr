@@ -88,7 +88,7 @@ public:
     DataSignal& signal();
 
     //Implementation of the SignalHook interface to receive changes
-    virtual void raised(const signal_data_t& sigdata, uint16_t hooktag) override;
+    virtual void raised(const signal_data_t& sigdata, int hooktag) override;
 
 private:
 

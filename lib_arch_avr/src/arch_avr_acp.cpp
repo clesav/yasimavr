@@ -206,7 +206,7 @@ void ArchAVR_ACP::update_state()
 /*
  * Hook callback, the hooktag determines if it's for the positive or the negative side
  */
-void ArchAVR_ACP::raised(const signal_data_t& sigdata, uint16_t hooktag)
+void ArchAVR_ACP::raised(const signal_data_t& sigdata, int hooktag)
 {
     if (hooktag == HookTag_Pos)
         m_pos_value = sigdata.data.as_double();

@@ -178,7 +178,7 @@ void ArchXT_USART::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& dat
     }
 }
 
-void ArchXT_USART::raised(const signal_data_t& sigdata, uint16_t __unused)
+void ArchXT_USART::raised(const signal_data_t& sigdata, int)
 {
     if (sigdata.sigid == UART::Signal_TX_Start) {
         //Notification that the pending frame has been pushed to the shift register

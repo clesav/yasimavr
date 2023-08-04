@@ -223,7 +223,7 @@ void ArchAVR_TWI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
 
 }
 
-void ArchAVR_TWI::raised(const signal_data_t& sigdata, uint16_t hooktag)
+void ArchAVR_TWI::raised(const signal_data_t& sigdata, int)
 {
     uint8_t ctrl = read_ioreg(m_config.reg_ctrl);
 

@@ -161,7 +161,7 @@ void ArchXT_SPI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
     }
 }
 
-void ArchXT_SPI::raised(const signal_data_t& sigdata, uint16_t hooktag)
+void ArchXT_SPI::raised(const signal_data_t& sigdata, int hooktag)
 {
     if (hooktag == HOOKTAG_SPI) {
         if (sigdata.sigid == SPI::Signal_HostTfrComplete ||

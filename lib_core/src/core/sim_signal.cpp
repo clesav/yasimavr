@@ -81,7 +81,7 @@ Signal::~Signal()
 }
 
 
-void Signal::connect_hook(SignalHook* hook, uint16_t hooktag)
+void Signal::connect_hook(SignalHook* hook, int hooktag)
 {
     if (hook_index(hook) == -1) {
         hook_slot_t slot = { hook, hooktag };
@@ -109,7 +109,7 @@ void Signal::raise()
 }
 
 
-void Signal::raise(uint16_t sigid)
+void Signal::raise(int sigid)
 {
     raise_u(sigid, 0);
 }
@@ -128,35 +128,35 @@ void Signal::raise(const signal_data_t& sigdata)
 }
 
 
-void Signal::raise_u(uint16_t sigid, uint32_t u, uint32_t index)
+void Signal::raise_u(int sigid, uint32_t u, long long index)
 {
     signal_data_t sigdata = { sigid, index, u };
     raise(sigdata);
 }
 
 
-void Signal::raise_d(uint16_t sigid, double d, uint32_t index)
+void Signal::raise_d(int sigid, double d, long long index)
 {
     signal_data_t sigdata = { sigid, index, d };
     raise(sigdata);
 }
 
 
-void Signal::raise(uint16_t sigid, void* p)
+void Signal::raise(int sigid, void* p)
 {
     signal_data_t sigdata = { sigid, 0, p };
     raise(sigdata);
 }
 
 
-void Signal::raise(uint16_t sigid, const char* s)
+void Signal::raise(int sigid, const char* s)
 {
     signal_data_t sigdata = { sigid, 0, s };
     raise(sigdata);
 }
 
 
-void Signal::raise(uint16_t sigid, vardata_t v)
+void Signal::raise(int sigid, vardata_t v)
 {
     signal_data_t sigdata = { sigid, 0, v };
     raise(sigdata);
@@ -208,7 +208,7 @@ Signal& Signal::operator=(const Signal& other)
 
 //=======================================================================================
 
-vardata_t DataSignal::data(uint16_t sigid, uint32_t index) const
+vardata_t DataSignal::data(int sigid, long long index) const
 {
     key_t k = { sigid, index };
     auto it = m_data.find(k);
@@ -219,14 +219,14 @@ vardata_t DataSignal::data(uint16_t sigid, uint32_t index) const
 }
 
 
-bool DataSignal::has_data(uint16_t sigid, uint32_t index) const
+bool DataSignal::has_data(int sigid, long long index) const
 {
     key_t k = { sigid, index };
     return m_data.find(k) != m_data.end();
 }
 
 
-void DataSignal::set_data(uint16_t sigid, vardata_t v, uint32_t index)
+void DataSignal::set_data(int sigid, const vardata_t& v, long long index)
 {
     key_t k = { sigid, index };
     m_data[k] = v;
@@ -269,7 +269,7 @@ DataSignalMux::DataSignalMux()
 :m_sel_index(0)
 {}
 
-void DataSignalMux::raised(const signal_data_t& sigdata, uint16_t hooktag)
+void DataSignalMux::raised(const signal_data_t& sigdata, int hooktag)
 {
     if (hooktag == m_sel_index && m_sel_index < m_items.size() && m_items[m_sel_index].match(sigdata)) {
         m_items[m_sel_index].data = sigdata.data;
@@ -292,14 +292,14 @@ size_t DataSignalMux::add_mux(DataSignal& signal)
 }
 
 
-size_t DataSignalMux::add_mux(DataSignal& signal, uint16_t sigid_filt)
+size_t DataSignalMux::add_mux(DataSignal& signal, int sigid_filt)
 {
     mux_item_t item = { &signal, sigid_filt, 0, FILT_SIGID };
     return add_mux(item);
 }
 
 
-size_t DataSignalMux::add_mux(DataSignal& signal, uint16_t sigid_filt, uint32_t ix_filt)
+size_t DataSignalMux::add_mux(DataSignal& signal, int sigid_filt, long long ix_filt)
 {
     mux_item_t item = { &signal, sigid_filt, ix_filt, FILT_SIGID | FILT_INDEX };
     return add_mux(item);

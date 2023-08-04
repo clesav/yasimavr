@@ -87,4 +87,6 @@ public:
 
     void set_paused(bool);
 
+    virtual void raised(const signal_data_t&, int);
+
 };

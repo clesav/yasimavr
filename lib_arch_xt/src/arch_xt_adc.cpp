@@ -316,9 +316,9 @@ void ArchXT_ADC::read_analog_value()
 * First, we perform the actual analog read.
 * Second, we store it in the data register and raise the interrupt flag
 */
-void ArchXT_ADC::raised(const signal_data_t& data, uint16_t sigid)
+void ArchXT_ADC::raised(const signal_data_t& sigdata, int)
 {
-    if (data.index != 1) return;
+    if (sigdata.index != 1) return;
 
     if (m_state == ADC_Starting) {
 

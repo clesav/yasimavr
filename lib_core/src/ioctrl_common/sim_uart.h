@@ -169,11 +169,9 @@ public:
     UART(const UART&) = delete;
     UART& operator=(const UART&) = delete;
 
-protected:
-
     //Implementation of the Signal::Hook interface to receive frames
     //from the outside
-    virtual void raised(const signal_data_t& data, uint16_t id) override;
+    virtual void raised(const signal_data_t& sigdata, int hooktag) override;
 
 private:
 

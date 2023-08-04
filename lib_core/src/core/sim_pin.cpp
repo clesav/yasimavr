@@ -183,7 +183,7 @@ Pin::State Pin::digital_state() const
     }
 }
 
-void Pin::raised(const signal_data_t& sigdata, uint16_t __unused)
+void Pin::raised(const signal_data_t& sigdata, int)
 {
     if (sigdata.sigid == Signal_DigitalStateChange)
         set_external_state((State) sigdata.data.as_uint());

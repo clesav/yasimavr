@@ -100,7 +100,7 @@ void Port::set_pin_internal_state(uint8_t num, Pin::State state)
     }
 }
 
-void Port::raised(const signal_data_t& sigdata, uint16_t hooktag)
+void Port::raised(const signal_data_t& sigdata, int hooktag)
 {
     if (sigdata.sigid == Pin::Signal_DigitalStateChange) {
         Pin::State pin_state = (Pin::State) sigdata.data.as_uint();

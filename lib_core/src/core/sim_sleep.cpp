@@ -105,7 +105,7 @@ bool SleepController::ctlreq(uint16_t req, ctlreq_data_t* __unused)
     return false;
 }
 
-void SleepController::raised(const signal_data_t& sigdata, uint16_t __unused)
+void SleepController::raised(const signal_data_t& sigdata, int)
 {
     //data.u contains the state of the interrupt. We only do something on a 'Raise'
     if (sigdata.sigid != InterruptController::Signal_StateChange ||

@@ -86,7 +86,10 @@ struct ArchAVR_ExtIntConfig {
 };
 
 
-class ArchAVR_ExtInt : public Peripheral, public InterruptHandler /NoDefaultCtors/ {
+class ArchAVR_ExtInt : public Peripheral,
+                       public InterruptHandler,
+                       public SignalHook
+                       /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_avr_extint.h"
 %End
@@ -105,5 +108,6 @@ public:
     virtual bool ctlreq(uint16_t req, ctlreq_data_t*);
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
     virtual void interrupt_ack_handler(int_vect_t);
+    virtual void raised(const signal_data_t&, int);
 
 };

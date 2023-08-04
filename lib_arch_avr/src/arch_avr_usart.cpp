@@ -155,7 +155,7 @@ void ArchAVR_USART::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& da
 
 }
 
-void ArchAVR_USART::raised(const signal_data_t& sigdata, uint16_t __unused)
+void ArchAVR_USART::raised(const signal_data_t& sigdata, int)
 {
     //If a frame emission is started, it means the TX buffer is empty
     //so raise the TXE (DRE) flag

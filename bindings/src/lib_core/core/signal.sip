@@ -26,8 +26,8 @@ struct signal_data_t {
 #include "core/sim_signal.h"
 %End
 
-    uint16_t sigid;
-    uint32_t index;
+    int sigid;
+    long long index;
     vardata_t data;
 
 };
@@ -41,7 +41,7 @@ class SignalHook {
 public:
 
     virtual ~SignalHook();
-    virtual void raised(const signal_data_t&, uint16_t) = 0;
+    virtual void raised(const signal_data_t&, int) = 0;
 
 };
 
@@ -60,13 +60,13 @@ public:
     Signal();
     Signal(const Signal&);
 
-    void connect_hook(SignalHook*, uint16_t = 0);
+    void connect_hook(SignalHook*, int = 0);
     void disconnect_hook(SignalHook*);
 
     void raise() /PyName=raise_/;
     virtual void raise(const signal_data_t&) /PyName=raise_/;
 
-    void raise(uint16_t, SIP_PYOBJECT, uint32_t = 0) /PyName=raise_/;
+    void raise(int, SIP_PYOBJECT, long long = 0) /PyName=raise_/;
     %MethodCode
         signal_data_t sigdata;
         sigdata.sigid = a0;
@@ -89,14 +89,14 @@ extern void fill_vardata_with_pyobj(vardata_t* d, PyObject* obj);
 
 public:
 
-    vardata_t data(uint16_t, uint32_t = 0) const;
-    bool has_data(uint16_t, uint32_t = 0) const;
-    void set_data(uint16_t, vardata_t, uint32_t = 0);
+    vardata_t data(int, long long = 0) const;
+    bool has_data(int, long long = 0) const;
+    void set_data(int, const vardata_t&, long long = 0);
 
     void clear();
 
     virtual void raise(const signal_data_t&);
-    void raise(uint16_t, SIP_PYOBJECT, uint32_t = 0);
+    void raise(int, SIP_PYOBJECT, long long = 0);
     %MethodCode
         signal_data_t sigdata;
         sigdata.sigid = a0;
@@ -133,7 +133,7 @@ public:
         Py_DECREF(m_callback);
     }
 
-    virtual void raised(const signal_data_t& sigdata, uint16_t hooktag) override final
+    virtual void raised(const signal_data_t& sigdata, int hooktag) override final
     {
         //Ensure the GIL is held for the callback
         PyGILState_STATE pystate = PyGILState_Ensure();
@@ -169,7 +169,7 @@ public:
     CallableSignalHook(SIP_PYCALLABLE);
     CallableSignalHook(const CallableSignalHook&);
 
-    virtual void raised(const signal_data_t&, uint16_t) final;
+    virtual void raised(const signal_data_t&, int) final;
 
 };
 
@@ -183,12 +183,12 @@ public:
 
     DataSignalMux();
 
-    virtual void raised(const signal_data_t&, uint16_t);
+    virtual void raised(const signal_data_t&, int);
 
     size_t add_mux();
     size_t add_mux(DataSignal&);
-    size_t add_mux(DataSignal&, uint16_t);
-    size_t add_mux(DataSignal&, uint16_t, uint32_t);
+    size_t add_mux(DataSignal&, int);
+    size_t add_mux(DataSignal&, int, long long);
 
     DataSignal& signal();
 
