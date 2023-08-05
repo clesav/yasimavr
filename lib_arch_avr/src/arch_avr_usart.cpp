@@ -163,11 +163,11 @@ void ArchAVR_USART::raised(const signal_data_t& sigdata, int)
         m_txe_intflag.set_flag();
 
     //If a frame is successfully emitted, raise the TXC flag
-    else if (sigdata.sigid == UART::Signal_TX_Complete && sigdata.data.as_uint())
+    else if (sigdata.sigid == UART::Signal_TX_Complete && sigdata.data.as_int())
         m_txc_intflag.set_flag();
 
     //If a frame is successfully received, raise the RXC flag
-    else if (sigdata.sigid == UART::Signal_RX_Complete && sigdata.data.as_uint())
+    else if (sigdata.sigid == UART::Signal_RX_Complete && sigdata.data.as_int())
         m_rxc_intflag.set_flag();
 }
 

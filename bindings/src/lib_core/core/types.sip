@@ -199,15 +199,18 @@ class vardata_t {
 %TypeCode
 void fill_vardata_with_pyobj(vardata_t* d, PyObject* obj)
 {
-    if (PyFloat_Check(obj)) {
+    if (!obj || obj == Py_None) {
+        *d = vardata_t();
+    }
+    else if (PyFloat_Check(obj)) {
         *d = PyFloat_AsDouble(obj);
     }
     else if (PyLong_Check(obj)) {
-        long long v = PyLong_AsLongLong(obj);
-        if (v >= 0)
-            *d = (unsigned int) v;
+        int is_pos = PyObject_RichCompareBool(obj, PyLong_FromLong(0), Py_GE);
+        if (is_pos == 1)
+            *d = PyLong_AsUnsignedLongLong(obj);
         else
-            *d = (int) v;
+            *d = PyLong_AsLongLong(obj);
     }
     else if (PyUnicode_Check(obj)) {
         *d = PyUnicode_AsUTF8(obj);
@@ -286,14 +289,14 @@ public:
 
     const char* as_str() const;
     double as_double() const;
-    unsigned int as_uint() const;
-    int as_int() const;
+    unsigned long long as_uint() const;
+    long long as_int() const;
 
     //vardata_t& operator=(void* p);
     //vardata_t& operator=(const char* s);
     //vardata_t& operator=(double d);
-    //vardata_t& operator=(unsigned int u);
-    //vardata_t& operator=(int i);
+    //vardata_t& operator=(unsigned long long u);
+    //vardata_t& operator=(long long i);
     void set(SIP_PYOBJECT);
     %MethodCode
         fill_vardata_with_pyobj(sipCpp, a0);
@@ -316,15 +319,22 @@ public:
             sipRes = PyFloat_FromDouble(sipCpp->as_double());
             break;
         case vardata_t::Uinteger:
-            sipRes = PyLong_FromUnsignedLong(sipCpp->as_uint());
+            sipRes = PyLong_FromUnsignedLongLong(sipCpp->as_uint());
             break;
         case vardata_t::Integer:
-            sipRes = PyLong_FromLong(sipCpp->as_int());
+            sipRes = PyLong_FromLongLong(sipCpp->as_int());
             break;
         case vardata_t::Bytes:
             sipRes = PyBytes_FromStringAndSize((const char*) sipCpp->as_bytes(), sipCpp->size());
             break;
     }
+    %End
+
+    bool __eq__(SIP_PYOBJECT) const;
+    %MethodCode
+        vardata_t v;
+        fill_vardata_with_pyobj(&v, a0);
+        sipRes = (*sipCpp == v);
     %End
 
 };

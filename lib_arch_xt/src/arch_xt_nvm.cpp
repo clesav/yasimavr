@@ -226,7 +226,7 @@ void ArchXT_NVM::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 
 NonVolatileMemory* ArchXT_NVM::get_memory(int nvm_index)
 {
-    ctlreq_data_t req = { .index = (unsigned int) nvm_index };
+    ctlreq_data_t req = { .index = nvm_index };
     if (!device()->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_NVM, &req))
         return nullptr;
     return reinterpret_cast<NonVolatileMemory*>(req.data.as_ptr());

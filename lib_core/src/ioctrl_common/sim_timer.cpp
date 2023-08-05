@@ -191,11 +191,11 @@ void PrescaledTimer::process_cycles(cycle_count_t cycles)
         if (timeout) {
             m_logger->dbg("Prescaled timer generating %lld ticks, delay=%u", ticks, m_delay);
             sigdata.index = 1;
-            sigdata.data = m_delay;
+            sigdata.data = (unsigned long long) m_delay;
             m_delay = 0;
         } else {
             sigdata.index = 0;
-            sigdata.data = (uint32_t) ticks;
+            sigdata.data = ticks;
             m_delay -= ticks;
         }
         m_signal.raise(sigdata);
@@ -514,7 +514,7 @@ void TimerCounter::timer_raised(const signal_data_t& sigdata)
     if (m_logger)
         m_logger->dbg("Updating counters");
 
-    process_ticks(sigdata.data.as_uint(), sigdata.index);
+    process_ticks(sigdata.data.as_int(), sigdata.index);
 }
 
 

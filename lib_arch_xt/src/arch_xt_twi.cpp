@@ -311,7 +311,7 @@ void ArchXT_TWI::raised(const signal_data_t& sigdata, int)
 
         case TWI::Signal_BusStateChange: {
             uint8_t bus_state = 0;
-            switch(sigdata.data.as_uint()) {
+            switch(sigdata.data.as_int()) {
                 case TWI::Bus_Idle: {
                     bus_state = TWI_BUSSTATE_IDLE_gc;
                     //If we had written an address, but the bus was busy,

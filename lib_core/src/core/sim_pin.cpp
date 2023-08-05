@@ -186,7 +186,7 @@ Pin::State Pin::digital_state() const
 void Pin::raised(const signal_data_t& sigdata, int)
 {
     if (sigdata.sigid == Signal_DigitalStateChange)
-        set_external_state((State) sigdata.data.as_uint());
+        set_external_state((State) sigdata.data.as_int());
     else if (sigdata.sigid == Signal_AnalogValueChange)
         set_external_analog_value(sigdata.data.as_double());
 }

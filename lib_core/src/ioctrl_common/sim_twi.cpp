@@ -608,7 +608,7 @@ cycle_count_t TWI::timer_next(cycle_count_t when)
     return m_timer_next_when;
 }
 
-void TWI::defer_signal_raise(uint16_t sigid, uint32_t index, uint32_t u)
+void TWI::defer_signal_raise(int sigid, long long index, unsigned long long u)
 {
     signal_data_t sig = { .sigid = sigid, .index = index, .data = u };
     m_deferred_sigdata = sig;

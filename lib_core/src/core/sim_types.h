@@ -230,8 +230,16 @@ public:
     vardata_t(void* p);
     vardata_t(const char* s);
     vardata_t(double d);
-    vardata_t(unsigned int u);
-    vardata_t(int i);
+    inline vardata_t(unsigned char u) : vardata_t((unsigned long long) u) {}
+    inline vardata_t(unsigned short u) : vardata_t((unsigned long long) u) {}
+    inline vardata_t(unsigned int u) : vardata_t((unsigned long long) u) {}
+    inline vardata_t(unsigned long u) : vardata_t((unsigned long long) u) {}
+    vardata_t(unsigned long long u);
+    inline vardata_t(signed char i) : vardata_t((long long) i) {}
+    inline vardata_t(short i) : vardata_t((long long) i) {}
+    inline vardata_t(int i) : vardata_t((long long) i) {}
+    inline vardata_t(long i) : vardata_t((long long) i) {}
+    vardata_t(long long i);
     vardata_t(uint8_t* b_, size_t sz);
     vardata_t(const vardata_t& v);
 
@@ -243,8 +251,8 @@ public:
     void* as_ptr() const;
     const char* as_str() const;
     double as_double() const;
-    unsigned int as_uint() const;
-    int as_int() const;
+    unsigned long long as_uint() const;
+    long long as_int() const;
 
     const uint8_t* as_bytes() const;
     size_t size() const;
@@ -252,9 +260,20 @@ public:
     vardata_t& operator=(void* p);
     vardata_t& operator=(const char* s);
     vardata_t& operator=(double d);
-    vardata_t& operator=(unsigned int u);
-    vardata_t& operator=(int i);
+    inline vardata_t& operator=(unsigned char u) {*this = (unsigned long long) u; return *this; }
+    inline vardata_t& operator=(unsigned short u) {*this = (unsigned long long) u; return *this; }
+    inline vardata_t& operator=(unsigned int u) {*this = (unsigned long long) u; return *this; }
+    inline vardata_t& operator=(unsigned long u) {*this = (unsigned long long) u; return *this; }
+    vardata_t& operator=(unsigned long long u);
+    inline vardata_t& operator=(signed char i) {*this = (long long) i; return *this; }
+    inline vardata_t& operator=(short i) {*this = (long long) i; return *this; }
+    inline vardata_t& operator=(int i) {*this = (long long) i; return *this; }
+    inline vardata_t& operator=(long i) {*this = (long long) i; return *this; }
+    vardata_t& operator=(long long i);
     vardata_t& operator=(const vardata_t& v);
+
+    bool operator==(const vardata_t& v) const;
+    bool operator!=(const vardata_t& v) const;
 
 private:
 
@@ -263,8 +282,8 @@ private:
     union {
         void* p;
         double d;
-        uint32_t u;
-        int32_t i;
+        unsigned long long u;
+        long long i;
         const char* s;
     };
 

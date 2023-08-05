@@ -232,7 +232,7 @@ void ArchAVR_TWI::raised(const signal_data_t& sigdata, int)
     switch (sigdata.sigid) {
 
         case TWI::Signal_BusStateChange: {
-            if (sigdata.data.as_uint() == TWI::Bus_Idle) {
+            if (sigdata.data == (int) TWI::Bus_Idle) {
                 if (start) {
                     if (m_twi.start_transfer())
                         set_intflag(TWI_START);
@@ -280,7 +280,7 @@ void ArchAVR_TWI::raised(const signal_data_t& sigdata, int)
         case TWI::Signal_AddrAck: { //Master side only
 
             uint8_t status;
-            if (sigdata.data.as_uint() == TWIPacket::Ack)
+            if (sigdata.data == (int) TWIPacket::Ack)
                 status = m_rx ? TWI_MRX_ADR_ACK : TWI_MTX_ADR_ACK;
             else
                 status = m_rx ? TWI_MRX_ADR_NACK : TWI_MTX_ADR_NACK;
@@ -294,9 +294,9 @@ void ArchAVR_TWI::raised(const signal_data_t& sigdata, int)
             bool acken = test_ioreg(m_config.reg_ctrl, m_config.bm_ack_enable);
             uint8_t status;
             if (sigdata.index == TWI::Cpt_Master) //master side
-                status = (sigdata.data.as_uint() == TWIPacket::Ack) ? TWI_MTX_DATA_ACK : TWI_MTX_DATA_NACK;
+                status = (sigdata.data == (int) TWIPacket::Ack) ? TWI_MTX_DATA_ACK : TWI_MTX_DATA_NACK;
             else { //slave
-                if (sigdata.data.as_uint() == TWIPacket::Nack)
+                if (sigdata.data == (int) TWIPacket::Nack)
                     status = TWI_STX_DATA_NACK;
                 else if (acken)
                     status = TWI_STX_DATA_ACK;

@@ -187,7 +187,7 @@ void ArchXT_USART::raised(const signal_data_t& sigdata, int)
         logger().dbg("TX started, raising DRE");
     }
 
-    else if (sigdata.sigid == UART::Signal_TX_Complete && sigdata.data.as_uint()) {
+    else if (sigdata.sigid == UART::Signal_TX_Complete && sigdata.data.as_int()) {
         //Notification that the frame in the shift register has been emitted
         //Raise the TXC interrupt.
         m_txc_intflag.set_flag();
@@ -202,7 +202,7 @@ void ArchXT_USART::raised(const signal_data_t& sigdata, int)
         }
     }
 
-    else if (sigdata.sigid == UART::Signal_RX_Complete && sigdata.data.as_uint()) {
+    else if (sigdata.sigid == UART::Signal_RX_Complete && sigdata.data.as_int()) {
         //Raise the RX completion flag
         m_rxc_intflag.set_flag(USART_RXCIF_bm);
         logger().dbg("RX complete, raising RXC");
