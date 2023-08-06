@@ -21,10 +21,10 @@
 
 //=======================================================================================
 
-typedef int64_t         cycle_count_t;
-typedef uint32_t        mem_addr_t;
-typedef uint32_t        flash_addr_t;
-typedef int16_t         int_vect_t;
+typedef long long         cycle_count_t;
+typedef unsigned long     mem_addr_t;
+typedef unsigned long     flash_addr_t;
+typedef short             int_vect_t;
 
 
 const cycle_count_t INVALID_CYCLE;
@@ -37,24 +37,24 @@ class reg_addr_t {
 
 public:
 
-    reg_addr_t(int16_t = -1);
+    reg_addr_t(short = -1);
 
     bool valid() const;
 
     int __index__() const;
     %MethodCode
-        sipRes = (int16_t)(*sipCpp);
+        sipRes = (short)(*sipCpp);
     %End
 
     int __int__() const;
     %MethodCode
-        sipRes = (int16_t)(*sipCpp);
+        sipRes = (short)(*sipCpp);
     %End
 
     const char* __repr__() const;
     %MethodCode
         if (sipCpp->valid())
-            return PyUnicode_FromFormat("[0x%04x]", (int16_t)(*sipCpp));
+            return PyUnicode_FromFormat("[0x%04x]", (short)(*sipCpp));
         else
             return PyUnicode_FromString("INVALID_REGISTER");
     %End
@@ -140,7 +140,7 @@ public:
     const char* __repr__() const;
     %MethodCode
         if (sipCpp->valid())
-            return PyUnicode_FromFormat("Regbit(%04x, %d, %02x)", (int16_t)(sipCpp->addr), sipCpp->bit, sipCpp->mask);
+            return PyUnicode_FromFormat("Regbit(%04x, %d, %02x)", (short)(sipCpp->addr), sipCpp->bit, sipCpp->mask);
         else
             return PyUnicode_FromString("Regbit(INVALID)");
     %End

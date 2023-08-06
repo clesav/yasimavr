@@ -34,10 +34,11 @@ YASIMAVR_BEGIN_NAMESPACE
 //cycle counts are signed to have -1 as invalid value
 //That leaves 63 bits to count cycles, which at a MCU frequency of 20MHz
 //represent more than 14000 simulated years
-typedef int64_t     cycle_count_t;
-typedef uint32_t    mem_addr_t;
-typedef uint32_t    flash_addr_t;
-typedef int16_t     int_vect_t;
+typedef long long        cycle_count_t;
+typedef unsigned long    mem_addr_t;
+typedef unsigned long    flash_addr_t;
+typedef short            int_vect_t;
+
 
 const cycle_count_t INVALID_CYCLE = -1;
 
@@ -46,15 +47,15 @@ class reg_addr_t {
 
 public:
 
-    constexpr inline reg_addr_t(int16_t addr = -1) : m_addr(addr) {}
+    constexpr inline reg_addr_t(short addr = -1) : m_addr(addr) {}
 
     constexpr inline bool valid() const { return m_addr >= 0; }
 
-    constexpr inline operator int16_t() const { return m_addr; }
+    constexpr inline operator short() const { return m_addr; }
 
 private:
 
-    int16_t m_addr;
+    short m_addr;
 
 };
 

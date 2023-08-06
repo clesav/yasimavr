@@ -44,7 +44,7 @@ struct CoreConfiguration {
     };
 
     uint32_t                attributes;     //OR'ed value of Attributes flags
-    uint8_t                 vector_size;    //Size in 16-bits words of individual interrupt vectors
+    unsigned short          vector_size;    //Size in 16-bits words of individual interrupt vectors
     mem_addr_t              iostart;        //first address of the IO register file in the data space
     mem_addr_t              ioend;          //last address of the IO register file in the data space
     mem_addr_t              ramstart;       //first address of the SRAM in the data space

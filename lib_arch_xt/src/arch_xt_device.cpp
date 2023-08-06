@@ -141,7 +141,7 @@ void ArchXT_Core::dbg_write_data(mem_addr_t addr, const uint8_t* buf, mem_addr_t
     const ArchXT_CoreConfig& cfg = reinterpret_cast<const ArchXT_CoreConfig&>(m_config);
 
     mem_addr_t bufofs, blockofs;
-    uint32_t n;
+    mem_addr_t n;
 
     if (data_space_map(addr, len, 0, cfg.ioend, &bufofs, &blockofs, &n)) {
         for (mem_addr_t i = 0; i < n; ++i)

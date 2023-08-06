@@ -26,7 +26,7 @@
 #include "core/sim_interrupt.h"
 const uint16_t CTLREQ_INTR_REGISTER = AVR_CTLREQ_INTR_REGISTER;
 const uint16_t CTLREQ_INTR_RAISE    = AVR_CTLREQ_INTR_RAISE;
-const int16_t INTERRUPT_NONE = -1;
+const int_vect_t INTERRUPT_NONE     = AVR_INTERRUPT_NONE;
 
 %End
 
@@ -35,7 +35,7 @@ const int16_t INTERRUPT_NONE = -1;
 
 const uint16_t CTLREQ_INTR_REGISTER;
 const uint16_t CTLREQ_INTR_RAISE;
-const int16_t INTERRUPT_NONE;
+const int_vect_t INTERRUPT_NONE;
 
 
 class InterruptController : public Peripheral /Abstract/ {
