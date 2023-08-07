@@ -174,7 +174,7 @@ void ArchAVR_ExtInt::raised(const signal_data_t& sigdata, int hooktag)
 {
     if (sigdata.sigid != Pin::Signal_DigitalStateChange) return;
 
-    bool pin_level = (sigdata.data == (int) Pin::State_High);
+    bool pin_level = (sigdata.data.as_int() == Pin::State_High);
     uint8_t pin_num = hooktag & 0x00FF;
     bool is_pc = (hooktag & 0x0100);
 

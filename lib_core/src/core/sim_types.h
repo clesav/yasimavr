@@ -228,8 +228,7 @@ public:
     };
 
     vardata_t();
-    vardata_t(void* p);
-    vardata_t(const char* s);
+
     vardata_t(double d);
     inline vardata_t(unsigned char u) : vardata_t((unsigned long long) u) {}
     inline vardata_t(unsigned short u) : vardata_t((unsigned long long) u) {}
@@ -241,6 +240,8 @@ public:
     inline vardata_t(int i) : vardata_t((long long) i) {}
     inline vardata_t(long i) : vardata_t((long long) i) {}
     vardata_t(long long i);
+    vardata_t(void* p);
+    vardata_t(const char* s);
     vardata_t(uint8_t* b_, size_t sz);
     vardata_t(const vardata_t& v);
 

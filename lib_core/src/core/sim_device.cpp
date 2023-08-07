@@ -377,7 +377,7 @@ bool Device::core_ctlreq(uint16_t req, ctlreq_data_t* reqdata)
         } else {
 
             m_state = State_Sleeping;
-            m_sleep_mode = (SleepMode) reqdata->data.as_uint();
+            m_sleep_mode = (SleepMode) reqdata->data.as_int();
 
             if (m_sleep_mode == SleepMode::Pseudo)
                 m_logger.dbg("Device going to pseudo sleep");

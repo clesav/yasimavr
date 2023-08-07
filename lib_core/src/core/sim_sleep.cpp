@@ -84,7 +84,7 @@ bool SleepController::ctlreq(uint16_t req, ctlreq_data_t* __unused)
                 SleepMode mode = m_config.modes[index].mode;
                 if (mode >= SleepMode::Idle) {
                     m_mode_index = index;
-                    ctlreq_data_t d = { .data = (uint32_t) mode };
+                    ctlreq_data_t d = { .data = (int) mode };
                     device()->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_SLEEP, &d);
                 }
             }

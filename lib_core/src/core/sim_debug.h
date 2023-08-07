@@ -85,8 +85,8 @@ public:
     mem_addr_t read_sp() const;
 
     //Access to the Program Counter
-    void write_pc(mem_addr_t value) const;
-    mem_addr_t read_pc() const;
+    void write_pc(flash_addr_t value) const;
+    flash_addr_t read_pc() const;
 
     //Access to I/O registers. From the peripherals point of view, it's
     //the same as a CPU access

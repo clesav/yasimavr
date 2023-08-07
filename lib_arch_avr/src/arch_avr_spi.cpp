@@ -154,7 +154,7 @@ void ArchAVR_SPI::raised(const signal_data_t& sigdata, int hooktag)
     }
     //Signal of pin state change, check if we're selected
     else if (hooktag == HOOKTAG_PIN) {
-        m_pin_selected = (sigdata.data == (int) Pin::State_Low);
+        m_pin_selected = (sigdata.data.as_int() == Pin::State_Low);
         m_spi.set_selected(m_pin_selected && test_ioreg(m_config.rb_enable));
     }
 }
