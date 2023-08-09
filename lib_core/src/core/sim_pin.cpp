@@ -40,7 +40,7 @@ const char* Pin::StateName(State state)
     };
 }
 
-Pin::Pin(uint32_t id)
+Pin::Pin(pin_id_t id)
 :m_id(id)
 ,m_ext_state(State_Floating)
 ,m_int_state(State_Floating)

@@ -21,6 +21,8 @@
 
 //=======================================================================================
 
+typedef id_t pin_id_t;
+
 class Pin : public SignalHook /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "core/sim_pin.h"
@@ -45,11 +47,11 @@ public:
 
     static const char* StateName(Pin::State state);
 
-    Pin(uint32_t);
+    Pin(pin_id_t);
 
     void set_external_state(Pin::State state);
     void set_external_analog_value(double v);
-    uint32_t id() const;
+    pin_id_t id() const;
     Pin::State state() const;
     Pin::State digital_state() const;
     double analog_value() const;

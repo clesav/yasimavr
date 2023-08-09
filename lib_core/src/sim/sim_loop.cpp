@@ -48,7 +48,7 @@ static uint64_t get_timestamp_usecs(time_point origin)
 AbstractSimLoop::AbstractSimLoop(Device& device)
 :m_device(device)
 ,m_state(State_Running)
-,m_logger(AVR_ID('S', 'M', 'L', 'P'))
+,m_logger(CTL_ID('S', 'M', 'L', 'P'))
 {
     m_logger.set_parent(&m_device.logger());
     m_device.init(m_cycle_manager);

@@ -194,7 +194,7 @@ regbit_compound_t& regbit_compound_t::operator=(const regbit_compound_t& other)
 
 //=======================================================================================
 
-std::string YASIMAVR_QUALIFIED_NAME(id_to_str)(uint32_t id)
+std::string YASIMAVR_QUALIFIED_NAME(id_to_str)(id_t id)
 {
     char buf[5];
     buf[0] = id & 0xFF;
@@ -205,7 +205,7 @@ std::string YASIMAVR_QUALIFIED_NAME(id_to_str)(uint32_t id)
     return std::string(buf);
 }
 
-uint32_t YASIMAVR_QUALIFIED_NAME(str_to_id)(const char* s)
+id_t YASIMAVR_QUALIFIED_NAME(str_to_id)(const char* s)
 {
     //Here we use the fact that strncpy pads the destination buffer
     //with null chars if the source string is shorter than 4.
@@ -216,7 +216,7 @@ uint32_t YASIMAVR_QUALIFIED_NAME(str_to_id)(const char* s)
 
 }
 
-uint32_t YASIMAVR_QUALIFIED_NAME(str_to_id)(const std::string& s)
+id_t YASIMAVR_QUALIFIED_NAME(str_to_id)(const std::string& s)
 {
     return str_to_id(s.c_str());
 }

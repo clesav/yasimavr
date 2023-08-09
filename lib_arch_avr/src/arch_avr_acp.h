@@ -28,6 +28,7 @@
 #include "ioctrl_common/sim_adc.h"
 #include "ioctrl_common/sim_vref.h"
 #include "core/sim_interrupt.h"
+#include "core/sim_pin.h"
 
 YASIMAVR_BEGIN_NAMESPACE
 
@@ -44,13 +45,13 @@ YASIMAVR_BEGIN_NAMESPACE
 struct ArchAVR_ACPConfig {
 
     struct mux_config_t : base_reg_config_t {
-        uint32_t pin;
+        pin_id_t pin;
     };
 
     std::vector<mux_config_t> mux_pins;
 
-    uint32_t pos_pin;
-    uint32_t neg_pin;
+    pin_id_t pos_pin;
+    pin_id_t neg_pin;
 
     regbit_t rb_disable;
     regbit_t rb_mux_enable;

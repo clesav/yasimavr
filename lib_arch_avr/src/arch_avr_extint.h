@@ -46,8 +46,8 @@ YASIMAVR_BEGIN_NAMESPACE
 
 struct ArchAVR_ExtIntConfig {
 
-    uint32_t extint_pins[EXTINT_PIN_COUNT];
-    uint32_t pcint_pins[PCINT_PIN_COUNT];
+    pin_id_t extint_pins[EXTINT_PIN_COUNT];
+    pin_id_t pcint_pins[PCINT_PIN_COUNT];
     regbit_t rb_extint_ctrl;
     regbit_t rb_extint_mask;
     regbit_t rb_extint_flag;

@@ -29,8 +29,8 @@ class LogWriter {
 
 public:
 
-    virtual void write(cycle_count_t, int, uint32_t, const char*, std::va_list&)
-        [void (cycle_count_t, int, uint32_t, const char*, std::va_list)];
+    virtual void write(cycle_count_t, int, ctl_id_t, const char*, std::va_list&)
+        [void (cycle_count_t, int, ctl_id_t, const char*, std::va_list)];
 
     static LogWriter* default_writer();
 
@@ -70,8 +70,8 @@ public:
         Level_Trace           /PyName=Trace/,
     };
 
-    Logger(uint32_t, LogHandler&);
-    Logger(uint32_t, Logger* = NULL);
+    Logger(ctl_id_t, LogHandler&);
+    Logger(ctl_id_t, Logger* = NULL);
 
     void set_level(int);
     int level() const;
@@ -87,13 +87,13 @@ public:
 
 protected:
 
-    uint32_t id() const;
+    ctl_id_t id() const;
 
     void filtered_write(int, const char*, std::va_list&)
         [void (int, const char*, std::va_list)];
 
-    void write(int, uint32_t, const char*, std::va_list&)
-        [void (int, uint32_t, const char*, std::va_list)];
+    void write(int, ctl_id_t, const char*, std::va_list&)
+        [void (int, ctl_id_t, const char*, std::va_list)];
 
 };
 

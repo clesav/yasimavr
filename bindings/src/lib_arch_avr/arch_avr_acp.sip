@@ -27,13 +27,13 @@ struct ArchAVR_ACPConfig {
 %End
 
     struct mux_config_t : base_reg_config_t {
-        uint32_t pin;
+        pin_id_t pin;
     };
 
     std::vector<ArchAVR_ACPConfig::mux_config_t> mux_pins;
 
-    uint32_t pos_pin;
-    uint32_t neg_pin;
+    pin_id_t pos_pin;
+    pin_id_t neg_pin;
 
     regbit_t rb_disable;
     regbit_t rb_mux_enable;

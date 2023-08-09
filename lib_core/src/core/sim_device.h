@@ -140,14 +140,14 @@ public:
     void add_ioreg_handler(reg_addr_t addr, IO_RegHandler& handler, uint8_t ro_mask=0x00);
     void add_ioreg_handler(const regbit_t& rb, IO_RegHandler& handler, bool readonly=false);
     Peripheral* find_peripheral(const char* name);
-    Peripheral* find_peripheral(uint32_t id);
-    bool ctlreq(uint32_t id, uint16_t req, ctlreq_data_t* reqdata = nullptr);
+    Peripheral* find_peripheral(ctl_id_t id);
+    bool ctlreq(ctl_id_t id, uint16_t req, ctlreq_data_t* reqdata = nullptr);
 
     //Helpers for the peripheral timers
     CycleManager* cycle_manager();
 
     Pin* find_pin(const char* name);
-    Pin* find_pin(uint32_t id);
+    Pin* find_pin(pin_id_t id);
 
     LogHandler& log_handler();
     Logger& logger();
@@ -181,7 +181,7 @@ private:
     LogHandler m_log_handler;
     Logger m_logger;
     std::vector<Peripheral*> m_peripherals;
-    std::map<uint32_t, Pin*> m_pins;
+    std::map<pin_id_t, Pin*> m_pins;
     CycleManager* m_cycle_manager;
     IO_Console* m_console;
     uint8_t m_reset_flags;

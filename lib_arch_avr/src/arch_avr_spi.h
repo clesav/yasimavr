@@ -50,7 +50,7 @@ struct ArchAVR_SPIConfig {
     regbit_t rb_int_flag;
     regbit_t rb_mode;
 
-    uint32_t pin_select;
+    pin_id_t pin_select;
 
     regbit_t rb_clock;
     regbit_t rb_clock2x;

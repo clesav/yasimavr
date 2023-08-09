@@ -183,12 +183,15 @@ public:
 };
 
 
-const char* id_to_str(uint32_t);
+typedef unsigned long id_t;
+typedef id_t ctl_id_t;
+
+const char* id_to_str(id_t);
 %MethodCode
     sipRes = id_to_str(a0).c_str();
 %End
 
-uint32_t str_to_id(const char*);
+id_t str_to_id(const char*);
 
 
 class vardata_t {

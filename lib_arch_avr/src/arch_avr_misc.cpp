@@ -54,7 +54,7 @@ int_vect_t ArchAVR_IntCtrl::get_next_irq() const
 //=======================================================================================
 
 ArchAVR_MiscRegCtrl::ArchAVR_MiscRegCtrl(const ArchAVR_MiscConfig& config)
-:Peripheral(AVR_ID('M', 'I', 'S', 'C'))
+:Peripheral(CTL_ID('M', 'I', 'S', 'C'))
 ,m_config(config)
 {}
 

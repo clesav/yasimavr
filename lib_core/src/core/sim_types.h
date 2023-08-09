@@ -202,14 +202,17 @@ inline const regbit_t& regbit_compound_t::operator[](size_t index) const
 
 //=======================================================================================
 
-std::string id_to_str(uint32_t id);
-uint32_t str_to_id(const char* s);
-uint32_t str_to_id(const std::string& s);
+typedef unsigned long id_t;
+typedef id_t ctl_id_t;
 
+std::string id_to_str(id_t id);
+id_t str_to_id(const char* s);
+id_t str_to_id(const std::string& s);
 
-#define AVR_ID(_a,_b,_c,_d) \
-    (((_d) << 24)|((_c) << 16)|((_b) << 8)|((_a)))
-
+constexpr id_t CTL_ID(char a, char b, char c, char d)
+{
+    return (d << 24) | (c << 16) | (b << 8) | a;
+}
 
 //=======================================================================================
 

@@ -27,7 +27,7 @@ struct ArchAVR_ExtIntConfig {
 #include "utils/buffer_utils.h"
 %End
 
-    //uint32_t extint_pins[EXTINT_PIN_COUNT];
+    //pin_id_t extint_pins[EXTINT_PIN_COUNT];
     SIP_PYBUFFER extint_pins {
         %GetCode
             sipPy = sipConvertToArray(sipCpp->extint_pins, "I", EXTINT_PIN_COUNT, 0);
@@ -37,7 +37,7 @@ struct ArchAVR_ExtIntConfig {
         %End
     };
 
-    //uint32_t pcint_pins[PCINT_PIN_COUNT];
+    //pin_id_t pcint_pins[PCINT_PIN_COUNT];
     SIP_PYBUFFER pcint_pins {
         %GetCode
             sipPy = sipConvertToArray(sipCpp->pcint_pins, "I", PCINT_PIN_COUNT, 0);

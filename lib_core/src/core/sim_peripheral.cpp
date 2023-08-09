@@ -30,7 +30,7 @@ YASIMAVR_USING_NAMESPACE
 
 //=======================================================================================
 
-Peripheral::Peripheral(uint32_t id)
+Peripheral::Peripheral(ctl_id_t id)
 :m_id(id)
 ,m_device(nullptr)
 ,m_logger(id)
@@ -141,7 +141,7 @@ bool Peripheral::register_interrupt(int_vect_t vector, InterruptHandler& handler
     }
 }
 
-Signal* Peripheral::get_signal(uint32_t ctl_id) const
+Signal* Peripheral::get_signal(ctl_id_t ctl_id) const
 {
     if (m_device) {
         ctlreq_data_t d;
@@ -155,7 +155,7 @@ Signal* Peripheral::get_signal(uint32_t ctl_id) const
 
 //=======================================================================================
 
-DummyController::DummyController(uint32_t id, const std::vector<dummy_register_t>& regs)
+DummyController::DummyController(ctl_id_t id, const std::vector<dummy_register_t>& regs)
 :Peripheral(id)
 ,m_registers(regs)
 {}

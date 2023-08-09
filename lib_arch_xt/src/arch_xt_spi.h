@@ -47,7 +47,7 @@ YASIMAVR_BEGIN_NAMESPACE
 struct ArchXT_SPIConfig {
 
     reg_addr_t reg_base;
-    uint32_t pin_select;
+    pin_id_t pin_select;
     int_vect_t iv_spi;
 
 };

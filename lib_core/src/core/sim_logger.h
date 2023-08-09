@@ -24,6 +24,7 @@
 #ifndef __YASIMAVR_LOGGER_H__
 #define __YASIMAVR_LOGGER_H__
 
+#include "sim_types.h"
 #include "sim_cycle_timer.h"
 #include <cstdarg>
 
@@ -40,7 +41,7 @@ public:
 
     virtual void write(cycle_count_t cycle,
                        int level,
-                       uint32_t id,
+                       ctl_id_t id,
                        const char* format,
                        std::va_list args);
 
@@ -70,7 +71,7 @@ private:
     CycleManager* m_cycle_manager;
     LogWriter* m_writer;
 
-    void write(int lvl, uint32_t id, const char* fmt, std::va_list args);
+    void write(int lvl, ctl_id_t id, const char* fmt, std::va_list args);
 
 };
 
@@ -100,8 +101,8 @@ public:
         Level_Trace,
     };
 
-    Logger(uint32_t id, LogHandler& hdl);
-    explicit Logger(uint32_t id, Logger* prt = nullptr);
+    Logger(ctl_id_t id, LogHandler& hdl);
+    explicit Logger(ctl_id_t id, Logger* prt = nullptr);
 
     void set_level(int lvl);
     int level() const;
@@ -117,14 +118,14 @@ public:
 
 protected:
 
-    uint32_t id() const;
+    ctl_id_t id() const;
 
     void filtered_write(int lvl, const char* fmt, std::va_list args);
-    void write(int lvl, uint32_t id, const char* fmt, std::va_list args);
+    void write(int lvl, ctl_id_t id, const char* fmt, std::va_list args);
 
 private:
 
-    uint32_t m_id;
+    ctl_id_t m_id;
     int m_level;
     Logger* m_parent;
     LogHandler* m_handler;
@@ -141,7 +142,7 @@ inline int Logger::level() const
     return m_level;
 }
 
-inline uint32_t Logger::id() const
+inline ctl_id_t Logger::id() const
 {
     return m_id;
 }

@@ -79,7 +79,7 @@ bool ArchAVR_ExtInt::init(Device& device)
 
     //Find the pins for EXTINT and connect the hook mapper to their signals
     for (int i = 0; i < EXTINT_PIN_COUNT; ++i) {
-        uint32_t pin_id = m_config.extint_pins[i];
+        pin_id_t pin_id = m_config.extint_pins[i];
         Pin* pin = device.find_pin(pin_id);
         if (pin)
             pin->signal().connect_hook(this, i);
@@ -87,7 +87,7 @@ bool ArchAVR_ExtInt::init(Device& device)
 
     //Find the pins for Pin Change and connect the hook mapper to their signals
     for (int i = 0; i < PCINT_PIN_COUNT; ++i) {
-        uint32_t pin_id = m_config.pcint_pins[i];
+        pin_id_t pin_id = m_config.pcint_pins[i];
         Pin* pin = device.find_pin(pin_id);
         if (pin)
             pin->signal().connect_hook(this, 0x100 | i);

@@ -52,7 +52,7 @@ private:
 };
 
 IO_Console::IO_Console()
-:Peripheral(AVR_ID('C', 'S', 'L', 'E'))
+:Peripheral(CTL_ID('C', 'S', 'L', 'E'))
 ,m_reg_console(0)
 {}
 
@@ -98,13 +98,13 @@ Device::Device(Core& core, const DeviceConfiguration& config)
 ,m_frequency(0)
 ,m_sleep_mode(SleepMode::Active)
 ,m_debugger(nullptr)
-,m_logger(AVR_ID('D', 'E', 'V', 0), m_log_handler)
+,m_logger(CTL_ID('D', 'E', 'V', 0), m_log_handler)
 ,m_cycle_manager(nullptr)
 ,m_reset_flags(0)
 {
     //Allocate the pin array
     for (int i = 0; i < config.pins.size(); ++i) {
-        uint32_t id = str_to_id(config.pins[i]);
+        pin_id_t id = str_to_id(config.pins[i]);
         Pin* pin = new Pin(id);
         m_pins[id] = pin;
     }
@@ -304,7 +304,7 @@ void Device::attach_peripheral(Peripheral& ctl)
     m_peripherals.push_back(&ctl);
 }
 
-bool Device::ctlreq(uint32_t id, uint16_t req, ctlreq_data_t* reqdata)
+bool Device::ctlreq(ctl_id_t id, uint16_t req, ctlreq_data_t* reqdata)
 {
     if (id == AVR_IOCTL_CORE) {
         return core_ctlreq(req, reqdata);
@@ -325,7 +325,7 @@ Peripheral* Device::find_peripheral(const char* name)
     return find_peripheral(str_to_id(name));
 }
 
-Peripheral* Device::find_peripheral(uint32_t id)
+Peripheral* Device::find_peripheral(ctl_id_t id)
 {
     for (auto per : m_peripherals) {
         if (per->id() == id)
@@ -465,7 +465,7 @@ Pin* Device::find_pin(const char* name)
     return find_pin(str_to_id(name));
 }
 
-Pin* Device::find_pin(uint32_t id)
+Pin* Device::find_pin(pin_id_t id)
 {
     auto search = m_pins.find(id);
     if (search == m_pins.end())
