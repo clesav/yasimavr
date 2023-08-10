@@ -209,7 +209,7 @@ std::string id_to_str(id_t id);
 id_t str_to_id(const char* s);
 id_t str_to_id(const std::string& s);
 
-constexpr id_t CTL_ID(char a, char b, char c, char d)
+constexpr id_t chr_to_id(char a, char b, char c, char d)
 {
     return (d << 24) | (c << 16) | (b << 8) | a;
 }

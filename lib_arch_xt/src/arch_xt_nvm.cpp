@@ -34,7 +34,7 @@ YASIMAVR_USING_NAMESPACE
 //=======================================================================================
 
 ArchXT_USERROW::ArchXT_USERROW(reg_addr_t base)
-:Peripheral(CTL_ID('U', 'R', 'O', 'W'))
+:Peripheral(chr_to_id('U', 'R', 'O', 'W'))
 ,m_reg_base(base)
 ,m_userrow(nullptr)
 {}
@@ -80,7 +80,7 @@ void ArchXT_USERROW::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& d
 //=======================================================================================
 
 ArchXT_Fuses::ArchXT_Fuses(reg_addr_t base)
-:Peripheral(CTL_ID('F', 'U', 'S', 'E'))
+:Peripheral(chr_to_id('F', 'U', 'S', 'E'))
 ,m_reg_base(base)
 ,m_fuses(nullptr)
 {}

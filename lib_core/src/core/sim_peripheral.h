@@ -44,25 +44,25 @@ enum class SleepMode;
  * This section defines the identifiers for the usual peripherals
 */
 
-#define AVR_IOCTL_CORE              CTL_ID('C', 'O', 'R', 'E')      //Core
-#define AVR_IOCTL_WTDG              CTL_ID('W', 'T', 'D', 'G')      //Watchdog
-#define AVR_IOCTL_INTR              CTL_ID('I', 'N', 'T', 'R')      //Interrupt controller
-#define AVR_IOCTL_SLEEP             CTL_ID('S', 'L', 'P', '\0')     //Sleep mode controller
-#define AVR_IOCTL_CLOCK             CTL_ID('C', 'L', 'K', '\0')     //Clock controller
-#define AVR_IOCTL_PORT(n)           CTL_ID('I', 'O', 'G', (n))      //Port controller
-#define AVR_IOCTL_PORTMUX           CTL_ID('I', 'O', 'M', 'X')      //Port Mux controller
-#define AVR_IOCTL_ADC(n)            CTL_ID('A', 'D', 'C', (n))      //Analog-to-digital converter
-#define AVR_IOCTL_ACP(n)            CTL_ID('A', 'C', 'P', (n))      //Analog comparator
-#define AVR_IOCTL_TIMER(t, n)       CTL_ID('T', 'C', (t), (n))      //Timer/counter
-#define AVR_IOCTL_EEPROM            CTL_ID('E', 'P', 'R', 'M')      //EEPROM controller
-#define AVR_IOCTL_NVM               CTL_ID('N', 'V', 'M', '\0')     //Non-Volative Memory controller
-#define AVR_IOCTL_VREF              CTL_ID('V', 'R', 'E', 'F')      //Voltage reference controller
-#define AVR_IOCTL_EXTINT            CTL_ID('E', 'I', 'N', 'T')      //External Interrupt controller
-#define AVR_IOCTL_RST               CTL_ID('R', 'S', 'T', '\0')     //Reset controller
-#define AVR_IOCTL_RTC               CTL_ID('R', 'T', 'C', '\0')     //Real Time Counter
-#define AVR_IOCTL_UART(n)           CTL_ID('U', 'A', 'X', (n))      //UART interface
-#define AVR_IOCTL_SPI(n)            CTL_ID('S', 'P', 'I', (n))      //SPI interface
-#define AVR_IOCTL_TWI(n)            CTL_ID('T', 'W', 'I', (n))      //TWI interface
+#define AVR_IOCTL_CORE              chr_to_id('C', 'O', 'R', 'E')      //Core
+#define AVR_IOCTL_WTDG              chr_to_id('W', 'T', 'D', 'G')      //Watchdog
+#define AVR_IOCTL_INTR              chr_to_id('I', 'N', 'T', 'R')      //Interrupt controller
+#define AVR_IOCTL_SLEEP             chr_to_id('S', 'L', 'P', '\0')     //Sleep mode controller
+#define AVR_IOCTL_CLOCK             chr_to_id('C', 'L', 'K', '\0')     //Clock controller
+#define AVR_IOCTL_PORT(n)           chr_to_id('I', 'O', 'G', (n))      //Port controller
+#define AVR_IOCTL_PORTMUX           chr_to_id('I', 'O', 'M', 'X')      //Port Mux controller
+#define AVR_IOCTL_ADC(n)            chr_to_id('A', 'D', 'C', (n))      //Analog-to-digital converter
+#define AVR_IOCTL_ACP(n)            chr_to_id('A', 'C', 'P', (n))      //Analog comparator
+#define AVR_IOCTL_TIMER(t, n)       chr_to_id('T', 'C', (t), (n))      //Timer/counter
+#define AVR_IOCTL_EEPROM            chr_to_id('E', 'P', 'R', 'M')      //EEPROM controller
+#define AVR_IOCTL_NVM               chr_to_id('N', 'V', 'M', '\0')     //Non-Volative Memory controller
+#define AVR_IOCTL_VREF              chr_to_id('V', 'R', 'E', 'F')      //Voltage reference controller
+#define AVR_IOCTL_EXTINT            chr_to_id('E', 'I', 'N', 'T')      //External Interrupt controller
+#define AVR_IOCTL_RST               chr_to_id('R', 'S', 'T', '\0')     //Reset controller
+#define AVR_IOCTL_RTC               chr_to_id('R', 'T', 'C', '\0')     //Real Time Counter
+#define AVR_IOCTL_UART(n)           chr_to_id('U', 'A', 'X', (n))      //UART interface
+#define AVR_IOCTL_SPI(n)            chr_to_id('S', 'P', 'I', (n))      //SPI interface
+#define AVR_IOCTL_TWI(n)            chr_to_id('T', 'W', 'I', (n))      //TWI interface
 
 
 //=======================================================================================

@@ -249,7 +249,7 @@ void ArchXT_ResetCtrl::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t&
 #define SIGROW_MEM_SIZE     (sizeof(SIGROW_t) - SIGROW_MEM_OFS)
 
 ArchXT_MiscRegCtrl::ArchXT_MiscRegCtrl(const ArchXT_MiscConfig& config)
-:Peripheral(CTL_ID('M', 'I', 'S', 'C'))
+:Peripheral(chr_to_id('M', 'I', 'S', 'C'))
 ,m_config(config)
 {
     m_sigrow = (uint8_t*) malloc(SIGROW_MEM_SIZE);

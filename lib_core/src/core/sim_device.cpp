@@ -52,7 +52,7 @@ private:
 };
 
 IO_Console::IO_Console()
-:Peripheral(CTL_ID('C', 'S', 'L', 'E'))
+:Peripheral(chr_to_id('C', 'S', 'L', 'E'))
 ,m_reg_console(0)
 {}
 
@@ -98,7 +98,7 @@ Device::Device(Core& core, const DeviceConfiguration& config)
 ,m_frequency(0)
 ,m_sleep_mode(SleepMode::Active)
 ,m_debugger(nullptr)
-,m_logger(CTL_ID('D', 'E', 'V', 0), m_log_handler)
+,m_logger(chr_to_id('D', 'E', 'V', 0), m_log_handler)
 ,m_cycle_manager(nullptr)
 ,m_reset_flags(0)
 {
