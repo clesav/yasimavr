@@ -25,6 +25,7 @@
 #define __YASIMAVR_ACP_H__
 
 #include "../core/sim_peripheral.h"
+#include "../core/sim_pin.h"
 
 YASIMAVR_BEGIN_NAMESPACE
 
@@ -44,7 +45,7 @@ public:
 
     struct channel_config_t : base_reg_config_t {
         Channel type;
-        uint32_t pin;
+        pin_id_t pin;
     };
 
     enum SignalId {

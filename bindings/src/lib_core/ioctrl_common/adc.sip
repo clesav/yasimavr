@@ -56,8 +56,8 @@ public:
     struct channel_config_t : base_reg_config_t {
 
         ADC::Channel type;
-        uint32_t pin_p;
-        uint32_t pin_n;
+        pin_id_t pin_p;
+        pin_id_t pin_n;
         char per_num;
         unsigned int gain;
 

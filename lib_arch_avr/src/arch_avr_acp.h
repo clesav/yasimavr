@@ -28,7 +28,6 @@
 #include "ioctrl_common/sim_adc.h"
 #include "ioctrl_common/sim_vref.h"
 #include "core/sim_interrupt.h"
-#include "core/sim_pin.h"
 
 YASIMAVR_BEGIN_NAMESPACE
 
