@@ -42,7 +42,7 @@ struct ArchXT_ACPConfig {
     std::vector<ACP::channel_config_t> pos_channels;
     std::vector<ACP::channel_config_t> neg_channels;
 
-    uint32_t vref_channel;
+    unsigned int vref_channel;
     reg_addr_t reg_base;
     int_vect_t iv_cmp;
 

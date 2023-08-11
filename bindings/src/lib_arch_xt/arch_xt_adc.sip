@@ -32,7 +32,7 @@ struct ArchXT_ADCConfig {
 
     std::vector<ADC::channel_config_t> channels;
     std::vector<ArchXT_ADCConfig::reference_config_t> references;
-    uint32_t vref_channel;
+    unsigned int vref_channel;
     UnsignedLongVector clk_ps_factors;
     unsigned long clk_ps_max;
     UnsignedLongVector init_delays;

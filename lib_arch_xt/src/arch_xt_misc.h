@@ -68,7 +68,7 @@ private:
 
     const ArchXT_VREFConfig& m_config;
 
-    void set_channel_reference(uint32_t index, uint8_t reg_value);
+    void set_channel_reference(unsigned int index, uint8_t reg_value);
 
 };
 

@@ -56,14 +56,14 @@ bool ArchXT_VREF::init(Device& device)
 void ArchXT_VREF::reset()
 {
     //Set each reference channel to the reset value
-    for (uint32_t index = 0; index < m_config.channels.size(); ++index)
+    for (unsigned int index = 0; index < m_config.channels.size(); ++index)
         set_channel_reference(index, 0);
 }
 
 void ArchXT_VREF::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
     //Iterate over all the channels, and update if impacted by the register change
-    for (uint32_t ch_ix = 0; ch_ix < m_config.channels.size(); ++ch_ix) {
+    for (unsigned int ch_ix = 0; ch_ix < m_config.channels.size(); ++ch_ix) {
         const ArchXT_VREFConfig::channel_t& ch = m_config.channels[ch_ix];
         if (addr == ch.rb_select.addr && ch.rb_select.extract(data.anyedge())) {
             //Extract the selection value for this channel
@@ -73,7 +73,7 @@ void ArchXT_VREF::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
     }
 }
 
-void ArchXT_VREF::set_channel_reference(uint32_t index, uint8_t reg_value)
+void ArchXT_VREF::set_channel_reference(unsigned int index, uint8_t reg_value)
 {
     typedef ArchXT_VREFConfig::reference_config_t vref_cfg_t;
 

@@ -74,7 +74,7 @@ public:
         Signal_VCCChange,
     };
 
-    explicit VREF(uint32_t ref_count);
+    explicit VREF(unsigned int ref_count);
 
     bool active() const;
 
@@ -82,8 +82,8 @@ public:
 
 protected:
 
-    void set_reference(uint32_t index, Source source, double voltage=1.0);
-    double reference(uint32_t index) const;
+    void set_reference(unsigned int index, Source source, double voltage=1.0);
+    double reference(unsigned int index) const;
 
 private:
 

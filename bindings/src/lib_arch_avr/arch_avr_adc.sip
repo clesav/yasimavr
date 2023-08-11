@@ -45,7 +45,7 @@ struct ArchAVR_ADCConfig {
     UnsignedLongVector clk_ps_factors;
     std::vector<ArchAVR_ADCConfig::trigger_config_t> triggers;
 
-    uint32_t vref_channel;
+    unsigned int vref_channel;
 
     reg_addr_t reg_datal;
     reg_addr_t reg_datah;

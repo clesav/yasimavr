@@ -29,7 +29,7 @@ YASIMAVR_USING_NAMESPACE
 
 //=======================================================================================
 
-VREF::VREF(uint32_t ref_count)
+VREF::VREF(unsigned int ref_count)
 :Peripheral(AVR_IOCTL_VREF)
 ,m_vcc(0.0)
 ,m_aref(0.0)
@@ -44,7 +44,7 @@ VREF::VREF(uint32_t ref_count)
     m_signal.set_data(Signal_VCCChange, 0.0);
     m_signal.set_data(Signal_ARefChange, 0.0);
 
-    for (uint32_t i = 0; i < ref_count; ++i)
+    for (unsigned int i = 0; i < ref_count; ++i)
         m_signal.set_data(Signal_IntRefChange, 0.0, i);
 }
 
@@ -64,7 +64,7 @@ bool VREF::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
         else if (data->index == Source_AREF)
             data->data = m_aref;
         else if (data->index == Source_Internal) {
-            uint32_t ref_index = data->data.as_uint();
+            unsigned int ref_index = data->data.as_uint();
             if (ref_index < m_references.size())
                 data->data = reference(ref_index);
             else
@@ -84,7 +84,7 @@ bool VREF::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
 
             //A VCC modif impacts all other references so we must
             //notify them all
-            for (uint32_t i = 0; i < m_references.size(); ++i)
+            for (unsigned int i = 0; i < m_references.size(); ++i)
                 m_signal.raise_d(Signal_IntRefChange, reference(i), i);
 
         }
@@ -105,7 +105,7 @@ bool VREF::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
     return false;
 }
 
-void VREF::set_reference(uint32_t index, Source source, double voltage)
+void VREF::set_reference(unsigned int index, Source source, double voltage)
 {
     ref_t r;
     if (source == Source_VCC || source == Source_AVCC)
@@ -122,7 +122,7 @@ void VREF::set_reference(uint32_t index, Source source, double voltage)
 }
 
 //Returns a reference as an absolute voltage value
-double VREF::reference(uint32_t index) const
+double VREF::reference(unsigned int index) const
 {
     if (index < m_references.size() && m_vcc) {
         ref_t r = m_references[index];

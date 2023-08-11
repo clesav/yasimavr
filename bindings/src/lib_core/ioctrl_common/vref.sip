@@ -57,7 +57,7 @@ public:
         Signal_VCCChange            /PyName=VCCChange/,
     };
 
-    VREF(size_t ref_count);
+    VREF(unsigned int ref_count);
 
     bool active() const;
 
@@ -65,7 +65,7 @@ public:
 
 protected:
 
-    void set_reference(uint32_t, Source, double=1.0);
-    double reference(uint32_t) const;
+    void set_reference(unsigned int, Source, double=1.0);
+    double reference(unsigned int) const;
 
 };
