@@ -36,7 +36,7 @@ YASIMAVR_USING_NAMESPACE
 
 typedef std::chrono::time_point<std::chrono::steady_clock> time_point;
 
-static uint64_t get_timestamp_usecs(time_point origin)
+static long long get_timestamp_usecs(time_point origin)
 {
     const time_point stamp = std::chrono::steady_clock::now();
     return std::chrono::duration_cast<std::chrono::microseconds>(stamp - origin).count();
@@ -139,10 +139,10 @@ void SimLoop::run(cycle_count_t nbcycles)
             //since the start of the loop divided by the clock frequency). It's then compared
             //to the system clock elapsed and if it's ahead by more than a threshold,
             //pause the loop for the time delta
-            int64_t sim_deadline_us = ((m_cycle_manager.cycle() + cycle_delta - first_cycle) *
-                                        1000000L) / m_device.frequency();
-            int64_t curr_time_us = get_timestamp_usecs(clock_start);
-            int64_t sleep_time_us = sim_deadline_us - curr_time_us;
+            long long sim_deadline_us = ((m_cycle_manager.cycle() + cycle_delta - first_cycle) *
+                                          1000000L) / m_device.frequency();
+            long long curr_time_us = get_timestamp_usecs(clock_start);
+            long long sleep_time_us = sim_deadline_us - curr_time_us;
             if (sleep_time_us > MIN_SLEEP_THRESHOLD) {
                 //WARNING_LOG(m_device.logger(), "LOOP : Sleeping %dus", sleep_time_us);
                 usleep(sleep_time_us);
@@ -239,10 +239,10 @@ void AsyncSimLoop::run()
                 //since the start of the loop divided by the clock frequency). It's then compared
                 //to the system clock elapsed and if it's ahead by more than a threshold,
                 //pause the loop for a catch-up sleep
-                int64_t sim_deadline_us = ((m_cycle_manager.cycle() + cycle_delta - cycle_start)
-                                           * 1000000L) / m_device.frequency();
-                int64_t curr_time_us = get_timestamp_usecs(clock_start);
-                int64_t sleep_time_us = sim_deadline_us - curr_time_us;
+                long long sim_deadline_us = ((m_cycle_manager.cycle() + cycle_delta - cycle_start)
+                                              * 1000000L) / m_device.frequency();
+                long long curr_time_us = get_timestamp_usecs(clock_start);
+                long long sleep_time_us = sim_deadline_us - curr_time_us;
                 if (sleep_time_us > MIN_SLEEP_THRESHOLD) {
                     logger().dbg("Sleeping %lld us", sleep_time_us);
 

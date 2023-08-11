@@ -70,7 +70,7 @@ struct ArchAVR_TimerConfig {
 
     struct clock_config_t : base_reg_config_t {
         TimerCounter::TickSource source;
-        unsigned int div;
+        unsigned long div;
     };
 
     struct vector_config_t {

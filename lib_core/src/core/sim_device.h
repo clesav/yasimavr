@@ -116,7 +116,7 @@ public:
     State state() const;
     cycle_count_t cycle() const;
     SleepMode sleep_mode() const; //Returns one of SleepMode enum values
-    uint32_t frequency() const;
+    unsigned long frequency() const;
 
     //Init should be called just after constructing the device to allows all peripherals
     //to allocate resources and connect signals
@@ -175,7 +175,7 @@ private:
     const DeviceConfiguration& m_config;
     uint32_t m_options;
     State m_state;
-    uint32_t m_frequency;
+    unsigned long m_frequency;
     SleepMode m_sleep_mode;
     DeviceDebugProbe* m_debugger;
     LogHandler m_log_handler;
@@ -217,7 +217,7 @@ inline SleepMode Device::sleep_mode() const
     return m_sleep_mode;
 }
 
-inline uint32_t Device::frequency() const
+inline unsigned long Device::frequency() const
 {
     return m_frequency;
 }

@@ -86,7 +86,7 @@ struct ArchAVR_TimerConfig {
 
     struct clock_config_t : base_reg_config_t {
         TimerCounter::TickSource source;      //Clock source
-        unsigned int div;                     //Prescaler factor
+        unsigned long div;                    //Prescaler factor
     };
 
     struct vector_config_t {
@@ -197,7 +197,7 @@ private:
     const ArchAVR_TimerConfig& m_config;
 
     //***** Clock management *****
-    uint16_t m_clk_ps_max;              //Max value counted by the clock prescaler
+    unsigned long m_clk_ps_max;              //Max value counted by the clock prescaler
     //Input Capture Register value
     uint16_t m_icr;
     //Temporary register when the CPU is reading 16-bits registers
@@ -219,9 +219,8 @@ private:
     void update_top();
     void capt_raised();
     ArchAVR_TimerConfig::COM_config_t get_COM_config(uint8_t regval);
-    void process_ticks(unsigned int ticks, bool event_reached);
-    void change_OC_state(uint32_t index, uint8_t event_flags);
-    bool output_active(ArchAVR_TimerConfig::COM_config_t& mode, uint32_t output_index);
+    void change_OC_state(size_t index, uint8_t event_flags);
+    bool output_active(ArchAVR_TimerConfig::COM_config_t& mode, size_t output_index);
 
 };
 

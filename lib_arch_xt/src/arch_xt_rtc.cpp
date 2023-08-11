@@ -281,7 +281,7 @@ void ArchXT_RTC::configure_timers()
         //Read and configure the clock source
         uint8_t clk_mode_val = READ_IOREG_F(CLKSEL, RTC_CLKSEL);
         auto clksel_cfg = find_reg_config_p<CFG::clksel_config_t>(m_config.clocks, clk_mode_val);
-        uint32_t clk_factor; //ratio (main MCU clock freq) / (RTC clock freq)
+        unsigned long clk_factor; //ratio (main MCU clock freq) / (RTC clock freq)
         if (clksel_cfg && clksel_cfg->source == CFG::Clock_32kHz)
             clk_factor = device()->frequency() / 32768;
         else if (clksel_cfg && clksel_cfg->source == CFG::Clock_1kHz)
@@ -292,8 +292,8 @@ void ArchXT_RTC::configure_timers()
         }
 
         //Read and configure the prescaler factor
-        const uint32_t ps_max = PRESCALER_MAX * clk_factor;
-        const uint32_t f = (1 << READ_IOREG_F(CTRLA, RTC_PRESCALER)) * clk_factor;
+        const unsigned long ps_max = PRESCALER_MAX * clk_factor;
+        const unsigned long f = (1 << READ_IOREG_F(CTRLA, RTC_PRESCALER)) * clk_factor;
         m_rtc_timer.set_prescaler(ps_max, f);
         m_pit_timer.set_prescaler(ps_max, f);
 

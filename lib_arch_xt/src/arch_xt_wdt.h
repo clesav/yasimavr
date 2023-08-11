@@ -36,8 +36,8 @@ YASIMAVR_BEGIN_NAMESPACE
 
 struct ArchXT_WDTConfig {
 
-    uint32_t clock_frequency;
-    std::vector<uint32_t> delays;
+    unsigned long clock_frequency;
+    std::vector<unsigned long> delays;
 
     reg_addr_t reg_base;
 

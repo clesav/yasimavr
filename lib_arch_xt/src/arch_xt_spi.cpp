@@ -40,7 +40,7 @@ YASIMAVR_USING_NAMESPACE
 #define HOOKTAG_SPI         0
 #define HOOKTAG_PIN         1
 
-const uint32_t ClockFactors[] = {4, 16, 64, 128};
+const unsigned long ClockFactors[] = {4, 16, 64, 128};
 
 
 //=======================================================================================
@@ -139,7 +139,7 @@ void ArchXT_SPI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
         m_spi.set_selected((data.value & SPI_ENABLE_bm) && m_pin_selected);
 
         uint8_t clk_setting = EXTRACT_F(data.value, SPI_PRESC);
-        uint32_t clk_factor = ClockFactors[clk_setting];
+        unsigned long clk_factor = ClockFactors[clk_setting];
         if (data.value & SPI_CLK2X_bm)
             clk_factor >>= 1;
         m_spi.set_frame_delay(clk_factor * 8);
