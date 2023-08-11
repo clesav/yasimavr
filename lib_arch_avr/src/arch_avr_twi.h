@@ -44,7 +44,7 @@ YASIMAVR_BEGIN_NAMESPACE
 
 struct ArchAVR_TWIConfig {
 
-    std::vector<unsigned int> ps_factors;
+    std::vector<unsigned long> ps_factors;
 
     reg_addr_t  reg_ctrl;
     bitmask_t   bm_enable;

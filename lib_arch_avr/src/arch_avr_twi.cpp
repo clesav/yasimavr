@@ -205,7 +205,7 @@ void ArchAVR_TWI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
     //TWBR and TWPS
     if (addr == m_config.rb_prescaler.addr || addr == m_config.reg_bitrate) {
         uint8_t ps_index = read_ioreg(m_config.rb_prescaler);
-        unsigned int ps_factor = m_config.ps_factors[ps_index];
+        unsigned long ps_factor = m_config.ps_factors[ps_index];
         uint8_t bitrate = read_ioreg(m_config.reg_bitrate);
         m_twi.set_bit_delay(16 + 2 * bitrate * ps_factor);
     }

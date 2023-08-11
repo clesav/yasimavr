@@ -26,7 +26,7 @@ struct ArchAVR_TWIConfig {
 #include "arch_avr_twi.h"
 %End
 
-    UnsignedInt32Vector ps_factors;
+    UnsignedLongVector ps_factors;
 
     reg_addr_t  reg_ctrl;
     bitmask_t   bm_enable;

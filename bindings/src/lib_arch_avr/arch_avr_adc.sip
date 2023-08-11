@@ -42,7 +42,7 @@ struct ArchAVR_ADCConfig {
 
     std::vector<ADC::channel_config_t> channels;
     std::vector<ArchAVR_ADCConfig::reference_config_t> references;
-    UnsignedInt16Vector clk_ps_factors;
+    UnsignedLongVector clk_ps_factors;
     std::vector<ArchAVR_ADCConfig::trigger_config_t> triggers;
 
     uint32_t vref_channel;
