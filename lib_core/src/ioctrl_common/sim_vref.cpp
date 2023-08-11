@@ -48,7 +48,7 @@ VREF::VREF(uint32_t ref_count)
         m_signal.set_data(Signal_IntRefChange, 0.0, i);
 }
 
-bool VREF::ctlreq(uint16_t req, ctlreq_data_t* data)
+bool VREF::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
 {
     if (req == AVR_CTLREQ_GET_SIGNAL) {
         data->data = &m_signal;

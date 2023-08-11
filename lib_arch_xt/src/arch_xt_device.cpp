@@ -177,7 +177,7 @@ ArchXT_Device::~ArchXT_Device()
 }
 
 
-bool ArchXT_Device::core_ctlreq(uint16_t req, ctlreq_data_t* reqdata)
+bool ArchXT_Device::core_ctlreq(ctlreq_id_t req, ctlreq_data_t* reqdata)
 {
     if (req == AVR_CTLREQ_CORE_NVM) {
         if (reqdata->index == ArchXT_Core::NVM_EEPROM)

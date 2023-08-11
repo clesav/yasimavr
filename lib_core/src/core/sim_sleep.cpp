@@ -70,7 +70,7 @@ bool SleepController::init(Device& device)
     return status;
 }
 
-bool SleepController::ctlreq(uint16_t req, ctlreq_data_t* __unused)
+bool SleepController::ctlreq(ctlreq_id_t req, ctlreq_data_t*)
 {
     //On a Sleep request (from a SLEEP instruction),
     // 1 - check that the sleep controller is enabled

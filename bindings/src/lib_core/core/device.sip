@@ -124,8 +124,8 @@ public:
     Peripheral* find_peripheral(const char*);
     Peripheral* find_peripheral(ctl_id_t);
 
-    SIP_PYTUPLE ctlreq(ctl_id_t, uint16_t, ctlreq_data_t* = NULL) /TypeHint="Tuple[bool, ctlreq_data_t]"/
-        [bool(ctl_id_t, uint16_t, ctlreq_data_t*)];
+    SIP_PYTUPLE ctlreq(ctl_id_t, ctlreq_id_t, ctlreq_data_t* = NULL) /TypeHint="Tuple[bool, ctlreq_data_t]"/
+        [bool(ctl_id_t, ctlreq_id_t, ctlreq_data_t*)];
     %MethodCode
         ctlreq_data_t* d;
         PyObject* transferObj;

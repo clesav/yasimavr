@@ -56,7 +56,7 @@ void InterruptController::reset()
     m_irq_vector = AVR_INTERRUPT_NONE;
 }
 
-bool InterruptController::ctlreq(uint16_t req, ctlreq_data_t* data)
+bool InterruptController::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
 {
     if (req == AVR_CTLREQ_GET_SIGNAL) {
         data->data = &m_signal;

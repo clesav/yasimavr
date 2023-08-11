@@ -25,16 +25,16 @@
 
 #include "ioctrl_common/sim_vref.h"
 
-const uint16_t CTLREQ_VREF_GET = AVR_CTLREQ_VREF_GET;
-const uint16_t CTLREQ_VREF_SET = AVR_CTLREQ_VREF_SET;
+const ctlreq_id_t CTLREQ_VREF_GET = AVR_CTLREQ_VREF_GET;
+const ctlreq_id_t CTLREQ_VREF_SET = AVR_CTLREQ_VREF_SET;
 
 %End
 
 
 //=======================================================================================
 
-const uint16_t CTLREQ_VREF_GET;
-const uint16_t CTLREQ_VREF_SET;
+const ctlreq_id_t CTLREQ_VREF_GET;
+const ctlreq_id_t CTLREQ_VREF_SET;
 
 
 class VREF : public Peripheral /Abstract/ {
@@ -61,7 +61,7 @@ public:
 
     bool active() const;
 
-    virtual bool ctlreq(uint16_t, ctlreq_data_t*);
+    virtual bool ctlreq(ctlreq_id_t, ctlreq_data_t*);
 
 protected:
 

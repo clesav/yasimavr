@@ -304,7 +304,7 @@ void Device::attach_peripheral(Peripheral& ctl)
     m_peripherals.push_back(&ctl);
 }
 
-bool Device::ctlreq(ctl_id_t id, uint16_t req, ctlreq_data_t* reqdata)
+bool Device::ctlreq(ctl_id_t id, ctlreq_id_t req, ctlreq_data_t* reqdata)
 {
     if (id == AVR_IOCTL_CORE) {
         return core_ctlreq(req, reqdata);
@@ -352,7 +352,7 @@ void Device::add_ioreg_handler(const regbit_t& rb, IO_RegHandler& handler, bool 
     }
 }
 
-bool Device::core_ctlreq(uint16_t req, ctlreq_data_t* reqdata)
+bool Device::core_ctlreq(ctlreq_id_t req, ctlreq_data_t* reqdata)
 {
     if (req == AVR_CTLREQ_CORE_BREAK) {
         if (m_core.m_debug_probe) {

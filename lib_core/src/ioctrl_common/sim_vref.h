@@ -78,7 +78,7 @@ public:
 
     bool active() const;
 
-    virtual bool ctlreq(uint16_t req, ctlreq_data_t* data) override;
+    virtual bool ctlreq(ctlreq_id_t req, ctlreq_data_t* data) override;
 
 protected:
 

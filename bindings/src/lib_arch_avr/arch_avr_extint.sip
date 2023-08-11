@@ -105,7 +105,7 @@ public:
 
     virtual bool init(Device&);
     virtual void reset();
-    virtual bool ctlreq(uint16_t req, ctlreq_data_t*);
+    virtual bool ctlreq(ctlreq_id_t, ctlreq_data_t*);
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
     virtual void interrupt_ack_handler(int_vect_t);
     virtual void raised(const signal_data_t&, int);

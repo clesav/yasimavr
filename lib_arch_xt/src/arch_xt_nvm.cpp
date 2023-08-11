@@ -193,7 +193,7 @@ void ArchXT_NVM::reset()
     m_state = State_Idle;
 }
 
-bool ArchXT_NVM::ctlreq(uint16_t req, ctlreq_data_t* data)
+bool ArchXT_NVM::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
 {
     //Write request from the core when writing to a data space
     //location mapped to one of the NVM blocks

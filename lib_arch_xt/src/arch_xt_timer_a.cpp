@@ -133,7 +133,7 @@ void ArchXT_TimerA::reset()
     m_timer.reset();
 }
 
-bool ArchXT_TimerA::ctlreq(uint16_t req, ctlreq_data_t* data)
+bool ArchXT_TimerA::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
 {
     if (req == AVR_CTLREQ_TCA_REGISTER_TCB) {
         PrescaledTimer* t = reinterpret_cast<PrescaledTimer*>(data->data.as_ptr());

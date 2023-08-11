@@ -86,7 +86,7 @@ void ArchAVR_ADC::reset()
     m_timer.reset();
 }
 
-bool ArchAVR_ADC::ctlreq(uint16_t req, ctlreq_data_t* data)
+bool ArchAVR_ADC::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
 {
     if (req == AVR_CTLREQ_GET_SIGNAL) {
         data->data = &m_signal;

@@ -103,7 +103,7 @@ void ArchAVR_ExtInt::reset()
         m_pcint_pin_value[i] = 0;
 }
 
-bool ArchAVR_ExtInt::ctlreq(uint16_t req, ctlreq_data_t* data)
+bool ArchAVR_ExtInt::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
 {
     if (req == AVR_CTLREQ_GET_SIGNAL) {
         data->data = &m_signal;

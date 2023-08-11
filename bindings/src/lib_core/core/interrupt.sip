@@ -24,17 +24,17 @@
 %ModuleCode
 
 #include "core/sim_interrupt.h"
-const uint16_t CTLREQ_INTR_REGISTER = AVR_CTLREQ_INTR_REGISTER;
-const uint16_t CTLREQ_INTR_RAISE    = AVR_CTLREQ_INTR_RAISE;
-const int_vect_t INTERRUPT_NONE     = AVR_INTERRUPT_NONE;
+const ctlreq_id_t CTLREQ_INTR_REGISTER = AVR_CTLREQ_INTR_REGISTER;
+const ctlreq_id_t CTLREQ_INTR_RAISE    = AVR_CTLREQ_INTR_RAISE;
+const int_vect_t INTERRUPT_NONE        = AVR_INTERRUPT_NONE;
 
 %End
 
 
 //=======================================================================================
 
-const uint16_t CTLREQ_INTR_REGISTER;
-const uint16_t CTLREQ_INTR_RAISE;
+const ctlreq_id_t CTLREQ_INTR_REGISTER;
+const ctlreq_id_t CTLREQ_INTR_RAISE;
 const int_vect_t INTERRUPT_NONE;
 
 
@@ -60,7 +60,7 @@ public:
     InterruptController(unsigned int);
 
     virtual void reset();
-    virtual bool ctlreq(uint16_t, ctlreq_data_t*);
+    virtual bool ctlreq(ctlreq_id_t, ctlreq_data_t*);
     virtual void sleep(bool, SleepMode);
 
 };

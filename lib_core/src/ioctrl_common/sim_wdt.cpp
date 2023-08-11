@@ -131,7 +131,7 @@ void WatchdogTimer::set_timer(uint32_t wdr_win_start, uint32_t wdr_win_end, uint
  * (3 cycles)
  * Ignores the request if there's already one being synced
  */
-bool WatchdogTimer::ctlreq(uint16_t req, ctlreq_data_t* __unused)
+bool WatchdogTimer::ctlreq(ctlreq_id_t req, ctlreq_data_t*)
 {
     if (req == AVR_CTLREQ_WATCHDOG_RESET) {
         if (m_win_end && !m_wdr_sync) {

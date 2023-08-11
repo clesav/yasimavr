@@ -70,6 +70,9 @@ enum class SleepMode;
  * CTLREQ definitions
 */
 
+typedef int ctlreq_id_t;
+
+
 //Common request identifier used to obtain a pointer to a particular signal
 //The data.index should contain the identifier of the signal
 //The data.p is returned pointing to the signal
@@ -121,7 +124,7 @@ struct NVM_request_t {
 
 struct ctlreq_data_t {
     vardata_t data;
-    uint32_t index;
+    long long index;
 };
 
 
@@ -182,7 +185,7 @@ public:
 
     //Callback method called for a CTL request. The method must return true if the request has
     //been processed
-    virtual bool ctlreq(uint16_t req, ctlreq_data_t* data);
+    virtual bool ctlreq(ctlreq_id_t req, ctlreq_data_t* data);
 
     //Callback method called when the CPU is reading a I/O register allocated by this peripheral.
     //The value has not been read yet so the module can modify it before the CPU gets it.

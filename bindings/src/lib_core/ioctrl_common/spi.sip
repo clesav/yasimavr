@@ -25,15 +25,15 @@
 
 #include "ioctrl_common/sim_spi.h"
 
-const uint16_t CTLREQ_SPI_ADD_CLIENT = AVR_CTLREQ_SPI_ADD_CLIENT;
-const uint16_t CTLREQ_SPI_CLIENT = AVR_CTLREQ_SPI_CLIENT;
-const uint16_t CTLREQ_SPI_SELECT = AVR_CTLREQ_SPI_SELECT;
+const ctlreq_id_t CTLREQ_SPI_ADD_CLIENT = AVR_CTLREQ_SPI_ADD_CLIENT;
+const ctlreq_id_t CTLREQ_SPI_CLIENT = AVR_CTLREQ_SPI_CLIENT;
+const ctlreq_id_t CTLREQ_SPI_SELECT = AVR_CTLREQ_SPI_SELECT;
 
 %End
 
-const uint16_t CTLREQ_SPI_ADD_CLIENT;
-const uint16_t CTLREQ_SPI_CLIENT;
-const uint16_t CTLREQ_SPI_SELECT;
+const ctlreq_id_t CTLREQ_SPI_ADD_CLIENT;
+const ctlreq_id_t CTLREQ_SPI_CLIENT;
+const ctlreq_id_t CTLREQ_SPI_SELECT;
 
 
 //=======================================================================================

@@ -58,7 +58,7 @@ bool Peripheral::init(Device& device)
 void Peripheral::reset()
 {}
 
-bool Peripheral::ctlreq(uint16_t req, ctlreq_data_t* data)
+bool Peripheral::ctlreq(ctlreq_id_t, ctlreq_data_t*)
 {
     return false;
 }

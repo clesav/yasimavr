@@ -97,7 +97,7 @@ void ArchXT_USART::reset()
     update_framerate();
 }
 
-bool ArchXT_USART::ctlreq(uint16_t req, ctlreq_data_t* data)
+bool ArchXT_USART::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
 {
     if (req == AVR_CTLREQ_GET_SIGNAL) {
         data->data = &m_uart.signal();

@@ -199,7 +199,7 @@ void ArchAVR_Timer::reset()
 }
 
 
-bool ArchAVR_Timer::ctlreq(uint16_t req, ctlreq_data_t* data)
+bool ArchAVR_Timer::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
 {
     if (req == AVR_CTLREQ_GET_SIGNAL) {
         data->data = &m_signal;

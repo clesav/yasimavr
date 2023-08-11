@@ -48,7 +48,7 @@ public:
     //Implementation of Peripheral callbacks
     virtual bool init(Device& device) override;
     virtual void reset() override;
-    virtual bool ctlreq(uint16_t req, ctlreq_data_t* data) override;
+    virtual bool ctlreq(ctlreq_id_t req, ctlreq_data_t* data) override;
     virtual void raised(const signal_data_t& sigdata, int hooktag) override;
 
 protected:

@@ -120,7 +120,7 @@ void ArchAVR_TWI::reset()
     write_ioreg(m_config.rb_addr, 0x7F);
 }
 
-bool ArchAVR_TWI::ctlreq(uint16_t req, ctlreq_data_t* data)
+bool ArchAVR_TWI::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
 {
     if (req == AVR_CTLREQ_GET_SIGNAL) {
         data->data = &m_twi.signal();

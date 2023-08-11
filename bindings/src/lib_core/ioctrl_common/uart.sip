@@ -25,14 +25,14 @@
 
 #include "ioctrl_common/sim_uart.h"
 
-const uint16_t CTLREQ_UART_ENDPOINT = AVR_CTLREQ_UART_ENDPOINT;
+const ctlreq_id_t CTLREQ_UART_ENDPOINT = AVR_CTLREQ_UART_ENDPOINT;
 
 %End
 
 
 //=======================================================================================
 
-const uint16_t CTLREQ_UART_ENDPOINT;
+const ctlreq_id_t CTLREQ_UART_ENDPOINT;
 
 
 struct UARTEndPoint {

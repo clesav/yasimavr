@@ -25,11 +25,11 @@
 
 #include "arch_xt_acp.h"
 
-const uint16_t CTLREQ_ACP_GET_DAC = AVR_CTLREQ_ACP_GET_DAC;
+const ctlreq_id_t CTLREQ_ACP_GET_DAC = AVR_CTLREQ_ACP_GET_DAC;
 
 %End
 
-const uint16_t CTLREQ_ACP_GET_DAC;
+const ctlreq_id_t CTLREQ_ACP_GET_DAC;
 
 
 //=======================================================================================
@@ -60,7 +60,7 @@ public:
 
     virtual bool init(Device&);
     virtual void reset();
-    virtual bool ctlreq(uint16_t, ctlreq_data_t*);
+    virtual bool ctlreq(ctlreq_id_t, ctlreq_data_t*);
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
     virtual void sleep(bool, SleepMode);
     virtual void raised(const signal_data_t&, int);

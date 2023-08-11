@@ -98,7 +98,7 @@ void ArchXT_TWI::reset()
     m_has_slave_rx_data = false;
 }
 
-bool ArchXT_TWI::ctlreq(uint16_t req, ctlreq_data_t* data)
+bool ArchXT_TWI::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
 {
     if (req == AVR_CTLREQ_GET_SIGNAL) {
         data->data = &m_twi.signal();

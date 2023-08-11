@@ -25,13 +25,13 @@
 
 #include "arch_avr_timer.h"
 
-const uint16_t CTLREQ_TMR_GET_EXTCLK_HOOK = AVR_CTLREQ_TMR_GET_EXTCLK_HOOK;
-const uint16_t CTLREQ_TMR_GET_CAPT_HOOK = AVR_CTLREQ_TMR_GET_CAPT_HOOK;
+const ctlreq_id_t CTLREQ_TMR_GET_EXTCLK_HOOK = AVR_CTLREQ_TMR_GET_EXTCLK_HOOK;
+const ctlreq_id_t CTLREQ_TMR_GET_CAPT_HOOK = AVR_CTLREQ_TMR_GET_CAPT_HOOK;
 
 %End
 
-const uint16_t CTLREQ_TMR_GET_EXTCLK_HOOK;
-const uint16_t CTLREQ_TMR_GET_CAPT_HOOK;
+const ctlreq_id_t CTLREQ_TMR_GET_EXTCLK_HOOK;
+const ctlreq_id_t CTLREQ_TMR_GET_CAPT_HOOK;
 
 
 //=======================================================================================
@@ -192,7 +192,7 @@ public:
 
     virtual bool init(Device&);
     virtual void reset();
-    virtual bool ctlreq(uint16_t, ctlreq_data_t*);
+    virtual bool ctlreq(ctlreq_id_t, ctlreq_data_t*);
     virtual uint8_t ioreg_read_handler(reg_addr_t, uint8_t);
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
     virtual void raised(const signal_data_t&, int);

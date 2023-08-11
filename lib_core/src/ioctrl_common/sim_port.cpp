@@ -79,7 +79,7 @@ void Port::reset()
 /*
  * The one supported request is 0 (get signal)
  */
-bool Port::ctlreq(uint16_t req, ctlreq_data_t* data)
+bool Port::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
 {
     if (req == AVR_CTLREQ_GET_SIGNAL) {
         data->data = &m_signal;

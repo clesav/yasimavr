@@ -78,7 +78,7 @@ void ArchAVR_SPI::reset()
     update_framerate();
 }
 
-bool ArchAVR_SPI::ctlreq(uint16_t req, ctlreq_data_t* data)
+bool ArchAVR_SPI::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
 {
     if (req == AVR_CTLREQ_GET_SIGNAL) {
         data->data = &m_spi.signal();

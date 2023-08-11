@@ -302,7 +302,7 @@ void ArchXT_MiscRegCtrl::reset()
     write_ioreg(SIGROW_REG_ADDR(DEVICEID2), (m_config.dev_id >> 16) & 0xFF);
 }
 
-bool ArchXT_MiscRegCtrl::ctlreq(uint16_t req, ctlreq_data_t* data)
+bool ArchXT_MiscRegCtrl::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
 {
     if (req == AVR_CTLREQ_WRITE_SIGROW) {
         memcpy(m_sigrow, data->data.as_ptr(), SIGROW_MEM_SIZE);

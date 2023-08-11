@@ -141,7 +141,7 @@ public:
     void add_ioreg_handler(const regbit_t& rb, IO_RegHandler& handler, bool readonly=false);
     Peripheral* find_peripheral(const char* name);
     Peripheral* find_peripheral(ctl_id_t id);
-    bool ctlreq(ctl_id_t id, uint16_t req, ctlreq_data_t* reqdata = nullptr);
+    bool ctlreq(ctl_id_t id, ctlreq_id_t req, ctlreq_data_t* reqdata = nullptr);
 
     //Helpers for the peripheral timers
     CycleManager* cycle_manager();
@@ -160,7 +160,7 @@ public:
 
 protected:
 
-    virtual bool core_ctlreq(uint16_t req, ctlreq_data_t* reqdata);
+    virtual bool core_ctlreq(ctlreq_id_t req, ctlreq_data_t* reqdata);
 
     //Loads the various memory area using the firmware data.
     //The basic implementation loads only the flash and the fuses, the rest

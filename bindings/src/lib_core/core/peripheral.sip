@@ -74,20 +74,20 @@ ctl_id_t IOCTL_TWI(char n)
 }
 
 
-const uint16_t CTLREQ_GET_SIGNAL       = AVR_CTLREQ_GET_SIGNAL;
-const uint16_t CTLREQ_CORE_BREAK       = AVR_CTLREQ_CORE_BREAK;
-const uint16_t CTLREQ_CORE_SLEEP       = AVR_CTLREQ_CORE_SLEEP;
-const uint16_t CTLREQ_CORE_WAKEUP      = AVR_CTLREQ_CORE_WAKEUP;
-const uint16_t CTLREQ_CORE_SHORTING    = AVR_CTLREQ_CORE_SHORTING;
-const uint16_t CTLREQ_CORE_CRASH       = AVR_CTLREQ_CORE_CRASH;
-const uint16_t CTLREQ_CORE_RESET       = AVR_CTLREQ_CORE_RESET;
-const uint16_t CTLREQ_CORE_RESET_FLAG  = AVR_CTLREQ_CORE_RESET_FLAG;
-const uint16_t CTLREQ_CORE_NVM         = AVR_CTLREQ_CORE_NVM;
-const uint16_t CTLREQ_CORE_HALT        = AVR_CTLREQ_CORE_HALT;
-const uint16_t CTLREQ_WATCHDOG_RESET   = AVR_CTLREQ_WATCHDOG_RESET;
-const uint16_t CTLREQ_NVM_WRITE        = AVR_CTLREQ_NVM_WRITE;
-const uint16_t CTLREQ_SLEEP_CALL       = AVR_CTLREQ_SLEEP_CALL;
-const uint16_t CTLREQ_SLEEP_PSEUDO     = AVR_CTLREQ_SLEEP_PSEUDO;
+const ctlreq_id_t CTLREQ_GET_SIGNAL       = AVR_CTLREQ_GET_SIGNAL;
+const ctlreq_id_t CTLREQ_CORE_BREAK       = AVR_CTLREQ_CORE_BREAK;
+const ctlreq_id_t CTLREQ_CORE_SLEEP       = AVR_CTLREQ_CORE_SLEEP;
+const ctlreq_id_t CTLREQ_CORE_WAKEUP      = AVR_CTLREQ_CORE_WAKEUP;
+const ctlreq_id_t CTLREQ_CORE_SHORTING    = AVR_CTLREQ_CORE_SHORTING;
+const ctlreq_id_t CTLREQ_CORE_CRASH       = AVR_CTLREQ_CORE_CRASH;
+const ctlreq_id_t CTLREQ_CORE_RESET       = AVR_CTLREQ_CORE_RESET;
+const ctlreq_id_t CTLREQ_CORE_RESET_FLAG  = AVR_CTLREQ_CORE_RESET_FLAG;
+const ctlreq_id_t CTLREQ_CORE_NVM         = AVR_CTLREQ_CORE_NVM;
+const ctlreq_id_t CTLREQ_CORE_HALT        = AVR_CTLREQ_CORE_HALT;
+const ctlreq_id_t CTLREQ_WATCHDOG_RESET   = AVR_CTLREQ_WATCHDOG_RESET;
+const ctlreq_id_t CTLREQ_NVM_WRITE        = AVR_CTLREQ_NVM_WRITE;
+const ctlreq_id_t CTLREQ_SLEEP_CALL       = AVR_CTLREQ_SLEEP_CALL;
+const ctlreq_id_t CTLREQ_SLEEP_PSEUDO     = AVR_CTLREQ_SLEEP_PSEUDO;
 
 %End
 
@@ -115,20 +115,23 @@ ctl_id_t IOCTL_UART(char);
 ctl_id_t IOCTL_SPI(char);
 ctl_id_t IOCTL_TWI(char);
 
-const uint16_t CTLREQ_GET_SIGNAL;
-const uint16_t CTLREQ_CORE_BREAK;
-const uint16_t CTLREQ_CORE_SLEEP;
-const uint16_t CTLREQ_CORE_WAKEUP;
-const uint16_t CTLREQ_CORE_SHORTING;
-const uint16_t CTLREQ_CORE_CRASH;
-const uint16_t CTLREQ_CORE_RESET;
-const uint16_t CTLREQ_CORE_RESET_FLAG;
-const uint16_t CTLREQ_CORE_NVM;
-const uint16_t CTLREQ_CORE_HALT;
-const uint16_t CTLREQ_WATCHDOG_RESET;
-const uint16_t CTLREQ_NVM_WRITE;
-const uint16_t CTLREQ_SLEEP_CALL;
-const uint16_t CTLREQ_SLEEP_PSEUDO;
+
+typedef int ctlreq_id_t;
+
+const ctlreq_id_t CTLREQ_GET_SIGNAL;
+const ctlreq_id_t CTLREQ_CORE_BREAK;
+const ctlreq_id_t CTLREQ_CORE_SLEEP;
+const ctlreq_id_t CTLREQ_CORE_WAKEUP;
+const ctlreq_id_t CTLREQ_CORE_SHORTING;
+const ctlreq_id_t CTLREQ_CORE_CRASH;
+const ctlreq_id_t CTLREQ_CORE_RESET;
+const ctlreq_id_t CTLREQ_CORE_RESET_FLAG;
+const ctlreq_id_t CTLREQ_CORE_NVM;
+const ctlreq_id_t CTLREQ_CORE_HALT;
+const ctlreq_id_t CTLREQ_WATCHDOG_RESET;
+const ctlreq_id_t CTLREQ_NVM_WRITE;
+const ctlreq_id_t CTLREQ_SLEEP_CALL;
+const ctlreq_id_t CTLREQ_SLEEP_PSEUDO;
 
 
 struct NVM_request_t {
@@ -150,7 +153,7 @@ struct ctlreq_data_t {
 %End
 
     vardata_t data;
-    uint32_t index;
+    long long index;
 
 };
 
@@ -178,7 +181,7 @@ public:
 
     virtual bool init(Device&);
     virtual void reset();
-    virtual bool ctlreq(uint16_t, ctlreq_data_t*);
+    virtual bool ctlreq(ctlreq_id_t, ctlreq_data_t*);
     virtual uint8_t ioreg_read_handler(reg_addr_t, uint8_t);
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
     virtual void sleep(bool on, SleepMode mode);
