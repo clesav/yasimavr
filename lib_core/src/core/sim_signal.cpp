@@ -255,7 +255,7 @@ bool DataSignal::key_t::operator==(const key_t& other) const
 
 size_t DataSignal::keyhash_t::operator()(const key_t& k) const
 {
-    return ((uint32_t)k.sigid) ^ k.index;
+    return ((long long)k.sigid) ^ k.index;
 }
 
 

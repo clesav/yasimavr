@@ -127,7 +127,7 @@ public:
     void set_frame_delay(cycle_count_t delay);
 
     //Set the TX buffer size, including the TX shift register. 0 means unlimited
-    void set_tx_buffer_limit(unsigned int limit);
+    void set_tx_buffer_limit(size_t limit);
 
     //Push a 8-bits frame to be emitted by the interface. If no TX is already
     //ongoing, it will be started immediately
@@ -144,13 +144,13 @@ public:
     void clear_tx_collision();
 
     //Set the RX buffer size, including the RX shift register, 0 means unlimited
-    void set_rx_buffer_limit(unsigned int limit);
+    void set_rx_buffer_limit(size_t limit);
 
     //Enable/disable the reception. If disabled, the RX buffer is flushed.
     void set_rx_enabled(bool enabled);
 
     //Return the no of received frames in the buffer and not popped
-    unsigned int rx_available() const;
+    size_t rx_available() const;
 
     //Pop a frame from the RX buffer. Returns 0 if no frame available.
     uint8_t pop_rx();
@@ -190,7 +190,7 @@ private:
     //TX FIFO buffer. The front is the TX shift register
     std::deque<uint8_t> m_tx_buffer;
     //Size limit for the TX FIFO, including the shift register
-    unsigned int m_tx_limit;
+    size_t m_tx_limit;
     //Collision flag
     bool m_tx_collision;
     //Cycle timer to simulate the delay to emit a frame
@@ -204,10 +204,10 @@ private:
     std::deque<uint8_t> m_rx_buffer;
     //It is actually the no of frames in the device FIFO,
     //hence delimiting the FIFO two sub-parts
-    unsigned int m_rx_count;
+    size_t m_rx_count;
     //Size limit for the device part of the RX FIFO
     //The back part of the FIFO is not limited
-    unsigned int m_rx_limit;
+    size_t m_rx_limit;
     //RX overflow flag
     bool m_rx_overflow;
     //Cycle timer to simulate the delay to receive a frame
@@ -237,7 +237,7 @@ inline Signal& UART::signal()
     return m_signal;
 }
 
-inline unsigned int UART::rx_available() const
+inline size_t UART::rx_available() const
 {
     return m_rx_count;
 }

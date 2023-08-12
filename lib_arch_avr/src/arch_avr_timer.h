@@ -91,7 +91,7 @@ struct ArchAVR_TimerConfig {
 
     struct vector_config_t {
         int_vect_t num;
-        uint8_t bit;
+        unsigned char bit;
     };
 
     struct OC_config_t : base_reg_config_t {
@@ -219,7 +219,7 @@ private:
     void update_top();
     void capt_raised();
     ArchAVR_TimerConfig::COM_config_t get_COM_config(uint8_t regval);
-    void change_OC_state(size_t index, uint8_t event_flags);
+    void change_OC_state(size_t index, int event_flags);
     bool output_active(ArchAVR_TimerConfig::COM_config_t& mode, size_t output_index);
 
 };

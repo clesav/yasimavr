@@ -132,7 +132,7 @@ void UART::reset()
  * Change the TX buffer limit and discard frames to adjust
  * if necessary
  */
-void UART::set_tx_buffer_limit(unsigned int limit)
+void UART::set_tx_buffer_limit(size_t limit)
 {
     m_tx_limit = limit;
     while (limit > 0 && m_tx_buffer.size() > limit)
@@ -189,7 +189,7 @@ cycle_count_t UART::tx_timer_next(cycle_count_t when)
 //=======================================================================================
 //RX management
 
-void UART::set_rx_buffer_limit(unsigned int limit)
+void UART::set_rx_buffer_limit(size_t limit)
 {
     m_rx_limit = limit;
     while (limit > 0 && m_rx_count > limit) {

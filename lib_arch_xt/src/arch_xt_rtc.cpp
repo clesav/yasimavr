@@ -328,7 +328,7 @@ void ArchXT_RTC::rtc_hook_raised(const signal_data_t& sigdata)
     if (sigdata.sigid != TimerCounter::Signal_Event)
         return;
 
-    uint8_t event_type = sigdata.data.as_uint();
+    int event_type = sigdata.data.as_int();
 
     if (event_type & TimerCounter::Event_Top) {
         if (m_rtc_intflag.set_flag(RTC_OVF_bm))

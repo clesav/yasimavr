@@ -75,7 +75,7 @@ struct ArchAVR_TimerConfig {
 
     struct vector_config_t {
         int_vect_t num;
-        uint8_t bit;
+        unsigned char bit /PyInt/;
     };
 
     struct OC_config_t : base_reg_config_t {

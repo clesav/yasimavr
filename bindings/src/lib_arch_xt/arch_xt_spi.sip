@@ -40,7 +40,7 @@ class ArchXT_SPI : public Peripheral, public SignalHook /NoDefaultCtors/ {
 
 public:
 
-    ArchXT_SPI(uint8_t, const ArchXT_SPIConfig& /KeepReference/);
+    ArchXT_SPI(int, const ArchXT_SPIConfig& /KeepReference/);
 
     virtual bool init(Device&);
     virtual void reset();

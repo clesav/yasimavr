@@ -56,7 +56,7 @@ class DLL_EXPORT ArchXT_SPI : public Peripheral, public SignalHook {
 
 public:
 
-    ArchXT_SPI(uint8_t num, const ArchXT_SPIConfig& config);
+    ArchXT_SPI(int num, const ArchXT_SPIConfig& config);
 
     virtual bool init(Device& device) override;
     virtual void reset() override;

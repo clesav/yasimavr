@@ -71,14 +71,14 @@ public:
 
     Signal& signal();
     void set_frame_delay(cycle_count_t);
-    void set_tx_buffer_limit(unsigned int);
+    void set_tx_buffer_limit(size_t);
     void push_tx(uint8_t);
     void cancel_tx_pending();
-    unsigned int tx_pending() const;
+    size_t tx_pending() const;
     bool has_tx_collision() const;
     void clear_tx_collision();
 
-    void set_rx_buffer_limit(unsigned int);
+    void set_rx_buffer_limit(size_t);
     void set_rx_enabled(bool);
     uint8_t rx_available() const;
     uint8_t pop_rx();

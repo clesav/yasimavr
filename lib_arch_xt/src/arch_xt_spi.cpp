@@ -45,7 +45,7 @@ const unsigned long ClockFactors[] = {4, 16, 64, 128};
 
 //=======================================================================================
 
-ArchXT_SPI::ArchXT_SPI(uint8_t num, const ArchXT_SPIConfig& config)
+ArchXT_SPI::ArchXT_SPI(int num, const ArchXT_SPIConfig& config)
 :Peripheral(AVR_IOCTL_SPI(0x30 + num))
 ,m_config(config)
 ,m_pin_select(nullptr)

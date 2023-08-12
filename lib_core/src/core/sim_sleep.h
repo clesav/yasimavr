@@ -101,7 +101,7 @@ private:
 
     const SleepConfig& m_config;
     //Index of the current sleep mode in the configuration mode map
-    uint8_t m_mode_index;
+    unsigned int m_mode_index;
 
 };
 

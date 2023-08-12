@@ -25,7 +25,7 @@
 
 #include "arch_xt_timer_a.h"
 const ctlreq_id_t CTLREQ_TCA_REGISTER_TCB = AVR_CTLREQ_TCA_REGISTER_TCB;
-const uint8_t TCA_CMP_CHANNEL_COUNT = AVR_TCA_CMP_CHANNEL_COUNT;
+const unsigned int TCA_CMP_CHANNEL_COUNT = AVR_TCA_CMP_CHANNEL_COUNT;
 
 %End
 
@@ -33,7 +33,7 @@ const uint8_t TCA_CMP_CHANNEL_COUNT = AVR_TCA_CMP_CHANNEL_COUNT;
 //=======================================================================================
 
 const ctlreq_id_t CTLREQ_TCA_REGISTER_TCB;
-const uint8_t TCA_CMP_CHANNEL_COUNT;
+const unsigned int TCA_CMP_CHANNEL_COUNT;
 
 
 struct ArchXT_TimerAConfig {

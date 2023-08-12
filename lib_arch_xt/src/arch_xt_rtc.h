@@ -79,7 +79,7 @@ private:
 
     const ArchXT_RTCConfig& m_config;
 
-    uint8_t m_clk_mode;
+    int m_clk_mode;
 
     //***** prescaled timer, one for each counter *****
     PrescaledTimer m_rtc_timer;

@@ -441,7 +441,7 @@ bool ArchAVR_Timer::output_active(CFG::COM_config_t& mode, size_t output_index)
 void ArchAVR_Timer::raised(const signal_data_t& sigdata, int)
 {
     if (sigdata.sigid == TimerCounter::Signal_Event) {
-        uint8_t event_flags = sigdata.data.as_uint();
+        int event_flags = sigdata.data.as_int();
         bool raise_ovf = false;
 
         //If the MAX value has been reached
@@ -502,14 +502,14 @@ void ArchAVR_Timer::raised(const signal_data_t& sigdata, int)
     }
 
     else if (sigdata.sigid == TimerCounter::Signal_CompMatch) {
-        change_OC_state(sigdata.index, sigdata.data.as_uint());
+        change_OC_state(sigdata.index, sigdata.data.as_int());
         //Raise the corresponding interrupt flag
         m_oc_channels[sigdata.index]->intflag.set_flag();
     }
 }
 
 
-void ArchAVR_Timer::change_OC_state(size_t index, uint8_t event_flags)
+void ArchAVR_Timer::change_OC_state(size_t index, int event_flags)
 {
     OutputCompareChannel* oc = m_oc_channels[index];
     if (!oc->active) return;
