@@ -45,3 +45,6 @@
 build
 dist
 yasimavr.egg-info
+
+# Log files
+*.log
