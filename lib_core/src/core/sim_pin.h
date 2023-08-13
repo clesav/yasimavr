@@ -40,7 +40,7 @@ class Port;
  * set.
  */
  
-typedef id_t pin_id_t;
+typedef sim_id_t pin_id_t;
  
 class DLL_EXPORT Pin : public SignalHook {
 

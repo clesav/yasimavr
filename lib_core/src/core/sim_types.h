@@ -202,14 +202,14 @@ inline const regbit_t& regbit_compound_t::operator[](size_t index) const
 
 //=======================================================================================
 
-typedef unsigned long id_t;
-typedef id_t ctl_id_t;
+typedef unsigned long sim_id_t;
+typedef sim_id_t ctl_id_t;
 
-std::string id_to_str(id_t id);
-id_t str_to_id(const char* s);
-id_t str_to_id(const std::string& s);
+std::string id_to_str(sim_id_t id);
+sim_id_t str_to_id(const char* s);
+sim_id_t str_to_id(const std::string& s);
 
-constexpr id_t chr_to_id(char a, char b, char c, char d)
+constexpr sim_id_t chr_to_id(char a, char b, char c, char d)
 {
     return (d << 24) | (c << 16) | (b << 8) | a;
 }
