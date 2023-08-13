@@ -56,14 +56,14 @@ bool ArchXT_VREF::init(Device& device)
 void ArchXT_VREF::reset()
 {
     //Set each reference channel to the reset value
-    for (uint32_t index = 0; index < m_config.channels.size(); ++index)
+    for (unsigned int index = 0; index < m_config.channels.size(); ++index)
         set_channel_reference(index, 0);
 }
 
 void ArchXT_VREF::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
     //Iterate over all the channels, and update if impacted by the register change
-    for (uint32_t ch_ix = 0; ch_ix < m_config.channels.size(); ++ch_ix) {
+    for (unsigned int ch_ix = 0; ch_ix < m_config.channels.size(); ++ch_ix) {
         const ArchXT_VREFConfig::channel_t& ch = m_config.channels[ch_ix];
         if (addr == ch.rb_select.addr && ch.rb_select.extract(data.anyedge())) {
             //Extract the selection value for this channel
@@ -73,7 +73,7 @@ void ArchXT_VREF::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
     }
 }
 
-void ArchXT_VREF::set_channel_reference(uint32_t index, uint8_t reg_value)
+void ArchXT_VREF::set_channel_reference(unsigned int index, uint8_t reg_value)
 {
     typedef ArchXT_VREFConfig::reference_config_t vref_cfg_t;
 
@@ -249,7 +249,7 @@ void ArchXT_ResetCtrl::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t&
 #define SIGROW_MEM_SIZE     (sizeof(SIGROW_t) - SIGROW_MEM_OFS)
 
 ArchXT_MiscRegCtrl::ArchXT_MiscRegCtrl(const ArchXT_MiscConfig& config)
-:Peripheral(AVR_ID('M', 'I', 'S', 'C'))
+:Peripheral(chr_to_id('M', 'I', 'S', 'C'))
 ,m_config(config)
 {
     m_sigrow = (uint8_t*) malloc(SIGROW_MEM_SIZE);
@@ -267,9 +267,8 @@ bool ArchXT_MiscRegCtrl::init(Device& device)
 
     add_ioreg(CCP);
 
-    for (unsigned int i = 0; i < m_config.gpior_count; ++i) {
+    for (unsigned int i = 0; i < m_config.gpior_count; ++i)
         add_ioreg(m_config.reg_base_gpior + i);
-    }
 
     add_ioreg(m_config.reg_revid, 0xFF, true);
 
@@ -302,7 +301,7 @@ void ArchXT_MiscRegCtrl::reset()
     write_ioreg(SIGROW_REG_ADDR(DEVICEID2), (m_config.dev_id >> 16) & 0xFF);
 }
 
-bool ArchXT_MiscRegCtrl::ctlreq(uint16_t req, ctlreq_data_t* data)
+bool ArchXT_MiscRegCtrl::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
 {
     if (req == AVR_CTLREQ_WRITE_SIGROW) {
         memcpy(m_sigrow, data->data.as_ptr(), SIGROW_MEM_SIZE);

@@ -79,7 +79,7 @@ bool ArchAVR_ExtInt::init(Device& device)
 
     //Find the pins for EXTINT and connect the hook mapper to their signals
     for (int i = 0; i < EXTINT_PIN_COUNT; ++i) {
-        uint32_t pin_id = m_config.extint_pins[i];
+        pin_id_t pin_id = m_config.extint_pins[i];
         Pin* pin = device.find_pin(pin_id);
         if (pin)
             pin->signal().connect_hook(this, i);
@@ -87,7 +87,7 @@ bool ArchAVR_ExtInt::init(Device& device)
 
     //Find the pins for Pin Change and connect the hook mapper to their signals
     for (int i = 0; i < PCINT_PIN_COUNT; ++i) {
-        uint32_t pin_id = m_config.pcint_pins[i];
+        pin_id_t pin_id = m_config.pcint_pins[i];
         Pin* pin = device.find_pin(pin_id);
         if (pin)
             pin->signal().connect_hook(this, 0x100 | i);
@@ -103,7 +103,7 @@ void ArchAVR_ExtInt::reset()
         m_pcint_pin_value[i] = 0;
 }
 
-bool ArchAVR_ExtInt::ctlreq(uint16_t req, ctlreq_data_t* data)
+bool ArchAVR_ExtInt::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
 {
     if (req == AVR_CTLREQ_GET_SIGNAL) {
         data->data = &m_signal;
@@ -170,11 +170,11 @@ void ArchAVR_ExtInt::interrupt_ack_handler(int_vect_t vector)
     }
 }
 
-void ArchAVR_ExtInt::raised(const signal_data_t& sigdata, uint16_t hooktag)
+void ArchAVR_ExtInt::raised(const signal_data_t& sigdata, int hooktag)
 {
     if (sigdata.sigid != Pin::Signal_DigitalStateChange) return;
 
-    bool pin_level = (sigdata.data.as_uint() == Pin::State_High);
+    bool pin_level = (sigdata.data.as_int() == Pin::State_High);
     uint8_t pin_num = hooktag & 0x00FF;
     bool is_pc = (hooktag & 0x0100);
 

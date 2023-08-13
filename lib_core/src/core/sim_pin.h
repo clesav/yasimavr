@@ -39,6 +39,9 @@ class Port;
  * It is resolved into a single electrical state. In case of conflict, the SHORTED state is
  * set.
  */
+ 
+typedef sim_id_t pin_id_t;
+ 
 class DLL_EXPORT Pin : public SignalHook {
 
 public:
@@ -70,14 +73,14 @@ public:
     static const char* StateName(State state);
 
     //Constructor of the pin. The ID should be a unique identifier of the pad for the MCU.
-    explicit Pin(uint32_t id);
+    explicit Pin(pin_id_t id);
 
     //Interface for controlling the pad from external code
     void set_external_state(State state);
     //Set the external analog voltage value, in interval [0;1], relative to VCC
     void set_external_analog_value(double v);
 
-    uint32_t id() const;
+    pin_id_t id() const;
     //Resolved state of the pad
     State state() const;
     //Resolved state reduced to digital values: LOW, HIGH or SHORTED
@@ -88,13 +91,13 @@ public:
     DataSignal& signal();
 
     //Implementation of the SignalHook interface to receive changes
-    virtual void raised(const signal_data_t& sigdata, uint16_t hooktag) override;
+    virtual void raised(const signal_data_t& sigdata, int hooktag) override;
 
 private:
 
     friend class Port;
 
-    uint32_t m_id;
+    pin_id_t m_id;
     State m_ext_state;
     State m_int_state;
     State m_resolved_state;
@@ -107,7 +110,7 @@ private:
 
 };
 
-inline uint32_t Pin::id() const
+inline pin_id_t Pin::id() const
 {
     return m_id;
 };

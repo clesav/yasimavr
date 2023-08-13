@@ -190,7 +190,7 @@ static const char* sreg_to_str(const uint8_t* sreg, char* sreg_str)
 #define INVALID_OPCODE \
     do { \
         char msg[50]; \
-        sprintf(msg, "Bad opcode 0x%04x at PC=0x%04x", opcode, m_pc); \
+        sprintf(msg, "Bad opcode 0x%04x at PC=0x%04lx", opcode, m_pc); \
         m_device->crash(CRASH_INVALID_OPCODE, msg); \
     } while(0);
 

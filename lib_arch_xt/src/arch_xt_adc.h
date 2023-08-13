@@ -55,10 +55,10 @@ struct ArchXT_ADCConfig {
 
     std::vector<ADC::channel_config_t> channels;
     std::vector<reference_config_t> references;
-    uint32_t vref_channel;
-    std::vector<uint16_t> clk_ps_factors;
-    uint16_t clk_ps_max;
-    std::vector<uint16_t> init_delays;
+    unsigned int vref_channel;
+    std::vector<unsigned long> clk_ps_factors;
+    unsigned long clk_ps_max;
+    std::vector<unsigned long> init_delays;
 
     reg_addr_t reg_base;
 
@@ -80,11 +80,11 @@ public:
 
     virtual bool init(Device& device) override;
     virtual void reset() override;
-    virtual bool ctlreq(uint16_t req, ctlreq_data_t* data) override;
+    virtual bool ctlreq(ctlreq_id_t req, ctlreq_data_t* data) override;
     virtual uint8_t ioreg_read_handler(reg_addr_t addr, uint8_t value) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
     virtual void sleep(bool on, SleepMode mode) override;
-    virtual void raised(const signal_data_t& data, uint16_t sigid) override;
+    virtual void raised(const signal_data_t& sigdata, int hooktag) override;
 
 private:
 

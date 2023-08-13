@@ -36,7 +36,7 @@ public:
     };
 
     std::string variant;
-    uint32_t frequency;
+    unsigned long frequency;
     double vcc;
     double aref;
 

@@ -23,6 +23,7 @@
 
 #include "sim_types.h"
 #include <cstring>
+#include <climits>
 
 YASIMAVR_USING_NAMESPACE
 
@@ -193,7 +194,7 @@ regbit_compound_t& regbit_compound_t::operator=(const regbit_compound_t& other)
 
 //=======================================================================================
 
-std::string YASIMAVR_QUALIFIED_NAME(id_to_str)(uint32_t id)
+std::string YASIMAVR_QUALIFIED_NAME(id_to_str)(sim_id_t id)
 {
     char buf[5];
     buf[0] = id & 0xFF;
@@ -204,7 +205,7 @@ std::string YASIMAVR_QUALIFIED_NAME(id_to_str)(uint32_t id)
     return std::string(buf);
 }
 
-uint32_t YASIMAVR_QUALIFIED_NAME(str_to_id)(const char* s)
+sim_id_t YASIMAVR_QUALIFIED_NAME(str_to_id)(const char* s)
 {
     //Here we use the fact that strncpy pads the destination buffer
     //with null chars if the source string is shorter than 4.
@@ -215,7 +216,7 @@ uint32_t YASIMAVR_QUALIFIED_NAME(str_to_id)(const char* s)
 
 }
 
-uint32_t YASIMAVR_QUALIFIED_NAME(str_to_id)(const std::string& s)
+sim_id_t YASIMAVR_QUALIFIED_NAME(str_to_id)(const std::string& s)
 {
     return str_to_id(s.c_str());
 }
@@ -227,8 +228,8 @@ vardata_t::vardata_t() : m_type(Invalid) {}
 vardata_t::vardata_t(void* p_) : m_type(Pointer), p(p_) {}
 vardata_t::vardata_t(const char* s_) : m_type(String), s(s_) {}
 vardata_t::vardata_t(double d_) : m_type(Double), d(d_) {}
-vardata_t::vardata_t(unsigned int u_) : m_type(Uinteger), u(u_) {}
-vardata_t::vardata_t(int i_) : m_type(Integer), i(i_) {}
+vardata_t::vardata_t(unsigned long long u_) : m_type(Uinteger), u(u_) {}
+vardata_t::vardata_t(long long i_) : m_type(Integer), i(i_) {}
 vardata_t::vardata_t(uint8_t* b_, size_t sz) : m_type(Bytes), p(b_), m_size(sz) {}
 vardata_t::vardata_t(const vardata_t& v) { *this = v; }
 
@@ -244,17 +245,34 @@ const char* vardata_t::as_str() const
 
 double vardata_t::as_double() const
 {
-    return (m_type == Double) ? d : 0;
+    if (m_type == Double)
+        return d;
+    else if (m_type == Uinteger)
+        return u;
+    else if (m_type == Integer)
+        return i;
+    else
+        return 0.0;
 }
 
-unsigned int vardata_t::as_uint() const
+unsigned long long vardata_t::as_uint() const
 {
-    return (m_type == Uinteger) ? u : 0;
+    if (m_type == Uinteger)
+        return u;
+    else if (m_type == Integer && i >= 0)
+        return i;
+    else
+        return 0;
 }
 
-int vardata_t::as_int() const
+long long vardata_t::as_int() const
 {
-    return (m_type == Integer) ? i : 0;
+    if (m_type == Integer)
+        return i;
+    else if (m_type == Uinteger && u <= LLONG_MAX)
+        return u;
+    else
+        return 0;
 }
 
 const uint8_t* vardata_t::as_bytes() const
@@ -288,14 +306,14 @@ vardata_t& vardata_t::operator=(double d_)
     return *this;
 }
 
-vardata_t& vardata_t::operator=(unsigned int u_)
+vardata_t& vardata_t::operator=(unsigned long long u_)
 {
     m_type = Uinteger;
     u = u_;
     return *this;
 }
 
-vardata_t& vardata_t::operator=(int i_)
+vardata_t& vardata_t::operator=(long long i_)
 {
     m_type = Integer;
     i = i_;
@@ -320,6 +338,34 @@ vardata_t& vardata_t::operator=(const vardata_t& v)
         p = v.p;
         m_size = v.m_size;
         break;
+    default: break;
     }
     return *this;
+}
+
+bool vardata_t::operator==(const vardata_t& v) const
+{
+    switch (m_type) {
+        case Invalid:
+            return v.m_type == Invalid;
+        case Pointer:
+            return v.m_type == Pointer && p == v.p;
+        case String:
+            return v.m_type == String && !strcmp(s, v.s);
+        case Double:
+            return v.m_type == Double && d == v.d;
+        case Uinteger:
+            return (v.m_type == Uinteger || v.m_type == Integer) && u == v.as_uint();
+        case Integer:
+            return (v.m_type == Uinteger || v.m_type == Integer) && i == v.as_int();
+        case Bytes:
+            return v.m_type == Bytes && m_size == v.m_size && !memcmp(&p, &v.p, m_size);
+        default:
+            return false;
+    }
+}
+
+bool vardata_t::operator!=(const vardata_t& v) const
+{
+    return !(*this == v);
 }

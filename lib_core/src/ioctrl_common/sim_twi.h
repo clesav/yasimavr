@@ -389,7 +389,7 @@ private:
 
     void start_timer(cycle_count_t delay);
     cycle_count_t timer_next(cycle_count_t when);
-    void defer_signal_raise(uint16_t sigid, uint32_t index, uint32_t u);
+    void defer_signal_raise(int sigid, long long index, unsigned long long u);
 
 };
 

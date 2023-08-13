@@ -52,10 +52,10 @@ struct ArchAVR_ADCConfig {
 
     std::vector<ADC::channel_config_t> channels;
     std::vector<reference_config_t> references;
-    std::vector<uint16_t> clk_ps_factors;
+    std::vector<unsigned long> clk_ps_factors;
     std::vector<trigger_config_t> triggers;
 
-    uint32_t vref_channel;
+    unsigned int vref_channel;
 
     reg_addr_t reg_datal;
     reg_addr_t reg_datah;
@@ -89,11 +89,11 @@ public:
 
     virtual bool init(Device& device) override;
     virtual void reset() override;
-    virtual bool ctlreq(uint16_t req, ctlreq_data_t* data) override;
+    virtual bool ctlreq(ctlreq_id_t req, ctlreq_data_t* data) override;
     virtual uint8_t ioreg_read_handler(reg_addr_t addr, uint8_t value) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
     virtual void sleep(bool on, SleepMode mode) override;
-    virtual void raised(const signal_data_t& sigdata, uint16_t hooktag) override;
+    virtual void raised(const signal_data_t& sigdata, int hooktag) override;
 
 private:
 

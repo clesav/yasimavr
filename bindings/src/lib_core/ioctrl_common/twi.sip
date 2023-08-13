@@ -25,14 +25,14 @@
 
 #include "ioctrl_common/sim_twi.h"
 
-const uint16_t CTLREQ_TWI_ENDPOINT = AVR_CTLREQ_TWI_ENDPOINT;
+const ctlreq_id_t CTLREQ_TWI_ENDPOINT = AVR_CTLREQ_TWI_ENDPOINT;
 
 %End
 
 
 //=======================================================================================
 
-const uint16_t CTLREQ_TWI_ENDPOINT;
+const ctlreq_id_t CTLREQ_TWI_ENDPOINT;
 
 class TWIPacket {
 %TypeHeaderCode

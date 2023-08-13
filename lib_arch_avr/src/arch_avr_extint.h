@@ -46,8 +46,8 @@ YASIMAVR_BEGIN_NAMESPACE
 
 struct ArchAVR_ExtIntConfig {
 
-    uint32_t extint_pins[EXTINT_PIN_COUNT];
-    uint32_t pcint_pins[PCINT_PIN_COUNT];
+    pin_id_t extint_pins[EXTINT_PIN_COUNT];
+    pin_id_t pcint_pins[PCINT_PIN_COUNT];
     regbit_t rb_extint_ctrl;
     regbit_t rb_extint_mask;
     regbit_t rb_extint_flag;
@@ -75,11 +75,11 @@ public:
 
     virtual bool init(Device& device) override;
     virtual void reset() override;
-    virtual bool ctlreq(uint16_t req, ctlreq_data_t* data) override;
+    virtual bool ctlreq(ctlreq_id_t req, ctlreq_data_t* data) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
     virtual void interrupt_ack_handler(int_vect_t vector) override;
 
-    virtual void raised(const signal_data_t& sigdata, uint16_t hooktag) override;
+    virtual void raised(const signal_data_t& sigdata, int hooktag) override;
 
 private:
 

@@ -36,10 +36,11 @@ YASIMAVR_BEGIN_NAMESPACE
 /*
  * Generic structure for the data passed on when raising a signal
  */
+
 struct signal_data_t {
 
-    uint16_t sigid;
-    uint32_t index;
+    int sigid;
+    long long index;
     vardata_t data;
 
 };
@@ -64,7 +65,7 @@ public:
     //Destructor: severs all connections with signals
     virtual ~SignalHook();
 
-    virtual void raised(const signal_data_t& sigdata, uint16_t hooktag) = 0;
+    virtual void raised(const signal_data_t& sigdata, int hooktag) = 0;
 
     //Copy assignment : copy all signal connections
     SignalHook& operator=(const SignalHook&);
@@ -103,21 +104,21 @@ public:
     //the hook's "raised()". It can be useful when a single hook
     //connects to several signals, in order to differentiate which
     //one the raise comes from.
-    void connect_hook(SignalHook* hook, uint16_t hooktag = 0);
+    void connect_hook(SignalHook* hook, int hooktag = 0);
     void disconnect_hook(SignalHook* hook);
 
     virtual void raise(const signal_data_t& sigdata);
     //Raise a signal with default data
     void raise();
     //Various override for simplicity
-    void raise(uint16_t sigid);
+    void raise(int sigid);
 
-    void raise(uint16_t sigid, void* p);
-    void raise(uint16_t sigid, const char* s);
-    void raise(uint16_t sigid, vardata_t v);
+    void raise(int sigid, void* p);
+    void raise(int sigid, const char* s);
+    void raise(int sigid, vardata_t v);
     //The different names are necessary to remove ambiguity at compilation
-    void raise_u(uint16_t sigid, uint32_t u, uint32_t index = 0);
-    void raise_d(uint16_t sigid, double d, uint32_t index = 0);
+    void raise_u(int sigid, uint32_t u, long long index = 0);
+    void raise_d(int sigid, double d, long long index = 0);
 
     //Copy assignment
     Signal& operator=(const Signal&);
@@ -133,7 +134,7 @@ private:
 
     struct hook_slot_t {
         SignalHook* hook;
-        uint16_t tag;
+        int tag;
     };
 
     std::vector<hook_slot_t> m_hooks;
@@ -150,9 +151,9 @@ class DLL_EXPORT DataSignal : public Signal {
 
 public:
 
-    vardata_t data(uint16_t sigid, uint32_t index = 0) const;
-    bool has_data(uint16_t sigid, uint32_t index = 0) const;
-    void set_data(uint16_t sigid, vardata_t v, uint32_t index = 0);
+    vardata_t data(int sigid, long long index = 0) const;
+    bool has_data(int sigid, long long index = 0) const;
+    void set_data(int sigid, const vardata_t& v, long long index = 0);
 
     void clear();
 
@@ -161,8 +162,8 @@ public:
 private:
 
     struct key_t {
-        uint16_t sigid;
-        uint32_t index;
+        int sigid;
+        long long index;
         bool operator==(const key_t& other) const;
     };
 
@@ -183,12 +184,12 @@ public:
 
     DataSignalMux();
 
-    virtual void raised(const signal_data_t& sigdata, uint16_t hooktag) override;
+    virtual void raised(const signal_data_t& sigdata, int hooktag) override;
 
     size_t add_mux();
     size_t add_mux(DataSignal& signal);
-    size_t add_mux(DataSignal& signal, uint16_t sigid_filt);
-    size_t add_mux(DataSignal& signal, uint16_t sigid_filt, uint32_t ix_filt);
+    size_t add_mux(DataSignal& signal, int sigid_filt);
+    size_t add_mux(DataSignal& signal, int sigid_filt, long long ix_filt);
 
     DataSignal& signal();
 
@@ -200,8 +201,8 @@ private:
 
     struct mux_item_t {
         DataSignal* signal;
-        uint16_t sigid_filt;
-        uint32_t index_filt;
+        int sigid_filt;
+        long long index_filt;
         uint8_t filt_mask;
         vardata_t data;
 

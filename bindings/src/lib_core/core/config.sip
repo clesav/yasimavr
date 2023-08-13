@@ -32,14 +32,14 @@ struct CoreConfiguration {
     };
 
     uint32_t            attributes;
-    uint8_t             vector_size;
-    uint16_t            iostart;
-    uint16_t            ioend;
-    uint32_t            ramstart;
-    uint32_t            ramend;
-    uint32_t            dataend;
-    uint32_t            flashend;
-    uint32_t            eepromend;
+    unsigned short      vector_size;
+    mem_addr_t          iostart;
+    mem_addr_t          ioend;
+    mem_addr_t          ramstart;
+    mem_addr_t          ramend;
+    mem_addr_t          dataend;
+    flash_addr_t        flashend;
+    mem_addr_t          eepromend;
     reg_addr_t          rampz;
     reg_addr_t          eind;
     mem_addr_t          fusesize;

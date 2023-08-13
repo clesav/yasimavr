@@ -97,7 +97,7 @@ void ArchXT_USART::reset()
     update_framerate();
 }
 
-bool ArchXT_USART::ctlreq(uint16_t req, ctlreq_data_t* data)
+bool ArchXT_USART::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
 {
     if (req == AVR_CTLREQ_GET_SIGNAL) {
         data->data = &m_uart.signal();
@@ -178,7 +178,7 @@ void ArchXT_USART::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& dat
     }
 }
 
-void ArchXT_USART::raised(const signal_data_t& sigdata, uint16_t __unused)
+void ArchXT_USART::raised(const signal_data_t& sigdata, int)
 {
     if (sigdata.sigid == UART::Signal_TX_Start) {
         //Notification that the pending frame has been pushed to the shift register
@@ -187,7 +187,7 @@ void ArchXT_USART::raised(const signal_data_t& sigdata, uint16_t __unused)
         logger().dbg("TX started, raising DRE");
     }
 
-    else if (sigdata.sigid == UART::Signal_TX_Complete && sigdata.data.as_uint()) {
+    else if (sigdata.sigid == UART::Signal_TX_Complete && sigdata.data.as_int()) {
         //Notification that the frame in the shift register has been emitted
         //Raise the TXC interrupt.
         m_txc_intflag.set_flag();
@@ -202,7 +202,7 @@ void ArchXT_USART::raised(const signal_data_t& sigdata, uint16_t __unused)
         }
     }
 
-    else if (sigdata.sigid == UART::Signal_RX_Complete && sigdata.data.as_uint()) {
+    else if (sigdata.sigid == UART::Signal_RX_Complete && sigdata.data.as_int()) {
         //Raise the RX completion flag
         m_rxc_intflag.set_flag(USART_RXCIF_bm);
         logger().dbg("RX complete, raising RXC");

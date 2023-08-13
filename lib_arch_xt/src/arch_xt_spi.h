@@ -47,7 +47,7 @@ YASIMAVR_BEGIN_NAMESPACE
 struct ArchXT_SPIConfig {
 
     reg_addr_t reg_base;
-    uint32_t pin_select;
+    pin_id_t pin_select;
     int_vect_t iv_spi;
 
 };
@@ -56,14 +56,14 @@ class DLL_EXPORT ArchXT_SPI : public Peripheral, public SignalHook {
 
 public:
 
-    ArchXT_SPI(uint8_t num, const ArchXT_SPIConfig& config);
+    ArchXT_SPI(int num, const ArchXT_SPIConfig& config);
 
     virtual bool init(Device& device) override;
     virtual void reset() override;
-    virtual bool ctlreq(uint16_t req, ctlreq_data_t* data) override;
+    virtual bool ctlreq(ctlreq_id_t req, ctlreq_data_t* data) override;
     virtual uint8_t ioreg_read_handler(reg_addr_t addr, uint8_t value) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
-    virtual void raised(const signal_data_t& sigdata, uint16_t hooktag) override;
+    virtual void raised(const signal_data_t& sigdata, int hooktag) override;
 
 private:
 

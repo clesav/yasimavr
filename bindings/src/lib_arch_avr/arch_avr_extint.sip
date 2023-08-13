@@ -27,7 +27,7 @@ struct ArchAVR_ExtIntConfig {
 #include "utils/buffer_utils.h"
 %End
 
-    //uint32_t extint_pins[EXTINT_PIN_COUNT];
+    //pin_id_t extint_pins[EXTINT_PIN_COUNT];
     SIP_PYBUFFER extint_pins {
         %GetCode
             sipPy = sipConvertToArray(sipCpp->extint_pins, "I", EXTINT_PIN_COUNT, 0);
@@ -37,7 +37,7 @@ struct ArchAVR_ExtIntConfig {
         %End
     };
 
-    //uint32_t pcint_pins[PCINT_PIN_COUNT];
+    //pin_id_t pcint_pins[PCINT_PIN_COUNT];
     SIP_PYBUFFER pcint_pins {
         %GetCode
             sipPy = sipConvertToArray(sipCpp->pcint_pins, "I", PCINT_PIN_COUNT, 0);
@@ -86,7 +86,10 @@ struct ArchAVR_ExtIntConfig {
 };
 
 
-class ArchAVR_ExtInt : public Peripheral, public InterruptHandler /NoDefaultCtors/ {
+class ArchAVR_ExtInt : public Peripheral,
+                       public InterruptHandler,
+                       public SignalHook
+                       /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_avr_extint.h"
 %End
@@ -102,8 +105,9 @@ public:
 
     virtual bool init(Device&);
     virtual void reset();
-    virtual bool ctlreq(uint16_t req, ctlreq_data_t*);
+    virtual bool ctlreq(ctlreq_id_t, ctlreq_data_t*);
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
     virtual void interrupt_ack_handler(int_vect_t);
+    virtual void raised(const signal_data_t&, int);
 
 };

@@ -367,6 +367,77 @@ typedef std::vector<uint32_t> UnsignedInt32Vector;
 
 //=======================================================================================
 
+%MappedType UnsignedLongVector
+    /TypeHintIn="Vector[unsigned long]",
+     TypeHintOut="List[unsigned long]"/
+{
+%TypeHeaderCode
+#include <vector>
+typedef std::vector<unsigned long> UnsignedLongVector;
+%End
+
+%ConvertFromTypeCode
+    PyObject* l = PyList_New(sipCpp->size());
+    if (!l) return 0;
+
+    for (size_t i = 0; i < sipCpp->size(); i++) {
+        PyObject* tobj = PyLong_FromUnsignedLong((*sipCpp)[i]);
+
+        if (!tobj) {
+            Py_DECREF(l);
+            return 0;
+        }
+
+        PyList_SET_ITEM(l, i, tobj);
+    }
+    return l;
+%End
+
+%ConvertToTypeCode
+    PyObject *iter = PyObject_GetIter(sipPy);
+    PyObject *item;
+
+    if (!sipIsErr) {
+        Py_XDECREF(iter);
+        return (iter && !PyUnicode_Check(sipPy));
+    }
+
+    if (!iter) {
+        *sipIsErr = 1;
+        return 0;
+    }
+
+    std::vector<unsigned long>* v = new std::vector<unsigned long>;
+    while ((item = PyIter_Next(iter)) != NULL) {
+        unsigned long value = sipLong_AsUnsignedLong(item);
+        if (PyErr_Occurred()) {
+            Py_DECREF(item);
+            break;
+        }
+
+        v->push_back(value);
+        Py_DECREF(item);
+    }
+
+    Py_DECREF(iter);
+
+    if (PyErr_Occurred())
+        *sipIsErr = 1;
+
+    if (*sipIsErr) {
+        delete v;
+        return 0;
+    } else {
+        v->shrink_to_fit();
+        *sipCppPtr = v;
+        return sipGetState(sipTransferObj);
+    }
+%End
+};
+
+
+//=======================================================================================
+
 %MappedType StdStringVector
     /TypeHintIn="Vector[str]",
      TypeHintOut="List[str]"/

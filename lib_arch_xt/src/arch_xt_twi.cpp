@@ -98,7 +98,7 @@ void ArchXT_TWI::reset()
     m_has_slave_rx_data = false;
 }
 
-bool ArchXT_TWI::ctlreq(uint16_t req, ctlreq_data_t* data)
+bool ArchXT_TWI::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
 {
     if (req == AVR_CTLREQ_GET_SIGNAL) {
         data->data = &m_twi.signal();
@@ -305,13 +305,13 @@ void ArchXT_TWI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 
 }
 
-void ArchXT_TWI::raised(const signal_data_t& sigdata, uint16_t __unused)
+void ArchXT_TWI::raised(const signal_data_t& sigdata, int)
 {
     switch (sigdata.sigid) {
 
         case TWI::Signal_BusStateChange: {
             uint8_t bus_state = 0;
-            switch(sigdata.data.as_uint()) {
+            switch(sigdata.data.as_int()) {
                 case TWI::Bus_Idle: {
                     bus_state = TWI_BUSSTATE_IDLE_gc;
                     //If we had written an address, but the bus was busy,

@@ -33,11 +33,11 @@ public:
 
     void init(CycleManager&, Logger&);
     void reset();
-    void set_prescaler(uint32_t, uint32_t);
-    uint32_t prescaler_factor() const;
+    void set_prescaler(unsigned long, unsigned long);
+    unsigned long prescaler_factor() const;
     void set_paused(bool);
-    void set_timer_delay(uint32_t);
-    uint32_t timer_delay() const;
+    void set_timer_delay(cycle_count_t);
+    cycle_count_t timer_delay() const;
     void update(cycle_count_t = -1);
 
     virtual cycle_count_t next(cycle_count_t);
@@ -47,7 +47,7 @@ public:
     void register_chained_timer(PrescaledTimer&);
     void unregister_chained_timer(PrescaledTimer&);
 
-    static int ticks_to_event(int, int, int);
+    static cycle_count_t ticks_to_event(cycle_count_t, cycle_count_t, cycle_count_t);
 
 };
 
@@ -85,7 +85,7 @@ public:
         Signal_CompMatch    /PyName=CompMatch/,
     };
 
-    TimerCounter(PrescaledTimer&, long, uint32_t);
+    TimerCounter(PrescaledTimer&, long, size_t);
 
     long wrap() const;
 
@@ -104,11 +104,11 @@ public:
     void set_counter(long);
     long counter() const;
 
-    void set_comp_value(uint32_t, long);
-    long comp_value(uint32_t) const;
+    void set_comp_value(size_t, long);
+    long comp_value(size_t) const;
 
-    void set_comp_enabled(uint32_t, bool);
-    bool comp_enabled(uint32_t) const;
+    void set_comp_enabled(size_t, bool);
+    bool comp_enabled(size_t) const;
 
     bool countdown() const;
 

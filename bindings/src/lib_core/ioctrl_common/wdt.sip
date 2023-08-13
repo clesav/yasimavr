@@ -31,7 +31,7 @@ public:
     WatchdogTimer();
 
     void reset();
-    bool ctlreq(uint16_t, ctlreq_data_t*);
+    bool ctlreq(ctlreq_id_t, ctlreq_data_t*);
 
 protected:
 

@@ -62,7 +62,7 @@ public:
 
     //These attributes can be assigned freely
     std::string                 variant;
-    unsigned int                frequency;
+    unsigned long               frequency;
     double                      vcc;
     double                      aref;
 

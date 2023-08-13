@@ -182,9 +182,9 @@ IO_Register* Core::get_ioreg(reg_addr_t addr)
     if (!addr.valid())
         return nullptr;
 
-    IO_Register* reg = m_ioregs[(int16_t) addr];
+    IO_Register* reg = m_ioregs[(short) addr];
     if (!reg)
-        reg = m_ioregs[(int16_t) addr] = new IO_Register();
+        reg = m_ioregs[(short) addr] = new IO_Register();
 
     return reg;
 }
@@ -197,7 +197,7 @@ uint8_t Core::cpu_read_ioreg(reg_addr_t reg_addr)
         return 0;
     }
 
-    int16_t addr = (int16_t) reg_addr;
+    short addr = (short) reg_addr;
 
     if (addr == R_SREG)
         return read_sreg();
@@ -228,7 +228,7 @@ void Core::cpu_write_ioreg(reg_addr_t reg_addr, uint8_t value)
         return;
     }
 
-    int16_t addr = (int16_t) reg_addr;
+    short addr = (short) reg_addr;
 
     if (addr == R_SREG) {
         write_sreg(value);
@@ -270,7 +270,7 @@ uint8_t Core::ioctl_read_ioreg(const reg_addr_t reg_addr)
         return 0;
     }
 
-    int16_t addr = (int16_t) reg_addr;
+    short addr = (short) reg_addr;
 
     if (addr == R_SREG)
         return read_sreg();
@@ -299,7 +299,7 @@ void Core::ioctl_write_ioreg(const regbit_t& rb, uint8_t value)
         return;
     }
 
-    int16_t addr = (int16_t) rb.addr;
+    short addr = (short) rb.addr;
 
     if (addr == R_SREG) {
         uint8_t v = read_sreg();

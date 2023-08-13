@@ -81,12 +81,12 @@ public:
     uint8_t read_sreg() const;
 
     //Access to the Stack Pointer
-    void write_sp(uint16_t value) const;
-    uint16_t read_sp() const;
+    void write_sp(mem_addr_t value) const;
+    mem_addr_t read_sp() const;
 
     //Access to the Program Counter
-    void write_pc(uint32_t value) const;
-    uint32_t read_pc() const;
+    void write_pc(flash_addr_t value) const;
+    flash_addr_t read_pc() const;
 
     //Access to I/O registers. From the peripherals point of view, it's
     //the same as a CPU access

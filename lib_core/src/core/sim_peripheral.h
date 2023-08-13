@@ -44,31 +44,34 @@ enum class SleepMode;
  * This section defines the identifiers for the usual peripherals
 */
 
-#define AVR_IOCTL_CORE              AVR_ID('C', 'O', 'R', 'E')      //Core
-#define AVR_IOCTL_WTDG              AVR_ID('W', 'T', 'D', 'G')      //Watchdog
-#define AVR_IOCTL_INTR              AVR_ID('I', 'N', 'T', 'R')      //Interrupt controller
-#define AVR_IOCTL_SLEEP             AVR_ID('S', 'L', 'P', '\0')     //Sleep mode controller
-#define AVR_IOCTL_CLOCK             AVR_ID('C', 'L', 'K', '\0')     //Clock controller
-#define AVR_IOCTL_PORT(n)           AVR_ID('I', 'O', 'G', (n))      //Port controller
-#define AVR_IOCTL_PORTMUX           AVR_ID('I', 'O', 'M', 'X')      //Port Mux controller
-#define AVR_IOCTL_ADC(n)            AVR_ID('A', 'D', 'C', (n))      //Analog-to-digital converter
-#define AVR_IOCTL_ACP(n)            AVR_ID('A', 'C', 'P', (n))      //Analog comparator
-#define AVR_IOCTL_TIMER(t, n)       AVR_ID('T', 'C', (t), (n))      //Timer/counter
-#define AVR_IOCTL_EEPROM            AVR_ID('E', 'P', 'R', 'M')      //EEPROM controller
-#define AVR_IOCTL_NVM               AVR_ID('N', 'V', 'M', '\0')     //Non-Volative Memory controller
-#define AVR_IOCTL_VREF              AVR_ID('V', 'R', 'E', 'F')      //Voltage reference controller
-#define AVR_IOCTL_EXTINT            AVR_ID('E', 'I', 'N', 'T')      //External Interrupt controller
-#define AVR_IOCTL_RST               AVR_ID('R', 'S', 'T', '\0')     //Reset controller
-#define AVR_IOCTL_RTC               AVR_ID('R', 'T', 'C', '\0')     //Real Time Counter
-#define AVR_IOCTL_UART(n)           AVR_ID('U', 'A', 'X', (n))      //UART interface
-#define AVR_IOCTL_SPI(n)            AVR_ID('S', 'P', 'I', (n))      //SPI interface
-#define AVR_IOCTL_TWI(n)            AVR_ID('T', 'W', 'I', (n))      //TWI interface
+#define AVR_IOCTL_CORE              chr_to_id('C', 'O', 'R', 'E')      //Core
+#define AVR_IOCTL_WTDG              chr_to_id('W', 'T', 'D', 'G')      //Watchdog
+#define AVR_IOCTL_INTR              chr_to_id('I', 'N', 'T', 'R')      //Interrupt controller
+#define AVR_IOCTL_SLEEP             chr_to_id('S', 'L', 'P', '\0')     //Sleep mode controller
+#define AVR_IOCTL_CLOCK             chr_to_id('C', 'L', 'K', '\0')     //Clock controller
+#define AVR_IOCTL_PORT(n)           chr_to_id('I', 'O', 'G', (n))      //Port controller
+#define AVR_IOCTL_PORTMUX           chr_to_id('I', 'O', 'M', 'X')      //Port Mux controller
+#define AVR_IOCTL_ADC(n)            chr_to_id('A', 'D', 'C', (n))      //Analog-to-digital converter
+#define AVR_IOCTL_ACP(n)            chr_to_id('A', 'C', 'P', (n))      //Analog comparator
+#define AVR_IOCTL_TIMER(t, n)       chr_to_id('T', 'C', (t), (n))      //Timer/counter
+#define AVR_IOCTL_EEPROM            chr_to_id('E', 'P', 'R', 'M')      //EEPROM controller
+#define AVR_IOCTL_NVM               chr_to_id('N', 'V', 'M', '\0')     //Non-Volative Memory controller
+#define AVR_IOCTL_VREF              chr_to_id('V', 'R', 'E', 'F')      //Voltage reference controller
+#define AVR_IOCTL_EXTINT            chr_to_id('E', 'I', 'N', 'T')      //External Interrupt controller
+#define AVR_IOCTL_RST               chr_to_id('R', 'S', 'T', '\0')     //Reset controller
+#define AVR_IOCTL_RTC               chr_to_id('R', 'T', 'C', '\0')     //Real Time Counter
+#define AVR_IOCTL_UART(n)           chr_to_id('U', 'A', 'X', (n))      //UART interface
+#define AVR_IOCTL_SPI(n)            chr_to_id('S', 'P', 'I', (n))      //SPI interface
+#define AVR_IOCTL_TWI(n)            chr_to_id('T', 'W', 'I', (n))      //TWI interface
 
 
 //=======================================================================================
 /*
  * CTLREQ definitions
 */
+
+typedef int ctlreq_id_t;
+
 
 //Common request identifier used to obtain a pointer to a particular signal
 //The data.index should contain the identifier of the signal
@@ -121,7 +124,7 @@ struct NVM_request_t {
 
 struct ctlreq_data_t {
     vardata_t data;
-    uint32_t index;
+    long long index;
 };
 
 
@@ -165,10 +168,10 @@ class DLL_EXPORT Peripheral: public IO_RegHandler {
 
 public:
 
-    explicit Peripheral(uint32_t id);
+    explicit Peripheral(ctl_id_t id);
     virtual ~Peripheral();
 
-    uint32_t id() const;
+    ctl_id_t id() const;
     std::string name() const;
 
     //Callback method called when the device is initialised. This is where the peripheral can
@@ -182,7 +185,7 @@ public:
 
     //Callback method called for a CTL request. The method must return true if the request has
     //been processed
-    virtual bool ctlreq(uint16_t req, ctlreq_data_t* data);
+    virtual bool ctlreq(ctlreq_id_t req, ctlreq_data_t* data);
 
     //Callback method called when the CPU is reading a I/O register allocated by this peripheral.
     //The value has not been read yet so the module can modify it before the CPU gets it.
@@ -251,17 +254,17 @@ protected:
     bool register_interrupt(int_vect_t vector, InterruptHandler& handler) const;
 
     //Helper function to obtain a pointer to a signal from another peripheral
-    Signal* get_signal(uint32_t ctl_id) const;
+    Signal* get_signal(ctl_id_t ctl_id) const;
 
 private:
 
-    uint32_t m_id;
+    ctl_id_t m_id;
     Device* m_device;
     Logger m_logger;
 
 };
 
-inline uint32_t Peripheral::id() const
+inline ctl_id_t Peripheral::id() const
 {
     return m_id;
 }
@@ -377,7 +380,7 @@ public:
         uint8_t reset;
     };
 
-    DummyController(uint32_t id, const std::vector<dummy_register_t>& regs);
+    DummyController(ctl_id_t id, const std::vector<dummy_register_t>& regs);
 
     virtual bool init(Device& device) override;
     virtual void reset() override;

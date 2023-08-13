@@ -25,110 +25,113 @@
 
 #include "core/sim_peripheral.h"
 
-const uint32_t IOCTL_CORE       = AVR_IOCTL_CORE;
-const uint32_t IOCTL_WTDG       = AVR_IOCTL_WTDG;
-const uint32_t IOCTL_INTR       = AVR_IOCTL_INTR;
-const uint32_t IOCTL_SLEEP      = AVR_IOCTL_SLEEP;
-const uint32_t IOCTL_CLOCK      = AVR_IOCTL_CLOCK;
-const uint32_t IOCTL_PORTMUX    = AVR_IOCTL_PORTMUX;
-const uint32_t IOCTL_EEPROM     = AVR_IOCTL_EEPROM;
-const uint32_t IOCTL_NVM        = AVR_IOCTL_NVM;
-const uint32_t IOCTL_VREF       = AVR_IOCTL_VREF;
-const uint32_t IOCTL_EXTINT     = AVR_IOCTL_EXTINT;
-const uint32_t IOCTL_RST        = AVR_IOCTL_RST;
-const uint32_t IOCTL_RTC        = AVR_IOCTL_RTC;
+const ctl_id_t IOCTL_CORE       = AVR_IOCTL_CORE;
+const ctl_id_t IOCTL_WTDG       = AVR_IOCTL_WTDG;
+const ctl_id_t IOCTL_INTR       = AVR_IOCTL_INTR;
+const ctl_id_t IOCTL_SLEEP      = AVR_IOCTL_SLEEP;
+const ctl_id_t IOCTL_CLOCK      = AVR_IOCTL_CLOCK;
+const ctl_id_t IOCTL_PORTMUX    = AVR_IOCTL_PORTMUX;
+const ctl_id_t IOCTL_EEPROM     = AVR_IOCTL_EEPROM;
+const ctl_id_t IOCTL_NVM        = AVR_IOCTL_NVM;
+const ctl_id_t IOCTL_VREF       = AVR_IOCTL_VREF;
+const ctl_id_t IOCTL_EXTINT     = AVR_IOCTL_EXTINT;
+const ctl_id_t IOCTL_RST        = AVR_IOCTL_RST;
+const ctl_id_t IOCTL_RTC        = AVR_IOCTL_RTC;
 
-uint32_t IOCTL_PORT(char n)
+ctl_id_t IOCTL_PORT(char n)
 {
     return AVR_IOCTL_PORT(n);
 }
 
-uint32_t IOCTL_ADC(char n)
+ctl_id_t IOCTL_ADC(char n)
 {
     return AVR_IOCTL_ADC(n);
 }
 
-uint32_t IOCTL_ACP(char n)
+ctl_id_t IOCTL_ACP(char n)
 {
     return AVR_IOCTL_ACP(n);
 }
 
-uint32_t IOCTL_TIMER(char t, char n)
+ctl_id_t IOCTL_TIMER(char t, char n)
 {
     return AVR_IOCTL_TIMER(t, n);
 }
 
-uint32_t IOCTL_UART(char n)
+ctl_id_t IOCTL_UART(char n)
 {
     return AVR_IOCTL_UART(n);
 }
 
-uint32_t IOCTL_SPI(char n)
+ctl_id_t IOCTL_SPI(char n)
 {
     return AVR_IOCTL_SPI(n);
 }
 
-uint32_t IOCTL_TWI(char n)
+ctl_id_t IOCTL_TWI(char n)
 {
     return AVR_IOCTL_TWI(n);
 }
 
 
-const uint16_t CTLREQ_GET_SIGNAL       = AVR_CTLREQ_GET_SIGNAL;
-const uint16_t CTLREQ_CORE_BREAK       = AVR_CTLREQ_CORE_BREAK;
-const uint16_t CTLREQ_CORE_SLEEP       = AVR_CTLREQ_CORE_SLEEP;
-const uint16_t CTLREQ_CORE_WAKEUP      = AVR_CTLREQ_CORE_WAKEUP;
-const uint16_t CTLREQ_CORE_SHORTING    = AVR_CTLREQ_CORE_SHORTING;
-const uint16_t CTLREQ_CORE_CRASH       = AVR_CTLREQ_CORE_CRASH;
-const uint16_t CTLREQ_CORE_RESET       = AVR_CTLREQ_CORE_RESET;
-const uint16_t CTLREQ_CORE_RESET_FLAG  = AVR_CTLREQ_CORE_RESET_FLAG;
-const uint16_t CTLREQ_CORE_NVM         = AVR_CTLREQ_CORE_NVM;
-const uint16_t CTLREQ_CORE_HALT        = AVR_CTLREQ_CORE_HALT;
-const uint16_t CTLREQ_WATCHDOG_RESET   = AVR_CTLREQ_WATCHDOG_RESET;
-const uint16_t CTLREQ_NVM_WRITE        = AVR_CTLREQ_NVM_WRITE;
-const uint16_t CTLREQ_SLEEP_CALL       = AVR_CTLREQ_SLEEP_CALL;
-const uint16_t CTLREQ_SLEEP_PSEUDO     = AVR_CTLREQ_SLEEP_PSEUDO;
+const ctlreq_id_t CTLREQ_GET_SIGNAL       = AVR_CTLREQ_GET_SIGNAL;
+const ctlreq_id_t CTLREQ_CORE_BREAK       = AVR_CTLREQ_CORE_BREAK;
+const ctlreq_id_t CTLREQ_CORE_SLEEP       = AVR_CTLREQ_CORE_SLEEP;
+const ctlreq_id_t CTLREQ_CORE_WAKEUP      = AVR_CTLREQ_CORE_WAKEUP;
+const ctlreq_id_t CTLREQ_CORE_SHORTING    = AVR_CTLREQ_CORE_SHORTING;
+const ctlreq_id_t CTLREQ_CORE_CRASH       = AVR_CTLREQ_CORE_CRASH;
+const ctlreq_id_t CTLREQ_CORE_RESET       = AVR_CTLREQ_CORE_RESET;
+const ctlreq_id_t CTLREQ_CORE_RESET_FLAG  = AVR_CTLREQ_CORE_RESET_FLAG;
+const ctlreq_id_t CTLREQ_CORE_NVM         = AVR_CTLREQ_CORE_NVM;
+const ctlreq_id_t CTLREQ_CORE_HALT        = AVR_CTLREQ_CORE_HALT;
+const ctlreq_id_t CTLREQ_WATCHDOG_RESET   = AVR_CTLREQ_WATCHDOG_RESET;
+const ctlreq_id_t CTLREQ_NVM_WRITE        = AVR_CTLREQ_NVM_WRITE;
+const ctlreq_id_t CTLREQ_SLEEP_CALL       = AVR_CTLREQ_SLEEP_CALL;
+const ctlreq_id_t CTLREQ_SLEEP_PSEUDO     = AVR_CTLREQ_SLEEP_PSEUDO;
 
 %End
 
 
 //=======================================================================================
 
-const uint32_t IOCTL_CORE;
-const uint32_t IOCTL_WTDG;
-const uint32_t IOCTL_INTR;
-const uint32_t IOCTL_SLEEP;
-const uint32_t IOCTL_CLOCK;
-const uint32_t IOCTL_PORTMUX;
-const uint32_t IOCTL_EEPROM;
-const uint32_t IOCTL_NVM;
-const uint32_t IOCTL_VREF;
-const uint32_t IOCTL_EXTINT;
-const uint32_t IOCTL_RST;
-const uint32_t IOCTL_RTC;
+const ctl_id_t IOCTL_CORE;
+const ctl_id_t IOCTL_WTDG;
+const ctl_id_t IOCTL_INTR;
+const ctl_id_t IOCTL_SLEEP;
+const ctl_id_t IOCTL_CLOCK;
+const ctl_id_t IOCTL_PORTMUX;
+const ctl_id_t IOCTL_EEPROM;
+const ctl_id_t IOCTL_NVM;
+const ctl_id_t IOCTL_VREF;
+const ctl_id_t IOCTL_EXTINT;
+const ctl_id_t IOCTL_RST;
+const ctl_id_t IOCTL_RTC;
 
-uint32_t IOCTL_PORT(char);
-uint32_t IOCTL_ADC(char);
-uint32_t IOCTL_ACP(char);
-uint32_t IOCTL_TIMER(char, char);
-uint32_t IOCTL_UART(char);
-uint32_t IOCTL_SPI(char);
-uint32_t IOCTL_TWI(char);
+ctl_id_t IOCTL_PORT(char);
+ctl_id_t IOCTL_ADC(char);
+ctl_id_t IOCTL_ACP(char);
+ctl_id_t IOCTL_TIMER(char, char);
+ctl_id_t IOCTL_UART(char);
+ctl_id_t IOCTL_SPI(char);
+ctl_id_t IOCTL_TWI(char);
 
-const uint16_t CTLREQ_GET_SIGNAL;
-const uint16_t CTLREQ_CORE_BREAK;
-const uint16_t CTLREQ_CORE_SLEEP;
-const uint16_t CTLREQ_CORE_WAKEUP;
-const uint16_t CTLREQ_CORE_SHORTING;
-const uint16_t CTLREQ_CORE_CRASH;
-const uint16_t CTLREQ_CORE_RESET;
-const uint16_t CTLREQ_CORE_RESET_FLAG;
-const uint16_t CTLREQ_CORE_NVM;
-const uint16_t CTLREQ_CORE_HALT;
-const uint16_t CTLREQ_WATCHDOG_RESET;
-const uint16_t CTLREQ_NVM_WRITE;
-const uint16_t CTLREQ_SLEEP_CALL;
-const uint16_t CTLREQ_SLEEP_PSEUDO;
+
+typedef int ctlreq_id_t;
+
+const ctlreq_id_t CTLREQ_GET_SIGNAL;
+const ctlreq_id_t CTLREQ_CORE_BREAK;
+const ctlreq_id_t CTLREQ_CORE_SLEEP;
+const ctlreq_id_t CTLREQ_CORE_WAKEUP;
+const ctlreq_id_t CTLREQ_CORE_SHORTING;
+const ctlreq_id_t CTLREQ_CORE_CRASH;
+const ctlreq_id_t CTLREQ_CORE_RESET;
+const ctlreq_id_t CTLREQ_CORE_RESET_FLAG;
+const ctlreq_id_t CTLREQ_CORE_NVM;
+const ctlreq_id_t CTLREQ_CORE_HALT;
+const ctlreq_id_t CTLREQ_WATCHDOG_RESET;
+const ctlreq_id_t CTLREQ_NVM_WRITE;
+const ctlreq_id_t CTLREQ_SLEEP_CALL;
+const ctlreq_id_t CTLREQ_SLEEP_PSEUDO;
 
 
 struct NVM_request_t {
@@ -150,7 +153,7 @@ struct ctlreq_data_t {
 %End
 
     vardata_t data;
-    uint32_t index;
+    long long index;
 
 };
 
@@ -171,14 +174,14 @@ class Peripheral : public IO_RegHandler /NoDefaultCtors/ {
 
 public:
 
-    Peripheral(uint32_t);
+    Peripheral(ctl_id_t);
 
-    uint32_t id() const;
+    ctl_id_t id() const;
     std::string name() const /Factory/;
 
     virtual bool init(Device&);
     virtual void reset();
-    virtual bool ctlreq(uint16_t, ctlreq_data_t*);
+    virtual bool ctlreq(ctlreq_id_t, ctlreq_data_t*);
     virtual uint8_t ioreg_read_handler(reg_addr_t, uint8_t);
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
     virtual void sleep(bool on, SleepMode mode);
@@ -224,7 +227,7 @@ protected:
 
     bool register_interrupt(int_vect_t, InterruptHandler&) const;
 
-    Signal* get_signal(uint32_t) const;
+    Signal* get_signal(ctl_id_t) const;
 
 };
 
@@ -241,7 +244,7 @@ public:
         uint8_t reset;
     };
 
-    DummyController(uint32_t, const std::vector<DummyController::dummy_register_t>&);
+    DummyController(ctl_id_t, const std::vector<DummyController::dummy_register_t>&);
 
     virtual bool init(Device&);
     virtual void reset();

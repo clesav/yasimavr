@@ -21,10 +21,10 @@
 
 //=======================================================================================
 
-typedef int64_t         cycle_count_t;
-typedef uint32_t        mem_addr_t;
-typedef uint32_t        flash_addr_t;
-typedef int16_t         int_vect_t;
+typedef long long         cycle_count_t;
+typedef unsigned long     mem_addr_t;
+typedef unsigned long     flash_addr_t;
+typedef short             int_vect_t;
 
 
 const cycle_count_t INVALID_CYCLE;
@@ -37,24 +37,24 @@ class reg_addr_t {
 
 public:
 
-    reg_addr_t(int16_t = -1);
+    reg_addr_t(short = -1);
 
     bool valid() const;
 
     int __index__() const;
     %MethodCode
-        sipRes = (int16_t)(*sipCpp);
+        sipRes = (short)(*sipCpp);
     %End
 
     int __int__() const;
     %MethodCode
-        sipRes = (int16_t)(*sipCpp);
+        sipRes = (short)(*sipCpp);
     %End
 
     const char* __repr__() const;
     %MethodCode
         if (sipCpp->valid())
-            return PyUnicode_FromFormat("[0x%04x]", (int16_t)(*sipCpp));
+            return PyUnicode_FromFormat("[0x%04x]", (short)(*sipCpp));
         else
             return PyUnicode_FromString("INVALID_REGISTER");
     %End
@@ -140,7 +140,7 @@ public:
     const char* __repr__() const;
     %MethodCode
         if (sipCpp->valid())
-            return PyUnicode_FromFormat("Regbit(%04x, %d, %02x)", (int16_t)(sipCpp->addr), sipCpp->bit, sipCpp->mask);
+            return PyUnicode_FromFormat("Regbit(%04x, %d, %02x)", (short)(sipCpp->addr), sipCpp->bit, sipCpp->mask);
         else
             return PyUnicode_FromString("Regbit(INVALID)");
     %End
@@ -183,12 +183,15 @@ public:
 };
 
 
-const char* id_to_str(uint32_t);
+typedef unsigned long sim_id_t;
+typedef sim_id_t ctl_id_t;
+
+const char* id_to_str(sim_id_t);
 %MethodCode
     sipRes = id_to_str(a0).c_str();
 %End
 
-uint32_t str_to_id(const char*);
+sim_id_t str_to_id(const char*);
 
 
 class vardata_t {
@@ -199,15 +202,18 @@ class vardata_t {
 %TypeCode
 void fill_vardata_with_pyobj(vardata_t* d, PyObject* obj)
 {
-    if (PyFloat_Check(obj)) {
+    if (!obj || obj == Py_None) {
+        *d = vardata_t();
+    }
+    else if (PyFloat_Check(obj)) {
         *d = PyFloat_AsDouble(obj);
     }
     else if (PyLong_Check(obj)) {
-        long long v = PyLong_AsLongLong(obj);
-        if (v >= 0)
-            *d = (unsigned int) v;
+        int is_pos = PyObject_RichCompareBool(obj, PyLong_FromLong(0), Py_GE);
+        if (is_pos == 1)
+            *d = PyLong_AsUnsignedLongLong(obj);
         else
-            *d = (int) v;
+            *d = PyLong_AsLongLong(obj);
     }
     else if (PyUnicode_Check(obj)) {
         *d = PyUnicode_AsUTF8(obj);
@@ -286,14 +292,14 @@ public:
 
     const char* as_str() const;
     double as_double() const;
-    unsigned int as_uint() const;
-    int as_int() const;
+    unsigned long long as_uint() const;
+    long long as_int() const;
 
     //vardata_t& operator=(void* p);
     //vardata_t& operator=(const char* s);
     //vardata_t& operator=(double d);
-    //vardata_t& operator=(unsigned int u);
-    //vardata_t& operator=(int i);
+    //vardata_t& operator=(unsigned long long u);
+    //vardata_t& operator=(long long i);
     void set(SIP_PYOBJECT);
     %MethodCode
         fill_vardata_with_pyobj(sipCpp, a0);
@@ -316,15 +322,22 @@ public:
             sipRes = PyFloat_FromDouble(sipCpp->as_double());
             break;
         case vardata_t::Uinteger:
-            sipRes = PyLong_FromUnsignedLong(sipCpp->as_uint());
+            sipRes = PyLong_FromUnsignedLongLong(sipCpp->as_uint());
             break;
         case vardata_t::Integer:
-            sipRes = PyLong_FromLong(sipCpp->as_int());
+            sipRes = PyLong_FromLongLong(sipCpp->as_int());
             break;
         case vardata_t::Bytes:
             sipRes = PyBytes_FromStringAndSize((const char*) sipCpp->as_bytes(), sipCpp->size());
             break;
     }
+    %End
+
+    bool __eq__(SIP_PYOBJECT) const;
+    %MethodCode
+        vardata_t v;
+        fill_vardata_with_pyobj(&v, a0);
+        sipRes = (*sipCpp == v);
     %End
 
 };

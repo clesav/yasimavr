@@ -98,8 +98,8 @@ void ArchAVR_WDT::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
 void ArchAVR_WDT::configure_timer(bool enable, uint8_t delay_index)
 {
     if (enable) {
-        uint32_t clk_factor = device()->frequency() / m_config.clock_frequency;
-        uint32_t delay = m_config.delays[delay_index];
+        unsigned long clk_factor = device()->frequency() / m_config.clock_frequency;
+        unsigned long delay = m_config.delays[delay_index];
         set_timer(0, delay, clk_factor);
     } else {
         set_timer(0, 0, 0);

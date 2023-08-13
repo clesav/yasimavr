@@ -116,7 +116,7 @@ public:
     State state() const;
     cycle_count_t cycle() const;
     SleepMode sleep_mode() const; //Returns one of SleepMode enum values
-    uint32_t frequency() const;
+    unsigned long frequency() const;
 
     //Init should be called just after constructing the device to allows all peripherals
     //to allocate resources and connect signals
@@ -140,14 +140,14 @@ public:
     void add_ioreg_handler(reg_addr_t addr, IO_RegHandler& handler, uint8_t ro_mask=0x00);
     void add_ioreg_handler(const regbit_t& rb, IO_RegHandler& handler, bool readonly=false);
     Peripheral* find_peripheral(const char* name);
-    Peripheral* find_peripheral(uint32_t id);
-    bool ctlreq(uint32_t id, uint16_t req, ctlreq_data_t* reqdata = nullptr);
+    Peripheral* find_peripheral(ctl_id_t id);
+    bool ctlreq(ctl_id_t id, ctlreq_id_t req, ctlreq_data_t* reqdata = nullptr);
 
     //Helpers for the peripheral timers
     CycleManager* cycle_manager();
 
     Pin* find_pin(const char* name);
-    Pin* find_pin(uint32_t id);
+    Pin* find_pin(pin_id_t id);
 
     LogHandler& log_handler();
     Logger& logger();
@@ -160,7 +160,7 @@ public:
 
 protected:
 
-    virtual bool core_ctlreq(uint16_t req, ctlreq_data_t* reqdata);
+    virtual bool core_ctlreq(ctlreq_id_t req, ctlreq_data_t* reqdata);
 
     //Loads the various memory area using the firmware data.
     //The basic implementation loads only the flash and the fuses, the rest
@@ -175,13 +175,13 @@ private:
     const DeviceConfiguration& m_config;
     uint32_t m_options;
     State m_state;
-    uint32_t m_frequency;
+    unsigned long m_frequency;
     SleepMode m_sleep_mode;
     DeviceDebugProbe* m_debugger;
     LogHandler m_log_handler;
     Logger m_logger;
     std::vector<Peripheral*> m_peripherals;
-    std::map<uint32_t, Pin*> m_pins;
+    std::map<pin_id_t, Pin*> m_pins;
     CycleManager* m_cycle_manager;
     IO_Console* m_console;
     uint8_t m_reset_flags;
@@ -217,7 +217,7 @@ inline SleepMode Device::sleep_mode() const
     return m_sleep_mode;
 }
 
-inline uint32_t Device::frequency() const
+inline unsigned long Device::frequency() const
 {
     return m_frequency;
 }

@@ -94,7 +94,7 @@ public:
     Device::State state() const;
     cycle_count_t cycle() const;
     SleepMode sleep_mode() const;
-    uint32_t frequency() const;
+    unsigned long frequency() const;
 
     void init(CycleManager&)
         [bool(CycleManager&)];
@@ -122,10 +122,10 @@ public:
     void add_ioreg_handler(reg_addr_t, IO_RegHandler&, uint8_t = 0x00);
     void add_ioreg_handler(const regbit_t&, IO_RegHandler&, bool = false);
     Peripheral* find_peripheral(const char*);
-    Peripheral* find_peripheral(uint32_t);
+    Peripheral* find_peripheral(ctl_id_t);
 
-    SIP_PYTUPLE ctlreq(uint32_t, uint16_t, ctlreq_data_t* = NULL) /TypeHint="Tuple[bool, ctlreq_data_t]"/
-        [bool(uint32_t, uint16_t, ctlreq_data_t*)];
+    SIP_PYTUPLE ctlreq(ctl_id_t, ctlreq_id_t, ctlreq_data_t* = NULL) /TypeHint="Tuple[bool, ctlreq_data_t]"/
+        [bool(ctl_id_t, ctlreq_id_t, ctlreq_data_t*)];
     %MethodCode
         ctlreq_data_t* d;
         PyObject* transferObj;
@@ -143,7 +143,7 @@ public:
     CycleManager* cycle_manager();
 
     Pin* find_pin(const char*);
-    Pin* find_pin(uint32_t);
+    Pin* find_pin(pin_id_t);
 
     LogHandler& log_handler();
     Logger& logger();

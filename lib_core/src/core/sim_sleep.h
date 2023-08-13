@@ -94,14 +94,14 @@ public:
     explicit SleepController(const SleepConfig& config);
 
     virtual bool init(Device& device) override;
-    virtual bool ctlreq(uint16_t req, ctlreq_data_t* data) override;
-    virtual void raised(const signal_data_t& data, uint16_t __unused) override;
+    virtual bool ctlreq(ctlreq_id_t req, ctlreq_data_t* data) override;
+    virtual void raised(const signal_data_t& sigdata, int hooktag) override;
 
 private:
 
     const SleepConfig& m_config;
     //Index of the current sleep mode in the configuration mode map
-    uint8_t m_mode_index;
+    unsigned int m_mode_index;
 
 };
 

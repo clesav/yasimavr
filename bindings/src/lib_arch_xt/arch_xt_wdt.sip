@@ -26,8 +26,8 @@ struct ArchXT_WDTConfig {
 #include "arch_xt_wdt.h"
 %End
 
-    uint32_t clock_frequency;
-    UnsignedInt32Vector delays;
+    unsigned long clock_frequency;
+    UnsignedLongVector delays;
 
     reg_addr_t reg_base;
 

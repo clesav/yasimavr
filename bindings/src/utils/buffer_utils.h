@@ -36,9 +36,9 @@ extern "C" {
  * into an C array.
  * buf is a pointer to a array pointer, that is allocated/freed on demand
  */
-uint32_t import_from_pybuffer(const sipAPIDef* sipAPI,
-                              uint8_t **data,
-                              PyObject* exporter);
+Py_ssize_t import_from_pybuffer(const sipAPIDef* sipAPI,
+                                uint8_t **data,
+                                PyObject* exporter);
 
 /*
  * Helper that exports a block of bytes in memory to a Python buffer exporter
@@ -47,7 +47,7 @@ uint32_t import_from_pybuffer(const sipAPIDef* sipAPI,
  */
 PyObject* export_to_pybuffer(const sipAPIDef* sipAPI,
                              uint8_t *data,
-                             uint32_t len);
+                             Py_ssize_t len);
 
 /*
  * Helper function for importing data from a fixed-length

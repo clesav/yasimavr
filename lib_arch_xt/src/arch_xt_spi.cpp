@@ -40,12 +40,12 @@ YASIMAVR_USING_NAMESPACE
 #define HOOKTAG_SPI         0
 #define HOOKTAG_PIN         1
 
-const uint32_t ClockFactors[] = {4, 16, 64, 128};
+const unsigned long ClockFactors[] = {4, 16, 64, 128};
 
 
 //=======================================================================================
 
-ArchXT_SPI::ArchXT_SPI(uint8_t num, const ArchXT_SPIConfig& config)
+ArchXT_SPI::ArchXT_SPI(int num, const ArchXT_SPIConfig& config)
 :Peripheral(AVR_IOCTL_SPI(0x30 + num))
 ,m_config(config)
 ,m_pin_select(nullptr)
@@ -92,7 +92,7 @@ void ArchXT_SPI::reset()
     m_intflag.update_from_ioreg();
 }
 
-bool ArchXT_SPI::ctlreq(uint16_t req, ctlreq_data_t* data)
+bool ArchXT_SPI::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
 {
     if (req == AVR_CTLREQ_GET_SIGNAL) {
         data->data = &m_spi.signal();
@@ -139,7 +139,7 @@ void ArchXT_SPI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
         m_spi.set_selected((data.value & SPI_ENABLE_bm) && m_pin_selected);
 
         uint8_t clk_setting = EXTRACT_F(data.value, SPI_PRESC);
-        uint32_t clk_factor = ClockFactors[clk_setting];
+        unsigned long clk_factor = ClockFactors[clk_setting];
         if (data.value & SPI_CLK2X_bm)
             clk_factor >>= 1;
         m_spi.set_frame_delay(clk_factor * 8);
@@ -161,7 +161,7 @@ void ArchXT_SPI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
     }
 }
 
-void ArchXT_SPI::raised(const signal_data_t& sigdata, uint16_t hooktag)
+void ArchXT_SPI::raised(const signal_data_t& sigdata, int hooktag)
 {
     if (hooktag == HOOKTAG_SPI) {
         if (sigdata.sigid == SPI::Signal_HostTfrComplete ||
@@ -170,7 +170,7 @@ void ArchXT_SPI::raised(const signal_data_t& sigdata, uint16_t hooktag)
     }
     else if (hooktag == HOOKTAG_PIN) {
         if (sigdata.sigid != Pin::Signal_DigitalStateChange) {
-            m_pin_selected = (sigdata.data.as_uint() == Pin::State_Low);
+            m_pin_selected = (sigdata.data.as_int() == Pin::State_Low);
             m_spi.set_selected(m_pin_selected && TEST_IOREG(CTRLA, SPI_ENABLE));
         }
     }

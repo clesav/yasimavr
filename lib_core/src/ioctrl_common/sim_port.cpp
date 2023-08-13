@@ -79,7 +79,7 @@ void Port::reset()
 /*
  * The one supported request is 0 (get signal)
  */
-bool Port::ctlreq(uint16_t req, ctlreq_data_t* data)
+bool Port::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
 {
     if (req == AVR_CTLREQ_GET_SIGNAL) {
         data->data = &m_signal;
@@ -100,10 +100,10 @@ void Port::set_pin_internal_state(uint8_t num, Pin::State state)
     }
 }
 
-void Port::raised(const signal_data_t& sigdata, uint16_t hooktag)
+void Port::raised(const signal_data_t& sigdata, int hooktag)
 {
     if (sigdata.sigid == Pin::Signal_DigitalStateChange) {
-        Pin::State pin_state = (Pin::State) sigdata.data.as_uint();
+        Pin::State pin_state = (Pin::State) sigdata.data.as_int();
         uint8_t pin_num = hooktag;
         pin_state_changed(pin_num, pin_state);
     }

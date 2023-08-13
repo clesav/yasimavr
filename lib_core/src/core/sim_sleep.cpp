@@ -70,7 +70,7 @@ bool SleepController::init(Device& device)
     return status;
 }
 
-bool SleepController::ctlreq(uint16_t req, ctlreq_data_t* __unused)
+bool SleepController::ctlreq(ctlreq_id_t req, ctlreq_data_t*)
 {
     //On a Sleep request (from a SLEEP instruction),
     // 1 - check that the sleep controller is enabled
@@ -84,7 +84,7 @@ bool SleepController::ctlreq(uint16_t req, ctlreq_data_t* __unused)
                 SleepMode mode = m_config.modes[index].mode;
                 if (mode >= SleepMode::Idle) {
                     m_mode_index = index;
-                    ctlreq_data_t d = { .data = (uint32_t) mode };
+                    ctlreq_data_t d = { .data = (int) mode };
                     device()->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_SLEEP, &d);
                 }
             }
@@ -96,7 +96,7 @@ bool SleepController::ctlreq(uint16_t req, ctlreq_data_t* __unused)
     //send the sleep request to the device
     else if (req == AVR_CTLREQ_SLEEP_PSEUDO) {
         if (!device()->test_option(Device::Option_DisablePseudoSleep)) {
-            ctlreq_data_t d = { .data = (uint32_t) SleepMode::Pseudo };
+            ctlreq_data_t d = { .data = (int) SleepMode::Pseudo };
             device()->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_SLEEP, &d);
         }
         return true;
@@ -105,11 +105,11 @@ bool SleepController::ctlreq(uint16_t req, ctlreq_data_t* __unused)
     return false;
 }
 
-void SleepController::raised(const signal_data_t& sigdata, uint16_t __unused)
+void SleepController::raised(const signal_data_t& sigdata, int)
 {
     //data.u contains the state of the interrupt. We only do something on a 'Raise'
     if (sigdata.sigid != InterruptController::Signal_StateChange ||
-        sigdata.data.as_uint() != InterruptController::State_Raised)
+        sigdata.data != (int) InterruptController::State_Raised)
         return;
 
     int_vect_t vector = sigdata.index;

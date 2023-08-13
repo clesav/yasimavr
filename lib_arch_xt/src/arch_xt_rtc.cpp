@@ -59,7 +59,7 @@ public:
 
     explicit TimerHook(ArchXT_RTC& ctl) : m_ctl(ctl) {}
 
-    virtual void raised(const signal_data_t& sigdata, uint16_t hooktag) override {
+    virtual void raised(const signal_data_t& sigdata, int hooktag) override {
         if (hooktag)
             m_ctl.pit_hook_raised(sigdata);
         else
@@ -281,7 +281,7 @@ void ArchXT_RTC::configure_timers()
         //Read and configure the clock source
         uint8_t clk_mode_val = READ_IOREG_F(CLKSEL, RTC_CLKSEL);
         auto clksel_cfg = find_reg_config_p<CFG::clksel_config_t>(m_config.clocks, clk_mode_val);
-        uint32_t clk_factor; //ratio (main MCU clock freq) / (RTC clock freq)
+        unsigned long clk_factor; //ratio (main MCU clock freq) / (RTC clock freq)
         if (clksel_cfg && clksel_cfg->source == CFG::Clock_32kHz)
             clk_factor = device()->frequency() / 32768;
         else if (clksel_cfg && clksel_cfg->source == CFG::Clock_1kHz)
@@ -292,8 +292,8 @@ void ArchXT_RTC::configure_timers()
         }
 
         //Read and configure the prescaler factor
-        const uint32_t ps_max = PRESCALER_MAX * clk_factor;
-        const uint32_t f = (1 << READ_IOREG_F(CTRLA, RTC_PRESCALER)) * clk_factor;
+        const unsigned long ps_max = PRESCALER_MAX * clk_factor;
+        const unsigned long f = (1 << READ_IOREG_F(CTRLA, RTC_PRESCALER)) * clk_factor;
         m_rtc_timer.set_prescaler(ps_max, f);
         m_pit_timer.set_prescaler(ps_max, f);
 
@@ -328,7 +328,7 @@ void ArchXT_RTC::rtc_hook_raised(const signal_data_t& sigdata)
     if (sigdata.sigid != TimerCounter::Signal_Event)
         return;
 
-    uint8_t event_type = sigdata.data.as_uint();
+    int event_type = sigdata.data.as_int();
 
     if (event_type & TimerCounter::Event_Top) {
         if (m_rtc_intflag.set_flag(RTC_OVF_bm))

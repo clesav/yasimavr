@@ -34,10 +34,11 @@ YASIMAVR_BEGIN_NAMESPACE
 //cycle counts are signed to have -1 as invalid value
 //That leaves 63 bits to count cycles, which at a MCU frequency of 20MHz
 //represent more than 14000 simulated years
-typedef int64_t     cycle_count_t;
-typedef uint32_t    mem_addr_t;
-typedef uint32_t    flash_addr_t;
-typedef int16_t     int_vect_t;
+typedef long long        cycle_count_t;
+typedef unsigned long    mem_addr_t;
+typedef unsigned long    flash_addr_t;
+typedef short            int_vect_t;
+
 
 const cycle_count_t INVALID_CYCLE = -1;
 
@@ -46,15 +47,15 @@ class reg_addr_t {
 
 public:
 
-    constexpr inline reg_addr_t(int16_t addr = -1) : m_addr(addr) {}
+    constexpr inline reg_addr_t(short addr = -1) : m_addr(addr) {}
 
     constexpr inline bool valid() const { return m_addr >= 0; }
 
-    constexpr inline operator int16_t() const { return m_addr; }
+    constexpr inline operator short() const { return m_addr; }
 
 private:
 
-    int16_t m_addr;
+    short m_addr;
 
 };
 
@@ -201,14 +202,17 @@ inline const regbit_t& regbit_compound_t::operator[](size_t index) const
 
 //=======================================================================================
 
-std::string id_to_str(uint32_t id);
-uint32_t str_to_id(const char* s);
-uint32_t str_to_id(const std::string& s);
+typedef unsigned long sim_id_t;
+typedef sim_id_t ctl_id_t;
 
+std::string id_to_str(sim_id_t id);
+sim_id_t str_to_id(const char* s);
+sim_id_t str_to_id(const std::string& s);
 
-#define AVR_ID(_a,_b,_c,_d) \
-    (((_d) << 24)|((_c) << 16)|((_b) << 8)|((_a)))
-
+constexpr sim_id_t chr_to_id(char a, char b, char c, char d)
+{
+    return (d << 24) | (c << 16) | (b << 8) | a;
+}
 
 //=======================================================================================
 
@@ -227,11 +231,20 @@ public:
     };
 
     vardata_t();
+
+    vardata_t(double d);
+    inline vardata_t(unsigned char u) : vardata_t((unsigned long long) u) {}
+    inline vardata_t(unsigned short u) : vardata_t((unsigned long long) u) {}
+    inline vardata_t(unsigned int u) : vardata_t((unsigned long long) u) {}
+    inline vardata_t(unsigned long u) : vardata_t((unsigned long long) u) {}
+    vardata_t(unsigned long long u);
+    inline vardata_t(signed char i) : vardata_t((long long) i) {}
+    inline vardata_t(short i) : vardata_t((long long) i) {}
+    inline vardata_t(int i) : vardata_t((long long) i) {}
+    inline vardata_t(long i) : vardata_t((long long) i) {}
+    vardata_t(long long i);
     vardata_t(void* p);
     vardata_t(const char* s);
-    vardata_t(double d);
-    vardata_t(unsigned int u);
-    vardata_t(int i);
     vardata_t(uint8_t* b_, size_t sz);
     vardata_t(const vardata_t& v);
 
@@ -243,8 +256,8 @@ public:
     void* as_ptr() const;
     const char* as_str() const;
     double as_double() const;
-    unsigned int as_uint() const;
-    int as_int() const;
+    unsigned long long as_uint() const;
+    long long as_int() const;
 
     const uint8_t* as_bytes() const;
     size_t size() const;
@@ -252,9 +265,20 @@ public:
     vardata_t& operator=(void* p);
     vardata_t& operator=(const char* s);
     vardata_t& operator=(double d);
-    vardata_t& operator=(unsigned int u);
-    vardata_t& operator=(int i);
+    inline vardata_t& operator=(unsigned char u) {*this = (unsigned long long) u; return *this; }
+    inline vardata_t& operator=(unsigned short u) {*this = (unsigned long long) u; return *this; }
+    inline vardata_t& operator=(unsigned int u) {*this = (unsigned long long) u; return *this; }
+    inline vardata_t& operator=(unsigned long u) {*this = (unsigned long long) u; return *this; }
+    vardata_t& operator=(unsigned long long u);
+    inline vardata_t& operator=(signed char i) {*this = (long long) i; return *this; }
+    inline vardata_t& operator=(short i) {*this = (long long) i; return *this; }
+    inline vardata_t& operator=(int i) {*this = (long long) i; return *this; }
+    inline vardata_t& operator=(long i) {*this = (long long) i; return *this; }
+    vardata_t& operator=(long long i);
     vardata_t& operator=(const vardata_t& v);
+
+    bool operator==(const vardata_t& v) const;
+    bool operator!=(const vardata_t& v) const;
 
 private:
 
@@ -263,8 +287,8 @@ private:
     union {
         void* p;
         double d;
-        uint32_t u;
-        int32_t i;
+        unsigned long long u;
+        long long i;
         const char* s;
     };
 

@@ -56,11 +56,11 @@ public:
     void write_sreg(uint8_t) const;
     uint8_t read_sreg() const;
 
-    void write_sp(uint16_t) const;
-    uint16_t read_sp() const;
+    void write_sp(mem_addr_t) const;
+    mem_addr_t read_sp() const;
 
-    void write_pc(uint32_t) const;
-    uint32_t read_pc() const;
+    void write_pc(flash_addr_t) const;
+    flash_addr_t read_pc() const;
 
     void write_ioreg(reg_addr_t, uint8_t) const;
     uint8_t read_ioreg(reg_addr_t) const;

@@ -50,23 +50,23 @@ InterruptController::InterruptController(unsigned int size)
 void InterruptController::reset()
 {
     //Reset the state of all vectors
-    for (uint8_t i = 0; i < m_interrupts.size(); i++)
+    for (unsigned int i = 0; i < m_interrupts.size(); i++)
         m_interrupts[i].raised = false;
 
     m_irq_vector = AVR_INTERRUPT_NONE;
 }
 
-bool InterruptController::ctlreq(uint16_t req, ctlreq_data_t* data)
+bool InterruptController::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
 {
     if (req == AVR_CTLREQ_GET_SIGNAL) {
         data->data = &m_signal;
         return true;
     }
     else if (req == AVR_CTLREQ_INTR_REGISTER) {
-        unsigned int vector = data->index;
+        int vector = data->index;
 
-        if (vector == 0) {
-            logger().err("Attempt to register reset vector");
+        if (vector <= 0) {
+            logger().err("Attempt to register an invalid or the reset vector");
         }
         else if (vector >= m_interrupts.size()) {
             logger().err("Invalid interrupt vector %d", vector);
@@ -114,7 +114,7 @@ void InterruptController::sleep(bool on, SleepMode mode)
 {
     if (!on) return;
 
-    for (size_t v = 0; v < m_interrupts.size(); ++v) {
+    for (unsigned int v = 0; v < m_interrupts.size(); ++v) {
         if (m_interrupts[v].raised)
             m_signal.raise_u(Signal_StateChange, State_RaisedFromSleep, v);
     }
@@ -174,7 +174,7 @@ void InterruptController::cancel_interrupt(int_vect_t vector)
 
 void InterruptController::disconnect_handler(InterruptHandler* handler)
 {
-    for (size_t v = 0; v < m_interrupts.size(); v++) {
+    for (unsigned int v = 0; v < m_interrupts.size(); v++) {
         if (m_interrupts[v].handler == handler) {
             m_interrupts[v].used = false;
             m_interrupts[v].handler->m_intctl = nullptr;

@@ -34,7 +34,7 @@ YASIMAVR_USING_NAMESPACE
 //=======================================================================================
 
 ArchXT_USERROW::ArchXT_USERROW(reg_addr_t base)
-:Peripheral(AVR_ID('U', 'R', 'O', 'W'))
+:Peripheral(chr_to_id('U', 'R', 'O', 'W'))
 ,m_reg_base(base)
 ,m_userrow(nullptr)
 {}
@@ -80,7 +80,7 @@ void ArchXT_USERROW::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& d
 //=======================================================================================
 
 ArchXT_Fuses::ArchXT_Fuses(reg_addr_t base)
-:Peripheral(AVR_ID('F', 'U', 'S', 'E'))
+:Peripheral(chr_to_id('F', 'U', 'S', 'E'))
 ,m_reg_base(base)
 ,m_fuses(nullptr)
 {}
@@ -193,7 +193,7 @@ void ArchXT_NVM::reset()
     m_state = State_Idle;
 }
 
-bool ArchXT_NVM::ctlreq(uint16_t req, ctlreq_data_t* data)
+bool ArchXT_NVM::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
 {
     //Write request from the core when writing to a data space
     //location mapped to one of the NVM blocks
@@ -226,7 +226,7 @@ void ArchXT_NVM::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 
 NonVolatileMemory* ArchXT_NVM::get_memory(int nvm_index)
 {
-    ctlreq_data_t req = { .index = (unsigned int) nvm_index };
+    ctlreq_data_t req = { .index = nvm_index };
     if (!device()->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_NVM, &req))
         return nullptr;
     return reinterpret_cast<NonVolatileMemory*>(req.data.as_ptr());

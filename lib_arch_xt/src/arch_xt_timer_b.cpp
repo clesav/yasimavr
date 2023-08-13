@@ -147,7 +147,7 @@ void ArchXT_TimerB::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& da
         bool is_chained = (old_clk_mode == TCB_CLKSEL_CLKTCA_gc);
         bool to_chain = (m_clk_mode == TCB_CLKSEL_CLKTCA_gc);
         if (to_chain != is_chained) {
-            ctlreq_data_t d = { .data = &m_timer, .index = (uint32_t)(to_chain ? 1 : 0) };
+            ctlreq_data_t d = { .data = &m_timer, .index = (to_chain ? 1 : 0) };
             device()->ctlreq(AVR_IOCTL_TIMER('A', '0'), AVR_CTLREQ_TCA_REGISTER_TCB, &d);
         }
 
@@ -196,7 +196,7 @@ void ArchXT_TimerB::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& da
     }
 }
 
-void ArchXT_TimerB::raised(const signal_data_t& sigdata, uint16_t __unused)
+void ArchXT_TimerB::raised(const signal_data_t& sigdata, int)
 {
     if (sigdata.data.as_uint() & TimerCounter::Event_Top)
         m_intflag.set_flag();

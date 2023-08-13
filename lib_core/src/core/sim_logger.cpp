@@ -30,7 +30,7 @@ YASIMAVR_USING_NAMESPACE
 
 void LogWriter::write(cycle_count_t cycle,
                           int level,
-                          uint32_t id,
+                          ctl_id_t id,
                           const char* format,
                           std::va_list args)
 {
@@ -54,7 +54,7 @@ void LogWriter::write(cycle_count_t cycle,
 
     std::string sid = id > 0 ? id_to_str(id) : "";
 
-    fprintf(f, "[%08d] %s %s : ", cycle, slvl, sid.c_str());
+    fprintf(f, "[%08lld] %s %s : ", cycle, slvl, sid.c_str());
     vfprintf(f, format, args);
     fprintf(f, "\n");
     fflush(f);
@@ -79,7 +79,7 @@ void LogHandler::init(CycleManager& cycle_manager)
     m_cycle_manager = &cycle_manager;
 }
 
-void LogHandler::write(int lvl, uint32_t id, const char* fmt, std::va_list args)
+void LogHandler::write(int lvl, ctl_id_t id, const char* fmt, std::va_list args)
 {
     cycle_count_t c = m_cycle_manager ? m_cycle_manager->cycle() : 0;
     m_writer->write(c, lvl, id, fmt, args);
@@ -88,14 +88,14 @@ void LogHandler::write(int lvl, uint32_t id, const char* fmt, std::va_list args)
 
 //=======================================================================================
 
-Logger::Logger(uint32_t id, LogHandler& hdl)
+Logger::Logger(ctl_id_t id, LogHandler& hdl)
 :m_id(id)
 ,m_level(Level_Error)
 ,m_parent(nullptr)
 ,m_handler(&hdl)
 {}
 
-Logger::Logger(uint32_t id, Logger* prt)
+Logger::Logger(ctl_id_t id, Logger* prt)
 :m_id(id)
 ,m_level(Level_Error)
 ,m_parent(prt)
@@ -140,7 +140,7 @@ void Logger::filtered_write(int lvl, const char* fmt, std::va_list args)
         write(lvl, m_id, fmt, args);
 }
 
-void Logger::write(int lvl, uint32_t id, const char* fmt, std::va_list args)
+void Logger::write(int lvl, ctl_id_t id, const char* fmt, std::va_list args)
 {
     if (m_parent)
         m_parent->write(lvl, id, fmt, args);

@@ -27,7 +27,7 @@ struct ArchXT_SPIConfig {
 %End
 
     reg_addr_t reg_base;
-    uint32_t pin_select;
+    pin_id_t pin_select;
     int_vect_t iv_spi;
 
 };
@@ -40,13 +40,13 @@ class ArchXT_SPI : public Peripheral, public SignalHook /NoDefaultCtors/ {
 
 public:
 
-    ArchXT_SPI(uint8_t, const ArchXT_SPIConfig& /KeepReference/);
+    ArchXT_SPI(int, const ArchXT_SPIConfig& /KeepReference/);
 
     virtual bool init(Device&);
     virtual void reset();
-    virtual bool ctlreq(uint16_t, ctlreq_data_t*);
+    virtual bool ctlreq(ctlreq_id_t, ctlreq_data_t*);
     virtual uint8_t ioreg_read_handler(reg_addr_t, uint8_t);
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
-    virtual void raised(const signal_data_t&, uint16_t);
+    virtual void raised(const signal_data_t&, int);
 
 };

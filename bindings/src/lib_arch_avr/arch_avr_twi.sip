@@ -26,7 +26,7 @@ struct ArchAVR_TWIConfig {
 #include "arch_avr_twi.h"
 %End
 
-    UnsignedInt32Vector ps_factors;
+    UnsignedLongVector ps_factors;
 
     reg_addr_t  reg_ctrl;
     bitmask_t   bm_enable;
@@ -59,9 +59,9 @@ public:
 
     virtual bool init(Device&);
     virtual void reset();
-    virtual bool ctlreq(uint16_t, ctlreq_data_t*);
+    virtual bool ctlreq(ctlreq_id_t, ctlreq_data_t*);
     virtual uint8_t ioreg_read_handler(reg_addr_t, uint8_t);
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
-    virtual void raised(const signal_data_t&, uint16_t);
+    virtual void raised(const signal_data_t&, int);
 
 };

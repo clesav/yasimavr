@@ -37,8 +37,8 @@ YASIMAVR_BEGIN_NAMESPACE
 
 struct ArchAVR_WDTConfig {
 
-    uint32_t clock_frequency;
-    std::vector<uint32_t> delays;
+    unsigned long clock_frequency;
+    std::vector<unsigned long> delays;
     //Assumes all the fields are on one single register
     reg_addr_t reg_wdt;
     bitmask_t bm_delay;

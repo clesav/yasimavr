@@ -58,11 +58,11 @@ bool ArchXT_WDT::init(Device& device)
 
 void ArchXT_WDT::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
-    uint32_t clk_factor = device()->frequency() / m_config.clock_frequency;
+    unsigned long clk_factor = device()->frequency() / m_config.clock_frequency;
     uint8_t win_start_index = (data.value & WDT_WINDOW_gm) >> WDT_WINDOW_gp;
     uint8_t win_end_index = (data.value & WDT_PERIOD_gm) >> WDT_PERIOD_gp;
-    uint32_t win_start = m_config.delays[win_start_index];
-    uint32_t win_end = m_config.delays[win_end_index];
+    unsigned long win_start = m_config.delays[win_start_index];
+    unsigned long win_end = m_config.delays[win_end_index];
     set_timer(win_start, win_end, clk_factor);
 }
 

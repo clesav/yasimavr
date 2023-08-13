@@ -27,13 +27,13 @@ struct ArchAVR_ACPConfig {
 %End
 
     struct mux_config_t : base_reg_config_t {
-        uint32_t pin;
+        pin_id_t pin;
     };
 
     std::vector<ArchAVR_ACPConfig::mux_config_t> mux_pins;
 
-    uint32_t pos_pin;
-    uint32_t neg_pin;
+    pin_id_t pos_pin;
+    pin_id_t neg_pin;
 
     regbit_t rb_disable;
     regbit_t rb_mux_enable;
@@ -61,8 +61,8 @@ public:
 
     virtual bool init(Device&);
     virtual void reset();
-    virtual bool ctlreq(uint16_t, ctlreq_data_t*);
+    virtual bool ctlreq(ctlreq_id_t, ctlreq_data_t*);
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
-    virtual void raised(const signal_data_t&, uint16_t);
+    virtual void raised(const signal_data_t&, int);
 
 };

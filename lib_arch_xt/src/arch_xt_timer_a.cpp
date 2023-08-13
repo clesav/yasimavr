@@ -133,7 +133,7 @@ void ArchXT_TimerA::reset()
     m_timer.reset();
 }
 
-bool ArchXT_TimerA::ctlreq(uint16_t req, ctlreq_data_t* data)
+bool ArchXT_TimerA::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
 {
     if (req == AVR_CTLREQ_TCA_REGISTER_TCB) {
         PrescaledTimer* t = reinterpret_cast<PrescaledTimer*>(data->data.as_ptr());
@@ -349,7 +349,7 @@ uint32_t ArchXT_TimerA::delay_to_event()
     return (uint32_t)ticks_to_next_event;
 }
 
-void ArchXT_TimerA::raised(const signal_data_t& sigdata, uint16_t __unused)
+void ArchXT_TimerA::raised(const signal_data_t& sigdata, int)
 {
     m_cnt += sigdata.data.as_uint();
 

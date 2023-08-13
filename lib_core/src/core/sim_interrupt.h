@@ -97,7 +97,7 @@ public:
 
     //===== Override of IO_CTL virtual methods =====
     virtual void reset() override;
-    virtual bool ctlreq(uint16_t req, ctlreq_data_t* data) override;
+    virtual bool ctlreq(ctlreq_id_t req, ctlreq_data_t* data) override;
     virtual void sleep(bool on, SleepMode mode) override;
 
     //===== Interface API for the CPU =====
@@ -113,7 +113,7 @@ public:
 protected:
 
     //Helper methods to access the vector table, for concrete implementing sub-classes
-    bool interrupt_raised(unsigned int vector) const;
+    bool interrupt_raised(int_vect_t vector) const;
     int_vect_t intr_count() const;
     void set_interrupt_raised(int_vect_t vector, bool raised);
 
@@ -159,7 +159,7 @@ inline int_vect_t InterruptController::intr_count() const
     return m_interrupts.size();
 }
 
-inline bool InterruptController::interrupt_raised(unsigned int vector) const
+inline bool InterruptController::interrupt_raised(int_vect_t vector) const
 {
     return m_interrupts[vector].raised;
 }

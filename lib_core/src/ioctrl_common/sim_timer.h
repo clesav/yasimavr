@@ -67,15 +67,15 @@ public:
     //   the prescaler counter wrap to 0
     // - ps_factor is the prescaler factor to generate ticks
     //   if ps_factor = 0, the prescaler and timeout delay are disabled and reset
-    void set_prescaler(uint32_t ps_max, uint32_t ps_factor);
+    void set_prescaler(unsigned long ps_max, unsigned long ps_factor);
     //Getter for ps_factor
-    uint32_t prescaler_factor() const;
+    unsigned long prescaler_factor() const;
     //Sets the timeout delay to generate a event
     //If delay = 0, the timeout delay is disabled and reset
     //The prescaler is not affected by this setting
-    void set_timer_delay(uint32_t delay);
+    void set_timer_delay(cycle_count_t delay);
     //Getter for timer_delay
-    uint32_t timer_delay() const;
+    cycle_count_t timer_delay() const;
     //Pauses the timer
     //If paused, the prescaler and timeout delay are frozen but not reset
     void set_paused(bool paused);
@@ -92,7 +92,7 @@ public:
     void register_chained_timer(PrescaledTimer& timer);
     void unregister_chained_timer(PrescaledTimer& timer);
 
-    static int ticks_to_event(int counter, int event, int wrap);
+    static cycle_count_t ticks_to_event(cycle_count_t counter, cycle_count_t event, cycle_count_t wrap);
 
     //Disable copy semantics
     PrescaledTimer(const PrescaledTimer&) = delete;
@@ -104,12 +104,12 @@ private:
     Logger* m_logger;
 
     //***** Prescaler management *****
-    uint32_t m_ps_max;                  //Max value of the prescaler
-    uint32_t m_ps_factor;               //Prescaler division factor (Tick period / Clock period)
-    uint32_t m_ps_counter;              //Prescaler counter
+    unsigned long m_ps_max;             //Max value of the prescaler
+    unsigned long m_ps_factor;          //Prescaler division factor (Tick period / Clock period)
+    cycle_count_t m_ps_counter;         //Prescaler counter
 
     //***** Delay management *****
-    uint32_t m_delay;                   //Delay until the next timeout in ticks
+    cycle_count_t m_delay;              //Delay until the next timeout in ticks
 
     //***** Update management *****
     bool m_paused;                      //Boolean indicating if the timer is paused
@@ -131,12 +131,12 @@ private:
 
 };
 
-inline uint32_t PrescaledTimer::prescaler_factor() const
+inline unsigned long PrescaledTimer::prescaler_factor() const
 {
     return m_ps_factor;
 }
 
-inline uint32_t PrescaledTimer::timer_delay() const
+inline cycle_count_t PrescaledTimer::timer_delay() const
 {
     return m_delay;
 }
@@ -191,7 +191,7 @@ public:
         Signal_CompMatch,
     };
 
-    TimerCounter(PrescaledTimer& timer, long wrap, uint32_t comp_count);
+    TimerCounter(PrescaledTimer& timer, long wrap, size_t comp_count);
     ~TimerCounter();
 
     long wrap() const;
@@ -211,11 +211,11 @@ public:
     void set_counter(long value);
     long counter() const;
 
-    void set_comp_value(uint32_t index, long value);
-    long comp_value(uint32_t index) const;
+    void set_comp_value(size_t index, long value);
+    long comp_value(size_t index) const;
 
-    void set_comp_enabled(uint32_t index, bool enable);
-    bool comp_enabled(uint32_t index) const;
+    void set_comp_enabled(size_t index, bool enable);
+    bool comp_enabled(size_t index) const;
 
     bool countdown() const;
 
@@ -300,12 +300,12 @@ inline long TimerCounter::counter() const
     return m_counter;
 }
 
-inline long TimerCounter::comp_value(uint32_t index) const
+inline long TimerCounter::comp_value(size_t index) const
 {
     return m_cmp[index].value;
 }
 
-inline bool TimerCounter::comp_enabled(uint32_t index) const
+inline bool TimerCounter::comp_enabled(size_t index) const
 {
     return m_cmp[index].enabled;
 }

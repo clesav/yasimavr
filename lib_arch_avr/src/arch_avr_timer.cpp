@@ -41,7 +41,7 @@ public:
     CaptureHook(ArchAVR_Timer& timer) : m_timer(timer) {}
     virtual ~CaptureHook() {}
 
-    virtual void raised(const signal_data_t& data, uint16_t sigid) override
+    virtual void raised(const signal_data_t&, int) override
     {
         m_timer.capt_raised();
     }
@@ -96,7 +96,7 @@ ArchAVR_Timer::ArchAVR_Timer(int num, const CFG& config)
 ,m_intflag_icr(true)
 {
     //Calculate the prescaler max value by looking for the highest division factor
-    unsigned int maxdiv = 0;
+    unsigned long maxdiv = 0;
     for (auto clkcfg : m_config.clocks) {
         if (clkcfg.div > maxdiv)
             maxdiv = clkcfg.div;
@@ -190,7 +190,7 @@ void ArchAVR_Timer::reset()
         m_intflag_icr.update_from_ioreg();
     }
 
-    for (uint32_t i = 0; i < m_oc_channels.size(); ++i) {
+    for (size_t i = 0; i < m_oc_channels.size(); ++i) {
         m_oc_channels[i]->reset();
         m_signal.raise(signal_data_t{Signal_CompOutput, i, vardata_t()});
 
@@ -199,7 +199,7 @@ void ArchAVR_Timer::reset()
 }
 
 
-bool ArchAVR_Timer::ctlreq(uint16_t req, ctlreq_data_t* data)
+bool ArchAVR_Timer::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
 {
     if (req == AVR_CTLREQ_GET_SIGNAL) {
         data->data = &m_signal;
@@ -276,7 +276,7 @@ void ArchAVR_Timer::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& da
 
     else {
         //Check if writing to any registers of each output compare module
-        for (uint32_t i = 0; i < m_oc_channels.size(); ++i) {
+        for (size_t i = 0; i < m_oc_channels.size(); ++i) {
             OutputCompareChannel* oc = m_oc_channels[i];
             if (addr == oc->config.reg_oc) {
                 oc->reg = (m_temp << 8) | data.value;
@@ -351,8 +351,7 @@ void ArchAVR_Timer::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& da
                 m_intflag_icr.clear_flag();
 
             //Check the flag for each OC
-            for (uint32_t i = 0; i < m_oc_channels.size(); ++i) {
-                OutputCompareChannel* oc = m_oc_channels[i];
+            for (auto oc : m_oc_channels) {
                 if (oc->config.vector.num && BITSET(data.value, oc->config.vector.bit))
                     oc->intflag.clear_flag();
             }
@@ -361,7 +360,7 @@ void ArchAVR_Timer::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& da
 
     if (do_com_reconfig) {
         logger().dbg("Reconfiguring OC modes");
-        for (uint32_t i = 0; i < m_oc_channels.size(); ++i) {
+        for (size_t i = 0; i < m_oc_channels.size(); ++i) {
             OutputCompareChannel* oc = m_oc_channels[i];
             oc->mode = get_COM_config(read_ioreg(oc->config.rb_mode));
             bool old_active = oc->active;
@@ -418,7 +417,7 @@ CFG::COM_config_t ArchAVR_Timer::get_COM_config(uint8_t regval)
  * Determine is a COM mode is active, i.e. driving the OC output
  * output_index is the OC index (0=A, 1=B, ...)
  */
-static inline bool COM_active(CFG::COM com, uint32_t output_index)
+static inline bool COM_active(CFG::COM com, size_t output_index)
 {
     if (output_index == 0)
         return (com > CFG::COM_NoChange);
@@ -430,7 +429,7 @@ static inline bool COM_active(CFG::COM com, uint32_t output_index)
 /*
  * Determine if an OC is active. It is if any of its COM modes is active.
  */
-bool ArchAVR_Timer::output_active(CFG::COM_config_t& mode, uint32_t output_index)
+bool ArchAVR_Timer::output_active(CFG::COM_config_t& mode, size_t output_index)
 {
     return COM_active(mode.up, output_index) ||
            COM_active(mode.down, output_index) ||
@@ -439,10 +438,10 @@ bool ArchAVR_Timer::output_active(CFG::COM_config_t& mode, uint32_t output_index
 }
 
 
-void ArchAVR_Timer::raised(const signal_data_t& sigdata, uint16_t __unused)
+void ArchAVR_Timer::raised(const signal_data_t& sigdata, int)
 {
     if (sigdata.sigid == TimerCounter::Signal_Event) {
-        uint8_t event_flags = sigdata.data.as_uint();
+        int event_flags = sigdata.data.as_int();
         bool raise_ovf = false;
 
         //If the MAX value has been reached
@@ -454,7 +453,7 @@ void ArchAVR_Timer::raised(const signal_data_t& sigdata, uint16_t __unused)
         //If the TOP value has been reached
         if (event_flags & TimerCounter::Event_Top) {
             if (m_mode.ocr == CFG::OCR_UpdateOnTop) {
-                for (uint32_t i = 0; i < m_oc_channels.size(); ++i)
+                for (size_t i = 0; i < m_oc_channels.size(); ++i)
                     m_counter.set_comp_value(i, m_oc_channels[i]->reg);
 
                 if (m_mode.top == CFG::Top_OnCompA)
@@ -468,7 +467,7 @@ void ArchAVR_Timer::raised(const signal_data_t& sigdata, uint16_t __unused)
             //it would be called twice as the signal Signal_CompMatch
             //would also be raised in the same cycle
             if (!(event_flags & TimerCounter::Event_Compare)) {
-                for (uint32_t i = 0; i < m_oc_channels.size(); ++i)
+                for (size_t i = 0; i < m_oc_channels.size(); ++i)
                     change_OC_state(i, event_flags);
             }
 
@@ -477,7 +476,7 @@ void ArchAVR_Timer::raised(const signal_data_t& sigdata, uint16_t __unused)
         //If the BOTTOM value has been reached
         if (event_flags & TimerCounter::Event_Bottom) {
             if (m_mode.ocr == CFG::OCR_UpdateOnBottom) {
-                for (uint32_t i = 0; i < m_oc_channels.size(); ++i)
+                for (size_t i = 0; i < m_oc_channels.size(); ++i)
                     m_counter.set_comp_value(i, m_oc_channels[i]->reg);
 
                 if (m_mode.top == CFG::Top_OnCompA)
@@ -489,7 +488,7 @@ void ArchAVR_Timer::raised(const signal_data_t& sigdata, uint16_t __unused)
 
             //Ditto as Event_Top
             if (!(event_flags & TimerCounter::Event_Compare)) {
-                for (uint32_t i = 0; i < m_oc_channels.size(); ++i)
+                for (size_t i = 0; i < m_oc_channels.size(); ++i)
                     change_OC_state(i, event_flags);
             }
         }
@@ -503,14 +502,14 @@ void ArchAVR_Timer::raised(const signal_data_t& sigdata, uint16_t __unused)
     }
 
     else if (sigdata.sigid == TimerCounter::Signal_CompMatch) {
-        change_OC_state(sigdata.index, sigdata.data.as_uint());
+        change_OC_state(sigdata.index, sigdata.data.as_int());
         //Raise the corresponding interrupt flag
         m_oc_channels[sigdata.index]->intflag.set_flag();
     }
 }
 
 
-void ArchAVR_Timer::change_OC_state(uint32_t index, uint8_t event_flags)
+void ArchAVR_Timer::change_OC_state(size_t index, int event_flags)
 {
     OutputCompareChannel* oc = m_oc_channels[index];
     if (!oc->active) return;

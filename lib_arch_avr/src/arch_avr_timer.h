@@ -86,12 +86,12 @@ struct ArchAVR_TimerConfig {
 
     struct clock_config_t : base_reg_config_t {
         TimerCounter::TickSource source;      //Clock source
-        unsigned int div;                     //Prescaler factor
+        unsigned long div;                    //Prescaler factor
     };
 
     struct vector_config_t {
         int_vect_t num;
-        uint8_t bit;
+        unsigned char bit;
     };
 
     struct OC_config_t : base_reg_config_t {
@@ -180,11 +180,11 @@ public:
 
     virtual bool init(Device& device) override;
     virtual void reset() override;
-    virtual bool ctlreq(uint16_t req, ctlreq_data_t* data) override;
+    virtual bool ctlreq(ctlreq_id_t req, ctlreq_data_t* data) override;
     virtual uint8_t ioreg_read_handler(reg_addr_t addr, uint8_t value) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
 
-    virtual void raised(const signal_data_t& sigdata, uint16_t hooktag) override;
+    virtual void raised(const signal_data_t& sigdata, int hooktag) override;
 
 private:
 
@@ -197,7 +197,7 @@ private:
     const ArchAVR_TimerConfig& m_config;
 
     //***** Clock management *****
-    uint16_t m_clk_ps_max;              //Max value counted by the clock prescaler
+    unsigned long m_clk_ps_max;              //Max value counted by the clock prescaler
     //Input Capture Register value
     uint16_t m_icr;
     //Temporary register when the CPU is reading 16-bits registers
@@ -219,9 +219,8 @@ private:
     void update_top();
     void capt_raised();
     ArchAVR_TimerConfig::COM_config_t get_COM_config(uint8_t regval);
-    void process_ticks(unsigned int ticks, bool event_reached);
-    void change_OC_state(uint32_t index, uint8_t event_flags);
-    bool output_active(ArchAVR_TimerConfig::COM_config_t& mode, uint32_t output_index);
+    void change_OC_state(size_t index, int event_flags);
+    bool output_active(ArchAVR_TimerConfig::COM_config_t& mode, size_t output_index);
 
 };
 

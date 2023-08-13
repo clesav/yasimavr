@@ -109,7 +109,7 @@ void ArchXT_ADC::reset()
     m_timer.reset();
 }
 
-bool ArchXT_ADC::ctlreq(uint16_t req, ctlreq_data_t* data)
+bool ArchXT_ADC::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
 {
     if (req == AVR_CTLREQ_GET_SIGNAL) {
         data->data = &m_signal;
@@ -316,9 +316,9 @@ void ArchXT_ADC::read_analog_value()
 * First, we perform the actual analog read.
 * Second, we store it in the data register and raise the interrupt flag
 */
-void ArchXT_ADC::raised(const signal_data_t& data, uint16_t sigid)
+void ArchXT_ADC::raised(const signal_data_t& sigdata, int)
 {
-    if (data.index != 1) return;
+    if (sigdata.index != 1) return;
 
     if (m_state == ADC_Starting) {
 

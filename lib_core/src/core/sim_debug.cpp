@@ -193,25 +193,25 @@ uint8_t DeviceDebugProbe::read_sreg() const
     return m_device->core().read_sreg();
 }
 
-void DeviceDebugProbe::write_sp(uint16_t value) const
+void DeviceDebugProbe::write_sp(mem_addr_t value) const
 {
     if (m_device)
         m_device->core().write_sp(value);
 }
 
-uint16_t DeviceDebugProbe::read_sp() const
+mem_addr_t DeviceDebugProbe::read_sp() const
 {
     if (!m_device) return 0;
     return m_device->core().read_sp();
 }
 
-void DeviceDebugProbe::write_pc(uint32_t value) const
+void DeviceDebugProbe::write_pc(flash_addr_t value) const
 {
     if (m_device)
         m_device->core().m_pc = value;
 }
 
-uint32_t DeviceDebugProbe::read_pc() const
+flash_addr_t DeviceDebugProbe::read_pc() const
 {
     if (!m_device) return 0;
     return m_device->core().m_pc;
@@ -222,7 +222,7 @@ void DeviceDebugProbe::write_ioreg(reg_addr_t addr, uint8_t value) const
     if (!m_device) return;
 
     Core& core = m_device->core();
-    const uint16_t iosize = core.config().ioend - core.config().iostart + 1;
+    const mem_addr_t iosize = core.config().ioend - core.config().iostart + 1;
 
     if (addr == R_SREG) {
         core.write_sreg(value);
@@ -239,7 +239,7 @@ uint8_t DeviceDebugProbe::read_ioreg(reg_addr_t addr) const
     if (!m_device) return 0;
 
     Core& core = m_device->core();
-    const uint16_t iosize = core.config().ioend - core.config().iostart + 1;
+    const mem_addr_t iosize = core.config().ioend - core.config().iostart + 1;
 
     if (addr == R_SREG) {
         return core.read_sreg();

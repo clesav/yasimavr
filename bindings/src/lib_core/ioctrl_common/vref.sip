@@ -25,16 +25,16 @@
 
 #include "ioctrl_common/sim_vref.h"
 
-const uint16_t CTLREQ_VREF_GET = AVR_CTLREQ_VREF_GET;
-const uint16_t CTLREQ_VREF_SET = AVR_CTLREQ_VREF_SET;
+const ctlreq_id_t CTLREQ_VREF_GET = AVR_CTLREQ_VREF_GET;
+const ctlreq_id_t CTLREQ_VREF_SET = AVR_CTLREQ_VREF_SET;
 
 %End
 
 
 //=======================================================================================
 
-const uint16_t CTLREQ_VREF_GET;
-const uint16_t CTLREQ_VREF_SET;
+const ctlreq_id_t CTLREQ_VREF_GET;
+const ctlreq_id_t CTLREQ_VREF_SET;
 
 
 class VREF : public Peripheral /Abstract/ {
@@ -57,15 +57,15 @@ public:
         Signal_VCCChange            /PyName=VCCChange/,
     };
 
-    VREF(size_t ref_count);
+    VREF(unsigned int ref_count);
 
     bool active() const;
 
-    virtual bool ctlreq(uint16_t, ctlreq_data_t*);
+    virtual bool ctlreq(ctlreq_id_t, ctlreq_data_t*);
 
 protected:
 
-    void set_reference(uint32_t, Source, double=1.0);
-    double reference(uint32_t) const;
+    void set_reference(unsigned int, Source, double=1.0);
+    double reference(unsigned int) const;
 
 };

@@ -94,7 +94,7 @@ public:
 
 protected:
 
-    virtual bool core_ctlreq(uint16_t req, ctlreq_data_t* reqdata) override;
+    virtual bool core_ctlreq(ctlreq_id_t req, ctlreq_data_t* reqdata) override;
 
     //Override to load the EEPROM and the USERROW
     virtual bool program(const Firmware& firmware) override;

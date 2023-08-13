@@ -68,7 +68,7 @@ private:
 
     const ArchXT_VREFConfig& m_config;
 
-    void set_channel_reference(uint32_t index, uint8_t reg_value);
+    void set_channel_reference(unsigned int index, uint8_t reg_value);
 
 };
 
@@ -170,7 +170,7 @@ public:
 
     virtual bool init(Device& device) override;
     virtual void reset() override;
-    virtual bool ctlreq(uint16_t req, ctlreq_data_t* data) override;
+    virtual bool ctlreq(ctlreq_id_t req, ctlreq_data_t* data) override;
     virtual uint8_t ioreg_read_handler(reg_addr_t addr, uint8_t value) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
 

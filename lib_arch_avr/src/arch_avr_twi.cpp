@@ -120,7 +120,7 @@ void ArchAVR_TWI::reset()
     write_ioreg(m_config.rb_addr, 0x7F);
 }
 
-bool ArchAVR_TWI::ctlreq(uint16_t req, ctlreq_data_t* data)
+bool ArchAVR_TWI::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
 {
     if (req == AVR_CTLREQ_GET_SIGNAL) {
         data->data = &m_twi.signal();
@@ -205,7 +205,7 @@ void ArchAVR_TWI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
     //TWBR and TWPS
     if (addr == m_config.rb_prescaler.addr || addr == m_config.reg_bitrate) {
         uint8_t ps_index = read_ioreg(m_config.rb_prescaler);
-        unsigned int ps_factor = m_config.ps_factors[ps_index];
+        unsigned long ps_factor = m_config.ps_factors[ps_index];
         uint8_t bitrate = read_ioreg(m_config.reg_bitrate);
         m_twi.set_bit_delay(16 + 2 * bitrate * ps_factor);
     }
@@ -223,7 +223,7 @@ void ArchAVR_TWI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
 
 }
 
-void ArchAVR_TWI::raised(const signal_data_t& sigdata, uint16_t hooktag)
+void ArchAVR_TWI::raised(const signal_data_t& sigdata, int)
 {
     uint8_t ctrl = read_ioreg(m_config.reg_ctrl);
 
@@ -232,7 +232,7 @@ void ArchAVR_TWI::raised(const signal_data_t& sigdata, uint16_t hooktag)
     switch (sigdata.sigid) {
 
         case TWI::Signal_BusStateChange: {
-            if (sigdata.data.as_uint() == TWI::Bus_Idle) {
+            if (sigdata.data.as_int() == TWI::Bus_Idle) {
                 if (start) {
                     if (m_twi.start_transfer())
                         set_intflag(TWI_START);
@@ -280,7 +280,7 @@ void ArchAVR_TWI::raised(const signal_data_t& sigdata, uint16_t hooktag)
         case TWI::Signal_AddrAck: { //Master side only
 
             uint8_t status;
-            if (sigdata.data.as_uint() == TWIPacket::Ack)
+            if (sigdata.data.as_int() == TWIPacket::Ack)
                 status = m_rx ? TWI_MRX_ADR_ACK : TWI_MTX_ADR_ACK;
             else
                 status = m_rx ? TWI_MRX_ADR_NACK : TWI_MTX_ADR_NACK;
@@ -296,7 +296,7 @@ void ArchAVR_TWI::raised(const signal_data_t& sigdata, uint16_t hooktag)
             if (sigdata.index == TWI::Cpt_Master) //master side
                 status = (sigdata.data.as_uint() == TWIPacket::Ack) ? TWI_MTX_DATA_ACK : TWI_MTX_DATA_NACK;
             else { //slave
-                if (sigdata.data.as_uint() == TWIPacket::Nack)
+                if (sigdata.data.as_int() == TWIPacket::Nack)
                     status = TWI_STX_DATA_NACK;
                 else if (acken)
                     status = TWI_STX_DATA_ACK;

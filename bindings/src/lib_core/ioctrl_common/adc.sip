@@ -25,13 +25,13 @@
 
 #include "ioctrl_common/sim_adc.h"
 
-const uint16_t CTLREQ_ADC_SET_TEMP = AVR_CTLREQ_ADC_SET_TEMP;
-const uint16_t CTLREQ_ADC_TRIGGER = AVR_CTLREQ_ADC_TRIGGER;
+const ctlreq_id_t CTLREQ_ADC_SET_TEMP = AVR_CTLREQ_ADC_SET_TEMP;
+const ctlreq_id_t CTLREQ_ADC_TRIGGER = AVR_CTLREQ_ADC_TRIGGER;
 
 %End
 
-const uint16_t CTLREQ_ADC_SET_TEMP;
-const uint16_t CTLREQ_ADC_TRIGGER;
+const ctlreq_id_t CTLREQ_ADC_SET_TEMP;
+const ctlreq_id_t CTLREQ_ADC_TRIGGER;
 
 
 //=======================================================================================
@@ -56,8 +56,8 @@ public:
     struct channel_config_t : base_reg_config_t {
 
         ADC::Channel type;
-        uint32_t pin_p;
-        uint32_t pin_n;
+        pin_id_t pin_p;
+        pin_id_t pin_n;
         char per_num;
         unsigned int gain;
 

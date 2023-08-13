@@ -67,7 +67,7 @@ void PrescaledTimer::reset()
         m_cycle_manager->cancel(*this);
 }
 
-void PrescaledTimer::set_prescaler(uint32_t ps_max, uint32_t ps_factor)
+void PrescaledTimer::set_prescaler(unsigned long ps_max, unsigned long ps_factor)
 {
     if (!m_updating) update(m_cycle_manager->cycle());
 
@@ -90,7 +90,7 @@ void PrescaledTimer::set_paused(bool paused)
     if (!m_updating) reschedule();
 }
 
-void PrescaledTimer::set_timer_delay(uint32_t delay)
+void PrescaledTimer::set_timer_delay(cycle_count_t delay)
 {
     if (!m_updating) update();
     m_delay = delay;
@@ -183,19 +183,19 @@ void PrescaledTimer::process_cycles(cycle_count_t cycles)
         //Update the prescaler counter accordingly
         m_ps_counter = (ticks_dt + m_ps_counter) % m_ps_max;
 
-        m_logger->dbg("Prescaled timer generating %lld ticks, delay=%u", ticks, m_delay);
+        m_logger->dbg("Prescaled timer generating %lld ticks, delay=%lld", ticks, m_delay);
 
         //Raise the signal to inform the parent peripheral of ticks to consume
         //Decrement the delay by the number of ticks
         signal_data_t sigdata = { .sigid = 0 };
         if (timeout) {
-            m_logger->dbg("Prescaled timer generating %lld ticks, delay=%u", ticks, m_delay);
+            m_logger->dbg("Prescaled timer generating %lld ticks, delay=%lld", ticks, m_delay);
             sigdata.index = 1;
             sigdata.data = m_delay;
             m_delay = 0;
         } else {
             sigdata.index = 0;
-            sigdata.data = (uint32_t) ticks;
+            sigdata.data = ticks;
             m_delay -= ticks;
         }
         m_signal.raise(sigdata);
@@ -289,9 +289,9 @@ void PrescaledTimer::unregister_chained_timer(PrescaledTimer& timer)
     if (!m_updating) reschedule();
 }
 
-int PrescaledTimer::ticks_to_event(int counter, int event, int wrap)
+cycle_count_t PrescaledTimer::ticks_to_event(cycle_count_t counter, cycle_count_t event, cycle_count_t wrap)
 {
-    int ticks = event - counter + 1;
+    cycle_count_t ticks = event - counter + 1;
     if (ticks <= 0)
         ticks += wrap;
     return ticks;
@@ -309,7 +309,7 @@ public:
 
     TimerHook(TimerCounter& timer) : m_timer(timer) {}
 
-    virtual void raised(const signal_data_t& sigdata, uint16_t hooktag) override
+    virtual void raised(const signal_data_t& sigdata, int) override
     {
         m_timer.timer_raised(sigdata);
     }
@@ -330,7 +330,7 @@ public:
 
     ExtTickHook(TimerCounter& timer) : m_timer(timer) {}
 
-    virtual void raised(const signal_data_t& sigdata, uint16_t hooktag) override
+    virtual void raised(const signal_data_t&, int) override
     {
         m_timer.extclock_raised();
     }
@@ -342,11 +342,11 @@ private:
 };
 
 
-TimerCounter::TimerCounter(PrescaledTimer& timer, long wrap, uint32_t comp_count)
-:m_wrap(wrap)
+TimerCounter::TimerCounter(PrescaledTimer& timer, long wrap, size_t comp_count)
+:m_source(Tick_Stopped)
+,m_wrap(wrap)
 ,m_counter(0)
 ,m_top(wrap - 1)
-,m_source(Tick_Stopped)
 ,m_slope(Slope_Up)
 ,m_countdown(false)
 ,m_cmp(comp_count)
@@ -427,12 +427,12 @@ void TimerCounter::set_counter(long value)
 }
 
 
-void TimerCounter::set_comp_value(uint32_t index, long value)
+void TimerCounter::set_comp_value(size_t index, long value)
 {
     m_cmp[index].value = value;
 }
 
-void TimerCounter::set_comp_enabled(uint32_t index, bool enable)
+void TimerCounter::set_comp_enabled(size_t index, bool enable)
 {
     m_cmp[index].enabled = enable;
 }
@@ -463,7 +463,7 @@ long TimerCounter::delay_to_event()
 
     //List of ticks counts to each Output Compare unit
     std::vector<long> comp_ticks = std::vector<long>(m_cmp.size());
-    for (uint32_t i = 0; i < m_cmp.size(); ++i) {
+    for (size_t i = 0; i < m_cmp.size(); ++i) {
         if (m_cmp[i].enabled) {
             long t = ticks_to_event(m_cmp[i].value);
             comp_ticks[i] = t;
@@ -491,7 +491,7 @@ long TimerCounter::delay_to_event()
     if (ticks_to_next_event == ticks_to_bottom)
         m_next_event_type |= Event_Bottom;
 
-    for (uint32_t i = 0; i < m_cmp.size(); ++i) {
+    for (size_t i = 0; i < m_cmp.size(); ++i) {
         bool is_next_event = (m_cmp[i].enabled && ticks_to_next_event == comp_ticks[i]);
         m_cmp[i].is_next_event = is_next_event;
         if (is_next_event)
@@ -514,7 +514,7 @@ void TimerCounter::timer_raised(const signal_data_t& sigdata)
     if (m_logger)
         m_logger->dbg("Updating counters");
 
-    process_ticks(sigdata.data.as_uint(), sigdata.index);
+    process_ticks(sigdata.data.as_int(), sigdata.index);
 }
 
 
@@ -574,7 +574,7 @@ void TimerCounter::process_ticks(long ticks, bool event_reached)
 
     //If one of the Output Compare Unit has been reached
     if (m_next_event_type & Event_Compare) {
-        for (uint32_t i = 0; i < m_cmp.size(); ++i) {
+        for (size_t i = 0; i < m_cmp.size(); ++i) {
             if (m_cmp[i].is_next_event) {
                 if (m_logger)
                     m_logger->dbg("Triggering Compare Match %u" , i);

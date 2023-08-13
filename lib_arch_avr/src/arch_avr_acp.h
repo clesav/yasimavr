@@ -44,13 +44,13 @@ YASIMAVR_BEGIN_NAMESPACE
 struct ArchAVR_ACPConfig {
 
     struct mux_config_t : base_reg_config_t {
-        uint32_t pin;
+        pin_id_t pin;
     };
 
     std::vector<mux_config_t> mux_pins;
 
-    uint32_t pos_pin;
-    uint32_t neg_pin;
+    pin_id_t pos_pin;
+    pin_id_t neg_pin;
 
     regbit_t rb_disable;
     regbit_t rb_mux_enable;
@@ -76,9 +76,9 @@ public:
 
     virtual bool init(Device& device) override;
     virtual void reset() override;
-    virtual bool ctlreq(uint16_t req, ctlreq_data_t* data) override;
+    virtual bool ctlreq(ctlreq_id_t req, ctlreq_data_t* data) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
-    virtual void raised(const signal_data_t& sigdata, uint16_t hooktag) override;
+    virtual void raised(const signal_data_t& sigdata, int hooktag) override;
 
 private:
 

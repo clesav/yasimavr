@@ -78,7 +78,7 @@ void ArchAVR_SPI::reset()
     update_framerate();
 }
 
-bool ArchAVR_SPI::ctlreq(uint16_t req, ctlreq_data_t* data)
+bool ArchAVR_SPI::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
 {
     if (req == AVR_CTLREQ_GET_SIGNAL) {
         data->data = &m_spi.signal();
@@ -142,7 +142,7 @@ void ArchAVR_SPI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
         m_spi.set_host_mode(m_config.rb_mode.extract(data.value));
 }
 
-void ArchAVR_SPI::raised(const signal_data_t& sigdata, uint16_t hooktag)
+void ArchAVR_SPI::raised(const signal_data_t& sigdata, int hooktag)
 {
     if (sigdata.sigid != Pin::Signal_DigitalStateChange) return;
 
@@ -154,7 +154,7 @@ void ArchAVR_SPI::raised(const signal_data_t& sigdata, uint16_t hooktag)
     }
     //Signal of pin state change, check if we're selected
     else if (hooktag == HOOKTAG_PIN) {
-        m_pin_selected = (sigdata.data.as_uint() == Pin::State_Low);
+        m_pin_selected = (sigdata.data.as_int() == Pin::State_Low);
         m_spi.set_selected(m_pin_selected && test_ioreg(m_config.rb_enable));
     }
 }

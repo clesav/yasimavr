@@ -25,6 +25,7 @@
 #define __YASIMAVR_ADC_H__
 
 #include "../core/sim_peripheral.h"
+#include "../core/sim_pin.h"
 #include "../core/sim_types.h"
 
 YASIMAVR_BEGIN_NAMESPACE
@@ -60,8 +61,8 @@ public:
         Channel type;
         union {
             struct {
-                uint32_t pin_p;
-                uint32_t pin_n;
+                pin_id_t pin_p;
+                pin_id_t pin_n;
             };
             char per_num;
         };

@@ -44,7 +44,7 @@ YASIMAVR_BEGIN_NAMESPACE
 
 struct ArchAVR_TWIConfig {
 
-    std::vector<unsigned int> ps_factors;
+    std::vector<unsigned long> ps_factors;
 
     reg_addr_t  reg_ctrl;
     bitmask_t   bm_enable;
@@ -73,9 +73,9 @@ public:
 
     virtual bool init(Device& device) override;
     virtual void reset() override;
-    virtual bool ctlreq(uint16_t req, ctlreq_data_t *data) override;
+    virtual bool ctlreq(ctlreq_id_t req, ctlreq_data_t *data) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
-    virtual void raised(const signal_data_t& sigdata, uint16_t hooktag) override;
+    virtual void raised(const signal_data_t& sigdata, int hooktag) override;
 
 private:
 

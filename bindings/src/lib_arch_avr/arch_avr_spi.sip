@@ -33,7 +33,7 @@ struct ArchAVR_SPIConfig {
     regbit_t rb_int_flag;
     regbit_t rb_mode;
 
-    uint32_t pin_select;
+    pin_id_t pin_select;
 
     regbit_t rb_clock;
     regbit_t rb_clock2x;
@@ -54,9 +54,9 @@ public:
 
     virtual bool init(Device&);
     virtual void reset();
-    virtual bool ctlreq(uint16_t, ctlreq_data_t*);
+    virtual bool ctlreq(ctlreq_id_t, ctlreq_data_t*);
     virtual uint8_t ioreg_read_handler(reg_addr_t, uint8_t);
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
-    virtual void raised(const signal_data_t&, uint16_t);
+    virtual void raised(const signal_data_t&, int);
 
 };

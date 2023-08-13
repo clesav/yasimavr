@@ -36,7 +36,7 @@ public:
 
      struct channel_config_t : base_reg_config_t {
         ACP::Channel type;
-        uint32_t pin;
+        pin_id_t pin;
     };
 
     enum SignalId /BaseType=IntEnum/ {
