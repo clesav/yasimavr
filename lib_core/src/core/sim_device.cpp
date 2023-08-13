@@ -103,7 +103,7 @@ Device::Device(Core& core, const DeviceConfiguration& config)
 ,m_reset_flags(0)
 {
     //Allocate the pin array
-    for (int i = 0; i < config.pins.size(); ++i) {
+    for (unsigned int i = 0; i < config.pins.size(); ++i) {
         pin_id_t id = str_to_id(config.pins[i]);
         Pin* pin = new Pin(id);
         m_pins[id] = pin;

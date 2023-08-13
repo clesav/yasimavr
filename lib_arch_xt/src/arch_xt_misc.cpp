@@ -267,9 +267,8 @@ bool ArchXT_MiscRegCtrl::init(Device& device)
 
     add_ioreg(CCP);
 
-    for (unsigned int i = 0; i < m_config.gpior_count; ++i) {
+    for (unsigned int i = 0; i < m_config.gpior_count; ++i)
         add_ioreg(m_config.reg_base_gpior + i);
-    }
 
     add_ioreg(m_config.reg_revid, 0xFF, true);
 

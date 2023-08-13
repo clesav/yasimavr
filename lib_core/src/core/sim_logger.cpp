@@ -54,7 +54,7 @@ void LogWriter::write(cycle_count_t cycle,
 
     std::string sid = id > 0 ? id_to_str(id) : "";
 
-    fprintf(f, "[%08d] %s %s : ", cycle, slvl, sid.c_str());
+    fprintf(f, "[%08lld] %s %s : ", cycle, slvl, sid.c_str());
     vfprintf(f, format, args);
     fprintf(f, "\n");
     fflush(f);
