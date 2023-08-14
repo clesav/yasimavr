@@ -22,7 +22,7 @@
 ADC:
     registers:
         - name: ADMUX
-          address: 0x7C
+          address: 0x5C
           fields:
             MUX:
                 kind: ENUM
@@ -39,7 +39,7 @@ ADC:
                 values: [ AREF, AVCC, "", 1V1 ]
 
         - name: ADCSRA
-          address: 0x7A
+          address: 0x5A
           fields:
             ADPS:
                 kind: ENUM
@@ -53,12 +53,12 @@ ADC:
             ADEN: { kind: BIT, pos: 7 }
 
         - name: ADC
-          address: 0x78
+          address: 0x58
           size: 2
           readonly: true
 
         - name: ADCSRB
-          address: 0x7B
+          address: 0x5B
           fields:
             ADTS:
                 kind: ENUM
@@ -68,7 +68,7 @@ ADC:
             ACME: { kind: BIT, pos: 6 }
 
         - name: DIDR
-          address: 0x7E
+          address: 0x5E
           fields:
             ADC0D: { kind: BIT, pos: 0 }
             ADC1D: { kind: BIT, pos: 1 }
@@ -121,7 +121,7 @@ ADC:
 ACP:
     registers:
         - name: ACSR
-          address: 0x28
+          address: 0x30
           fields:
             ACIS:
                 kind: ENUM
