@@ -367,10 +367,10 @@ void ArchAVR_Timer::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& da
             oc->active = output_active(oc->mode, i);
             //If the ocm is inactive, ensure the output level is reset
             if (old_active && !oc->active)
-                m_signal.raise(signal_data_t{Signal_CompOutput, i, vardata_t()});
+                m_signal.raise(Signal_CompOutput, vardata_t(), i);
             //If the ocm is activated, ensure the output level is up-to-date
             else if (oc->active && !old_active)
-                m_signal.raise_u(Signal_CompOutput, oc->state, i);
+                m_signal.raise(Signal_CompOutput, oc->state, i);
         }
         do_reschedule = true;
     }
@@ -497,7 +497,7 @@ void ArchAVR_Timer::raised(const signal_data_t& sigdata, int)
         if (raise_ovf) {
             logger().dbg("Counter triggering OVF interrupt");
             m_intflag_ovf.set_flag();
-            m_signal.raise_u(Signal_OVF, 0);
+            m_signal.raise(Signal_OVF, 0);
         }
     }
 
@@ -555,7 +555,7 @@ void ArchAVR_Timer::change_OC_state(size_t index, int event_flags)
 
     if (oc->state != old_state) {
         logger().dbg("OC update from %u to %u", old_state, oc->state);
-        m_signal.raise_u(Signal_CompOutput, oc->state, index);
+        m_signal.raise(Signal_CompOutput, oc->state, index);
     }
 }
 
@@ -571,5 +571,5 @@ void ArchAVR_Timer::capt_raised()
     m_timer.update();
     m_icr = m_counter.counter();
     m_intflag_icr.set_flag();
-    m_signal.raise_u(Signal_Capt, 0);
+    m_signal.raise(Signal_Capt, 0);
 }

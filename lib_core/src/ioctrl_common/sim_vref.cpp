@@ -80,12 +80,12 @@ bool VREF::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
             m_vcc = data->data.as_double();
             if (m_vcc < 0.0) m_vcc = 0.0;
 
-            m_signal.raise_d(Signal_VCCChange, m_vcc);
+            m_signal.raise(Signal_VCCChange, m_vcc);
 
             //A VCC modif impacts all other references so we must
             //notify them all
             for (unsigned int i = 0; i < m_references.size(); ++i)
-                m_signal.raise_d(Signal_IntRefChange, reference(i), i);
+                m_signal.raise(Signal_IntRefChange, reference(i), i);
 
         }
         else if (data->index == Source_AREF) {
@@ -94,7 +94,7 @@ bool VREF::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
             if (m_aref > 1.0) m_aref = 1.0;
             if (m_aref < 0.0) m_aref = 0.0;
 
-            m_signal.raise_d(Signal_ARefChange, m_aref);
+            m_signal.raise(Signal_ARefChange, m_aref);
         }
         else
             return false;
@@ -118,7 +118,7 @@ void VREF::set_reference(unsigned int index, Source source, double voltage)
     m_references[index] = r;
 
     if (m_vcc)
-        m_signal.raise_d(Signal_IntRefChange, reference(index), index);
+        m_signal.raise(Signal_IntRefChange, reference(index), index);
 }
 
 //Returns a reference as an absolute voltage value

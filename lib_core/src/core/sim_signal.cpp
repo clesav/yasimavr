@@ -102,19 +102,6 @@ void Signal::disconnect_hook(SignalHook* hook)
 }
 
 
-void Signal::raise()
-{
-    signal_data_t __unused__ = signal_data_t();
-    raise(__unused__);
-}
-
-
-void Signal::raise(int sigid)
-{
-    raise_u(sigid, 0);
-}
-
-
 void Signal::raise(const signal_data_t& sigdata)
 {
     if (m_busy) return;
@@ -128,37 +115,9 @@ void Signal::raise(const signal_data_t& sigdata)
 }
 
 
-void Signal::raise_u(int sigid, uint32_t u, long long index)
+void Signal::raise(int sigid, const vardata_t& v, long long ix)
 {
-    signal_data_t sigdata = { sigid, index, u };
-    raise(sigdata);
-}
-
-
-void Signal::raise_d(int sigid, double d, long long index)
-{
-    signal_data_t sigdata = { sigid, index, d };
-    raise(sigdata);
-}
-
-
-void Signal::raise(int sigid, void* p)
-{
-    signal_data_t sigdata = { sigid, 0, p };
-    raise(sigdata);
-}
-
-
-void Signal::raise(int sigid, const char* s)
-{
-    signal_data_t sigdata = { sigid, 0, s };
-    raise(sigdata);
-}
-
-
-void Signal::raise(int sigid, vardata_t v)
-{
-    signal_data_t sigdata = { sigid, 0, v };
+    signal_data_t sigdata = { sigid, ix, v };
     raise(sigdata);
 }
 

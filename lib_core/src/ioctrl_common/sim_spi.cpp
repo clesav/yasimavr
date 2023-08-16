@@ -167,7 +167,7 @@ void SPI::cancel_tx()
     m_tx_buffer.clear();
 
     if (m_is_host && m_tfr_in_progress) {
-        m_signal.raise_u(Signal_HostTfrComplete, 0);
+        m_signal.raise(Signal_HostTfrComplete, 0);
         m_tfr_in_progress = false;
         m_rx_buffer.pop_back();
         m_cycle_manager->cancel(*this);
@@ -214,7 +214,7 @@ void SPI::start_transfer_as_host()
 
     m_logger->dbg("Host tfr MOSI=0x%02x, MISO=0x%02x", mosi_frame, miso_frame);
 
-    m_signal.raise_u(Signal_HostTfrStart, (mosi_frame << 8) | miso_frame);
+    m_signal.raise(Signal_HostTfrStart, (mosi_frame << 8) | miso_frame);
 
     //Add the MISO frame to the RX buffer and trim it to the limit
     m_rx_buffer.push_back(miso_frame);
@@ -235,7 +235,7 @@ cycle_count_t SPI::next(cycle_count_t when)
         m_selected_client = nullptr;
     }
 
-    m_signal.raise_u(Signal_HostTfrComplete, 1);
+    m_signal.raise(Signal_HostTfrComplete, 1);
 
     //Is there another transfer to do ?
     if (m_tx_buffer.size()) {
@@ -277,7 +277,7 @@ uint8_t SPI::start_transfer(uint8_t mosi_frame)
 
     m_shift_reg = mosi_frame;
 
-    m_signal.raise_u(Signal_ClientTfrStart, (mosi_frame << 8) | miso_frame);
+    m_signal.raise(Signal_ClientTfrStart, (mosi_frame << 8) | miso_frame);
 
     m_logger->dbg("Client tfr MOSI=0x%02x, MISO=0x%02x", mosi_frame, miso_frame);
 
@@ -298,5 +298,5 @@ void SPI::end_transfer(bool ok)
     }
 
     //Inform the parent peripheral
-    m_signal.raise_u(Signal_ClientTfrComplete, ok ? 1 : 0);
+    m_signal.raise(Signal_ClientTfrComplete, ok ? 1 : 0);
 }

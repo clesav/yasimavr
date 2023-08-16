@@ -63,10 +63,9 @@ public:
     void connect_hook(SignalHook*, int = 0);
     void disconnect_hook(SignalHook*);
 
-    void raise() /PyName=raise_/;
     virtual void raise(const signal_data_t&) /PyName=raise_/;
 
-    void raise(int, SIP_PYOBJECT, long long = 0) /PyName=raise_/;
+    void raise(int = 0, SIP_PYOBJECT = nullptr, long long = 0) /PyName=raise_/;
     %MethodCode
         signal_data_t sigdata;
         sigdata.sigid = a0;
@@ -91,12 +90,20 @@ public:
 
     vardata_t data(int, long long = 0) const;
     bool has_data(int, long long = 0) const;
-    void set_data(int, const vardata_t&, long long = 0);
+    void set_data(int, SIP_PYOBJECT = nullptr, long long = 0);
+    %MethodCode
+        vardata_t v;
+        fill_vardata_with_pyobj(&v, a1);
+        sipCpp->set_data(a0, v, a2);
+    %End
 
     void clear();
 
+    //The PyName annotation doesn't seem required for an override
     virtual void raise(const signal_data_t&);
-    void raise(int, SIP_PYOBJECT, long long = 0);
+
+    //Duplicate from Signal, because it's not virtual
+    void raise(int = 0, SIP_PYOBJECT = nullptr, long long = 0);
     %MethodCode
         signal_data_t sigdata;
         sigdata.sigid = a0;

@@ -198,7 +198,7 @@ void ArchXT_ACP::update_DAC()
 {
     vardata_t vref = m_vref_signal->data(VREF::Signal_IntRefChange, m_config.vref_channel);
     double dac_value = vref.as_double() * READ_IOREG(DACREF) / 256.0;
-    m_signal.raise_d(Signal_DAC, dac_value);
+    m_signal.raise(Signal_DAC, dac_value);
 }
 
 
@@ -283,7 +283,7 @@ void ArchXT_ACP::update_output()
 
     //Update the state in the register and in the signal
     WRITE_IOREG_B(STATUS, AC_STATE, new_state);
-    m_signal.raise_u(Signal_Output, new_state);
+    m_signal.raise(Signal_Output, new_state);
 }
 
 /*

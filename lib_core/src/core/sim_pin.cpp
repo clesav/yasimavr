@@ -48,8 +48,8 @@ Pin::Pin(pin_id_t id)
 ,m_analog_value(0.0)
 {
     //To ensure there is an initial persistent data stored in the signal
-    m_signal.raise_u(Signal_DigitalStateChange, State_Floating);
-    m_signal.raise_d(Signal_AnalogValueChange, 0.0);
+    m_signal.raise(Signal_DigitalStateChange, State_Floating);
+    m_signal.raise(Signal_AnalogValueChange, 0.0);
 }
 
 void Pin::set_external_state(State state)
@@ -59,8 +59,8 @@ void Pin::set_external_state(State state)
     m_resolved_state = resolve_state();
     State digstate = digital_state();
     if (digstate != prev_digstate) {
-        m_signal.raise_u(Signal_DigitalStateChange, digstate);
-        m_signal.raise_d(Signal_AnalogValueChange, analog_value());
+        m_signal.raise(Signal_DigitalStateChange, digstate);
+        m_signal.raise(Signal_AnalogValueChange, analog_value());
     }
 }
 
@@ -71,8 +71,8 @@ void Pin::set_internal_state(State state)
     m_resolved_state = resolve_state();
     State digstate = digital_state();
     if (digstate != prev_digstate) {
-        m_signal.raise_u(Signal_DigitalStateChange, digstate);
-        m_signal.raise_d(Signal_AnalogValueChange, analog_value());
+        m_signal.raise(Signal_DigitalStateChange, digstate);
+        m_signal.raise(Signal_AnalogValueChange, analog_value());
     }
 }
 
@@ -138,10 +138,10 @@ void Pin::set_external_analog_value(double v)
     //If the digital state has change, raise the digital signal
     State digstate = digital_state();
     if (digstate != prev_digstate)
-        m_signal.raise_u(Signal_DigitalStateChange, digstate);
+        m_signal.raise(Signal_DigitalStateChange, digstate);
 
     //Raise the analog signal in any case
-    m_signal.raise_d(Signal_AnalogValueChange, analog_value());
+    m_signal.raise(Signal_AnalogValueChange, analog_value());
 }
 
 double Pin::analog_value() const
