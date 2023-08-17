@@ -103,8 +103,8 @@ bool ArchAVR_ACP::init(Device& device)
         m_neg_mux.add_mux(pin->signal(), Pin::Signal_AnalogValueChange);
     }
 
-    m_pos_mux.signal().connect_hook(this, HookTag_Pos);
-    m_neg_mux.signal().connect_hook(this, HookTag_Neg);
+    m_pos_mux.signal().connect(*this, HookTag_Pos);
+    m_neg_mux.signal().connect(*this, HookTag_Neg);
 
     return status;
 }

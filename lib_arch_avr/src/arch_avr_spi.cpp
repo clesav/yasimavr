@@ -63,10 +63,10 @@ bool ArchAVR_SPI::init(Device& device)
     m_spi.init(*device.cycle_manager(), logger());
     m_spi.set_tx_buffer_limit(1);
     m_spi.set_rx_buffer_limit(2);
-    m_spi.signal().connect_hook(this, HOOKTAG_SPI);
+    m_spi.signal().connect(*this, HOOKTAG_SPI);
 
     m_pin_select = device.find_pin(m_config.pin_select);
-    m_pin_select->signal().connect_hook(this, HOOKTAG_PIN);
+    m_pin_select->signal().connect(*this, HOOKTAG_PIN);
 
     return status;
 }

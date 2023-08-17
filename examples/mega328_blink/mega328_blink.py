@@ -30,7 +30,7 @@ class LED(QtWidgets.QWidget):
 
         #Create a hook and connect it to the pin
         self.hook = corelib.CallableSignalHook(self._pin_signal_raised)
-        pin.signal().connect_hook(self.hook)
+        pin.signal().connect(self.hook)
         #Default state: OFF
         self.state = False
         #Connect our signal to our slot for synchronisation

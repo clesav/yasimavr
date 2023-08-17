@@ -104,8 +104,8 @@ public:
     //the hook's "raised()". It can be useful when a single hook
     //connects to several signals, in order to differentiate which
     //one the raise comes from.
-    void connect_hook(SignalHook* hook, int hooktag = 0);
-    void disconnect_hook(SignalHook* hook);
+    void connect(SignalHook& hook, int hooktag = 0);
+    void disconnect(SignalHook& hook);
 
     //Raise a signal
     virtual void raise(const signal_data_t& sigdata);
@@ -130,8 +130,8 @@ private:
 
     std::vector<hook_slot_t> m_hooks;
 
-    int hook_index(const SignalHook* hook) const;
-    int signal_index(const SignalHook* hook) const;
+    int hook_index(const SignalHook& hook) const;
+    int signal_index(const SignalHook& hook) const;
 
 };
 

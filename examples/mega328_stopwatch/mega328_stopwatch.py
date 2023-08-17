@@ -43,7 +43,7 @@ class Number(QtWidgets.QLCDNumber):
         #Create a hook and connect it to the signal of each pin in the list above
         self.hook = corelib.CallableSignalHook(self._pin_signal_raised)
         for i, pin in enumerate(self.pins):
-            pin.signal().connect_hook(self.hook, i)
+            pin.signal().connect(self.hook, i)
 
         #List storing the value given by the pin state
         self.pin_values = [0] * len(self.pins)

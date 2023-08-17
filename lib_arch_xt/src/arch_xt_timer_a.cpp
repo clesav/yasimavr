@@ -114,7 +114,7 @@ bool ArchXT_TimerA::init(Device& device)
                                           m_config.ivs_cmp[i]);
 
     m_timer.init(*device.cycle_manager(), logger());
-    m_timer.signal().connect_hook(this);
+    m_timer.signal().connect(*this);
 
     return status;
 }

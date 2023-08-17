@@ -118,7 +118,7 @@ class _WatchDataTrace(Formatter):
 
         f = _corelib.DeviceDebugProbe.WatchpointFlags
         _probe.insert_watchpoint(addr, 1, f.Write | f.Signal)
-        _probe.watchpoint_signal().connect_hook(self)
+        _probe.watchpoint_signal().connect(self)
 
     def filter(self, sigdata, hooktag):
         return (sigdata.sigid == _corelib.DeviceDebugProbe.WatchpointFlags.Write and \

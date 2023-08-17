@@ -81,7 +81,7 @@ bool ArchXT_TimerB::init(Device& device)
     m_timer.init(*device.cycle_manager(), logger());
 
     m_counter.set_logger(&logger());
-    m_counter.signal().connect_hook(this);
+    m_counter.signal().connect(*this);
 
     return status;
 }

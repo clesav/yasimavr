@@ -85,15 +85,15 @@ bool ArchXT_ACP::init(Device& device)
 
     m_vref_signal = dynamic_cast<DataSignal*>(get_signal(AVR_IOCTL_VREF));
     if (m_vref_signal)
-        m_vref_signal->connect_hook(this, HookTag_VREF);
+        m_vref_signal->connect(*this, HookTag_VREF);
     else
         status = false;
 
     status &= register_channels(m_pos_mux, m_config.pos_channels);
     status &= register_channels(m_neg_mux, m_config.neg_channels);
 
-    m_pos_mux.signal().connect_hook(this, HookTag_PosMux);
-    m_neg_mux.signal().connect_hook(this, HookTag_NegMux);
+    m_pos_mux.signal().connect(*this, HookTag_PosMux);
+    m_neg_mux.signal().connect(*this, HookTag_NegMux);
 
     return status;
 }

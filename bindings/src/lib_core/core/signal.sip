@@ -40,7 +40,6 @@ class SignalHook {
 
 public:
 
-    virtual ~SignalHook();
     virtual void raised(const signal_data_t&, int) = 0;
 
 };
@@ -60,8 +59,8 @@ public:
     Signal();
     Signal(const Signal&);
 
-    void connect_hook(SignalHook*, int = 0);
-    void disconnect_hook(SignalHook*);
+    void connect(SignalHook&, int = 0);
+    void disconnect(SignalHook&);
 
     virtual void raise(const signal_data_t&) /PyName=raise_/;
 

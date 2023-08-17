@@ -95,7 +95,7 @@ bool ArchXT_ADC::init(Device& device)
                                  m_config.iv_wincmp);
 
     m_timer.init(*device.cycle_manager(), logger());
-    m_timer.signal().connect_hook(this);
+    m_timer.signal().connect(*this);
 
     return status;
 }

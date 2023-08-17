@@ -51,7 +51,7 @@ bool Port::init(Device& device)
         std::sprintf(pinname, "P%c%d", m_name, i);
         Pin *pin = device.find_pin(pinname);
         if (pin) {
-            pin->signal().connect_hook(this, i);
+            pin->signal().connect(*this, i);
             m_pinmask |= (1 << i);
         }
         m_pins[i] = pin;

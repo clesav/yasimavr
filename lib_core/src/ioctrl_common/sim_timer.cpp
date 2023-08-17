@@ -357,7 +357,7 @@ TimerCounter::TimerCounter(PrescaledTimer& timer, long wrap, size_t comp_count)
     m_timer_hook = new TimerHook(*this);
     m_ext_hook = new ExtTickHook(*this);
 
-    m_timer.signal().connect_hook(m_timer_hook);
+    m_timer.signal().connect(*m_timer_hook);
 }
 
 

@@ -61,11 +61,11 @@ class UartIO(io.RawIOBase):
         #Create the signal hook and connect to the endpoint
         if 'r' in mode:
             self._rx_hook = self._TxHook()
-            self._endpoint.tx_signal.connect_hook(self._rx_hook)
+            self._endpoint.tx_signal.connect(self._rx_hook)
 
         if 'w' in mode:
             self._tx_signal = _corelib.Signal()
-            self._tx_signal.connect_hook(self._endpoint.rx_hook)
+            self._tx_signal.connect(self._endpoint.rx_hook)
 
         self._mode = mode
 
@@ -103,8 +103,8 @@ class UartIO(io.RawIOBase):
 
     def close(self):
         if not self.closed:
-            self._endpoint.tx_signal.disconnect_hook(self)
-            self._tx_signal.disconnect_hook(self._endpoint.rx_hook)
+            self._endpoint.tx_signal.disconnect(self)
+            self._tx_signal.disconnect(self._endpoint.rx_hook)
             self._rx_hook.queue.clear()
 
         super(UartIO, self).close()

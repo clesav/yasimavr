@@ -85,7 +85,7 @@ bool ArchXT_TWI::init(Device& device)
         m_config.iv_slave);
 
     m_twi.init(*device.cycle_manager(), logger());
-    m_twi.signal().connect_hook(this);
+    m_twi.signal().connect(*this);
 
     return status;
 }
