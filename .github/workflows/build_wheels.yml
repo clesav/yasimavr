@@ -1,5 +1,10 @@
 name: Build
 
+on:
+  push:
+    branches:
+      - cibuildwheel
+
 jobs:
   build_wheels:
     name: Build wheels on ${{ matrix.os }}
