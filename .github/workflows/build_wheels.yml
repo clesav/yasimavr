@@ -1,7 +1,7 @@
 name: Build
 
 on:
-  workflow_dispatch
+  workflow_dispatch:
 
   push:
     branches:
@@ -22,8 +22,9 @@ jobs:
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.15.0
         env:
-          CIBW_BEFORE_BUILD_LINUX: >-
-            apt-get install libelf-dev
+          CIBW_BUILD_FRONTEND: build
+          CIBW_BEFORE_BUILD_LINUX: 'sudo apt-get install libelf-dev'
+          CIBW_CONFIG_SETTINGS_WINDOWS: --build-option="--compiler=mingw32"
 
         # with:
         #   package-dir: .
