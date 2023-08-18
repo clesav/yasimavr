@@ -62,10 +62,15 @@ LIBRARIES = {
     'arch_xt': LibraryData('arch_xt', 'lib_arch_xt/src'),
 }
 
-GCC_ARGS = [
+GCC_COMPILER_ARGS = [
     '-std=c++17',
     '-O3',
-    '-fmessage-length=0'
+    '-fmessage-length=0',
+#    '-fstack-protector'
+]
+
+GCC_LINK_ARGS = [
+    '-fstack-protector'
 ]
 
 
@@ -127,7 +132,7 @@ class _BindingsSubPackageBuilder(yasimavr_bindings_builder):
         ext = Extension(buildable.fq_name,
                         buildable.sources,
                         define_macros=define_macros,
-                        extra_compile_args=buildable.extra_compile_args + GCC_ARGS,
+                        extra_compile_args=buildable.extra_compile_args + GCC_COMPILER_ARGS,
                         extra_link_args=buildable.extra_link_args,
                         extra_objects=buildable.extra_objects,
                         include_dirs=buildable.include_dirs,
@@ -329,21 +334,24 @@ setup(
                 sources=LIBRARIES['core'].get_sources(),
                 libraries=['elf'],
                 define_macros=[('YASIMAVR_DLL', None)],
-                extra_compile_args=GCC_ARGS),
+                extra_compile_args=GCC_COMPILER_ARGS,
+                extra_link_args=GCC_LINK_ARGS),
 
         Library(name='yasimavr.lib.yasimavr_arch_avr',
                 sources=LIBRARIES['arch_avr'].get_sources(),
                 include_dirs=['lib_core/src'],
                 libraries=['yasimavr_core'],
                 library_dirs = ['yasimavr/lib'],
-                extra_compile_args=GCC_ARGS),
+                extra_compile_args=GCC_COMPILER_ARGS,
+                extra_link_args=GCC_LINK_ARGS),
 
         Library(name='yasimavr.lib.yasimavr_arch_xt',
                 sources=LIBRARIES['arch_xt'].get_sources(),
                 include_dirs=['lib_core/src'],
                 libraries=['yasimavr_core'],
                 library_dirs = ['yasimavr/lib'],
-                extra_compile_args=GCC_ARGS),
+                extra_compile_args=GCC_COMPILER_ARGS,
+                extra_link_args=GCC_LINK_ARGS),
     ],
 
     cmdclass = {

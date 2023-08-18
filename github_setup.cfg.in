@@ -1,0 +1,5 @@
+[build_ext]
+
+compiler=mingw32
+include_dirs=c:\msys64\mingw64\include
+library_dirs=c:\msys64\mingw64\lib
