@@ -13,7 +13,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
-        python-version: ["3.7", "3.8", "3.9", "3.10"]
+        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
 
     steps:
     - uses: actions/checkout@v3
@@ -23,22 +23,40 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    - name: install libelf (Windows)
+    - name: install libelf and setup.cfg (Windows)
       if: matrix.os == 'windows-latest'
       run: |
         C:\\msys64\\msys2_shell -no-start -defterm -c "pacman -S --noconfirm mingw-w64-x86_64-libelf"
         copy github_setup.cfg.in setup.cfg
-      #shell: cmd
 
     - name: install libelf (Ubuntu)
       if: matrix.os == 'ubuntu-latest'
       run: sudo apt-get install libelf-dev
 
-    - name: Install Python dependencies
+    - name: Build package
       run: |
         python -m pip install --upgrade build
         python -m build -w
-  
+
     - uses: actions/upload-artifact@v3
       with:
         path: dist/*.whl
+
+
+  sdist:
+    name: Source Distribution
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v3
+
+    - name: Build package
+      run: |
+        python -m pip install --upgrade build
+        python -m build -s
+
+    - uses: actions/upload-artifact@v3
+      with:
+        path: dist/*.tar.gz
