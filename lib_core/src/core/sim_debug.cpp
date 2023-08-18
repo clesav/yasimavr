@@ -379,7 +379,7 @@ void DeviceDebugProbe::notify_watchpoint(watchpoint_t& wp, int event, mem_addr_t
 
     //If the watchpoint flag is set to Signal, raise the signal
     if (wp.flags & Watchpoint_Signal)
-        m_wp_signal.raise_u(event, (uint32_t)value, wp.addr);
+        m_wp_signal.raise(event, value, wp.addr);
 
     //Notify the secondary probes
     for (auto secondary : m_secondaries)

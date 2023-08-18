@@ -423,7 +423,7 @@ void TWI::set_master_enabled(bool enabled)
 void TWI::set_master_state(State new_state)
 {
     m_mst_state = new_state;
-    m_signal.raise_u(Signal_StateChange, new_state, Cpt_Master);
+    m_signal.raise(Signal_StateChange, new_state, Cpt_Master);
 }
 
 void TWI::set_bit_delay(cycle_count_t delay)
@@ -441,11 +441,11 @@ bool TWI::start_transfer()
     if (acquire_bus()) {
         m_logger->dbg("Ownership of bus acquired");
         set_master_state(State_Addr);
-        m_signal.raise_u(Signal_BusStateChange, Bus_Owned, Cpt_Any);
+        m_signal.raise(Signal_BusStateChange, Bus_Owned, Cpt_Any);
         return true;
     } else {
         set_master_state(State_Waiting);
-        m_signal.raise_u(Signal_BusStateChange, Bus_Busy, Cpt_Any);
+        m_signal.raise(Signal_BusStateChange, Bus_Busy, Cpt_Any);
         return false;
     }
 }
@@ -470,7 +470,7 @@ void TWI::end_transfer()
 {
     if (State_Active(m_mst_state) && !State_Busy(m_mst_state)) {
         set_master_state(State_Idle);
-        m_signal.raise_u(Signal_BusStateChange, Bus_Idle, Cpt_Any);
+        m_signal.raise(Signal_BusStateChange, Bus_Idle, Cpt_Any);
         release_bus();
     }
 }
@@ -569,7 +569,7 @@ cycle_count_t TWI::timer_next(cycle_count_t when)
             else
                 set_master_state(State_TX);
 
-            m_signal.raise_u(Signal_AddrAck, m_current_packet.ack, Cpt_Master);
+            m_signal.raise(Signal_AddrAck, m_current_packet.ack, Cpt_Master);
         }
     }
 
@@ -584,7 +584,7 @@ cycle_count_t TWI::timer_next(cycle_count_t when)
             set_master_state(State_TX_Ack);
         } else {
             set_master_state(State_TX);
-            m_signal.raise_u(Signal_TxComplete, m_current_packet.ack, Cpt_Master);
+            m_signal.raise(Signal_TxComplete, m_current_packet.ack, Cpt_Master);
         }
     }
 
@@ -597,7 +597,7 @@ cycle_count_t TWI::timer_next(cycle_count_t when)
         //The packet now contains the data byte provided by the slave
         //Setting the ACK/NACK is the responsibility of the upper layers
         set_master_state(State_RX_Ack);
-        m_signal.raise_u(Signal_RxComplete, m_current_packet.data, Cpt_Master);
+        m_signal.raise(Signal_RxComplete, m_current_packet.data, Cpt_Master);
     }
 
     else
@@ -654,7 +654,7 @@ void TWI::set_slave_enabled(bool enabled)
 void TWI::set_slave_state(State new_state)
 {
     m_slv_state = new_state;
-    m_signal.raise_u(Signal_StateChange, new_state, Cpt_Slave);
+    m_signal.raise(Signal_StateChange, new_state, Cpt_Slave);
 }
 
 bool TWI::start_slave_tx(uint8_t data)

@@ -97,7 +97,7 @@ class _PinDigitalFormatter(Formatter):
 
     def __init__(self, pin):
         super().__init__('tri', 1, None)
-        pin.signal().connect_hook(self)
+        pin.signal().connect(self)
 
     def filter(self, sigdata, hooktag):
         return (sigdata.sigid == self._SIGID)
@@ -120,7 +120,7 @@ class _PortFormatter(Formatter):
 
     def __init__(self, port_signal):
         super().__init__('reg', 8, None)
-        port_signal.connect_hook(self)
+        port_signal.connect(self)
 
     def format(self, sigdata, hooktag):
         return sigdata.data.as_uint()
@@ -133,7 +133,7 @@ class _SignalFormatter(Formatter):
         super().__init__(vartype, size, 0)
         self._sigid = sigid
         self._index = index
-        sig.connect_hook(self)
+        sig.connect(self)
 
     def filter(self, sigdata, hooktag):
         return ((self._sigid is None or sigdata.sigid == self._sigid) and \
@@ -245,7 +245,7 @@ class VCD_Recorder:
         if ok:
             sig = d.data.as_ptr(_corelib.Signal)
             formatter = _InterruptFormatter(vector)
-            sig.connect_hook(formatter)
+            sig.connect(formatter)
             formatter.register(self, var_name)
             self._formatters[var_name] = formatter
         else:

@@ -63,7 +63,7 @@ bool SleepController::init(Device& device)
 
     Signal* s = get_signal(AVR_IOCTL_INTR);
     if (s)
-        s->connect_hook(this);
+        s->connect(*this);
     else
         status = false;
 

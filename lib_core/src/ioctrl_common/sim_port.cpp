@@ -51,7 +51,7 @@ bool Port::init(Device& device)
         std::sprintf(pinname, "P%c%d", m_name, i);
         Pin *pin = device.find_pin(pinname);
         if (pin) {
-            pin->signal().connect_hook(this, i);
+            pin->signal().connect(*this, i);
             m_pinmask |= (1 << i);
         }
         m_pins[i] = pin;
@@ -73,7 +73,7 @@ void Port::reset()
     }
 
     m_port_value = 0;
-    m_signal.raise_u(0, m_port_value);
+    m_signal.raise(0, m_port_value);
 }
 
 /*
@@ -126,5 +126,5 @@ void Port::pin_state_changed(uint8_t num, Pin::State state)
     else
         m_port_value &= ~(1 << num);
 
-    m_signal.raise_u(0, m_port_value);
+    m_signal.raise(0, m_port_value);
 }

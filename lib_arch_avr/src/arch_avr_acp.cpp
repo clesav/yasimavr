@@ -103,8 +103,8 @@ bool ArchAVR_ACP::init(Device& device)
         m_neg_mux.add_mux(pin->signal(), Pin::Signal_AnalogValueChange);
     }
 
-    m_pos_mux.signal().connect_hook(this, HookTag_Pos);
-    m_neg_mux.signal().connect_hook(this, HookTag_Neg);
+    m_pos_mux.signal().connect(*this, HookTag_Pos);
+    m_neg_mux.signal().connect(*this, HookTag_Neg);
 
     return status;
 }
@@ -115,6 +115,7 @@ void ArchAVR_ACP::reset()
     m_intflag.update_from_ioreg();
     change_pos_channel();
     change_neg_channel();
+    m_out_signal.raise(Signal_Output, (unsigned char) 0);
 }
 
 
@@ -198,7 +199,7 @@ void ArchAVR_ACP::update_state()
     if (new_state ^ old_state) {
         write_ioreg(m_config.rb_output, new_state);
         m_intflag.set_flag();
-        m_out_signal.raise_u(Signal_Output, new_state);
+        m_out_signal.raise(Signal_Output, (unsigned char) new_state);
     }
 }
 

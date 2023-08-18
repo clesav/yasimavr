@@ -116,7 +116,7 @@ void InterruptController::sleep(bool on, SleepMode mode)
 
     for (unsigned int v = 0; v < m_interrupts.size(); ++v) {
         if (m_interrupts[v].raised)
-            m_signal.raise_u(Signal_StateChange, State_RaisedFromSleep, v);
+            m_signal.raise(Signal_StateChange, State_RaisedFromSleep, v);
     }
 }
 
@@ -133,12 +133,12 @@ void InterruptController::cpu_ack_irq(int_vect_t vector)
     if (m_interrupts[vector].handler)
         m_interrupts[vector].handler->interrupt_ack_handler(vector);
 
-    m_signal.raise_u(Signal_StateChange, State_Acknowledged, vector);
+    m_signal.raise(Signal_StateChange, State_Acknowledged, vector);
 }
 
 void InterruptController::cpu_reti()
 {
-    m_signal.raise_u(Signal_StateChange, State_Returned);
+    m_signal.raise(Signal_StateChange, State_Returned);
     update_irq();
 }
 
@@ -157,7 +157,7 @@ void InterruptController::raise_interrupt(int_vect_t vector)
     //If the interrupt is already raised, no op
     if (m_interrupts[vector].used && !m_interrupts[vector].raised) {
         m_interrupts[vector].raised = true;
-        m_signal.raise_u(Signal_StateChange, State_Raised, vector);
+        m_signal.raise(Signal_StateChange, State_Raised, vector);
         update_irq();
     }
 }
@@ -166,7 +166,7 @@ void InterruptController::cancel_interrupt(int_vect_t vector)
 {
     if (m_interrupts[vector].used && m_interrupts[vector].raised) {
         m_interrupts[vector].raised = false;
-        m_signal.raise_u(Signal_StateChange, State_Cancelled, vector);
+        m_signal.raise(Signal_StateChange, State_Cancelled, vector);
         if (m_irq_vector == vector)
             update_irq();
     }

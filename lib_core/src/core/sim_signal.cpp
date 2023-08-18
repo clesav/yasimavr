@@ -38,10 +38,10 @@ SignalHook::SignalHook(const SignalHook& other)
 SignalHook::~SignalHook()
 {
     //A temporary vector is required because m_signals is
-    //modified by disconnect_hook()
+    //modified by disconnect()
     std::vector<Signal*> v = m_signals;
     for (Signal* signal : v)
-        signal->disconnect_hook(this);
+        signal->disconnect(*this);
 }
 
 
@@ -51,7 +51,7 @@ SignalHook& SignalHook::operator=(const SignalHook& other)
         std::vector<Signal::hook_slot_t> hook_slots = signal->m_hooks;
         for (auto slot : hook_slots) {
             if (slot.hook == &other)
-                signal->connect_hook(this, slot.tag);
+                signal->connect(*this, slot.tag);
         }
     }
     return *this;
@@ -66,52 +66,39 @@ Signal::Signal()
 Signal::Signal(const Signal& other)
 :m_busy(false)
 {
-    for (auto slot : other.m_hooks)
-        connect_hook(slot.hook, slot.tag);
+    for (auto& slot : other.m_hooks)
+        connect(*slot.hook, slot.tag);
 }
 
 
 Signal::~Signal()
 {
     std::vector<hook_slot_t> hook_slots = m_hooks;
-    for (auto slot : hook_slots) {
-        int i = signal_index(slot.hook);
+    for (auto& slot : hook_slots) {
+        int i = signal_index(*slot.hook);
         slot.hook->m_signals.erase(slot.hook->m_signals.begin() + i);
     }
 }
 
 
-void Signal::connect_hook(SignalHook* hook, int hooktag)
+void Signal::connect(SignalHook& hook, int hooktag)
 {
     if (hook_index(hook) == -1) {
-        hook_slot_t slot = { hook, hooktag };
+        hook_slot_t slot = { &hook, hooktag };
         m_hooks.push_back(slot);
-        hook->m_signals.push_back(this);
+        hook.m_signals.push_back(this);
     }
 }
 
 
-void Signal::disconnect_hook(SignalHook* hook)
+void Signal::disconnect(SignalHook& hook)
 {
     int h_index = hook_index(hook);
     if (h_index > -1) {
         m_hooks.erase(m_hooks.begin() + h_index);
         int sig_index = signal_index(hook);
-        hook->m_signals.erase(hook->m_signals.begin() + sig_index);
+        hook.m_signals.erase(hook.m_signals.begin() + sig_index);
     }
-}
-
-
-void Signal::raise()
-{
-    signal_data_t __unused__ = signal_data_t();
-    raise(__unused__);
-}
-
-
-void Signal::raise(int sigid)
-{
-    raise_u(sigid, 0);
 }
 
 
@@ -121,53 +108,25 @@ void Signal::raise(const signal_data_t& sigdata)
     m_busy = true;
 
     //Notify the registered callbacks
-    for (auto slot : m_hooks)
+    for (auto& slot : m_hooks)
         slot.hook->raised(sigdata, slot.tag);
 
     m_busy = false;
 }
 
 
-void Signal::raise_u(int sigid, uint32_t u, long long index)
+void Signal::raise(int sigid, const vardata_t& v, long long ix)
 {
-    signal_data_t sigdata = { sigid, index, u };
+    signal_data_t sigdata = { sigid, ix, v };
     raise(sigdata);
 }
 
 
-void Signal::raise_d(int sigid, double d, long long index)
-{
-    signal_data_t sigdata = { sigid, index, d };
-    raise(sigdata);
-}
-
-
-void Signal::raise(int sigid, void* p)
-{
-    signal_data_t sigdata = { sigid, 0, p };
-    raise(sigdata);
-}
-
-
-void Signal::raise(int sigid, const char* s)
-{
-    signal_data_t sigdata = { sigid, 0, s };
-    raise(sigdata);
-}
-
-
-void Signal::raise(int sigid, vardata_t v)
-{
-    signal_data_t sigdata = { sigid, 0, v };
-    raise(sigdata);
-}
-
-
-int Signal::hook_index(const SignalHook* hook) const
+int Signal::hook_index(const SignalHook& hook) const
 {
     int index = 0;
-    for (auto slot : m_hooks) {
-        if (slot.hook == hook)
+    for (auto& slot : m_hooks) {
+        if (slot.hook == &hook)
             return index;
         index++;
     }
@@ -175,10 +134,10 @@ int Signal::hook_index(const SignalHook* hook) const
 }
 
 
-int Signal::signal_index(const SignalHook* hook) const
+int Signal::signal_index(const SignalHook& hook) const
 {
     int index = 0;
-    for (auto s : hook->m_signals) {
+    for (auto s : hook.m_signals) {
         if (s == this)
             return index;
         index++;
@@ -193,14 +152,14 @@ Signal& Signal::operator=(const Signal& other)
 
     //Disconnect from all current hooks
     std::vector<hook_slot_t> hook_slots = m_hooks;
-    for (auto slot : hook_slots) {
-        int i = signal_index(slot.hook);
+    for (auto& slot : hook_slots) {
+        int i = signal_index(*slot.hook);
         slot.hook->m_signals.erase(slot.hook->m_signals.begin() + i);
     }
 
     //Copy all connections
-    for (auto slot : other.m_hooks)
-        connect_hook(slot.hook, slot.tag);
+    for (auto& slot : other.m_hooks)
+        connect(*slot.hook, slot.tag);
 
     return *this;
 }
@@ -310,7 +269,7 @@ size_t DataSignalMux::add_mux(mux_item_t& item)
 {
     size_t index = m_items.size();
     if (item.signal) {
-        item.signal->connect_hook(this, index);
+        item.signal->connect(*this, index);
         if (!index) {
             item.data = item.signal->data(item.sigid_filt, item.index_filt);
             m_signal.set_data(0, item.data, 0);

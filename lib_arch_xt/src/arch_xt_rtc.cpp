@@ -83,8 +83,8 @@ ArchXT_RTC::ArchXT_RTC(const CFG& config)
 ,m_pit_intflag(false)
 {
     m_timer_hook = new TimerHook(*this);
-    m_rtc_counter.signal().connect_hook(m_timer_hook, 0);
-    m_pit_counter.signal().connect_hook(m_timer_hook, 1);
+    m_rtc_counter.signal().connect(*m_timer_hook, 0);
+    m_pit_counter.signal().connect(*m_timer_hook, 1);
 }
 
 ArchXT_RTC::~ArchXT_RTC()

@@ -72,7 +72,7 @@ bool ArchAVR_ADC::init(Device& device)
                              m_config.int_vector);
 
     m_timer.init(*device.cycle_manager(), logger());
-    m_timer.signal().connect_hook(this);
+    m_timer.signal().connect(*this);
 
     return status;
 }
@@ -198,7 +198,7 @@ void ArchAVR_ADC::start_conversion_cycle()
     m_timer.set_timer_delay(adc_ticks);
 
     //Raise the signal
-    m_signal.raise_u(Signal_ConversionStarted, m_latched_ch_mux);
+    m_signal.raise(Signal_ConversionStarted, m_latched_ch_mux);
 }
 
 /*
@@ -299,7 +299,7 @@ void ArchAVR_ADC::raised(const signal_data_t& sigdata, int)
 
     if (m_state == ADC_PendingConversion) {
         //Raise the signal
-        m_signal.raise_u(Signal_AboutToSample, m_latched_ch_mux);
+        m_signal.raise(Signal_AboutToSample, m_latched_ch_mux);
 
         read_analog_value();
 
@@ -314,7 +314,7 @@ void ArchAVR_ADC::raised(const signal_data_t& sigdata, int)
     else if (m_state == ADC_PendingRaise) {
 
         //Raise the signal
-        m_signal.raise_u(Signal_ConversionComplete, m_latched_ch_mux);
+        m_signal.raise(Signal_ConversionComplete, m_latched_ch_mux);
 
         //Store the converted value in the data register according to the adjusting
         write_digital_value();

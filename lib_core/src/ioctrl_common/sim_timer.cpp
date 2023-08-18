@@ -357,7 +357,7 @@ TimerCounter::TimerCounter(PrescaledTimer& timer, long wrap, size_t comp_count)
     m_timer_hook = new TimerHook(*this);
     m_ext_hook = new ExtTickHook(*this);
 
-    m_timer.signal().connect_hook(m_timer_hook);
+    m_timer.signal().connect(*m_timer_hook);
 }
 
 
@@ -578,7 +578,7 @@ void TimerCounter::process_ticks(long ticks, bool event_reached)
             if (m_cmp[i].is_next_event) {
                 if (m_logger)
                     m_logger->dbg("Triggering Compare Match %u" , i);
-                m_signal.raise_u(Signal_CompMatch, m_next_event_type, i);
+                m_signal.raise(Signal_CompMatch, m_next_event_type, i);
             }
         }
     }
@@ -625,7 +625,7 @@ void TimerCounter::process_ticks(long ticks, bool event_reached)
     if (m_logger)
         m_logger->dbg("Counter value: %ld", m_counter);
 
-    m_signal.raise_u(Signal_Event, m_next_event_type);
+    m_signal.raise(Signal_Event, m_next_event_type);
 
     //Set the timer to the next event
     if (m_source == Tick_Timer)

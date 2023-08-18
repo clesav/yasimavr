@@ -104,21 +104,12 @@ public:
     //the hook's "raised()". It can be useful when a single hook
     //connects to several signals, in order to differentiate which
     //one the raise comes from.
-    void connect_hook(SignalHook* hook, int hooktag = 0);
-    void disconnect_hook(SignalHook* hook);
+    void connect(SignalHook& hook, int hooktag = 0);
+    void disconnect(SignalHook& hook);
 
+    //Raise a signal
     virtual void raise(const signal_data_t& sigdata);
-    //Raise a signal with default data
-    void raise();
-    //Various override for simplicity
-    void raise(int sigid);
-
-    void raise(int sigid, void* p);
-    void raise(int sigid, const char* s);
-    void raise(int sigid, vardata_t v);
-    //The different names are necessary to remove ambiguity at compilation
-    void raise_u(int sigid, uint32_t u, long long index = 0);
-    void raise_d(int sigid, double d, long long index = 0);
+    void raise(int sigid = 0, const vardata_t& v = vardata_t(), long long index = 0);
 
     //Copy assignment
     Signal& operator=(const Signal&);
@@ -139,8 +130,8 @@ private:
 
     std::vector<hook_slot_t> m_hooks;
 
-    int hook_index(const SignalHook* hook) const;
-    int signal_index(const SignalHook* hook) const;
+    int hook_index(const SignalHook& hook) const;
+    int signal_index(const SignalHook& hook) const;
 
 };
 
@@ -158,6 +149,7 @@ public:
     void clear();
 
     virtual void raise(const signal_data_t& sigdata) override;
+    using Signal::raise;
 
 private:
 
