@@ -28,6 +28,7 @@ from setuptools import setup, Extension
 from setuptools.extension import Library
 from setuptools.command.build_ext import build_ext, libtype
 from distutils.sysconfig import get_config_var
+from wheel.bdist_wheel import bdist_wheel
 
 from sipbuild.module import module as sip_module
 from sipbuild.pyproject import PyProject
@@ -161,6 +162,8 @@ class _BindingsSubPackageProject(yasimavr_bindings_project):
         self.builder_factory = _BindingsSubPackageBuilder
 
 
+_COMPILER_OPT = None
+
 class yasimavr_build_ext(build_ext):
 
 
@@ -185,6 +188,9 @@ class yasimavr_build_ext(build_ext):
 
         #Necessary to allow finalize_options() to be called multiple times
         self.swig_opts = None
+
+        if _COMPILER_OPT is not None:
+            self.compiler = _COMPILER_OPT
 
         super().finalize_options()
 
@@ -272,6 +278,23 @@ class yasimavr_build_ext(build_ext):
         super().run()
 
 
+class yasimavr_bdist_wheel(bdist_wheel):
+
+    user_options = bdist_wheel.user_options + [
+        ('compiler=', 'c', "specify the compiler type"),
+    ]
+
+    def initialize_options(self):
+        super().initialize_options()
+        self.compiler = None
+
+    def finalize_options(self):
+        super().finalize_options()
+
+        global _COMPILER_OPT
+        _COMPILER_OPT = self.compiler
+
+
 setup(
     name = NAME,
     version = VERSION,
@@ -325,5 +348,6 @@ setup(
 
     cmdclass = {
         'build_ext': yasimavr_build_ext,
+        'bdist_wheel': yasimavr_bdist_wheel
     },
 )
