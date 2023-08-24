@@ -36,29 +36,29 @@ def _create_argparser():
         description="Runs a simulation",
         epilog="""Trace arguments:
     port X[/VARNAME] : 8-bits GPIO port tracing
-        X identifies the GPIO port (ex: 'A', 'B')
+        X: identifies the GPIO port (ex: 'A', 'B')
     pin PIN[/VARNAME] : Pin digital value tracing
-        PIN identifies the pin (ex: 'PA0')
+        PIN: identifies the pin (ex: 'PA0')
     data ADDR[/VARNAME] : Memory tracing, currently only works for SRAM
-        ADDR is the hexadecimal address in data space
+        ADDR: the hexadecimal address in data space
     vector N[/VARNAME] : Interrupt state tracing
-        N is the vector index
-    signal CTL[/SIZE][/ID][/IX][/VARNAME] : Generic peripheral signal tracing
-        CTL identifies the peripheral
+        N: the vector index
+    signal CTL/[size=SIZE],[id=ID],[ix=IX],[name=VARNAME] : Generic peripheral signal tracing
+        CTL: Peripheral identifier from the model description file
         SIZE: optional, variable size in bits (default is 32)
-        ID : optional, sigid to filter (default is none)
-        IX : optional, index to filter (default is none)
+        ID: optional, sigid to filter (default is no filter)
+        IX: optional, index to filter (default is no filter)
     for all trace types, VARNAME is an optional variable name""")
 
     p.add_argument('-f', '--frequency',
-                   type=int, metavar='FREQ',
-                   help="Set the clock frequency in Hertz for the MCU")
+                   metavar='FREQ', type=int,
+                   help="[Mandatory] Set the clock frequency in Hertz for the MCU")
 
     p.add_argument('-m', '--mcu',
                    metavar='MCU',
-                   help="Set the MCU model")
+                   help="[Mandatory] Set the MCU model")
 
-    p.add_argument('--list-cores',
+    p.add_argument('--list-models',
                    action='store_true',
                    help="List all supported MCU models and exit")
 
@@ -68,7 +68,7 @@ def _create_argparser():
 
     p.add_argument('-g', '--gdb',
                    metavar='PORT', nargs = '?', default=None, const=1234, type=int,
-                   help="Enable GDB mode. Listen for GDB connection on <PORT> (default 1234)")
+                   help="Enable GDB mode. Listen for GDB connection on localhost:<PORT> (default 1234)")
 
     p.add_argument('-v', '--verbose',
                    metavar='LEVEL', action='store', default=0, type=int,
@@ -96,7 +96,7 @@ def _create_argparser():
 
     p.add_argument('firmware',
                    nargs='?',
-                   help='ELF file containing the firmware to execute')
+                   help='[Mandatory] ELF file containing the firmware to execute')
 
     return p
 
@@ -128,7 +128,7 @@ class _WatchDataTrace(Formatter):
         return sigdata.data.as_uint()
 
 
-def _print_list_cores():
+def _print_model_list():
     print(model_list())
 
 
@@ -151,50 +151,94 @@ def _load_firmware():
     _device.load_firmware(_firmware)
 
 
+def _parse_trace_params(s_params, default_values={}):
+    try:
+        param_list = s_params.split('/')
+        ident = param_list[0]
+        params = default_values.copy()
+        if len(param_list) >= 2:
+            comma_split = param_list[1].split(',')
+
+            if len(comma_split) >= 2 or '=' in comma_split[0]:
+                for item in comma_split:
+                    key, val = item.split('=', 1)
+                    if key in default_values:
+                        params[key] = val
+                    else:
+                        raise ValueError('Invalid parameter: ' + key)
+            else:
+                params = {'name': comma_split[0]}
+
+        return ident, params
+
+    except Exception as e:
+        raise Exception('Argument error for a signal trace') from e
+
+
 def _init_VCD():
     global _vcd_out
     _vcd_out = VCD_Recorder(_simloop, _run_args.output)
 
     for kind, s_params in _run_args.traces:
-        params = s_params.split('/')
 
         if kind == 'port':
-            port_id = params[0]
-            port_name = '' if len(params) < 2 else params[1]
-            _vcd_out.add_gpio_port(port_id, port_name)
+            port_id, params = _parse_trace_params(s_params, {'name': ''})
+            _vcd_out.add_gpio_port(port_id, params['name'])
 
         elif kind == 'pin':
-            pin_id = params[0]
-            pin_name = '' if len(params) < 2 else params[1]
+            pin_id, params = _parse_trace_params(s_params, {'name': ''})
             pin = _device.find_pin(pin_id)
-            _vcd_out.add_digital_pin(pin, pin_name)
+            _vcd_out.add_digital_pin(pin, params['name'])
 
         elif kind == 'data':
             global _probe
             if _probe is None:
                 _probe = _corelib.DeviceDebugProbe(_device)
 
-            addr = int(params[0], 16)
-            name = hex(addr) if len(params[0]) < 2 else params[1]
-            tr = _WatchDataTrace(addr)
-            _vcd_out.add(tr, name)
+            hex_addr, params = _parse_trace_params(s_params, {'name': ''})
+
+            data_name = params['name'] or hex_addr
+
+            tr = _WatchDataTrace(int(hex_addr, 16))
+            _vcd_out.add(tr, data_name)
 
         elif kind == 'vector':
-            ix = int(params[0])
-            name = '' if len(params) < 2 else params[1]
-            _vcd_out.add_interrupt(ix, name)
+            ix, params = _parse_trace_params(s_params, {'name': ''})
+            _vcd_out.add_interrupt(ix, params['name'])
 
         elif kind == 'signal':
-            ctlid = params[0]
-            sigid = int(params[1]) if len(params) >= 2 else None
-            sigindex = int(params[2]) if len(params) >= 3 else None
-            size = int(params[3]) if len(params) >= 4 else 32
-            name = 'sig_' + ctlid
-            ok, d = _device.ctlreq(_corelib.str_to_id(ctlid), _corelib.CTLREQ_GET_SIGNAL)
+            param_map = {'id': None, 'ix': None, 'size': 32, 'name': ''}
+            per_id, params = _parse_trace_params(s_params, param_map)
+
+            try:
+                per_descriptor = _device._descriptor_.peripherals[per_id]
+            except KeyError:
+                raise Exception('Peripheral %s not found' % per_id) from None
+
+            bin_per_id = _corelib.str_to_id(per_descriptor.ctl_id)
+
+            ok, d = _device.ctlreq(bin_per_id, _corelib.CTLREQ_GET_SIGNAL)
             if not ok:
                 raise Exception('Unable to obtain the peripheral signal')
             sig = d.data.as_ptr(_corelib.Signal)
-            _vcd_out.add_signal(sig, name, size, sigid, sigindex)
+
+            var_name = params['name'] or ('sig_' + per_id)
+
+            if params['id'] is None:
+                bin_sigid = None
+            else:
+                bin_sigid = int(params['id'])
+
+            if params['ix'] is None:
+                bin_sigix = None
+            else:
+                bin_sigix = int(params['ix'])
+
+            _vcd_out.add_signal(sig,
+                                var_name=var_name,
+                                size=int(params['size']),
+                                sigid=bin_sigid,
+                                sigindex=bin_sigix)
 
         else:
             raise ValueError('Invalid trace kind: ' + kind)
@@ -226,6 +270,11 @@ def _run_asyncloop(args):
 
     _load_firmware()
 
+    #If an output file is set
+    if _run_args.output:
+        _init_VCD()
+        _vcd_out.record_on()
+
     gdb = GDB_Stub(conn_point=('127.0.0.1', args.gdb),
                    fw_source=args.firmware,
                    simloop=_simloop)
@@ -247,8 +296,8 @@ def main(args=None):
     parser = _create_argparser()
     _run_args = parser.parse_args(args=args)
 
-    if _run_args.list_cores:
-        _print_list_cores()
+    if _run_args.list_models:
+        _print_model_list()
         return
 
     if _run_args.firmware is None:
