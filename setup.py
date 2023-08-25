@@ -80,6 +80,15 @@ GCC_EXT_COMPILER_EXTRA_ARGS = [
     '-O3',
 ]
 
+if sys.platform == 'win32':
+    GCC_SHLIB_COMPILER_EXTRA_ARGS.extend([
+        '-fstack-protector',
+    ])
+
+    GCC_SHLIB_LINKER_EXTRA_ARGS.extend([
+        '-fstack-protector',
+    ])
+
 
 #Reimplementation of bindings_builder and bindings_project
 #Here, we just want to generate the source code from the SIP files
@@ -187,10 +196,29 @@ class yasimavr_build_ext(build_ext):
             ext = self.ext_map[fullname]
             if isinstance(ext, Library):
                 filename = os.path.join(*fullname.split('.'))
-                shlibname = self.shlib_compiler.library_filename(filename, libtype)
+                shlibname = self.shlib_compiler.library_filename(filename, 'shared')
                 return shlibname
 
         return super().get_ext_filename(fullname)
+
+
+    #Overriding the setuptools overrride to actually get shared libraries
+    def setup_shlib_compiler(self):
+        def link_shared_object(
+                self, objects, output_libname, output_dir=None, libraries=None,
+                library_dirs=None, runtime_library_dirs=None, export_symbols=None,
+                debug=0, extra_preargs=None, extra_postargs=None, build_temp=None,
+                target_lang=None):
+            self.link(
+                self.SHARED_LIBRARY, objects, output_libname,
+                output_dir, libraries, library_dirs, runtime_library_dirs,
+                export_symbols, debug, extra_preargs, extra_postargs,
+                build_temp, target_lang
+            )
+
+        super().setup_shlib_compiler()
+
+        self.shlib_compiler.link_shared_object = link_shared_object.__get__(self.shlib_compiler)
 
 
     def finalize_options(self):
@@ -247,7 +275,7 @@ class yasimavr_build_ext(build_ext):
             sip_args += ['--tracing', '--gdb', '--no-line-directive']
 
         old_cwd = os.getcwd()
-        os.chdir('bindings');
+        os.chdir('bindings')
         sip_project = _BindingsSubPackageProject(sip_args, sipbuild_temp, self.build_lib)
         os.chdir(old_cwd)
 
