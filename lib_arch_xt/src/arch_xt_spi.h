@@ -24,6 +24,7 @@
 #ifndef __YASIMAVR_XT_SPI_H__
 #define __YASIMAVR_XT_SPI_H__
 
+#include "arch_xt_globals.h"
 #include "ioctrl_common/sim_spi.h"
 #include "core/sim_interrupt.h"
 
@@ -52,7 +53,7 @@ struct ArchXT_SPIConfig {
 
 };
 
-class DLL_EXPORT ArchXT_SPI : public Peripheral, public SignalHook {
+class AVR_ARCHXT_PUBLIC_API ArchXT_SPI : public Peripheral, public SignalHook {
 
 public:
 

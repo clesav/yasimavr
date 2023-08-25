@@ -81,7 +81,7 @@ struct UARTEndPoint {
  * The signal UART_RX_Complete are emitted at the end of a reception, with data = 1 if the frame
  * if kept or data = 0 if canceled or discarded
  */
-class DLL_EXPORT UART : public SignalHook {
+class AVR_CORE_PUBLIC_API UART : public SignalHook {
 
 public:
 

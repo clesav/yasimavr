@@ -37,7 +37,7 @@ YASIMAVR_BEGIN_NAMESPACE
  * The actual effect of the timeout is left to sub-classes by overriding timeout()
  * The configuration via fuses is not supported at the moment
  */
-class DLL_EXPORT WatchdogTimer : public Peripheral {
+class AVR_CORE_PUBLIC_API WatchdogTimer : public Peripheral {
 
 public:
 

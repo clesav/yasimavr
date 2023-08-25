@@ -24,6 +24,7 @@
 #ifndef __YASIMAVR_XT_PORT_H__
 #define __YASIMAVR_XT_PORT_H__
 
+#include "arch_xt_globals.h"
 #include "core/sim_interrupt.h"
 #include "ioctrl_common/sim_port.h"
 
@@ -45,7 +46,7 @@ struct ArchXT_PortConfig {
 };
 
 
-class DLL_EXPORT ArchXT_Port : public Port, public InterruptHandler {
+class AVR_ARCHXT_PUBLIC_API ArchXT_Port : public Port, public InterruptHandler {
 
 public:
 

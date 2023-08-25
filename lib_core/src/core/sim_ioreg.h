@@ -66,7 +66,7 @@ struct ioreg_write_t {
  * The handler is notified when the register is accessed by the CPU
  * It is meant to be implemented by I/O peripherals
  */
-class DLL_EXPORT IO_RegHandler {
+class AVR_CORE_PUBLIC_API IO_RegHandler {
 
 public:
 
@@ -86,7 +86,7 @@ public:
  *  Peripherals can be added as handlers to a register to be notified of
  *  accesses (read or write) by the CPU
  */
-class DLL_EXPORT IO_Register {
+class AVR_CORE_PUBLIC_API IO_Register {
 
 public:
 

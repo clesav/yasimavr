@@ -87,7 +87,7 @@ struct breakpoint_t {
  * Implementation of the AVR core CPU
  * This is an abstract class. Concrete sub-classes define the memory map.
 */
-class DLL_EXPORT Core {
+class AVR_CORE_PUBLIC_API Core {
 
     friend class Device;
     friend class DeviceDebugProbe;
@@ -211,10 +211,11 @@ inline const CoreConfiguration& Core::config() const
     return m_config;
 }
 
-bool data_space_map(mem_addr_t addr, mem_addr_t len,
-                    mem_addr_t blockstart, mem_addr_t blockend,
-                    mem_addr_t* bufofs, mem_addr_t* blockofs,
-                    mem_addr_t* blocklen);
+bool  data_space_map(mem_addr_t addr, mem_addr_t len,
+                     mem_addr_t blockstart, mem_addr_t blockend,
+                     mem_addr_t* bufofs, mem_addr_t* blockofs,
+                     mem_addr_t* blocklen)
+                     AVR_CORE_PUBLIC_API;
 
 
 YASIMAVR_END_NAMESPACE

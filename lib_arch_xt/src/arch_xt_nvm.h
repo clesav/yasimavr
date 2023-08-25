@@ -24,6 +24,7 @@
 #ifndef __YASIMAVR_XT_NVM_H__
 #define __YASIMAVR_XT_NVM_H__
 
+#include "arch_xt_globals.h"
 #include "core/sim_peripheral.h"
 #include "core/sim_interrupt.h"
 #include "core/sim_memory.h"
@@ -39,7 +40,7 @@ YASIMAVR_BEGIN_NAMESPACE
  */
 
 
-class DLL_EXPORT ArchXT_USERROW : public Peripheral {
+class AVR_ARCHXT_PUBLIC_API ArchXT_USERROW : public Peripheral {
 
 public:
 
@@ -64,7 +65,7 @@ private:
  */
 
 
-class DLL_EXPORT ArchXT_Fuses : public Peripheral {
+class AVR_ARCHXT_PUBLIC_API ArchXT_Fuses : public Peripheral {
 
 public:
 
@@ -109,7 +110,7 @@ struct ArchXT_NVMConfig {
 
 };
 
-class DLL_EXPORT ArchXT_NVM : public Peripheral {
+class AVR_ARCHXT_PUBLIC_API ArchXT_NVM : public Peripheral {
 
 public:
 

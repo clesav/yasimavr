@@ -24,6 +24,7 @@
 #ifndef __YASIMAVR_XT_MISC_H__
 #define __YASIMAVR_XT_MISC_H__
 
+#include "arch_xt_globals.h"
 #include "core/sim_interrupt.h"
 #include "core/sim_types.h"
 #include "ioctrl_common/sim_vref.h"
@@ -54,7 +55,7 @@ struct ArchXT_VREFConfig {
 
 };
 
-class DLL_EXPORT ArchXT_VREF : public VREF {
+class AVR_ARCHXT_PUBLIC_API ArchXT_VREF : public VREF {
 
 public:
 
@@ -90,7 +91,7 @@ struct ArchXT_IntCtrlConfig {
 };
 
 
-class DLL_EXPORT ArchXT_IntCtrl : public InterruptController {
+class AVR_ARCHXT_PUBLIC_API ArchXT_IntCtrl : public InterruptController {
 
 public:
 
@@ -120,7 +121,7 @@ private:
  *  - Software reset (register SWRR)
  */
 
-class DLL_EXPORT ArchXT_ResetCtrl : public Peripheral {
+class AVR_ARCHXT_PUBLIC_API ArchXT_ResetCtrl : public Peripheral {
 
 public:
 
@@ -161,7 +162,7 @@ struct ArchXT_MiscConfig {
 };
 
 
-class DLL_EXPORT ArchXT_MiscRegCtrl : public Peripheral {
+class AVR_ARCHXT_PUBLIC_API ArchXT_MiscRegCtrl : public Peripheral {
 
 public:
 

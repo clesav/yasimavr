@@ -24,6 +24,7 @@
 #ifndef __YASIMAVR_AVR_TIMER_H__
 #define __YASIMAVR_AVR_TIMER_H__
 
+#include "arch_avr_globals.h"
 #include "core/sim_peripheral.h"
 #include "core/sim_interrupt.h"
 #include "ioctrl_common/sim_timer.h"
@@ -157,7 +158,7 @@ struct ArchAVR_TimerConfig {
 };
 
 
-class DLL_EXPORT ArchAVR_Timer : public Peripheral, public SignalHook {
+class AVR_ARCHAVR_PUBLIC_API ArchAVR_Timer : public Peripheral, public SignalHook {
 
 public:
 

@@ -24,6 +24,7 @@
 #ifndef __YASIMAVR_AVR_DEVICE_H__
 #define __YASIMAVR_AVR_DEVICE_H__
 
+#include "arch_avr_globals.h"
 #include "core/sim_core.h"
 #include "core/sim_device.h"
 #include "core/sim_interrupt.h"
@@ -46,7 +47,7 @@ typedef DeviceConfiguration ArchAVR_DeviceConfig;
  * Implementation of a CPU core for AVR series
  * The main addition is to handle the address mapping in data space
  */
-class DLL_EXPORT ArchAVR_Core : public Core {
+class AVR_ARCHAVR_PUBLIC_API ArchAVR_Core : public Core {
 
 public:
 
@@ -77,7 +78,7 @@ friend class ArchAVR_Device;
 /*
  * Implementation of a MCU for AVR series
  */
-class DLL_EXPORT ArchAVR_Device : public Device {
+class AVR_ARCHAVR_PUBLIC_API ArchAVR_Device : public Device {
 
 public:
 

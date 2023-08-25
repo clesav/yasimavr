@@ -53,7 +53,7 @@ struct signal_data_t {
  */
 class Signal;
 
-class SignalHook {
+class AVR_CORE_PUBLIC_API SignalHook {
 
 public:
 
@@ -87,7 +87,7 @@ private:
  * across the simulator.
  * It is similar in use to simavr's IRQs
 */
-class DLL_EXPORT Signal {
+class AVR_CORE_PUBLIC_API Signal {
 
 public:
 
@@ -147,7 +147,7 @@ private:
 
 //=======================================================================================
 
-class DLL_EXPORT DataSignal : public Signal {
+class AVR_CORE_PUBLIC_API DataSignal : public Signal {
 
 public:
 
@@ -178,7 +178,7 @@ private:
 
 //=======================================================================================
 
-class DLL_EXPORT DataSignalMux : public SignalHook {
+class AVR_CORE_PUBLIC_API DataSignalMux : public SignalHook {
 
 public:
 

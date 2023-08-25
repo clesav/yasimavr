@@ -57,7 +57,7 @@ YASIMAVR_BEGIN_NAMESPACE
  * Note that setting VCC in the firmware is required for using any analog feature of a MCU.
  * Failing to do so will trigger a device crash
  */
-class DLL_EXPORT VREF : public Peripheral {
+class AVR_CORE_PUBLIC_API VREF : public Peripheral {
 
 public:
 
