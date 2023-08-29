@@ -29,4 +29,7 @@ dev_mega_0series:
     - atmega4809
 
 dev_megaxx8:
+    - atmega48
+    - atmega88
+    - atmega168
     - atmega328
