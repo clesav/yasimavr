@@ -80,15 +80,6 @@ GCC_EXT_COMPILER_EXTRA_ARGS = [
     '-O3',
 ]
 
-if sys.platform == 'win32':
-    GCC_SHLIB_COMPILER_EXTRA_ARGS.extend([
-        '-fstack-protector',
-    ])
-
-    GCC_SHLIB_LINKER_EXTRA_ARGS.extend([
-        '-fstack-protector',
-    ])
-
 
 #Reimplementation of bindings_builder and bindings_project
 #Here, we just want to generate the source code from the SIP files
@@ -183,9 +174,14 @@ class _BindingsSubPackageProject(yasimavr_bindings_project):
         self.builder_factory = _BindingsSubPackageBuilder
 
 
-_COMPILER_OPT = None
+#_COMPILER_OPT = None
 
 class yasimavr_build_ext(build_ext):
+
+    user_options = build_ext.user_options + [
+        ('extra_compile_args=', '', "extra compiler flags"),
+        ('extra_link_args=', '', "extra linker flags"),
+    ]
 
 
     def get_ext_filename(self, fullname):
@@ -221,6 +217,12 @@ class yasimavr_build_ext(build_ext):
         self.shlib_compiler.link_shared_object = link_shared_object.__get__(self.shlib_compiler)
 
 
+    def initialize_options(self):
+        super().initialize_options()
+        self.extra_compile_args = None
+        self.extra_link_args = None
+
+
     def finalize_options(self):
         #Due to library/extension dependencies with each other,
         #we can't support parallelizing
@@ -229,13 +231,21 @@ class yasimavr_build_ext(build_ext):
         #Necessary to allow finalize_options() to be called multiple times
         self.swig_opts = None
 
-        if _COMPILER_OPT is not None:
-            self.compiler = _COMPILER_OPT
+        #if _COMPILER_OPT is not None:
+        #    self.compiler = _COMPILER_OPT
 
         super().finalize_options()
 
 
     def run(self):
+
+        #Add the extra flags for the compiler and the linker
+        for lib in self.extensions:
+            if self.extra_compile_args is not None:
+                lib.extra_compile_args = lib.extra_compile_args + self.extra_compile_args.split()
+            if self.extra_link_args is not None:
+                lib.extra_link_args = lib.extra_link_args + self.extra_link_args.split()
+
         #=====================================================================
         #Create the SIP extension module to build
         #=====================================================================
@@ -318,21 +328,21 @@ class yasimavr_build_ext(build_ext):
         super().run()
 
 
-class yasimavr_bdist_wheel(bdist_wheel):
-
-    user_options = bdist_wheel.user_options + [
-        ('compiler=', 'c', "specify the compiler type"),
-    ]
-
-    def initialize_options(self):
-        super().initialize_options()
-        self.compiler = None
-
-    def finalize_options(self):
-        super().finalize_options()
-
-        global _COMPILER_OPT
-        _COMPILER_OPT = self.compiler
+# class yasimavr_bdist_wheel(bdist_wheel):
+#
+#     user_options = bdist_wheel.user_options + [
+#         ('compiler=', 'c', "specify the compiler type"),
+#     ]
+#
+#     def initialize_options(self):
+#         super().initialize_options()
+#         self.compiler = None
+#
+#     def finalize_options(self):
+#         super().finalize_options()
+#
+#         global _COMPILER_OPT
+#         _COMPILER_OPT = self.compiler
 
 
 setup(
@@ -396,6 +406,6 @@ setup(
 
     cmdclass = {
         'build_ext': yasimavr_build_ext,
-        'bdist_wheel': yasimavr_bdist_wheel
+        #'bdist_wheel': yasimavr_bdist_wheel
     },
 )
