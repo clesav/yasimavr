@@ -30,15 +30,6 @@ YASIMAVR_USING_NAMESPACE
 
 //========================================================================================
 
-InterruptController::interrupt_t::interrupt_t()
-:used(false)
-,raised(false)
-,handler(nullptr)
-{}
-
-
-//========================================================================================
-
 InterruptController::InterruptController(unsigned int size)
 :Peripheral(AVR_IOCTL_INTR)
 ,m_interrupts(size)
@@ -50,8 +41,10 @@ InterruptController::InterruptController(unsigned int size)
 void InterruptController::reset()
 {
     //Reset the state of all vectors
-    for (unsigned int i = 0; i < m_interrupts.size(); i++)
+    for (unsigned int i = 0; i < m_interrupts.size(); ++i) {
         m_interrupts[i].raised = false;
+        m_signal.raise(Signal_StateChange, State_Reset, i);
+    }
 
     m_irq_vector = AVR_INTERRUPT_NONE;
 }
@@ -174,11 +167,11 @@ void InterruptController::cancel_interrupt(int_vect_t vector)
 
 void InterruptController::disconnect_handler(InterruptHandler* handler)
 {
-    for (unsigned int v = 0; v < m_interrupts.size(); v++) {
-        if (m_interrupts[v].handler == handler) {
-            m_interrupts[v].used = false;
-            m_interrupts[v].handler->m_intctl = nullptr;
-            m_interrupts[v].handler = nullptr;
+    for (auto& intr : m_interrupts) {
+        if (intr.handler == handler) {
+            intr.used = false;
+            intr.handler->m_intctl = nullptr;
+            intr.handler = nullptr;
         }
     }
 

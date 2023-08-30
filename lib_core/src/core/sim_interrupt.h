@@ -77,18 +77,20 @@ public:
     };
 
     enum State {
-        //The interrupt has been raised
-        State_Raised,
-        //The interrupt has been cancelled
-        State_Cancelled,
-        //The interrupt has been acknwledged by the CPU and it's about
-        //to jump to the corresponding vector.
-        State_Acknowledged,
+        //The interrupt is raised
+        State_Raised          = 0x01,
+        //The interrupt is cancelled
+        State_Cancelled       = 0x10,
+        //The interrupt is acknowledged by the CPU and it's about
+        //to jump to the corresponding vector
+        State_Acknowledged    = 0x20,
         //The CPU is returning from an ISR
-        State_Returned,
-        //Special case for when an interrupt masked by a sleep mode is re-notified
-        //when exiting the sleep mode.
-        State_RaisedFromSleep
+        State_Returned        = 0x30,
+        //The interrupt is raised after leaving a sleep mode where it
+        //was masked
+        State_RaisedFromSleep = 0x41,
+        //The interrupt is reset because the MCU is reset
+        State_Reset           = 0x50
     };
 
     //===== Constructor/destructor =====
@@ -130,11 +132,9 @@ private:
 
     //===== Structure holding data on the vector table =====
     struct interrupt_t {
-        bool used;
-        bool raised;
-        InterruptHandler* handler;
-
-        interrupt_t();
+        bool used = false;
+        bool raised = false;
+        InterruptHandler* handler = nullptr;
     };
 
     //Interrupt vector table

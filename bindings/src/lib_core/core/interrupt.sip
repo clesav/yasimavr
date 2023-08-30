@@ -55,6 +55,7 @@ public:
         State_Acknowledged          /PyName=Acknowledged/,
         State_Returned              /PyName=Returned/,
         State_RaisedFromSleep       /PyName=RaisedFromSleep/,
+        State_Reset                 /PyName=Reset/
     };
 
     InterruptController(unsigned int);
