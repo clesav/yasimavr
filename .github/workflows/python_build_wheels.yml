@@ -27,7 +27,7 @@ jobs:
       if: matrix.os == 'windows-latest'
       run: |
         C:\\msys64\\msys2_shell -no-start -defterm -c "pacman -S --noconfirm mingw-w64-x86_64-libelf"
-        copy github_setup.cfg.in setup.cfg
+        copy ".\.github\workflows\github_setup.cfg.in" setup.cfg
 
     - name: install libelf (Ubuntu)
       if: matrix.os == 'ubuntu-latest'
