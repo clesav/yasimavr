@@ -1,6 +1,6 @@
-# YAML configuration file for atmega328 variant
+# YAML configuration file for atmega48 variant
 #
-# Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2023 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -18,10 +18,7 @@
 # along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
 
 ---
-name: atmega328
-
-aliases:
-   - atmega328p
+name: atmega48
 
 architecture: AVR
 
@@ -31,11 +28,11 @@ memory:
         IOSTART: 0x020
         IOEND:  0x0FF
         RAMSTART: 0x100
-        RAMEND: 0x8FF
+        RAMEND: 0x2FF
     flash:
-        FLASHEND: 0x7FFF
+        FLASHEND: 0x0FFF
     eeprom:
-        EEPROMEND: 0x3FF
+        EEPROMEND: 0xFF
 
 core:
     extended_addressing: no
@@ -51,7 +48,7 @@ pins: [ PB0, PB1, PB2, PB3, PB4, PB5, PB6, PB7,
         ADC6, ADC7 ]
 
 interrupts:
-    vector_size: 4
+    vector_size: 2
 
     vectors:
         - RESET
