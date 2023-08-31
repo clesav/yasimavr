@@ -121,6 +121,8 @@ public:
 
     void start_interrupt_inhibit(unsigned int count);
 
+    void set_console_register(reg_addr_t addr);
+
     //Disable copy semantics
     Core(const Core&) = delete;
     Core& operator=(const Core&) = delete;
@@ -188,6 +190,9 @@ private:
     //Direct pointer to the interrupt controller. We don't use the ctlreq framework for performance
     InterruptController* m_intrctl;
 
+    reg_addr_t m_reg_console;
+    std::string m_console_buffer;
+
     //Helpers for managing the SREG register
     uint8_t read_sreg();
     void write_sreg(uint8_t value);
@@ -209,6 +214,11 @@ private:
 inline const CoreConfiguration& Core::config() const
 {
     return m_config;
+}
+
+inline void Core::set_console_register(reg_addr_t addr)
+{
+    m_reg_console = addr;
 }
 
 bool data_space_map(mem_addr_t addr, mem_addr_t len,

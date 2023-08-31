@@ -28,65 +28,6 @@
 
 YASIMAVR_USING_NAMESPACE
 
-//=======================================================================================
-/*
- * Pseudo-peripheral that allows to use any register to output text to the simulator logger
- * Characters written by the CPU to this register are stored in a buffer and flushed to the
- * device logger on a newline character.
- */
-class YASIMAVR_QUALIFIED_NAME(IO_Console) : public Peripheral {
-
-public:
-
-    IO_Console();
-
-    void set_register(reg_addr_t reg);
-    virtual void reset() override;
-    virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
-
-private:
-
-    reg_addr_t m_reg_console;
-    std::string m_buf;
-
-};
-
-IO_Console::IO_Console()
-:Peripheral(chr_to_id('C', 'S', 'L', 'E'))
-,m_reg_console(0)
-{}
-
-void IO_Console::set_register(reg_addr_t reg)
-{
-    if (!m_reg_console) {
-        m_reg_console = reg;
-        if (reg)
-            add_ioreg(reg);
-    }
-}
-
-void IO_Console::reset()
-{
-    if (m_buf.size())
-        logger().wng("Console output lost by reset");
-    m_buf.clear();
-}
-
-void IO_Console::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
-{
-    if (addr == m_reg_console) {
-        if (data.value == '\n') {
-            char s[20];
-            sprintf(s, "[%llu] ", device()->cycle());
-            m_buf.insert(0, s);
-            logger().log(Logger::Level_Output, m_buf.c_str());
-            m_buf.clear();
-        } else {
-            m_buf += (char) data.value;
-        }
-    }
-}
-
 
 //=======================================================================================
 
@@ -108,10 +49,6 @@ Device::Device(Core& core, const DeviceConfiguration& config)
         Pin* pin = new Pin(id);
         m_pins[id] = pin;
     }
-
-    //Allocate the console peripheral
-    m_console = new IO_Console();
-    attach_peripheral(*m_console);
 }
 
 Device::~Device()
@@ -244,7 +181,7 @@ bool Device::load_firmware(const Firmware& firmware)
     }
 
     //Set the console register
-    m_console->set_register(firmware.console_register);
+    m_core.set_console_register(firmware.console_register);
 
     m_state = State_Running;
 

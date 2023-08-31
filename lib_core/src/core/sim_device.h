@@ -37,7 +37,6 @@ YASIMAVR_BEGIN_NAMESPACE
 class DeviceConfiguration;
 class Firmware;
 class Interrupt;
-class IO_Console;
 enum class SleepMode;
 
 
@@ -183,7 +182,6 @@ private:
     std::vector<Peripheral*> m_peripherals;
     std::map<pin_id_t, Pin*> m_pins;
     CycleManager* m_cycle_manager;
-    IO_Console* m_console;
     uint8_t m_reset_flags;
 
     std::string& name_from_pin(Pin* pin);
