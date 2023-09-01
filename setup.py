@@ -1,5 +1,5 @@
 NAME = "yasimavr"
-VERSION = "0.0.2"
+VERSION = "0.0.3.dev1"
 DESCRIPTION = "Yet Another SIMulator for AVR"
 LICENSE = "GPLv3"
 AUTHOR = "C. Savergne"
@@ -14,6 +14,7 @@ CLASSIFIERS = [
     'Programming Language :: Python :: 3.8',
     'Programming Language :: Python :: 3.9',
     'Programming Language :: Python :: 3.10',
+    'Programming Language :: Python :: 3.11',
     'Topic :: Scientific/Engineering',
 ]
 KEYWORDS = 'avr simavr'
@@ -174,8 +175,6 @@ class _BindingsSubPackageProject(yasimavr_bindings_project):
         self.builder_factory = _BindingsSubPackageBuilder
 
 
-#_COMPILER_OPT = None
-
 class yasimavr_build_ext(build_ext):
 
     user_options = build_ext.user_options + [
@@ -230,9 +229,6 @@ class yasimavr_build_ext(build_ext):
 
         #Necessary to allow finalize_options() to be called multiple times
         self.swig_opts = None
-
-        #if _COMPILER_OPT is not None:
-        #    self.compiler = _COMPILER_OPT
 
         super().finalize_options()
 
@@ -328,28 +324,12 @@ class yasimavr_build_ext(build_ext):
         super().run()
 
 
-# class yasimavr_bdist_wheel(bdist_wheel):
-#
-#     user_options = bdist_wheel.user_options + [
-#         ('compiler=', 'c', "specify the compiler type"),
-#     ]
-#
-#     def initialize_options(self):
-#         super().initialize_options()
-#         self.compiler = None
-#
-#     def finalize_options(self):
-#         super().finalize_options()
-#
-#         global _COMPILER_OPT
-#         _COMPILER_OPT = self.compiler
-
-
 setup(
     name = NAME,
     version = VERSION,
     description = DESCRIPTION,
     long_description = open("README.md").read(),
+    long_description_content_type = "text/markdown",
     author = AUTHOR,
     author_email = AUTHOR_EMAIL,
     license = LICENSE,
@@ -406,6 +386,5 @@ setup(
 
     cmdclass = {
         'build_ext': yasimavr_build_ext,
-        #'bdist_wheel': yasimavr_bdist_wheel
     },
 )
