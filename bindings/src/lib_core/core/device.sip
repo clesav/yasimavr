@@ -61,7 +61,6 @@ public:
         State_Sleeping      /PyName=Sleeping/,
         State_Halted        /PyName=Halted/,
         State_Reset         /PyName=Reset/,
-        State_Stopped       /PyName=Stopped/,
         State_Break         /PyName=Break/,
         State_Done          /PyName=Done/,
         State_Crashed       /PyName=Crashed/,
@@ -73,14 +72,16 @@ public:
         Reset_WDT           /PyName=WDT/,
         Reset_BOD           /PyName=BOD/,
         Reset_SW            /PyName=SW/,
+        Reset_Ext           /PyName=Ext/,
+        Reset_Halt          /PyName=Halt/,
     };
 
     enum Option /BaseType=IntFlag/ {
-        Option_ResetOnPinShorting,
-        Option_IgnoreBadCpuIO,
-        Option_IgnoreBadCpuLPM,
-        Option_DisablePseudoSleep,
-        Option_InfiniteLoopDetect
+        Option_ResetOnPinShorting    /PyName=ResetOnPinShorting/,
+        Option_IgnoreBadCpuIO        /PyName=IgnoreBadCpuIO/,
+        Option_IgnoreBadCpuLPM       /PyName=IgnoreBadCpuLPM/,
+        Option_DisablePseudoSleep    /PyName=DisablePseudoSleep/,
+        Option_InfiniteLoopDetect    /PyName=InfiniteLoopDetect/,
     };
 
     Device(Core&, const DeviceConfiguration&);
@@ -114,7 +115,7 @@ public:
         }
     %End
 
-    void reset(uint8_t = Device::Reset_PowerOn);
+    void reset(int = Device::Reset_PowerOn);
 
     cycle_count_t exec_cycle();
 

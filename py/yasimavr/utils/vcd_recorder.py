@@ -130,7 +130,7 @@ class _SignalFormatter(Formatter):
 
     def __init__(self, sig, size, sigid, index):
         vartype = 'tri' if size == 1 else 'reg'
-        super().__init__(vartype, size, 0)
+        super().__init__(vartype, size, 'x')
         self._sigid = sigid
         self._index = index
         sig.connect(self)
@@ -145,18 +145,16 @@ class _SignalFormatter(Formatter):
 
 class _InterruptFormatter(Formatter):
 
-    _State = _corelib.InterruptController.State
-
     def __init__(self, vector):
         super().__init__('tri', 1, False)
-        self._vector = vector
+        self._vector = int(vector)
 
     def filter(self, sigdata, hooktag):
         return (sigdata.index == self._vector)
 
     def format(self, sigdata, hooktag):
-        vect_state = self._State(sigdata.data.as_uint())
-        return vect_state not in (self._State.Cancelled, self._State.Returned)
+        vect_state = sigdata.data.as_uint()
+        return vect_state & 0x01
 
 
 class VCD_Recorder:

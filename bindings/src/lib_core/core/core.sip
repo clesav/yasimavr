@@ -91,6 +91,8 @@ public:
 
     void start_interrupt_inhibit(unsigned int);
 
+    void set_console_register(reg_addr_t addr);
+
 protected:
 
     uint8_t cpu_read_ioreg(reg_addr_t);

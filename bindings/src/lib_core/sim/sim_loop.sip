@@ -1,5 +1,5 @@
 /*
- * simulation_loop.sip
+ * sim_loop.sip
  *
  *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
 

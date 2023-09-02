@@ -110,6 +110,10 @@ void Core::reset()
     write_sp(m_config.ramend);
     //Ensures at least one instruction is executed before interrupts are processed
     m_int_inhib_counter = 1;
+    //Flush the console buffer
+    if (m_console_buffer.size())
+        m_device->logger().wng("Console output lost by reset");
+    m_console_buffer.clear();
 }
 
 int Core::exec_cycle()
@@ -129,11 +133,8 @@ int Core::exec_cycle()
 
     //Decrement the instruction counter if used.
     //If it drops to 0, reactivate the interrupts and raise the signal
-    if (m_int_inhib_counter) {
+    if (m_int_inhib_counter)
         m_int_inhib_counter--;
-        //if (!m_int_inhib_counter)
-        //  m_int_inhib_signal.raise();
-    }
 
     //Executes one instruction and returns the number of clock cycles spent
     int cycles = run_instruction();
@@ -241,6 +242,18 @@ void Core::cpu_write_ioreg(reg_addr_t reg_addr, uint8_t value)
         return;
     }
 
+    if (addr == m_reg_console) {
+        if (value == '\n') {
+            char s[20];
+            sprintf(s, "[%llu] ", m_device->cycle());
+            m_console_buffer.insert(0, s);
+            m_device->logger().log(Logger::Level_Output, m_console_buffer.c_str());
+            m_console_buffer.clear();
+        } else {
+            m_console_buffer += (char) value;
+        }
+        return;
+    }
 
     IO_Register* ioreg = m_ioregs[addr];
     if (ioreg) {

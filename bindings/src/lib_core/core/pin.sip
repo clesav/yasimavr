@@ -45,12 +45,12 @@ public:
         Signal_AnalogValueChange    /PyName=AnalogValueChange/,
     };
 
-    static const char* StateName(Pin::State state);
+    static const char* StateName(Pin::State);
 
     Pin(pin_id_t);
 
-    void set_external_state(Pin::State state);
-    void set_external_analog_value(double v);
+    void set_external_state(Pin::State);
+    void set_external_analog_value(double);
     pin_id_t id() const;
     Pin::State state() const;
     Pin::State digital_state() const;

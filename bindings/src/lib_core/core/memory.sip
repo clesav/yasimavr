@@ -81,6 +81,7 @@ public:
         unsigned char* buf;
         size_t len = import_from_pybuffer(sipAPI_core, &buf, a0);
         sipCpp->erase(buf, a1, len);
+        sipFree(buf);
     %End
 
     int dbg_read(size_t) const;

@@ -28,65 +28,6 @@
 
 YASIMAVR_USING_NAMESPACE
 
-//=======================================================================================
-/*
- * Pseudo-peripheral that allows to use any register to output text to the simulator logger
- * Characters written by the CPU to this register are stored in a buffer and flushed to the
- * device logger on a newline character.
- */
-class YASIMAVR_QUALIFIED_NAME(IO_Console) : public Peripheral {
-
-public:
-
-    IO_Console();
-
-    void set_register(reg_addr_t reg);
-    virtual void reset() override;
-    virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
-
-private:
-
-    reg_addr_t m_reg_console;
-    std::string m_buf;
-
-};
-
-IO_Console::IO_Console()
-:Peripheral(chr_to_id('C', 'S', 'L', 'E'))
-,m_reg_console(0)
-{}
-
-void IO_Console::set_register(reg_addr_t reg)
-{
-    if (!m_reg_console) {
-        m_reg_console = reg;
-        if (reg)
-            add_ioreg(reg);
-    }
-}
-
-void IO_Console::reset()
-{
-    if (m_buf.size())
-        logger().wng("Console output lost by reset");
-    m_buf.clear();
-}
-
-void IO_Console::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
-{
-    if (addr == m_reg_console) {
-        if (data.value == '\n') {
-            char s[20];
-            sprintf(s, "[%llu] ", device()->cycle());
-            m_buf.insert(0, s);
-            logger().log(Logger::Level_Output, m_buf.c_str());
-            m_buf.clear();
-        } else {
-            m_buf += (char) data.value;
-        }
-    }
-}
-
 
 //=======================================================================================
 
@@ -108,10 +49,6 @@ Device::Device(Core& core, const DeviceConfiguration& config)
         Pin* pin = new Pin(id);
         m_pins[id] = pin;
     }
-
-    //Allocate the console peripheral
-    m_console = new IO_Console();
-    attach_peripheral(*m_console);
 }
 
 Device::~Device()
@@ -191,7 +128,7 @@ bool Device::init(CycleManager& cycle_manager)
     return true;
 }
 
-void Device::reset(uint8_t reset_flag)
+void Device::reset(int reset_flag)
 {
     m_logger.dbg("Device reset");
 
@@ -202,8 +139,8 @@ void Device::reset(uint8_t reset_flag)
     for (auto per : m_peripherals)
         per->reset();
 
-    if (m_state > State_Running)
-        m_state = State_Running;
+    if (m_state >= State_Running && m_state < State_Done)
+        m_state = (m_reset_flags & Reset_Halt) ? State_Halted : State_Running;
 
     m_reset_flags = 0;
     m_sleep_mode = SleepMode::Active;
@@ -244,7 +181,7 @@ bool Device::load_firmware(const Firmware& firmware)
     }
 
     //Set the console register
-    m_console->set_register(firmware.console_register);
+    m_core.set_console_register(firmware.console_register);
 
     m_state = State_Running;
 
@@ -403,12 +340,13 @@ bool Device::core_ctlreq(ctlreq_id_t req, ctlreq_data_t* reqdata)
     }
 
     else if (req == AVR_CTLREQ_CORE_SHORTING) {
-        m_logger.err("Pin %s shorted", id_to_str(reqdata->index).c_str());
+        pin_id_t pin_id = reqdata->data.as_uint();
+        m_logger.err("Pin %s shorted", id_to_str(pin_id).c_str());
         if (m_options & Option_ResetOnPinShorting) {
-            m_reset_flags |= Reset_BOD;
+            m_reset_flags |= Reset_PowerOn;
             m_state = State_Reset;
         } else {
-            m_state = State_Stopped;
+            m_state = State_Crashed;
         }
         return true;
     }
@@ -423,7 +361,7 @@ bool Device::core_ctlreq(ctlreq_id_t req, ctlreq_data_t* reqdata)
     else if (req == AVR_CTLREQ_CORE_RESET) {
         m_reset_flags |= reqdata->data.as_uint();
         m_state = State_Reset;
-        m_logger.wng("MCU reset triggered, Flags = 0x%02x", m_reset_flags);
+        m_logger.wng("MCU reset triggered, Flags = 0x%08x", m_reset_flags);
         return true;
     }
 

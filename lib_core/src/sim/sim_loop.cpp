@@ -88,9 +88,9 @@ cycle_count_t AbstractSimLoop::run_device(cycle_count_t final_cycle)
         logger().wng("Device is done, stopping definitely");
     }
 
-    else if (dev_state >= Device::State_Stopped) {
+    else if (dev_state == Device::State_Break) {
         m_state = State_Stopped;
-        logger().wng("Device stopped, stopping");
+        logger().wng("Device hit a break, stopping");
     }
 
     return cycle_delta;
