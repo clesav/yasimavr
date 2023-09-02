@@ -128,7 +128,7 @@ bool Device::init(CycleManager& cycle_manager)
     return true;
 }
 
-void Device::reset(uint8_t reset_flag)
+void Device::reset(int reset_flag)
 {
     m_logger.dbg("Device reset");
 
@@ -139,8 +139,8 @@ void Device::reset(uint8_t reset_flag)
     for (auto per : m_peripherals)
         per->reset();
 
-    if (m_state > State_Running)
-        m_state = State_Running;
+    if (m_state >= State_Running && m_state < State_Done)
+        m_state = (m_reset_flags & Reset_Halt) ? State_Halted : State_Running;
 
     m_reset_flags = 0;
     m_sleep_mode = SleepMode::Active;
@@ -342,10 +342,10 @@ bool Device::core_ctlreq(ctlreq_id_t req, ctlreq_data_t* reqdata)
     else if (req == AVR_CTLREQ_CORE_SHORTING) {
         m_logger.err("Pin %s shorted", id_to_str(reqdata->index).c_str());
         if (m_options & Option_ResetOnPinShorting) {
-            m_reset_flags |= Reset_BOD;
+            m_reset_flags |= Reset_PowerOn;
             m_state = State_Reset;
         } else {
-            m_state = State_Stopped;
+            m_state = State_Crashed;
         }
         return true;
     }
@@ -360,7 +360,7 @@ bool Device::core_ctlreq(ctlreq_id_t req, ctlreq_data_t* reqdata)
     else if (req == AVR_CTLREQ_CORE_RESET) {
         m_reset_flags |= reqdata->data.as_uint();
         m_state = State_Reset;
-        m_logger.wng("MCU reset triggered, Flags = 0x%02x", m_reset_flags);
+        m_logger.wng("MCU reset triggered, Flags = 0x%08x", m_reset_flags);
         return true;
     }
 

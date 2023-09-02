@@ -69,19 +69,19 @@ public:
         State_Sleeping      = 0x31,
         State_Halted        = 0x41,
         State_Reset         = 0x50,
-        State_Stopped       = 0x60,
-        State_Break         = 0x70,
-        State_Done          = 0x80,
-        State_Crashed       = 0x90,
+        State_Break         = 0x60,
+        State_Done          = 0x70,
+        State_Crashed       = 0x80,
         State_Destroying    = 0xFF,
     };
 
     enum ResetFlag {
-        Reset_PowerOn = 0x01,
-        Reset_WDT     = 0x02,
-        Reset_BOD     = 0x04,
-        Reset_SW      = 0x08,
-        Reset_Ext     = 0x10,
+        Reset_PowerOn = 0x00000001,
+        Reset_WDT     = 0x00000002,
+        Reset_BOD     = 0x00000004,
+        Reset_SW      = 0x00000008,
+        Reset_Ext     = 0x00000010,
+        Reset_Halt    = 0x00010000,
     };
 
     //These options are to be used with set_option() and test_option() to alter
@@ -126,7 +126,7 @@ public:
     bool load_firmware(const Firmware& firmware);
 
     //Simulates a MCU reset
-    void reset(uint8_t reset_flags = Reset_PowerOn);
+    void reset(int reset_flags = Reset_PowerOn);
 
     //Executes one instruction cycle
     //The returned value is the duration of the instruction in cycles
@@ -172,7 +172,7 @@ private:
 
     Core& m_core;
     const DeviceConfiguration& m_config;
-    uint32_t m_options;
+    int m_options;
     State m_state;
     unsigned long m_frequency;
     SleepMode m_sleep_mode;
@@ -182,7 +182,7 @@ private:
     std::vector<Peripheral*> m_peripherals;
     std::map<pin_id_t, Pin*> m_pins;
     CycleManager* m_cycle_manager;
-    uint8_t m_reset_flags;
+    int m_reset_flags;
 
     std::string& name_from_pin(Pin* pin);
 
