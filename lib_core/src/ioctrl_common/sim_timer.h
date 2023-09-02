@@ -51,7 +51,7 @@ YASIMAVR_BEGIN_NAMESPACE
  *  Timers can be daisy-chained, so that the prescaler output of a timer feeds into the
  *  prescaler of another.
  */
-class PrescaledTimer : public CycleTimer {
+class AVR_CORE_PUBLIC_API PrescaledTimer : public CycleTimer {
 
 public:
 
@@ -159,7 +159,7 @@ inline Signal& PrescaledTimer::signal()
  * to the user.
  */
 
-class DLL_EXPORT TimerCounter {
+class AVR_CORE_PUBLIC_API TimerCounter {
 
 public:
 

@@ -42,8 +42,8 @@ BUILD_DIR := Release
 
 -include Makefile-defs
 
-CPP_ARGS := -std=c++17 -O3 -Wall -c -fmessage-length=0
-CPP_DEFS := -DYASIMAVR_DLL
+CPP_ARGS := -std=c++17 -O3 -Wall -c -fPIC -fmessage-length=0 -fvisibility=hidden
+CPP_DEFS := -DYASIMAVR_XT_DLL
 
 
 BUILD_ARTIFACT = $(BUILD_DIR)/$(ARTIFACT_PREFIX)$(ARTIFACT_NAME).$(ARTIFACT_EXT)
@@ -75,7 +75,7 @@ build-dirs:
 $(BUILD_ARTIFACT): $(OBJS) Makefile-release
 	@echo 'Building target: $@'
 	@echo 'Invoking: MinGW C++ Linker'
-	g++ -shared -L"../lib_core/Release" -o "$(BUILD_ARTIFACT)" $(OBJS) -lyasimavr_core
+	g++ -shared -s -L"../lib_core/Release" -o "$(BUILD_ARTIFACT)" $(OBJS) -lyasimavr_core
 	@echo 'Finished building target: $@'
 	@echo ' '
 

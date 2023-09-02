@@ -24,6 +24,7 @@
 #ifndef __YASIMAVR_AVR_WDT_H__
 #define __YASIMAVR_AVR_WDT_H__
 
+#include "arch_avr_globals.h"
 #include "core/sim_cycle_timer.h"
 #include "core/sim_interrupt.h"
 #include "ioctrl_common/sim_wdt.h"
@@ -52,7 +53,7 @@ struct ArchAVR_WDTConfig {
 
 };
 
-class DLL_EXPORT ArchAVR_WDT : public WatchdogTimer, public InterruptHandler {
+class AVR_ARCHAVR_PUBLIC_API ArchAVR_WDT : public WatchdogTimer, public InterruptHandler {
 
 public:
 

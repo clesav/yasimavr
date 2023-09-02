@@ -43,7 +43,7 @@ typedef short            int_vect_t;
 const cycle_count_t INVALID_CYCLE = -1;
 
 
-class reg_addr_t {
+class AVR_CORE_PUBLIC_API reg_addr_t {
 
 public:
 
@@ -66,7 +66,7 @@ const reg_addr_t INVALID_REGISTER;
 
 struct regbit_t;
 
-struct bitmask_t {
+struct AVR_CORE_PUBLIC_API bitmask_t {
 
     uint8_t bit;
     uint8_t mask;
@@ -105,7 +105,7 @@ struct bitmask_t {
 };
 
 
-struct regbit_t {
+struct AVR_CORE_PUBLIC_API regbit_t {
 
     reg_addr_t addr;
     uint8_t bit;
@@ -150,7 +150,7 @@ struct regbit_t {
 };
 
 
-class regbit_compound_t {
+class AVR_CORE_PUBLIC_API regbit_compound_t {
 
 public:
 
@@ -205,9 +205,9 @@ inline const regbit_t& regbit_compound_t::operator[](size_t index) const
 typedef unsigned long sim_id_t;
 typedef sim_id_t ctl_id_t;
 
-std::string id_to_str(sim_id_t id);
-sim_id_t str_to_id(const char* s);
-sim_id_t str_to_id(const std::string& s);
+std::string id_to_str(sim_id_t id) AVR_CORE_PUBLIC_API;
+sim_id_t str_to_id(const char* s) AVR_CORE_PUBLIC_API;
+sim_id_t str_to_id(const std::string& s) AVR_CORE_PUBLIC_API;
 
 constexpr sim_id_t chr_to_id(char a, char b, char c, char d)
 {
@@ -216,7 +216,7 @@ constexpr sim_id_t chr_to_id(char a, char b, char c, char d)
 
 //=======================================================================================
 
-class vardata_t {
+class AVR_CORE_PUBLIC_API vardata_t {
 
 public:
 

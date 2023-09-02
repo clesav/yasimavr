@@ -23,8 +23,8 @@
 
 #include "sim_firmware.h"
 #include "sim_device.h"
-#include <libelf.h>
-#include <gelf.h>
+#include "libelf.h"
+#include "gelf.h"
 #include <stdio.h>
 #include <cstring>
 

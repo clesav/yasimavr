@@ -25,6 +25,7 @@
 #ifndef __YASIMAVR_XT_ADC_H__
 #define __YASIMAVR_XT_ADC_H__
 
+#include "arch_xt_globals.h"
 #include "core/sim_interrupt.h"
 #include "ioctrl_common/sim_adc.h"
 #include "ioctrl_common/sim_timer.h"
@@ -70,9 +71,9 @@ struct ArchXT_ADCConfig {
 
 };
 
-class DLL_EXPORT ArchXT_ADC : public ADC,
-                              public Peripheral,
-                              public SignalHook {
+class AVR_ARCHXT_PUBLIC_API ArchXT_ADC : public ADC,
+                                         public Peripheral,
+                                         public SignalHook {
 
 public:
 

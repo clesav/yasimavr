@@ -38,7 +38,7 @@ YASIMAVR_BEGIN_NAMESPACE
 
 class CycleManager;
 
-class DLL_EXPORT CycleTimer {
+class AVR_CORE_PUBLIC_API CycleTimer {
 
 public:
 
@@ -78,7 +78,7 @@ private:
  * the overall cycle-level accuracy of the simulation is not guaranteed.
  * It it a counter guaranteed to start at 0 and always increasing.
  */
-class DLL_EXPORT CycleManager {
+class AVR_CORE_PUBLIC_API CycleManager {
 
 public:
 

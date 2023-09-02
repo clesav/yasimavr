@@ -66,7 +66,7 @@ class InterruptHandler;
  * routine should be executed.
  * The arbitration of priorities between vectors is left to concrete sub-classes.
 */
-class DLL_EXPORT InterruptController : public Peripheral {
+class AVR_CORE_PUBLIC_API InterruptController : public Peripheral {
 
     friend class InterruptHandler;
 
@@ -172,7 +172,7 @@ inline bool InterruptController::interrupt_raised(int_vect_t vector) const
  * It allows to raise (or cancel) an interrupt
  * The same handler can be used for several interrupts.
 */
-class DLL_EXPORT InterruptHandler {
+class AVR_CORE_PUBLIC_API InterruptHandler {
 
     friend class InterruptController;
 
@@ -207,7 +207,7 @@ private:
  * Class InterruptFlag
  * Generic helper to manage an Interrupt Flag/Enable in a I/O register
 */
-class DLL_EXPORT InterruptFlag : public InterruptHandler {
+class AVR_CORE_PUBLIC_API InterruptFlag : public InterruptHandler {
 
 public:
 

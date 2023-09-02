@@ -38,7 +38,7 @@ YASIMAVR_BEGIN_NAMESPACE
  * An initialization, the port will lookup all possible ports with the letter
  * (e.g. port 'B' will lookup all pins named 'PBx' (x=0 to 7)
  */
-class DLL_EXPORT Port : public Peripheral, public SignalHook {
+class AVR_CORE_PUBLIC_API Port : public Peripheral, public SignalHook {
 
 public:
 

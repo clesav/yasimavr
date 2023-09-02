@@ -24,6 +24,7 @@
 #ifndef __YASIMAVR_XT_USART_H__
 #define __YASIMAVR_XT_USART_H__
 
+#include "arch_xt_globals.h"
 #include "core/sim_interrupt.h"
 #include "ioctrl_common/sim_uart.h"
 
@@ -60,7 +61,7 @@ struct ArchXT_USARTConfig {
 
 };
 
-class DLL_EXPORT ArchXT_USART : public Peripheral, public SignalHook {
+class AVR_ARCHXT_PUBLIC_API ArchXT_USART : public Peripheral, public SignalHook {
 
 public:
 

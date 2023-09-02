@@ -49,7 +49,7 @@ YASIMAVR_BEGIN_NAMESPACE
 
 class SPI;
 
-class SPIClient {
+class AVR_CORE_PUBLIC_API SPIClient {
 
 public:
 
@@ -72,7 +72,7 @@ private:
 };
 
 
-class DLL_EXPORT SPI : public SPIClient, public CycleTimer {
+class AVR_CORE_PUBLIC_API SPI : public SPIClient, public CycleTimer {
 
 public:
 

@@ -49,7 +49,7 @@ YASIMAVR_BEGIN_NAMESPACE
  *  - "signature"           .signature                  0x840000
  *  - "user_signatures"     .user_signatures            0x850000
  */
-class DLL_EXPORT Firmware {
+class AVR_CORE_PUBLIC_API Firmware {
 
 public:
 

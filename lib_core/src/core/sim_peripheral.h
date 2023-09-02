@@ -164,7 +164,7 @@ const T* find_reg_config_p(const std::vector<T>& v, uint64_t reg_value)
  * Class Peripheral
  * Abstract class defining a framework for MCU peripherals
  */
-class DLL_EXPORT Peripheral: public IO_RegHandler {
+class AVR_CORE_PUBLIC_API Peripheral: public IO_RegHandler {
 
 public:
 
@@ -371,7 +371,7 @@ inline void Peripheral::write_ioreg(reg_addr_t reg, uint8_t bit, uint8_t value)
  * Class defining a dummy peripheral. It does nothing but adding I/O registers.
  */
 
-class DLL_EXPORT DummyController : public Peripheral {
+class AVR_CORE_PUBLIC_API DummyController : public Peripheral {
 
 public:
 

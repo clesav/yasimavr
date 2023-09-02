@@ -24,6 +24,7 @@
 #ifndef __YASIMAVR_AVR_PORT_H__
 #define __YASIMAVR_AVR_PORT_H__
 
+#include "arch_avr_globals.h"
 #include "ioctrl_common/sim_port.h"
 
 YASIMAVR_BEGIN_NAMESPACE
@@ -44,7 +45,7 @@ struct ArchAVR_PortConfig {
 };
 
 
-class DLL_EXPORT ArchAVR_Port : public Port {
+class AVR_ARCHAVR_PUBLIC_API ArchAVR_Port : public Port {
 
 public:
 
