@@ -24,7 +24,7 @@
 #ifndef __YASIMAVR_AVR_TWI_H__
 #define __YASIMAVR_AVR_TWI_H__
 
-
+#include "arch_avr_globals.h"
 #include "core/sim_interrupt.h"
 #include "ioctrl_common/sim_twi.h"
 
@@ -65,7 +65,7 @@ struct ArchAVR_TWIConfig {
 
 };
 
-class DLL_EXPORT ArchAVR_TWI : public Peripheral, public SignalHook {
+class AVR_ARCHAVR_PUBLIC_API ArchAVR_TWI : public Peripheral, public SignalHook {
 
 public:
 

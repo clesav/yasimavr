@@ -60,7 +60,7 @@ YASIMAVR_BEGIN_NAMESPACE
 
 //=======================================================================================
 
-class DLL_EXPORT TWIPacket {
+class AVR_CORE_PUBLIC_API TWIPacket {
 
 public:
 
@@ -100,7 +100,7 @@ public:
 
 class TWIBus;
 
-class DLL_EXPORT TWIEndPoint {
+class AVR_CORE_PUBLIC_API TWIEndPoint {
 
 public:
 
@@ -143,7 +143,7 @@ private:
 };
 
 
-class DLL_EXPORT TWIBus {
+class AVR_CORE_PUBLIC_API TWIBus {
 
 public:
 
@@ -218,7 +218,7 @@ inline Signal& TWIBus::signal()
 }
 
 
-class DLL_EXPORT TWI : public TWIEndPoint {
+class AVR_CORE_PUBLIC_API TWI : public TWIEndPoint {
 
 public:
 

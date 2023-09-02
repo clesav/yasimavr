@@ -33,7 +33,7 @@ YASIMAVR_BEGIN_NAMESPACE
 
 //=======================================================================================
 
-class DLL_EXPORT LogWriter {
+class AVR_CORE_PUBLIC_API LogWriter {
 
 public:
 
@@ -53,7 +53,7 @@ public:
 
 class Logger;
 
-class DLL_EXPORT LogHandler {
+class AVR_CORE_PUBLIC_API LogHandler {
 
     friend class Logger;
 
@@ -88,7 +88,7 @@ inline LogWriter& LogHandler::writer()
 
 //=======================================================================================
 
-class DLL_EXPORT Logger {
+class AVR_CORE_PUBLIC_API Logger {
 
 public:
 
@@ -158,7 +158,7 @@ inline Logger* Logger::parent() const
 }
 
 
-Logger& global_logger();
+Logger& global_logger() AVR_CORE_PUBLIC_API;
 
 
 YASIMAVR_END_NAMESPACE

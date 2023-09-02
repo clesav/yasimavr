@@ -42,7 +42,7 @@ class Port;
  
 typedef sim_id_t pin_id_t;
  
-class DLL_EXPORT Pin : public SignalHook {
+class AVR_CORE_PUBLIC_API Pin : public SignalHook {
 
 public:
 

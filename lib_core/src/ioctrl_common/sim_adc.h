@@ -44,7 +44,7 @@ YASIMAVR_BEGIN_NAMESPACE
  * Configuration enumerations and structures
 */
 
-class DLL_EXPORT ADC {
+class AVR_CORE_PUBLIC_API ADC {
 
 public:
 

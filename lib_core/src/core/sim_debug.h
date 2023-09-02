@@ -39,7 +39,7 @@ YASIMAVR_BEGIN_NAMESPACE
  *  - data watchpoints
  *  - device reset and state change
  */
-class DLL_EXPORT DeviceDebugProbe {
+class AVR_CORE_PUBLIC_API DeviceDebugProbe {
 
 public:
 

@@ -56,7 +56,7 @@ enum class SleepMode;
 /*
  * Generic AVR device definition, holding all the data about a MCU
  */
-class DLL_EXPORT Device {
+class AVR_CORE_PUBLIC_API Device {
 
     friend class DeviceDebugProbe;
 

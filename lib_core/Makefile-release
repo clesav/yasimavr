@@ -42,8 +42,8 @@ BUILD_DIR := Release
 
 -include Makefile-defs
 
-CPP_ARGS := -std=c++17 -O3 -Wall -c -fmessage-length=0
-CPP_DEFS := -DYASIMAVR_DLL
+CPP_ARGS := -std=c++17 -O3 -Wall -c -fPIC -fmessage-length=0 -fvisibility=hidden
+CPP_DEFS := -DYASIMAVR_CORE_DLL
 
 
 BUILD_ARTIFACT = $(BUILD_DIR)/$(ARTIFACT_PREFIX)$(ARTIFACT_NAME).$(ARTIFACT_EXT)
@@ -78,7 +78,7 @@ build-dirs:
 $(BUILD_ARTIFACT): $(OBJS) $(MAKEFILE)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C++ Linker'
-	g++ -shared -o "$(BUILD_ARTIFACT)" $(OBJS) -lelf
+	g++ -shared -s -o "$(BUILD_ARTIFACT)" $(OBJS) -lelf
 	@echo 'Finished building target: $@'
 	@echo ' '
 

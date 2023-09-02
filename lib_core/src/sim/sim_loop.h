@@ -38,7 +38,7 @@ YASIMAVR_BEGIN_NAMESPACE
  * Base class for a simloop
  */
 
-class DLL_EXPORT AbstractSimLoop {
+class AVR_CORE_PUBLIC_API AbstractSimLoop {
 
 public:
 
@@ -111,7 +111,7 @@ inline Logger& AbstractSimLoop::logger()
  *  to align the simulated time with the system time.
  *  - In fast mode : no adjustment is done and the simulation runs as fast as permitted.
  */
-class DLL_EXPORT SimLoop : public AbstractSimLoop {
+class AVR_CORE_PUBLIC_API SimLoop : public AbstractSimLoop {
 
 public:
 
@@ -147,7 +147,7 @@ inline void SimLoop::set_fast_mode(bool fast)
  * the simulated MCU.
  */
 
-class DLL_EXPORT AsyncSimLoop : public AbstractSimLoop {
+class AVR_CORE_PUBLIC_API AsyncSimLoop : public AbstractSimLoop {
 
 public:
 

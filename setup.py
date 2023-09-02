@@ -1,5 +1,5 @@
 NAME = "yasimavr"
-VERSION = "0.0.2"
+VERSION = "0.0.3.dev1"
 DESCRIPTION = "Yet Another SIMulator for AVR"
 LICENSE = "GPLv3"
 AUTHOR = "C. Savergne"
@@ -14,6 +14,7 @@ CLASSIFIERS = [
     'Programming Language :: Python :: 3.8',
     'Programming Language :: Python :: 3.9',
     'Programming Language :: Python :: 3.10',
+    'Programming Language :: Python :: 3.11',
     'Topic :: Scientific/Engineering',
 ]
 KEYWORDS = 'avr simavr'
@@ -28,6 +29,7 @@ from setuptools import setup, Extension
 from setuptools.extension import Library
 from setuptools.command.build_ext import build_ext, libtype
 from distutils.sysconfig import get_config_var
+from wheel.bdist_wheel import bdist_wheel
 
 from sipbuild.module import module as sip_module
 from sipbuild.pyproject import PyProject
@@ -61,10 +63,22 @@ LIBRARIES = {
     'arch_xt': LibraryData('arch_xt', 'lib_arch_xt/src'),
 }
 
-GCC_ARGS = [
+GCC_SHLIB_COMPILER_EXTRA_ARGS = [
     '-std=c++17',
     '-O3',
-    '-fmessage-length=0'
+    '-fPIC',
+    '-fmessage-length=0',
+    '-fvisibility=hidden',
+]
+
+GCC_SHLIB_LINKER_EXTRA_ARGS = [
+    '-s',
+    '-fPIC',
+    '-fvisibility=hidden',
+]
+
+GCC_EXT_COMPILER_EXTRA_ARGS = [
+    '-O3',
 ]
 
 
@@ -126,7 +140,7 @@ class _BindingsSubPackageBuilder(yasimavr_bindings_builder):
         ext = Extension(buildable.fq_name,
                         buildable.sources,
                         define_macros=define_macros,
-                        extra_compile_args=buildable.extra_compile_args + GCC_ARGS,
+                        extra_compile_args=buildable.extra_compile_args + GCC_EXT_COMPILER_EXTRA_ARGS,
                         extra_link_args=buildable.extra_link_args,
                         extra_objects=buildable.extra_objects,
                         include_dirs=buildable.include_dirs,
@@ -163,6 +177,11 @@ class _BindingsSubPackageProject(yasimavr_bindings_project):
 
 class yasimavr_build_ext(build_ext):
 
+    user_options = build_ext.user_options + [
+        ('extra_compile_args=', '', "extra compiler flags"),
+        ('extra_link_args=', '', "extra linker flags"),
+    ]
+
 
     def get_ext_filename(self, fullname):
         #Override of the normal behavior, in order to avoid adding the
@@ -172,10 +191,35 @@ class yasimavr_build_ext(build_ext):
             ext = self.ext_map[fullname]
             if isinstance(ext, Library):
                 filename = os.path.join(*fullname.split('.'))
-                shlibname = self.shlib_compiler.library_filename(filename, libtype)
+                shlibname = self.shlib_compiler.library_filename(filename, 'shared')
                 return shlibname
 
         return super().get_ext_filename(fullname)
+
+
+    #Overriding the setuptools overrride to actually get shared libraries
+    def setup_shlib_compiler(self):
+        def link_shared_object(
+                self, objects, output_libname, output_dir=None, libraries=None,
+                library_dirs=None, runtime_library_dirs=None, export_symbols=None,
+                debug=0, extra_preargs=None, extra_postargs=None, build_temp=None,
+                target_lang=None):
+            self.link(
+                self.SHARED_LIBRARY, objects, output_libname,
+                output_dir, libraries, library_dirs, runtime_library_dirs,
+                export_symbols, debug, extra_preargs, extra_postargs,
+                build_temp, target_lang
+            )
+
+        super().setup_shlib_compiler()
+
+        self.shlib_compiler.link_shared_object = link_shared_object.__get__(self.shlib_compiler)
+
+
+    def initialize_options(self):
+        super().initialize_options()
+        self.extra_compile_args = None
+        self.extra_link_args = None
 
 
     def finalize_options(self):
@@ -190,6 +234,14 @@ class yasimavr_build_ext(build_ext):
 
 
     def run(self):
+
+        #Add the extra flags for the compiler and the linker
+        for lib in self.extensions:
+            if self.extra_compile_args is not None:
+                lib.extra_compile_args = lib.extra_compile_args + self.extra_compile_args.split()
+            if self.extra_link_args is not None:
+                lib.extra_link_args = lib.extra_link_args + self.extra_link_args.split()
+
         #=====================================================================
         #Create the SIP extension module to build
         #=====================================================================
@@ -229,7 +281,7 @@ class yasimavr_build_ext(build_ext):
             sip_args += ['--tracing', '--gdb', '--no-line-directive']
 
         old_cwd = os.getcwd()
-        os.chdir('bindings');
+        os.chdir('bindings')
         sip_project = _BindingsSubPackageProject(sip_args, sipbuild_temp, self.build_lib)
         os.chdir(old_cwd)
 
@@ -277,6 +329,7 @@ setup(
     version = VERSION,
     description = DESCRIPTION,
     long_description = open("README.md").read(),
+    long_description_content_type = "text/markdown",
     author = AUTHOR,
     author_email = AUTHOR_EMAIL,
     license = LICENSE,
@@ -305,22 +358,30 @@ setup(
         Library(name='yasimavr.lib.yasimavr_core',
                 sources=LIBRARIES['core'].get_sources(),
                 libraries=['elf'],
-                define_macros=[('YASIMAVR_DLL', None)],
-                extra_compile_args=GCC_ARGS),
+                define_macros=[('YASIMAVR_CORE_DLL', None)],
+                extra_compile_args=GCC_SHLIB_COMPILER_EXTRA_ARGS,
+                extra_link_args=GCC_SHLIB_LINKER_EXTRA_ARGS,
+        ),
 
         Library(name='yasimavr.lib.yasimavr_arch_avr',
                 sources=LIBRARIES['arch_avr'].get_sources(),
                 include_dirs=['lib_core/src'],
                 libraries=['yasimavr_core'],
                 library_dirs = ['yasimavr/lib'],
-                extra_compile_args=GCC_ARGS),
+                define_macros=[('YASIMAVR_AVR_DLL', None)],
+                extra_compile_args=GCC_SHLIB_COMPILER_EXTRA_ARGS,
+                extra_link_args=GCC_SHLIB_LINKER_EXTRA_ARGS,
+        ),
 
         Library(name='yasimavr.lib.yasimavr_arch_xt',
                 sources=LIBRARIES['arch_xt'].get_sources(),
                 include_dirs=['lib_core/src'],
                 libraries=['yasimavr_core'],
                 library_dirs = ['yasimavr/lib'],
-                extra_compile_args=GCC_ARGS),
+                define_macros=[('YASIMAVR_XT_DLL', None)],
+                extra_compile_args=GCC_SHLIB_COMPILER_EXTRA_ARGS,
+                extra_link_args=GCC_SHLIB_LINKER_EXTRA_ARGS,
+        ),
     ],
 
     cmdclass = {

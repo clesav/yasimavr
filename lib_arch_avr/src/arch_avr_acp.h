@@ -24,6 +24,7 @@
 #ifndef __YASIMAVR_AVR_ACOMP_H__
 #define __YASIMAVR_AVR_ACOMP_H__
 
+#include "arch_avr_globals.h"
 #include "ioctrl_common/sim_acp.h"
 #include "ioctrl_common/sim_adc.h"
 #include "ioctrl_common/sim_vref.h"
@@ -66,9 +67,9 @@ struct ArchAVR_ACPConfig {
 };
 
 
-class DLL_EXPORT ArchAVR_ACP : public ACP,
-                               public Peripheral,
-                               public SignalHook {
+class AVR_ARCHAVR_PUBLIC_API ArchAVR_ACP : public ACP,
+                                           public Peripheral,
+                                           public SignalHook {
 
 public:
 

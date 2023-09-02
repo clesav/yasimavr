@@ -42,7 +42,7 @@ struct mem_block_t {
 };
 
 
-class DLL_EXPORT NonVolatileMemory {
+class AVR_CORE_PUBLIC_API NonVolatileMemory {
 
 public:
 

@@ -58,7 +58,7 @@ enum class SleepMode {
     PowerSave,
 };
 
-const char* SleepModeName(SleepMode mode);
+const char* SleepModeName(SleepMode mode) AVR_CORE_PUBLIC_API;
 
 
 //=======================================================================================
@@ -87,7 +87,7 @@ struct SleepConfig {
 };
 
 
-class DLL_EXPORT SleepController : public Peripheral, public SignalHook {
+class AVR_CORE_PUBLIC_API SleepController : public Peripheral, public SignalHook {
 
 public:
 

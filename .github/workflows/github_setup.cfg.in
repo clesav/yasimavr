@@ -1,0 +1,12 @@
+#This file contains settings specific to the GitHub Actions Windows executer
+#The workflow makes a copy of this file named 'setup.cfg', to be used by setuptools
+
+[build_ext]
+
+compiler=mingw32
+include_dirs=c:\msys64\mingw64\include
+library_dirs=c:\msys64\mingw64\lib
+
+#for some reason, GCC requires this option to link happy
+extra_compile_args=-fstack-protector
+extra_link_args=-fstack-protector

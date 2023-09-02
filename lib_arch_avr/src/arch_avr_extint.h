@@ -24,6 +24,7 @@
 #ifndef __YASIMAVR_AVR_EXTINT_H__
 #define __YASIMAVR_AVR_EXTINT_H__
 
+#include "arch_avr_globals.h"
 #include "core/sim_peripheral.h"
 #include "core/sim_interrupt.h"
 #include "core/sim_pin.h"
@@ -60,9 +61,9 @@ struct ArchAVR_ExtIntConfig {
 };
 
 
-class DLL_EXPORT ArchAVR_ExtInt : public Peripheral,
-                                  public InterruptHandler,
-                                  public SignalHook {
+class AVR_ARCHAVR_PUBLIC_API ArchAVR_ExtInt : public Peripheral,
+                                             public InterruptHandler,
+                                             public SignalHook {
 
 public:
 

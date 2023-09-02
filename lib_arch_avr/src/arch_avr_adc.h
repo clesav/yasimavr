@@ -24,6 +24,7 @@
 #ifndef __YASIMAVR_AVR_ADC_H__
 #define __YASIMAVR_AVR_ADC_H__
 
+#include "arch_avr_globals.h"
 #include "core/sim_interrupt.h"
 #include "ioctrl_common/sim_adc.h"
 #include "ioctrl_common/sim_timer.h"
@@ -79,9 +80,9 @@ struct ArchAVR_ADCConfig {
 };
 
 
-class DLL_EXPORT ArchAVR_ADC : public ADC,
-                               public Peripheral,
-                               public SignalHook {
+class AVR_ARCHAVR_PUBLIC_API ArchAVR_ADC : public ADC,
+                                           public Peripheral,
+                                           public SignalHook {
 
 public:
 

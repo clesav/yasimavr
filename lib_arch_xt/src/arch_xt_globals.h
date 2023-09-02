@@ -1,7 +1,7 @@
 /*
- * sim_acp.h
+ * arch_xt_globals.h
  *
- *  Copyright 2022 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2023 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -21,41 +21,31 @@
 
 //=======================================================================================
 
-#ifndef __YASIMAVR_ACP_H__
-#define __YASIMAVR_ACP_H__
-
-#include "../core/sim_peripheral.h"
-#include "../core/sim_pin.h"
-
-YASIMAVR_BEGIN_NAMESPACE
+#ifndef __YASIMAVR_XT_GLOBALS_H__
+#define __YASIMAVR_XT_GLOBALS_H__
 
 
-//=======================================================================================
-/*
- * Configuration enumerations and structures
-*/
-class AVR_CORE_PUBLIC_API ACP {
-
-public:
-
-    enum Channel {
-        Channel_Pin,
-        Channel_AcompRef
-    };
-
-    struct channel_config_t : base_reg_config_t {
-        Channel type;
-        pin_id_t pin;
-    };
-
-    enum SignalId {
-        Signal_Output,
-        Signal_DAC
-    };
-
-};
+#if defined _WIN32
+  #ifdef YASIMAVR_XT_DLL
+    #ifdef __GNUC__
+      #define AVR_ARCHXT_PUBLIC_API __attribute__ ((dllexport))
+    #else
+      #define AVR_ARCHXT_PUBLIC_API __declspec(dllexport)
+    #endif
+  #else
+    #ifdef __GNUC__
+      #define AVR_ARCHXT_PUBLIC_API __attribute__ ((dllimport))
+    #else
+      #define AVR_ARCHXT_PUBLIC_API __declspec(dllimport)
+    #endif
+  #endif
+#else
+  #if __GNUC__ >= 4
+    #define AVR_ARCHXT_PUBLIC_API __attribute__ ((visibility ("default")))
+  #else
+    #define AVR_ARCHXT_PUBLIC_API
+  #endif
+#endif
 
 
-YASIMAVR_END_NAMESPACE
-
-#endif //__YASIMAVR_ACP_H__
+#endif //__YASIMAVR_XT_GLOBALS_H__

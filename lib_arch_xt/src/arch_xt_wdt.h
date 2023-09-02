@@ -24,6 +24,7 @@
 #ifndef __YASIMAVR_XT_WDT_H__
 #define __YASIMAVR_XT_WDT_H__
 
+#include "arch_xt_globals.h"
 #include "ioctrl_common/sim_wdt.h"
 
 YASIMAVR_BEGIN_NAMESPACE
@@ -44,7 +45,7 @@ struct ArchXT_WDTConfig {
 };
 
 
-class DLL_EXPORT ArchXT_WDT : public WatchdogTimer {
+class AVR_ARCHXT_PUBLIC_API ArchXT_WDT : public WatchdogTimer {
 
 public:
 

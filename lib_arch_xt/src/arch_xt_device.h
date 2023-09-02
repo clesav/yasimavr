@@ -24,6 +24,7 @@
 #ifndef __YASIMAVR_XT_DEVICE_H__
 #define __YASIMAVR_XT_DEVICE_H__
 
+#include "arch_xt_globals.h"
 #include "core/sim_core.h"
 #include "core/sim_device.h"
 #include "core/sim_interrupt.h"
@@ -54,7 +55,7 @@ typedef DeviceConfiguration ArchXT_DeviceConfig;
 
 //=======================================================================================
 
-class DLL_EXPORT ArchXT_Core : public Core {
+class AVR_ARCHXT_PUBLIC_API ArchXT_Core : public Core {
 
 public:
 
@@ -85,7 +86,7 @@ friend class ArchXT_Device;
 
 //=======================================================================================
 
-class DLL_EXPORT ArchXT_Device : public Device {
+class AVR_ARCHXT_PUBLIC_API ArchXT_Device : public Device {
 
 public:
 

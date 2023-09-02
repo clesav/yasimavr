@@ -41,8 +41,8 @@ BUILD_DIR := Debug
 
 -include Makefile-defs
 
-CPP_ARGS := -std=c++17 -O0 -g3 -w -Wall -c -fmessage-length=0 -fvisibility=hidden
-CPP_DEFS := -DYASIMAVR_USE_TRACE -DYASIMAVR_DLL
+CPP_ARGS := -std=c++17 -O0 -g3 -Wall -c -fPIC -fmessage-length=0 -fvisibility=hidden
+CPP_DEFS := -DYASIMAVR_XT_DLL
 
 
 BUILD_ARTIFACT = $(BUILD_DIR)/$(ARTIFACT_PREFIX)$(ARTIFACT_NAME).$(ARTIFACT_EXT)

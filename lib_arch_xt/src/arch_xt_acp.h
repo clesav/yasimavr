@@ -25,6 +25,7 @@
 #ifndef __YASIMAVR_XT_ACOMP_H__
 #define __YASIMAVR_XT_ACOMP_H__
 
+#include "arch_xt_globals.h"
 #include "ioctrl_common/sim_acp.h"
 #include "ioctrl_common/sim_vref.h"
 #include "core/sim_interrupt.h"
@@ -60,9 +61,9 @@ struct ArchXT_ACPConfig {
 
 };
 
-class DLL_EXPORT ArchXT_ACP : public ACP,
-                              public Peripheral,
-                              public SignalHook {
+class AVR_ARCHXT_PUBLIC_API ArchXT_ACP : public ACP,
+                                         public Peripheral,
+                                         public SignalHook {
 
 public:
 

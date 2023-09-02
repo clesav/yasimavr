@@ -24,6 +24,7 @@
 #ifndef __YASIMAVR_AVR_MISC_H__
 #define __YASIMAVR_AVR_MISC_H__
 
+#include "arch_avr_globals.h"
 #include "core/sim_interrupt.h"
 #include "ioctrl_common/sim_vref.h"
 
@@ -35,7 +36,7 @@ YASIMAVR_BEGIN_NAMESPACE
  * Implementation of a Voltage Reference controller for AVR series
  */
 
-class DLL_EXPORT ArchAVR_VREF : public VREF {
+class AVR_ARCHAVR_PUBLIC_API ArchAVR_VREF : public VREF {
 
 public:
 
@@ -48,7 +49,7 @@ public:
 /*
  * Implementation of a interrupt controller for AVR series
  */
-class DLL_EXPORT ArchAVR_IntCtrl : public InterruptController {
+class AVR_ARCHAVR_PUBLIC_API ArchAVR_IntCtrl : public InterruptController {
 
 public:
 
@@ -73,7 +74,7 @@ struct ArchAVR_MiscConfig {
 };
 
 
-class DLL_EXPORT ArchAVR_MiscRegCtrl : public Peripheral {
+class AVR_ARCHAVR_PUBLIC_API ArchAVR_MiscRegCtrl : public Peripheral {
 
 public:
 

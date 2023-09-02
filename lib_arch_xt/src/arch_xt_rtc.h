@@ -24,6 +24,7 @@
 #ifndef __YASIMAVR_XT_RTC_H__
 #define __YASIMAVR_XT_RTC_H__
 
+#include "arch_xt_globals.h"
 #include "core/sim_peripheral.h"
 #include "core/sim_interrupt.h"
 #include "ioctrl_common/sim_timer.h"
@@ -62,7 +63,7 @@ struct ArchXT_RTCConfig {
 };
 
 
-class DLL_EXPORT ArchXT_RTC : public Peripheral {
+class AVR_ARCHXT_PUBLIC_API ArchXT_RTC : public Peripheral {
 
 public:
 
