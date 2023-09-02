@@ -3,7 +3,10 @@ name: Python packaging
 on:
   push:
     branches:
-      - cibuildwheel
+      - main
+
+permissions:
+  contents: read
 
 jobs:
   build:
