@@ -96,8 +96,7 @@ class GDB_Stub:
         else:
             raise ValueError('device and simloop cannot be both None')
 
-        self._probe = DeviceDebugProbe()
-        self._probe.attach(self._device)
+        self._probe = DeviceDebugProbe(self._device)
 
         self._server = _GDB_StubServer(conn_point, self)
         self._socket = None

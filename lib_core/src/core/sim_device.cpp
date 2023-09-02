@@ -340,7 +340,8 @@ bool Device::core_ctlreq(ctlreq_id_t req, ctlreq_data_t* reqdata)
     }
 
     else if (req == AVR_CTLREQ_CORE_SHORTING) {
-        m_logger.err("Pin %s shorted", id_to_str(reqdata->index).c_str());
+        pin_id_t pin_id = reqdata->data.as_uint();
+        m_logger.err("Pin %s shorted", id_to_str(pin_id).c_str());
         if (m_options & Option_ResetOnPinShorting) {
             m_reset_flags |= Reset_PowerOn;
             m_state = State_Reset;

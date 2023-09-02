@@ -116,7 +116,7 @@ void Port::pin_state_changed(uint8_t num, Pin::State state)
 {
     logger().dbg("Detected Pin %d change to %s", num, Pin::StateName(state));
     if (state == Pin::State_Shorted) {
-        ctlreq_data_t d = { .index = m_pins[num]->id() };
+        ctlreq_data_t d = { .data = m_pins[num]->id() };
         device()->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_SHORTING, &d);
         return;
     }

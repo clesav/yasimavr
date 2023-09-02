@@ -75,7 +75,6 @@ WatchdogTimer::WatchdogTimer()
 ,m_win_start(0)
 ,m_win_end(0)
 ,m_wdr_cycle(0)
-,m_wdr_sync(false)
 {
     m_wd_timer = new WDT_Timer(*this);
     m_wdr_sync_timer = new WDR_Sync_Timer(*this);
@@ -97,7 +96,6 @@ void WatchdogTimer::reset()
 {
     m_win_start = 0;
     m_win_end = 0;
-    m_wdr_sync = false;
     device()->cycle_manager()->cancel(*m_wd_timer);
     device()->cycle_manager()->cancel(*m_wdr_sync_timer);
 }
@@ -134,10 +132,9 @@ void WatchdogTimer::set_timer(uint32_t wdr_win_start, uint32_t wdr_win_end, uint
 bool WatchdogTimer::ctlreq(ctlreq_id_t req, ctlreq_data_t*)
 {
     if (req == AVR_CTLREQ_WATCHDOG_RESET) {
-        if (m_win_end && !m_wdr_sync) {
-            m_wdr_sync = true;
+        if (m_win_end && !m_wdr_sync_timer->scheduled())
             device()->cycle_manager()->delay(*m_wdr_sync_timer, m_clk_factor * 3);
-        }
+
         return true;
     }
     return false;

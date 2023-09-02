@@ -109,7 +109,7 @@ void SleepController::raised(const signal_data_t& sigdata, int)
 {
     //data.u contains the state of the interrupt. We only do something on a 'Raise'
     if (sigdata.sigid != InterruptController::Signal_StateChange ||
-        sigdata.data != (int) InterruptController::State_Raised)
+        sigdata.data.as_int() != InterruptController::State_Raised)
         return;
 
     int_vect_t vector = sigdata.index;

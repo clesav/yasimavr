@@ -148,8 +148,6 @@ protected:
     flash_addr_t m_pc;
     //Counter to inhibit interrupts for a given number of instructions
     unsigned int m_int_inhib_counter;
-    //Signal that is raised when the interrupt counter reaches zero
-    //Signal m_int_inhib_signal;
     //Pointer to the generic debug probe
     DeviceDebugProbe* m_debug_probe;
 

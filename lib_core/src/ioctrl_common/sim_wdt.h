@@ -80,7 +80,6 @@ private:
     //The WDR reset simulates a signal synchronisation to the watchdog clock
     //by waiting for 3 WDT clock cycles before resetting the timer
     //this flag indicates if the timer is for a WDT timeout or for WDR signal sync.
-    bool m_wdr_sync;
     WDR_Sync_Timer* m_wdr_sync_timer;
 
     cycle_count_t wd_timer_next(cycle_count_t when);

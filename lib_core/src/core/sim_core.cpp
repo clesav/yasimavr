@@ -133,11 +133,8 @@ int Core::exec_cycle()
 
     //Decrement the instruction counter if used.
     //If it drops to 0, reactivate the interrupts and raise the signal
-    if (m_int_inhib_counter) {
+    if (m_int_inhib_counter)
         m_int_inhib_counter--;
-        //if (!m_int_inhib_counter)
-        //  m_int_inhib_signal.raise();
-    }
 
     //Executes one instruction and returns the number of clock cycles spent
     int cycles = run_instruction();
