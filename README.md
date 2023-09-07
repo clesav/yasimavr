@@ -15,7 +15,7 @@ Installation
 ------------
 Prerequisites:
 * Python (version >=3.7) and PIP
-* For Ubuntu, libelf is required: ```sudo apt-get install libelf```
+* For Ubuntu, libelf is required: ```sudo apt-get install libelf-dev```
 
 Install:
 * execute: ```pip install yasimavr```

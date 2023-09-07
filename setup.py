@@ -18,6 +18,10 @@ CLASSIFIERS = [
     'Topic :: Scientific/Engineering',
 ]
 KEYWORDS = 'avr simavr'
+PROJECT_URLS = {
+    'Source Code': 'https://github.com/clesav/yasimavr',
+    'Bug Tracker': 'https://github.com/clesav/yasimavr/issues',
+}
 
 import glob
 import os
@@ -337,6 +341,7 @@ setup(
     url = URL,
     classifiers = CLASSIFIERS,
     keywords = KEYWORDS,
+    project_urls = PROJECT_URLS,
 
     python_requires = ">=3.7",
     platforms = "Any",

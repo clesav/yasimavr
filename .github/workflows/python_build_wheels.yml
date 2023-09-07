@@ -4,46 +4,73 @@ on:
   push:
     branches:
       - main
+      - ci-update
 
 permissions:
   contents: read
 
 jobs:
-  build:
-    name: Build wheels on ${{ matrix.os }} with Python ${{ matrix.python-version }}
-    runs-on: ${{ matrix.os }}
+  build_windows:
+    name: Build wheels on windows with Python ${{ matrix.python-version }}
+    runs-on: windows-latest
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
         python-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
 
     steps:
     - uses: actions/checkout@v3
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
 
-    - name: install libelf and setup.cfg (Windows)
-      if: matrix.os == 'windows-latest'
+    - name: install libelf and setup.cfg
       run: |
         C:\\msys64\\msys2_shell -no-start -defterm -c "pacman -S --noconfirm mingw-w64-x86_64-libelf"
         copy ".\.github\workflows\github_setup.cfg.in" setup.cfg
 
-    - name: install libelf (Ubuntu)
-      if: matrix.os == 'ubuntu-latest'
-      run: sudo apt-get install libelf-dev
+    - name: Build package
+      run: |
+        python -m pip install --upgrade build
+        python -m build -w > "build_windows_${{ matrix.python-version }}.log" 2>&1
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: dist
+        path: |
+          dist/*.whl
+          build_windows_*.log
+
+
+  build_ubuntu:
+    name: Build wheels on ubuntu
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+
+    - name: install libelf
+      run: |
+        sudo apt-get update
+        sudo apt-get install libelf-dev
 
     - name: Build package
       run: |
         python -m pip install --upgrade build
-        python -m build -w
+        python -m build -w > "build_ubuntu.log" 2>&1
 
     - uses: actions/upload-artifact@v3
       with:
-        path: dist/*.whl
+        name: dist
+        path:
+          build_ubuntu.log
 
 
   sdist:
@@ -62,4 +89,5 @@ jobs:
 
     - uses: actions/upload-artifact@v3
       with:
+        name: dist
         path: dist/*.tar.gz
