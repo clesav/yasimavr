@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - ci-update
+      - ci-*
 
 permissions:
   contents: read
@@ -28,20 +28,21 @@ jobs:
 
     - name: install libelf and setup.cfg
       run: |
-        C:\\msys64\\msys2_shell -no-start -defterm -c "pacman -S --noconfirm mingw-w64-x86_64-libelf"
+        C:\\msys64\\msys2_shell -no-start -defterm -c "pacman -Sy --noconfirm mingw-w64-x86_64-libelf"
         copy ".\.github\workflows\github_setup.cfg.in" setup.cfg
 
     - name: Build package
       run: |
         python -m pip install --upgrade build
         python -m build -w > "build_windows_${{ matrix.python-version }}.log" 2>&1
+        move build_windows_*.log dist
 
     - uses: actions/upload-artifact@v3
       with:
         name: dist
         path: |
           dist/*.whl
-          build_windows_*.log
+          dist/*.log
 
 
   build_ubuntu:
@@ -65,12 +66,12 @@ jobs:
       run: |
         python -m pip install --upgrade build
         python -m build -w > "build_ubuntu.log" 2>&1
+        mv build_ubuntu.log dist
 
     - uses: actions/upload-artifact@v3
       with:
         name: dist
-        path:
-          build_ubuntu.log
+        path: dist/build_ubuntu.log
 
 
   sdist:
@@ -80,7 +81,9 @@ jobs:
     - uses: actions/checkout@v3
 
     - name: Set up Python
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
 
     - name: Build package
       run: |
