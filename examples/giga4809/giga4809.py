@@ -12,7 +12,7 @@ dev = device_library.load_device_from_config(desc)
 simloop = SimLoop(dev)
 dev_acc = device_library.DeviceAccessor(dev)
 
-fw = Firmware.read_elf('../../test/fw/unittest_4809.elf')
+fw = Firmware.read_elf('../mega4809_blink/mega4809_blink_fw.elf')
 fw.frequency = 1000
 dev.load_firmware(fw)
 
