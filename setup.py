@@ -1,5 +1,5 @@
 NAME = "yasimavr"
-VERSION = "0.0.3.dev1"
+VERSION = "0.0.3"
 DESCRIPTION = "Yet Another SIMulator for AVR"
 LICENSE = "GPLv3"
 AUTHOR = "C. Savergne"
