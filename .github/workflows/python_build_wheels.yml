@@ -33,16 +33,20 @@ jobs:
 
     - name: Build package
       run: |
-        python -m pip install --upgrade build
+        python -m pip install --upgrade build delvewheel
         python -m build -w > "build_windows_${{ matrix.python-version }}.log" 2>&1
-        move build_windows_*.log dist
+        $files = Get-ChildItem ".\dist"
+        foreach ($f in $files) {
+          python -m delvewheel repair $f.FullName --ignore-in-wheel -w ./wheelhouse
+        }
+        move build_windows_*.log wheelhouse
 
     - uses: actions/upload-artifact@v3
       with:
         name: dist
         path: |
-          dist/*.whl
-          dist/*.log
+          wheelhouse/*.whl
+          wheelhouse/*.log
 
 
   build_ubuntu:
