@@ -8,5 +8,5 @@ include_dirs=c:\msys64\mingw64\include
 library_dirs=c:\msys64\mingw64\lib
 
 #for some reason, GCC requires this option to link happy
-extra_compile_args=-fstack-protector
-extra_link_args=-fstack-protector
+#extra_compile_args=-fstack-protector
+#extra_link_args=-fstack-protector
