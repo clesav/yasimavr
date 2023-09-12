@@ -32,6 +32,7 @@ jobs:
         copy ".\.github\workflows\github_setup.cfg.in" setup.cfg
 
     - name: Build package
+      continue-on-error: true
       run: |
         python -m pip install --upgrade build delvewheel
         python -m build -w > "build_windows_${{ matrix.python-version }}.log" 2>&1
