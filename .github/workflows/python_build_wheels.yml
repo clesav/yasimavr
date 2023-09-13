@@ -13,10 +13,10 @@ jobs:
   build_windows:
     name: Build wheels on windows with Python ${{ matrix.python-version }}
     runs-on: windows-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
+    # strategy:
+      # fail-fast: false
+      # matrix:
+        # python-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
 
     steps:
     - uses: actions/checkout@v3
@@ -24,7 +24,7 @@ jobs:
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version: "3.11" #${{ matrix.python-version }}
 
     - name: install libelf and setup.cfg
       run: |
@@ -48,46 +48,59 @@ jobs:
           wheelhouse/*.whl
 
 
-  build_ubuntu:
-    name: Build wheels on ubuntu
-    runs-on: ubuntu-latest
+  # build_ubuntu:
+    # name: Build wheels on ubuntu
+    # runs-on: ubuntu-latest
 
+    # steps:
+    # - uses: actions/checkout@v3
+
+    # - name: Set up Python
+      # uses: actions/setup-python@v4
+      # with:
+        # python-version: "3.11"
+
+    # - name: install libelf
+      # run: |
+        # sudo apt-get update
+        # sudo apt-get install libelf-dev
+
+    # - name: Build package
+      # run: |
+        # python -m pip install --upgrade build
+        # python -m build -w
+
+
+  # sdist:
+    # name: Source Distribution
+    # runs-on: ubuntu-latest
+    # steps:
+    # - uses: actions/checkout@v3
+
+    # - name: Set up Python
+      # uses: actions/setup-python@v4
+      # with:
+        # python-version: "3.11"
+
+    # - name: Build package
+      # run: |
+        # python -m pip install --upgrade build
+        # python -m build -s
+
+    # - uses: actions/upload-artifact@v3
+      # with:
+        # name: dist
+        # path: dist/*.tar.gz
+
+  check_config:
+    name: Check config
+    runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v3
+      - name: Add MSYS2 to PATH
+        run: PATH=C:/msys64;%PATH%
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: "3.11"
-
-    - name: install libelf
-      run: |
-        sudo apt-get update
-        sudo apt-get install libelf-dev
-
-    - name: Build package
-      run: |
-        python -m pip install --upgrade build
-        python -m build -w
-
-
-  sdist:
-    name: Source Distribution
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: "3.11"
-
-    - name: Build package
-      run: |
-        python -m pip install --upgrade build
-        python -m build -s
-
-    - uses: actions/upload-artifact@v3
-      with:
-        name: dist
-        path: dist/*.tar.gz
+      - name: check MSYS2
+        shell: msys2_shell -mingw64 -no-start -defterm {0}
+        run: |
+          pacman -h
+          gcc -v
