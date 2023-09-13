@@ -99,7 +99,7 @@ jobs:
       - name: Add MSYS2 to PATH
         shell: cmd
         run: |
-          PATH=C:\\msys64;%PATH%
+          PATH=C:\msys64;%PATH%
           echo %PATH%
 
       - name: check MSYS2
