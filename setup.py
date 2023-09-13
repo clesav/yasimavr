@@ -52,8 +52,9 @@ class LibraryData:
     src_path : str
 
     def get_sources(self):
-        src = glob.glob(os.path.join(self.src_path, '**/*.cpp'), recursive=True)
-        src = [os.path.normpath(p) for p in src]
+        src_cpp = glob.glob(os.path.join(self.src_path, '**/*.cpp'), recursive=True)
+        src_c = glob.glob(os.path.join(self.src_path, '**/*.c'), recursive=True)
+        src = [os.path.normpath(p) for p in src_cpp + src_c]
         return src
 
     def get_headers(self):
