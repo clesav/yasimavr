@@ -98,7 +98,9 @@ jobs:
     steps:
       - name: Add MSYS2 to PATH
         shell: cmd
-        run: PATH=C:\\msys64;%PATH%
+        run: |
+          PATH=C:\\msys64;%PATH%
+          echo %PATH%
 
       - name: check MSYS2
         shell: msys2_shell -mingw64 -no-start -defterm {0}
