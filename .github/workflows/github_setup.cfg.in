@@ -6,7 +6,3 @@
 compiler=mingw32
 include_dirs=c:\msys64\mingw64\include
 library_dirs=c:\msys64\mingw64\lib
-
-#for some reason, GCC requires this option to link happy
-#extra_compile_args=-fno-stack-protector
-#extra_link_args=-fno-stack-protector
