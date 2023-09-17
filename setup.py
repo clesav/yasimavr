@@ -52,8 +52,9 @@ class LibraryData:
     src_path : str
 
     def get_sources(self):
-        src = glob.glob(os.path.join(self.src_path, '**/*.cpp'), recursive=True)
-        src = [os.path.normpath(p) for p in src]
+        src_cpp = glob.glob(os.path.join(self.src_path, '**/*.cpp'), recursive=True)
+        src_c = glob.glob(os.path.join(self.src_path, '**/*.c'), recursive=True)
+        src = [os.path.normpath(p) for p in src_cpp + src_c]
         return src
 
     def get_headers(self):
@@ -181,10 +182,10 @@ class _BindingsSubPackageProject(yasimavr_bindings_project):
 
 class yasimavr_build_ext(build_ext):
 
-    user_options = build_ext.user_options + [
-        ('extra_compile_args=', '', "extra compiler flags"),
-        ('extra_link_args=', '', "extra linker flags"),
-    ]
+    # user_options = build_ext.user_options + [
+        # ('extra_compile_args=', '', "extra compiler flags"),
+        # ('extra_link_args=', '', "extra linker flags"),
+    # ]
 
 
     def get_ext_filename(self, fullname):
@@ -220,10 +221,10 @@ class yasimavr_build_ext(build_ext):
         self.shlib_compiler.link_shared_object = link_shared_object.__get__(self.shlib_compiler)
 
 
-    def initialize_options(self):
-        super().initialize_options()
-        self.extra_compile_args = None
-        self.extra_link_args = None
+    # def initialize_options(self):
+        # super().initialize_options()
+        # self.extra_compile_args = None
+        # self.extra_link_args = None
 
 
     def finalize_options(self):
@@ -240,11 +241,11 @@ class yasimavr_build_ext(build_ext):
     def run(self):
 
         #Add the extra flags for the compiler and the linker
-        for lib in self.extensions:
-            if self.extra_compile_args is not None:
-                lib.extra_compile_args = lib.extra_compile_args + self.extra_compile_args.split()
-            if self.extra_link_args is not None:
-                lib.extra_link_args = lib.extra_link_args + self.extra_link_args.split()
+        # for lib in self.extensions:
+            # if self.extra_compile_args is not None:
+                # lib.extra_compile_args = lib.extra_compile_args + self.extra_compile_args.split()
+            # if self.extra_link_args is not None:
+                # lib.extra_link_args = lib.extra_link_args + self.extra_link_args.split()
 
         #=====================================================================
         #Create the SIP extension module to build

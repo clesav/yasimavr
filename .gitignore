@@ -44,6 +44,7 @@
 # Build directories
 build
 dist
+wheelhouse
 yasimavr.egg-info
 
 # Log files
