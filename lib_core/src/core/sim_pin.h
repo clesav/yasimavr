@@ -33,19 +33,26 @@ class Port;
 
 
 //=======================================================================================
-/*
- * Pin represents a external pad of the MCU used for GPIO.
- * The pin has two electrical states given by the external circuit and the internal circuit
- * It is resolved into a single electrical state. In case of conflict, the SHORTED state is
- * set.
- */
- 
+
 typedef sim_id_t pin_id_t;
- 
+
+/**
+   \brief MCU pin model.
+
+   Pin represents a external pad of the MCU used for GPIO.
+   The pin has two electrical states given by the external circuit and the internal circuit,
+   which are resolved into a single electrical state. In case of conflict, the SHORTED state is
+   set.
+   Analog voltage levels are relative to VCC, hence limited to the range [0.0, 1.0].
+ */
 class AVR_CORE_PUBLIC_API Pin : public SignalHook {
 
 public:
 
+    /**
+       Pin state enum.
+       All the possible logical/analog electrical states that the pin can take.
+     */
     enum State {
         //'Weak' states
         State_Floating  = 0x00,
@@ -58,39 +65,43 @@ public:
         State_Shorted   = 0xFF
     };
 
-    //Signal IDs raised by the pin.
-    //For all signals, the index is set to the pin ID.
+    /**
+       Signal IDs raised by the pin.
+       For all signals, the index is set to the pin ID.
+     */
     enum SignalId {
-        //Signal raised for any change of the resolved digital state.
-        //data.u is set to the new state.
+        /**
+          Signal raised for any change of the resolved digital state.
+          data is set to the new state (unsigned integer, one of State enum values).
+         */
         Signal_DigitalStateChange,
-        //Signal raised for any change to the analog value, including
-        //when induced by a digital state change.
-        //data.d is set to the analog value (in interval [0;1])
+
+        /**
+           Signal raised for any change to the analog value, including
+           when induced by a digital state change.
+           data is set to the analog value (double, in range [0;1])
+         */
         Signal_AnalogValueChange,
     };
 
     static const char* StateName(State state);
 
-    //Constructor of the pin. The ID should be a unique identifier of the pad for the MCU.
     explicit Pin(pin_id_t id);
 
-    //Interface for controlling the pad from external code
     void set_external_state(State state);
-    //Set the external analog voltage value, in interval [0;1], relative to VCC
+
     void set_external_analog_value(double v);
 
     pin_id_t id() const;
-    //Resolved state of the pad
+
     State state() const;
-    //Resolved state reduced to digital values: LOW, HIGH or SHORTED
+
     State digital_state() const;
-    //Resolved analog voltage value at the pin, in interval [0;1]
+
     double analog_value() const;
-    //Signal raised for state/value changes
+
     DataSignal& signal();
 
-    //Implementation of the SignalHook interface to receive changes
     virtual void raised(const signal_data_t& sigdata, int hooktag) override;
 
 private:
@@ -110,16 +121,25 @@ private:
 
 };
 
+/**
+   \return the identifier of the pin
+ */
 inline pin_id_t Pin::id() const
 {
     return m_id;
 };
 
+/**
+   \return the resolved state
+ */
 inline Pin::State Pin::state() const
 {
     return m_resolved_state;
 };
 
+/**
+   \return the signal raising the state/value changes
+ */
 inline DataSignal& Pin::signal()
 {
     return m_signal;

@@ -26,6 +26,13 @@
 YASIMAVR_USING_NAMESPACE
 
 
+/**
+   Map the state to its name, for debug and logging purpose.
+
+   \param state
+
+   \return name of the state
+ */
 const char* Pin::StateName(State state)
 {
     switch(state) {
@@ -40,6 +47,11 @@ const char* Pin::StateName(State state)
     };
 }
 
+/**
+   Build a pin.
+
+   \param id Identifier for the pin which should be unique
+ */
 Pin::Pin(pin_id_t id)
 :m_id(id)
 ,m_ext_state(State_Floating)
@@ -52,6 +64,11 @@ Pin::Pin(pin_id_t id)
     m_signal.raise(Signal_AnalogValueChange, 0.0);
 }
 
+/**
+   Set the external electrical state of the pin.
+
+   \param state new external electrical state
+ */
 void Pin::set_external_state(State state)
 {
     State prev_digstate = digital_state();
@@ -64,6 +81,12 @@ void Pin::set_external_state(State state)
     }
 }
 
+/**
+   Set the internal electrical state of the pin.
+   This is only used by general purpose port models.
+
+   \param state new internal electrical state
+ */
 void Pin::set_internal_state(State state)
 {
     State prev_digstate = digital_state();
@@ -76,8 +99,11 @@ void Pin::set_internal_state(State state)
     }
 }
 
-/*
- * Resolves the electrical state from the combination of the internal and external states
+/**
+   Resolves the electrical state from the combination of
+   the internal and external states into a single state.
+
+   \return the resolved state
  */
 Pin::State Pin::resolve_state()
 {
@@ -121,6 +147,12 @@ Pin::State Pin::resolve_state()
     }
 }
 
+/**
+   Set the external analog voltage.
+   This has no effect in the external state is not Analog.
+
+   \param v the analog voltage value in the range [0.0; 1.0]
+ */
 void Pin::set_external_analog_value(double v)
 {
     //If the pin state is not Analog, ignore any change
@@ -144,6 +176,12 @@ void Pin::set_external_analog_value(double v)
     m_signal.raise(Signal_AnalogValueChange, analog_value());
 }
 
+/**
+   Compute and return the analog level corresponding to the
+   resolved electrical state.
+
+   \return the resolved analog value in the range [0.0; 1.0]
+ */
 double Pin::analog_value() const
 {
     switch (m_resolved_state) {
@@ -164,6 +202,10 @@ double Pin::analog_value() const
     }
 }
 
+/**
+   \return the resolved electrical state. Can be one of
+   High, Low or Shorted.
+ */
 Pin::State Pin::digital_state() const
 {
     switch (m_resolved_state) {
@@ -183,6 +225,9 @@ Pin::State Pin::digital_state() const
     }
 }
 
+/**
+   Callback override for receiving signal changes
+ */
 void Pin::raised(const signal_data_t& sigdata, int)
 {
     if (sigdata.sigid == Signal_DigitalStateChange)

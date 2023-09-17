@@ -32,13 +32,13 @@ YASIMAVR_BEGIN_NAMESPACE
 
 //=======================================================================================
 
-//This structure is used for 'ioreg_write_handler' callbacks to hold pre-calculated
-//information on the new register value
+/**
+   This structure is used for 'ioreg_write_handler' callbacks to hold pre-calculated
+   information on the new register value.
+ */
 struct ioreg_write_t {
-
-    uint8_t value;   //contains the new value in the register
-    uint8_t old;     //contains the old value of the register
-
+    uint8_t value;   //!<new value of the register
+    uint8_t old;     //!<previous value of the register
     //indicates bits transiting from '0' to '1'
     inline uint8_t posedge() const
     {
@@ -61,10 +61,10 @@ struct ioreg_write_t {
 
 
 //=======================================================================================
-/*
- * Abstract interface for I/O register handlers
- * The handler is notified when the register is accessed by the CPU
- * It is meant to be implemented by I/O peripherals
+/**
+   Abstract interface for I/O register handlers
+   The handler is notified when the register is accessed by the CPU
+   It is meant to be implemented by I/O peripherals
  */
 class AVR_CORE_PUBLIC_API IO_RegHandler {
 
@@ -72,50 +72,55 @@ public:
 
     virtual ~IO_RegHandler() = default;
 
+    /**
+       Callback for a CPU I/O read access. On-the-fly modifications of the
+       register content are possible.
+       \param addr address of the register read, in I/O address space
+    */
     virtual uint8_t ioreg_read_handler(reg_addr_t addr, uint8_t value) = 0;
 
+    /**
+       Callback for a CPU I/O write access. Note that the register has already been
+       updated so it's ok for the callback to overwrite it. (a typical use case is
+       implementing write-one-to-clear bits)
+       \param addr address of the register read, in I/O address space
+       \param data struct containing the data change.
+     */
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) = 0;
 
 };
 
 
 //=======================================================================================
-/*
- *  Represents one 8-bits I/O register that is a vehicle for data transfer
- *  between the CPU and I/O peripherals
- *  Peripherals can be added as handlers to a register to be notified of
- *  accesses (read or write) by the CPU
+/**
+   Simulation model for a 8-bits I/O register that is a vehicle for data transfer
+   between the CPU and I/O peripherals.
+
+   Peripherals can be added as handlers to a register to be notified of
+   accesses (read or write) by the CPU.
+
+   Each bit of the register can be marked as used/unused or read-only. this is taken
+   into account on write access for error checks.
  */
 class AVR_CORE_PUBLIC_API IO_Register {
 
 public:
 
     explicit IO_Register(bool core_reg=false);
-    //Copy constructor
     IO_Register(const IO_Register& other);
-    //Destructor
     ~IO_Register();
 
-    //Simple inline interface to access the value
     uint8_t value() const;
     void set(uint8_t value);
 
-    //Add a handler to this register
     void set_handler(IO_RegHandler& handler, uint8_t use_mask, uint8_t ro_mask);
 
-    //CPU interface for read/write operation on this register
     uint8_t cpu_read(reg_addr_t addr);
-    //return true if the read-only rule has been violated, i.e. attempting to write
-    //a read-only or unused bit with '1'
-    //Note that if the register has no handler, all 8 bits are read-only except if
-    //core_reg was true at construction
     bool cpu_write(reg_addr_t addr, uint8_t value);
 
-    //I/O peripheral interface for read/write operation on this register
     uint8_t ioctl_read(reg_addr_t addr);
     void ioctl_write(reg_addr_t addr, uint8_t value);
 
-    //Disable copy assignments
     IO_Register& operator=(const IO_Register&) = delete;
 
 private:
@@ -133,11 +138,13 @@ private:
 
 };
 
+///Simple inline interface to access the value
 inline uint8_t IO_Register::value() const
 {
     return m_value;
 }
 
+///Simple inline interface to access the value
 inline void IO_Register::set(uint8_t value)
 {
     m_value = value;

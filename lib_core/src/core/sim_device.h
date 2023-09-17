@@ -53,8 +53,10 @@ enum class SleepMode;
 
 
 //=======================================================================================
-/*
- * Generic AVR device definition, holding all the data about a MCU
+/**
+   \brief Basic AVR device model.
+
+   This is the top-level object for a AVR MCU simulation model.
  */
 class AVR_CORE_PUBLIC_API Device {
 
@@ -62,44 +64,71 @@ class AVR_CORE_PUBLIC_API Device {
 
 public:
 
+    /**
+       Device model state enum.
+     */
     enum State {
-        State_Limbo         = 0x00,
-        State_Ready         = 0x10,
-        State_Running       = 0x21,
-        State_Sleeping      = 0x31,
-        State_Halted        = 0x41,
-        State_Reset         = 0x50,
-        State_Break         = 0x60,
-        State_Done          = 0x70,
-        State_Crashed       = 0x80,
-        State_Destroying    = 0xFF,
+        State_Limbo         = 0x00, //!< Device constructed but not yet initialised
+        State_Ready         = 0x10, //!< Device initialised but no firmware loaded yet
+        State_Running       = 0x21, //!< Device executing the firmware
+        State_Sleeping      = 0x31, //!< Device in sleep mode
+        State_Halted        = 0x41, //!< CPU halted but peripherals are running normally
+        State_Reset         = 0x50, //!< Device being reset (taken into account at the next cycle)
+        State_Break         = 0x60, //!< Device halted by a BREAK instruction
+        State_Done          = 0x70, //!< Final state without any error
+        State_Crashed       = 0x80, //!< Final state with error
+        State_Destroying    = 0xFF, //!< Transiting state during destruction
     };
 
+    /**
+       Reset source enum
+     */
     enum ResetFlag {
-        Reset_PowerOn = 0x00000001,
-        Reset_WDT     = 0x00000002,
-        Reset_BOD     = 0x00000004,
-        Reset_SW      = 0x00000008,
-        Reset_Ext     = 0x00000010,
+        Reset_PowerOn = 0x00000001, //!< Power-On reset source
+        Reset_WDT     = 0x00000002, //!< Watchdog Timer reset source
+        Reset_BOD     = 0x00000004, //!< Brown-out Detector reset source
+        Reset_SW      = 0x00000008, //!< Software reset source
+        Reset_Ext     = 0x00000010, //!< External pin reset source
         Reset_Halt    = 0x00010000,
     };
 
-    //These options are to be used with set_option() and test_option() to alter
-    //the behaviour of the simulation
+    /**
+       Device option enum
+
+       These options are to be used with set_option() and test_option() to alter
+       the behaviour of the simulation model.
+     */
     enum Option {
-        //By default, the simulation will halt if a pin shorting is detected.
-        //If this option is set, it will instead trigger a MCU reset and the simulation will carry on.
+        ///By default, the device will crash if a pin shorting is detected.
+        ///If this option is set, it will instead simulate a BOD-triggered MCU reset.
         Option_ResetOnPinShorting   = 0x01,
-        //By default the simulation will halt if the CPU writes a non-zero value to an
-        //invalid I/O address (either it doesn't exist in the MCU model or is not supported by the simulator)
-        //If this option is set, the write operation will be ignored and the simulation will carry on.
-        //Note: read operations to invalid I/O addresses by the CPU always succeed and return 0.
+
+        /**
+           By default the device will crash on the following CPU I/O access errors:
+              - Reading from a unallocated register,
+              - Writing to a unallocated register,
+              - Changing the value of a read-only field,
+              - Writing a '1' to an unused bit.
+
+           If this option is set, these errors will be ignored.
+           \sa Core::cpu_read_ioreg, Core::cpu_write_ioreg
+         */
         Option_IgnoreBadCpuIO       = 0x02,
+
+        /**
+           By default the device will crash if the CPU reads an unprogrammed address of the flash.
+           If this option is set, the operation will succeed.
+        */
         Option_IgnoreBadCpuLPM      = 0x04,
-        //This option allows to disable the pseudo-sleep (triggered by a "rjmp .-2" instruction)
+
+        ///This option disables the pseudo-sleep mode.
         Option_DisablePseudoSleep   = 0x08,
-        //This option exits the simloop when the device enters sleep or a infinite
-        //loop with GIE cleared. It is enabled by default.
+
+        /**
+           This option makes the simulation loop exit when the device enters a sleep mode
+           or an infinite loop instruction ("rjmp .-2") with the GIE bit cleared.
+           It is set by default.
+         */
         Option_InfiniteLoopDetect   = 0x10,
     };
 
@@ -117,23 +146,14 @@ public:
     SleepMode sleep_mode() const; //Returns one of SleepMode enum values
     unsigned long frequency() const;
 
-    //Init should be called just after constructing the device to allows all peripherals
-    //to allocate resources and connect signals
-    //Returns true on success or false on failure
     bool init(CycleManager& cycle_manager);
 
-    //Loads a firmware object into the flash and loads the parameters in the .mcu section
     bool load_firmware(const Firmware& firmware);
 
-    //Simulates a MCU reset
     void reset(int reset_flags = Reset_PowerOn);
 
-    //Executes one instruction cycle
-    //The returned value is the duration of the instruction in cycles
     cycle_count_t exec_cycle();
 
-    //Attach a peripheral to the device. The peripheral will be owned by the device and will
-    //be destroyed alongside
     void attach_peripheral(Peripheral& ctl);
 
     void add_ioreg_handler(reg_addr_t addr, IO_RegHandler& handler, uint8_t ro_mask=0x00);
@@ -153,7 +173,6 @@ public:
 
     void crash(uint16_t reason, const char* text);
 
-    //Disable copy semantics
     Device(const Device&) = delete;
     Device& operator=(const Device&) = delete;
 
@@ -161,9 +180,6 @@ protected:
 
     virtual bool core_ctlreq(ctlreq_id_t req, ctlreq_data_t* reqdata);
 
-    //Loads the various memory area using the firmware data.
-    //The basic implementation loads only the flash and the fuses, the rest
-    //is the responsibility of architecture-specific implementations.
     virtual bool program(const Firmware& firmware);
 
     void erase_peripherals();

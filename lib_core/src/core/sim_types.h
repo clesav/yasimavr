@@ -43,6 +43,9 @@ typedef short            int_vect_t;
 const cycle_count_t INVALID_CYCLE = -1;
 
 
+/**
+   \brief Representation of a I/O register address, with validity state.
+ */
 class AVR_CORE_PUBLIC_API reg_addr_t {
 
 public:
@@ -66,6 +69,10 @@ const reg_addr_t INVALID_REGISTER;
 
 struct regbit_t;
 
+
+/**
+   \brief Bit mask structure for bitwise operations on 8-bits registers
+ */
 struct AVR_CORE_PUBLIC_API bitmask_t {
 
     uint8_t bit;
@@ -80,31 +87,51 @@ struct AVR_CORE_PUBLIC_API bitmask_t {
     bitmask_t& operator=(const bitmask_t& bm);
     bitmask_t& operator=(const regbit_t& rb);
 
+    /**
+       Extracts the field value from the register value
+     */
     inline uint8_t extract(uint8_t value) const
     {
         return (value & mask) >> bit;
     }
 
+    /**
+       Performs a bitwise OR between the register value and the field value
+     */
     inline uint8_t set_to(uint8_t reg, uint8_t value = 0xFF) const
     {
         return reg | ((mask & value) << bit);
     }
 
+    /**
+       Performs a bitwise NEG-AND between the register value and the field value
+     */
     inline uint8_t clear_from(uint8_t reg, uint8_t value = 0xFF) const
     {
         return reg & ~((mask & value) << bit);
     }
 
+    /**
+       Replace the field value within the register value
+     */
     inline uint8_t replace(uint8_t reg, uint8_t value) const
     {
         return (reg & ~mask) | ((value << bit) & mask);
     }
 
+    /**
+       Returns the number of bits in the field
+     */
     int bitcount() const;
 
 };
 
 
+/**
+   \brief Representation of a register field or bit position
+
+   Defined by the I/O register address, a bit position and a mask.
+ */
 struct AVR_CORE_PUBLIC_API regbit_t {
 
     reg_addr_t addr;
@@ -120,36 +147,60 @@ struct AVR_CORE_PUBLIC_API regbit_t {
 
     regbit_t& operator=(const regbit_t& rb);
 
+    /**
+       Returns the validity of the register address
+     */
     inline bool valid() const
     {
         return addr.valid();
     }
 
+    /**
+       Extracts the field value from the register value
+     */
     inline uint8_t extract(uint8_t value) const
     {
         return (value & mask) >> bit;
     }
 
+    /**
+       Performs a bitwise OR between the register value and the field value
+     */
     inline uint8_t set_to(uint8_t reg, uint8_t value = 0xFF) const
     {
         return reg | (mask & (value << bit));
     }
 
+    /**
+       Performs a bitwise NEG-AND between the register value and the field value
+     */
     inline uint8_t clear_from(uint8_t reg, uint8_t value = 0xFF) const
     {
         return reg & ~(mask & (value << bit));
     }
 
+    /**
+       Replace the field value within the register value
+     */
     inline uint8_t replace(uint8_t reg, uint8_t value) const
     {
         return (reg & ~mask) | ((value << bit) & mask);
     }
 
+    /**
+       Returns the number of bits in the field
+     */
     int bitcount() const;
 
 };
 
 
+//=======================================================================================
+/**
+   regbit_compound_t allows to model a register field that is split in separate locations
+   Under the hood, it is an array of regbit_t, each representing a piece of the field.
+   It can be iterated over, like a standard container, yielding the regbit pieces.
+ */
 class AVR_CORE_PUBLIC_API regbit_compound_t {
 
 public:
@@ -159,18 +210,34 @@ public:
     explicit regbit_compound_t(const std::vector<regbit_t>& v);
     regbit_compound_t(const regbit_compound_t& other);
 
+    ///Adds a regbit piece to the end
     void add(const regbit_t& rb);
 
+    ///Returns a iterator to the beginning of the regbit pieces
     std::vector<regbit_t>::const_iterator begin() const;
+
+    ///Returns a iterator to the end of the regbit pieces
     std::vector<regbit_t>::const_iterator end() const;
+
+    ///Returns the number of pieces
     size_t size() const;
+
+    ///Returns a reference to the specified regbit
     const regbit_t& operator[](size_t index) const;
 
+    ///Returns true if the addr matches any of the regbit pieces
     bool addr_match(reg_addr_t addr) const;
+
+    ///Returns a compound value that can be OR's together with
     uint64_t compound(uint8_t regvalue, size_t index) const;
+
+    ///Extracts a compound value for a specified regbit piece
     uint8_t extract(uint64_t v, size_t index) const;
 
+    ///Assigns the regbit pieces
     regbit_compound_t& operator=(const std::vector<regbit_t>& v);
+
+    ///Assigns the compound
     regbit_compound_t& operator=(const regbit_compound_t& other);
 
 private:

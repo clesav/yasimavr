@@ -34,20 +34,21 @@ YASIMAVR_BEGIN_NAMESPACE
 
 
 //=======================================================================================
-/*
- * Firmware contains the information of a firmware loaded from a ELF file.
- * the ELF format decoding relies on the library libelf.
- * The data from the ELF is split is the various memory areas of the device.
- * Each memory area can avec several blocks of data (e.g. flash has .text, .rodata, ...)
- * placed at different, not necessarily contiguous addresses.
- * The currently supported memory areas :
- *    [area name]           [ELF section(s)]            [LMA origin]
- *  - "flash"               .text, .data, .rodata       0
- *  - "eeprom"              .eeprom                     0x810000
- *  - "fuse"                .fuse                       0x820000
- *  - "lock"                .lock                       0x830000
- *  - "signature"           .signature                  0x840000
- *  - "user_signatures"     .user_signatures            0x850000
+/**
+   Firmware contains the information of a firmware loaded from a ELF file.
+   A firmware consists of blocks of binary data that can be loaded into the various
+   non-volatile memory areas of a MCU.
+   Each memory area can have several blocks of data (e.g. flash has .text, .rodata, ...)
+   placed at different addresses, not necessarily contiguous.
+   The currently supported memory areas :
+      area name         |  ELF section(s)       | LMA origin
+      ------------------|-----------------------|-----------
+      "flash"           | .text, .data, .rodata | 0x000000
+      "eeprom"          | .eeprom               | 0x810000
+      "fuse"            | .fuse                 | 0x820000
+      "lock"            | .lock                 | 0x830000
+      "signature"       | .signature            | 0x840000
+      "user_signatures" | .user_signatures      | 0x850000
  */
 class AVR_CORE_PUBLIC_API Firmware {
 
@@ -60,23 +61,23 @@ public:
 
     };
 
-    //These attributes can be assigned freely
-    std::string                 variant;
-    unsigned long               frequency;
-    double                      vcc;
-    double                      aref;
-
-    reg_addr_t                  console_register;
+    ///Free attribute, name of the model, not used by the simulation
+    std::string variant;
+    ///Main clock frequency in hertz, mandatory to run the simulation.
+    unsigned long frequency;
+    ///Power supply voltage in volts. If not set, analog peripherals such as ADC are not usable.
+    double vcc;
+    ///Analog reference voltage in volts
+    double aref;
+    ///I/O register address used for console output
+    reg_addr_t console_register;
 
     Firmware();
-    //Copy constructor : make a deep copy of all memory blocks
     Firmware(const Firmware& other);
     ~Firmware();
 
-    //Reads a ELF file and returns a new firmware object
     static Firmware* read_elf(const std::string& filename);
 
-    //Add a data block to a memory
     void add_block(const std::string& name, const mem_block_t& block, size_t base = 0);
 
     bool has_memory(const std::string& name) const;
@@ -90,7 +91,6 @@ public:
     mem_addr_t datasize() const;
     mem_addr_t bsssize() const;
 
-    //Copy assignment
     Firmware& operator=(const Firmware& other);
 
 private:

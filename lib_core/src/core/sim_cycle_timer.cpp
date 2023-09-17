@@ -88,7 +88,9 @@ CycleManager::~CycleManager()
     m_timer_slots.clear();
 }
 
-
+/**
+   Increment the cycle counter.
+ */
 void CycleManager::increment_cycle(cycle_count_t count)
 {
     m_cycle += count;
@@ -97,6 +99,11 @@ void CycleManager::increment_cycle(cycle_count_t count)
 
 void CycleManager::add_to_queue(TimerSlot* slot)
 {
+    //Add a timer slot to the queue
+    //The timers are ordered in chronological order (in cycle count), the front being
+    //the first timer to be called.
+    //The inactive (i.e. paused) timers are placed after all the active timers.
+    //Here, we use an insertion sort algorithm.
     for (auto it = m_timer_slots.begin(); it != m_timer_slots.end(); ++it) {
         if ((slot->when < (*it)->when) || (*it)->paused) {
             m_timer_slots.insert(it, slot);
@@ -120,6 +127,11 @@ CycleManager::TimerSlot* CycleManager::pop_from_queue(CycleTimer& timer)
 }
 
 
+/**
+   Schedule or reschedule a timer for call at 'when'.
+   \param timer timer to schedule
+   \param when absolute cycle number when the timer should be called
+ */
 void CycleManager::schedule(CycleTimer& timer, cycle_count_t when)
 {
     if (when < 0) return;
@@ -135,6 +147,11 @@ void CycleManager::schedule(CycleTimer& timer, cycle_count_t when)
 }
 
 
+/**
+   Schedule or reschedule a timer for call in 'delay' cycles
+   \param timer timer to schedule
+   \param delay delay from the current cycle number
+ */
 void CycleManager::delay(CycleTimer& timer, cycle_count_t delay)
 {
     if (delay > 0)
@@ -142,6 +159,9 @@ void CycleManager::delay(CycleTimer& timer, cycle_count_t delay)
 }
 
 
+/**
+   Remove a timer from the queue. No-op if the timer is not scheduled.
+ */
 void CycleManager::cancel(CycleTimer& timer)
 {
     TimerSlot* slot = pop_from_queue(timer);
@@ -152,6 +172,13 @@ void CycleManager::cancel(CycleTimer& timer)
 }
 
 
+/**
+   Pause a timer.
+
+   The timer stays in the queue but won't be called until it's resumed.
+   The remaining delay until the timer 'when' is conserved during the pause.
+   \sa resume
+ */
 void CycleManager::pause(CycleTimer& timer)
 {
     TimerSlot* slot = pop_from_queue(timer);
@@ -164,7 +191,10 @@ void CycleManager::pause(CycleTimer& timer)
     }
 }
 
-
+/**
+   Resume a paused timer.
+   \sa pause
+ */
 void CycleManager::resume(CycleTimer& timer)
 {
     TimerSlot* slot = pop_from_queue(timer);
@@ -178,6 +208,9 @@ void CycleManager::resume(CycleTimer& timer)
 }
 
 
+/**
+   Process the timers for the current cycle.
+ */
 void CycleManager::process_timers()
 {
     //Loops until either the timer queue is empty or the front timer is paused or its 'when' is in the future
@@ -188,12 +221,13 @@ void CycleManager::process_timers()
         if (slot->when > m_cycle) {
             break;
         } else {
-            //Removes the timer from the front of the queue
+            //Remove the timer from the front of the queue
             m_timer_slots.pop_front();
-            //Calling the timer next function
+            //Calling the timer
             cycle_count_t next_when = slot->timer->next(slot->when);
-            //If the returned 'when' is not zero, we reschedule the timer
+            //If the returned 'when' is greater than zero, reschedule the timer
             //(the next 'when' might be in the past)
+            //If the returned 'when' is negative or zero, discard the timer
             if (next_when > 0) {
                 //Ensure the 'when' always increments
                 if (next_when <= slot->when)
@@ -208,7 +242,11 @@ void CycleManager::process_timers()
     }
 }
 
-
+/**
+   \return the next cycle at which a timer is scheduled to be called,
+   or INVALID_CYCLE if no timer is scheduled or all scheduled timers are
+   paused.
+ */
 cycle_count_t CycleManager::next_when() const
 {
     if (m_timer_slots.empty())

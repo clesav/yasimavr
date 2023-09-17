@@ -34,6 +34,11 @@ YASIMAVR_USING_NAMESPACE
 
 //=======================================================================================
 
+/**
+   Build a MCU core.
+
+   \param config Configuration settings for the core
+ */
 Core::Core(const CoreConfiguration& config)
 :m_config(config)
 ,m_device(nullptr)
@@ -69,6 +74,9 @@ Core::Core(const CoreConfiguration& config)
     }
 }
 
+/**
+   Destroy a MCU core.
+ */
 Core::~Core()
 {
     free(m_sram);
@@ -82,6 +90,11 @@ Core::~Core()
         m_debug_probe->detach();
 }
 
+/**
+   Initialise a MCU core.
+
+   \return the status of initialisation, it's always true.
+ */
 bool Core::init(Device& d)
 {
     m_device = &d;
@@ -92,6 +105,14 @@ bool Core::init(Device& d)
     return true;
 }
 
+/**
+   Reset the core:
+   - the Program Counter is set to 0x0000,
+   - all general purpose registers are set to 0x00,
+   - all I/O registers are set by default to 0x00 (Peripheral models are responsible for
+   resetting registers whose reset values are different),
+   - the Stack Pointer is set to RAMEND.
+ */
 void Core::reset()
 {
     //Jump to the reset interrupt vector
@@ -116,6 +137,12 @@ void Core::reset()
     m_console_buffer.clear();
 }
 
+/**
+   Execute a single instruction cycle with the CPU.
+
+   \return the number of clock cycle consumed by the instruction, or 0
+   if something wrong happened.
+ */
 int Core::exec_cycle()
 {
     //Check if we have a interrupt request and if we can handle it
@@ -142,6 +169,9 @@ int Core::exec_cycle()
     return cycles;
 }
 
+/**
+   Execute a RETI instruction with the CPU.
+ */
 void Core::exec_reti()
 {
     //On a RETI, if allowed by the core options, set the GIE flag
@@ -154,6 +184,13 @@ void Core::exec_reti()
     start_interrupt_inhibit(1);
 }
 
+/**
+   Start an interrupt inhibit counter. The counter is decremented for
+   each instruction executed after this call. Raised interrupts will be
+   held up until this counter has dropped to zero.
+
+   \param count initial inhibit counter value
+ */
 void Core::start_interrupt_inhibit(unsigned int count)
 {
     if (m_int_inhib_counter < count)
@@ -164,11 +201,25 @@ void Core::start_interrupt_inhibit(unsigned int count)
 //=======================================================================================
 //CPU interface for accessing general purpose working registers (r0 to r31)
 
+/**
+   Read the content of a general purpose register.
+   This function is intended for CPU model use only.
+
+   \param reg index of the register to read (0-31)
+   \return content of the register
+ */
 uint8_t Core::cpu_read_gpreg(uint8_t reg)
 {
     return m_regs[reg];
 }
 
+/**
+   Write the content of a general purpose register.
+   This function is intended for CPU model use only.
+
+   \param reg index of the register to read (0-31)
+   \param value 8-bits value to write in the register
+ */
 void Core::cpu_write_gpreg(uint8_t reg, uint8_t value)
 {
     m_regs[reg] = value;
@@ -178,6 +229,14 @@ void Core::cpu_write_gpreg(uint8_t reg, uint8_t value)
 //=======================================================================================
 //CPU interface for accessing I/O registers.
 
+/**
+   Helper function to get access to IO Registers.
+   If a register does not exist, it is allocated.
+
+   \param addr Address of the register to access (in IO address space)
+
+   \return IO_Register object
+ */
 IO_Register* Core::get_ioreg(reg_addr_t addr)
 {
     if (!addr.valid())
@@ -190,6 +249,20 @@ IO_Register* Core::get_ioreg(reg_addr_t addr)
     return reg;
 }
 
+/**
+   Read the content of a I/O register.
+
+   If the register does not exist, by default, the device crashes
+   with the code CRASH_BAD_CPU_IO.
+   If the option IgnoreBadCpuIO is set, the error is ignored and the value 0x00
+   is returned.
+
+   This function is intended for CPU model use only.
+
+   \param addr address of the register to access (in IO address space)
+
+   \return content of the register
+ */
 uint8_t Core::cpu_read_ioreg(reg_addr_t reg_addr)
 {
     if (!reg_addr.valid()) {
@@ -221,6 +294,19 @@ uint8_t Core::cpu_read_ioreg(reg_addr_t reg_addr)
     }
 }
 
+/**
+   Write the content of a I/O register.
+
+   An error will occurred if the register does not exist, or if the call is modifying
+   the read-only part of an existing register.
+   If an error occurred, by default, the device crashes with the code CRASH_BAD_CPU_IO.
+   If the option IgnoreBadCpuIO is set, the error is ignored and the register is unchanged.
+
+   This function is intended for CPU model use only.
+
+   \param addr address of the register to access (in IO address space)
+   \param value value to write
+ */
 void Core::cpu_write_ioreg(reg_addr_t reg_addr, uint8_t value)
 {
     if (!reg_addr.valid()) {
@@ -275,6 +361,17 @@ void Core::cpu_write_ioreg(reg_addr_t reg_addr, uint8_t value)
 //=======================================================================================
 //Peripheral interface for accessing I/O registers.
 
+/**
+   Read the content of a I/O register.
+
+   If the register does not exist, the device crashes with the code CRASH_BAD_CTL_IO.
+
+   This function is intended for peripheral model use only.
+
+   \param addr address of the register to access (in IO address space)
+
+   \return content of the register
+ */
 uint8_t Core::ioctl_read_ioreg(const reg_addr_t reg_addr)
 {
     if (!reg_addr.valid()) {
@@ -304,6 +401,16 @@ uint8_t Core::ioctl_read_ioreg(const reg_addr_t reg_addr)
     }
 }
 
+/**
+   Write the content of a I/O register.
+
+   If the register does not exist, the device crashes with the code CRASH_BAD_CTL_IO.
+
+   This function is intended for peripheral model use only.
+
+   \param rb regbit of the register/field to access (in IO address space)
+   \param value value to write
+ */
 void Core::ioctl_write_ioreg(const regbit_t& rb, uint8_t value)
 {
     if (!rb.valid()) {
@@ -341,6 +448,19 @@ void Core::ioctl_write_ioreg(const regbit_t& rb, uint8_t value)
 
 //=======================================================================================
 
+/**
+   Read the content of the flash non-volatile memory.
+
+   This function is intended for CPU use only, to implement the LPM/ELPM instruction.
+
+   If the address is out of bounds, the device will crash.
+   If the address is unprogrammed, by default the device will crash but the error can be ignored
+   by setting the option IgnoreBadCpuLPM.
+
+   \param pgm_addr Flash address (in 8-bits, flash address space) to read
+
+   \return value content at the flash address
+ */
 uint8_t Core::cpu_read_flash(flash_addr_t pgm_addr)
 {
     if (pgm_addr > m_config.flashend) {
@@ -429,11 +549,12 @@ flash_addr_t Core::cpu_pop_flash_addr()
 
 
 //=======================================================================================
-/*
- * Block memory mapping from data space to a block of memory
- * The block is defined by the interval [blockstart ; blockend] in data space
- * If the data space block defined by (address/len) intersects with the block,
- * the offsets bufofs, blockofs, blocklen are computed and the function returns true
+
+/**
+   Block memory mapping from data space to a block of memory
+   The block is defined by the interval [blockstart ; blockend] in data space
+   If the data space block defined by (address/len) intersects with the block,
+   the offsets bufofs, blockofs, blocklen are computed and the function returns true
  */
 bool YASIMAVR_QUALIFIED_NAME(data_space_map)(mem_addr_t addr, mem_addr_t len,
                                              mem_addr_t blockstart, mem_addr_t blockend,
