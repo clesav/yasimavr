@@ -29,6 +29,10 @@ YASIMAVR_USING_NAMESPACE
 
 //=======================================================================================
 
+/**
+   Constructor of the port controller.
+   \param name Upper case letter identifying the port. (eg. 'A' denotes port PA)
+ */
 Port::Port(char name)
 :Peripheral(AVR_IOCTL_PORT(name))
 ,m_name(name)
@@ -37,14 +41,13 @@ Port::Port(char name)
 ,m_port_value(0)
 {}
 
-/*
- * In initialisation, construct the pin mask by looking up for pins names
- * Pcx where c is the port letter and x is 0 to 7
- */
+
 bool Port::init(Device& device)
 {
     bool status = Peripheral::init(device);
 
+    //Construct the pin mask by looking up for pins names
+    //Pcx where c is the port letter and x is 0 to 7
     char pinname[4];
     m_pinmask = 0;
     for (int i = 0; i < 8; ++i) {
@@ -60,11 +63,10 @@ bool Port::init(Device& device)
     return status;
 }
 
-/*
- * On reset, we set the internal state of all the pins to floating
- */
+
 void Port::reset()
 {
+    //On reset, we set the internal state of all the pins to floating
     uint8_t pinmask = m_pinmask;
     for (int i = 0; i < 8; ++i) {
         if (pinmask & 1)
@@ -76,9 +78,7 @@ void Port::reset()
     m_signal.raise(0, m_port_value);
 }
 
-/*
- * The one supported request is 0 (get signal)
- */
+
 bool Port::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
 {
     if (req == AVR_CTLREQ_GET_SIGNAL) {
@@ -88,8 +88,12 @@ bool Port::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
     return false;
 }
 
-/*
- * Set the pin internal state and raise the signal
+
+/**
+   Set the pin internal state and raise the signal.
+   \param num index of the pin (0 to 7)
+   \param state new state for the pin
+   \sa pin_state_changed
  */
 void Port::set_pin_internal_state(uint8_t num, Pin::State state)
 {
@@ -100,6 +104,7 @@ void Port::set_pin_internal_state(uint8_t num, Pin::State state)
     }
 }
 
+
 void Port::raised(const signal_data_t& sigdata, int hooktag)
 {
     if (sigdata.sigid == Pin::Signal_DigitalStateChange) {
@@ -109,8 +114,10 @@ void Port::raised(const signal_data_t& sigdata, int hooktag)
     }
 }
 
-/*
- * On pin state change, handle the SHORTED case. A request is sent to the core
+
+/**
+   Callback method called when the resolved state of a pin has changed.
+   \sa set_pin_internal_state
  */
 void Port::pin_state_changed(uint8_t num, Pin::State state)
 {

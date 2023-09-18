@@ -92,12 +92,20 @@ UART::~UART()
     delete m_tx_timer;
 }
 
+/**
+   Initialise the interface.
+   \param cycle_manager Cycle manager used for time-related operations
+   \param logger Logger used for the interface
+ */
 void UART::init(CycleManager& cycle_manager, Logger& logger)
 {
     m_cycle_manager = &cycle_manager;
     m_logger = &logger;
 }
 
+/**
+   Reset the interface.
+ */
 void UART::reset()
 {
     m_delay = 1;
@@ -128,9 +136,10 @@ void UART::reset()
 //=======================================================================================
 //TX management
 
-/*
- * Change the TX buffer limit and discard frames to adjust
- * if necessary
+/**
+   Set the TX buffer size, including the TX shift register.
+   A zero size means unlimited.
+   Stored frames are discarded to adjust if necessary.
  */
 void UART::set_tx_buffer_limit(size_t limit)
 {
@@ -139,6 +148,10 @@ void UART::set_tx_buffer_limit(size_t limit)
         m_tx_buffer.pop_back();
 }
 
+/**
+   Push a 8-bits frame to be emitted by the interface. If no TX is already
+   ongoing, it will be started immediately.
+ */
 void UART::push_tx(uint8_t frame)
 {
     m_logger->dbg("TX push: 0x%02x ('%c')", frame, frame);
@@ -159,6 +172,9 @@ void UART::push_tx(uint8_t frame)
     }
 }
 
+/**
+   Cancel all pending TX but let the current one finish, if any.
+ */
 void UART::cancel_tx_pending()
 {
     while (m_tx_buffer.size() > 1)
@@ -189,6 +205,11 @@ cycle_count_t UART::tx_timer_next(cycle_count_t when)
 //=======================================================================================
 //RX management
 
+/**
+   Set the RX buffer size, including the RX shift register.
+   A zero size means unlimited.
+   Stored frames are discarded to adjust if necessary.
+ */
 void UART::set_rx_buffer_limit(size_t limit)
 {
     m_rx_limit = limit;
@@ -198,6 +219,9 @@ void UART::set_rx_buffer_limit(size_t limit)
     }
 }
 
+/**
+   Enable/disable the reception. If disabled, the RX buffer is flushed.
+ */
 void UART::set_rx_enabled(bool enabled)
 {
     m_rx_enabled = enabled;
@@ -219,8 +243,10 @@ void UART::set_rx_enabled(bool enabled)
     }
 }
 
-/*
- * Pop a received frame from the device FIFO (front part)
+/**
+   Pop a frame from the RX buffer.
+   Use rx_available() to know if any frame is available.
+   \return the popped frame, 0 if no frame is available.
  */
 uint8_t UART::pop_rx()
 {
@@ -315,6 +341,13 @@ void UART::raised(const signal_data_t& sigdata, int)
 //=======================================================================================
 //Pause management
 
+/**
+   Enable/disable the pause mode.
+
+   If pause is enabled, any ongoing communication will complete as normal, and
+   further TX frames won't be emitted (but remain in the FIFO). Frames already
+   in the RX FIFO are kept but further received frames will be ignored.
+ */
 void UART::set_paused(bool paused)
 {
     //If going out of pause and there are TX frames pending, resume the transmission

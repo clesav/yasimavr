@@ -50,12 +50,14 @@ PrescaledTimer::~PrescaledTimer()
         timer->m_parent_timer = nullptr;
 }
 
+///Initialise the timer, must be called once during initialisation phases
 void PrescaledTimer::init(CycleManager& cycle_manager, Logger& logger)
 {
     m_cycle_manager = &cycle_manager;
     m_logger = &logger;
 }
 
+///Reset the timer. Both stages are reset and disabled.
 void PrescaledTimer::reset()
 {
     m_ps_max = 1;
@@ -67,6 +69,12 @@ void PrescaledTimer::reset()
         m_cycle_manager->cancel(*this);
 }
 
+/**
+   Configure the prescaler
+   \param ps_max Maximum value of the prescaler counter, making the prescaler counter wrap to 0
+   \param ps_factor Prescaler factor to generate ticks.
+          if = 0, the prescaler and timer stages are disabled and reset.
+ */
 void PrescaledTimer::set_prescaler(unsigned long ps_max, unsigned long ps_factor)
 {
     if (!m_updating) update(m_cycle_manager->cycle());
@@ -83,6 +91,11 @@ void PrescaledTimer::set_prescaler(unsigned long ps_max, unsigned long ps_factor
     if (!m_updating) reschedule();
 }
 
+/**
+   Pause or resume the timer.
+   If paused, the prescaler and timer stages are frozen but not reset.
+   \param paused true for pausing, false for resuming
+ */
 void PrescaledTimer::set_paused(bool paused)
 {
     if (!m_updating) update();
@@ -90,6 +103,12 @@ void PrescaledTimer::set_paused(bool paused)
     if (!m_updating) reschedule();
 }
 
+/**
+   Sets the timeout delay to generate a event
+   \param delay Timeout delay in prescaler ticks.
+          If = 0, the timer stage is disabled and reset.
+   \note The prescaler stage is not affected by this setting.
+ */
 void PrescaledTimer::set_timer_delay(cycle_count_t delay)
 {
     if (!m_updating) update();
@@ -97,6 +116,10 @@ void PrescaledTimer::set_timer_delay(cycle_count_t delay)
     if (!m_updating) reschedule();
 }
 
+/**
+   Reschedule the timer. This is normally automatically called after
+   a configuration change.
+ */
 void PrescaledTimer::reschedule()
 {
     cycle_count_t when;
@@ -116,6 +139,15 @@ void PrescaledTimer::reschedule()
         m_cycle_manager->cancel(*this);
 }
 
+/**
+   Update the timer to catchup with the 'when' cycle.
+   Ticks may be generated and the signal may be raised if enough cycles have passed.
+
+   If the timer is a child of another timer, the update call is passed on to the parent.
+
+   \param when (optional) Current clock cycle.
+          If omitted, it's obtained via the cycle manager.
+ */
 void PrescaledTimer::update(cycle_count_t when)
 {
     if (m_updating) return;
@@ -204,7 +236,7 @@ void PrescaledTimer::process_cycles(cycle_count_t cycles)
 }
 
 /*
- * Methods calculating when the cycle timer should timeout
+ * Methods calculating when the cycle timer should timeout.
  * This is calculated by returning the smallest number of cycles
  * required to reach the timer delay (if non-zero and factoring for
  * the prescaler) of this timer or any of the chained timers.
@@ -260,8 +292,9 @@ cycle_count_t PrescaledTimer::next(cycle_count_t when)
     return calculate_when(when);
 }
 
-/*
- * Methods adding or removing a chained timer
+/**
+   Add a timer in the chain.
+   \param timer will be added as a child to this timer.
  */
 void PrescaledTimer::register_chained_timer(PrescaledTimer& timer)
 {
@@ -273,6 +306,9 @@ void PrescaledTimer::register_chained_timer(PrescaledTimer& timer)
     if (!m_updating) reschedule();
 }
 
+/**
+   Remove a timer from the chain.
+ */
 void PrescaledTimer::unregister_chained_timer(PrescaledTimer& timer)
 {
     if (!m_updating) update();
@@ -289,6 +325,9 @@ void PrescaledTimer::unregister_chained_timer(PrescaledTimer& timer)
     if (!m_updating) reschedule();
 }
 
+/**
+   Static helper to compute a timer delay for a particular counter to reach a value.
+ */
 cycle_count_t PrescaledTimer::ticks_to_event(cycle_count_t counter, cycle_count_t event, cycle_count_t wrap)
 {
     cycle_count_t ticks = event - counter + 1;
@@ -342,6 +381,11 @@ private:
 };
 
 
+/**
+   Constructor
+   \param wrap Wrapping value for the counter. For example, a 16-bits counter wrap is 0x10000.
+   \param comp_count number of compare channels
+ */
 TimerCounter::TimerCounter(PrescaledTimer& timer, long wrap, size_t comp_count)
 :m_source(Tick_Stopped)
 ,m_wrap(wrap)
@@ -368,12 +412,18 @@ TimerCounter::~TimerCounter()
 }
 
 
+/**
+   Set the logger for reporting counter events
+ */
 void TimerCounter::set_logger(Logger* logger)
 {
     m_logger = logger;
 }
 
 
+/**
+   Reset the counter
+ */
 void TimerCounter::reset()
 {
     m_source = Tick_Stopped;
@@ -389,6 +439,9 @@ void TimerCounter::reset()
 }
 
 
+/**
+   Reschedule the counter, this should be called after changing the configuration
+ */
 void TimerCounter::reschedule()
 {
     if (m_source == Tick_Timer)
@@ -398,18 +451,27 @@ void TimerCounter::reschedule()
 }
 
 
+/**
+   Change the tick source
+ */
 void TimerCounter::set_tick_source(TickSource src)
 {
     m_source = src;
 }
 
 
+/**
+   Change the TOP value
+ */
 void TimerCounter::set_top(long top)
 {
     m_top = top;
 }
 
 
+/**
+   Change the slope mode
+ */
 void TimerCounter::set_slope_mode(SlopeMode mode)
 {
     m_slope = mode;
@@ -421,17 +483,27 @@ void TimerCounter::set_slope_mode(SlopeMode mode)
 }
 
 
+/**
+   Change the counter current value
+ */
 void TimerCounter::set_counter(long value)
 {
     m_counter = value;
 }
 
 
+/**
+   Change a compare channel value
+ */
 void TimerCounter::set_comp_value(size_t index, long value)
 {
     m_cmp[index].value = value;
 }
 
+
+/**
+   Enable or disable a compare channel
+ */
 void TimerCounter::set_comp_enabled(size_t index, bool enable)
 {
     m_cmp[index].enabled = enable;
@@ -448,11 +520,11 @@ long TimerCounter::ticks_to_event(long event)
 
 
 /*
- * Calculates the delay in prescaler ticks and the type of the next timer/counter event
- * 1st step : calculate the delays in ticks to each possible event, determine the
- *            smallest of them and store it in 'ticks_to_next_event' to be the returned value.
- * 2st step : store in 'm_next_event_type' the combination of flags TimerEventType corresponding
- *            to the event, or combination thereof, reached at 'ticks_to_next_event'.
+   Calculates the delay in prescaler ticks and the type of the next timer/counter event
+   1st step : calculate the delays in ticks to each possible event, determine the
+              smallest of them and store it in 'ticks_to_next_event' to be the returned value.
+   2st step : store in 'm_next_event_type' the combination of flags TimerEventType corresponding
+              to the event, or combination thereof, reached at 'ticks_to_next_event'.
  */
 long TimerCounter::delay_to_event()
 {
@@ -506,8 +578,8 @@ long TimerCounter::delay_to_event()
 
 
 /*
- * Callback from the internal prescaled timer
- * Process the timer ticks, by updating the counter
+   Callback from the internal prescaled timer
+   Process the timer ticks, by updating the counter
  */
 void TimerCounter::timer_raised(const signal_data_t& sigdata)
 {
@@ -519,9 +591,9 @@ void TimerCounter::timer_raised(const signal_data_t& sigdata)
 
 
 /*
- * Callback for a single external clock tick.
- * Determine the events that should be raised for the current value of
- * the counter, then process one tick.
+   Callback for a single external clock tick.
+   Determine the events that should be raised for the current value of
+   the counter, then process one tick.
  */
 void TimerCounter::extclock_raised()
 {
@@ -549,8 +621,8 @@ void TimerCounter::extclock_raised()
 
 
 /*
- * Processes the timer clock ticks to update the counter and raise
- * the signals for any event reached.
+   Processes the timer clock ticks to update the counter and raise
+   the signals for any event reached.
  */
 void TimerCounter::process_ticks(long ticks, bool event_reached)
 {

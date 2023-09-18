@@ -32,20 +32,29 @@ YASIMAVR_BEGIN_NAMESPACE
 
 
 //=======================================================================================
-/*
- * Port implements a GPIO port controller for up to 8 bits
- * the exact number of pins is determined by the device configuration
- * An initialization, the port will lookup all possible ports with the letter
- * (e.g. port 'B' will lookup all pins named 'PBx' (x=0 to 7)
+/**
+   \brief Generic model for a GPIO port controller
+
+   It implements a GPIO port controller for up to 8 pins.
+   The exact number of pins is determined by the device configuration.
+
+   At initialization, the port will lookup all possible ports with the letter
+   (e.g. port 'A' will lookup and control all pins named 'PAx' (x=0 to 7))
+
+   CTLREQs supported:
+    - AVR_CTLREQ_GET_SIGNAL
+
+   Signals :
+      Id  |  Index  |  Trigger                          |  Data
+      ----|---------|-----------------------------------|-----------------
+      0   | -       |  Digital state change by any pin  |  port IN value
  */
 class AVR_CORE_PUBLIC_API Port : public Peripheral, public SignalHook {
 
 public:
 
-    //Constructor of the port. The name is the upper case letter identifying the port.
     explicit Port(char name);
 
-    //Implementation of Peripheral callbacks
     virtual bool init(Device& device) override;
     virtual void reset() override;
     virtual bool ctlreq(ctlreq_id_t req, ctlreq_data_t* data) override;
@@ -53,12 +62,9 @@ public:
 
 protected:
 
-    //returns the pin mask, containing a '1' for each existing pin
     uint8_t pin_mask() const;
-    //Set the internal state of a pin (0 to 7)
     void set_pin_internal_state(uint8_t num, Pin::State state);
-    //Callback method called when the resolved state of a pin has changed
-    //The default implementation only handles the SHORTED case and the logging
+
     virtual void pin_state_changed(uint8_t num, Pin::State state);
 
 private:
@@ -71,6 +77,7 @@ private:
 
 };
 
+/// Returns the pin mask, containing a '1' for each existing pin
 inline uint8_t Port::pin_mask() const
 {
     return m_pinmask;

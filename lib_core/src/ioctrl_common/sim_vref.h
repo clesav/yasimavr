@@ -52,9 +52,9 @@ YASIMAVR_BEGIN_NAMESPACE
 
 
 //=======================================================================================
-/*
- * Generic I/O controller for managing VREF for analog peripherals (ADC, analog comparator)
- * Note that setting VCC in the firmware is required for using any analog feature of a MCU.
+/**
+ * \brief Generic model for managing VREF for analog peripherals (ADC, analog comparator)
+ * \note Setting VCC in the firmware is required for using any analog feature of a MCU.
  * Failing to do so will trigger a device crash
  */
 class AVR_CORE_PUBLIC_API VREF : public Peripheral {

@@ -35,27 +35,41 @@ YASIMAVR_BEGIN_NAMESPACE
 
 
 //=======================================================================================
-/*
- * This code (tentatively) defines a simulation of a TWI (a.k.a. I2C or SMBus) implementation
- * It supports multiple masters/slaves.
- * It does not support arbitration beyond the START condition and (currently) is not
- * multi-thread safe.
- * It is implemented by 4 classes:
- *  - TWIPacket defines a packet circulating on a bus simulating the successive exchange
- *    of information between mater and slave.
- *  - TWIEndPoint is an abstract interface defining a generic device connected to a TWI bus.
- *  - TWIBus defines a central object to circulate packets between multiple endpoints.
- *  - TWI is an implementation of a TWI interface for an AVR MCU, as generic
- *    as possible. It manages master and slave operations independently and communicates
- *    with upper layers via signals.
+/**
+   \file
+   \defgroup core_twi <sim_twi.h> : Base framework for TWI interface
+
+    This code (tentatively) defines a simulation of a TWI (a.k.a. I2C or SMBus) implementation.
+
+    It supports multiple masters/slaves.
+
+    It does not support arbitration beyond the START condition and (currently) is not
+    multi-thread safe.
+
+    It is implemented by 4 classes:
+     - TWIPacket defines a packet circulating on a bus simulating the successive exchange
+       of information between mater and slave.
+     - TWIEndPoint is an abstract interface defining a generic device connected to a TWI bus.
+     - TWIBus defines a central object to circulate packets between multiple endpoints.
+     - TWI is an implementation of a TWI interface for an AVR MCU, as generic
+       as possible. It manages master and slave operations independently and communicates
+       with upper layers via signals.
+   @{
  */
 
+/**
+   \name Controller requests definition for SPI
+   @{
+ */
 
-/*
- * CTLREQ definitions
-*/
-//Request to get the TWI endpoint. data->p must be pointing at a TWIEndPoint
+ /**
+   Request to get the TWI endpoint.
+    - data->p must be pointing at a TWIEndPoint object.
+ */
 #define AVR_CTLREQ_TWI_ENDPOINT     1
+
+/// @}
+/// @}
 
 
 //=======================================================================================
@@ -64,12 +78,14 @@ class AVR_CORE_PUBLIC_API TWIPacket {
 
 public:
 
-    //This enum lists the types of packet.
-    //Address, WriteData and ReadData (and ReadRequest under some conditions)
-    //are 'long' packets, i.e. they have a 'duration' that is simulated by a
-    //'send' and a 'end' callback.
-    //The xxxxAck packets are 'short', i.e. instantaneous. In reality they have
-    //a duration but it's included in the respective 'long' packet duration.
+    /**
+       Types of packet.
+       Address, WriteData and ReadData (and ReadRequest under some conditions)
+       are 'long' packets, i.e. they have a 'duration' that is simulated by a
+       'send' and a 'end' callback.
+       The xxxxAck packets are 'short', i.e. instantaneous. In reality they have
+       a duration but it's included in the respective 'long' packet duration.
+     */
     enum Cmd {
         Cmd_Invalid = 0,
         Cmd_Address,
@@ -98,8 +114,16 @@ public:
 
 };
 
+
+//=======================================================================================
+
 class TWIBus;
 
+/**
+   \brief An endpoint connected to a TWI bus.
+   Represents a device connected to a TWI bus model and acting as a master, a slave or both.
+   \sa TWI_Bus, TWI_Packet
+ */
 class AVR_CORE_PUBLIC_API TWIEndPoint {
 
 public:
@@ -115,23 +139,20 @@ public:
 
 protected:
 
-    //Used by a master endpoint to get ownership of the bus
     bool acquire_bus();
-    //Used by a master endpoint to release ownship of the bus
     void release_bus();
-    //Used by a endpoint to send a packet on the bus
     void send_packet(TWIPacket& packet);
-    //Used by a endpoint to end a 'long' packet
     void end_packet(TWIPacket& packet);
 
     //*********************************
 
-    //Called by the bus to transmit a packet.
+    /// Called by the bus to transmit a packet
     virtual void packet(TWIPacket& packet) = 0;
+    /// Called by the bus to end a packet
     virtual void packet_ended(TWIPacket& packet) = 0;
-    //Called by the bus to signal that the bus is acquired
+    /// Called by the bus to notify that the bus is acquired
     virtual void bus_acquired() = 0;
-    //Called by the bus to signal that the bus is released
+    /// Called by the bus to notify that the bus is released
     virtual void bus_released() = 0;
 
 private:
@@ -143,29 +164,35 @@ private:
 };
 
 
+//=======================================================================================
+
+/**
+   \brief A central object to circulate packets between multiple TWI endpoints.
+   \sa TWIEndPoint, TWIPacket
+ */
 class AVR_CORE_PUBLIC_API TWIBus {
 
 public:
 
-    //Signal definitions
+    /// Signal ID definitions
     enum SignalId {
-        //Signal emitted when the bus has been acquired by a master
-        //sigdata.p is pointing at the endpoint master who acquired the bus.
+        /// Raised when the bus has been acquired by a master.
+        /// sigdata is a pointer to the endpoint master who acquired the bus.
         Signal_Start,
-        //Signal emitted when a address packet is sent over the bus.
-        //sigdata.p is pointing at the packet
+        /// Raised when a address packet is sent over the bus.
+        /// sigdata is a pointer the packet.
         Signal_Address,
-        //Signal emitted when a data packet is sent over the bus.
-        //sigdata.p is pointing at the packet
+        /// Raised when a data packet is sent over the bus.
+        /// sigdata is a pointer to the packet.
         Signal_Data,
-        //Signal emitted when a long packet is ended.
-        //no data attached
+        /// Raised when a long packet is ended.
+        /// no data attached.
         Signal_Packet_End,
-        //Signal emitted when a ACK/NACK (address or data) is sent over the bus.
-        //sigdata.p is pointing at the packet
+        /// Raised when a ACK/NACK (address or data) is sent over the bus.
+        /// sigdata is a pointer to the packet.
         Signal_Ack,
-        //Signal emitted when the bus is released.
-        //sigdata.p is pointing at the endpoint master that owned the bus.
+        /// Raised when the bus is released.
+        /// sigdata is a pointer to the endpoint master that owned the bus.
         Signal_Stop,
     };
 
@@ -218,94 +245,122 @@ inline Signal& TWIBus::signal()
 }
 
 
+//=======================================================================================
+
+/**
+   \brief Generic model defining a two-wire interface a.k.a. TWI.
+
+   The interface has a Master side and a Slave side that are independent
+   of each other and can even communicate with each other;
+ */
 class AVR_CORE_PUBLIC_API TWI : public TWIEndPoint {
 
 public:
 
-    //For all the signals below, sigdata.index is set to either Cpt_Master
-    //or Cpt_Slave identifying which part of the endpoint is emitting the
-    //signal
+    /**
+       Signal IDs raised by the TWI interface.
+       For all the signals below, sigdata.index is set to either Cpt_Master
+       or Cpt_Slave identifying which part of the endpoint is emitting the
+       signal.
+     */
     enum SignalId {
-        //For debug and logging purpose only
+        /// For debug and logging purpose only
         Signal_StateChange,
-        //Emitted when the bus state changed. sigdata.u is set to one
-        //of the BusState enumeration values.
+        /// Emitted when the bus state changed. sigdata is set to one
+        /// of the BusState enumeration values.
         Signal_BusStateChange,
-        //Slave only signal. Emitted when received a address packet.
-        //sigdata.u is set to the raw byte received, so
-        //bit 0 is the RW flag, bits 1 to 7 contain the address
+        /// Slave only signal. Emitted when received a address packet.
+        /// sigdata is set to the raw byte received, so
+        /// bit 0 is the RW flag, bits 1 to 7 contain the address
         Signal_Address,
-        //Master only signal. Emitted when received a address ACK/NACK
-        //from a slave. sigdata.u is set to TWIPacket::Ack or TWIPacket::Nack
+        /// Master only signal. Emitted when received a address ACK/NACK
+        /// from a slave. sigdata is set to TWIPacket::Ack or TWIPacket::Nack
         Signal_AddrAck,
-        //Emitted when a data transmission complete, i.e. the ACK/NACK has been
-        //received in return. sigdata.u is set to TWIPacket::Ack or TWIPacket::Nack.
+        /// Emitted when a data transmission complete, i.e. the ACK/NACK has been
+        /// received in return. sigdata is set to TWIPacket::Ack or TWIPacket::Nack.
         Signal_TxComplete,
-        //Emitted when a data reception completed. sigdata.u is set to the data byte
-        //received. A ACK/NACK has not been sent in return yet.
+        /// Emitted when a data reception completed. sigdata is set to the data byte
+        /// received. A ACK/NACK has not been sent in return yet.
         Signal_RxComplete,
     };
 
+    /**
+       Enum value used in signal indexes to identify the part of the interface
+       raising a signal.
+     */
     enum Component {
+        /// Master or Slave
         Cpt_Any,
+        /// Master part
         Cpt_Master,
+        /// Slave part
         Cpt_Slave,
     };
 
+    /**
+       Enum values for the bus state.
+     */
     enum BusState {
-        //The bus is idle
+        /// The bus is idle
         Bus_Idle,
-        //The bus is owned by another master
+        /// The bus is owned by another master
         Bus_Busy,
-        //The bus is owned by this instance
+        /// The bus is owned by this instance
         Bus_Owned,
     };
 
-    //State enumeration values are split in 2 nibbles :
-    //bits 0 to 3 : a OR'ed combination of StateFlag enum values
-    //bits 4 to 7 : a integer incremented only to differentiate the values
+    /**
+       Enum value for the interface state. Each part (master/slave) has an
+       independent state. \n Enum values are split in 2 nibbles :
+       - bits 0 to 3 : an OR'ed combination of StateFlag enum values
+       - bits 4 to 7 : an integer incremented only to differentiate the values
+     */
     enum State {
         //Active here means actively participating in bus traffic
         //either as master or as slave
+        /// Flag indicating the interface is active, i.e. participating in bus traffic
         StateFlag_Active    = 0x01,
+        /// Flag indicating the interface is busy.
         StateFlag_Busy      = 0x02,
+        /// Flag indicating data transmission is in progress
         StateFlag_Data      = 0x04,
+        /// Flag indicating the interface is sending data
         StateFlag_Tx        = 0x08,
 
+        /// Interface disabled
         State_Disabled      = 0x00,
+        /// Interface idle
         State_Idle          = 0x10,
-        //Waiting for the bus to be released
+        /// Waiting for the bus to be released
         State_Waiting       = 0x20,
-        //Pending a ADDR packet, where the next valid actions are either
-        //a STOP (bus release) or a RESTART (new Address packet)
+        /// Pending a ADDR packet, where the next valid actions are either
+        /// a STOP (bus release) or a RESTART (new Address packet)
         State_Addr          = 0x31,
-        //Address packet transmitting/receiving or waiting for ACK/NACK
+        /// Address packet transmitting/receiving or waiting for ACK/NACK
         State_Addr_Busy     = 0x43,
-        //Slave address ACKed, in TX mode, ready to send
+        /// Slave address ACKed, in TX mode, ready to send
         State_TX            = 0x5D,
-
+        /// Write data request sent, bus held still by the slave
         State_TX_Req        = 0x6F,
-        //Sending data in progress
+        /// Sending data in progress
         State_TX_Busy       = 0x7F,
-        //Waiting for a TX ACK/NACK
+        /// Waiting for a TX ACK/NACK
         State_TX_Ack        = 0x8F,
-        //Slave address ACKed, in RX mode, ready to receive
+        /// Slave address ACKed, in RX mode, ready to receive
         State_RX            = 0x95,
-        //Read data request sent, waiting for data packet (master only)
+        /// Read data request sent, waiting for data packet (master only)
         State_RX_Req        = 0xA7,
-        //Receiving data in progress
+        /// Receiving data in progress
         State_RX_Busy       = 0xB7,
-        //Waiting for a RX ACK/NACK
+        /// Waiting for a RX ACK/NACK
         State_RX_Ack        = 0xC7,
     };
 
     TWI();
     virtual ~TWI();
 
-    //Initialise the interface. the device will be used for timer related operations
     void init(CycleManager& cycle_manager, Logger& logger);
 
-    //Reset the interface cancel any transaction
     void reset();
 
     Signal& signal();
@@ -315,34 +370,13 @@ public:
     bool start_transfer();
     void end_transfer();
     bool send_address(uint8_t remote_addr, bool rw);
-
-    //(Master only) sends a byte of data to the slave.
-    //Returns true if the data could actually be sent, false otherwise.
     bool start_master_tx(uint8_t data);
-
-    //(Master only) sends a ReadRequest packet to the slave
-    //Returns true if the packet could actually be sent, false otherwise
     bool start_master_rx();
-
-    //Used when the slave is expecting a ACK/NACK response
-    //after a ReadData packet
-    //ack: true=ACK, false=NACK
     void set_master_ack(bool ack);
 
-    //Enable/disable the slave component
     void set_slave_enabled(bool enabled);
-
-    //(Slave only) Sends a byte of data to the master.
-    //Returns true if the data could actually been sent, false otherwise
     bool start_slave_tx(uint8_t data);
-
-    //(Slave only) Indicates to the master that the slave is ready to receive
-    //data. Returns True if the operation was legal, false otherwise.
     bool start_slave_rx();
-
-    //Function used when the master is expected a ACK/NACK response
-    //after a Address or a WriteData packet
-    //ack: true=ACK, false=NACK
     void set_slave_ack(bool ack);
 
     State master_state() const;
@@ -398,11 +432,17 @@ inline Signal& TWI::signal()
     return m_signal;
 }
 
+/**
+   Returns the current state of the master-side.
+ */
 inline TWI::State TWI::master_state() const
 {
     return m_mst_state;
 }
 
+/**
+   Returns the current state of the slave-side.
+ */
 inline TWI::State TWI::slave_state() const
 {
     return m_slv_state;
