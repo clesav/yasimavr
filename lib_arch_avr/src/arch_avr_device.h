@@ -43,14 +43,15 @@ typedef DeviceConfiguration ArchAVR_DeviceConfig;
 
 
 //=======================================================================================
-/*
- * Implementation of a CPU core for AVR series
- * The main addition is to handle the address mapping in data space
+/**
+   \brief Implementation of a CPU core for AVR series
+   The main addition is to handle the address mapping in data space
  */
 class AVR_ARCHAVR_PUBLIC_API ArchAVR_Core : public Core {
 
 public:
 
+    /// Additional NVM enumerations
     enum ArchAVR_NVM {
         NVM_EEPROM = NVM_ArchDefined,
     };
@@ -75,8 +76,8 @@ friend class ArchAVR_Device;
 
 
 //=======================================================================================
-/*
- * Implementation of a MCU for AVR series
+/**
+   \brief Implementation of a MCU for AVR series
  */
 class AVR_ARCHAVR_PUBLIC_API ArchAVR_Device : public Device {
 
@@ -89,7 +90,7 @@ protected:
 
     virtual bool core_ctlreq(ctlreq_id_t req, ctlreq_data_t* reqdata) override;
 
-    //Override to load the EEPROM
+    /// Override to load the EEPROM
     virtual bool program(const Firmware& firmware) override;
 
 private:

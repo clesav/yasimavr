@@ -28,17 +28,13 @@ YASIMAVR_USING_NAMESPACE
 
 
 //=======================================================================================
-/*
- * Constructor of a watchdog timer
- */
+
 ArchAVR_WDT::ArchAVR_WDT(const ArchAVR_WDTConfig& config)
 :m_config(config)
 ,m_unlock_cycle(UINT64_MAX)
 {}
 
-/*
- * Initialisation of a watchdog timer
- */
+
 bool ArchAVR_WDT::init(Device& device)
 {
     bool status = WatchdogTimer::init(device);
@@ -49,6 +45,7 @@ bool ArchAVR_WDT::init(Device& device)
 
     return status;
 }
+
 
 void ArchAVR_WDT::reset()
 {
@@ -62,6 +59,7 @@ void ArchAVR_WDT::reset()
         }
     }
 }
+
 
 void ArchAVR_WDT::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
@@ -95,6 +93,7 @@ void ArchAVR_WDT::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
         clear_ioreg(m_config.reg_wdt, m_config.bm_int_flag);
 }
 
+
 void ArchAVR_WDT::configure_timer(bool enable, uint8_t delay_index)
 {
     if (enable) {
@@ -105,6 +104,7 @@ void ArchAVR_WDT::configure_timer(bool enable, uint8_t delay_index)
         set_timer(0, 0, 0);
     }
 }
+
 
 void ArchAVR_WDT::timeout()
 {

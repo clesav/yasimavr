@@ -41,6 +41,10 @@ ArchAVR_IntCtrl::ArchAVR_IntCtrl(unsigned int size)
 :InterruptController(size)
 {}
 
+/**
+   Implementation of the interrupt arbiration as per the AVR series.
+   The lowest vectors have higher priority.
+ */
 int_vect_t ArchAVR_IntCtrl::get_next_irq() const
 {
     for (int_vect_t i = 0; i < intr_count(); ++i) {

@@ -32,16 +32,9 @@ YASIMAVR_BEGIN_NAMESPACE
 
 
 //=======================================================================================
-/*
- * Implementation of a SPI interface for AVR series
- * Features:
- *  - Host/client mode
- *  - data order, phase and polarity settings have no effect
- *  - write collision flag not supported
- *
- *  for supported CTLREQs, see sim_spi.h
+/**
+   \brief Configuration structure for ArchAVR_SPI
  */
-
 struct ArchAVR_SPIConfig {
 
     reg_addr_t reg_data;
@@ -60,6 +53,15 @@ struct ArchAVR_SPIConfig {
 
 };
 
+/**
+   \brief Implementation of a SPI interface for AVR series
+   Features:
+    - Host/client mode
+    - data order, phase and polarity settings have no effect
+    - write collision flag not supported
+
+    \sa sim_spi.h
+ */
 class AVR_ARCHAVR_PUBLIC_API ArchAVR_SPI : public Peripheral, public SignalHook {
 
 public:

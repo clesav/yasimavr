@@ -41,26 +41,37 @@ YASIMAVR_BEGIN_NAMESPACE
 
 
 //=======================================================================================
-/*
- * Implementation of a External Interrupt controller for AVR series
+/**
+   \brief Configuration structure for ArchAVR_ExtInt
  */
-
 struct ArchAVR_ExtIntConfig {
 
+    /// Array of pins for external interrupts
     pin_id_t extint_pins[EXTINT_PIN_COUNT];
+    /// Array of pins for Pin Change interrupts
     pin_id_t pcint_pins[PCINT_PIN_COUNT];
+    /// Regbit for external interrupt control
     regbit_t rb_extint_ctrl;
+    /// Regbit for the external interrupt mask
     regbit_t rb_extint_mask;
+    /// Regbit for the external interrupt flags
     regbit_t rb_extint_flag;
+    /// Regbit for Pin Change interrupt control
     regbit_t rb_pcint_ctrl;
+    /// Regbit for Pin Change interrupt flags
     regbit_t rb_pcint_flag;
+    /// Array of Pin Change mask regbit for each pin
     reg_addr_t reg_pcint_mask[PCINT_BANK_COUNT];
+    /// Array of External Interrupt vector indexes
     int_vect_t extint_vector[EXTINT_PIN_COUNT];
+    /// Array of Pin Change interrupt vector indexes
     int_vect_t pcint_vector[PCINT_BANK_COUNT];
 
 };
 
-
+/**
+   \brief Implementation of a model for a External Interrupts peripheral for AVR series
+ */
 class AVR_ARCHAVR_PUBLIC_API ArchAVR_ExtInt : public Peripheral,
                                              public InterruptHandler,
                                              public SignalHook {

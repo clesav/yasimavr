@@ -34,39 +34,56 @@ YASIMAVR_BEGIN_NAMESPACE
 
 
 //=======================================================================================
-/*
- * Implementation of a Analog Comparator for the AVR series
- * Unsupported features:
- *      - INT modes other than BOTHEDGE
- *      - Timer input capture
+
+/**
+   \brief Configuration structure for ArchAVR_ACP.
  */
-
-
 struct ArchAVR_ACPConfig {
 
     struct mux_config_t : base_reg_config_t {
         pin_id_t pin;
     };
 
+    /// List of the mux options for the negative input
     std::vector<mux_config_t> mux_pins;
-
+    /// Positive input pin ID
     pin_id_t pos_pin;
+    /// Negative input pin ID
     pin_id_t neg_pin;
-
+    /// Regbit for the disable bit (ACD)
     regbit_t rb_disable;
+    /// Regbit for the mux enable bit (ACME)
     regbit_t rb_mux_enable;
+    /// Regbit for the ADC enable bit (ADEN)
     regbit_t rb_adc_enable;
+    /// Regbit for the mux select field (ADMUX)
     regbit_t rb_mux;
+    /// Regbit for the bandgap select bit (ACBG)
     regbit_t rb_bandgap_select;
+    /// Regbit for the interrupt mode select field (ACIS)
     regbit_t rb_int_mode;
+    /// Regbit for the output bit (ACO)
     regbit_t rb_output;
+    /// Regbit for the interrupt enable bit (ACIE)
     regbit_t rb_int_enable;
+    /// Regbit for the interrupt flag (ACI)
     regbit_t rb_int_flag;
-
+    /// Vector index for the interrupt
     int_vect_t iv_cmp;
 };
 
 
+/**
+   \brief Implementation of an Analog Comparator for AVR series
+
+   \sa ACP
+
+   Limitations:
+    - Analog Comparator Input Capture is not implemented.
+
+   CTLREQs supported:
+    - AVR_CTLREQ_GET_SIGNAL : returns a pointer to the instance signal
+ */
 class AVR_ARCHAVR_PUBLIC_API ArchAVR_ACP : public ACP,
                                            public Peripheral,
                                            public SignalHook {

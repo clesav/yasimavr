@@ -31,10 +31,9 @@ YASIMAVR_BEGIN_NAMESPACE
 
 
 //=======================================================================================
-/*
- * Implementation of a GPIO port controller for AVR series
+/**
+   \brief Configuration structure for ArchAVR_Port
  */
-
 struct ArchAVR_PortConfig {
 
     char name;
@@ -44,7 +43,9 @@ struct ArchAVR_PortConfig {
 
 };
 
-
+/**
+   \brief Implementation of a GPIO port controller for AVR series
+ */
 class AVR_ARCHAVR_PUBLIC_API ArchAVR_Port : public Port {
 
 public:

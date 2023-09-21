@@ -32,8 +32,10 @@ YASIMAVR_BEGIN_NAMESPACE
 
 
 //=======================================================================================
-/*
- * Implementation of a Voltage Reference controller for AVR series
+/**
+   \brief Implementation of a Voltage Reference controller for AVR series
+   
+   It supports only one fixed reference.
  */
 
 class AVR_ARCHAVR_PUBLIC_API ArchAVR_VREF : public VREF {
@@ -46,8 +48,8 @@ public:
 
 
 //=======================================================================================
-/*
- * Implementation of a interrupt controller for AVR series
+/**
+   \brief Implementation of a interrupt controller for AVR series
  */
 class AVR_ARCHAVR_PUBLIC_API ArchAVR_IntCtrl : public InterruptController {
 
@@ -63,17 +65,21 @@ protected:
 
 
 //=======================================================================================
-/*
- * Implementation of a interrupt controller for AVR series
+/**
+   \brief Configuration structure for ArchAVR_MiscRegCtrl
  */
-
 struct ArchAVR_MiscConfig {
 
-    std::vector<reg_addr_t> gpior;
+    /// Array of addresses for the GPIORx registers
+	std::vector<reg_addr_t> gpior;
 
 };
 
-
+/**
+   \brief Implementation of a misc controller for AVR series
+   
+   This implementation supports the general purpose registers GPIORx.
+ */
 class AVR_ARCHAVR_PUBLIC_API ArchAVR_MiscRegCtrl : public Peripheral {
 
 public:
