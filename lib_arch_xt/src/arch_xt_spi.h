@@ -32,27 +32,36 @@ YASIMAVR_BEGIN_NAMESPACE
 
 
 //=======================================================================================
-/*
- * Implementation of a SPI for the XT core series
- * Features:
- *  - Host/client mode
- *  - data order, phase and polarity settings have no effect
- *  - write collision flag not supported
- *  - buffer mode not supported
- *  - multi-host mode not supported
- *  - Slave Select has no effect in host mode (the SSD setting has no effect)
- *
- *  for supported CTLREQs, see sim_spi.h
- */
 
+/**
+   \ingroup api_spi
+   \brief Configuration structure for ArchXT_SPI.
+ */
 struct ArchXT_SPIConfig {
 
+    /// Base address for the peripheral I/O registers
     reg_addr_t reg_base;
+    /// Identifier of the pin used for Chip Select
     pin_id_t pin_select;
+    /// Interrupt vector index
     int_vect_t iv_spi;
 
 };
 
+/**
+   \ingroup api_spi
+   \brief Implementation of a Serial Peripheral Interface controller for the XT core series
+
+   Features:
+    - Host/client mode
+    - data order, phase and polarity settings have no effect
+    - write collision flag not supported
+    - buffer mode not supported
+    - multi-host mode not supported
+    - Slave Select has no effect in host mode (the SSD setting has no effect)
+
+    for supported CTLREQs, see sim_spi.h
+ */
 class AVR_ARCHXT_PUBLIC_API ArchXT_SPI : public Peripheral, public SignalHook {
 
 public:

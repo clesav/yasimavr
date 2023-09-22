@@ -36,6 +36,7 @@ YASIMAVR_BEGIN_NAMESPACE
 //=======================================================================================
 
 /**
+   \ingroup api_adc
    \brief Configuration structure for ArchAVR_ADC.
  */
 struct ArchAVR_ADCConfig {
@@ -101,6 +102,7 @@ struct ArchAVR_ADCConfig {
 
 
 /**
+   \ingroup api_adc
    \brief Implementation of an ADC for AVR series
 
    Limitations:

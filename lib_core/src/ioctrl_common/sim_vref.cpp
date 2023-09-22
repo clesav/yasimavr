@@ -105,6 +105,17 @@ bool VREF::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
     return false;
 }
 
+
+/**
+   Set a voltage reference value
+   \param index channel index of the reference
+   \param source source of the reference
+   \param voltage Value of the reference (optional, default value is 1.0)
+
+   If source is VCC or AVCC, the voltage value is ignored (it is by definition 1.0).\n
+   If source is AREF, voltage must be a value relative to VCC/AVCC.\n
+   If source is Internal, voltage must be an absolute value in Volts.
+ */
 void VREF::set_reference(unsigned int index, Source source, double voltage)
 {
     ref_t r;
@@ -121,7 +132,13 @@ void VREF::set_reference(unsigned int index, Source source, double voltage)
         m_signal.raise(Signal_IntRefChange, reference(index), index);
 }
 
-//Returns a reference as an absolute voltage value
+/**
+   Returns a voltage reference value.
+
+   The value returned is always relative to VCC, even if set with an absolute value.\n
+   The value is also constrained to the range [0; VCC].\n
+   If index is out of range or VCC is not set, 0.0 is returned.
+ */
 double VREF::reference(unsigned int index) const
 {
     if (index < m_references.size() && m_vcc) {

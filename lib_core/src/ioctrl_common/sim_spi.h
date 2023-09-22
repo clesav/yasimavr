@@ -36,8 +36,7 @@ YASIMAVR_BEGIN_NAMESPACE
 //=======================================================================================
 /**
    \file
-   \defgroup core_spi <sim_spi.h> : Base framework for SPI interface
-   \sa SPI
+   \defgroup api_spi Serial Peripheral Interface framework
    @{
  */
 
@@ -73,6 +72,7 @@ YASIMAVR_BEGIN_NAMESPACE
 class SPI;
 
 /**
+   \ingroup api_spi
    \brief Abstract interface for a SPI Client.
  */
 class AVR_CORE_PUBLIC_API SPIClient {
@@ -111,12 +111,13 @@ private:
 
 
 /**
-  \brief Generic model defining an serial peripheral interface a.k.a. SPI.
+   \ingroup api_spi
+   \brief Generic model defining an serial peripheral interface a.k.a. SPI.
 
-   The interface can act in either host or client mode.
+    The interface can act in either host or client mode.
 
-   The class is composed of two FIFOs, one for TX, the other for RX.
-   The transfer of a frame starts immediately after pushing it in the TX FIFO.
+    The class is composed of two FIFOs, one for TX, the other for RX.
+    The transfer of a frame starts immediately after pushing it in the TX FIFO.
  */
 class AVR_CORE_PUBLIC_API SPI : public SPIClient, public CycleTimer {
 

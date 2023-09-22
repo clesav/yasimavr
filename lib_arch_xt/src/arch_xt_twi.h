@@ -32,24 +32,41 @@ YASIMAVR_BEGIN_NAMESPACE
 
 
 //=======================================================================================
-/*
- * Implementation of a TWI for the XT core series
- * Features:
- *  - Host/client mode
- *  - data order, phase and polarity settings have no effect
- *  - write collision flag not supported
- *
- *  for supported CTLREQs, see sim_spi.h
- */
 
+/**
+   \ingroup api_twi
+   \brief Configuration structure for ArchXT_TWI
+ */
 struct ArchXT_TWIConfig {
 
+    /// Base address for the peripheral I/O registers
     reg_addr_t reg_base;
+    /// Interrupt vector index for the master part
     int_vect_t iv_master;
+    /// Interrupt vector index for the slave part
     int_vect_t iv_slave;
 
 };
 
+/**
+   \ingroup api_twi
+   \brief Implementation of a Two Wire Interface for XT core series
+
+   Unsupported features:
+    - SDA Setup time
+    - Dual mode control
+    - DBGRUN
+    - Bus timeout
+    - write collision flag not supported
+    - SMBus compatibility not supported
+    - Fast mode not supported
+
+   CTLREQs supported:
+    - AVR_CTLREQ_GET_SIGNAL : returns a pointer to the TWI signal.
+    - AVR_CTLREQ_TWI_ENDPOINT : returns a pointer to the bus end point.
+
+   \sa TWI, TWIEndPoint
+ */
 class AVR_ARCHXT_PUBLIC_API ArchXT_TWI : public Peripheral, public SignalHook {
 
 public:

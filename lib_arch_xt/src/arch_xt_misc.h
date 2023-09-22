@@ -33,12 +33,14 @@ YASIMAVR_BEGIN_NAMESPACE
 
 
 //=======================================================================================
-/*
- * Implementation of a Voltage Reference controller for XT core series
- */
 
+/**
+   \ingroup api_vref
+   \brief Configuration structure for ArchXT_VREF.
+ */
 struct ArchXT_VREFConfig {
 
+    /// Structure defining the source of a voltage reference
     struct reference_config_t : base_reg_config_t {
         VREF::Source source;
         double level;
@@ -49,12 +51,18 @@ struct ArchXT_VREFConfig {
         std::vector<reference_config_t> references;
     };
 
+    /// Configuration for the VREF channels
     std::vector<channel_t> channels;
-
+    /// Base address for the peripheral I/O registers
     reg_addr_t reg_base;
 
 };
 
+
+/**
+   \ingroup api_vref
+   \brief Implementation of a voltage reference controller for XT core series.
+ */
 class AVR_ARCHXT_PUBLIC_API ArchXT_VREF : public VREF {
 
 public:

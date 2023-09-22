@@ -33,7 +33,8 @@ YASIMAVR_BEGIN_NAMESPACE
 
 //=======================================================================================
 /**
-   Configuration structure for ArchAVR_TWI
+   \ingroup api_twi
+   \brief Configuration structure for ArchAVR_TWI
  */
 struct ArchAVR_TWIConfig {
 
@@ -59,7 +60,9 @@ struct ArchAVR_TWIConfig {
 };
 
 /**
-   Implementation of a TWI model for the AVR series
+   \ingroup api_twi
+   \brief Implementation of a TWI model for the AVR series
+
    Features:
     - Host/client mode
     - data order, phase and polarity settings have no effect

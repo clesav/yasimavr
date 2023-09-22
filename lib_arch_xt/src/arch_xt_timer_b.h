@@ -33,24 +33,32 @@ YASIMAVR_BEGIN_NAMESPACE
 
 
 //=======================================================================================
-/*
- * ArchXT_TimerB is the implementation of a Timer/Counter type B for the XT core series
- * Only the Periodic Interrupt mode is currently implemented
- * Other unsupported features:
- *      - Event control and input
- *      - Debug run override
- *      - Compare/capture output on pin
- *      - Status register
- *      - Synchronize Update (SYNCUPD)
- */
 
+/**
+   \ingroup api_timer
+   \brief Configuration structure for ArchXT_TimerB.
+ */
 struct ArchXT_TimerBConfig {
 
+    /// Base address for the peripheral I/O registers
     reg_addr_t reg_base;
+    /// Interrupt vector index for TCB_CAPT
     int_vect_t iv_capt;
 
 };
 
+/**
+   \ingroup api_timer
+   \brief Implementation of a Timer/Counter type B for the XT core series
+
+   Only the Periodic Interrupt mode is currently implemented.
+   Other unsupported features:
+   - Event control and input
+   - Debug run override
+   - Compare/capture output on pin
+   - Status register
+   - Synchronize Update (SYNCUPD)
+ */
 class AVR_ARCHXT_PUBLIC_API ArchXT_TimerB : public Peripheral, public SignalHook {
 
 public:

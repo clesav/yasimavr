@@ -33,7 +33,10 @@ YASIMAVR_BEGIN_NAMESPACE
 
 //=======================================================================================
 
+/// \defgroup api_timer Timer/Counter framework
+
 /**
+   \ingroup api_timer
    \brief Generic model of a Timer with prescaling.
 
    Implementation of a clock cycle timer, used by peripherals such as TCx, WDT, RTC.
@@ -147,6 +150,7 @@ inline Signal& PrescaledTimer::signal()
 
 //=======================================================================================
 /**
+   \ingroup api_timer
    \brief Generic model of a Counter.
 
    Implementation of a clock cycle counter, used by peripherals such as TCx, WDT, RTC.

@@ -35,42 +35,57 @@ YASIMAVR_BEGIN_NAMESPACE
 
 
 //=======================================================================================
-/*
- * Implementation of a ADC for the XT core series
- * Unsupported features:
- *      - Sample Capacitance Selection (register bit available but not used)
- *      - Event Control
- *      - Debug Run Override
- *      - Duty Cycle calibration (register bit available but not used)
- *
- * Note: Without the event control system, only the software can manually start a conversion.
- * As a workaround, a conversion can be triggered externally by the simulation environment
- * by using the request AVR_CTLREQ_ADC_TRIGGER.
- */
 
+/**
+   \ingroup api_adc
+   \brief Configuration structure for ArchXT_ADC.
+ */
 struct ArchXT_ADCConfig {
 
     struct reference_config_t : base_reg_config_t {
         VREF::Source source;
     };
 
+    /// List of the ADC channels
     std::vector<ADC::channel_config_t> channels;
+    /// List of the voltage references
     std::vector<reference_config_t> references;
+    /// Channel index for the voltage reference
     unsigned int vref_channel;
+    /// List of the clock prescaler factors
     std::vector<unsigned long> clk_ps_factors;
+    /// Wrapping value for the ADC clock prescaler
     unsigned long clk_ps_max;
+    /// List of conversion delay values
     std::vector<unsigned long> init_delays;
-
+    /// Base address for the peripheral I/O registers
     reg_addr_t reg_base;
-
+    /// Interrupt vector index for ADC_RESREADY
     int_vect_t iv_resready;
+    /// Interrupt vector index for ADC_WINCMP
     int_vect_t iv_wincmp;
-
-    double temp_cal_25C;            //Temperature sensor value in V at +25 degC
-    double temp_cal_coef;           //Temperature sensor linear coef in V/degC
+    /// Temperature sensor calibration offset (in V at +25degC)
+    double temp_cal_25C;
+    /// Temperature sensor calibration linear coef (in V/degC)
+    double temp_cal_coef;
 
 };
 
+/**
+   \ingroup api_adc
+   \brief Implementation of an ADC for XT series
+
+   Limitations:
+    - Sampling cap and duty cycle settings have no effect
+    - No Debug Run override
+
+   CTLREQs supported:
+    - AVR_CTLREQ_GET_SIGNAL : returns a pointer to the instance signal
+    - AVR_CTLREQ_ADC_SET_TEMP : Sets the temperature reported by the internal sensor.
+    The reqdata should carry the temperature in Celsius as a double.
+    - AVR_CTLREQ_ADC_TRIGGER : Allows other peripherals to trigger a conversion.
+    The trigger only works when the ADC is enabled and idle, and the bit STARTEI is set.
+ */
 class AVR_ARCHXT_PUBLIC_API ArchXT_ADC : public ADC,
                                          public Peripheral,
                                          public SignalHook {

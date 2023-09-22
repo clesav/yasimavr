@@ -34,8 +34,7 @@ YASIMAVR_BEGIN_NAMESPACE
 //=======================================================================================
 /**
    \file
-   \defgroup core_adc <sim_adc.h> : Base framework for ADC
-   \sa ADC
+   \defgroup api_adc Analog-to-Digital Converter framework
    @{
  */
 
@@ -64,6 +63,7 @@ YASIMAVR_BEGIN_NAMESPACE
 
 //=======================================================================================
 /**
+   \ingroup api_adc
    \brief Generic ADC definitions
 
    Definition of enumerations, configuration structures and signal Ids used for ADC models,

@@ -37,7 +37,7 @@ YASIMAVR_BEGIN_NAMESPACE
 //=======================================================================================
 /**
    \file
-   \defgroup core_twi <sim_twi.h> : Base framework for TWI interface
+   \defgroup api_twi Two Wire Interface framework
 
     This code (tentatively) defines a simulation of a TWI (a.k.a. I2C or SMBus) implementation.
 
@@ -74,6 +74,9 @@ YASIMAVR_BEGIN_NAMESPACE
 
 //=======================================================================================
 
+/**
+   \ingroup api_twi
+ */
 class AVR_CORE_PUBLIC_API TWIPacket {
 
 public:
@@ -120,6 +123,7 @@ public:
 class TWIBus;
 
 /**
+   \ingroup api_twi
    \brief An endpoint connected to a TWI bus.
    Represents a device connected to a TWI bus model and acting as a master, a slave or both.
    \sa TWI_Bus, TWI_Packet
@@ -167,6 +171,7 @@ private:
 //=======================================================================================
 
 /**
+   \ingroup api_twi
    \brief A central object to circulate packets between multiple TWI endpoints.
    \sa TWIEndPoint, TWIPacket
  */
@@ -248,6 +253,7 @@ inline Signal& TWIBus::signal()
 //=======================================================================================
 
 /**
+   \ingroup api_twi
    \brief Generic model defining a two-wire interface a.k.a. TWI.
 
    The interface has a Master side and a Slave side that are independent

@@ -35,7 +35,7 @@ YASIMAVR_BEGIN_NAMESPACE
 
 
 //=======================================================================================
-/*
+/**
  * Definition of CTLREQ codes for Timer type A
  */
 
@@ -44,23 +44,36 @@ YASIMAVR_BEGIN_NAMESPACE
 
 
 //=======================================================================================
-/*
- * Implementation of a Analog Comparator for the XT core series
- * Unsupported features:
- *      - Pin output
- */
 
+/**
+   \brief Configuration structure for ArchXT_ACP
+ */
 struct ArchXT_ACPConfig {
 
+    /// List of the channels for the positive input
     std::vector<ACP::channel_config_t> pos_channels;
+    /// List of the channels for the negative input
     std::vector<ACP::channel_config_t> neg_channels;
-
+    /// Channel index for the internal voltage reference
     unsigned int vref_channel;
+    /// Base address for the peripheral I/O registers
     reg_addr_t reg_base;
+    /// Interrupt vector index for the comparator output
     int_vect_t iv_cmp;
 
 };
 
+/**
+   \brief Implementation of an Analog Comparator for Mega0/Mega1 series
+
+   Limitations:
+    - Pin output
+    - No Debug Run override
+
+   CTLREQs supported:
+    - AVR_CTLREQ_GET_SIGNAL : returns a pointer to the instance signal
+    - AVR_CTLREQ_ACP_GET_DAC : returns the output value of the internal DAC.
+ */
 class AVR_ARCHXT_PUBLIC_API ArchXT_ACP : public ACP,
                                          public Peripheral,
                                          public SignalHook {

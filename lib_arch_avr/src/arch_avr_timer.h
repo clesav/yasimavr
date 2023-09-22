@@ -33,18 +33,15 @@ YASIMAVR_BEGIN_NAMESPACE
 
 
 //=======================================================================================
+
 /**
    \file
-   \defgroup arch_avr_timer <arch_avr_timer.h> : Timer/Counter model for AVR architecture
+   \name Controller requests definition for ArchAVR_Timer
    @{
  */
 
 /**
-   \name Controller requests definition for ADC
-   @{
- */
-
-/**
+   \ingroup api_timer
    Request to obtain a pointer to the SignalHook entry point for external clock ticks
  */
 #define AVR_CTLREQ_TMR_GET_EXTCLK_HOOK        1
@@ -55,10 +52,10 @@ YASIMAVR_BEGIN_NAMESPACE
 #define AVR_CTLREQ_TMR_GET_CAPT_HOOK          2
 
 /// @}
-/// @}
 
 
 /**
+   \ingroup api_timer
    \brief Configuration structure for ArchAVR_Timer.
  */
 struct ArchAVR_TimerConfig {
@@ -217,6 +214,7 @@ struct ArchAVR_TimerConfig {
 
 
 /**
+   \ingroup api_timer
    \brief Timer/Counter model for AVR series
 
    Implementation of a 8bits/16bits Timer/Counter for AVR series

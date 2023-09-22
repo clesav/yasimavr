@@ -33,6 +33,7 @@ YASIMAVR_BEGIN_NAMESPACE
 
 //=======================================================================================
 /**
+   \ingroup api_spi
    \brief Configuration structure for ArchAVR_SPI
  */
 struct ArchAVR_SPIConfig {
@@ -54,6 +55,7 @@ struct ArchAVR_SPIConfig {
 };
 
 /**
+   \ingroup api_spi
    \brief Implementation of a SPI interface for AVR series
    Features:
     - Host/client mode
