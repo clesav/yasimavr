@@ -39,7 +39,7 @@ enum class SleepMode;
 //=======================================================================================
 /**
    \file
-   \defgroup core_peripheral <sim_peripheral.h> : Base framework for peripherals
+   \defgroup core_peripheral Peripheral base framework
    @{
  */
 
@@ -216,10 +216,13 @@ struct ctlreq_data_t {
 
 //=======================================================================================
 /**
+   \name Register field lookup
    The structure base_reg_config_t and the functions find_reg_config() are useful for
    configuration that maps a register field value to a set of parameters.
    (see the timer classes for examples)
+   @{
  */
+
 struct base_reg_config_t {
     uint64_t reg_value;
 };
@@ -246,9 +249,12 @@ const T* find_reg_config_p(const std::vector<T>& v, uint64_t reg_value)
 }
 
 /// @}
+/// @}
+
 
 //=======================================================================================
 /**
+   \ingroup core_peripheral
    \brief Abstract class defining a framework for MCU peripherals.
  */
 class AVR_CORE_PUBLIC_API Peripheral: public IO_RegHandler {
@@ -330,13 +336,13 @@ private:
 
 };
 
-///Unique identifier of the peripheral
+/// Unique identifier of the peripheral
 inline ctl_id_t Peripheral::id() const
 {
     return m_id;
 }
 
-///Access to the device. It is null before init() is called.
+/// Access to the device. It is null before init() is called.
 inline Device *Peripheral::device() const
 {
     return m_device;

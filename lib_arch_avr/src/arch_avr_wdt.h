@@ -56,7 +56,7 @@ struct ArchAVR_WDTConfig {
     bitmask_t bm_int_flag;
 	/// Regbit for the reset flag
     regbit_t rb_reset_flag;
-    // Interrupt vector index
+    /// Interrupt vector index
     int_vect_t vector;
 
 };

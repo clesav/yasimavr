@@ -36,7 +36,7 @@ YASIMAVR_BEGIN_NAMESPACE
 
 //=======================================================================================
 /**
- * Definition of CTLREQ codes for Timer type A
+   Definition of CTLREQ codes for ACP
  */
 
 //Request to obtain the DAC output value
@@ -64,7 +64,9 @@ struct ArchXT_ACPConfig {
 };
 
 /**
-   \brief Implementation of an Analog Comparator for Mega0/Mega1 series
+   \brief Implementation of an Analog Comparator for XT core series
+
+   \sa ACP
 
    Limitations:
     - Pin output

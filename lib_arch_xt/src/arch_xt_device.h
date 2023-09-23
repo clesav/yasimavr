@@ -35,14 +35,22 @@ YASIMAVR_BEGIN_NAMESPACE
 
 //=======================================================================================
 
+/**
+   \brief Configuration structure for ArchXT_Core
+ */
 struct ArchXT_CoreConfig : CoreConfiguration {
 
-    mem_addr_t              flashstart_ds;      //first address of the flash in the data space
-    mem_addr_t              flashend_ds;        //last address of the flash in the data space
+    /// First address of the flash in the data space
+    mem_addr_t              flashstart_ds;
+    /// Last address of the flash in the data space
+    mem_addr_t              flashend_ds;
 
-    mem_addr_t              eepromstart_ds;     //first address of the eeprom in the data space
-    mem_addr_t              eepromend_ds;       //last address of the eeprom in the data space
+    /// First address of the EEPROM in the data space
+    mem_addr_t              eepromstart_ds;
+    /// Last address of the EEPROM in the data space
+    mem_addr_t              eepromend_ds;
 
+    /// Last address of the USERROW space
     mem_addr_t              userrowend;
 
 };
@@ -50,11 +58,21 @@ struct ArchXT_CoreConfig : CoreConfiguration {
 
 //=======================================================================================
 
+/**
+   \brief Configuration structure for ArchXT_Device
+ */
 typedef DeviceConfiguration ArchXT_DeviceConfig;
 
 
 //=======================================================================================
 
+/**
+   \brief Implementation of a core model for Mega0/Mega1 series
+
+   The model adds 2 NVM : EEPROM and USERROW
+   It implements the data space access for the CPU, in which the FLASH and the EEPROM
+   are accessible (read-only) at the address defined in the configuration structure.
+ */
 class AVR_ARCHXT_PUBLIC_API ArchXT_Core : public Core {
 
 public:
@@ -86,6 +104,9 @@ friend class ArchXT_Device;
 
 //=======================================================================================
 
+/**
+   \brief Implementation of a device model for Mega0/Mega1 series
+ */
 class AVR_ARCHXT_PUBLIC_API ArchXT_Device : public Device {
 
 public:
@@ -95,9 +116,10 @@ public:
 
 protected:
 
+    /// Override to provide access to EEPROM and USERROW via AVR_CTLREQ_CORE_NVM
     virtual bool core_ctlreq(ctlreq_id_t req, ctlreq_data_t* reqdata) override;
 
-    //Override to load the EEPROM and the USERROW
+    /// Override to load the EEPROM and the USERROW
     virtual bool program(const Firmware& firmware) override;
 
 private:

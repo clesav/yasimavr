@@ -33,13 +33,13 @@ YASIMAVR_BEGIN_NAMESPACE
 
 
 //=======================================================================================
-/*
- * Implementation of a USERROW controller for XT core series
- * The purpose of this controller is only to allow reading from the userrow
- * using the data address space.
+
+/**
+   \brief Implementation of a User Row peripheral for XT core series
+
+   The purpose of this class is to allow access to the User Row block from
+   the I/O address space.
  */
-
-
 class AVR_ARCHXT_PUBLIC_API ArchXT_USERROW : public Peripheral {
 
 public:
@@ -58,13 +58,13 @@ private:
 
 
 //=======================================================================================
-/*
- * Implementation of a fuse controller for XT core series
- * The purpose of this controller is only to allow reading the fuses
- * using the data address space.
+
+/**
+   \brief Implementation of a fuse NVM peripheral for Mega0/Mega1 series
+
+   The purpose of this class is to allow access to the fuse NVM block from
+   the I/O address space.
  */
-
-
 class AVR_ARCHXT_PUBLIC_API ArchXT_Fuses : public Peripheral {
 
 public:
@@ -80,36 +80,44 @@ private:
 
 };
 
-//=======================================================================================
-/*
- * Implementation of a NVM controller for XT core series
- * Features:
- *  - supports all commands except WFU(Write FUse)
- *  - the Configuration Change Protection for SPM is not supported (has no effect)
- *  - None of the Write Protection mechanisms (boot lock, boot/app/data section) is supported
- *
- *  CTLREQs supported:
- *   - internally, AVR_CTLREQ_NVM_WRITE is supported to receive NVM write to the page buffer
- */
 
+//=======================================================================================
+
+/**
+   \brief Configuration structure for ArchXT_NVM.
+ */
 struct ArchXT_NVMConfig {
 
+    /// Base address for the peripheral I/O registers
     reg_addr_t reg_base;
-
+    /// Page size for the flash. The EEPROM page size is assumed to be half of it.
     mem_addr_t flash_page_size;
-    //EEPROM page size is assumed to be half the flash page size
-
-    unsigned int buffer_erase_delay;        //Page buffer erase delay in cycles
-    //All the delays below are expressed in microseconds
-    unsigned int page_write_delay;          //Flash/EEPROM page write operation delay
-    unsigned int page_erase_delay;          //Flash/EEPROM page erase operation delay
-    unsigned int chip_erase_delay;          //Chip erase delay
-    unsigned int eeprom_erase_delay;        //EEPROM erase delay
-
+    /// Page buffer erase delay in cycles
+    unsigned int buffer_erase_delay;
+    /// Flash/EEPROM page write operation delay in usecs
+    unsigned int page_write_delay;
+    /// Flash/EEPROM page erase operation delay in usecs
+    unsigned int page_erase_delay;
+    /// Chip erase operation delay in usecs
+    unsigned int chip_erase_delay;
+    /// EEPROM erase operation delay in usecs
+    unsigned int eeprom_erase_delay;
+    /// Interrupt vector index for EEREADY
     int_vect_t iv_eeready;
 
 };
 
+/**
+   \brief Implementation of a NVM controller for Mega0/Mega1 series
+
+   Limitations:
+    - Read or write protections for the various flash sections are not supported
+    - The Configuration Change Protection for SPM registers has no effect
+
+   CTLREQs supported:
+    - AVR_CTLREQ_NVM_WRITE : Used internally when the CPU writes to a data space address
+    mapped to a NVM block. Used to redirect the write to the page buffer.
+ */
 class AVR_ARCHXT_PUBLIC_API ArchXT_NVM : public Peripheral {
 
 public:

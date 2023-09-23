@@ -59,9 +59,9 @@ public:
     };
 
     enum SignalId {
-        ///Raised when the output state of the comparator has change. The data is the new state.
+        /// Raised when the output state of the comparator has change. The data is the new state.
         Signal_Output,
-        ///Raised when the internal DAC value (if the peripheral has one) has changed. The data
+        /// Raised when the internal DAC value (if the peripheral has one) has changed. The data
         /// is the DAC voltage value
         Signal_DAC
     };

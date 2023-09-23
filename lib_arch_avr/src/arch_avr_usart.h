@@ -34,6 +34,7 @@ YASIMAVR_BEGIN_NAMESPACE
 //=======================================================================================
 
 /**
+   \ingroup api_uart
    \brief Configuration structure for ArchAVR_USART
  */
 struct ArchAVR_USARTConfig {
@@ -61,6 +62,7 @@ struct ArchAVR_USARTConfig {
 
 
 /**
+   \ingroup api_uart
    \brief Implementation of a USART interface for AVR series
 
    Supported features:
@@ -69,7 +71,7 @@ struct ArchAVR_USARTConfig {
     - synchronous, SPI and MPCM modes are not supported
     - RXC, TXC, UDRE interrupts are supported
     - Error flags are not supported
-  
+
     CTLREQs supported:
      - AVR_CTLREQ_GET_SIGNAL : returns in data.p the signal of the underlying
         UART (see sim_uart.h)

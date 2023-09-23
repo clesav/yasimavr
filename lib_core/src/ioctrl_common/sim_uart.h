@@ -33,18 +33,28 @@ YASIMAVR_BEGIN_NAMESPACE
 
 
 //=======================================================================================
-/*
- * CTLREQ definitions
-*/
-//Request that can be used by external code to access the end point of a UART interface
-//which can then be used to send & receive data via signaling both ways
-//The data.p is set to the UARTEndPoint structure to connect to.
+/**
+   \file
+   \defgroup api_uart Universal Asynchronous Serial Interface framework
+   @{
+ */
+
+/**
+   \name Controller requests definition for UART
+   @{
+ */
+
+/**
+   Request that can be used by external code to access the end point of a UART interface
+   which can then be used to send & receive data via signaling both ways.\n
+   data is set to point to the UARTEndPoint structure to connect to.
+ */
 #define AVR_CTLREQ_UART_ENDPOINT        1
 
 
-/*
- * Structure exchanged with CTLREQ_UART_ENDPOINT
-*/
+/**
+   Structure exchanged with CTLREQ_UART_ENDPOINT
+ */
 struct UARTEndPoint {
 
     Signal* tx_signal;
@@ -52,9 +62,13 @@ struct UARTEndPoint {
 
 };
 
+/// @}
+/// @}
+
 
 //=======================================================================================
 /**
+   \ingroup api_uart
    \brief Generic model defining an universal asynchronous serial interface a.k.a. UART
 
    \par Emitter
