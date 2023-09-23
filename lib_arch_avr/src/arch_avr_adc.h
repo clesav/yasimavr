@@ -93,9 +93,9 @@ struct ArchAVR_ADCConfig {
     regbit_t rb_left_adj;
     /// Interrupt vector index
     int_vect_t int_vector;
-    /// Calibration value for the internal temperature sensor - offset in V at +25°C
+    /// Calibration value for the internal temperature sensor - offset in V at +25Â°C
     double temp_cal_25C;
-    /// Calibration value for the internal temperature sensor - linear coefficient in V/°C
+    /// Calibration value for the internal temperature sensor - linear coefficient in V/Â°C
     double temp_cal_coef;
 
 };

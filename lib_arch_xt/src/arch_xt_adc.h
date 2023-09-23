@@ -64,9 +64,9 @@ struct ArchXT_ADCConfig {
     int_vect_t iv_resready;
     /// Interrupt vector index for ADC_WINCMP
     int_vect_t iv_wincmp;
-    /// Temperature sensor calibration offset (in V at +25degC)
+    /// Temperature sensor calibration offset (in V at +25°C)
     double temp_cal_25C;
-    /// Temperature sensor calibration linear coef (in V/degC)
+    /// Temperature sensor calibration linear coef (in V/°C)
     double temp_cal_coef;
 
 };

@@ -45,7 +45,7 @@ YASIMAVR_BEGIN_NAMESPACE
 
 /**
    Request to set the value reported by the simulated temperature sensor
-    - data set to the temperature value in °C (as a double)
+    - data set to the temperature value in Â°C (as a double)
  */
 #define AVR_CTLREQ_ADC_SET_TEMP         1
 
