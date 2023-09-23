@@ -46,7 +46,6 @@ build
 dist
 wheelhouse
 yasimavr.egg-info
-dox
 
 # Log files
 *.log
