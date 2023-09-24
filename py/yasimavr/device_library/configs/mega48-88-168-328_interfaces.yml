@@ -286,7 +286,7 @@ TWI:
                 kind: ENUM
                 LSB: 0
                 MSB: 1
-                values: [ 1, 4, 16, 64 ]
+                values: [ DIV1, DIV4, DIV16, DIV64 ]
             TWS:
                 kind: RAW
                 LSB: 3

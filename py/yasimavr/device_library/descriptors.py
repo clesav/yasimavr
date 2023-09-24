@@ -77,7 +77,7 @@ def _get_reg_address(reg_descriptor, base):
         elif base >= 0 and reg_descriptor.offset >= 0:
             return base + reg_descriptor.offset
         else:
-            raise DeviceConfigException('Register address cannot be resolved')
+            raise DeviceConfigException('Register address cannot be resolved for ' + reg_descriptor.name)
 
 
 MemorySegmentDescriptor = collections.namedtuple('_MemorySegmentDescriptor', ['start', 'end'])
