@@ -314,7 +314,7 @@ void ArchAVR_TWI::raised(const signal_data_t& sigdata, int)
             write_ioreg(m_config.reg_data, sigdata.data.as_uint());
             //Set the status and reply automatically with ACK or NACK depending on TWIEA
             bool acken = test_ioreg(m_config.reg_ctrl, m_config.bm_ack_enable);
-            bool status;
+            uint8_t status;
             if (sigdata.index == TWI::Cpt_Master) {
                 m_twi.set_master_ack(acken);
                 if (acken)
@@ -323,11 +323,10 @@ void ArchAVR_TWI::raised(const signal_data_t& sigdata, int)
                     status = TWI_MRX_DATA_NACK;
             } else { //slave part
                 m_twi.set_slave_ack(acken);
-                if (m_gencall) {
+                if (m_gencall)
                     status = acken ? TWI_SRX_GEN_DATA_ACK : TWI_SRX_GEN_DATA_NACK;
-                } else {
+                else
                     status = acken ? TWI_SRX_ADR_DATA_ACK : TWI_SRX_ADR_DATA_NACK;
-                }
             }
 
             set_intflag(status);
