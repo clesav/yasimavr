@@ -37,7 +37,6 @@ enum REG_Flags {
  * Dispatcher is a class for the few registers that are shared between several
  * peripherals. It is allocated automatically by the IOREG instances
  */
-
 class IO_RegDispatcher : public IO_RegHandler {
 
 public:
@@ -72,6 +71,11 @@ private:
 
 //=======================================================================================
 
+/**
+   Build a register.
+   \param core_reg set to true if the register is handled by the core. The effect
+   is to bypass read-only/use masks checks
+*/
 IO_Register::IO_Register(bool core_reg)
 :m_value(0)
 ,m_handler(nullptr)
@@ -98,6 +102,13 @@ IO_Register::~IO_Register()
         delete static_cast<IO_RegDispatcher*>(m_handler);
 }
 
+/**
+   Add a handler to this register.
+   \param handler handler to add
+   \param use_mask bitmask indicating the used bits ('1's)
+   \param ro_mask bitmask indicating the read-only bits ('1's)
+   \note the bitmasks are OR'd with any pre-defined mask.
+ */
 void IO_Register::set_handler(IO_RegHandler& handler, uint8_t use_mask, uint8_t ro_mask)
 {
     if (m_flags & Reg_Flag_Dispatcher) {
@@ -121,6 +132,10 @@ void IO_Register::set_handler(IO_RegHandler& handler, uint8_t use_mask, uint8_t 
     m_ro_mask |= ro_mask;
 }
 
+/**
+   CPU read access to the register.
+   The handlers' read callbacks are called then the register value is returned.
+ */
 uint8_t IO_Register::cpu_read(reg_addr_t addr)
 {
     if (m_handler)
@@ -129,6 +144,14 @@ uint8_t IO_Register::cpu_read(reg_addr_t addr)
     return m_value;
 }
 
+/**
+   CPU write access to the register.
+   The handlers' write callbacks are called.
+   \return true if the read-only rule has been violated, i.e. attempting to write
+   a read-only or unused bit with '1'.(temporary removed)
+   \note that if the register has no handler, all 8 bits are read-only except if
+   core_reg was true at construction
+ */
 bool IO_Register::cpu_write(reg_addr_t addr, uint8_t value)
 {
     if (m_handler) {
@@ -149,11 +172,17 @@ bool IO_Register::cpu_write(reg_addr_t addr, uint8_t value)
     }
 }
 
+/**
+   I/O peripheral interface for read/write operation on this register
+ */
 uint8_t IO_Register::ioctl_read(reg_addr_t addr)
 {
     return m_value;
 }
 
+/**
+   I/O peripheral interface for read/write operation on this register
+ */
 void IO_Register::ioctl_write(reg_addr_t addr, uint8_t value)
 {
     m_value = value;

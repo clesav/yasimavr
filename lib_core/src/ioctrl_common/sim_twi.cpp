@@ -103,6 +103,10 @@ TWIEndPoint::~TWIEndPoint()
         m_bus->remove_endpoint(*this);
 }
 
+/**
+   Used by a master endpoint to get ownership of the bus.
+   \return true if the endpoint won the acquisition arbitration, false if it lost.
+ */
 bool TWIEndPoint::acquire_bus()
 {
     if (m_bus)
@@ -111,18 +115,29 @@ bool TWIEndPoint::acquire_bus()
         return false;
 }
 
+/**
+   Releases the bus ownership.
+ */
 void TWIEndPoint::release_bus()
 {
     if (m_bus)
         m_bus->release(this);
 }
 
+/**
+   Send a packet over the bus.
+   \param packet Packet to circulate on the bus. Note that it may be modified on-the-fly.
+ */
 void TWIEndPoint::send_packet(TWIPacket& packet)
 {
     if (m_bus)
         m_bus->send_packet(*this, packet);
 }
 
+/**
+   End a 'long' packet over the bus.
+   \param packet Packet to circulate on the bus. Note that it may be modified on-the-fly.
+ */
 void TWIEndPoint::end_packet(TWIPacket& packet)
 {
     if (m_bus)
@@ -144,6 +159,9 @@ TWIBus::~TWIBus()
         endpoint->m_bus = nullptr;
 }
 
+/**
+   Add a TWIEndPoint to this bus.
+ */
 void TWIBus::add_endpoint(TWIEndPoint& endpoint)
 {
     if (!m_master) {
@@ -156,6 +174,9 @@ void TWIBus::add_endpoint(TWIEndPoint& endpoint)
     }
 }
 
+/**
+   Remove a TWIEndPoint from this bus.
+ */
 void TWIBus::remove_endpoint(TWIEndPoint& endpoint)
 {
     if (!m_master) {
@@ -376,12 +397,18 @@ TWI::~TWI()
     delete m_timer;
 }
 
+/**
+   Initialise the interface.
+ */
 void TWI::init(CycleManager& cycle_manager, Logger& logger)
 {
     m_cycle_manager = &cycle_manager;
     m_logger = &logger;
 }
 
+/**
+   Reset the interface and cancel any transaction.
+ */
 void TWI::reset()
 {
     m_has_deferred_raise = false;
@@ -405,6 +432,10 @@ void TWI::reset()
  * Master operations
  */
 
+/**
+   Enable the master part of the interface.
+   Cancel any transfer and release the bus if disabled.
+ */
 void TWI::set_master_enabled(bool enabled)
 {
     if (m_mst_state != State_Disabled && !enabled) {
@@ -426,11 +457,20 @@ void TWI::set_master_state(State new_state)
     m_signal.raise(Signal_StateChange, new_state, Cpt_Master);
 }
 
+/**
+   Set the duration of a bit in clock cycles.
+ */
 void TWI::set_bit_delay(cycle_count_t delay)
 {
     m_bitdelay = delay;
 }
 
+/**
+   Start a transfer. Tries to obtain the ownership of the bus.
+   Master-side only.
+   \return true if the bus could be acquired, false if the arbitration
+   was lost.
+ */
 bool TWI::start_transfer()
 {
     //Illegal to be here if not idle
@@ -450,6 +490,13 @@ bool TWI::start_transfer()
     }
 }
 
+/**
+   Send an address to the bus to select a slave device.
+   Master only.
+   \param remote_addr Slave address to select. Only the 7 LSBs are used.
+   \param rw true for a Read request, false for a Write request.
+   \return true if the operation was successful.
+ */
 bool TWI::send_address(uint8_t remote_addr, bool rw)
 {
     if (!State_Active(m_mst_state) || State_Busy(m_mst_state))
@@ -466,6 +513,10 @@ bool TWI::send_address(uint8_t remote_addr, bool rw)
     return true;
 }
 
+/**
+   Terminate a transfer and release the bus.
+   Master-side only.
+ */
 void TWI::end_transfer()
 {
     if (State_Active(m_mst_state) && !State_Busy(m_mst_state)) {
@@ -475,6 +526,11 @@ void TWI::end_transfer()
     }
 }
 
+/**
+   Start a Write request and send a frame of data to the slave.
+   \param data 8-bits frame to send
+   \return true if the data could actually be sent, false otherwise.
+ */
 bool TWI::start_master_tx(uint8_t data)
 {
     if (m_mst_state != State_TX)
@@ -497,6 +553,10 @@ bool TWI::start_master_tx(uint8_t data)
     return true;
 }
 
+/**
+   Start a read request to the slave.
+   \return true if the data could actually be sent, false otherwise.
+ */
 bool TWI::start_master_rx()
 {
     if (m_mst_state != State_RX)
@@ -519,6 +579,10 @@ bool TWI::start_master_rx()
     return true;
 }
 
+/**
+   Used when the slave is expecting a ACK/NACK response after a ReadData packet.
+   \param ack true for ACK, false for NACK
+ */
 void TWI::set_master_ack(bool ack)
 {
     if (m_mst_state == State_RX_Ack) {
@@ -621,6 +685,9 @@ void TWI::defer_signal_raise(int sigid, long long index, unsigned long long u)
  * Slave operations
  */
 
+/**
+   Enable/disable the slave part of the interface.
+ */
 void TWI::set_slave_enabled(bool enabled)
 {
     if (m_slv_state != State_Disabled && !enabled) {
@@ -657,6 +724,12 @@ void TWI::set_slave_state(State new_state)
     m_signal.raise(Signal_StateChange, new_state, Cpt_Slave);
 }
 
+/**
+   Send a byte of data to the master, in response to a read request.
+   Slave only
+   \param data 8-bits frame to send
+   \return true if the data could actually be sent, false otherwise.
+ */
 bool TWI::start_slave_tx(uint8_t data)
 {
     if (m_slv_state == State_TX) {
@@ -678,6 +751,10 @@ bool TWI::start_slave_tx(uint8_t data)
     }
 }
 
+/**
+   Start receiving data from the master.
+   \return true if the data could actually be sent, false otherwise.
+ */
 bool TWI::start_slave_rx()
 {
     if (m_slv_state == State_RX) {
@@ -697,6 +774,11 @@ bool TWI::start_slave_rx()
     }
 }
 
+/**
+   Used when the master is expecting a ACK/NACK response after an address
+   or a Write data request.
+   \param ack true for ACK, false for NACK
+ */
 void TWI::set_slave_ack(bool ack)
 {
     if (m_slv_state == State_Addr_Busy) {
@@ -780,6 +862,10 @@ void TWI::packet(TWIPacket& packet)
         //Received a data request (slave side)
         case TWIPacket::Cmd_DataRequest: {
 
+            //If m_slv_hold is set, it means we're not able to receive or send
+            //data just yet so, by setting packet.hold to 1, we inform the master
+            //that we hold the bus for now.
+            //if m_slv_hold is cleared, the data transfer can take place
             if (m_slv_state == State_TX) {
                 set_slave_state(m_slv_hold ? State_TX_Req : State_TX_Busy);
                 packet.hold = m_slv_hold ? 1 : 0;

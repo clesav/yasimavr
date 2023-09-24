@@ -31,6 +31,9 @@ YASIMAVR_USING_NAMESPACE
 
 //=======================================================================================
 
+/**
+   Construct a device model
+ */
 Device::Device(Core& core, const DeviceConfiguration& config)
 :m_core(core)
 ,m_config(config)
@@ -51,6 +54,9 @@ Device::Device(Core& core, const DeviceConfiguration& config)
     }
 }
 
+/**
+   Destroy the device model and all the attached peripheral.
+ */
 Device::~Device()
 {
     m_state = State_Destroying;
@@ -78,6 +84,10 @@ void Device::erase_peripherals()
 
 //=======================================================================================
 
+/**
+   Set or clear a device option.
+   \sa Device::Option
+ */
 void Device::set_option(Option option, bool value)
 {
     if (value)
@@ -86,6 +96,10 @@ void Device::set_option(Option option, bool value)
         m_options &= ~option;
 }
 
+/**
+   Returns whether a device option is set.
+   \sa Device::Option
+ */
 bool Device::test_option(Option option) const
 {
     return m_options & option;
@@ -94,6 +108,12 @@ bool Device::test_option(Option option) const
 
 //=======================================================================================
 
+/**
+   Initialise a device. This must be called once before the simulation is started.
+   This function allows all peripherals to allocate resources and connect signals.
+   \param cycle_manager used for scheduling timers during the device model execution.
+   \return true if the initialisation has succeeded, false if it failed.
+ */
 bool Device::init(CycleManager& cycle_manager)
 {
     if (m_state != State_Limbo)
@@ -128,6 +148,10 @@ bool Device::init(CycleManager& cycle_manager)
     return true;
 }
 
+/**
+   Simulates a MCU reset.
+   \param reset_flag combination of ResetFlag enum values, indicating the source of the reset signal
+ */
 void Device::reset(int reset_flag)
 {
     m_logger.dbg("Device reset");
@@ -146,6 +170,11 @@ void Device::reset(int reset_flag)
     m_sleep_mode = SleepMode::Active;
 }
 
+/**
+   Load a firmware into the device non-volatile memories.
+   \return true if the load succeeded, false if it failed
+   \sa Firmware
+ */
 bool Device::load_firmware(const Firmware& firmware)
 {
     if (m_state != State_Ready) {
@@ -188,6 +217,13 @@ bool Device::load_firmware(const Firmware& firmware)
     return true;
 }
 
+/**
+   Implementation of the programming of the non-volatile memories of the device.
+   The basic implementation only loads the flash and the fuses, the rest
+   is the responsibility of architecture-specific implementations.
+   \return true if the load succeeded, false if it failed
+   \sa Firmware
+ */
 bool Device::program(const Firmware& firmware)
 {
     if (!firmware.has_memory("flash")) {
@@ -213,6 +249,11 @@ bool Device::program(const Firmware& firmware)
     return true;
 }
 
+/**
+   Execute one instruction cycle.
+   \return the number of clock cycle consumed by the instruction, or 0
+   if something wrong happened.
+ */
 cycle_count_t Device::exec_cycle()
 {
     if (!(m_state & 0x0F)) return 0;
@@ -233,6 +274,11 @@ cycle_count_t Device::exec_cycle()
 //=======================================================================================
 //Management of I/O peripherals
 
+/**
+   Attach a peripheral to the device. The device takes ownership of the peripheral
+   and will destroy it upon destruction.
+   \param ctl peripheral to attach
+ */
 void Device::attach_peripheral(Peripheral& ctl)
 {
     if (ctl.id() == AVR_IOCTL_INTR)
@@ -241,6 +287,14 @@ void Device::attach_peripheral(Peripheral& ctl)
     m_peripherals.push_back(&ctl);
 }
 
+/**
+   Process a peripheral request. This is the mechanism used to interrogate peripherals or
+   the device itself.
+   \param id identifier of the peripheral to interrogate
+   \param req request identifier, specific to each peripheral
+   \param reqdata data structure of the request
+   \return true if the request could be processed, false otherwise.
+ */
 bool Device::ctlreq(ctl_id_t id, ctlreq_id_t req, ctlreq_data_t* reqdata)
 {
     if (id == AVR_IOCTL_CORE) {
@@ -262,6 +316,11 @@ Peripheral* Device::find_peripheral(const char* name)
     return find_peripheral(str_to_id(name));
 }
 
+/**
+   Finds a peripheral given its identifier
+   the device itself.
+   \return the peripheral if found or nullptr
+ */
 Peripheral* Device::find_peripheral(ctl_id_t id)
 {
     for (auto per : m_peripherals) {
@@ -271,6 +330,16 @@ Peripheral* Device::find_peripheral(ctl_id_t id)
     return nullptr;
 }
 
+/**
+   Adds a handler to a I/O register.
+   \param addr address of the I/O register, in I/O address space
+   \param handler handler to add
+   \param ro_mask optional read-only bit mask. By default = 0x00 (all bits are R/W)
+
+   \note The register is allocated if it does not exist yet.
+   All bits of the register are marked as used and bits marked as '1' in ro_mask are
+   marked as read-only. This is OR'ed with any pre-defined read-only mask.
+ */
 void Device::add_ioreg_handler(reg_addr_t addr, IO_RegHandler& handler, uint8_t ro_mask)
 {
     if (addr != R_SREG && addr >= 0) {
@@ -280,6 +349,15 @@ void Device::add_ioreg_handler(reg_addr_t addr, IO_RegHandler& handler, uint8_t 
     }
 }
 
+/**
+   Adds a handler to a part of a I/O register.
+   \param rb address/mask of the bits I/O register, in I/O address space
+   \param handler handler to add
+   \param readonly
+
+   \note The register is allocated if it does not exist yet.
+   All bits of the regbit mask are marked as used and also marked as read-only if 'readonly' is true
+ */
 void Device::add_ioreg_handler(const regbit_t& rb, IO_RegHandler& handler, bool readonly)
 {
     if (rb.addr != R_SREG && rb.valid()) {
@@ -289,6 +367,10 @@ void Device::add_ioreg_handler(const regbit_t& rb, IO_RegHandler& handler, bool 
     }
 }
 
+/**
+   Callback for processing the requests to the core.
+   \sa ctlreq()
+ */
 bool Device::core_ctlreq(ctlreq_id_t req, ctlreq_data_t* reqdata)
 {
     if (req == AVR_CTLREQ_CORE_BREAK) {
@@ -398,11 +480,19 @@ bool Device::core_ctlreq(ctlreq_id_t req, ctlreq_data_t* reqdata)
 //=======================================================================================
 //Management of device pins
 
+/**
+   Find a device pin with the given name
+   \return the pin if found, or nullptr
+ */
 Pin* Device::find_pin(const char* name)
 {
     return find_pin(str_to_id(name));
 }
 
+/**
+   Find a device pin with the given identifier
+   \return the pin if found, or nullptr
+ */
 Pin* Device::find_pin(pin_id_t id)
 {
     auto search = m_pins.find(id);
@@ -416,6 +506,11 @@ Pin* Device::find_pin(pin_id_t id)
 //=======================================================================================
 //Management of the crashes
 
+/**
+   Set the device to the crashed state
+   \param reason one of the CRASH_XXX codes
+   \param text message of the crash
+ */
 void Device::crash(uint16_t reason, const char* text)
 {
     m_logger.err("MCU crash, reason (code=%d) : %s", reason, text);

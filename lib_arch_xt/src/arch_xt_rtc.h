@@ -33,16 +33,10 @@ YASIMAVR_BEGIN_NAMESPACE
 
 
 //=======================================================================================
-/*
- * ArchXT_RTC is the implementation of a Real-Time Clock for the XT core series
- * This includes a Periodic Interrupt Timer system
- * Unsupported features:
- *      - External clock source
- *      - Crystal error correction
- *      - Events outputs
- *      - Synchronization Busy flags
- */
 
+/**
+   \brief Configuration structure for ArchXT_RTC.
+ */
 struct ArchXT_RTCConfig {
 
     enum RTC_ClockSource {
@@ -50,19 +44,37 @@ struct ArchXT_RTCConfig {
         Clock_1kHz
     };
 
+    /**
+       \brief Configuration structure for each supported source clock
+       \param reg_value the register field value for this source
+       \param source RTC_ClockSource enum value
+     */
     struct clksel_config_t : base_reg_config_t {
         RTC_ClockSource source;
     };
 
+    /// Clock source configurations
     std::vector<clksel_config_t> clocks;
-
+    /// Base address for the peripheral I/O registers
     reg_addr_t reg_base;
+    /// Interrupt vector index for RTC
     int_vect_t iv_rtc;
+    /// Interrupt vector index for PIT
     int_vect_t iv_pit;
 
 };
 
+/**
+   \brief Implementation of a RTC controller for XT core series
 
+   Includes a Periodic Interrupt Timer system
+
+   Unsupported features:
+     - External clock source
+     - Crystal error correction
+     - Events outputs
+     - Synchronization Busy flags
+ */
 class AVR_ARCHXT_PUBLIC_API ArchXT_RTC : public Peripheral {
 
 public:

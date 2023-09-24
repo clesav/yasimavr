@@ -32,27 +32,39 @@
 YASIMAVR_BEGIN_NAMESPACE
 
 //=======================================================================================
-/*
- * Implementation of a Watchdog Timer for AVR series
- */
 
+/**
+   \brief Configuration structure for ArchAVR_WDT
+ */
 struct ArchAVR_WDTConfig {
 
-    unsigned long clock_frequency;
+    /// Clock frequency used by the watchdog timer
+	unsigned long clock_frequency;
+	/// List of selectable delays
     std::vector<unsigned long> delays;
-    //Assumes all the fields are on one single register
+    /// WDT configuration register address
     reg_addr_t reg_wdt;
+	/// Bitmask for the delay select
     bitmask_t bm_delay;
+	/// Bitmask for the Change Enable bit
     bitmask_t bm_chg_enable;
+	/// Bitmask for the Reset Enable bit
     bitmask_t bm_reset_enable;
+	/// Bitmask for the Interrupt Enable bit
     bitmask_t bm_int_enable;
+	/// Bitmask for the Interrupt Flag bit
     bitmask_t bm_int_flag;
+	/// Regbit for the reset flag
     regbit_t rb_reset_flag;
-
+    /// Interrupt vector index
     int_vect_t vector;
 
 };
 
+
+/**
+   \brief Implementation of a Watchdog Timer for AVR series
+ */
 class AVR_ARCHAVR_PUBLIC_API ArchAVR_WDT : public WatchdogTimer, public InterruptHandler {
 
 public:

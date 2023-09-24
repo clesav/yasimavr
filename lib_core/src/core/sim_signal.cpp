@@ -29,15 +29,21 @@ YASIMAVR_USING_NAMESPACE
 
 //=======================================================================================
 
+/**
+   Copy construction ensuring the connection with signals is consistent.
+ */
 SignalHook::SignalHook(const SignalHook& other)
 {
     *this = other;
 }
 
 
+/**
+   Generic destructor. Severs the connection with all signals.
+ */
 SignalHook::~SignalHook()
 {
-    //A temporary vector is required because m_signals is
+    //A temporary vector copy is required because m_signals is
     //modified by disconnect()
     std::vector<Signal*> v = m_signals;
     for (Signal* signal : v)
@@ -45,6 +51,9 @@ SignalHook::~SignalHook()
 }
 
 
+/**
+   Copy assignment ensuring the connection with signals is consistent.
+ */
 SignalHook& SignalHook::operator=(const SignalHook& other)
 {
     for (Signal* signal : other.m_signals) {
@@ -58,11 +67,17 @@ SignalHook& SignalHook::operator=(const SignalHook& other)
 }
 
 
+/**
+   Build a signal.
+ */
 Signal::Signal()
 :m_busy(false)
 {}
 
 
+/**
+   Copy construction ensuring the connection with hooks is consistent.
+ */
 Signal::Signal(const Signal& other)
 :m_busy(false)
 {
@@ -71,6 +86,10 @@ Signal::Signal(const Signal& other)
 }
 
 
+/**
+   Destroy a signal.
+   Severs all the connections with hooks.
+ */
 Signal::~Signal()
 {
     std::vector<hook_slot_t> hook_slots = m_hooks;
@@ -81,6 +100,16 @@ Signal::~Signal()
 }
 
 
+/**
+   Connect a hook to this signal.
+   \param hook hook to be connected. If the hook is already connected, the call
+   has no effect.
+   \param hooktag identifier given to the hook when calling it. It has only a meaning
+   for the hook and is passed though by the signal when called.
+   \note The hootag can be useful when a single hook connects to several signals,
+   in order to differentiate which one the raise comes from.
+   \sa SignalHook::raised()
+ */
 void Signal::connect(SignalHook& hook, int hooktag)
 {
     if (hook_index(hook) == -1) {
@@ -91,6 +120,10 @@ void Signal::connect(SignalHook& hook, int hooktag)
 }
 
 
+/**
+   Disconnect a hook to this signal.
+   \param hook hook to be disconnected.
+ */
 void Signal::disconnect(SignalHook& hook)
 {
     int h_index = hook_index(hook);
@@ -102,6 +135,10 @@ void Signal::disconnect(SignalHook& hook)
 }
 
 
+/**
+   Raise the signal with the given data
+   \param sigdata
+ */
 void Signal::raise(const signal_data_t& sigdata)
 {
     if (m_busy) return;
@@ -115,6 +152,10 @@ void Signal::raise(const signal_data_t& sigdata)
 }
 
 
+/**
+   Raise the signal with the given data.
+   \param data
+ */
 void Signal::raise(int sigid, const vardata_t& v, long long ix)
 {
     signal_data_t sigdata = { sigid, ix, v };
@@ -146,6 +187,9 @@ int Signal::signal_index(const SignalHook& hook) const
 }
 
 
+/**
+   Copy assignment ensuring the connection with hooks is consistent.
+ */
 Signal& Signal::operator=(const Signal& other)
 {
     assert(!m_busy);
@@ -167,6 +211,10 @@ Signal& Signal::operator=(const Signal& other)
 
 //=======================================================================================
 
+/**
+   Returns the data stored by the data signal for the given SIGID and index
+   If no data is stored, an invalid vardata_t is returned.
+ */
 vardata_t DataSignal::data(int sigid, long long index) const
 {
     key_t k = { sigid, index };
@@ -178,6 +226,9 @@ vardata_t DataSignal::data(int sigid, long long index) const
 }
 
 
+/**
+   Returns whether the signals has data given SIGID and index.
+ */
 bool DataSignal::has_data(int sigid, long long index) const
 {
     key_t k = { sigid, index };
@@ -185,6 +236,9 @@ bool DataSignal::has_data(int sigid, long long index) const
 }
 
 
+/**
+   Sets the data for a SIGID and index. Does not raise the signal.
+ */
 void DataSignal::set_data(int sigid, const vardata_t& v, long long index)
 {
     key_t k = { sigid, index };
@@ -192,6 +246,9 @@ void DataSignal::set_data(int sigid, const vardata_t& v, long long index)
 }
 
 
+/**
+   Deletes all data stored by the signal.
+ */
 void DataSignal::clear()
 {
     m_data.clear();

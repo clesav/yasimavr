@@ -34,21 +34,47 @@ YASIMAVR_BEGIN_NAMESPACE
 
 
 //=======================================================================================
-/*
- * CTLREQ definitions
-*/
-//Request to add a SPI client interface. data must be set to a SPIClient object pointer
+/**
+   \file
+   \defgroup api_spi Serial Peripheral Interface framework
+   @{
+ */
+
+/**
+   \name Controller requests definition for SPI
+   @{
+ */
+
+/**
+   Request to register a SPI client to a SPI interface
+    - data must be a pointer to a SPIClient object
+ */
 #define AVR_CTLREQ_SPI_ADD_CLIENT       1
-//Request to obtain a pointer to the SPI interface as a SPIClient object
+
+/**
+   Request to obtain a pointer to the SPI interface as a SPI client
+    - data is returned as a pointer to a SPIClient object
+ */
 #define AVR_CTLREQ_SPI_CLIENT           2
-//Request to manually select the SPI interface when configured as a client.
-//data must be set to an unsigned integer value (0 = deselected, other values = selected)
+
+/**
+   Request to select/deselect the SPI interface when used as a client
+    - data must be an integer : select if > 0, deselect if == 0
+ */
 #define AVR_CTLREQ_SPI_SELECT           3
+
+/// @}
+/// @}
+
 
 //=======================================================================================
 
 class SPI;
 
+/**
+   \ingroup api_spi
+   \brief Abstract interface for a SPI Client.
+ */
 class AVR_CORE_PUBLIC_API SPIClient {
 
 public:
@@ -57,8 +83,20 @@ public:
     SPIClient(const SPIClient& other);
     virtual ~SPIClient();
 
+    /// Used by the SPI host to interrogate the selection state of the client.
     virtual bool selected() const = 0;
+
+    /**
+       Called by the SPI host to start a transfer of one frame.
+       \param mosi_frame MOSI frame emitted by the host
+       \return the MISO frame simultaneously emitted by the client.
+     */
     virtual uint8_t start_transfer(uint8_t mosi_frame) = 0;
+
+    /**
+       Called by the host at the end of a transfer.
+       \param ok indicates the success of the transfer, or false if it was aborted.
+     */
     virtual void end_transfer(bool ok) = 0;
 
     SPIClient& operator=(const SPIClient& other);
@@ -72,11 +110,20 @@ private:
 };
 
 
+/**
+   \ingroup api_spi
+   \brief Generic model defining an serial peripheral interface a.k.a. SPI.
+
+    The interface can act in either host or client mode.
+
+    The class is composed of two FIFOs, one for TX, the other for RX.
+    The transfer of a frame starts immediately after pushing it in the TX FIFO.
+ */
 class AVR_CORE_PUBLIC_API SPI : public SPIClient, public CycleTimer {
 
 public:
 
-    //Signal definitions
+    /// Signal Ids raised by this object.
     enum SignalId {
         Signal_HostTfrStart,
         Signal_HostTfrComplete,
@@ -86,60 +133,42 @@ public:
 
     SPI();
 
-    //Initialise the interface. the device will be used for timer related operations
     void init(CycleManager& cycle_manager, Logger& logger);
 
-    //Reset the interface, clear the buffers and cancel any transfer
     void reset();
 
-    //Set the interface in host mode (mode=true) or client mode (mode=false)
     void set_host_mode(bool mode);
-
     bool is_host_mode() const;
 
-    //Return the internal signal used for operation signaling
     Signal& signal();
 
-    //Set the delay in clock ticks to emit or receive a frame
-    //The minimum valid value is 1
     void set_frame_delay(cycle_count_t delay);
 
-    //Add a client to the interface
     void add_client(SPIClient& client);
 
-    //Remove a client from the interface
     void remove_client(SPIClient& client);
 
-    //Set the interface as selected (client mode only)
     void set_selected(bool selected);
 
-    //Set the TX buffer size, 0 means unlimited
     void set_tx_buffer_limit(size_t limit);
 
-    //Push a 8-bits frame to be emitted by the interface.
-    //In host mode, if no transfer is already ongoing, one will
-    //start immediately.
-    //In client mode, the frame is only saved until the host
-    //starts a transfer
     void push_tx(uint8_t frame);
 
-    //Cancel all transfers (host mode only)
     void cancel_tx();
 
-    //Set the RX buffer size, 0 means unlimited
     void set_rx_buffer_limit(size_t limit);
 
     //Indicates if a transfer is in progress (host or client mode)
     bool tfr_in_progress() const;
 
-    //Count of frames in the RX buffer
+
     size_t rx_available() const;
 
-    //Pop a frame from the RX buffer, return 0 if there aren't any
     uint8_t pop_rx();
 
     //Reimplementation of CycleTimer interface
     virtual cycle_count_t next(cycle_count_t when) override;
+
     //Reimplementation of SPIClient interface
     virtual bool selected() const override;
     virtual uint8_t start_transfer(uint8_t mosi_frame) override;
@@ -170,6 +199,7 @@ private:
 
 };
 
+/// Getter for the signal raised during transfers
 inline Signal& SPI::signal()
 {
     return m_signal;
@@ -180,6 +210,7 @@ inline bool SPI::is_host_mode() const
     return m_is_host;
 }
 
+/// Getter for the count of frames in the RX buffer
 inline size_t SPI::rx_available() const
 {
     size_t n = m_rx_buffer.size();
@@ -187,6 +218,7 @@ inline size_t SPI::rx_available() const
     return n;
 }
 
+/// Getter indicating if a transfer is in progress
 inline bool SPI::tfr_in_progress() const
 {
     return m_tfr_in_progress;

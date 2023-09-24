@@ -33,6 +33,9 @@ YASIMAVR_USING_NAMESPACE
 
 //=======================================================================================
 
+/**
+   Build a empty firmware
+ */
 Firmware::Firmware()
 :variant("")
 ,frequency(0)
@@ -48,7 +51,9 @@ Firmware::Firmware(const Firmware& other)
 {
     *this = other;
 }
-
+/**
+   Destroy a firmware
+ */
 Firmware::~Firmware()
 {
     for (auto it = m_blocks.begin(); it != m_blocks.end(); ++it) {
@@ -70,6 +75,11 @@ static Elf32_Phdr* elf_find_phdr(Elf32_Phdr* phdr_table, size_t phdr_count, GElf
     return nullptr;
 }
 
+/**
+   Read a ELF file and build a firmware, using the section binary blocks from the file.
+   The ELF format decoding relies on the library libelf.
+   \param filename file path of the ELF file to read
+ */
 Firmware* Firmware::read_elf(const std::string& filename)
 {
     Elf32_Ehdr elf_header;          // ELF header
@@ -188,6 +198,12 @@ Firmware* Firmware::read_elf(const std::string& filename)
     return firmware;
 }
 
+/**
+   Add a binary block to the firmware
+   \param name name of the NVM area to which the block should be added
+   \param block binary data block to be added
+   \param base base address of the NVM area where the block should be added
+ */
 void Firmware::add_block(const std::string& name, const mem_block_t& block, size_t base)
 {
     //Make a deep copy of the memory block
@@ -200,12 +216,21 @@ void Firmware::add_block(const std::string& name, const mem_block_t& block, size
     m_blocks[name].push_back(b);
 }
 
+/**
+   Get whether the firmware has binary data for a given NVM area.
+   \param name name of the NVM area to check
+   \return true if the NVM area has data, false otherwise
+ */
 bool Firmware::has_memory(const std::string& name) const
 {
     return m_blocks.find(name) != m_blocks.end();
 }
 
-
+/**
+   Get the total size of binary data loaded for a given NVM area.
+   \param name name of the NVM area to check
+   \return the total size of data in bytes
+ */
 size_t Firmware::memory_size(const std::string& name) const
 {
     auto it = m_blocks.find(name);
@@ -219,7 +244,11 @@ size_t Firmware::memory_size(const std::string& name) const
     return s;
 }
 
-
+/**
+   Get the binary blocks loaded for a given NVM area.
+   \param name name of the NVM area to check
+   \return the binary data blocks loaded for this area, may be empty.
+ */
 std::vector<Firmware::Block> Firmware::blocks(const std::string& name) const
 {
     auto it = m_blocks.find(name);
@@ -229,6 +258,12 @@ std::vector<Firmware::Block> Firmware::blocks(const std::string& name) const
         return it->second;
 }
 
+/**
+   Copy the binary blocks loaded for a given NVM area into a NVM model.
+   \param name name of the NVM area
+   \param memory NVM model where the data should be copied
+   \return true if the binary data could be copied, false if it failed
+ */
 bool Firmware::load_memory(const std::string& name, NonVolatileMemory& memory) const
 {
     bool status = true;

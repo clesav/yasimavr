@@ -42,23 +42,29 @@ uint8_t ArchXT_Core::cpu_read_data(mem_addr_t data_addr)
     const ArchXT_CoreConfig& cfg = reinterpret_cast<const ArchXT_CoreConfig&>(m_config);
     uint8_t value = 0;
 
+    //Read in the I/O registers area
     if (data_addr <= cfg.ioend) {
         value = cpu_read_ioreg(data_addr);
     }
+    //Read in the SRAM area
     else if (data_addr >= cfg.ramstart && data_addr <= cfg.ramend) {
         value = m_sram[data_addr - cfg.ramstart];
     }
+    //Read in the EEPROM area
     else if (data_addr >= cfg.eepromstart_ds && data_addr <= cfg.eepromend_ds) {
         value = m_eeprom[data_addr - cfg.eepromstart_ds];
     }
+    //Read in the Flash area
     else if (data_addr >= cfg.flashstart_ds && data_addr <= cfg.flashend_ds) {
         value = cpu_read_flash(data_addr - cfg.flashstart_ds);
     }
+    //Read in any other area => generate a device crash if the option to ignore it is not set
     else if (!m_device->test_option(Device::Option_IgnoreBadCpuIO)) {
         m_device->logger().err("CPU reading an invalid data address: 0x%04x", data_addr);
         m_device->crash(CRASH_BAD_CPU_IO, "Bad data address");
     }
 
+    //Notify the debug probe for the read access
     if (m_debug_probe)
         m_debug_probe->_cpu_notify_data_read(data_addr, value);
 
@@ -69,12 +75,15 @@ void ArchXT_Core::cpu_write_data(mem_addr_t data_addr, uint8_t value)
 {
     const ArchXT_CoreConfig& cfg = reinterpret_cast<const ArchXT_CoreConfig&>(m_config);
 
+    //Write in the I/O register section => write to the I/O register
     if (data_addr <= cfg.ioend) {
         cpu_write_ioreg(data_addr, value);
     }
+    //Write in the SRAM section => straightforward to the SRAM block
     else if (data_addr >= cfg.ramstart && data_addr <= cfg.ramend) {
         m_sram[data_addr - cfg.ramstart] = value;
     }
+    //Write in the EEPROM section => send a request to the NVM controller
     else if (data_addr >= cfg.eepromstart_ds && data_addr <= cfg.eepromend_ds) {
         //Prepare the NVM Write request
         NVM_request_t nvm_req = {
@@ -87,6 +96,7 @@ void ArchXT_Core::cpu_write_data(mem_addr_t data_addr, uint8_t value)
         ctlreq_data_t d = { .data = &nvm_req };
         m_device->ctlreq(AVR_IOCTL_NVM, AVR_CTLREQ_NVM_WRITE, &d);
     }
+    //Write in the Flash section => send a request to the NVM controller
     else if (data_addr >= cfg.flashstart_ds && data_addr <= cfg.flashend_ds) {
         //Prepare the NVM Write request
         NVM_request_t nvm_req = {
@@ -99,11 +109,13 @@ void ArchXT_Core::cpu_write_data(mem_addr_t data_addr, uint8_t value)
         ctlreq_data_t d = { .data = &nvm_req };
         m_device->ctlreq(AVR_IOCTL_NVM, AVR_CTLREQ_NVM_WRITE, &d);
     }
+    //Write in any other area => generate a device crash if the option to ignore it is not set
     else if (!m_device->test_option(Device::Option_IgnoreBadCpuIO)) {
         m_device->logger().err("CPU writing an invalid data address: 0x%04x", data_addr);
         m_device->crash(CRASH_BAD_CPU_IO, "Bad data address");
     }
 
+    //Notify the debug probe about the write access
     if (m_debug_probe)
         m_debug_probe->_cpu_notify_data_write(data_addr, value);
 }

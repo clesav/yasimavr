@@ -35,6 +35,10 @@ YASIMAVR_BEGIN_NAMESPACE
 
 //=======================================================================================
 
+/**
+   \ingroup api_adc
+   \brief Configuration structure for ArchAVR_ADC.
+ */
 struct ArchAVR_ADCConfig {
 
     struct reference_config_t : base_reg_config_t {
@@ -51,35 +55,68 @@ struct ArchAVR_ADCConfig {
         Trigger trigger;
     };
 
+    /// List of the channels
     std::vector<ADC::channel_config_t> channels;
+    /// List of the voltage references
     std::vector<reference_config_t> references;
+    /// List of the prescaler factors for the ADC clock
     std::vector<unsigned long> clk_ps_factors;
+    /// List of the autotrigger sources
     std::vector<trigger_config_t> triggers;
-
+    /// Channel index for the internal voltage reference
     unsigned int vref_channel;
-
+    /// Register address for the result low byte
     reg_addr_t reg_datal;
+    /// Register address for the result high byte
     reg_addr_t reg_datah;
-
+    /// Regbit for the channel mux selection
     regbit_t rb_chan_mux;
+    /// Regbit for the reference mux selection
     regbit_t rb_ref_mux;
+    /// Regbit for the enable bit
     regbit_t rb_enable;
+    /// Regbit for the conversion manual start bit
     regbit_t rb_start;
+    /// Regbit for the auto-trigger enable bit
     regbit_t rb_auto_trig;
+    /// Regbit for the interrupt enable bit
     regbit_t rb_int_enable;
+    /// Regbit for the interrupt flag bit
     regbit_t rb_int_flag;
+    /// Regbit for the clock prescaler selection
     regbit_t rb_prescaler;
+    /// Regbit for the auto-trigger mux selection
     regbit_t rb_trig_mux;
+    /// Regbit for the bipolar mode
     regbit_t rb_bipolar;
+    /// Regbit for result left adjusting
     regbit_t rb_left_adj;
-
+    /// Interrupt vector index
     int_vect_t int_vector;
+    /// Calibration value for the internal temperature sensor - offset in V at +25Â°C
+    double temp_cal_25C;
+    /// Calibration value for the internal temperature sensor - linear coefficient in V/Â°C
+    double temp_cal_coef;
 
-    double temp_cal_25C;            //Temperature sensor value in V at +25°C
-    double temp_cal_coef;           //Temperature sensor linear coef in V/°C
 };
 
 
+/**
+   \ingroup api_adc
+   \brief Implementation of an ADC for AVR series
+
+   Limitations:
+    - No automatic start on ADR Noise Reduction sleep mode
+    - No digital input disabling
+
+   CTLREQs supported:
+    - AVR_CTLREQ_GET_SIGNAL : returns a pointer to the instance signal
+    - AVR_CTLREQ_ADC_SET_TEMP : Sets the temperature reported by the internal sensor.
+    The reqdata should carry the temperature in Celsius as a double.
+    - AVR_CTLREQ_ADC_TRIGGER : Allows other peripherals to trigger a conversion.
+    The trigger only works when the ADC is enabled and idle, auto-trigger is enabled and
+    an external trigger source is selected.
+ */
 class AVR_ARCHAVR_PUBLIC_API ArchAVR_ADC : public ADC,
                                            public Peripheral,
                                            public SignalHook {

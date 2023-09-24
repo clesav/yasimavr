@@ -1034,6 +1034,13 @@ cycle_count_t Core::run_instruction()
 
 //=======================================================================================
 
+/**
+   Insert a soft breakpoint at the flash address set in bp
+   This is done by replacing the normal instruction by a BREAK.
+   The normal instruction is backed up in the breakpoint structure.
+
+   \param bp breakpoint to insert
+ */
 void Core::dbg_insert_breakpoint(breakpoint_t& bp)
 {
     //Obtain the size of the targeted opcode
@@ -1046,6 +1053,13 @@ void Core::dbg_insert_breakpoint(breakpoint_t& bp)
     m_flash.dbg_write(AVR_BREAK_OPCODE >> 8, bp.addr + 1);
 }
 
+/**
+   Remove a soft breakpoint at the flash address set in bp
+   This is done by restoring the initial instruction backed up
+   in the breakpoint object.
+
+   \param bp breakpoint to remove
+ */
 void Core::dbg_remove_breakpoint(breakpoint_t& bp)
 {
     //Restore the original instruction in flash

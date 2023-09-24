@@ -30,6 +30,9 @@ YASIMAVR_USING_NAMESPACE
 
 //=======================================================================================
 
+/**
+   Build a default peripheral.
+*/
 Peripheral::Peripheral(ctl_id_t id)
 :m_id(id)
 ,m_device(nullptr)
@@ -43,11 +46,19 @@ Peripheral::~Peripheral()
         m_logger.dbg("IOCTL %s destroyed", name().c_str());
 }
 
+/**
+   \return the name of the peripheral (the id converted to 4 ASCII characters)
+*/
 std::string Peripheral::name() const
 {
     return id_to_str(m_id);
 }
 
+/**
+   Virtual method called when the device is initialised. This is where the peripheral can
+   allocate its I/O registers, interrupts or connect signals.
+   \return boolean indicates the success of all allocations.
+*/
 bool Peripheral::init(Device& device)
 {
     m_device = &device;
@@ -55,22 +66,47 @@ bool Peripheral::init(Device& device)
     return true;
 }
 
+/**
+   Virtual method called when the device is reset. Note that resetting I/O registers is only
+   necessary here if their reset value is not zero.
+*/
 void Peripheral::reset()
 {}
 
+/**
+   Virtual method called for a CTL request. The method must return true if the request has
+   been processed.
+*/
 bool Peripheral::ctlreq(ctlreq_id_t, ctlreq_data_t*)
 {
     return false;
 }
 
+/**
+   Virtual method called when the CPU is reading a I/O register allocated by this peripheral.
+   The value has not been read yet so the module can modify it before the CPU gets it.
+   \param addr the register address in I/O space
+*/
 uint8_t Peripheral::ioreg_read_handler(reg_addr_t addr, uint8_t value)
 {
     return value;
 }
 
+
+/**
+   Virtual method called when the CPU is writing a I/O register allocated by this peripheral.
+   The value has already been written.
+   \param addr the register address in I/O space
+   \param value the new register content
+*/
 void Peripheral::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& value)
 {}
 
+/**
+   Virtual method called when the device enters or exits a sleep mode.
+   \param on true when entering a sleep mode, false when exiting it.
+   \param mode one of the enum SleepMode values
+*/
 void Peripheral::sleep(bool on, SleepMode mode)
 {}
 
@@ -127,6 +163,9 @@ void Peripheral::clear_ioreg(const regbit_compound_t& rbc)
         set_ioreg(rb);
 }
 
+/**
+   Helper function to register an interrupt vector.
+*/
 bool Peripheral::register_interrupt(int_vect_t vector, InterruptHandler& handler) const
 {
     if (vector < 0) {
@@ -141,6 +180,9 @@ bool Peripheral::register_interrupt(int_vect_t vector, InterruptHandler& handler
     }
 }
 
+/**
+   Helper function to obtain a pointer to a signal from another peripheral.
+*/
 Signal* Peripheral::get_signal(ctl_id_t ctl_id) const
 {
     if (m_device) {

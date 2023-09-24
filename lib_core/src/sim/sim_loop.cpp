@@ -105,6 +105,11 @@ SimLoop::SimLoop(Device& device)
 {}
 
 
+/**
+   Runs the simulation for a given number of cycles. If set to zero, the simulation
+   will run indefinitely and the function will only return when the device stops
+   definitely.
+ */
 void SimLoop::run(cycle_count_t nbcycles)
 {
     if (m_state == State_Done) return;
@@ -171,11 +176,17 @@ AsyncSimLoop::AsyncSimLoop(Device& device)
 ,m_fast_mode(false)
 {}
 
+/// Set the simulation running mode: false=real-time, true=fast
 void AsyncSimLoop::set_fast_mode(bool fast)
 {
     m_fast_mode = fast;
 }
 
+/**
+   Runs the simulation loop indefinitely. It returns when the loop is killed
+   using loop_kill() or the device has stopped definitively.
+   The simulation will start in the Stopped state so loop_continue() must be called.
+ */
 void AsyncSimLoop::run()
 {
     if (m_state == State_Done) return;
@@ -298,12 +309,18 @@ void AsyncSimLoop::run()
     }
 }
 
+/**
+   Start a transaction, which designates any interaction with any
+   interface of the simulated device.
+   This will pause the simulation between cycles, to ensure the consistency
+   of the device model data.
+ */
 bool AsyncSimLoop::start_transaction()
 {
     std::unique_lock<std::mutex> lock(m_cycle_mutex);
 
     //In case the transaction allows the device to wake-up from
-    //unlimited sleep, or at least schedule timer, wake up the loop
+    //unlimited sleep, or at least schedule timer, wake up the loop.
     //If nothing is scheduled, the loop will go back in standby at the next
     //cycle
     if (m_state == State_Standby)
@@ -323,6 +340,9 @@ bool AsyncSimLoop::start_transaction()
     return m_state != State_Done;
 }
 
+/**
+   End a transaction and let the simulation resume.
+ */
 void AsyncSimLoop::end_transaction()
 {
     std::unique_lock<std::mutex> lock(m_cycle_mutex);
@@ -332,24 +352,42 @@ void AsyncSimLoop::end_transaction()
     m_cycle_cv.notify_all();
 }
 
+/**
+   Resumes the loop when it's in the Stopped state.
+   The loop is initialised in the Stopped state so this must be called
+   at the start of a simulation.
+   Must be surrounded by start_transaction() / end_transaction()
+ */
 void AsyncSimLoop::loop_continue()
 {
     if (m_state < State_Done)
         set_state(State_Running);
 }
 
+/**
+   Instruct the device model to execute one instruction and stop.
+   Must be surrounded by start_transaction() / end_transaction()
+ */
 void AsyncSimLoop::loop_step()
 {
     if (m_state == State_Stopped)
         set_state(State_Step);
 }
 
+/**
+   Stop the simulation.
+   Must be surrounded by start_transaction() / end_transaction()
+ */
 void AsyncSimLoop::loop_pause()
 {
     if (m_state < State_Done)
         set_state(State_Stopped);
 }
 
+/**
+   Stop definitively the simulation. run() will exit.
+   Must be surrounded by start_transaction() / end_transaction()
+ */
 void AsyncSimLoop::loop_kill()
 {
     set_state(State_Done);

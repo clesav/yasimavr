@@ -35,40 +35,66 @@ class ArchXT_TimerB;
 
 
 //=======================================================================================
+
+/**
+   \file
+   \name Controller requests definition for ArchXT_TimerA
+   @{
+ */
+
 /*
  * Definition of CTLREQ codes for Timer type A
  */
 
-//Request for a Timer type B to register with the timer type A. this is necessary
-//for the TCB to use the same "clock" as the TCA.
+/**
+   \ingroup api_timer
+   Request for a Timer type B to register with the timer type A. this is necessary
+   for the TCB to use the same "clock" as the TCA.
+ */
 #define AVR_CTLREQ_TCA_REGISTER_TCB         1
 
+/// @}
 
-//Defines the number of comparison channels supported by the TCA
+/**
+   \ingroup api_timer
+   Defines the number of comparison channels supported by the TCA
+ */
 #define AVR_TCA_CMP_CHANNEL_COUNT           3
 
 
 //=======================================================================================
-/*
- * Implementation of a Timer/Counter type A for the XT core series
- * Only the Normal WGM mode in Single timer configuration is currently implemented
- * Other unsupported features:
- *      - Event control and input
- *      - Debug run override
- *      - Compare/capture output on pin
- *      - Lock Update
- *      - Timer command for forced update/restart
- */
 
+/**
+   \ingroup api_timer
+   \brief Configuration structure for ArchXT_TimerA.
+ */
 struct ArchXT_TimerAConfig {
 
+    /// Base address for the peripheral I/O registers
     reg_addr_t reg_base;
-
+    /// Interrupt vector index for TCA_OVF
     int_vect_t iv_ovf;
+    /// List of interrupt vector indexes for TCB_CMPx
     int_vect_t ivs_cmp[AVR_TCA_CMP_CHANNEL_COUNT];
 
 };
 
+/**
+   \ingroup api_timer
+   \brief Implementation of a Timer/Counter type A for the XT core series.
+
+   Only the Normal WGM mode in Single timer configuration is currently implemented.
+   Other unsupported features:
+        - Event control and input
+        - Debug run override
+        - Compare/capture output on pin
+        - Lock Update
+        - Timer command for forced update/restart
+
+   CTLREQs supported:
+    - AVR_CTLREQ_TCA_REGISTER_TCB : Used internally by ArchXT_TimerB instances to
+      link their prescaler clock source to the TCA prescaler output
+ */
 class AVR_ARCHXT_PUBLIC_API ArchXT_TimerA : public Peripheral, public SignalHook {
 
 public:

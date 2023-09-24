@@ -32,16 +32,10 @@ YASIMAVR_BEGIN_NAMESPACE
 
 
 //=======================================================================================
-/*
- * Implementation of a TWI for the AVR series
- * Features:
- *  - Host/client mode
- *  - data order, phase and polarity settings have no effect
- *  - write collision flag not supported
- *
- *  for supported CTLREQs, see sim_spi.h
+/**
+   \ingroup api_twi
+   \brief Configuration structure for ArchAVR_TWI
  */
-
 struct ArchAVR_TWIConfig {
 
     std::vector<unsigned long> ps_factors;
@@ -65,6 +59,17 @@ struct ArchAVR_TWIConfig {
 
 };
 
+/**
+   \ingroup api_twi
+   \brief Implementation of a TWI model for the AVR series
+
+   Features:
+    - Host/client mode
+    - data order, phase and polarity settings have no effect
+    - write collision flag not supported
+
+    \sa sim_twi.h
+ */
 class AVR_ARCHAVR_PUBLIC_API ArchAVR_TWI : public Peripheral, public SignalHook {
 
 public:

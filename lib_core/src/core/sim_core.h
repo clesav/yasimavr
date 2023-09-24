@@ -58,7 +58,6 @@ enum {
     SREG_I,// = 0x80,
 };
 
-//Definition of the standard register addresses
 enum {
     // 16 bits register pairs
     R_XL    = 0x1a, R_XH,R_YL,R_YH,R_ZL,R_ZH,
@@ -71,22 +70,29 @@ enum {
     R_SREG  = 0x3f,
 };
 
-//Definition of a breakpoint structure
+/**
+   \brief Breakpoint structure
+
+   Record for the data associated with a software breakpoint.
+ */
 struct breakpoint_t {
-    //Address in code space of the breakpoint (where the BREAK instruction is inserted)
+    ///Address in code space of the breakpoint (where the BREAK instruction is inserted)
     flash_addr_t addr;
-    //Instruction replaced by the BREAK (up to 32-bits long)
+    ///Instruction replaced by the BREAK (up to 32-bits long)
     uint8_t instr[4];
-    //Length in bytes of the instruction replaced
+    ///Length in bytes of the instruction replaced
     uint8_t instr_len;
 };
 
 
 //=======================================================================================
-/*
- * Implementation of the AVR core CPU
- * This is an abstract class. Concrete sub-classes define the memory map.
-*/
+
+/**
+   \brief AVR core generic model
+
+   Base model for a AVR MCU 8-bits core.
+   This is an abstract class that the different architecture sub-classes must reimplement.
+ */
 class AVR_CORE_PUBLIC_API Core {
 
     friend class Device;
@@ -94,6 +100,12 @@ class AVR_CORE_PUBLIC_API Core {
 
 public:
 
+    /**
+       NVM type enum, used for loading a firmware.
+       The generic core handles only the flash and fuses.
+       The rest (including eeprom) must be handled by
+       the architecture implementations.
+     */
     enum NVM {
         NVM_Flash,
         NVM_Fuses,
@@ -129,26 +141,25 @@ public:
 
 protected:
 
-    //Reference to the configuration structure, set at construction
+    ///Reference to the configuration structure, set at construction
     const CoreConfiguration& m_config;
-    //Pointer to the device, set by init()
+    ///Pointer to the device, set by init()
     Device* m_device;
-    //Value of the 32 general registers
+    ///Array of the 32 general registers
     uint8_t m_regs[32];
-    //array of the I/O registers
-    //We don't actually allocate any register until the peripherals ask for it
+    ///Array of the I/O registers
     std::vector<IO_Register*> m_ioregs;
-    //Pointer to the array representing the device memories.
+    ///Pointer to the array representing the device RAM memory.
     uint8_t* m_sram;
-    //Non-volatile memory model for the flash.
+    ///Non-volatile memory model for the flash.
     NonVolatileMemory m_flash;
-    //Non-volatile memory model for the fuse bits.
+    ///Non-volatile memory model for the fuse bits.
     NonVolatileMemory m_fuses;
-    //PC variable, expressed in 8-bits (unlike the actual device PC)
+    ///Program Counter register, expressed in bytes (unlike the actual device PC)
     flash_addr_t m_pc;
-    //Counter to inhibit interrupts for a given number of instructions
+    ///Counter to inhibit interrupts for a given number of instructions
     unsigned int m_int_inhib_counter;
-    //Pointer to the generic debug probe
+    ///Pointer to the generic debug probe
     DeviceDebugProbe* m_debug_probe;
 
     //CPU access to I/O registers in I/O address space
@@ -159,11 +170,35 @@ protected:
     uint8_t cpu_read_gpreg(uint8_t reg);
     void cpu_write_gpreg(uint8_t reg, uint8_t value);
 
-    //CPU access to memory data, in data space
+    /**
+       Read memory in data address space. This is a pure virtual function that architectures
+       should implement.
+       Implementations should ensure that, if the address is invalid,
+       the behavior should be consistent with the option IgnoreBadCpuIO.
+       \sa cpu_read_ioreg()
+
+       This function is intended for CPU use only.
+
+       \param data_addr Memory address (in 8-bits, data address space) to read
+
+       \return Content at the flash address
+     */
     virtual uint8_t cpu_read_data(mem_addr_t data_addr) = 0;
+
+    /**
+       Write memory in data address space. This is a pure virtual function that architectures
+       should implement.
+       Implementations should ensure that, if the address is invalid or read-only,
+       the behavior should be consistent with the option IgnoreBadCpuIO.
+       \sa cpu_write_ioreg()
+
+       This function is intended for CPU use only.
+
+       \param data_addr Memory address (in 8-bits, data address space) to read
+       \param value Value to write
+     */
     virtual void cpu_write_data(mem_addr_t data_addr, uint8_t value) = 0;
 
-    //CPU access to the flash with boundary checks
     uint8_t cpu_read_flash(flash_addr_t pgm_addr);
 
     inline bool use_extended_addressing() const
@@ -174,7 +209,28 @@ protected:
     //===== Debugging management (used by DeviceDebugProbe) =====
 
     //Debug probe access to memory data in blocks
+    /**
+       Read memory in data address space. This is a pure virtual function that architectures
+       should implement.
+
+       This function is intended for debug probe use only.
+
+       \param start First memory address (in 8-bits, data address space) to read
+       \param buf Buffer where the memory data will be copied into
+       \param len Length of the memory block to read
+     */
     virtual void dbg_read_data(mem_addr_t start, uint8_t* buf, mem_addr_t len) = 0;
+
+    /**
+       Write memory in data address space. This is a pure virtual function that architectures
+       should implement.
+
+       This function is intended for debug probe use only.
+
+       \param start First memory address (in 8-bits, data address space) to read
+       \param buf Buffer from which the memory data will be copied
+       \param len Length of the memory block to write
+     */
     virtual void dbg_write_data(mem_addr_t start, const uint8_t* buf, mem_addr_t len) = 0;
 
     //Breakpoint management
@@ -220,11 +276,11 @@ inline void Core::set_console_register(reg_addr_t addr)
 }
 
 
-bool  data_space_map(mem_addr_t addr, mem_addr_t len,
-                     mem_addr_t blockstart, mem_addr_t blockend,
-                     mem_addr_t* bufofs, mem_addr_t* blockofs,
-                     mem_addr_t* blocklen)
-                     AVR_CORE_PUBLIC_API;
+bool data_space_map(mem_addr_t addr, mem_addr_t len,
+                    mem_addr_t blockstart, mem_addr_t blockend,
+                    mem_addr_t* bufofs, mem_addr_t* blockofs,
+                    mem_addr_t* blocklen)
+                    AVR_CORE_PUBLIC_API;
 
 
 YASIMAVR_END_NAMESPACE

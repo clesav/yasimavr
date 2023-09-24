@@ -32,20 +32,26 @@ YASIMAVR_BEGIN_NAMESPACE
 
 
 //=======================================================================================
-/*
- * Implementation of a GPIO port controller for XT core series, based on the generic
- * Port class
+/**
+   \brief Configuration structure for ArchXT_Port.
  */
-
 struct ArchXT_PortConfig {
 
+    /// Base address for the peripheral I/O registers
     reg_addr_t reg_base_port;
+    /// Base address for the virtual port I/O registers
     reg_addr_t reg_base_vport;
+    /// Interrupt vector index for the port
     int_vect_t iv_port;
 
 };
 
-
+/**
+ * \brief Implementation of a GPIO port controller for XT core series, based on the generic
+ * Port class.
+ *
+ * The Slewrate limit is unsupported.
+ */
 class AVR_ARCHXT_PUBLIC_API ArchXT_Port : public Port, public InterruptHandler {
 
 public:

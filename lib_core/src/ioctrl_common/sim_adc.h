@@ -32,46 +32,93 @@ YASIMAVR_BEGIN_NAMESPACE
 
 
 //=======================================================================================
-/*
- * CTLREQ definitions
-*/
+/**
+   \file
+   \defgroup api_adc Analog-to-Digital Converter framework
+   @{
+ */
+
+/**
+   \name Controller requests definition for ADC
+   @{
+ */
+
+/**
+   Request to set the value reported by the simulated temperature sensor
+    - data set to the temperature value in °C (as a double)
+ */
 #define AVR_CTLREQ_ADC_SET_TEMP         1
+
+/**
+   Request to force trigger an ADC conversion. The request only has effect if
+   the ADC must be enabled, idle (no conversion running) and configured
+   to use an external trigger.
+   No data used.
+ */
 #define AVR_CTLREQ_ADC_TRIGGER          2
+
+/// @}
+/// @}
 
 
 //=======================================================================================
-/*
- * Configuration enumerations and structures
-*/
+/**
+   \ingroup api_adc
+   \brief Generic ADC definitions
 
+   Definition of enumerations, configuration structures and signal Ids used for ADC models,
+   common to all architectures.
+ */
 class AVR_CORE_PUBLIC_API ADC {
 
 public:
 
+    /**
+       Enum definition for the ADC channel configuration
+     */
     enum Channel {
+        /// Single-ended analog input
         Channel_SingleEnded,
+        /// Differential analog input
         Channel_Differential,
+        /// Ground reference channel
         Channel_Zero,
+        /// Internal bandgap reference voltage
         Channel_IntRef,
+        /// Internal temperature sensor voltage
         Channel_Temperature,
+        /// Analog comparator reference input (used on ATMega0 and ATMega1 series)
         Channel_AcompRef
     };
 
+    /**
+       Structure for configuring one ADC channel
+     */
     struct channel_config_t : base_reg_config_t {
+        /// Channel type
         Channel type;
         union {
             struct {
+                /// Pin ID used for single-ended channels or as positive input for differential channels
                 pin_id_t pin_p;
+                /// Pin ID used as negative input for differential channels, unused for other channel types
                 pin_id_t pin_n;
             };
+            /// Used for Channel_AcompRef, index of the ACP peripheral to get the reference value from
             char per_num;
         };
+
+        /// Measurement gain applied to the voltage value. Must be non-zero.
         unsigned int gain;
     };
 
     enum SignalId {
+        /// Raised at the start of a conversion
         Signal_ConversionStarted,
+        /// Raised just before the ADC is sampling the inputs. Last chance to set the analog values
+        /// for it to be taken into account by the current conversion.
         Signal_AboutToSample,
+        /// Raised when the conversion is complete and the CPU is notified that the conversion result is ready.
         Signal_ConversionComplete,
     };
 

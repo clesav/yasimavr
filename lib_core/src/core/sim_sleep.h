@@ -43,7 +43,7 @@ YASIMAVR_BEGIN_NAMESPACE
 //Request sent by the CPU when executing a infinite loop (RJMP .-2) with GIE flag set
 //No data is required
 
-/*
+/**
  *Definition of generic sleep modes
 */
 enum class SleepMode {
@@ -62,31 +62,50 @@ const char* SleepModeName(SleepMode mode) AVR_CORE_PUBLIC_API;
 
 
 //=======================================================================================
-/*
- * Generic sleep mode controller
- * On receiving a sleep request, it checks the I/O registers that sleep is enabled and
- * which mode to enter. It then notifies the Device by a AVR_CTLREQ_CORE_SLEEP request.
- * The sleep controller connects to the interrupt controller to get notified of any
- * interrupt raised. It filters the notifications depending on the selected sleep mode
- * and if the device should be woken up, sends a AVR_CTLREQ_CORE_WAKEUP request to
- * the Device
-*/
 
+/**
+   \brief Configuration structure for a generic sleep mode controller.
+   \sa AVR_SleepController
+ */
 struct SleepConfig {
 
+    /**
+       \brief Configuration structure for each supported sleep mode
+       \param reg_value the register field value for this sleep mode
+       \param mode the SleepMode enum value corresponding to this sleep mode
+       \param int_mask bitset that indicates for each interrupt vector of the device vector map
+       if it can wake up the device from this sleep mode
+     */
     struct mode_config_t : base_reg_config_t {
         SleepMode mode;
-        //Bitset that indicates for each vector of the device vector map
-        //if the corresponding interrupt can wake up the device from this sleep mode
         uint8_t int_mask[16];
     };
 
+    ///The supported sleep modes
     std::vector<mode_config_t> modes;
+    ///Register location for the sleep mode selection
     regbit_t rb_mode;
+    ///Register location for the sleep enable bit
     regbit_t rb_enable;
 };
 
 
+/**
+   \brief Generic sleep mode controller
+
+   It listens for the sleep instruction notification from the CPU and,
+   using the register configuration, determines which sleep mode the MCU
+   should enter. It then sends a CTL request to the device to enter sleep.
+
+   It is also connected to the interrupt controller to listen to any interrupt
+   raise, and determines if the interrupt is able to wake the MCU up.
+   If so, it sends a CTL request to the device to exit sleep.
+
+   This controller also manages the "pseudo-sleep" mode, which is treated as any
+   other sleep mode, and which can be exited by any interrupt.
+
+   All the configuration is done at construction by mean of a AVR_SleepConfig object.
+ */
 class AVR_CORE_PUBLIC_API SleepController : public Peripheral, public SignalHook {
 
 public:

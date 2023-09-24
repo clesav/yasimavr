@@ -33,12 +33,14 @@ YASIMAVR_BEGIN_NAMESPACE
 
 
 //=======================================================================================
-/*
- * Implementation of a Voltage Reference controller for XT core series
- */
 
+/**
+   \ingroup api_vref
+   \brief Configuration structure for ArchXT_VREF.
+ */
 struct ArchXT_VREFConfig {
 
+    /// Structure defining the source of a voltage reference
     struct reference_config_t : base_reg_config_t {
         VREF::Source source;
         double level;
@@ -49,12 +51,18 @@ struct ArchXT_VREFConfig {
         std::vector<reference_config_t> references;
     };
 
+    /// Configuration for the VREF channels
     std::vector<channel_t> channels;
-
+    /// Base address for the peripheral I/O registers
     reg_addr_t reg_base;
 
 };
 
+
+/**
+   \ingroup api_vref
+   \brief Implementation of a voltage reference controller for XT core series.
+ */
 class AVR_ARCHXT_PUBLIC_API ArchXT_VREF : public VREF {
 
 public:
@@ -75,22 +83,27 @@ private:
 
 
 //=======================================================================================
-/*
- * Implementation of a CPU Interrupt controller for XT core series
- * Unsupported features:
- *      - Round-robin scheduling
- *      - Compact vector table
- *      - Interrupt Vector Select feature
- */
 
+/**
+   \brief Configuration structure for ArchXT_IntCtrl.
+ */
 struct ArchXT_IntCtrlConfig {
 
+    /// Number of interrupt vector
     unsigned int vector_count;
+    /// Base address for the controller registers
     reg_addr_t reg_base;
 
 };
 
+/**
+   \brief Implementation of a Interrupt controller for XT core series
 
+   Unsupported features:
+     - Round-robin scheduling
+     - Compact vector table
+     - Interrupt Vector Select feature
+ */
 class AVR_ARCHXT_PUBLIC_API ArchXT_IntCtrl : public InterruptController {
 
 public:
@@ -114,13 +127,12 @@ private:
 
 
 //=======================================================================================
-/*
- * Implementation of a Reset controller for XT core series
- * Supported features :
- *  - Reset flag (register RSTFR)
- *  - Software reset (register SWRR)
- */
 
+/**
+   \brief Implementation of a Reset controller for XT core series
+
+   Allows to support the Reset flag (register RSTFR) and Software reset (register SWRR)
+ */
 class AVR_ARCHXT_PUBLIC_API ArchXT_ResetCtrl : public Peripheral {
 
 public:
@@ -140,28 +152,44 @@ private:
 
 
 //=======================================================================================
-/*
- *
- */
 
 #define MCU_REVID                       0xFF
 
 #define AVR_CTLREQ_WRITE_SIGROW         1
 
-
+/**
+   \brief Configuration structure for ArchXT_MiscRegCtrl
+ */
 struct ArchXT_MiscConfig {
 
+    /// Base address for the general purpose registers
     reg_addr_t reg_base_gpior;
+    /// Number of general purpose registers
     unsigned int gpior_count;
-
+    /// Address for the Revision ID register
     reg_addr_t reg_revid;
-
+    /// Base address for the signature row registers
     reg_addr_t reg_base_sigrow;
+    /// Device ID
     uint32_t dev_id;
 
 };
 
+/**
+   \brief Implementation of a controller for misc registers for XT core series
 
+   This controller implements miscellaneous registers:
+     - General purpose registers
+     - Signature row
+     - Device ID
+     - Revision ID
+     - Calibration registers
+     - Serial number
+     - Configuration Control Protection (no effect)
+
+   CTLREQs supported:
+    - AVR_CTLREQ_WRITE_SIGROW : writes data to the signature row
+ */
 class AVR_ARCHXT_PUBLIC_API ArchXT_MiscRegCtrl : public Peripheral {
 
 public:

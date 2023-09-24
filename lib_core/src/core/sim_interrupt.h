@@ -59,12 +59,17 @@ class InterruptHandler;
 
 
 //=======================================================================================
-/*
- * Class InterruptController
- * Peripheral implementation of a generic interrupt controller
- * It manages an interrupt vector table that the CPU can access to know if a interrupt
- * routine should be executed.
- * The arbitration of priorities between vectors is left to concrete sub-classes.
+/**
+   \brief Generic interrupt controller
+
+   It manages an interrupt vector table that the CPU can access to know if a interrupt
+   routine should be executed.
+   Each interrupt vector may be allocated by a interrupt handler which
+   controls the raise (or cancellation) of the interrupt.
+   When a
+   The arbitration of priorities between vectors is left to concrete sub-classes.
+
+   \sa AVR_InterruptHandler
 */
 class AVR_CORE_PUBLIC_API InterruptController : public Peripheral {
 
@@ -94,7 +99,6 @@ public:
     };
 
     //===== Constructor/destructor =====
-    //Construct the controller with the given vector table size
     explicit InterruptController(unsigned int size);
 
     //===== Override of IO_CTL virtual methods =====
@@ -103,13 +107,8 @@ public:
     virtual void sleep(bool on, SleepMode mode) override;
 
     //===== Interface API for the CPU =====
-    //Returns a vector index if there is an IRQ raised, AVR_INTERRUPT_NONE if not.
-    //If a valid vector is returned and the Global Interrupt Enable flag is set,
-    //the CPU initiates a jump to the corresponding routine.
     int_vect_t cpu_get_irq() const;
-    //Called to ACK the IRQ obtained with cpu_get_irq()
     void cpu_ack_irq();
-    //Called when returning from an interrupt service routine
     virtual void cpu_reti();
 
 protected:
@@ -119,11 +118,17 @@ protected:
     int_vect_t intr_count() const;
     void set_interrupt_raised(int_vect_t vector, bool raised);
 
-    //Called by cpu_ack_irq with the vector obtained by cpu_get_irq()
-    //By default it sets the interrupt state back to Idle and calls the handler
     virtual void cpu_ack_irq(int_vect_t vector);
-    //Abstract method to indicate if a vector should be executed next.
-    //This should not take into account the value of the GIE flag
+
+    /**
+       Abstract method indicating which vector should be executed next.
+       Architecture specific behaviors can be implemented here to take
+       into account priority arbitration between vectors.
+
+       \note implementations should assume the GIE flag is set.
+
+       \return Vector index to be executed next or AVR_INTERRUPT_NONE
+    */
     virtual int_vect_t get_next_irq() const = 0;
 
     void update_irq();
@@ -141,24 +146,35 @@ private:
     std::vector<interrupt_t> m_interrupts;
     //Variable holding the vector to be executed next
     int_vect_t m_irq_vector;
+    //Signal raised with changes of interrupt state
     Signal m_signal;
 
-    //Interface for the interrupt handlers
+    //private API used by the interrupt handlers
     void raise_interrupt(int_vect_t vector);
     void cancel_interrupt(int_vect_t vector);
     void disconnect_handler(InterruptHandler* handler);
+
 };
 
+/**
+   Used by the CPU to interrogate the controller whether an interrupt is raised.
+   \n If a valid vector is returned and the Global Interrupt Enable flag is set,
+   the CPU initiates a jump to the corresponding routine.
+
+   \return a vector index if there is an IRQ raised, AVR_INTERRUPT_NONE if not.
+*/
 inline int_vect_t InterruptController::cpu_get_irq() const
 {
     return m_irq_vector;
 }
 
+///Interrupt table size getter
 inline int_vect_t InterruptController::intr_count() const
 {
     return m_interrupts.size();
 }
 
+///Interrupt state getter
 inline bool InterruptController::interrupt_raised(int_vect_t vector) const
 {
     return m_interrupts[vector].raised;
@@ -166,11 +182,12 @@ inline bool InterruptController::interrupt_raised(int_vect_t vector) const
 
 
 //=======================================================================================
-/*
- * Class InterruptHandler
- * Abstract interface to a interrupt controller
- * It allows to raise (or cancel) an interrupt
- * The same handler can be used for several interrupts.
+/**
+   \brief Abstract interface to a interrupt controller.
+
+   It allows to raise (or cancel) an single interrupt.
+   The same handler can be used for several interrupts.
+   \sa AVR_InterruptController
 */
 class AVR_CORE_PUBLIC_API InterruptHandler {
 
@@ -186,9 +203,6 @@ public:
     //registered with the controller
     void raise_interrupt(int_vect_t vector) const;
     void cancel_interrupt(int_vect_t vector) const;
-    //Callback method called when a vector has been ACK'ed by the CPU
-    //(i.e. it is about to execute the corresponding vector table entry)
-    //The default does nothing
     virtual void interrupt_ack_handler(int_vect_t vector);
 
     //Disable copy semantics
@@ -203,9 +217,19 @@ private:
 
 
 //=======================================================================================
-/*
- * Class InterruptFlag
- * Generic helper to manage an Interrupt Flag/Enable in a I/O register
+/**
+   \brief Generic helper to manage an Interrupt Flag/Enable in a I/O register.
+
+   The flag is made of one or several bits of a I/O register, along with corresponding
+   enable bit(s).
+
+   The interrupt is raised if and only if at least one flag bit and its
+   corresponding enable bit are set.
+
+   The flag can be configured to clear-on-ack.
+   If enabled, the flag will be cleared when the interrupt is ACK'ed by the CPU.
+   If disabled, the flag will be unchanged by a CPU ACK'ed. The effect is to
+   keep the interrupt raised until the flag is cleared directly in the register.
 */
 class AVR_CORE_PUBLIC_API InterruptFlag : public InterruptHandler {
 
@@ -213,7 +237,6 @@ public:
 
     explicit InterruptFlag(bool clear_on_ack);
 
-    //Init allocates the resources required. Returns true on success
     bool init(Device& device, const regbit_t& rb_enable, const regbit_t& rb_flag, int_vect_t vector);
 
     int update_from_ioreg();
@@ -241,6 +264,7 @@ private:
 
 };
 
+/// Returns the raised state of the interrupt flag
 inline bool InterruptFlag::raised() const
 {
     return m_raised;

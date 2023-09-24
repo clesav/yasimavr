@@ -33,10 +33,9 @@ YASIMAVR_BEGIN_NAMESPACE
 
 
 //=======================================================================================
-/*
- * Generic structure for the data passed on when raising a signal
+/**
+   Generic structure for the data passed on when raising a signal
  */
-
 struct signal_data_t {
 
     int sigid;
@@ -47,29 +46,31 @@ struct signal_data_t {
 
 
 //=======================================================================================
-/*
- * Generic hook class to connect to a signal in order to receive notifications
- * To be used, reimplement raised() to use the data from the signal
- */
+
 class Signal;
 
+/**
+   Abstract interface to be reimplemented to receive signal raises
+ */
 class AVR_CORE_PUBLIC_API SignalHook {
 
 public:
 
     SignalHook() = default;
-    //Copy constructor: to ensure the connection with signals is consistent
     SignalHook(const SignalHook&);
-    //No move constructor
     SignalHook(const SignalHook&&) = delete;
-    //Destructor: severs all connections with signals
     virtual ~SignalHook();
 
+    /**
+       Pure virtual callback called during signal raises.
+       \param sigdata Data structure passed on when raising a signal
+       \param hooktag integer passed on when connecting a hook to a signal.
+       For hooks connected to several signals, it provides a mean to identify
+       the caller.
+     */
     virtual void raised(const signal_data_t& sigdata, int hooktag) = 0;
 
-    //Copy assignment : copy all signal connections
     SignalHook& operator=(const SignalHook&);
-    //No move assignment
     SignalHook& operator=(const SignalHook&&) = delete;
 
 private:
@@ -82,38 +83,33 @@ private:
 
 
 //=======================================================================================
-/*
- * Signal is a means for point-to-point communication and notification
- * across the simulator.
- * It is similar in use to simavr's IRQs
-*/
+/**
+   \brief Signalling framework class
+
+   Main class for raising signals.
+   It implements a messaging passing system in the yasimavr simulation models, in a
+   very similar fashion to simavr's IRQ, or QT's signal/slot frameworks.
+
+   Signals are connected to objects implementing the SignalHook interface.
+   One signal can be connected to may hooks, whilst one hook can be connected to
+   many signals.
+ */
 class AVR_CORE_PUBLIC_API Signal {
 
 public:
 
     Signal();
-    //Copy constructor
     Signal(const Signal& other);
-    //No move constructor
     Signal(const Signal&&) = delete;
-    //Destructor: severs all connections with hooks
     virtual ~Signal();
 
-    ////The hooktag is an arbitrary value that only has a meaning
-    //for the hook and is passed though by the signal when calling
-    //the hook's "raised()". It can be useful when a single hook
-    //connects to several signals, in order to differentiate which
-    //one the raise comes from.
     void connect(SignalHook& hook, int hooktag = 0);
     void disconnect(SignalHook& hook);
 
-    //Raise a signal
     virtual void raise(const signal_data_t& sigdata);
     void raise(int sigid = 0, const vardata_t& v = vardata_t(), long long index = 0);
 
-    //Copy assignment
     Signal& operator=(const Signal&);
-    //No move assignment
     Signal& operator=(const Signal&&) = delete;
 
 private:

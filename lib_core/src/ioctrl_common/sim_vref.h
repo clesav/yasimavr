@@ -31,46 +31,70 @@ YASIMAVR_BEGIN_NAMESPACE
 
 
 //=======================================================================================
-/*
- * CTLREQ definitions
-*/
+/**
+   \file
+   \defgroup api_vref Voltage Reference framework
+   @{
+ */
 
-//AVR_CTLREQ_GET_SIGNAL is not implemented
+/**
+   \name Controller requests definition for VREF
+   @{
+ */
 
-//Request sent by the ADC to the VREF controller to obtain the VREF.
-//The index shall be set to the required source (one of VREF::Source enum values)
-//On returning, the value 'd' contains the voltage value
-//Except for VCC which is returned in absolute volts, all values are returned as a ratio of VCC
+/**
+   Request to interrogate the VREF controller and obtain a reference value.\n
+   The index shall be set to the required source (one of VREF::Source enum values)\n
+   For Internal references, data shall be set to the required channel, as an unsigned integer.\n
+   On return, data is set to the reference value as a double. Except for VCC, all values are relative to VCC.
+ */
 #define AVR_CTLREQ_VREF_GET             1
 
-//Request sent by Device classes to set the VCC or AREF values when loading the firmware.
-//The index shall be set to the required source (VREF_Ext_VCC or VREF_Ext_AREF)
-//The value 'd' shall be set to the voltage value :
-//  - VCC shall be an absolute positive value in volts
-//  - AREF shall be a ratio of VCC and is clipped to [0.0; 1.0]
+/**
+   Request to set VCC or AREF reference values.\n
+   The index shall be set to the required source (one of VREF::Source enum values but only VCC and VREF are accepted)\n
+   data shall be set to the required value as a double.\n
+   VCC shall be an absolute value in Volts, AREF shall be relative to VCC and contrainted to the range [0; 1].
+ */
 #define AVR_CTLREQ_VREF_SET             2
+
+/// @}
+/// @}
 
 
 //=======================================================================================
-/*
- * Generic I/O controller for managing VREF for analog peripherals (ADC, analog comparator)
- * Note that setting VCC in the firmware is required for using any analog feature of a MCU.
- * Failing to do so will trigger a device crash
+/**
+   \ingroup api_vref
+   \brief Generic model for managing VREF for analog peripherals (ADC, analog comparator)
+   \note Setting VCC in the firmware is required for using any analog feature of a MCU.
+   Failing to do so will trigger a device crash.
  */
 class AVR_CORE_PUBLIC_API VREF : public Peripheral {
 
 public:
 
+    /// Enumation value for the sources of voltage references
     enum Source {
-        Source_VCC,             //VCC voltage value
-        Source_AVCC,            //AVCC voltage value (always equal to VCC for now)
-        Source_AREF,            //AREF voltage value
-        Source_Internal,        //Internal reference voltage value
+        Source_VCC,             ///< VCC voltage value
+        Source_AVCC,            ///< AVCC voltage value (always equal to VCC for now)
+        Source_AREF,            ///< AREF voltage value
+        Source_Internal,        ///< Internal reference voltage value
     };
 
     enum SignalId {
+        /**
+           Raised when the AREF reference value is changed. data carries the new value (absolute)
+         */
         Signal_ARefChange,
+        /**
+           Raised when an internal reference value is changed.
+           data carries the new value (relative to VCC) and index the reference index.
+         */
         Signal_IntRefChange,
+        /**
+           Raised when VCC value is changed.
+           data carries the new value (absolute)
+         */
         Signal_VCCChange,
     };
 

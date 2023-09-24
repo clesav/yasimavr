@@ -70,12 +70,20 @@ SPI::SPI()
 ,m_rx_limit(0)
 {}
 
+/**
+   Initialise the interface.
+   \param cycle_manager Cycle manager used for time-related operations
+   \param logger Logger used for the interface
+ */
 void SPI::init(CycleManager& cycle_manager, Logger& logger)
 {
     m_cycle_manager = &cycle_manager;
     m_logger = &logger;
 }
 
+/**
+   Reset the interface.
+ */
 void SPI::reset()
 {
     m_delay = 1;
@@ -92,11 +100,19 @@ void SPI::reset()
     m_cycle_manager->cancel(*this);
 }
 
+/**
+   Set the interface mode.
+   \param mode true=host, false=client
+ */
 void SPI::set_host_mode(bool mode)
 {
     m_is_host = mode;
 }
 
+/**
+   Add a client to the interface.
+   \param client Client to add
+ */
 void SPI::add_client(SPIClient& client)
 {
     m_clients.push_back(&client);
@@ -114,18 +130,24 @@ void SPI::remove_client(SPIClient& client)
     }
 }
 
+/// Set the interface as selected (client mode only)
 void SPI::set_selected(bool selected)
 {
     m_selected = selected;
 }
 
+/**
+   Set the delay to emit or receive a frame.
+   \param delay Delay in cycles. The minimum valid value is 1.
+ */
 void SPI::set_frame_delay(cycle_count_t delay)
 {
     m_delay = delay;
 }
 
-/*
- * Set the TX buffer limit and trim the buffer if necessary
+/**
+   Set the TX buffer limit and trim the buffer if necessary.
+   \param limit New buffer limit. Zero means unlimited.
  */
 void SPI::set_tx_buffer_limit(size_t limit)
 {
@@ -134,8 +156,9 @@ void SPI::set_tx_buffer_limit(size_t limit)
         m_tx_buffer.pop_back();
 }
 
-/*
- * Set the RX buffer limit and trim the buffer if necessary
+/**
+   Set the RX buffer limit and trim the buffer if necessary.
+   \param limit New buffer limit. Zero means unlimited.
  */
 void SPI::set_rx_buffer_limit(size_t limit)
 {
@@ -144,9 +167,12 @@ void SPI::set_rx_buffer_limit(size_t limit)
         m_rx_buffer.pop_back();
 }
 
-/*
- * Push a 8-bits frame to be transmitted
- * Start the transfer if it's not already in progress
+/**
+   Push a 8-bits frame to be emitted by the interface.
+   In host mode, if no transfer is already ongoing, one will
+   start immediately. Otherwise the frame is added to the TX FIFO.
+   In client mode, the frame stays in the TX FIFO, waiting for
+   the host to start a transfer.
  */
 void SPI::push_tx(uint8_t frame)
 {
@@ -159,8 +185,8 @@ void SPI::push_tx(uint8_t frame)
         start_transfer_as_host();
 }
 
-/*
- * Cancel all pending and current transfers
+/**
+   Cancel all pending and current transfers. (host mode only)
  */
 void SPI::cancel_tx()
 {
@@ -179,6 +205,9 @@ void SPI::cancel_tx()
     }
 }
 
+/**
+   Pop a frame from the RX buffer, return 0 if there aren't any.
+ */
 uint8_t SPI::pop_rx()
 {
     if (m_rx_buffer.size()) {
@@ -205,7 +234,10 @@ void SPI::start_transfer_as_host()
         }
     }
 
-    //call it, giving it the MOSI frame and it returns the MISO frame
+    //Call the selected client callback, giving it the MOSI frame
+    //and it returns the MISO frame.
+    //If not client is selected, the MISO line is normally pulled up therefore
+    //the acquired frame is read as 0xFF.
     uint8_t miso_frame;
     if (m_selected_client)
         miso_frame = m_selected_client->start_transfer(mosi_frame);
@@ -228,8 +260,10 @@ void SPI::start_transfer_as_host()
     }
 }
 
+//Timer callback indicating the end of a frame transfer.
 cycle_count_t SPI::next(cycle_count_t when)
 {
+    //Indicate to the selected client that the transfer has completed.
     if (m_selected_client) {
         m_selected_client->end_transfer(true);
         m_selected_client = nullptr;
@@ -237,7 +271,8 @@ cycle_count_t SPI::next(cycle_count_t when)
 
     m_signal.raise(Signal_HostTfrComplete, 1);
 
-    //Is there another transfer to do ?
+    //Is there another frame to send ? if so, restart a transfer and reschedule
+    //the timer
     if (m_tx_buffer.size()) {
         start_transfer_as_host();
         return when + m_delay;

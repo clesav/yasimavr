@@ -30,6 +30,9 @@ YASIMAVR_USING_NAMESPACE
 
 //========================================================================================
 
+/**
+   Construct the controller with the given vector table size
+*/
 InterruptController::InterruptController(unsigned int size)
 :Peripheral(AVR_IOCTL_INTR)
 ,m_interrupts(size)
@@ -113,12 +116,19 @@ void InterruptController::sleep(bool on, SleepMode mode)
     }
 }
 
+/**
+   Used by the CPU to acknowledge the IRQ obtained with cpu_get_irq().
+*/
 void InterruptController::cpu_ack_irq()
 {
     cpu_ack_irq(m_irq_vector);
     update_irq();
 }
 
+/**
+   Called by cpu_ack_irq() with the vector obtained by cpu_get_irq()
+   \n Sets the interrupt state back to Idle and calls the handler
+*/
 void InterruptController::cpu_ack_irq(int_vect_t vector)
 {
     m_interrupts[vector].raised = false;
@@ -129,17 +139,26 @@ void InterruptController::cpu_ack_irq(int_vect_t vector)
     m_signal.raise(Signal_StateChange, State_Acknowledged, vector);
 }
 
+/**
+   Called by the CPU when returning from an ISR.
+   \n The base implementation calls update_irq to determine the next vector to be
+   given to the CPU.
+*/
 void InterruptController::cpu_reti()
 {
     m_signal.raise(Signal_StateChange, State_Returned);
     update_irq();
 }
 
+/**
+   Update the controller, by storing the next vector to be given to the CPU
+*/
 void InterruptController::update_irq()
 {
     m_irq_vector = get_next_irq();
 }
 
+///Interrupt state setter
 void InterruptController::set_interrupt_raised(int_vect_t vector, bool raised)
 {
     m_interrupts[vector].raised = raised;
@@ -147,7 +166,7 @@ void InterruptController::set_interrupt_raised(int_vect_t vector, bool raised)
 
 void InterruptController::raise_interrupt(int_vect_t vector)
 {
-    //If the interrupt is already raised, no op
+    //If the interrupt is unused or already raised, no op
     if (m_interrupts[vector].used && !m_interrupts[vector].raised) {
         m_interrupts[vector].raised = true;
         m_signal.raise(Signal_StateChange, State_Raised, vector);
@@ -204,12 +223,23 @@ void InterruptHandler::cancel_interrupt(int_vect_t vector) const
         m_intctl->cancel_interrupt(vector);
 }
 
+/**
+   Callback method called when a vector has been ACK'ed by the CPU.
+   (i.e. the CPU is about to jump to the corresponding vector table entry)
+   \n The default implementation does nothing.
+*/
 void InterruptHandler::interrupt_ack_handler(int_vect_t vector)
 {}
 
 
 //========================================================================================
 
+/**
+   Construct an Interrupt Flag.
+
+   \param clear_on_ack if true, the flag will be cleared when the interrupt is ACK'ed
+   by the CPU. If false, the flag can only be cleared by writing to the register
+*/
 InterruptFlag::InterruptFlag(bool clear_on_ack)
 :m_clr_on_ack(clear_on_ack)
 ,m_vector(AVR_INTERRUPT_NONE)
@@ -218,6 +248,17 @@ InterruptFlag::InterruptFlag(bool clear_on_ack)
 ,m_enable_reg(nullptr)
 {}
 
+/**
+   Initialise an Interrupt Flag. Allocates the registers for the flag and the enable
+   register fields and register with the interrupt controller for a particular vector.
+   \note If the vector is < 0, then no interrupt is registered. (can be used for future
+   or unsupported features)
+   \note Registering with the reset vector (vector 0) is an error.
+   \param rb_enable register location for the flag enable bits
+   \param rb_flag register location for the flag state bits
+   \param vector interrupt vector index
+   \return true if allocations and registrations are successful, false otherwise
+*/
 bool InterruptFlag::init(Device& device,
                          const regbit_t& rb_enable,
                          const regbit_t& rb_flag,
@@ -248,6 +289,14 @@ bool InterruptFlag::init(Device& device,
     return m_flag_reg && m_enable_reg && vector_ok;
 }
 
+/**
+   Update the state of the interrupt flag according to the
+   value of the I/O registers.
+   This should be called whenever the flag registers are written.
+   Allocates the registers for the flag and the enable register fields.
+   \return +1 if the interrupt has been raised as a result of the update,
+           -1 if it has been cleared, 0 if unchanged.
+*/
 int InterruptFlag::update_from_ioreg()
 {
     bool raised = flag_raised();
@@ -271,6 +320,11 @@ int InterruptFlag::update_from_ioreg()
     }
 }
 
+/**
+   Set the interrupt flag bits by OR'ing them with the mask argument.
+   \return true if the interrupt is raised as a result of the flag bit changes,
+   false if the interrupt is unchanged.
+*/
 bool InterruptFlag::set_flag(uint8_t mask)
 {
     uint8_t new_flag_reg = m_rb_flag.set_to(m_flag_reg->value(), mask);
@@ -285,6 +339,11 @@ bool InterruptFlag::set_flag(uint8_t mask)
     }
 }
 
+/**
+   Clear the interrupt flag bits by AND'ing them with the mask argument.
+   \return true if the interrupt is canceled as a result of the flag bit changes,
+   false if the interrupt is unchanged.
+*/
 bool InterruptFlag::clear_flag(uint8_t mask)
 {
     uint8_t new_flag_reg = m_rb_flag.clear_from(m_flag_reg->value(), mask);
@@ -299,6 +358,8 @@ bool InterruptFlag::clear_flag(uint8_t mask)
     }
 }
 
+//Private function computing the status raised/canceled of the interrupt
+//according to the flag&enable bits
 bool InterruptFlag::flag_raised() const
 {
     uint8_t en_mask = m_rb_enable.extract(m_enable_reg->value());

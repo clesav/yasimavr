@@ -31,11 +31,14 @@ YASIMAVR_BEGIN_NAMESPACE
 
 
 //=======================================================================================
-/*
- * Generic I/O controller that implements a watchdog timer.
- * It combines a classic period feature with a window option such as on Mega0 series
- * The actual effect of the timeout is left to sub-classes by overriding timeout()
- * The configuration via fuses is not supported at the moment
+/**
+   \brief Generic I/O controller that implements a watchdog timer.
+
+   It combines a classic period feature with a window option such as on Mega0 series.
+
+   The actual effect of the timeout is left to sub-classes by overriding timeout()
+
+   The configuration via fuses is not supported at the moment.
  */
 class AVR_CORE_PUBLIC_API WatchdogTimer : public Peripheral {
 
@@ -44,20 +47,24 @@ public:
     WatchdogTimer();
     virtual ~WatchdogTimer();
 
-    //Callback that resets and disable the timer
     virtual void reset() override;
-    //Callbacks to react to the request AVR_CTLREQ_WATCHDOG_RESET.
+    /// Override to handle the core request AVR_CTLREQ_WATCHDOG_RESET
     virtual bool ctlreq(ctlreq_id_t req, ctlreq_data_t* data) override;
 
 protected:
 
-    //Configuration of the timer.
-    //the timer is enabled for wdr_win_end > 0.
-    //If wdr_win_start > 0, the window feature is enabled
-    //clk_factor is the ratio WDT_clock_freq / MCU_clock_freq
+    /**
+       Configuration of the timer.\n
+       the timer is enabled for wdr_win_end > 0.
+       If wdr_win_start > 0, the window feature is enabled.\n
+       clk_factor is the ratio WDT_clock_freq / MCU_clock_freq.\n
+     */
     void set_timer(uint32_t wdr_win_start, uint32_t wdr_win_end, uint32_t clk_factor);
 
-    //Callback to be reimplemented by sub-classes for
+    /**
+       Callback to be reimplemented by sub-classes for handling the effects of a
+       timeout.
+     */
     virtual void timeout() = 0;
 
 private:

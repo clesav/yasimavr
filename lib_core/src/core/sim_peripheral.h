@@ -37,91 +37,177 @@ enum class SleepMode;
 
 
 //=======================================================================================
-/*
- * Peripheral identifier definition
- * All peripherals are uniquely identified by a 32-bits integer which is actually
- * composed of 4 characters.
- * This section defines the identifiers for the usual peripherals
+/**
+   \file
+   \defgroup core_peripheral Peripheral base framework
+   @{
+ */
+
+/**
+   \name Peripheral identifier definition
+
+   All peripherals are uniquely identified by a 32-bits integer which is actually
+   composed of 4 characters.
+   This section defines the identifiers for the usual peripherals.
+   \sa Peripheral
+   @{
 */
 
-#define AVR_IOCTL_CORE              chr_to_id('C', 'O', 'R', 'E')      //Core
-#define AVR_IOCTL_WTDG              chr_to_id('W', 'T', 'D', 'G')      //Watchdog
-#define AVR_IOCTL_INTR              chr_to_id('I', 'N', 'T', 'R')      //Interrupt controller
-#define AVR_IOCTL_SLEEP             chr_to_id('S', 'L', 'P', '\0')     //Sleep mode controller
-#define AVR_IOCTL_CLOCK             chr_to_id('C', 'L', 'K', '\0')     //Clock controller
-#define AVR_IOCTL_PORT(n)           chr_to_id('I', 'O', 'G', (n))      //Port controller
-#define AVR_IOCTL_PORTMUX           chr_to_id('I', 'O', 'M', 'X')      //Port Mux controller
-#define AVR_IOCTL_ADC(n)            chr_to_id('A', 'D', 'C', (n))      //Analog-to-digital converter
-#define AVR_IOCTL_ACP(n)            chr_to_id('A', 'C', 'P', (n))      //Analog comparator
-#define AVR_IOCTL_TIMER(t, n)       chr_to_id('T', 'C', (t), (n))      //Timer/counter
-#define AVR_IOCTL_EEPROM            chr_to_id('E', 'P', 'R', 'M')      //EEPROM controller
-#define AVR_IOCTL_NVM               chr_to_id('N', 'V', 'M', '\0')     //Non-Volative Memory controller
-#define AVR_IOCTL_VREF              chr_to_id('V', 'R', 'E', 'F')      //Voltage reference controller
-#define AVR_IOCTL_EXTINT            chr_to_id('E', 'I', 'N', 'T')      //External Interrupt controller
-#define AVR_IOCTL_RST               chr_to_id('R', 'S', 'T', '\0')     //Reset controller
-#define AVR_IOCTL_RTC               chr_to_id('R', 'T', 'C', '\0')     //Real Time Counter
-#define AVR_IOCTL_UART(n)           chr_to_id('U', 'A', 'X', (n))      //UART interface
-#define AVR_IOCTL_SPI(n)            chr_to_id('S', 'P', 'I', (n))      //SPI interface
-#define AVR_IOCTL_TWI(n)            chr_to_id('T', 'W', 'I', (n))      //TWI interface
+/** CTLID for the core: "CORE" */
+#define AVR_IOCTL_CORE              chr_to_id('C', 'O', 'R', 'E')
+/** CTLID for the watchdog timer: "WTDG" */
+#define AVR_IOCTL_WTDG              chr_to_id('W', 'T', 'D', 'G')
+/** CTLID for the interrupt controller: "INTR" */
+#define AVR_IOCTL_INTR              chr_to_id('I', 'N', 'T', 'R')
+/** CTLID for the sleep controller: "SLP" */
+#define AVR_IOCTL_SLEEP             chr_to_id('S', 'L', 'P', '\0')
+/** CTLID for the clock controller: "CLK" */
+#define AVR_IOCTL_CLOCK             chr_to_id('C', 'L', 'K', '\0')
+/** CTLID for the I/O port controller: "IOGx" x='A','B',... */
+#define AVR_IOCTL_PORT(n)           chr_to_id('I', 'O', 'G', (n))
+/** CTLID for the port mux controller */
+#define AVR_IOCTL_PORTMUX           chr_to_id('I', 'O', 'M', 'X')
+/** CTLID for the analog-to-digital converter: "ADCn", n=0,1,... */
+#define AVR_IOCTL_ADC(n)            chr_to_id('A', 'D', 'C', (n))
+/** CTLID for the analog comparator: "ACPn", n=0,1,... */
+#define AVR_IOCTL_ACP(n)            chr_to_id('A', 'C', 'P', (n))
+/** CTLID for the timer/counter: "TCtn", t='A','B'; n=0,1,... */
+#define AVR_IOCTL_TIMER(t, n)       chr_to_id('T', 'C', (t), (n))
+/** CTLID for the EEPROM controller: "EPRM" */
+#define AVR_IOCTL_EEPROM            chr_to_id('E', 'P', 'R', 'M')
+/** CTLID for the NVM controller: "NVM" */
+#define AVR_IOCTL_NVM               chr_to_id('N', 'V', 'M', '\0')
+/** CTLID for the voltage reference controller: "VREF" */
+#define AVR_IOCTL_VREF              chr_to_id('V', 'R', 'E', 'F')
+/** CTLID for the external interrupt controller: "EINT" */
+#define AVR_IOCTL_EXTINT            chr_to_id('E', 'I', 'N', 'T')
+/** CTLID for the reset controller: "RST" */
+#define AVR_IOCTL_RST               chr_to_id('R', 'S', 'T', '\0')
+/** CTLID for the real-time counter: "RTC" */
+#define AVR_IOCTL_RTC               chr_to_id('R', 'T', 'C', '\0')
+/** CTLID for the USART interface: "UAXn" */
+#define AVR_IOCTL_UART(n)           chr_to_id('U', 'A', 'X', (n))
+/** CTLID for the SPI interface: "SPIn" */
+#define AVR_IOCTL_SPI(n)            chr_to_id('S', 'P', 'I', (n))
+/** CTLID for the TWI interface: "TWIn" */
+#define AVR_IOCTL_TWI(n)            chr_to_id('T', 'W', 'I', (n))
 
+///@}
 
 //=======================================================================================
-/*
- * CTLREQ definitions
-*/
 
+/**
+   \name Controller requests definition
+   Definition of common and builtin CTLREQs
+   \sa Device::ctlreq
+   \sa ctlreq_data_t
+   @{
+ */
+
+
+/**
+   CTLREQ identifier type
+ */
 typedef int ctlreq_id_t;
 
 
-//Common request identifier used to obtain a pointer to a particular signal
-//The data.index should contain the identifier of the signal
-//The data.p is returned pointing to the signal
+/**
+   Common request identifier used to obtain a pointer to a particular signal
+    - data.index should contain the identifier of the signal
+    - data.p is returned pointing to the signal
+ */
 #define AVR_CTLREQ_GET_SIGNAL       0
 
-//Request sent by the CPU to the core when a BREAK instruction is executed, no data provided
+/**
+   Request sent by the CPU to the core when a BREAK instruction is executed, no data provided.
+ */
 #define AVR_CTLREQ_CORE_BREAK       1
-//Request sent by the Sleep Controller to the core to enter a sleep mode
-//The data.u contains the sleep mode enum value
+
+/**
+   Request sent by the Sleep Controller to the core to enter a sleep mode
+    - data.u contains the sleep mode enum value
+ */
 #define AVR_CTLREQ_CORE_SLEEP       2
-//Request sent by the Sleep Controller to the core to wake up from a sleep mode, no data provided
+
+/**
+   Request sent by the Sleep Controller to the core to wake up from a sleep mode, no data provided
+ */
 #define AVR_CTLREQ_CORE_WAKEUP      3
-//Request sent by the Port Controller to the core when a pin shorting is detected
+
+/**
+   Request sent by the Port Controller to the core when a pin shorting is detected
+ */
 #define AVR_CTLREQ_CORE_SHORTING    4
-//Request sent to the core to crash. data.index is the reason code, data.p is the optional reason string
+
+/**
+   Request sent to the core to crash.
+    - data.index is the reason code,
+    - data.p is the optional reason string
+ */
 #define AVR_CTLREQ_CORE_CRASH       5
-//Request sent to the core to trigger a MCU reset. data.u is the corresponding ResetFlag enum value
+
+/**
+   Request sent to the core to trigger a MCU reset.
+    - data.u is the corresponding ResetFlag enum value
+ */
 #define AVR_CTLREQ_CORE_RESET       6
-//Request sent to the core to query the latest cause of reset. data.u is set to the ResetFlag enum value
+
+/**
+   Request sent to the core to query the latest cause of reset.
+    - data.u is set to the ResetFlag enum value
+ */
 #define AVR_CTLREQ_CORE_RESET_FLAG  7
-//Request sent to the core to query the pointer to a NVM block
-//  data.index indicates which block with one of the AVR_NVM enum values
+
+/**
+   Request sent to the core to query the pointer to a NVM block
+    - data.index indicates which block with one of the AVR_NVM enum values
+ */
 #define AVR_CTLREQ_CORE_NVM         8
-//Request to halt the CPU, used during a SPM instruction.
-//a non-zero data.u enables the halt, data.u == 0 disables the halt
+
+/**
+   Request to halt the CPU, used during a SPM instruction.
+   a non-zero data.u enables the halt, data.u == 0 disables the halt.
+ */
 #define AVR_CTLREQ_CORE_HALT        9
 
-//Request sent by the CPU to the watchdog when executing a WDR instruction, no data provided
+/**
+   Request sent by the CPU to the watchdog when executing a WDR instruction, no data provided
+ */
 #define AVR_CTLREQ_WATCHDOG_RESET   1
 
-//Request sent by the CPU to the NVM controller when executing a SPM instruction
-//  data.p points to a NVM_request_t structure filled with the instruction information
+/**
+   Request sent by the CPU to the NVM controller when executing a SPM instruction
+    - data.p points to a NVM_request_t structure filled with the instruction information
+ */
 #define AVR_CTLREQ_NVM_WRITE        1
 
-//Structure used for AVR_CTLREQ_NVM_WRITE requests
-struct NVM_request_t {
-    int nvm;                //Memory block being written : -1 if unknown/irrelevant,
-                            //otherwise one of AVR_NVM enumeration values
-    mem_addr_t addr;        //Address to write (in the appropriate block address space)
-    uint16_t data;          //Value to write to the NVM
-    flash_addr_t instr;     //Write instruction address (future use for access control)
-};
-
-//Request sent by the CPU to the Sleep Controller when executing a SLEEP instruction, no data provided
+/**
+   Request sent by the CPU to the Sleep Controller when executing a SLEEP instruction, no data provided
+ */
 #define AVR_CTLREQ_SLEEP_CALL       1
-//Request sent by the CPU to the Sleep Controller when executing a "RJMP .-2" instruction, no data provided
+
+/**
+   Request sent by the CPU to the Sleep Controller when executing a "RJMP .-2" instruction, no data provided
+ */
 #define AVR_CTLREQ_SLEEP_PSEUDO     2
 
+/// @}
 
+
+/** Structure used for AVR_CTLREQ_NVM_WRITE requests */
+struct NVM_request_t {
+    /// Memory block being written : -1 if unknown/irrelevant, otherwise one of AVR_NVM enumeration values
+    int nvm;
+    /// Address to write (in the appropriate block address space)
+    mem_addr_t addr;
+    /// Value to write to the NVM
+    uint16_t data;
+    /// Write instruction address (future use for access control)
+    flash_addr_t instr;
+};
+
+
+/** Structure exchanged with CTL requests */
 struct ctlreq_data_t {
     vardata_t data;
     long long index;
@@ -129,10 +215,14 @@ struct ctlreq_data_t {
 
 
 //=======================================================================================
-/*
- * The structure base_reg_config_t and find_reg_config are useful for configuration that
- * maps a register field value to a set of parameters (see the timer classes for examples)
+/**
+   \name Register field lookup
+   The structure base_reg_config_t and the functions find_reg_config() are useful for
+   configuration that maps a register field value to a set of parameters.
+   (see the timer classes for examples)
+   @{
  */
+
 struct base_reg_config_t {
     uint64_t reg_value;
 };
@@ -158,11 +248,14 @@ const T* find_reg_config_p(const std::vector<T>& v, uint64_t reg_value)
     return nullptr;
 }
 
+/// @}
+/// @}
+
 
 //=======================================================================================
-/*
- * Class Peripheral
- * Abstract class defining a framework for MCU peripherals
+/**
+   \ingroup core_peripheral
+   \brief Abstract class defining a framework for MCU peripherals.
  */
 class AVR_CORE_PUBLIC_API Peripheral: public IO_RegHandler {
 
@@ -174,42 +267,23 @@ public:
     ctl_id_t id() const;
     std::string name() const;
 
-    //Callback method called when the device is initialised. This is where the peripheral can
-    //allocate its I/O registers, interrupts or connect signals
-    //The return boolean indicates the success of all allocations
     virtual bool init(Device& device);
 
-    //Callback method called when the device is reset. Note that resetting I/O registers is only
-    //necessary here if their reset value is not zero.
     virtual void reset();
 
-    //Callback method called for a CTL request. The method must return true if the request has
-    //been processed
     virtual bool ctlreq(ctlreq_id_t req, ctlreq_data_t* data);
 
-    //Callback method called when the CPU is reading a I/O register allocated by this peripheral.
-    //The value has not been read yet so the module can modify it before the CPU gets it.
-    //'addr' is the register address in I/O space
     virtual uint8_t ioreg_read_handler(reg_addr_t addr, uint8_t value) override;
 
-    //Callback method called when the CPU is writing a I/O register allocated by this peripheral.
-    //The value has already been written.
-    //'addr' is the register address in I/O space,
-    //'data' is the new register content
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
 
-    //Callback method called when the device enters or exits a sleep mode.
-    //'on' is true when entering a sleep mode, false when exiting it.
-    //'mode' is one of the enum SleepMode values
     virtual void sleep(bool on, SleepMode mode);
 
-    //Disable copy semantics
     Peripheral(const Peripheral&) = delete;
     Peripheral& operator=(const Peripheral&) = delete;
 
 protected:
 
-    //Access to the device. It is null before init() is called
     Device* device() const;
 
     Logger& logger();
@@ -250,10 +324,8 @@ protected:
     void clear_ioreg(reg_addr_t reg, const bitmask_t& bm);
     void clear_ioreg(const regbit_t& rb, uint8_t bit);
 
-    //Helper function to register an interrupt vector
     bool register_interrupt(int_vect_t vector, InterruptHandler& handler) const;
 
-    //Helper function to obtain a pointer to a signal from another peripheral
     Signal* get_signal(ctl_id_t ctl_id) const;
 
 private:
@@ -264,11 +336,13 @@ private:
 
 };
 
+/// Unique identifier of the peripheral
 inline ctl_id_t Peripheral::id() const
 {
     return m_id;
 }
 
+/// Access to the device. It is null before init() is called.
 inline Device *Peripheral::device() const
 {
     return m_device;
@@ -366,9 +440,10 @@ inline void Peripheral::write_ioreg(reg_addr_t reg, uint8_t bit, uint8_t value)
 
 
 //=======================================================================================
-/*
- * Class DummyController
- * Class defining a dummy peripheral. It does nothing but adding I/O registers.
+/**
+   \brief Generic dummy peripheral.
+
+   It does nothing but adding I/O registers.
  */
 
 class AVR_CORE_PUBLIC_API DummyController : public Peripheral {
@@ -376,8 +451,8 @@ class AVR_CORE_PUBLIC_API DummyController : public Peripheral {
 public:
 
     struct dummy_register_t {
-        regbit_t reg;
-        uint8_t reset;
+        regbit_t reg; ///< Address of the I/O register
+        uint8_t reset; ///< Reset value of the I/O register
     };
 
     DummyController(ctl_id_t id, const std::vector<dummy_register_t>& regs);

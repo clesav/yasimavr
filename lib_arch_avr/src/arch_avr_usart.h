@@ -32,45 +32,52 @@ YASIMAVR_BEGIN_NAMESPACE
 
 
 //=======================================================================================
-/*
- * Implementation of a USART interface for AVR series
- * Features:
- *  - 8-bits frames only, regardless of the frame size setting
- *  - stop bits and parity settings have no effect
- *  - synchronous, SPI and MPCM modes are not supported
- *  - RXC, TXC, UDRE interrupts are supported
- *  - Error flags are not supported
- *
- *  CTLREQs supported:
- *   - AVR_CTLREQ_GET_SIGNAL : returns in data.p the signal of the underlying
- *      UART (see sim_uart.h)
- *   - AVR_CTLREQ_UART_ENDPOINT : returns in data.p the endpoint to use in order to transmit
- *      data in and out (see sim_uart.h)
- */
 
+/**
+   \ingroup api_uart
+   \brief Configuration structure for ArchAVR_USART
+ */
 struct ArchAVR_USARTConfig {
 
-    reg_addr_t reg_data;            //Data register address
+    reg_addr_t reg_data;            ///< Data register address
 
-    regbit_t rb_rx_enable;          //RX enable bit
-    regbit_t rb_tx_enable;          //TX enable bit
-    regbit_t rb_rxc_inten;          //RXC interrupt enable bit
-    regbit_t rb_rxc_flag;           //RXC flag bit
-    regbit_t rb_txc_inten;          //TXC interrupt enable bit
-    regbit_t rb_txc_flag;           //TXC flag bit
-    regbit_t rb_txe_inten;          //TXE (DRE) interrupt enable bit
-    regbit_t rb_txe_flag;           //TXE flag bit
+    regbit_t rb_rx_enable;          ///< RX enable bit
+    regbit_t rb_tx_enable;          ///< TX enable bit
+    regbit_t rb_rxc_inten;          ///< RXC interrupt enable bit
+    regbit_t rb_rxc_flag;           ///< RXC flag bit
+    regbit_t rb_txc_inten;          ///< TXC interrupt enable bit
+    regbit_t rb_txc_flag;           ///< TXC flag bit
+    regbit_t rb_txe_inten;          ///< TXE (DRE) interrupt enable bit
+    regbit_t rb_txe_flag;           ///< TXE flag bit
 
-    regbit_t rb_baud_2x;            //double bitrate bit
-    reg_addr_t reg_baud;            //bitrate register (1 or 2 bytes)
-    uint8_t baud_bitsize;           //size of the bitrate field (in bits)
+    regbit_t rb_baud_2x;            ///< double bitrate bit
+    reg_addr_t reg_baud;            ///< bitrate register (1 or 2 bytes)
+    uint8_t baud_bitsize;           ///< size of the bitrate field (in bits)
 
-    int_vect_t rxc_vector;          //RXC interrupt vector
-    int_vect_t txc_vector;          //TXC interrupt vector
-    int_vect_t txe_vector;          //TXE (DRE) interrupt vector
+    int_vect_t rxc_vector;          ///< RXC interrupt vector
+    int_vect_t txc_vector;          ///< TXC interrupt vector
+    int_vect_t txe_vector;          ///< TXE (DRE) interrupt vector
 
 };
 
+
+/**
+   \ingroup api_uart
+   \brief Implementation of a USART interface for AVR series
+
+   Supported features:
+    - 8-bits frames only, regardless of the frame size setting
+    - stop bits and parity settings have no effect
+    - synchronous, SPI and MPCM modes are not supported
+    - RXC, TXC, UDRE interrupts are supported
+    - Error flags are not supported
+
+    CTLREQs supported:
+     - AVR_CTLREQ_GET_SIGNAL : returns in data.p the signal of the underlying
+        UART (see sim_uart.h)
+     - AVR_CTLREQ_UART_ENDPOINT : returns in data.p the endpoint to use in order to transmit
+        data in and out (see sim_uart.h)
+ */
 class AVR_ARCHAVR_PUBLIC_API ArchAVR_USART : public Peripheral, public SignalHook {
 
 public:

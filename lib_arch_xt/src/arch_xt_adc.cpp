@@ -311,11 +311,11 @@ void ArchXT_ADC::read_analog_value()
 }
 
 /*
-* Callback from the timer hook.
-* We arrive here twice in a conversion cycle.
-* First, we perform the actual analog read.
-* Second, we store it in the data register and raise the interrupt flag
-*/
+ * Callback from the timer hook.
+ * We arrive here twice in a conversion cycle.
+ * First, we perform the actual analog read.
+ * Second, we store it in the data register and raise the interrupt flag
+ */
 void ArchXT_ADC::raised(const signal_data_t& sigdata, int)
 {
     if (sigdata.index != 1) return;
@@ -420,8 +420,8 @@ void ArchXT_ADC::raised(const signal_data_t& sigdata, int)
 //Sleep management
 
 /*
-* The ADC is paused for modes above Standby and in Standby if RUNSTBY is not set
-*/
+ * The ADC is paused for modes above Standby and in Standby if RUNSTBY is not set
+ */
 void ArchXT_ADC::sleep(bool on, SleepMode mode)
 {
     if (mode > SleepMode::Standby || (mode == SleepMode::Standby && !TEST_IOREG(CTRLA, ADC_RUNSTBY))) {

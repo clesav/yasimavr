@@ -32,35 +32,44 @@ YASIMAVR_BEGIN_NAMESPACE
 
 
 //=======================================================================================
-/*
- * Implementation of a USART interface for XT core series
- * Features:
- *  - 8-bits frames only, regardless of the frame size setting
- *  - stop bits and parity settings have no effect
- *  - synchronous, SPI MPCM modes are not supported
- *  - one-wire / RS485 and IRCOM modes not supported
- *  - RXC, RXS, TXC, UDRE interrupts are supported
- *  - Start-of-Frame detection is supported
- *  - Error flags are not supported
- *  - Auto-baud not supported
- *
- *  CTLREQs supported:
- *   - AVR_CTLREQ_GET_SIGNAL : returns in data.p the signal of the underlying
- *      UART (see sim_uart.h)
- *   - AVR_CTLREQ_UART_ENDPOINT : returns in data.p the endpoint to use in order to transmit
- *      data in and out (see sim_uart.h)
- */
 
+/**
+   \ingroup api_uart
+   \brief Configuration structure for ArchXT_USART.
+ */
 struct ArchXT_USARTConfig {
 
+    /// Base address for the peripheral I/O registers
     reg_addr_t reg_base;
-
+    /// Interrupt vector index for RXC
     int_vect_t iv_rxc;
+    /// Interrupt vector index for TXC
     int_vect_t iv_txc;
+    /// Interrupt vector index for TXE
     int_vect_t iv_txe;
 
 };
 
+/**
+   \ingroup api_uart
+   \brief Implementation of a USART interface for XT core series
+
+   Features:
+    - 8-bits frames only, regardless of the frame size setting
+    - stop bits and parity settings have no effect
+    - synchronous, SPI MPCM modes are not supported
+    - one-wire / RS485 and IRCOM modes not supported
+    - RXC, RXS, TXC, UDRE interrupts are supported
+    - Start-of-Frame detection is supported
+    - Error flags are not supported
+    - Auto-baud not supported
+
+   CTLREQs supported:
+    - AVR_CTLREQ_GET_SIGNAL : returns in data.p the signal of the underlying
+      UART (see sim_uart.h)
+    - AVR_CTLREQ_UART_ENDPOINT : returns in data.p the endpoint to use in order to transmit
+      data in and out (see sim_uart.h)
+ */
 class AVR_ARCHXT_PUBLIC_API ArchXT_USART : public Peripheral, public SignalHook {
 
 public:

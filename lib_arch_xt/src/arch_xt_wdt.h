@@ -31,20 +31,25 @@ YASIMAVR_BEGIN_NAMESPACE
 
 
 //=======================================================================================
-/*
- * Implementation of a Watchdog Timer for XT core series
- */
 
+/**
+   \brief Configuration structure for ArchXT_WDT
+ */
 struct ArchXT_WDTConfig {
 
+    /// Frequency in Hertz of the clock used for the Watchdog Timer
     unsigned long clock_frequency;
+    /// Watchdog timer delays
     std::vector<unsigned long> delays;
-
+    /// Base address for the peripheral I/O registers
     reg_addr_t reg_base;
 
 };
 
 
+/**
+   \brief Implementation of a Watchdog Timer for XT core series
+ */
 class AVR_ARCHXT_PUBLIC_API ArchXT_WDT : public WatchdogTimer {
 
 public:

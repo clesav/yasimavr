@@ -32,24 +32,33 @@ YASIMAVR_BEGIN_NAMESPACE
 
 
 //=======================================================================================
-/*
- * Generic implementation of a clock cycle timer, used by the peripherals TCx, WDT, RTC
- * It is structured with two consecutive stages:
- *  - Prescaler
- *  - Timer
- *  The prescaler works as a counter of simulated clock cycles, starting at 0,
- *  wrapping at 'ps_max', and generating timer 'ticks' once every 'ps_factor' cycles.
- *  The timer generates a timeout signal after a delay given in prescaler ticks.
- *  The class doesn't not have any tick counter as such. it only generates ticks that user objects
- *  can use to increment or decrement a counter. The meaning of the timeout signal is also left
- *  to users.
- *  The timeout is transmitted though a Signal, available via 'signal()' and raised in 2 ways:
- *   - When the programmed timeout delay is reached
- *   - When 'update()' is called, and enough clock cycles have passed, resulting in at least one tick.
- *  If the nb of ticks is enough to reach the set delay, the signal data index is set to 1.
- *  Otherwise, data.index is set to 0 and data.u is set to the available tick count.
- *  Timers can be daisy-chained, so that the prescaler output of a timer feeds into the
- *  prescaler of another.
+
+/// \defgroup api_timer Timer/Counter framework
+
+/**
+   \ingroup api_timer
+   \brief Generic model of a Timer with prescaling.
+
+   Implementation of a clock cycle timer, used by peripherals such as TCx, WDT, RTC.
+
+   It is structured with two consecutive stages:
+    - Prescaler
+    - Timer
+
+   The prescaler works as a counter of simulated clock cycles, starting at 0,
+   wrapping at 'ps_max', and generating timer 'ticks' once every 'ps_factor' cycles.
+   The timer generates a timeout signal after a delay given in prescaler ticks.
+
+   The timeout is transmitted though a Signal, available via signal() and raised in 2 ways:
+    - When the programmed timeout delay is reached.
+    - When update() is called, and enough clock cycles have passed, resulting in at least one tick.
+
+   If, during the update, the number of generated ticks is enough to reach the timer delay,
+   the signal index is set to 1, otherwise it is set to 0. The signal data field is set to the
+   generated tick count.
+
+   Timers can be daisy-chained, so that the prescaler tick output of a timer feeds into the
+   prescaler clock input of another.
  */
 class AVR_CORE_PUBLIC_API PrescaledTimer : public CycleTimer {
 
@@ -58,35 +67,24 @@ public:
     PrescaledTimer();
     virtual ~PrescaledTimer();
 
-    //Initialise the timer, must be called once during initialisation phases
     void init(CycleManager& cycle_manager, Logger& logger);
-    //Reset the timer. Both stages are reset and disabled
+
     void reset();
-    //Configure the prescaler:
-    // - ps_max is the maximum value of the prescaler counter, making
-    //   the prescaler counter wrap to 0
-    // - ps_factor is the prescaler factor to generate ticks
-    //   if ps_factor = 0, the prescaler and timeout delay are disabled and reset
+
     void set_prescaler(unsigned long ps_max, unsigned long ps_factor);
-    //Getter for ps_factor
+
     unsigned long prescaler_factor() const;
-    //Sets the timeout delay to generate a event
-    //If delay = 0, the timeout delay is disabled and reset
-    //The prescaler is not affected by this setting
+
     void set_timer_delay(cycle_count_t delay);
-    //Getter for timer_delay
+
     cycle_count_t timer_delay() const;
-    //Pauses the timer
-    //If paused, the prescaler and timeout delay are frozen but not reset
+
     void set_paused(bool paused);
-    //Update the timer to catchup with the 'when' cycle
-    //Ticks may be generated and the signal may be raised if enough cycles have passed
+
     void update(cycle_count_t when = INVALID_CYCLE);
 
-    //Callback override from CycleTimer
     virtual cycle_count_t next(cycle_count_t when) override;
 
-    //Returns the signal that is raised with ticks
     Signal& signal();
 
     void register_chained_timer(PrescaledTimer& timer);
@@ -131,16 +129,19 @@ private:
 
 };
 
+/// Getter for ps_factor.
 inline unsigned long PrescaledTimer::prescaler_factor() const
 {
     return m_ps_factor;
 }
 
+/// Getter for timer_delay.
 inline cycle_count_t PrescaledTimer::timer_delay() const
 {
     return m_delay;
 }
 
+/// Getter for the signal raised with counter updates
 inline Signal& PrescaledTimer::signal()
 {
     return m_signal;
@@ -148,46 +149,64 @@ inline Signal& PrescaledTimer::signal()
 
 
 //=======================================================================================
-/*
- * Implementation of a generic Timer/Counter for AVR series
- * This timer is a flexible implementation aiming at covering most modes found in
- * AVR timer/counter. It covers normal, CTC, PWM in both single and dual slopes.
- * It has a arbitrary number of Compare Units that raise signals when the counter
- * matches their values.
- * A TimerCounter object must be associated to a PrescaledTimer object. The TimerCounter
- * will set the timer delay but configuring the PrescaledTimer object, in particular theis up
- * to the user.
- */
+/**
+   \ingroup api_timer
+   \brief Generic model of a Counter.
 
+   Implementation of a clock cycle counter, used by peripherals such as TCx, WDT, RTC.
+   Features :
+    - 2 'tick' sources: internal (using a PrescaledTimer object) or external via a signal hook
+    - Up/down counting and dual slope
+    - Arbitrary number of compare channels
+    - Signalling on top, bottom, max and compare value
+ */
 class AVR_CORE_PUBLIC_API TimerCounter {
 
 public:
 
+    /// Tick source mode
     enum TickSource {
+        /// Counter stopped
         Tick_Stopped = 0,
+        /// Internal prescaled timer used as tick source
         Tick_Timer,
+        /// External signal hook used as tick source
         Tick_External,
     };
 
+    /// Counter direction mode.
     enum SlopeMode {
+        /// Up-counting
         Slope_Up = 0,
+        /// Down-counting
         Slope_Down,
+        /// Dual-slope counting
         Slope_Double,
     };
 
+    /// Event type flags used when signaling. \sa Signal_Event
     enum EventType {
+        /// The counter is wrapping
         Event_Max     = 0x01,
+        /// The counter has reached the TOP value
         Event_Top     = 0x02,
+        /// The counter has reached the BOTTOM value (zero)
         Event_Bottom  = 0x04,
+        /// The counter has reached one of the Compare channel values
         Event_Compare = 0x08
     };
 
+    /// Signal Ids raised by this object.
     enum SignalId {
-        //Signal raised on a overflow event, the data is a uint, combination
-        //of EventType flags, indicating the type(s) of event
+        /**
+           Signal raised on a overflow event, the data is a combination
+           of EventType flags, indicating the type(s) of event.
+         */
         Signal_Event,
-        //Signal raised on a Compare Match event. The index indicates which channel
-        //(0='A', 1='B', etc...), no data is carried.
+        /**
+           Signal raised on a Compare Match event. The index indicates which channel.
+           No data is carried.
+         */
         Signal_CompMatch,
     };
 
@@ -275,51 +294,61 @@ private:
 
 };
 
+/// Getter for the wrapping value
 inline long TimerCounter::wrap() const
 {
     return m_wrap;
 }
 
+/// Getter for the tick source mode
 inline TimerCounter::TickSource TimerCounter::tick_source() const
 {
     return m_source;
 }
 
+/// Getter for the TOP value
 inline long TimerCounter::top() const
 {
     return m_top;
 }
 
+/// Getter for the slope mode
 inline TimerCounter::SlopeMode TimerCounter::slope_mode() const
 {
     return m_slope;
 }
 
+/// Getter for the current counter value
 inline long TimerCounter::counter() const
 {
     return m_counter;
 }
 
+/// Getter for a compare value
 inline long TimerCounter::comp_value(size_t index) const
 {
     return m_cmp[index].value;
 }
 
+/// Getter for a compare value enable
 inline bool TimerCounter::comp_enabled(size_t index) const
 {
     return m_cmp[index].enabled;
 }
 
+/// Getter for the current counting direction
 inline bool TimerCounter::countdown() const
 {
     return m_countdown;
 }
 
+/// Getter for the counting signal
 inline Signal& TimerCounter::signal()
 {
     return m_signal;
 }
 
+/// Getter for the external signal hook used for tick source
 inline SignalHook& TimerCounter::ext_tick_hook()
 {
     return *reinterpret_cast<SignalHook*>(m_ext_hook);
