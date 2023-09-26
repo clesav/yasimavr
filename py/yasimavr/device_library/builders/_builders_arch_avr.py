@@ -321,6 +321,21 @@ def _get_usart_builder():
 
 
 #========================================================================================
+#TWI configuration
+
+def _twi_convertor(cfg, attr, yml_val, per_desc):
+    if attr == 'ps_factors':
+        cfg.ps_factors = yml_val
+    else:
+        raise Exception('Converter not implemented for ' + attr)
+
+
+def _get_twi_builder():
+    cfg_builder = PeripheralConfigBuilder(_archlib.ArchAVR_TWIConfig, _twi_convertor)
+    return IndexedPeripheralBuilder(_archlib.ArchAVR_TWI, cfg_builder)
+
+
+#========================================================================================
 
 class AVR_BaseDevice(_archlib.ArchAVR_Device):
 
@@ -347,6 +362,7 @@ class AVR_DeviceBuilder(DeviceBuilder):
         'ADC': _get_adc_builder,
         'ACP': _get_acp_builder,
         'USART': _get_usart_builder,
+        'TWI': _get_twi_builder,
     }
 
     def _build_core_config(self, dev_desc):

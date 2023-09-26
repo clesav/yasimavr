@@ -46,7 +46,8 @@ class dev_megaxx8(AVR_BaseDevice):
             'ADC',
             'ACP',
             'VREF',
-            'USART'
+            'USART',
+            'TWI',
         ]
 
         builder.build_peripherals(self, peripherals)

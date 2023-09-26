@@ -157,3 +157,7 @@ peripherals:
     USART:
         file: mega48-88-168-328_interfaces.yml
         ctl_id: UAX0
+
+    TWI:
+       file: mega48-88-168-328_interfaces.yml
+       ctl_id: TWI0

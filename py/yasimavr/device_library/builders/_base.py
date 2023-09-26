@@ -174,6 +174,10 @@ class PeripheralConfigBuilder:
         elif attr.startswith('rbc_') or isinstance(default_val, _corelib.regbit_compound_t):
             return convert_to_regbit_compound(yml_val, per_desc)
 
+        elif attr.startswith('bm_') or isinstance(default_val, _corelib.bitmask_t):
+            rb = convert_to_regbit(yml_val, per_desc)
+            return _corelib.bitmask_t(rb)
+
         elif isinstance(default_val, (int, float)):
             return yml_val
 

@@ -262,141 +262,73 @@ SPI:
 #========================================================================================
 TWI:
     registers:
-        - name: CTRLA
-          offset: 0x00
+        - name: TWBR
+          address: 0xB8
           fields:
-            FMPEN: { kind: BIT, pos: 1, one: enabled, zero: disabled }
-            SDAHOLD:
-                kind: ENUM
-                LSB: 2
-                MSB: 3
-                values: [ OFF, 50ns, 300ns, 500ns ]
-            SDASETUP: { kind: BIT, pos: 4, one: 8CYC, zero: 4CYC }
-
-        - name: DUALCTRL
-          offset: 0x01
-          fields:
-            ENABLE: { kind: BIT, pos: 0 , one: enabled, zero: disabled }
-            FMPEN: { kind: BIT, pos: 1, one: enabled, zero: disabled }
-            SDAHOLD:
-                kind: ENUM
-                LSB: 2
-                MSB: 3
-                values: [ OFF, 50ns, 300ns, 500ns ]
-
-        - name: DBGCTRL
-          offset: 0x02
-          supported: no
-
-        - name: MCTRLA
-          offset: 0x03
-          fields:
-            ENABLE: { kind: BIT, pos: 0, one: enabled, zero: disabled }
-            SMEN: { kind: BIT, pos: 1, one: enabled, zero: disabled }
-            TIMEOUT:
-                kind: ENUM
-                LSB: 2
-                MSB: 3
-                values: [ disabled, 50us, 100us, 200us ]
-            QCEN: { kind: BIT, pos: 4, one: enabled, zero: disabled }
-            WIEN: { kind: BIT, pos: 6, one: enabled, zero: disabled }
-            RIEN: { kind: BIT, pos: 7, one: enabled, zero: disabled }
-
-        - name: MCTRLB
-          offset: 0x04
-          fields:
-            MCMD:
-                kind: ENUM
-                LSB: 0
-                MSB: 1
-                values: [ NOACT, REPSTART, RECVTRANS, STOP ]
-            ACKACT: { kind: BIT, pos: 2, one: nack, zero: ack }
-            FLUSH: { kind: BIT, pos: 3 }
-
-        - name: MSTATUS
-          offset: 0x05
-          fields:
-            BUSSTATE:
-                kind: ENUM
-                LSB: 0
-                MSB: 1
-                values: [ UNKNOWN, IDLE, OWNER, BUSY ]
-            BUSERR: { kind: BIT, pos: 2, one: error, zero: ok }
-            ARBLOST: { kind: BIT, pos: 3 }
-            RXACK: { kind: BIT, pos: 4, readonly: yes, one: nack, zero: ack }
-            CLKHOLD: { kind: BIT, pos: 5 }
-            WIF: { kind: BIT, pos: 6 }
-            RIF: { kind: BIT, pos: 7 }
-
-        - name: MBAUD
-          offset: 0x06
-          fields:
-            BAUD:
+            TWBR:
                 kind: INT
 
-        - name: MADDR
-          offset: 0x07
+        - name: TWCR
+          address: 0xBC
           fields:
-            ADDR:
-                kind: RAW
+            TWIE: { kind: BIT, pos: 0 , one: enabled, zero: disabled }
+            TWEN: { kind: BIT, pos: 2, one: enabled, zero: disabled }
+            TWWC: { kind: BIT, pos: 3 }
+            TWSTO: { kind: BIT, pos: 4 }
+            TWSTA: { kind: BIT, pos: 5 }
+            TWEA: { kind: BIT, pos: 6 }
+            TWINT: { kind: BIT, pos: 7 }
 
-        - name: MDATA
-          offset: 0x08
+        - name: TWSR
+          address: 0xB9
           fields:
-            DATA:
-                kind: RAW
-
-        - name: SCTRLA
-          offset: 0x09
-          fields:
-            ENABLE: { kind: BIT, pos: 0, one: enabled, zero: disabled }
-            SMEN: { kind: BIT, pos: 1, one: enabled, zero: disabled }
-            PMEN: { kind: BIT, pos: 2, one: enabled, zero: disabled }
-            PIEN: { kind: BIT, pos: 4, one: enabled, zero: disabled }
-            APIEN: { kind: BIT, pos: 6, one: enabled, zero: disabled }
-            DIEN: { kind: BIT, pos: 7, one: enabled, zero: disabled }
-
-        - name: SCTRLB
-          offset: 0x0A
-          fields:
-            SCMD:
+            TWPS:
                 kind: ENUM
                 LSB: 0
                 MSB: 1
-                values: { 0:NOACT, 2:COMPTRANS, 3:RESPONSE }
-            ACKACT: { kind: BIT, pos: 2, one: nack, zero: ack }
+                values: [ DIV1, DIV4, DIV16, DIV64 ]
+            TWS:
+                kind: RAW
+                LSB: 3
+                MSB: 7
 
-        - name: SSTATUS
-          offset: 0x0B
+        - name: TWDR
+          address: 0xBB
           fields:
-            AP: { kind: BIT, pos: 0, readonly: yes, one: adr, zero: stop }
-            DIR: { kind: BIT, pos: 1, readonly: yes, one: "m<-s", zero: "m->s" }
-            BUSERR: { kind: BIT, pos: 2, one: error, zero: ok }
-            COLL: { kind: BIT, pos: 3 }
-            RXACK: { kind: BIT, pos: 4, readonly: yes, one: nack, zero: ack }
-            CLKHOLD: { kind: BIT, pos: 5 }
-            APIF: { kind: BIT, pos: 6 }
-            DIF: { kind: BIT, pos: 7 }
-
-        - name: SADDR
-          offset: 0x0C
-          fields:
-            ADDR:
+            TWDR:
                 kind: RAW
 
-        - name: SDATA
-          offset: 0x0D
+        - name: TWAR
+          address: 0xBA
           fields:
-            DATA:
-                kind: RAW
-
-        - name: SADDRMASK
-          offset: 0x0E
-          fields:
-            ADDREN: { kind: BIT, pos: 0, one: enabled, zero: disabled }
-            ADDRMASK:
+            TWA:
                 kind: RAW
                 LSB: 1
-                MSB: 7
+            TWGCE: { kind: BIT, pos: 0 }
+
+        - name: TWAMR
+          address: 0xBD
+          fields:
+            TWAM:
+                kind: RAW
+                LSB: 1
+
+    config:
+        ps_factors: [ 1, 4, 16, 64 ]
+        reg_ctrl: TWCR
+        bm_enable: [ TWCR, TWEN ]
+        bm_start: [ TWCR, TWSTA ]
+        bm_stop: [ TWCR, TWSTO ]
+        bm_int_enable: [ TWCR, TWIE ]
+        bm_int_flag: [ TWCR, TWINT ]
+        bm_ack_enable: [ TWCR, TWEA ]
+        reg_bitrate: TWBR
+        rb_status: [ TWSR, TWS ]
+        rb_prescaler: [ TWSR, TWPS ]
+        reg_data: TWDR
+        rb_addr: [ TWAR, TWA ]
+        rb_gencall_enable: [ TWAR, TWGCE ]
+        rb_addr_mask: [ TWAMR, TWAM ]
+        iv_twi: TWI
 
 #========================================================================================
