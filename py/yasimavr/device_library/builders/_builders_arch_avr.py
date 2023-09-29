@@ -321,6 +321,21 @@ def _get_usart_builder():
 
 
 #========================================================================================
+#SPI configuration
+
+def _spi_convertor(cfg, attr, yml_val, per_desc):
+    if attr == 'pin_select':
+        cfg.pin_select = _corelib.str_to_id(yml_val)
+    else:
+        raise Exception('Converter not implemented for ' + attr)
+
+
+def _get_spi_builder():
+    cfg_builder = PeripheralConfigBuilder(_archlib.ArchAVR_SPIConfig, _spi_convertor)
+    return IndexedPeripheralBuilder(_archlib.ArchAVR_SPI, cfg_builder)
+
+
+#========================================================================================
 #TWI configuration
 
 def _twi_convertor(cfg, attr, yml_val, per_desc):
@@ -362,6 +377,7 @@ class AVR_DeviceBuilder(DeviceBuilder):
         'ADC': _get_adc_builder,
         'ACP': _get_acp_builder,
         'USART': _get_usart_builder,
+        'SPI': _get_spi_builder,
         'TWI': _get_twi_builder,
     }
 

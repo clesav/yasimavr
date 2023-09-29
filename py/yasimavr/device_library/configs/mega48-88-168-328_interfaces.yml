@@ -209,55 +209,40 @@ USART:
 #========================================================================================
 SPI:
     registers:
-        - name: CTRLA
-          offset: 0x00
+        - name: SPCR
+          address: 0x2C
           fields:
-            ENABLE: { kind: BIT, pos: 0, one: enabled, zero: disabled }
-            PRESC:
-                kind: ENUM
-                LSB: 1
-                MSB: 2
-                values: [ DIV4, DIV16, DIV64, DIV128 ]
-            CLK2X: { kind: BIT, pos: 4, one: 2X, zero: 1X }
-            MASTER: { kind: BIT, pos: 5, one: master, zero: slave }
-            DORD: { kind: BIT, pos: 6, one: "LSB first", zero: "MSB first" }
-
-        - name: CTRLB
-          offset: 0x01
-          fields:
-            MODE:
+            SPR:
                 kind: ENUM
                 LSB: 0
                 MSB: 1
-                values: [ MODE0, MODE1, MODE2, MODE3 ]
+                values: [ DIV4, DIV16, DIV64, DIV128 ]
+            CPHA: { kind: BIT, pos: 2 }
+            CPOL: { kind: BIT, pos: 3 }
+            MSTR: { kind: BIT, pos: 4, one: master, zero: slave }
+            DORD: { kind: BIT, pos: 5, one: "LSB first", zero: "MSB first" }
+            SPE: { kind: BIT, pos: 6, one: enable, zero: disable }
+            SPIE: { kind: BIT, pos: 6, one: enable, zero: disable }
 
-            SSD: { kind: BIT, pos: 2, one: disable, zero: enable }
-            BUFWR: { kind: BIT, pos: 6 }
-            BUFEN: { kind: BIT, pos: 7 }
-
-        - name: INTCTRL
-          offset: 0x02
+        - name: SPSR
+          address: 0x2D
           fields:
-            IE: { kind: BIT, pos: 0 }
-            SSIE: { kind: BIT, pos: 4 }
-            DREIE: { kind: BIT, pos: 5 }
-            TXCIE: { kind: BIT, pos: 6 }
-            RXCIE: { kind: BIT, pos: 7 }
+            SPI2X: { kind: BIT, pos: 0, one: 2X, zero: 1X }
+            WCOL: { kind: BIT, pos: 6 }
+            SPIF: { kind: BIT, pos: 7 }
 
-        - name: INTFLAGS
-          offset: 0x03
-          fields:
-            WRCOL: { kind: BIT, pos: 6 }
-            IF: { kind: BIT, pos: 7 }
+        - name: SPDR
+          address: 0x2E
 
-            BUFOVF: { kind: BIT, pos: 0 }
-            SSIF: { kind: BIT, pos: 4 }
-            DREIF: { kind: BIT, pos: 5 }
-            TXCIF: { kind: BIT, pos: 6 }
-            RXCIF: { kind: BIT, pos: 7 }
-
-        - name: DATA
-          offset: 0x04
+    config:
+        reg_data: SPDR
+        rb_enable: [ SPCR, SPE ]
+        rb_int_enable: [ SPCR, SPIE ]
+        rb_int_flag: [ SPSR, SPIF ]
+        rb_mode: [ SPCR, MSTR ]
+        rb_clock: [ SPCR, SPR ]
+        rb_clock2x: [ SPSR, SPI2X ]
+        iv_spi: SPI_STC
 
 #========================================================================================
 TWI:
