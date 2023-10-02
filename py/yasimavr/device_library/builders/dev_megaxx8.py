@@ -47,6 +47,7 @@ class dev_megaxx8(AVR_BaseDevice):
             'ACP',
             'VREF',
             'USART',
+            'SPI',
             'TWI',
         ]
 
