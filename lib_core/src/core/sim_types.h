@@ -50,7 +50,7 @@ class AVR_CORE_PUBLIC_API reg_addr_t {
 
 public:
 
-    constexpr inline reg_addr_t(short addr = -1) : m_addr(addr) {}
+    constexpr inline reg_addr_t(short addr = -1) : m_addr(addr >= 0 ? addr : -1) {}
 
     constexpr inline bool valid() const { return m_addr >= 0; }
 

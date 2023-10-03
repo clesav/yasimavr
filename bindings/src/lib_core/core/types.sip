@@ -59,6 +59,36 @@ public:
             return PyUnicode_FromString("INVALID_REGISTER");
     %End
 
+    bool __eq__(const reg_addr_t&) const;
+    %MethodCode
+        sipRes = sipCpp->valid() ? ((short)(*sipCpp) == (short)(*a0)) : !a0->valid();
+    %End
+
+    bool __ne__(const reg_addr_t&) const;
+    %MethodCode
+        sipRes = sipCpp->valid() ? ((short)(*sipCpp) != (short)(*a0)) : a0->valid();
+    %End
+
+    bool __lt__(const reg_addr_t&) const;
+    %MethodCode
+        sipRes = sipCpp->valid() ? ((short)(*sipCpp) < (short)(*a0)) : a0->valid();
+    %End
+
+    bool __le__(const reg_addr_t&) const;
+    %MethodCode
+        sipRes = sipCpp->valid() ? ((short)(*sipCpp) <= (short)(*a0)) : true;
+    %End
+
+    bool __gt__(const reg_addr_t&) const;
+    %MethodCode
+        sipRes = sipCpp->valid() ? ((short)(*sipCpp) > (short)(*a0)) : false;
+    %End
+
+    bool __ge__(const reg_addr_t&) const;
+    %MethodCode
+        sipRes = sipCpp->valid() ? ((short)(*sipCpp) >= (short)(*a0)) : !a0->valid();
+    %End
+
     //Ensures a seamless conversion from a Python integer
     %ConvertToTypeCode
         //Type check : we can convert from either a wrapped reg_addr_t or a Python integer
