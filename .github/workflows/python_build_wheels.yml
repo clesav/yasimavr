@@ -37,7 +37,7 @@ jobs:
 
     - name: Build package
       run: |
-        python -m pip install --upgrade build delvewheel
+        python -m pip install --upgrade build delvewheel==1.4.0
         python -m build -w
         $files = Get-ChildItem ".\dist"
         foreach ($f in $files) {
