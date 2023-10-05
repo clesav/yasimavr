@@ -80,10 +80,15 @@ GCC_SHLIB_LINKER_EXTRA_ARGS = [
     '-s',
     '-fPIC',
     '-fvisibility=hidden',
+    '-static-libstdc++',
 ]
 
 GCC_EXT_COMPILER_EXTRA_ARGS = [
     '-O3',
+]
+
+GCC_EXT_LINKER_EXTRA_ARGS = [
+    '-static-libstdc++',
 ]
 
 
@@ -146,7 +151,7 @@ class _BindingsSubPackageBuilder(yasimavr_bindings_builder):
                         buildable.sources,
                         define_macros=define_macros,
                         extra_compile_args=buildable.extra_compile_args + GCC_EXT_COMPILER_EXTRA_ARGS,
-                        extra_link_args=buildable.extra_link_args,
+                        extra_link_args=buildable.extra_link_args + GCC_EXT_LINKER_EXTRA_ARGS,
                         extra_objects=buildable.extra_objects,
                         include_dirs=buildable.include_dirs,
                         libraries=buildable.libraries,
