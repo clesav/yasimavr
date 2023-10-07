@@ -129,7 +129,10 @@ class _WatchDataTrace(Formatter):
 
 
 def _print_model_list():
-    print(model_list())
+    l = model_list()
+    l.sort()
+    for m in l:
+        print(m)
 
 
 def _load_firmware():
