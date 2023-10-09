@@ -46,11 +46,14 @@ Firmware::Firmware()
 ,m_bsssize(0)
 {}
 
+
 Firmware::Firmware(const Firmware& other)
 :Firmware()
 {
     *this = other;
 }
+
+
 /**
    Destroy a firmware
  */
@@ -63,6 +66,7 @@ Firmware::~Firmware()
     }
 }
 
+
 static Elf32_Phdr* elf_find_phdr(Elf32_Phdr* phdr_table, size_t phdr_count, GElf_Shdr* shdr)
 {
     for (size_t i = 0; i < phdr_count; ++i) {
@@ -74,6 +78,7 @@ static Elf32_Phdr* elf_find_phdr(Elf32_Phdr* phdr_table, size_t phdr_count, GElf
     }
     return nullptr;
 }
+
 
 /**
    Read a ELF file and build a firmware, using the section binary blocks from the file.
@@ -163,27 +168,27 @@ Firmware* Firmware::read_elf(const std::string& filename)
         //Add the firmware chunk to the corresponding memory area (Flash, etc...)
         if (!strcmp(name, ".text") || !strcmp(name, ".data") || !strcmp(name, ".rodata")) {
             b.base = lma;
-            firmware->m_blocks["flash"].push_back(b);
+            firmware->m_blocks[Area_Flash].push_back(b);
         }
         else if (!strcmp(name, ".eeprom")) {
             b.base = lma - 0x810000;
-            firmware->m_blocks["eeprom"].push_back(b);
+            firmware->m_blocks[Area_EEPROM].push_back(b);
         }
         else if (!strcmp(name, ".fuse")) {
             b.base = lma - 0x820000;
-            firmware->m_blocks["fuse"].push_back(b);
+            firmware->m_blocks[Area_Fuses].push_back(b);
         }
         else if (!strcmp(name, ".lock")) {
             b.base = lma - 0x830000;
-            firmware->m_blocks["lock"].push_back(b);
+            firmware->m_blocks[Area_Lock].push_back(b);
         }
         else if (!strcmp(name, ".signature")) {
             b.base = lma - 0x840000;
-            firmware->m_blocks["signature"].push_back(b);
+            firmware->m_blocks[Area_Signature].push_back(b);
         }
         else if (!strcmp(name, ".user_signatures")) {
             b.base = lma - 0x850000;
-            firmware->m_blocks["user_signatures"].push_back(b);
+            firmware->m_blocks[Area_UserSignatures].push_back(b);
         }
         else {
             global_logger().err("Firmware section unknown: '%s'", name);
@@ -198,13 +203,14 @@ Firmware* Firmware::read_elf(const std::string& filename)
     return firmware;
 }
 
+
 /**
    Add a binary block to the firmware
-   \param name name of the NVM area to which the block should be added
+   \param area NVM area to which the block should be added
    \param block binary data block to be added
    \param base base address of the NVM area where the block should be added
  */
-void Firmware::add_block(const std::string& name, const mem_block_t& block, size_t base)
+void Firmware::add_block(Area area, const mem_block_t& block, size_t base)
 {
     //Make a deep copy of the memory block
     mem_block_t mb;
@@ -213,27 +219,29 @@ void Firmware::add_block(const std::string& name, const mem_block_t& block, size
     memcpy(mb.buf, block.buf, block.size);
     //Construct a firmware block and add it to the map
     Block b = { .mem_block = mb, .base = base };
-    m_blocks[name].push_back(b);
+    m_blocks[area].push_back(b);
 }
+
 
 /**
    Get whether the firmware has binary data for a given NVM area.
-   \param name name of the NVM area to check
+   \param area NVM area to check
    \return true if the NVM area has data, false otherwise
  */
-bool Firmware::has_memory(const std::string& name) const
+bool Firmware::has_memory(Area area) const
 {
-    return m_blocks.find(name) != m_blocks.end();
+    return m_blocks.find(area) != m_blocks.end();
 }
+
 
 /**
    Get the total size of binary data loaded for a given NVM area.
-   \param name name of the NVM area to check
+   \param area NVM area to check
    \return the total size of data in bytes
  */
-size_t Firmware::memory_size(const std::string& name) const
+size_t Firmware::memory_size(Area area) const
 {
-    auto it = m_blocks.find(name);
+    auto it = m_blocks.find(area);
     if (it == m_blocks.end())
         return 0;
 
@@ -244,35 +252,38 @@ size_t Firmware::memory_size(const std::string& name) const
     return s;
 }
 
+
 /**
    Get the binary blocks loaded for a given NVM area.
-   \param name name of the NVM area to check
+   \param area NVM area to check
    \return the binary data blocks loaded for this area, may be empty.
  */
-std::vector<Firmware::Block> Firmware::blocks(const std::string& name) const
+std::vector<Firmware::Block> Firmware::blocks(Area area) const
 {
-    auto it = m_blocks.find(name);
+    auto it = m_blocks.find(area);
     if (it == m_blocks.end())
         return std::vector<Block>();
     else
         return it->second;
 }
 
+
 /**
    Copy the binary blocks loaded for a given NVM area into a NVM model.
-   \param name name of the NVM area
+   \param area NVM area to retrieve
    \param memory NVM model where the data should be copied
    \return true if the binary data could be copied, false if it failed
  */
-bool Firmware::load_memory(const std::string& name, NonVolatileMemory& memory) const
+bool Firmware::load_memory(Area area, NonVolatileMemory& memory) const
 {
     bool status = true;
 
-    for (Block& fb : blocks(name))
+    for (Block& fb : blocks(area))
         status &= memory.program(fb.mem_block, fb.base);
 
     return status;
 }
+
 
 Firmware& Firmware::operator=(const Firmware& other)
 {

@@ -212,8 +212,8 @@ bool ArchXT_Device::program(const Firmware& firmware)
     if (!Device::program(firmware))
         return false;
 
-    if (firmware.has_memory("eeprom")) {
-        if (firmware.load_memory("eeprom", m_core_impl.m_eeprom)) {
+    if (firmware.has_memory(Firmware::Area_EEPROM)) {
+        if (firmware.load_memory(Firmware::Area_EEPROM, m_core_impl.m_eeprom)) {
             logger().dbg("Firmware load: EEPROM loaded");
         } else {
             logger().err("Firmware load: Error loading the EEPROM");
@@ -221,8 +221,8 @@ bool ArchXT_Device::program(const Firmware& firmware)
         }
     }
 
-    if (firmware.has_memory("user_signatures")) {
-        if (firmware.load_memory("user_signatures", m_core_impl.m_userrow)) {
+    if (firmware.has_memory(Firmware::Area_UserSignatures)) {
+        if (firmware.load_memory(Firmware::Area_UserSignatures, m_core_impl.m_userrow)) {
             logger().dbg("Firmware load: USERROW loaded");
         } else {
             logger().err("Firmware load: Error loading the USERROW");

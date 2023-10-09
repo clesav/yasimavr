@@ -43,22 +43,29 @@ YASIMAVR_BEGIN_NAMESPACE
    The currently supported memory areas :
       area name         |  ELF section(s)       | LMA origin
       ------------------|-----------------------|-----------
-      "flash"           | .text, .data, .rodata | 0x000000
-      "eeprom"          | .eeprom               | 0x810000
-      "fuse"            | .fuse                 | 0x820000
-      "lock"            | .lock                 | 0x830000
-      "signature"       | .signature            | 0x840000
-      "user_signatures" | .user_signatures      | 0x850000
+      Flash             | .text, .data, .rodata | 0x000000
+      EEPROM            | .eeprom               | 0x810000
+      Fuses             | .fuse                 | 0x820000
+      Lock              | .lock                 | 0x830000
+      Signature         | .signature            | 0x840000
+      UserSignatures    | .user_signatures      | 0x850000
  */
 class AVR_CORE_PUBLIC_API Firmware {
 
 public:
 
     struct Block {
-
         mem_block_t mem_block;
-        size_t base;
+        size_t      base;
+    };
 
+    enum Area {
+        Area_Flash,
+        Area_EEPROM,
+        Area_Fuses,
+        Area_Lock,
+        Area_Signature,
+        Area_UserSignatures,
     };
 
     ///Free attribute, name of the model, not used by the simulation
@@ -78,15 +85,15 @@ public:
 
     static Firmware* read_elf(const std::string& filename);
 
-    void add_block(const std::string& name, const mem_block_t& block, size_t base = 0);
+    void add_block(Area area, const mem_block_t& block, size_t base = 0);
 
-    bool has_memory(const std::string& name) const;
+    bool has_memory(Area area) const;
 
-    size_t memory_size(const std::string& name) const;
+    size_t memory_size(Area area) const;
 
-    std::vector<Block> blocks(const std::string& name) const;
+    std::vector<Block> blocks(Area area) const;
 
-    bool load_memory(const std::string& name, NonVolatileMemory& memory) const;
+    bool load_memory(Area area, NonVolatileMemory& memory) const;
 
     mem_addr_t datasize() const;
     mem_addr_t bsssize() const;
@@ -95,7 +102,7 @@ public:
 
 private:
 
-    std::map<std::string, std::vector<Block>> m_blocks;
+    std::map<Area, std::vector<Block>> m_blocks;
     mem_addr_t m_datasize;
     mem_addr_t m_bsssize;
 
