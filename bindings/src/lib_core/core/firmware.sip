@@ -29,10 +29,17 @@ class Firmware {
 public:
 
     struct Block {
-
         mem_block_t mem_block;
         size_t base;
+    };
 
+    enum Area {
+        Area_Flash           /PyName=Flash/,
+        Area_EEPROM          /PyName=EEPROM/,
+        Area_Fuses           /PyName=Fuses/,
+        Area_Lock            /PyName=Lock/,
+        Area_Signature       /PyName=Signature/,
+        Area_UserSignatures  /PyName=UserSignatures/,
     };
 
     std::string variant;
@@ -47,11 +54,11 @@ public:
 
     static Firmware* read_elf(const std::string&);
 
-    void add_block(const std::string&, const mem_block_t&, size_t = 0);
-    bool has_memory(const std::string&) const;
-    size_t memory_size(const std::string&) const;
-    std::vector<Firmware::Block> blocks(const std::string&) const;
-    bool load_memory(const std::string&, NonVolatileMemory&) const;
+    void add_block(Area area, const mem_block_t&, size_t = 0);
+    bool has_memory(Area area) const;
+    size_t memory_size(Area area) const;
+    std::vector<Firmware::Block> blocks(Area area) const;
+    bool load_memory(Area area, NonVolatileMemory&) const;
     mem_addr_t datasize() const;
     mem_addr_t bsssize() const;
 

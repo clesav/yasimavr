@@ -226,19 +226,19 @@ bool Device::load_firmware(const Firmware& firmware)
  */
 bool Device::program(const Firmware& firmware)
 {
-    if (!firmware.has_memory("flash")) {
+    if (!firmware.has_memory(Firmware::Area_Flash)) {
         m_logger.err("Firmware load: No program to load");
         return false;
     }
-    else if (firmware.load_memory("flash", m_core.m_flash)) {
-        m_logger.dbg("Loaded %d bytes of flash", firmware.memory_size("flash"));
+    else if (firmware.load_memory(Firmware::Area_Flash, m_core.m_flash)) {
+        m_logger.dbg("Loaded %d bytes of flash", firmware.memory_size(Firmware::Area_Flash));
     } else {
         m_logger.err("Firmware load: The flash does not fit");
         return false;
     }
 
-    if (firmware.has_memory("fuse")) {
-        if (!firmware.load_memory("fuse", m_core.m_fuses)) {
+    if (firmware.has_memory(Firmware::Area_Fuses)) {
+        if (!firmware.load_memory(Firmware::Area_Fuses, m_core.m_fuses)) {
             m_logger.dbg("Firmware load: fuses loaded");
         } else {
             m_logger.err("Firmware load: Error programming the fuses");
