@@ -142,5 +142,7 @@ py-bindings-debug: libs-debug
 py-bindings-clean: FORCE
 	-cd bindings && $(MAKE) clean
 
+docs: FORCE
+	-cd docs && $(MAKE)
 
 FORCE:
