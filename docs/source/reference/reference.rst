@@ -11,4 +11,5 @@ new core architectures, or new device/peripheral models.
 
    ../cpp_api/cpp_api_root
    frameworks
+   device_library
    utils

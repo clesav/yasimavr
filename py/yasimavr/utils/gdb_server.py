@@ -17,13 +17,6 @@
 # You should have received a copy of the GNU General Public License
 # along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
 
-'''
-This module defines a GDB stub that act as an interface between
-yasim-avr and the GNU Debugger. It is designed on top of a TCP server and
-implements the relevant parts of the Remote Serial Protocol.
-
-Source: https://www.sourceware.org/gdb/onlinedocs/gdb/Remote-Protocol.html
-'''
 
 import binascii
 import struct
@@ -80,6 +73,22 @@ class _GDB_StubServer(socketserver.TCPServer):
 
 
 class GDB_Stub:
+    """This class implements a stub that acts as an interface between
+    yasimavr and the GNU Debugger. It is designed on top of a TCP server and
+    implements the relevant parts of the Remote Serial Protocol.
+
+    Source: https://www.sourceware.org/gdb/onlinedocs/gdb/Remote-Protocol.html
+
+    :param tuple[str, int] conn_point: Tuple (IP, port) for the socket to listen for GDB connections
+    :param str fw_source: path to the firmware source code
+    :param AsyncSimLoop simloop: Simulation loop to connect to
+    :param Device device: Device simulation model to connect to
+
+    .. note:: At least one of simloop or device should be specified.
+
+    If simloop is provided, the stub will take control of it.
+    If device is provided, the stub will create a simulation loop for it and dispose of it on shutdown.
+    """
 
     def __init__(self, conn_point, fw_source, simloop=None, device=None):
         self._source = os.path.normpath(os.path.abspath(fw_source))

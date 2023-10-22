@@ -1,7 +1,7 @@
 Key Concepts
 ==================
 
-This page is mainly to try and explain some of the concepts underlaying *yasimavr* internals and behaviour.
+This page is mainly to try and explain some of the concepts underlying *yasimavr* internals and behaviour.
 
 
 Signals/Hooks
@@ -70,7 +70,7 @@ The pseudo-sleep mode is a special sleep mode with no real-world meaning and tha
 instruction "RJMP .-2" - also known as infinite inconditional loop.
 
 When a MCU executes this instruction, the Program Counter will freeze and all CPU registers will remain unchanged.
-The only ways to get out of it is by an interrupt or a device reset.
+The only ways to get out of it are by an interrupt or a device reset.
 From a functional point of view, this is equivalent to entering a sleep mode. Therefore *yasimavr* processes this
 instruction as entering a special sleep mode called pseudo-sleep.
 
@@ -79,3 +79,38 @@ This concept allows *yasimavr* to simulate much faster firmwares that have inter
 This special mode is enabled by default and can be disabled by the option *DisablePseudoSleep* in the *Device* class.
 
 .. note:: If the Global Interrupt Enable flag is cleared, the simulation will exit gracefully on entering pseudo-sleep mode (as with any actual sleep mode). This case is useful to stop the simulation when the firmware returns from the main() function. Often, the instructions "CLI; RJMP -.2" are added as a post-main stub by the linker. The simulation would detect that and exit.
+
+
+Analog Features
+---------------
+
+The way *yasimavr* simulates a number of analog features of a MCU, such as ADC, analog comparators, voltage references, relies on a few conventions.
+
+To enable analog features, VCC (the main power supply voltage for the MCU) must be
+specified.
+In command line, it is provided by the option ``-a``. For example the following will enable analog features and set VCC = 5.0 Volts:
+
+.. code-block::
+
+   > python -m yasimavr -a 5.0 firmware.elf
+
+In a script, the field vcc of the Firmware object must be set to a non-zero value *before* loading it into the device model:
+
+.. code-block::
+
+   > fw = Firmware.read_elf("firmware.elf")
+   > fw.vcc = 5.0
+   > device.load_firmware(fw)
+
+All other voltage values used within ``yasimavr`` are relative to VCC.
+So, with VCC set to 5.0 Volts, a analog value of 1.0 must be read as 5.0 Volts,
+or a value of 0.5, read as 2.5 Volts.
+
+The values are restricted to the range [0.0; 1.0] which means that all simulated voltages are constrained to [0.0; VCC].
+Any value specified outside this range will at best be clipped, at worst crash the software alltogether...
+
+.. note::
+
+   The only exception to the rule above is when configuring internal voltage references.
+   On initialisation and configuration, these shall be passed on to the VREF model as absolute voltage values.
+   However, during a simulation, whenever a reference is required, it is returned as relative to VCC.

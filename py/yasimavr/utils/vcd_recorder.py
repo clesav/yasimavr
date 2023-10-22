@@ -27,12 +27,11 @@ class Formatter(_corelib.SignalHook):
     """Generic formatter class.
 
     A formatter is a signal hook connected to receive data changes and
-    formatter it for dumping into a VCD file
+    format it for writing into a VCD file.
 
-    parameters:
-        var_type: VCD variable type (see pyvcd documentation)
-        var_size: VCD variable size (see pyvcd documentation)
-        init_value: initial value
+    :param VarType var_type: VCD variable type (see pyvcd documentation)
+    :param int var_size: VCD variable size (see pyvcd documentation)
+    :param str init_value: initial value
     """
 
     def __init__(self, var_type, var_size, init_value):
@@ -47,9 +46,8 @@ class Formatter(_corelib.SignalHook):
         """Called by the recorder to register this Formatter instance
         with a associated VCD Variable object.
 
-        parameters:
-            recorder: VCD_Recorder instance
-            var_name: VCD variable name (see pyvcd documentation)
+        :param VCD_Recorder recorder: VCD_Recorder instance
+        :param str var_name: VCD variable name (see pyvcd documentation)
         """
 
         self._recorder = recorder
@@ -61,7 +59,8 @@ class Formatter(_corelib.SignalHook):
 
 
     def filter(self, sigdata, hooktag):
-        """Generic filtering facility to be reimplemented by subclasses
+        """Generic filtering facility to be reimplemented by subclasses.
+
         Must return True if the value shall be recorded, based on the
         signal data fields. By default all values are recorded.
         """
@@ -69,16 +68,19 @@ class Formatter(_corelib.SignalHook):
 
 
     def format(self, sigdata, hooktag):
-        """Generic conversion facility to be reimplemented by subclasses
+        """Generic conversion facility to be reimplemented by subclasses.
+
         Must return a value compatible with the variable type, to be recorded
         in the VCD file.
         """
         return None
 
 
-    #Reimplementation of SignalHook, to filter, format and record
-    #the value associated to the signal
     def raised(self, sigdata, hooktag):
+        """Reimplementation of SignalHook, to filter, format and record
+        the value associated to the signal.
+        """
+
         try:
             if self.filter(sigdata, hooktag):
                 fmt_value = self.format(sigdata, hooktag)
@@ -163,11 +165,16 @@ class VCD_Recorder:
     A VCD file captures time-ordered changes to the value of variables as raised by
     signals.
 
-    parameters:
-        simloop: simulation loop object (AbstractSimLoop instance)
-        file: file path of the VCD record
-        kwargs: other arguments passed on to the underlying VCDWriter object
-                see pyvcd documentation for details
+    It is built on top of a VCDWriter instance from *PyVCD* and uses Formatter objects to
+    connect to signals from the simulation model, filter and format the values received from
+    signal notifications and  writes them into the VCD file.
+
+    :param AbstractSimLoop simloop: The simulation loop instance.
+    :param str file: file path to write the VCD data.
+    :param dict kwargs: other arguments passed on to the underlying VCDWriter object.
+
+    See *PyVCD* docs for details on VCDWriter and the VCD file format:
+    `PyVCD documentation <https://pyvcd.readthedocs.io/>`_
     """
 
     def __init__(self, simloop, file, **kwargs):
@@ -185,7 +192,7 @@ class VCD_Recorder:
 
     @property
     def writer(self):
-        """Returns the underlying VCDWriter object
+        """Return the underlying VCDWriter object.
         """
         return self._writer
 
@@ -193,9 +200,8 @@ class VCD_Recorder:
     def add_digital_pin(self, pin, var_name=''):
         """Register a new VCD variable for a Pin instance.
 
-        parameters:
-            pin: Pin object
-            var_name: optional variable name, defaults to the pin identifier
+        :param Pin pin: Pin object
+        :param str var_name: optional variable name, defaults to the pin identifier
         """
 
         if not var_name:
@@ -209,9 +215,8 @@ class VCD_Recorder:
     def add_gpio_port(self, port_name, var_name=''):
         """Register a new VCD variable for a GPIO port.
 
-        parameters:
-            port_name: Letter identifying the GPIO port
-            var_name: optional variable name, defaults to the port identifier
+        :param str port_name: Letter identifying the GPIO port
+        :param str var_name: optional variable name, defaults to the port identifier
         """
 
         if not var_name:
@@ -231,9 +236,8 @@ class VCD_Recorder:
     def add_interrupt(self, vector, var_name=''):
         """Register a new VCD variable for an interrupt vector.
 
-        parameters:
-            vector: interrupt vector index
-            var_name: optional variable name, defaults to the vector index
+        :param int vector: interrupt vector index
+        :param str var_name: optional variable name, defaults to the vector index
         """
 
         if not var_name:
@@ -253,12 +257,11 @@ class VCD_Recorder:
     def add_signal(self, sig, var_name, size=32, sigid=None, sigindex=None):
         """Register a new VCD variable for a generic peripheral signal.
 
-        parameters:
-            sig: Signal to connect to
-            var_name: Variable name
-            size: variable size, default is 32 bits
-            sigid: optional SignalId value for filtering
-            sigindex: optional index value for filtering
+        :param Signal sig: Signal to connect to
+        :param str var_name: Variable name
+        :param int size: variable size, default is 32 bits
+        :param int sigid: optional SignalId value for filtering
+        :param int sigindex: optional index value for filtering
         """
 
         formatter = _SignalFormatter(sig, size, sigid, sigindex)
@@ -269,9 +272,8 @@ class VCD_Recorder:
     def add(self, formatter, var_name):
         """Register a new VCD variable for a generic formatter.
 
-        parameters:
-            formatter: Formatter object
-            var_name: variable name
+        :param Formatter formatter: Formatter object
+        :param str var_name: variable name
         """
 
         formatter.register(self, var_name)
@@ -284,7 +286,7 @@ class VCD_Recorder:
 
 
     def record_on(self):
-        """Starts or resumes the recording
+        """Start or resume the recording.
         """
 
         ts = self._ts_ratio * self._simloop.cycle()
@@ -292,7 +294,7 @@ class VCD_Recorder:
 
 
     def record_off(self):
-        """Pauses the recording
+        """Pause the recording.
         """
 
         ts = self._ts_ratio * self._simloop.cycle()
@@ -300,7 +302,7 @@ class VCD_Recorder:
 
 
     def flush(self):
-        """Flushes the recorded data into the destination file
+        """Flush the recorded data into the destination file.
         """
 
         ts = self._ts_ratio * self._simloop.cycle()
@@ -308,7 +310,7 @@ class VCD_Recorder:
 
 
     def close(self):
-        """Closes the record. The recorder may not be used anymore afterwards
+        """Close the record. The recorder may not be used anymore afterwards.
         """
 
         ts = self._ts_ratio * self._simloop.cycle()
