@@ -11,10 +11,10 @@ build:
 python:
   install:
     - requirements: docs/requirements.txt
-    - method: pip
-      path: .
+#    - method: pip
+#      path: .
 
 sphinx:
   builder: html
-  configuration: docs/conf.py
+  configuration: docs/source/conf.py
   fail_on_warning: false
