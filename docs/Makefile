@@ -5,6 +5,7 @@ doxygen_docs:
 	@doxygen Doxyfile
 
 sphinx_html_docs: doxygen_docs
+	python make_mock_libs.py
 	-cd source/cpp_api && del *.* /Q
 	@sphinx-build -M html "source" "build"
 
