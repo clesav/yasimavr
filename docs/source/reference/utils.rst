@@ -1,12 +1,6 @@
 Python Utilities
 ================
 
-.. currentmodule:: yasimavr.utils
-
-.. autosummary::
-
-   vcd_recorder::VCD_Recorder
-
 
 VCD Output
 ----------
