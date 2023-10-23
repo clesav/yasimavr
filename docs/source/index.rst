@@ -15,6 +15,7 @@ Documentation
    CLI
    concepts
    reference/reference
+   examples/examples
 
 
 Indices and tables
