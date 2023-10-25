@@ -77,3 +77,12 @@ For the list of command line options, execute python -m yasimavr -h
 
 Some simple script examples are available here:
 https://github.com/clesav/yasimavr/tree/main/examples
+
+Documentation
+-------------
+
+The documentation is still a work in progress but will be progressively completed.
+The online version, including an API reference, can be read on the Read the Docs:
+
+* [Development documentation] http://yasimavr.readthedocs.io/en/latest/
+* [Stable documentation] http://yasimavr.readthedocs.io/en/stable/
