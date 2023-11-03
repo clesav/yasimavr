@@ -44,6 +44,7 @@ BUILD_DIR := Debug
 
 CPP_ARGS := -std=c++17 -O0 -g3 -Wall -c -fPIC -fmessage-length=0 -fvisibility=hidden
 CPP_DEFS := -DYASIMAVR_USE_TRACE -DYASIMAVR_CORE_DLL
+LNK_ARGS := -shared -static-libstdc++
 
 
 BUILD_ARTIFACT = $(BUILD_DIR)/$(ARTIFACT_PREFIX)$(ARTIFACT_NAME).$(ARTIFACT_EXT)
@@ -78,7 +79,7 @@ build-dirs:
 $(BUILD_ARTIFACT): $(OBJS) $(MAKEFILE)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C++ Linker'
-	g++ -shared -o "$(BUILD_ARTIFACT)" $(OBJS) -lelf
+	g++ $(LNK_ARGS) -o "$(BUILD_ARTIFACT)" $(OBJS) -lelf
 	@echo 'Finished building target: $@'
 	@echo ' '
 

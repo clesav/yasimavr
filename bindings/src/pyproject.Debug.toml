@@ -35,7 +35,7 @@ libraries = ["yasimavr_core"]
 library-dirs = ["../../lib_core/Debug"]
 pep484-pyi = true
 protected-is-public = false
-extra-link-args = ["-Wl,-rpath=${ORIGIN}"]
+extra-link-args = ["-Wl,-rpath=${ORIGIN}", "-static-libstdc++"]
 
 
 [tool.sip.bindings.yasimavr-arch-avr]
@@ -50,7 +50,7 @@ library-dirs = ["../../lib_core/Debug",
                 "../../lib_arch_avr/Debug"]
 pep484-pyi = true
 protected-is-public = false
-extra-link-args = ["-Wl,-rpath=${ORIGIN}"]
+extra-link-args = ["-Wl,-rpath=${ORIGIN}", "-static-libstdc++"]
 
 
 [tool.sip.bindings.yasimavr-arch-xt]
@@ -64,7 +64,7 @@ library-dirs = ["../../lib_core/Debug",
                 "../../lib_arch_xt/Debug"]
 pep484-pyi = true
 protected-is-public = false
-extra-link-args = ["-Wl,-rpath=${ORIGIN}"]
+extra-link-args = ["-Wl,-rpath=${ORIGIN}", "-static-libstdc++"]
 
 
 [tool.sip.project]
