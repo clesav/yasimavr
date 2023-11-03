@@ -41,7 +41,7 @@ BUILD_DIR := Debug
 
 -include Makefile-defs
 
-CPP_ARGS := -std=c++17 -O0 -g3 -Wall -c -fPIC -fmessage-length=0 -fvisibility=hidden
+CPP_ARGS := -O0 -g3 -Wall -c -fPIC -fmessage-length=0 -fvisibility=hidden
 CPP_DEFS := -DYASIMAVR_XT_DLL
 LNK_ARGS := -shared -static-libstdc++
 

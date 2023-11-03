@@ -42,7 +42,7 @@ BUILD_DIR := Release
 
 -include Makefile-defs
 
-CPP_ARGS := -std=c++17 -O3 -Wall -c -fPIC -fmessage-length=0 -fvisibility=hidden
+CPP_ARGS := -O3 -Wall -c -fPIC -fmessage-length=0 -fvisibility=hidden
 CPP_DEFS := -DYASIMAVR_CORE_DLL
 LNK_ARGS := -shared -static-libstdc++
 
