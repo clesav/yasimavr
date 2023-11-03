@@ -353,7 +353,7 @@ void ArchXT_NVM::execute_command(Command cmd)
 
 unsigned int ArchXT_NVM::execute_page_command(Command cmd)
 {
-    unsigned int delay_usecs;
+    unsigned int delay_usecs = 0;
 
     //Boolean indicating if it's an operation to the flash (true)
     //or to the eeprom (false)
@@ -383,7 +383,7 @@ unsigned int ArchXT_NVM::execute_page_command(Command cmd)
             nvm->erase(m_bufset, page_size * m_page, page_size);
         }
 
-        delay_usecs = m_config.page_erase_delay;
+        delay_usecs += m_config.page_erase_delay;
     }
 
     //Write the page if required by the command

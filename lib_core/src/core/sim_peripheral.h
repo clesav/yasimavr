@@ -307,7 +307,7 @@ protected:
     bool test_ioreg(const regbit_t& rb, uint8_t bit = 0) const;
 
     void write_ioreg(const regbit_compound_t& rbc, uint64_t value);
-    void write_ioreg(reg_addr_t reg, uint8_t value);
+    inline void write_ioreg(reg_addr_t reg, uint8_t value);
     void write_ioreg(reg_addr_t reg, uint8_t bit, uint8_t value);
     void write_ioreg(reg_addr_t reg, const bitmask_t& bm, uint8_t value);
 

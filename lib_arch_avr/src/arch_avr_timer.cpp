@@ -192,7 +192,7 @@ void ArchAVR_Timer::reset()
 
     for (size_t i = 0; i < m_oc_channels.size(); ++i) {
         m_oc_channels[i]->reset();
-        m_signal.raise(signal_data_t{Signal_CompOutput, i, vardata_t()});
+        m_signal.raise(signal_data_t{Signal_CompOutput, (long long) i, vardata_t()});
 
         m_counter.set_comp_enabled(i,  true);
     }

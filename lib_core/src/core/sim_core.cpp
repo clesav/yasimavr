@@ -271,7 +271,7 @@ uint8_t Core::cpu_read_ioreg(reg_addr_t reg_addr)
         return 0;
     }
 
-    short addr = (short) reg_addr;
+    unsigned short addr = (unsigned short) reg_addr;
 
     if (addr == R_SREG)
         return read_sreg();
@@ -315,7 +315,7 @@ void Core::cpu_write_ioreg(reg_addr_t reg_addr, uint8_t value)
         return;
     }
 
-    short addr = (short) reg_addr;
+    unsigned short addr = (unsigned short) reg_addr;
 
     if (addr == R_SREG) {
         write_sreg(value);
@@ -380,7 +380,7 @@ uint8_t Core::ioctl_read_ioreg(const reg_addr_t reg_addr)
         return 0;
     }
 
-    short addr = (short) reg_addr;
+    unsigned short addr = (unsigned short) reg_addr;
 
     if (addr == R_SREG)
         return read_sreg();
@@ -419,7 +419,7 @@ void Core::ioctl_write_ioreg(const regbit_t& rb, uint8_t value)
         return;
     }
 
-    short addr = (short) rb.addr;
+    unsigned short addr = (unsigned short) rb.addr;
 
     if (addr == R_SREG) {
         uint8_t v = read_sreg();
