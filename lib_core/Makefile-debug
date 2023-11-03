@@ -43,7 +43,7 @@ BUILD_DIR := Debug
 -include Makefile-defs
 
 CPP_ARGS := -O0 -g3 -Wall -c -fPIC -fmessage-length=0 -fvisibility=hidden
-CPP_DEFS := -DYASIMAVR_USE_TRACE -DYASIMAVR_CORE_DLL
+CPP_DEFS := -DYASIMAVR_CORE_DLL
 LNK_ARGS := -shared -static-libstdc++
 
 

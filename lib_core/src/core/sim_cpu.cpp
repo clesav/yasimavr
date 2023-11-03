@@ -203,7 +203,7 @@ static const char* sreg_to_str(const uint8_t* sreg, char* sreg_str)
 #define TRACE_RET \
     if (m_debug_probe) m_debug_probe->_cpu_notify_ret()
 
-#ifdef YASIMAVR_USE_TRACE
+#ifndef YASIMAVR_NO_TRACE
 
 #define TRACE_OP(f, args...) \
     m_device->logger().log(Logger::Level_Trace, "PC=0x%04X SREG=%s | " f, \
@@ -978,7 +978,7 @@ cycle_count_t Core::run_instruction()
                     uint8_t flag = opcode & 7;
                     int set = (opcode & 0x0400) == 0;       // this bit means BRXC otherwise BRXS
                     int branch = (m_sreg[flag] && set) || (!m_sreg[flag] && !set);
-#ifdef YASIMAVR_USE_TRACE
+#ifndef YASIMAVR_NO_TRACE
                     const char *opnames[2][8] = {
                             { "brcc", "brne", "brpl", "brvc", "brlt", "brhc", "brtc", "brid"},
                             { "brcs", "breq", "brmi", "brvs", "brge", "brhs", "brts", "brie"},
