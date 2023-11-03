@@ -69,7 +69,6 @@ LIBRARIES = {
 }
 
 GCC_SHLIB_COMPILER_EXTRA_ARGS = [
-    '-std=c++17',
     '-O3',
     '-fPIC',
     '-fmessage-length=0',

@@ -287,7 +287,7 @@ DataSignalMux::DataSignalMux()
 
 void DataSignalMux::raised(const signal_data_t& sigdata, int hooktag)
 {
-    if (hooktag == m_sel_index && m_sel_index < m_items.size() && m_items[m_sel_index].match(sigdata)) {
+    if ((size_t) hooktag == m_sel_index && m_sel_index < m_items.size() && m_items[m_sel_index].match(sigdata)) {
         m_items[m_sel_index].data = sigdata.data;
         m_signal.raise({ 0, 0, sigdata.data });
     }

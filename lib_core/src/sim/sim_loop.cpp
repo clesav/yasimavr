@@ -23,7 +23,7 @@
 
 #include "sim_loop.h"
 #include "../core/sim_debug.h"
-#include <unistd.h>
+#include <thread>
 #include <chrono>
 #include <climits>
 
@@ -150,7 +150,7 @@ void SimLoop::run(cycle_count_t nbcycles)
             long long sleep_time_us = sim_deadline_us - curr_time_us;
             if (sleep_time_us > MIN_SLEEP_THRESHOLD) {
                 //WARNING_LOG(m_device.logger(), "LOOP : Sleeping %dus", sleep_time_us);
-                usleep(sleep_time_us);
+                std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time_us));
             }
         }
 
@@ -211,7 +211,7 @@ void AsyncSimLoop::run()
     cv_lock.unlock();
 
     //Time baseline. Note that it's initialised by the synchronisation part
-    cycle_count_t cycle_start;
+    cycle_count_t cycle_start = 0;
     std::chrono::time_point<std::chrono::steady_clock> clock_start;
 
     while (true) {

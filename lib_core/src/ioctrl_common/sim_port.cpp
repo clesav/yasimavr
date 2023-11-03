@@ -36,8 +36,8 @@ YASIMAVR_USING_NAMESPACE
 Port::Port(char name)
 :Peripheral(AVR_IOCTL_PORT(name))
 ,m_name(name)
-,m_pins(8)
 ,m_pinmask(0)
+,m_pins(8)
 ,m_port_value(0)
 {}
 

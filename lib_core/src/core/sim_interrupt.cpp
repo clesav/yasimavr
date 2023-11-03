@@ -64,7 +64,7 @@ bool InterruptController::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
         if (vector <= 0) {
             logger().err("Attempt to register an invalid or the reset vector");
         }
-        else if (vector >= m_interrupts.size()) {
+        else if ((size_t) vector >= m_interrupts.size()) {
             logger().err("Invalid interrupt vector %d", vector);
         }
         else if (m_interrupts[vector].used) {
@@ -85,7 +85,7 @@ bool InterruptController::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
     else if (req == AVR_CTLREQ_INTR_RAISE) {
         int_vect_t vector = (int_vect_t) data->index;
 
-        if (vector >= 0 && vector < m_interrupts.size()) {
+        if (vector >= 0 && (size_t) vector < m_interrupts.size()) {
             if (data->data.as_uint()) {
                 logger().dbg("Raising vector %d on CTLREQ.", vector);
                 raise_interrupt(vector);

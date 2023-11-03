@@ -89,9 +89,15 @@ libs-debug: lib-core-debug \
 clean: lib-core-clean \
 	   lib-arch-avr-clean \
 	   lib-arch-xt-clean \
-	   py-bindings-clean
+	   py-bindings-clean \
+	   docs-clean \
+	   dist-clean
+	-$(RM_DIR) build
+	-$(RM_DIR) dist
+	-$(RM_DIR) yasimavr.egg-info
+	
 
-dist-clean: clean
+dist-clean: FORCE
 	-cd $(LIB_TARGET_DIR) && $(RM_FILE) *.pyd *.pyi *.dll *.so
 
 
@@ -144,5 +150,8 @@ py-bindings-clean: FORCE
 
 docs: FORCE
 	-cd docs && $(MAKE)
+
+docs-clean: FORCE
+	-cd docs && $(MAKE) clean
 
 FORCE:
