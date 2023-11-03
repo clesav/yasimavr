@@ -90,9 +90,14 @@ clean: lib-core-clean \
 	   lib-arch-avr-clean \
 	   lib-arch-xt-clean \
 	   py-bindings-clean \
-	   docs-clean
+	   docs-clean \
+	   dist-clean
+	-$(RM_DIR) build
+	-$(RM_DIR) dist
+	-$(RM_DIR) yasimavr.egg-info
+	
 
-dist-clean: clean
+dist-clean: FORCE
 	-cd $(LIB_TARGET_DIR) && $(RM_FILE) *.pyd *.pyi *.dll *.so
 
 

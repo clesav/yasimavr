@@ -39,7 +39,7 @@ YASIMAVR_USING_NAMESPACE
 
 const char sreg_flag_names[8] = {'c', 'z', 'n', 'v', 's', 'h', 't', 'i'};
 
-static const char* sreg_to_str(const uint8_t* sreg, char* sreg_str)
+const char* sreg_to_str(const uint8_t* sreg, char* sreg_str)
 {
     for (uint8_t i = 0; i < 8; i++)
         sreg_str[i] = sreg[i] ? sreg_flag_names[i] : '-';
@@ -205,15 +205,15 @@ static const char* sreg_to_str(const uint8_t* sreg, char* sreg_str)
 
 #ifndef YASIMAVR_NO_TRACE
 
-#define TRACE_OP(f, args...) \
+#define TRACE_OP(f, ...) \
     m_device->logger().log(Logger::Level_Trace, "PC=0x%04X SREG=%s | " f, \
                            m_pc, \
                            sreg_to_str(m_sreg, sreg_str), \
-                           ##args)
+                           ##__VA_ARGS__)
 
 #else
 
-#define TRACE_OP(f, arg...)
+#define TRACE_OP(f, ...)
 
 #endif
 
@@ -240,7 +240,9 @@ cycle_count_t Core::run_instruction()
     uint32_t        opcode = get_flash16le(m_pc);
     flash_addr_t    new_pc = m_pc + 2;  // future "default" pc
     int             cycle = 1;
+#ifndef YASIMAVR_NO_TRACE
     char            sreg_str[9];
+#endif
 
     switch (opcode & 0xf000) {
         case 0x0000: {
