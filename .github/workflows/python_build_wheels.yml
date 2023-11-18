@@ -96,13 +96,18 @@ jobs:
         python-version: "3.11"
         cache: "pip"
 
-    - name: install libelf
+    - name: Install libelf
       run: |
         sudo apt-get update
         sudo apt-get install libelf-dev
 
-    - name: Build and install package
+    - name: Build and install package using the sdist
       run: |
         pip install --upgrade pip
         find dist -type f -name *.tar.gz -fprint dist/req.txt
-        pip install -r dist/req.txt
+        pip install -r dist/req.txt -v
+
+    - name: Run pytest
+      run: |
+        pip install pytest
+        pytest tests
