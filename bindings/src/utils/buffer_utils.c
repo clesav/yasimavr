@@ -27,9 +27,6 @@ Py_ssize_t import_from_pybuffer(const sipAPIDef* sipAPI, uint8_t **buf, PyObject
     Py_buffer buffer;
     Py_ssize_t len;
 
-    if (*buf != NULL)
-        sipAPI->api_free(*buf);
-
     PyObject_GetBuffer(exporter, &buffer, PyBUF_SIMPLE);
     len = buffer.len;
 

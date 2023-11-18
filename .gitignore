@@ -38,7 +38,7 @@
 
 # Compiled firmware
 *.asm
-*.elf
+#*.elf #We leave ELF files as required for tests
 *.hex
 
 # Build directories
