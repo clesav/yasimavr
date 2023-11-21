@@ -80,17 +80,21 @@ public:
     %MethodCode
         unsigned char* buf;
         size_t len = import_from_pybuffer(sipAPI_core, &buf, a0);
-        sipCpp->erase(buf, a1, len);
-        sipFree(buf);
+        if (len) {
+            sipCpp->erase(buf, a1, len);
+            sipFree(buf);
+        }
     %End
 
     int dbg_read(size_t) const;
-    SIP_PYBUFFER dbg_read(size_t, size_t) const;
+    SIP_PYOBJECT dbg_read(size_t, size_t) const /TypeHint="bytes"/;
     %MethodCode
-        unsigned char* buf = (unsigned char*) sipMalloc(a1);
-        size_t len_res = sipCpp->dbg_read(buf, a0, a1);
-        sipRes = export_to_pybuffer(sipAPI_core, buf, len_res);
-        sipFree(buf);
+        if (a1) {
+            unsigned char* buf = (unsigned char*) sipMalloc(a1);
+            size_t len_res = sipCpp->dbg_read(buf, a0, a1);
+            sipRes = export_to_pybuffer(sipAPI_core, buf, len_res);
+            sipFree(buf);
+        }
     %End
 
     void dbg_write(unsigned char /PyInt/, size_t);
@@ -98,20 +102,30 @@ public:
     %MethodCode
         unsigned char* buf;
         size_t len = import_from_pybuffer(sipAPI_core, &buf, a0);
-        sipCpp->dbg_write(buf, a1, len);
+        if (len) {
+            sipCpp->dbg_write(buf, a1, len);
+            sipFree(buf);
+        }
     %End
 
     void spm_write(unsigned char /PyInt/, size_t);
     void spm_write(SIP_PYBUFFER, SIP_PYBUFFER, size_t);
     %MethodCode
         unsigned char* buf;
-        unsigned char* bufset = NULL;
         size_t len = import_from_pybuffer(sipAPI_core, &buf, a0);
+
+        unsigned char* bufset = NULL;
         if (a1) {
             size_t lenset = import_from_pybuffer(sipAPI_core, &bufset, a1);
             if (lenset < len) len = lenset;
         }
+
         sipCpp->spm_write(buf, bufset, a2, len);
+
+        if (buf)
+            sipFree(buf);
+        if (bufset)
+            sipFree(bufset);
     %End
 
 };

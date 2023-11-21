@@ -46,7 +46,7 @@ Py_ssize_t import_from_pybuffer(const sipAPIDef* sipAPI,
  * otherwise a SIP array object is created
  */
 PyObject* export_to_pybuffer(const sipAPIDef* sipAPI,
-                             uint8_t *data,
+                             const uint8_t *data,
                              Py_ssize_t len);
 
 /*
