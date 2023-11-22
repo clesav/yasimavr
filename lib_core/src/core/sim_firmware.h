@@ -54,9 +54,8 @@ class AVR_CORE_PUBLIC_API Firmware {
 
 public:
 
-    struct Block {
-        mem_block_t mem_block;
-        size_t      base;
+    struct Block : mem_block_t {
+        size_t      base = 0;
     };
 
     enum Area {

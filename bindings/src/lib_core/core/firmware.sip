@@ -29,7 +29,16 @@ class Firmware {
 public:
 
     struct Block {
-        mem_block_t mem_block;
+        %TypeCode
+        #include "utils/buffer_utils.h"
+        %End
+
+        SIP_PYOBJECT buf /NoSetter,TypeHint="bytes"/ {
+        %GetCode
+            sipPy = export_to_pybuffer(sipAPI_core, sipCpp->buf, sipCpp->size);
+        %End
+        };
+
         size_t base;
     };
 
@@ -54,11 +63,18 @@ public:
 
     static Firmware* read_elf(const std::string&);
 
-    void add_block(Area area, const mem_block_t&, size_t = 0);
     bool has_memory(Area area) const;
     size_t memory_size(Area area) const;
     std::vector<Firmware::Block> blocks(Area area) const;
     bool load_memory(Area area, NonVolatileMemory&) const;
+    void add_block(Area, SIP_PYBUFFER, size_t = 0);
+    %MethodCode
+        unsigned char* buf;
+        size_t len = import_from_pybuffer(sipAPI_core, &buf, a1);
+        sipCpp->add_block(a0, {len, buf}, a2);
+        if (len) sipFree(buf);
+    %End
+
     mem_addr_t datasize() const;
     mem_addr_t bsssize() const;
 

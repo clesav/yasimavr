@@ -34,8 +34,8 @@ YASIMAVR_BEGIN_NAMESPACE
 
 struct mem_block_t {
 
-    size_t size;
-    unsigned char* buf;
+    size_t size = 0;
+    unsigned char* buf = nullptr;
 
 };
 
