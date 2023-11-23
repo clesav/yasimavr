@@ -25,6 +25,9 @@ class Firmware {
 %TypeHeaderCode
 #include "core/sim_firmware.h"
 %End
+%TypeCode
+#include "utils/buffer_utils.h"
+%End
 
 public:
 
@@ -71,7 +74,7 @@ public:
     %MethodCode
         unsigned char* buf;
         size_t len = import_from_pybuffer(sipAPI_core, &buf, a1);
-        sipCpp->add_block(a0, {len, buf}, a2);
+        sipCpp->add_block(a0, {len, buf, a2});
         if (len) sipFree(buf);
     %End
 

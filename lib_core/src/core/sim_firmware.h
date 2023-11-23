@@ -84,7 +84,7 @@ public:
 
     static Firmware* read_elf(const std::string& filename);
 
-    void add_block(Area area, const mem_block_t& block, size_t base = 0);
+    void add_block(Area area, const Block& block);
 
     bool has_memory(Area area) const;
 

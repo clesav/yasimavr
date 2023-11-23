@@ -202,16 +202,16 @@ Firmware* Firmware::read_elf(const std::string& filename)
    Add a binary block to the firmware
    \param area NVM area to which the block should be added
    \param block binary data block to be added
-   \param base base address of the NVM area where the block should be added
  */
-void Firmware::add_block(Area area, const mem_block_t& block, size_t base)
+void Firmware::add_block(Area area, const Block& block)
 {
     //Make a deep copy of the memory block
-    Block b = { block.size, nullptr, base };
+    Block b = { block.size, nullptr, block.base };
     if (block.size) {
         b.buf = (unsigned char*) malloc(block.size);
         memcpy(b.buf, block.buf, block.size);
     }
+    //Add the copy to the area map
     m_blocks[area].push_back(b);
 }
 
@@ -297,7 +297,7 @@ Firmware& Firmware::operator=(const Firmware& other)
 
     for (auto it = other.m_blocks.begin(); it != other.m_blocks.end(); ++it) {
         for (const Block& b : it->second)
-            add_block(it->first, b, b.base);
+            add_block(it->first, b);
     }
 
     return *this;
