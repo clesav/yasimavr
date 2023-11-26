@@ -57,8 +57,7 @@ Core::Core(const CoreConfiguration& config)
 
     //Set the fuses to their default values
     std::vector<unsigned char> f = m_config.fuses;
-    mem_block_t fuseblock = { .size = f.size(), .buf = f.data() };
-    m_fuses.program(fuseblock);
+    m_fuses.program({ f.size(), f.data() });
 
     //Create the I/O registers managed by the CPU
     m_ioregs[R_SPL] = new IO_Register(true);

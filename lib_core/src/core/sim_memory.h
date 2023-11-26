@@ -70,7 +70,7 @@ public:
 
     void erase();
     void erase(size_t base, size_t size);
-    void erase(const unsigned char* buf, size_t pos, size_t len);
+    void erase(const unsigned char* buf, size_t base, size_t len);
 
     int dbg_read(size_t pos) const;
     size_t dbg_read(unsigned char* buf, size_t base, size_t len) const;

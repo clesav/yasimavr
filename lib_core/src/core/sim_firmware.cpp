@@ -202,6 +202,7 @@ Firmware* Firmware::read_elf(const std::string& filename)
    Add a binary block to the firmware
    \param area NVM area to which the block should be added
    \param block binary data block to be added
+   \note A deep copy of the binary data is made
  */
 void Firmware::add_block(Area area, const Block& block)
 {

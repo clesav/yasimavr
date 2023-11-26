@@ -67,7 +67,7 @@ class yasimavr_bindings_builder(SetuptoolsBuilder):
             lines = open(fp_src).readlines()
             new_lines = [line
                          for line in lines
-                         if not line.startswith('#line ')]
+                         if not line.strip().startswith('#line ')]
 
             f = open(fp_src, 'w')
             for line in new_lines:

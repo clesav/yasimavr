@@ -83,6 +83,8 @@ public:
             size_t len_res = sipCpp->dbg_read(buf, a0, a1);
             sipRes = export_to_pybuffer(sipAPI_core, buf, len_res);
             sipFree(buf);
+        } else {
+            sipRes = PyBytes_FromString("");
         }
     %End
 
@@ -103,7 +105,7 @@ public:
         unsigned char* buf;
         size_t len = import_from_pybuffer(sipAPI_core, &buf, a0);
 
-        unsigned char* bufset = NULL;
+        unsigned char* bufset = nullptr;
         if (a1) {
             size_t lenset = import_from_pybuffer(sipAPI_core, &bufset, a1);
             if (lenset < len) len = lenset;

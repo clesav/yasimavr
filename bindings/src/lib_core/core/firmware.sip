@@ -42,7 +42,7 @@ public:
         %End
         };
 
-        size_t base;
+        size_t base /NoSetter/;
     };
 
     enum Area {
@@ -62,14 +62,10 @@ public:
     reg_addr_t console_register;
 
     Firmware();
-    Firmware(const Firmware& other);
+    Firmware(const Firmware&);
 
     static Firmware* read_elf(const std::string&);
 
-    bool has_memory(Area area) const;
-    size_t memory_size(Area area) const;
-    std::vector<Firmware::Block> blocks(Area area) const;
-    bool load_memory(Area area, NonVolatileMemory&) const;
     void add_block(Area, SIP_PYBUFFER, size_t = 0);
     %MethodCode
         unsigned char* buf;
@@ -78,6 +74,10 @@ public:
         if (len) sipFree(buf);
     %End
 
+    bool has_memory(Area) const;
+    size_t memory_size(Area) const;
+    std::vector<Firmware::Block> blocks(Area) const;
+    bool load_memory(Area, NonVolatileMemory&) const;
     mem_addr_t datasize() const;
     mem_addr_t bsssize() const;
 
