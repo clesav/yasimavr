@@ -73,6 +73,27 @@ NonVolatileMemory::NonVolatileMemory(const NonVolatileMemory& other)
     *this = other;
 }
 
+
+/**
+   Return the unprogrammed/programmed state of the NVM into a buffer.
+   Each byte in the buffer is set a value of 0 for "unprogrammed" and 1 for "programmed".
+   \param buf buffer to copy the NVM programmed state into
+   \param base first address to be read
+   \param len length of the area to be read, in bytes
+   \return length of data actually read
+ */
+size_t NonVolatileMemory::programmed(unsigned char* buf, size_t base, size_t len) const
+{
+    if (!m_size || !len) return 0;
+
+    ADJUST_BASE_LEN(base, len, m_size);
+
+    memcpy(buf, m_tag + base, len);
+
+    return len;
+}
+
+
 /**
    Erase the entire NVM.
  */

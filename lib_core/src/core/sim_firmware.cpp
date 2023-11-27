@@ -229,6 +229,18 @@ bool Firmware::has_memory(Area area) const
 
 
 /**
+   Return the list of NVM areas for which the firmware has binary data.
+ */
+std::vector<Firmware::Area> Firmware::memories() const
+{
+    std::vector<Area> v;
+    for (auto it = m_blocks.begin(); it != m_blocks.end(); ++it)
+        v.push_back(it->first);
+    return v;
+}
+
+
+/**
    Get the total size of binary data loaded for a given NVM area.
    \param area NVM area to check
    \return the total size of data in bytes

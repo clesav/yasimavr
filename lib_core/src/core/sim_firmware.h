@@ -88,6 +88,8 @@ public:
 
     bool has_memory(Area area) const;
 
+    std::vector<Area> memories() const;
+
     size_t memory_size(Area area) const;
 
     std::vector<Block> blocks(Area area) const;

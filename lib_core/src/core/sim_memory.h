@@ -60,6 +60,7 @@ public:
     const std::string& name() const;
 
     bool programmed(size_t pos) const;
+    size_t programmed(unsigned char* buf, size_t base, size_t len) const;
 
     unsigned char operator[](size_t pos) const;
 

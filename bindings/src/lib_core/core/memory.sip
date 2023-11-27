@@ -38,6 +38,17 @@ public:
     const std::string& name() const;
 
     bool programmed(size_t) const;
+    SIP_PYOBJECT programmed(size_t, size_t) const /TypeHint="bytes"/;
+    %MethodCode
+        if (a1) {
+            unsigned char* buf = (unsigned char*) sipMalloc(a1);
+            size_t len_res = sipCpp->programmed(buf, a0, a1);
+            sipRes = export_to_pybuffer(sipAPI_core, buf, len_res);
+            sipFree(buf);
+        } else {
+            sipRes = PyBytes_FromString("");
+        }
+    %End
 
     unsigned char operator[](size_t) const /PyInt/;
 

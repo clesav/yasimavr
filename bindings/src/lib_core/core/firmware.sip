@@ -76,6 +76,7 @@ public:
 
     bool has_memory(Area) const;
     size_t memory_size(Area) const;
+    std::vector<Firmware::Area> memories() const;
     std::vector<Firmware::Block> blocks(Area) const;
     bool load_memory(Area, NonVolatileMemory&) const;
     mem_addr_t datasize() const;
