@@ -25,12 +25,24 @@ class Firmware {
 %TypeHeaderCode
 #include "core/sim_firmware.h"
 %End
+%TypeCode
+#include "utils/buffer_utils.h"
+%End
 
 public:
 
     struct Block {
-        mem_block_t mem_block;
-        size_t base;
+        %TypeCode
+        #include "utils/buffer_utils.h"
+        %End
+
+        SIP_PYOBJECT buf /NoSetter,TypeHint="bytes"/ {
+        %GetCode
+            sipPy = export_to_pybuffer(sipAPI_core, sipCpp->buf, sipCpp->size);
+        %End
+        };
+
+        size_t base /NoSetter/;
     };
 
     enum Area {
@@ -50,15 +62,23 @@ public:
     reg_addr_t console_register;
 
     Firmware();
-    Firmware(const Firmware& other);
+    Firmware(const Firmware&);
 
     static Firmware* read_elf(const std::string&);
 
-    void add_block(Area area, const mem_block_t&, size_t = 0);
-    bool has_memory(Area area) const;
-    size_t memory_size(Area area) const;
-    std::vector<Firmware::Block> blocks(Area area) const;
-    bool load_memory(Area area, NonVolatileMemory&) const;
+    void add_block(Area, SIP_PYBUFFER, size_t = 0);
+    %MethodCode
+        unsigned char* buf;
+        size_t len = import_from_pybuffer(sipAPI_core, &buf, a1);
+        sipCpp->add_block(a0, {len, buf, a2});
+        if (len) sipFree(buf);
+    %End
+
+    bool has_memory(Area) const;
+    size_t memory_size(Area) const;
+    std::vector<Firmware::Area> memories() const;
+    std::vector<Firmware::Block> blocks(Area) const;
+    bool load_memory(Area, NonVolatileMemory&) const;
     mem_addr_t datasize() const;
     mem_addr_t bsssize() const;
 

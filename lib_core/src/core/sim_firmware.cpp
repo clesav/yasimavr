@@ -61,8 +61,8 @@ Firmware::~Firmware()
 {
     for (auto it = m_blocks.begin(); it != m_blocks.end(); ++it) {
         for (Block& b : it->second)
-            if (b.mem_block.size)
-                free(b.mem_block.buf);
+            if (b.size)
+                free(b.buf);
     }
 }
 
@@ -152,18 +152,12 @@ Firmware* Firmware::read_elf(const std::string& filename)
         unsigned int lma = phdr->p_paddr + shdr.sh_offset - phdr->p_offset;
 
         //Create the memory block
-        uint8_t* buf;
+        Block b = { 0, nullptr, 0 };
         if (scn_data->d_size) {
-            buf = (uint8_t*) malloc(scn_data->d_size);
-            memcpy(buf, scn_data->d_buf, scn_data->d_size);
-        } else {
-            buf = nullptr;
+            b.size = scn_data->d_size;
+            b.buf = (unsigned char*) malloc(scn_data->d_size);
+            memcpy(b.buf, scn_data->d_buf, scn_data->d_size);
         }
-
-        //Construct the firmware chunk (essentially a memory block and an offset)
-        Block b;
-        b.mem_block.size = scn_data->d_size;
-        b.mem_block.buf = buf;
 
         //Add the firmware chunk to the corresponding memory area (Flash, etc...)
         if (!strcmp(name, ".text") || !strcmp(name, ".data") || !strcmp(name, ".rodata")) {
@@ -208,17 +202,17 @@ Firmware* Firmware::read_elf(const std::string& filename)
    Add a binary block to the firmware
    \param area NVM area to which the block should be added
    \param block binary data block to be added
-   \param base base address of the NVM area where the block should be added
+   \note A deep copy of the binary data is made
  */
-void Firmware::add_block(Area area, const mem_block_t& block, size_t base)
+void Firmware::add_block(Area area, const Block& block)
 {
     //Make a deep copy of the memory block
-    mem_block_t mb;
-    mb.size = block.size;
-    mb.buf = (uint8_t*) malloc(block.size);
-    memcpy(mb.buf, block.buf, block.size);
-    //Construct a firmware block and add it to the map
-    Block b = { .mem_block = mb, .base = base };
+    Block b = { block.size, nullptr, block.base };
+    if (block.size) {
+        b.buf = (unsigned char*) malloc(block.size);
+        memcpy(b.buf, block.buf, block.size);
+    }
+    //Add the copy to the area map
     m_blocks[area].push_back(b);
 }
 
@@ -235,6 +229,18 @@ bool Firmware::has_memory(Area area) const
 
 
 /**
+   Return the list of NVM areas for which the firmware has binary data.
+ */
+std::vector<Firmware::Area> Firmware::memories() const
+{
+    std::vector<Area> v;
+    for (auto it = m_blocks.begin(); it != m_blocks.end(); ++it)
+        v.push_back(it->first);
+    return v;
+}
+
+
+/**
    Get the total size of binary data loaded for a given NVM area.
    \param area NVM area to check
    \return the total size of data in bytes
@@ -247,7 +253,7 @@ size_t Firmware::memory_size(Area area) const
 
     size_t s = 0;
     for (const Block& block : it->second)
-        s += block.mem_block.size;
+        s += block.size;
 
     return s;
 }
@@ -279,7 +285,7 @@ bool Firmware::load_memory(Area area, NonVolatileMemory& memory) const
     bool status = true;
 
     for (Block& fb : blocks(area))
-        status &= memory.program(fb.mem_block, fb.base);
+        status &= memory.program(fb, fb.base);
 
     return status;
 }
@@ -289,8 +295,8 @@ Firmware& Firmware::operator=(const Firmware& other)
 {
     for (auto it = m_blocks.begin(); it != m_blocks.end(); ++it) {
         for (Block& b : it->second)
-            if (b.mem_block.size)
-                free(b.mem_block.buf);
+            if (b.size)
+                free(b.buf);
     }
     m_blocks.clear();
 
@@ -304,7 +310,7 @@ Firmware& Firmware::operator=(const Firmware& other)
 
     for (auto it = other.m_blocks.begin(); it != other.m_blocks.end(); ++it) {
         for (const Block& b : it->second)
-            add_block(it->first, b.mem_block, b.base);
+            add_block(it->first, b);
     }
 
     return *this;

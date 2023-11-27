@@ -54,9 +54,8 @@ class AVR_CORE_PUBLIC_API Firmware {
 
 public:
 
-    struct Block {
-        mem_block_t mem_block;
-        size_t      base;
+    struct Block : mem_block_t {
+        size_t      base = 0;
     };
 
     enum Area {
@@ -85,9 +84,11 @@ public:
 
     static Firmware* read_elf(const std::string& filename);
 
-    void add_block(Area area, const mem_block_t& block, size_t base = 0);
+    void add_block(Area area, const Block& block);
 
     bool has_memory(Area area) const;
+
+    std::vector<Area> memories() const;
 
     size_t memory_size(Area area) const;
 

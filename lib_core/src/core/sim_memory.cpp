@@ -73,6 +73,27 @@ NonVolatileMemory::NonVolatileMemory(const NonVolatileMemory& other)
     *this = other;
 }
 
+
+/**
+   Return the unprogrammed/programmed state of the NVM into a buffer.
+   Each byte in the buffer is set a value of 0 for "unprogrammed" and 1 for "programmed".
+   \param buf buffer to copy the NVM programmed state into
+   \param base first address to be read
+   \param len length of the area to be read, in bytes
+   \return length of data actually read
+ */
+size_t NonVolatileMemory::programmed(unsigned char* buf, size_t base, size_t len) const
+{
+    if (!m_size || !len) return 0;
+
+    ADJUST_BASE_LEN(base, len, m_size);
+
+    memcpy(buf, m_tag + base, len);
+
+    return len;
+}
+
+
 /**
    Erase the entire NVM.
  */
@@ -102,19 +123,19 @@ void NonVolatileMemory::erase(size_t base, size_t len)
    Bytes in the block are erased only if the corresponding byte
    in the buffer argument is non-zero.
    \param buf buffer for selecting the bytes that should be erased
-   \param pos first address to be erased
+   \param base first address to be erased
    \param len length of the area to be erased, in bytes
  */
-void NonVolatileMemory::erase(const unsigned char* buf, size_t pos, size_t len)
+void NonVolatileMemory::erase(const unsigned char* buf, size_t base, size_t len)
 {
     if (!m_size || !len) return;
 
-    ADJUST_BASE_LEN(pos, len, m_size);
+    ADJUST_BASE_LEN(base, len, m_size);
 
     for (size_t i = 0; i < len; ++i) {
         if (buf[i]) {
-            m_memory[pos + i] = 0xFF;
-            m_tag[pos + i] = 0;
+            m_memory[base + i] = 0xFF;
+            m_tag[base + i] = 0;
         }
     }
 }

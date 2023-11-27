@@ -42,7 +42,7 @@ Py_ssize_t import_from_pybuffer(const sipAPIDef* sipAPI, uint8_t **buf, PyObject
 }
 
 
-PyObject* export_to_pybuffer(const sipAPIDef* sipAPI, uint8_t *data, Py_ssize_t len)
+PyObject* export_to_pybuffer(const sipAPIDef* sipAPI, const uint8_t *data, Py_ssize_t len)
 {
     if (len > 0 && data) {
         void* buf = sipAPI->api_malloc(len);

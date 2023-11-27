@@ -21,40 +21,12 @@
 
 //=======================================================================================
 
-%MappedType mem_block_t {
-%TypeHeaderCode
-#include "core/sim_memory.h"
-#include "utils/buffer_utils.h"
-%End
-
-%ConvertFromTypeCode
-    return export_to_pybuffer(sipAPI_core, sipCpp->buf, sipCpp->size);
-%End
-
-%ConvertToTypeCode
-    if (!sipIsErr) {
-        return PyObject_CheckBuffer(sipPy);
-    }
-
-    mem_block_t* block = new mem_block_t();
-    block->size = import_from_pybuffer(sipAPI_core, &(block->buf), sipPy);
-
-    if (PyErr_Occurred()) {
-        *sipIsErr = 1;
-        delete block;
-        return 0;
-    } else {
-        *sipCppPtr = block;
-        return sipGetState(sipTransferObj);
-    }
-%End
-
-};
-
-
 class NonVolatileMemory /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "core/sim_memory.h"
+%End
+%TypeCode
+#include "utils/buffer_utils.h"
 %End
 
 public:
@@ -66,13 +38,41 @@ public:
     const std::string& name() const;
 
     bool programmed(size_t) const;
+    SIP_PYOBJECT programmed(size_t, size_t) const /TypeHint="bytes"/;
+    %MethodCode
+        if (a1) {
+            unsigned char* buf = (unsigned char*) sipMalloc(a1);
+            size_t len_res = sipCpp->programmed(buf, a0, a1);
+            sipRes = export_to_pybuffer(sipAPI_core, buf, len_res);
+            sipFree(buf);
+        } else {
+            sipRes = PyBytes_FromString("");
+        }
+    %End
 
     unsigned char operator[](size_t) const /PyInt/;
 
-    mem_block_t block() const;
-    mem_block_t block(size_t, size_t) const;
+    SIP_PYOBJECT block() const /TypeHint="bytes"/;
+    %MethodCode
+        mem_block_t b = sipCpp->block();
+        sipRes = export_to_pybuffer(sipAPI_core, b.buf, b.size);
+    %End
 
-    bool program(const mem_block_t&, size_t = 0);
+    SIP_PYOBJECT block(size_t, size_t) const /TypeHint="bytes"/;
+    %MethodCode
+        mem_block_t b = sipCpp->block(a0, a1);
+        sipRes = export_to_pybuffer(sipAPI_core, b.buf, b.size);
+    %End
+
+    bool program(SIP_PYBUFFER, size_t = 0);
+    %MethodCode
+        unsigned char* buf;
+        size_t len = import_from_pybuffer(sipAPI_core, &buf, a0);
+        if (len) {
+            sipCpp->program({len, buf}, a1);
+            sipFree(buf);
+        }
+    %End
 
     void erase();
     void erase(size_t, size_t);
@@ -80,17 +80,23 @@ public:
     %MethodCode
         unsigned char* buf;
         size_t len = import_from_pybuffer(sipAPI_core, &buf, a0);
-        sipCpp->erase(buf, a1, len);
-        sipFree(buf);
+        if (len) {
+            sipCpp->erase(buf, a1, len);
+            sipFree(buf);
+        }
     %End
 
     int dbg_read(size_t) const;
-    SIP_PYBUFFER dbg_read(size_t, size_t) const;
+    SIP_PYOBJECT dbg_read(size_t, size_t) const /TypeHint="bytes"/;
     %MethodCode
-        unsigned char* buf = (unsigned char*) sipMalloc(a1);
-        size_t len_res = sipCpp->dbg_read(buf, a0, a1);
-        sipRes = export_to_pybuffer(sipAPI_core, buf, len_res);
-        sipFree(buf);
+        if (a1) {
+            unsigned char* buf = (unsigned char*) sipMalloc(a1);
+            size_t len_res = sipCpp->dbg_read(buf, a0, a1);
+            sipRes = export_to_pybuffer(sipAPI_core, buf, len_res);
+            sipFree(buf);
+        } else {
+            sipRes = PyBytes_FromString("");
+        }
     %End
 
     void dbg_write(unsigned char /PyInt/, size_t);
@@ -98,20 +104,30 @@ public:
     %MethodCode
         unsigned char* buf;
         size_t len = import_from_pybuffer(sipAPI_core, &buf, a0);
-        sipCpp->dbg_write(buf, a1, len);
+        if (len) {
+            sipCpp->dbg_write(buf, a1, len);
+            sipFree(buf);
+        }
     %End
 
     void spm_write(unsigned char /PyInt/, size_t);
     void spm_write(SIP_PYBUFFER, SIP_PYBUFFER, size_t);
     %MethodCode
         unsigned char* buf;
-        unsigned char* bufset = NULL;
         size_t len = import_from_pybuffer(sipAPI_core, &buf, a0);
+
+        unsigned char* bufset = nullptr;
         if (a1) {
             size_t lenset = import_from_pybuffer(sipAPI_core, &bufset, a1);
             if (lenset < len) len = lenset;
         }
+
         sipCpp->spm_write(buf, bufset, a2, len);
+
+        if (buf)
+            sipFree(buf);
+        if (bufset)
+            sipFree(bufset);
     %End
 
 };
