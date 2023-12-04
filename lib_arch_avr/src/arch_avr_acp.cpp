@@ -74,7 +74,7 @@ bool ArchAVR_ACP::init(Device& device)
         logger().err("Positive input pin invalid");
         return false;
     }
-    m_pos_mux.add_mux(pos_pin->signal(), Pin::Signal_AnalogValueChange);
+    m_pos_mux.add_mux(pos_pin->signal(), Pin::Signal_VoltageChange);
 
     //Find the negative input pin and add it to the negative input mux
     Pin* neg_pin = device.find_pin(m_config.neg_pin);
@@ -82,7 +82,7 @@ bool ArchAVR_ACP::init(Device& device)
         logger().err("Negative input pin invalid");
         return false;
     }
-    m_neg_mux.add_mux(neg_pin->signal(), Pin::Signal_AnalogValueChange);
+    m_neg_mux.add_mux(neg_pin->signal(), Pin::Signal_VoltageChange);
 
     //Find the signal from the voltage reference controller and add it to
     //the positive input mux
@@ -100,7 +100,7 @@ bool ArchAVR_ACP::init(Device& device)
             logger().err("Negative mux pin invalid");
             return false;
         }
-        m_neg_mux.add_mux(pin->signal(), Pin::Signal_AnalogValueChange);
+        m_neg_mux.add_mux(pin->signal(), Pin::Signal_VoltageChange);
     }
 
     m_pos_mux.signal().connect(*this, HookTag_Pos);

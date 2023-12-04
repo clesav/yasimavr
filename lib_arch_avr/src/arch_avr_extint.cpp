@@ -172,9 +172,9 @@ void ArchAVR_ExtInt::interrupt_ack_handler(int_vect_t vector)
 
 void ArchAVR_ExtInt::raised(const signal_data_t& sigdata, int hooktag)
 {
-    if (sigdata.sigid != Pin::Signal_DigitalStateChange) return;
+    if (sigdata.sigid != Pin::Signal_DigitalChange) return;
 
-    bool pin_level = (sigdata.data.as_int() == Pin::State_High);
+    bool pin_level = sigdata.data.as_uint();
     uint8_t pin_num = hooktag & 0x00FF;
     bool is_pc = (hooktag & 0x0100);
 

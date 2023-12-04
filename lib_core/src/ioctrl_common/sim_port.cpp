@@ -70,7 +70,7 @@ void Port::reset()
     uint8_t pinmask = m_pinmask;
     for (int i = 0; i < 8; ++i) {
         if (pinmask & 1)
-            m_pins[i]->set_internal_state(Pin::State_Floating);
+            m_pins[i]->set_gpio_state(Pin::State_Floating);
         pinmask >>= 1;
     }
 
@@ -99,15 +99,14 @@ void Port::set_pin_internal_state(uint8_t num, Pin::State state)
 {
     if (num < 8 && ((m_pinmask >> num) & 1)) {
         logger().dbg("Pin %d set to %s", num, Pin::StateName(state));
-        m_pins[num]->set_internal_state(state);
-        //m_signal.raise_u(0, num, state);
+        m_pins[num]->set_gpio_state(state);
     }
 }
 
 
 void Port::raised(const signal_data_t& sigdata, int hooktag)
 {
-    if (sigdata.sigid == Pin::Signal_DigitalStateChange) {
+    if (sigdata.sigid == Pin::Signal_StateChange) {
         Pin::State pin_state = (Pin::State) sigdata.data.as_int();
         uint8_t pin_num = hooktag;
         pin_state_changed(pin_num, pin_state);

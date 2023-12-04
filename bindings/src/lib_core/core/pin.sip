@@ -41,20 +41,26 @@ public:
     };
 
     enum SignalId /BaseType=IntEnum/ {
-        Signal_DigitalStateChange   /PyName=DigitalStateChange/,
-        Signal_AnalogValueChange    /PyName=AnalogValueChange/,
+        Signal_StateChange          /PyName=StateChange/,
+        Signal_DigitalChange        /PyName=DigitalChange/,
+        Signal_VoltageChange        /PyName=VoltageChange/,
+    };
+
+    struct state_t {
+        Pin::State state;
+        double level;
     };
 
     static const char* StateName(Pin::State);
 
     Pin(pin_id_t);
 
-    void set_external_state(Pin::State);
-    void set_external_analog_value(double);
+    void set_external_state(Pin::State, double = 0.0);
+    void set_gpio_state(Pin::State);
     pin_id_t id() const;
     Pin::State state() const;
-    Pin::State digital_state() const;
-    double analog_value() const;
+    bool digital_state() const;
+    double voltage() const;
 
     DataSignal& signal();
 

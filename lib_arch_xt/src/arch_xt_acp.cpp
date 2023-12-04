@@ -105,7 +105,7 @@ bool ArchXT_ACP::register_channels(DataSignalMux& mux, const std::vector<channel
             case Channel_Pin: {
                 Pin* pin = device()->find_pin(channel.pin);
                 if (pin)
-                    mux.add_mux(pin->signal(), Pin::Signal_AnalogValueChange);
+                    mux.add_mux(pin->signal(), Pin::Signal_VoltageChange);
                 else
                     return false;
             } break;
