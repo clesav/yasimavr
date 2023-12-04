@@ -144,7 +144,7 @@ void ArchAVR_SPI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
 
 void ArchAVR_SPI::raised(const signal_data_t& sigdata, int hooktag)
 {
-    if (sigdata.sigid != Pin::Signal_DigitalStateChange) return;
+    if (sigdata.sigid != Pin::Signal_DigitalChange) return;
 
     //On completion of a transfer, raise the interrupt flag
     if (hooktag == HOOKTAG_SPI) {
@@ -154,7 +154,7 @@ void ArchAVR_SPI::raised(const signal_data_t& sigdata, int hooktag)
     }
     //Signal of pin state change, check if we're selected
     else if (hooktag == HOOKTAG_PIN) {
-        m_pin_selected = (sigdata.data.as_int() == Pin::State_Low);
+        m_pin_selected = !sigdata.data.as_uint();
         m_spi.set_selected(m_pin_selected && test_ioreg(m_config.rb_enable));
     }
 }

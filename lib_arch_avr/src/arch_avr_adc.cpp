@@ -239,7 +239,7 @@ void ArchAVR_ADC::read_analog_value()
         case Channel_SingleEnded: {
             Pin* p = device()->find_pin(ch_config->pin_p);
             if (!p) _crash("ADC: Invalid pin configuration");
-            raw_value = p->analog_value();
+            raw_value = p->voltage();
         } break;
 
         case Channel_Differential: {
@@ -247,7 +247,7 @@ void ArchAVR_ADC::read_analog_value()
             if (!p) _crash("ADC: Invalid pin configuration");
             Pin* n = device()->find_pin(ch_config->pin_n);
             if (!n) _crash("ADC: Invalid pin configuration");
-            raw_value = p->analog_value() - n->analog_value();
+            raw_value = p->voltage() - n->voltage();
             bipolar = test_ioreg(m_config.rb_bipolar);
         } break;
 

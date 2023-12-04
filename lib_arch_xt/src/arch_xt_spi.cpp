@@ -169,8 +169,8 @@ void ArchXT_SPI::raised(const signal_data_t& sigdata, int hooktag)
             m_intflag.set_flag();
     }
     else if (hooktag == HOOKTAG_PIN) {
-        if (sigdata.sigid != Pin::Signal_DigitalStateChange) {
-            m_pin_selected = (sigdata.data.as_int() == Pin::State_Low);
+        if (sigdata.sigid != Pin::Signal_DigitalChange) {
+            m_pin_selected = !sigdata.data.as_uint();
             m_spi.set_selected(m_pin_selected && TEST_IOREG(CTRLA, SPI_ENABLE));
         }
     }

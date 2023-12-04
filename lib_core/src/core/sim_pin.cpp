@@ -47,6 +47,14 @@ const char* Pin::StateName(State state)
     };
 }
 
+const Pin::state_t DEFAULT_STATE = { Pin::State_Floating, 0.5 };
+const Pin::state_t ERROR_STATE = { Pin::State_Shorted, 0.5 };
+
+#define STATE_DIGITAL           0x01
+#define STATE_BOOL_HIGH         0x02
+#define STATE_DRIVEN            0x04
+
+
 /**
    Build a pin.
 
@@ -54,50 +62,73 @@ const char* Pin::StateName(State state)
  */
 Pin::Pin(pin_id_t id)
 :m_id(id)
-,m_ext_state(State_Floating)
-,m_int_state(State_Floating)
-,m_resolved_state(State_Floating)
-,m_analog_value(0.0)
+,m_ext_state(DEFAULT_STATE)
+,m_gpio_state(DEFAULT_STATE)
+,m_resolved_state(DEFAULT_STATE)
 {
     //To ensure there is an initial persistent data stored in the signal
-    m_signal.raise(Signal_DigitalStateChange, State_Floating);
-    m_signal.raise(Signal_AnalogValueChange, 0.0);
+    m_signal.set_data(Signal_StateChange, (int) State_Floating);
+    m_signal.set_data(Signal_DigitalChange, 0);
+    m_signal.set_data(Signal_VoltageChange, 0.5);
 }
 
 /**
    Set the external electrical state of the pin.
 
    \param state new external electrical state
+   \param voltage new voltage value, relative to VCC.
+
+   \note The voltage value is used only when state is Analog,
+   and contrained to the range [0.0; 1.0].
  */
-void Pin::set_external_state(State state)
+void Pin::set_external_state(State state, double voltage)
 {
-    State prev_digstate = digital_state();
-    m_ext_state = state;
-    m_resolved_state = resolve_state();
-    State digstate = digital_state();
-    if (digstate != prev_digstate) {
-        m_signal.raise(Signal_DigitalStateChange, digstate);
-        m_signal.raise(Signal_AnalogValueChange, analog_value());
-    }
+    voltage = normalise_level(state, voltage);
+    m_ext_state = { state, voltage };
+    update_resolved_state();
 }
 
+
 /**
-   Set the internal electrical state of the pin.
-   This is only used by general purpose port models.
+   Set the electrical state of the pin as controlled by the GPIO port.
 
    \param state new internal electrical state
  */
-void Pin::set_internal_state(State state)
+void Pin::set_gpio_state(State state)
 {
-    State prev_digstate = digital_state();
-    m_int_state = state;
-    m_resolved_state = resolve_state();
-    State digstate = digital_state();
-    if (digstate != prev_digstate) {
-        m_signal.raise(Signal_DigitalStateChange, digstate);
-        m_signal.raise(Signal_AnalogValueChange, analog_value());
-    }
+    if (state & STATE_DIGITAL)
+        m_gpio_state = { state, ((state & STATE_BOOL_HIGH) ? 1.0 : 0.0) };
+    else
+        m_gpio_state = DEFAULT_STATE;
+
+    update_resolved_state();
 }
+
+
+/*
+   returns a voltage level taking into account the state and constrained
+   to the range [0.0; 1.0]
+ */
+double Pin::normalise_level(State state, double level)
+{
+    //If the state is analog, trim the voltage to the correct range
+    if (state == State_Analog) {
+        if (level < 0.0) level = 0.0;
+        if (level > 1.0) level = 1.0;
+    }
+    //If the state is digital, ensure the voltage level is consistent with the
+    //digital level
+    else if (state & STATE_DIGITAL) {
+        level = (state & STATE_BOOL_HIGH) ? 1.0 : 0.0;
+    }
+    //Other cases : force to the default value
+    else {
+        level = 0.5;
+    }
+
+    return level;
+}
+
 
 /**
    Resolves the electrical state from the combination of
@@ -105,133 +136,86 @@ void Pin::set_internal_state(State state)
 
    \return the resolved state
  */
-Pin::State Pin::resolve_state()
+Pin::state_t Pin::resolved_state(const state_t& gpio, const state_t& ext)
 {
-    switch (m_int_state) {
+    switch (gpio.state) {
         case State_Floating:
-            return m_ext_state;
+            return ext;
 
         case State_PullUp:
-            switch (m_ext_state) {
-                case State_Floating: return State_PullUp;
-                case State_PullDown: return State_Floating;
-                default: return m_ext_state;
-            }
+            if (ext.state & STATE_DRIVEN)
+                return ext;
+            else
+                return gpio;
 
         case State_PullDown:
-            switch(m_ext_state) {
-                case State_Floating: return State_PullDown;
-                case State_PullUp: return State_Floating;
-                default: return m_ext_state;
-            }
-
-        case State_Analog:
-            if (m_ext_state >= State_Analog)
-                return State_Shorted;
+            //Any state other than Floating or PullDown
+            if (ext.state & (STATE_DRIVEN | STATE_BOOL_HIGH))
+                return ext;
             else
-                return State_Analog;
+                return gpio;
 
         case State_High:
-            if (m_ext_state >= State_Analog && m_ext_state != State_High)
-                return State_Shorted;
-            else
-                return State_High;
-
         case State_Low:
-            if (m_ext_state >= State_Analog && m_ext_state != State_Low)
-                return State_Shorted;
+            if (gpio.state == ext.state || !(ext.state & STATE_DRIVEN))
+                return gpio;
             else
-                return State_Low;
-
-        default: return State_Shorted;
-    }
-}
-
-/**
-   Set the external analog voltage.
-   This has no effect in the external state is not Analog.
-
-   \param v the analog voltage value in the range [0.0; 1.0]
- */
-void Pin::set_external_analog_value(double v)
-{
-    //If the pin state is not Analog, ignore any change
-    if (m_ext_state != State_Analog)
-        return;
-
-    //Trim the value to the valid interval [0, 1]
-    if (v < 0.0) v = 0.0;
-    if (v > 1.0) v = 1.0;
-    //Backup the current digital state to detect a potential change
-    State prev_digstate = digital_state();
-
-    m_analog_value = v;
-
-    //If the digital state has change, raise the digital signal
-    State digstate = digital_state();
-    if (digstate != prev_digstate)
-        m_signal.raise(Signal_DigitalStateChange, digstate);
-
-    //Raise the analog signal in any case
-    m_signal.raise(Signal_AnalogValueChange, analog_value());
-}
-
-/**
-   Compute and return the analog level corresponding to the
-   resolved electrical state.
-
-   \return the resolved analog value in the range [0.0; 1.0]
- */
-double Pin::analog_value() const
-{
-    switch (m_resolved_state) {
-        case State_Floating:
-        case State_Analog:
-            return m_analog_value;
-
-        case State_PullUp:
-        case State_High:
-            return 1.0;
-
-        case State_PullDown:
-        case State_Low:
-            return 0.0;
+                return ERROR_STATE;
 
         default:
-            return 0.5;
+            return ERROR_STATE;
     }
 }
+
+
+/*
+   Update the resolved state and raise the corresponding signals
+ */
+void Pin::update_resolved_state()
+{
+    state_t old_state = m_resolved_state;
+    bool old_dig_state = digital_state();
+
+    m_resolved_state = resolved_state(m_gpio_state, m_ext_state);
+
+    if (m_resolved_state.state != old_state.state)
+        m_signal.raise(Signal_StateChange, (int) m_resolved_state.state);
+
+    if (m_resolved_state.level != old_state.level)
+        m_signal.raise(Signal_VoltageChange, m_resolved_state.level);
+
+    bool dig_state = digital_state();
+    if (dig_state != old_dig_state)
+        m_signal.raise(Signal_DigitalChange, (unsigned char) dig_state);
+}
+
 
 /**
-   \return the resolved electrical state. Can be one of
-   High, Low or Shorted.
+   Returns the electrical state expressed as a boolean state.
+   If the state is digital, it returns true if the state is high or
+   false if it's low.
+   In other states, true is returned if the voltage is greater than 0.5.
+
+   \return the resolved state
  */
-Pin::State Pin::digital_state() const
+bool Pin::digital_state() const
 {
-    switch (m_resolved_state) {
-        case State_PullUp:
-        case State_High:
-            return State_High;
-
-        case State_PullDown:
-        case State_Low:
-            return State_Low;
-
-        case State_Shorted:
-            return State_Shorted;
-
-        default:
-            return m_analog_value > 0.5 ? State_High : State_Low;
-    }
+    if (m_resolved_state.state & STATE_DIGITAL)
+        return (m_resolved_state.state & STATE_BOOL_HIGH);
+    else
+        return (m_resolved_state.level > 0.5);
 }
+
 
 /**
    Callback override for receiving signal changes
  */
 void Pin::raised(const signal_data_t& sigdata, int)
 {
-    if (sigdata.sigid == Signal_DigitalStateChange)
+    if (sigdata.sigid == Signal_StateChange)
         set_external_state((State) sigdata.data.as_int());
-    else if (sigdata.sigid == Signal_AnalogValueChange)
-        set_external_analog_value(sigdata.data.as_double());
+
+    else if (sigdata.sigid == Signal_VoltageChange)
+        if (m_ext_state.state == State_Analog)
+            set_external_state(State_Analog, sigdata.data.as_double());
 }
