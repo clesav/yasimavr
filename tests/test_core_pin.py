@@ -27,6 +27,20 @@ Floating = corelib.Pin.State.Floating
 Analog = corelib.Pin.State.Analog
 High = corelib.Pin.State.High
 Low = corelib.Pin.State.Low
+PullDown = corelib.Pin.State.PullDown
+PullUp = corelib.Pin.State.PullUp
+Shorted = corelib.Pin.State.Shorted
+
+states = [Floating, PullDown, PullUp, Analog, High, Low]
+
+resolved_matrix = [
+    [Floating, PullDown, PullUp, Analog,  High,    Low    ],
+    [PullDown, PullDown, PullUp, Analog,  High,    Low    ],
+    [PullUp,   PullUp,   PullUp, Analog,  High,    Low    ],
+    [Floating, PullDown, PullUp, Analog,  High,    Low    ],
+    [High,     High,     High,   Shorted, High,    Shorted],
+    [Low,      Low,      Low,    Shorted, Shorted, Low    ],
+]
 
 
 @pytest.fixture
@@ -37,28 +51,75 @@ def pin():
 def test_pin_initial_state(pin):
     assert pin.id() == corelib.str_to_id('test')
     assert pin.state() == Floating
-    assert pin.analog_value() == 0.0
-    assert pin.digital_state() == Low
+    assert pin.voltage() == 0.5
+    assert not pin.digital_state()
 
 
 def test_pin_external_voltage(pin):
-    pin.set_external_state(Analog)
-    pin.set_external_analog_value(0.25)
-    assert pin.analog_value() == 0.25
+    pin.set_external_state(Analog, 0.25)
+    assert pin.voltage() == 0.25
 
-    pin.set_external_analog_value(0.75)
-    assert pin.analog_value() == 0.75
+    pin.set_external_state(Analog, 0.75)
+    assert pin.voltage() == 0.75
 
     #Check bounds
-    pin.set_external_analog_value(1.5)
-    assert pin.analog_value() == 1.0
-    pin.set_external_analog_value(-0.5)
-    assert pin.analog_value() == 0.0
+    pin.set_external_state(Analog, 1.5)
+    assert pin.voltage() == 1.0
+    pin.set_external_state(Analog, -0.5)
+    assert pin.voltage() == 0.0
 
     #Check forced value for digital states
+    pin.set_external_state(Low, 0.75)
+    assert pin.voltage() ==  0.0
+    pin.set_external_state(High, 0.25)
+    assert pin.voltage() == 1.0
+
+
+def test_pin_resolution(pin):
+    for i, s1 in enumerate(states):
+        for j, s2 in enumerate(states):
+            sr = resolved_matrix[i][j]
+            pin.set_gpio_state(s1)
+            pin.set_external_state(s2)
+            assert pin.state() == sr
+
+
+def test_pin_signal(pin):
+    hook = DictSignalHook(pin.signal())
+
+    StateChange = corelib.Pin.SignalId.StateChange
+    VoltageChange = corelib.Pin.SignalId.VoltageChange
+    DigitalChange = corelib.Pin.SignalId.DigitalChange
+
     pin.set_external_state(Low)
-    pin.set_external_analog_value(0.75)
-    assert pin.analog_value() ==  0.0
-    pin.set_external_state(High)
-    pin.set_external_analog_value(0.25)
-    assert pin.analog_value() == 1.0
+    assert hook.has_data(StateChange)
+    assert hook.pop(StateChange)[0].data == Low
+    assert hook.has_data(VoltageChange)
+    assert hook.pop(VoltageChange)[0].data == 0.0
+
+    pin.set_external_state(PullUp)
+    assert hook.has_data(StateChange)
+    assert hook.pop(StateChange)[0].data == PullUp
+    assert hook.has_data(VoltageChange)
+    assert hook.pop(VoltageChange)[0].data == 1.0
+    assert hook.has_data(DigitalChange)
+    assert hook.pop(DigitalChange)[0].data == 1
+
+    pin.set_external_state(Analog, 1.0)
+    assert hook.has_data(StateChange)
+    assert hook.pop(StateChange)[0].data == Analog
+    assert not hook.has_data(VoltageChange)
+    assert not hook.has_data(DigitalChange)
+
+    pin.set_external_state(Analog, 0.75)
+    assert not hook.has_data(StateChange)
+    assert hook.has_data(VoltageChange)
+    assert hook.pop(VoltageChange)[0].data == 0.75
+    assert not hook.has_data(DigitalChange)
+
+    pin.set_external_state(Analog, 0.25)
+    assert not hook.has_data(StateChange)
+    assert hook.has_data(VoltageChange)
+    assert hook.pop(VoltageChange)[0].data == 0.25
+    assert hook.has_data(DigitalChange)
+    assert hook.pop(DigitalChange)[0].data == 0
