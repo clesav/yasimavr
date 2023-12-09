@@ -223,7 +223,7 @@ void ArchXT_Port::update_pin_states()
     uint8_t pinmask = pin_mask();
 
     for (int i = 0; i < 8; ++i) {
-        if (pinmask && 0x01) {
+        if (pinmask & 0x01) {
             uint8_t pin_cfg = read_ioreg(m_config.reg_base_port + 0x10 + i);
             if (valdir & 0x01) {
                 if (valport & 0x01)
@@ -252,7 +252,7 @@ void ArchXT_Port::pin_state_changed(uint8_t num, Pin::State state)
 
     //Extract the current and new pin boolean state and if there's no change, we return
     bool curr_value = test_ioreg(PORT_REG_ADDR(IN), num);
-    bool new_value = (state == Pin::State_High ? 1 : 0);
+    bool new_value = pin(num)->digital_state();
     if (new_value == curr_value) return;
 
     //Read the Input Sense Config field of the pin control register
