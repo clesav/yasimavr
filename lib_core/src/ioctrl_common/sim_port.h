@@ -63,6 +63,7 @@ public:
 protected:
 
     uint8_t pin_mask() const;
+    Pin* pin(uint8_t num) const;
     void set_pin_internal_state(uint8_t num, Pin::State state);
 
     virtual void pin_state_changed(uint8_t num, Pin::State state);
@@ -81,6 +82,12 @@ private:
 inline uint8_t Port::pin_mask() const
 {
     return m_pinmask;
+}
+
+
+inline Pin* Port::pin(uint8_t num) const
+{
+    return m_pins[num];
 }
 
 

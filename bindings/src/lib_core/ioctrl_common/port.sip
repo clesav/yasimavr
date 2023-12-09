@@ -35,10 +35,4 @@ public:
     virtual bool ctlreq(ctlreq_id_t, ctlreq_data_t*);
     virtual void raised(const signal_data_t&, int);
 
-protected:
-
-    uint8_t pin_mask() const;
-    void set_pin_internal_state(uint8_t, Pin::State);
-    virtual void pin_state_changed(uint8_t, Pin::State);
-
 };

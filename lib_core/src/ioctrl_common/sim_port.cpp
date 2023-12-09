@@ -127,7 +127,7 @@ void Port::pin_state_changed(uint8_t num, Pin::State state)
         return;
     }
 
-    if (state == Pin::State_High)
+    if (m_pins[num]->digital_state())
         m_port_value |= 1 << num;
     else
         m_port_value &= ~(1 << num);
