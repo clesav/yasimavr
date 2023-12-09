@@ -331,6 +331,14 @@ class PeripheralAccessor:
     def base(self):
         return self._per.reg_base
 
+    def signal(self):
+        ctl_id = _corelib.str_to_id(self._per.ctl_id)
+        ok, d = self._probe.device().ctlreq(ctl_id, _corelib.CTLREQ_GET_SIGNAL)
+        if ok:
+            return d.data.as_ptr(_corelib.Signal)
+        else:
+            return None
+
     def __getattr__(self, key):
         if key.startswith('_'):
             raise AttributeError()
@@ -368,15 +376,20 @@ class DeviceAccessor:
             self._probe = arg
             if not self._probe.attached():
                 raise Exception('the probe is not attached to a device')
+            dev_model = arg.device()
         elif isinstance(arg, _corelib.Device):
             self._probe = _corelib.DeviceDebugProbe(arg)
+            dev_model = arg
         else:
             raise TypeError('First arg must be a device or a attached probe')
 
         if descriptor is not None:
             self._desc = descriptor
         else:
-            self._desc = self._probe.device()._descriptor_
+            self._desc = dev_model._descriptor_
+
+        #Convenience dictionary for accessing the pins of the device model
+        self.pins = {name : dev_model.find_pin(name) for name in self._desc.pins}
 
     @property
     def name(self):

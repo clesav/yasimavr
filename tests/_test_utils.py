@@ -21,6 +21,9 @@ import yasimavr.lib.core as corelib
 import collections
 
 
+PinState = corelib.Pin.State
+
+
 class DictSignalHook(corelib.SignalHook):
 
     def __init__(self, signal=None, tag=0):
@@ -33,6 +36,12 @@ class DictSignalHook(corelib.SignalHook):
         k = (int(sigid), index)
         if (int(sigid), index) in self._signals:
             return self._signals.pop(k)
+        else:
+            return None
+
+    def pop_data(self, sigid=0, index=0):
+        if self.has_data(sigid, index):
+            return self.pop(sigid, index)[0].data
         else:
             return None
 
