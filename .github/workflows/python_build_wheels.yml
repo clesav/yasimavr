@@ -104,8 +104,8 @@ jobs:
     - name: Build and install package using the sdist
       run: |
         pip install --upgrade pip
-        find dist -type f -name *.tar.gz -fprint dist/req.txt
-        pip install -r dist/req.txt -v
+        find dist -type f -name *.tar.gz -fprint dist_req.txt
+        pip install -r dist_req.txt -v
 
     - name: Run pytest
       run: |
