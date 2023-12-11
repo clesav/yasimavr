@@ -111,3 +111,8 @@ jobs:
       run: |
         pip install pytest
         pytest tests
+
+    - name: Run twine check
+      run: |
+        pip install twine
+        twine check dist/*
