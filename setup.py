@@ -339,7 +339,7 @@ setup(
     version = VERSION,
     description = DESCRIPTION,
     long_description = open("README.rst").read(),
-    #long_description_content_type = "text/markdown",
+    long_description_content_type = "text/x-rst",
     author = AUTHOR,
     author_email = AUTHOR_EMAIL,
     license = LICENSE,

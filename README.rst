@@ -1,8 +1,8 @@
 yasimavr
-==========
+========
 
 Yet another simulator for Microchip AVR microcontrollers, inspired from simavr
-------------
+------------------------------------------------------------------------------
 
 _yasimavr_ is a simulator for AVR 8-bits microcontrollers.
 It is mainly aimed at the Mega0 and Mega1 series (ATmega80x-160x-320x-480x and others)
@@ -15,12 +15,15 @@ It is composed of 2 layers:
 
 Installation
 ------------
+
 Prerequisites:
+**************
 
 * Python (version >=3.7) and PIP
 * For Ubuntu, libelf is required: ``sudo apt-get install libelf-dev``
 
 Install:
+********
 
 * execute: ``pip install yasimavr``
 
@@ -29,6 +32,7 @@ The python bindings for the C++ librairies are built with the SIP tool from Rive
 
 Thanks
 ------
+
 Quite a few ideas in this software - and even big chunks of code - originate from simavr.
 (https://github.com/buserror/simavr)
 Big thanks to the simavr authors for this great tool !
