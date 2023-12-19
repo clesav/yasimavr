@@ -7,7 +7,7 @@ from yasimavr.lib import core as corelib
 #It captures digital state change notifications and prints the new LED state.
 def pin_hook(sigdata, hooktag):
     #Filter the notifications, we're only interested in digital state changes
-    if sigdata.sigid == corelib.Pin.SignalId.DigitalStateChange:
+    if sigdata.sigid == corelib.Pin.SignalId.DigitalChange:
         #Obtain the new pin state
         pin_state = sigdata.data.as_uint()
         led_state = 'ON' if pin_state == corelib.Pin.State.High else 'OFF'

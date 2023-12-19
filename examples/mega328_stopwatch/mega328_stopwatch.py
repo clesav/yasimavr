@@ -56,7 +56,7 @@ class Number(QtWidgets.QLCDNumber):
     #The pin_index value (0 to 7) gives the pin that actually raised the signal
     def _pin_signal_raised(self, sigdata, pin_index):
         #Filter on digital state changes
-        if sigdata.sigid == corelib.Pin.SignalId.DigitalStateChange:
+        if sigdata.sigid == corelib.Pin.SignalId.DigitalChange:
 
             #Store the new pin state, extracted from the signal data
             if sigdata.data.as_uint() == corelib.Pin.State.High:
