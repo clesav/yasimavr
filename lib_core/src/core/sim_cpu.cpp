@@ -233,7 +233,13 @@ cycle_count_t Core::run_instruction()
 {
 
     if (m_pc > m_config.flashend) {
-        m_device->crash(CRASH_PC_OVERFLOW, "PC over programend");
+        m_device->crash(CRASH_PC_OVERFLOW, "Program Counter out of bounds");
+        return 0;
+    }
+
+    if (!m_flash.programmed(m_pc) || !m_flash.programmed(m_pc + 1)) {
+        m_device->logger().err("Program Counter at unprogrammed flash address: 0x%04x", m_pc);
+        m_device->crash(CRASH_FLASH_ADDR_OVERFLOW, "Invalid flash address");
         return 0;
     }
 
