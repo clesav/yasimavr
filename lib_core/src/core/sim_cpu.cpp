@@ -217,6 +217,13 @@ const char* sreg_to_str(const uint8_t* sreg, char* sreg_str)
 
 #endif
 
+#define EIND_VALID \
+    (use_extended_addressing() && m_config.eind.valid())
+
+#define RAMPZ_VALID \
+    (use_extended_addressing() && m_config.rampz.valid())
+
+
 static bool _is_instruction_32_bits(uint16_t opcode)
 {
     uint16_t o = opcode & 0xfe0f;
@@ -539,7 +546,7 @@ cycle_count_t Core::run_instruction()
                 case 0x95f8: {  // SPM -- Store Program Memory -- 1001 0101 1111 1000 (Z post-increment)
                     bool op = opcode & 0x0010;
                     uint32_t z = get_r16le(R_Z);
-                    if (use_extended_addressing())
+                    if (RAMPZ_VALID)
                         z |= cpu_read_ioreg(m_config.rampz) << 16;
                     uint16_t w = (CPU_READ_GPREG(1) << 8) | CPU_READ_GPREG(0);
                     NVM_request_t nvm_req = { .nvm = -1, .addr = z, .data = w, .instr = m_pc };
@@ -547,7 +554,8 @@ cycle_count_t Core::run_instruction()
 
                     if (op) {
                         z += 2;
-                        cpu_write_ioreg(m_config.rampz, z >> 16);
+                        if (RAMPZ_VALID)
+                            cpu_write_ioreg(m_config.rampz, z >> 16);
                         set_r16le(R_ZL, z);
                     }
 
@@ -557,7 +565,7 @@ cycle_count_t Core::run_instruction()
                 case 0x9409:   // IJMP -- Indirect jump -- 1001 0100 0000 1001
                 case 0x9419: { // EIJMP -- Indirect jump -- 1001 0100 0001 1001   bit 4 is "extended"
                     int e = opcode & 0x10;
-                    if (e && !m_config.eind)
+                    if (e && !EIND_VALID)
                         INVALID_OPCODE;
                     uint32_t z = get_r16le(R_Z);
                     if (e)
@@ -570,7 +578,7 @@ cycle_count_t Core::run_instruction()
                 case 0x9509:   // ICALL -- Indirect Call to Subroutine -- 1001 0101 0000 1001
                 case 0x9519: { // EICALL -- Indirect Call to Subroutine -- 1001 0101 0001 1001   bit 8 is "push pc"
                     int e = opcode & 0x10;
-                    if (e && !m_config.eind)
+                    if (e && !EIND_VALID)
                         INVALID_OPCODE;
                     uint32_t z = get_r16le(R_Z);
                     if (e)
@@ -594,7 +602,7 @@ cycle_count_t Core::run_instruction()
                 case 0x95c8:    // LPM -- Load Program Memory R0 <- (Z) -- 1001 0101 1100 1000
                 case 0x95d8: {  // ELPM -- Load Program Memory R0 <- (Z) -- 1001 0101 1101 1000
                     int e = opcode & 0x10;
-                    if (e && !m_config.rampz)
+                    if (e && !RAMPZ_VALID)
                         INVALID_OPCODE;
                     uint16_t z = get_r16le(R_Z);
                     if (e)
@@ -631,7 +639,7 @@ cycle_count_t Core::run_instruction()
                         }   break;
                         case 0x9006:
                         case 0x9007: {  // ELPM -- Extended Load Program Memory -- 1001 000d dddd 01oo
-                            if (!m_config.rampz)
+                            if (!RAMPZ_VALID)
                                 INVALID_OPCODE;
                             uint32_t z = get_r16le(R_Z) | (cpu_read_ioreg(m_config.rampz) << 16);
                             get_d5(opcode);
