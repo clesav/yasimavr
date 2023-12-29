@@ -130,7 +130,7 @@ void SimLoop::run(cycle_count_t nbcycles)
 
     const time_point clock_start = std::chrono::steady_clock::now();
     cycle_count_t first_cycle = m_cycle_manager.cycle();
-    cycle_count_t final_cycle = (nbcycles > 0) ? (first_cycle + nbcycles) : LLONG_MAX;
+    cycle_count_t final_cycle = (nbcycles > 0) ? (first_cycle + nbcycles - 1) : LLONG_MAX;
 
     while (m_cycle_manager.cycle() <= final_cycle) {
 
@@ -161,7 +161,7 @@ void SimLoop::run(cycle_count_t nbcycles)
     if (m_state < State_Done) {
         m_state = State_Stopped;
         if (nbcycles > 0)
-            m_cycle_manager.increment_cycle(final_cycle - m_cycle_manager.cycle());
+            m_cycle_manager.increment_cycle(final_cycle - m_cycle_manager.cycle() + 1);
     }
 
 }
