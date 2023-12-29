@@ -194,6 +194,9 @@ const char* sreg_to_str(const uint8_t* sreg, char* sreg_str)
         m_device->crash(CRASH_INVALID_OPCODE, msg); \
     } while(0);
 
+
+#ifndef YASIMAVR_NO_TRACE
+
 #define TRACE_JUMP \
     if (m_debug_probe) m_debug_probe->_cpu_notify_jump(new_pc)
 
@@ -203,8 +206,6 @@ const char* sreg_to_str(const uint8_t* sreg, char* sreg_str)
 #define TRACE_RET \
     if (m_debug_probe) m_debug_probe->_cpu_notify_ret()
 
-#ifndef YASIMAVR_NO_TRACE
-
 #define TRACE_OP(f, ...) \
     m_device->logger().log(Logger::Level_Trace, "PC=0x%04X SREG=%s | " f, \
                            m_pc, \
@@ -213,6 +214,9 @@ const char* sreg_to_str(const uint8_t* sreg, char* sreg_str)
 
 #else
 
+#define TRACE_JUMP
+#define TRACE_CALL
+#define TRACE_RET
 #define TRACE_OP(f, ...)
 
 #endif
