@@ -94,7 +94,7 @@ class _PinDigitalFormatter(Formatter):
     """Formatter specialised for the digital state of GPIO pins.
     """
 
-    _SIGID = _corelib.Pin.SignalId.DigitalStateChange
+    _SIGID = _corelib.Pin.SignalId.DigitalChange
     _PinState = _corelib.Pin.State
 
     def __init__(self, pin):
