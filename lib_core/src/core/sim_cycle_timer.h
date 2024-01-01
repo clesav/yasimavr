@@ -49,6 +49,10 @@ public:
     /// Returns true if this timer is scheduled with a manager.
     inline bool scheduled() const { return !!m_manager; }
 
+    bool paused() const;
+
+    cycle_count_t remaining_delay() const;
+
     /**
        \brief Callback from the cycle loop.
 
@@ -93,6 +97,7 @@ public:
     ~CycleManager();
 
     cycle_count_t cycle() const;
+    void set_cycle(cycle_count_t c);
     void increment_cycle(cycle_count_t count);
 
     void schedule(CycleTimer& timer, cycle_count_t when);
@@ -129,6 +134,8 @@ private:
     TimerSlot* pop_from_queue(CycleTimer& timer);
 
     void copy_slot(const CycleTimer& src, CycleTimer& dst);
+
+    TimerSlot* get_slot(const CycleTimer& timer) const;
 
 };
 

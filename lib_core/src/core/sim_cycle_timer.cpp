@@ -28,6 +28,21 @@ YASIMAVR_USING_NAMESPACE
 
 //=======================================================================================
 
+struct CycleManager::TimerSlot {
+    //Pointer to the timer
+    CycleTimer* timer;
+
+    //When the timer is running, it's the absolute cycle when the timer should be called
+    //When the timer is paused, it's the remaining delay until a call
+    cycle_count_t when;
+
+    //Indicates if the timer is paused
+    bool paused;
+};
+
+
+//=======================================================================================
+
 CycleTimer::CycleTimer()
 :m_manager(nullptr)
 {}
@@ -57,19 +72,38 @@ CycleTimer& CycleTimer::operator=(const CycleTimer& other)
     return *this;
 }
 
+/**
+   Returns true if this timer is scheduled and paused
+ */
+bool CycleTimer::paused() const
+{
+    if (!m_manager)
+        return false;
 
-struct CycleManager::TimerSlot {
-    //Pointer to the timer
-    CycleTimer* timer;
+    auto slot = m_manager->get_slot(*this);
+    return slot->paused;
+}
 
-    //When the timer is running, it's the absolute cycle when the timer should be called
-    //When the timer is paused, it's the remaining delay until a call
-    cycle_count_t when;
 
-    //Indicates if the timer is paused
-    bool paused;
-};
+/**
+   Returns the remaining delay before this timer is called, or -1 if the timer isn't scheduled.
+ */
+cycle_count_t CycleTimer::remaining_delay() const
+{
+    if (!m_manager)
+        return INVALID_CYCLE;
 
+    auto slot = m_manager->get_slot(*this);
+    if (slot->paused)
+        return slot->when;
+    else if (slot->when < m_manager->cycle())
+        return 0;
+    else
+        return slot->when - m_manager->cycle();
+}
+
+
+//=======================================================================================
 
 CycleManager::CycleManager()
 :m_cycle(0)
@@ -86,6 +120,14 @@ CycleManager::~CycleManager()
     }
 
     m_timer_slots.clear();
+}
+
+/**
+   Set the current value of the cycle counter.
+ */
+void CycleManager::set_cycle(cycle_count_t c)
+{
+    m_cycle = c >= 0 ? c : 0;
 }
 
 /**
@@ -122,6 +164,16 @@ CycleManager::TimerSlot* CycleManager::pop_from_queue(CycleTimer& timer)
             m_timer_slots.erase(it);
             return slot;
         }
+    }
+    return nullptr;
+}
+
+
+CycleManager::TimerSlot* CycleManager::get_slot(const CycleTimer& timer) const
+{
+    for (auto slot : m_timer_slots) {
+        if (slot->timer == &timer)
+            return slot;
     }
     return nullptr;
 }
