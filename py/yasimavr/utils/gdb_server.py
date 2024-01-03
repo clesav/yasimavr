@@ -314,7 +314,7 @@ class GDB_Stub:
                     self._probe.reset_device()
             elif rcmd == 'halt':
                 with self._simloop:
-                    self._probe.set_device_state(Device.State.Stopped)
+                    self._probe.set_device_state(Device.State.Done)
 
             self.__send_reply('OK')
 
