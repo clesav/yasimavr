@@ -264,7 +264,7 @@ def _run_syncloop():
 
 
 def _run_asyncloop(args):
-    from .utils.gdb_server import GDB_Stub
+    from ..utils.gdb_server import GDB_Stub
 
     global _simloop
 
@@ -325,7 +325,7 @@ def main(args=None):
         if _run_args.gdb is None:
             _run_syncloop()
         else:
-            _run_asyncloop()
+            _run_asyncloop(_run_args)
     except KeyboardInterrupt:
         print('Simulation interrupted !!')
 
