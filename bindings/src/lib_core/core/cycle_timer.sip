@@ -31,6 +31,8 @@ public:
     CycleTimer();
 
     bool scheduled() const;
+    bool paused() const;
+    cycle_count_t remaining_delay() const;
 
     virtual cycle_count_t next(cycle_count_t when) = 0;
 
@@ -47,6 +49,7 @@ public:
     CycleManager();
 
     cycle_count_t cycle() const;
+    void set_cycle(cycle_count_t);
     void increment_cycle(cycle_count_t);
 
     void schedule(CycleTimer&, cycle_count_t);
