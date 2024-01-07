@@ -39,8 +39,10 @@ def _create_argparser():
         X: identifies the GPIO port (ex: 'A', 'B')
     pin PIN[/VARNAME] : Pin digital value tracing
         PIN: identifies the pin (ex: 'PA0')
-    data ADDR[/VARNAME] : Memory tracing, currently only works for SRAM
-        ADDR: the hexadecimal address in data space
+    data SYM/[name=VARNAME] :
+        Memory tracing
+        SYM: the name of a symbol or an hexadecimal address in data space
+        Currently only works if the symbol or address is placed in SRAM
     vector N[/VARNAME] : Interrupt state tracing
         N: the vector index
     signal CTL/[size=SIZE],[id=ID],[ix=IX],[name=VARNAME] : Generic peripheral signal tracing
@@ -116,6 +118,8 @@ class _WatchDataTrace(Formatter):
 
         self._addr = addr
 
+        #Add a watchpoint that raises the signal when the data is written
+        #and connect to the watchpoint signal
         f = _corelib.DeviceDebugProbe.WatchpointFlags
         _probe.insert_watchpoint(addr, 1, f.Write | f.Signal)
         _probe.watchpoint_signal().connect(self)
@@ -182,6 +186,9 @@ def _init_VCD():
     global _vcd_out
     _vcd_out = VCD_Recorder(_simloop, _run_args.output)
 
+    #Symbol map, only built if needed
+    sym_map = None
+
     for kind, s_params in _run_args.traces:
 
         if kind == 'port':
@@ -194,15 +201,32 @@ def _init_VCD():
             _vcd_out.add_digital_pin(pin, params['name'])
 
         elif kind == 'data':
+            #Ensure we have a connected probe
             global _probe
             if _probe is None:
                 _probe = _corelib.DeviceDebugProbe(_device)
 
-            hex_addr, params = _parse_trace_params(s_params, {'name': ''})
+            addr_or_symbol, params = _parse_trace_params(s_params, {'name': ''})
 
-            data_name = params['name'] or hex_addr
+            #Create the symbol map if not done yet
+            if sym_map is None:
+                #Retrieve the symbol table from the firmware and turn it into a dictionary
+                sym_map = { s.name: s for s in _firmware.symbols() }
 
-            tr = _WatchDataTrace(int(hex_addr, 16))
+            if addr_or_symbol in sym_map:
+                #Get the symbol and check that it is located in data space
+                sym = sym_map[addr_or_symbol]
+                if sym.area != _corelib.Firmware.Area.Data:
+                    raise Exception('Invalid symbol referenced')
+
+                bin_addr = sym.addr
+
+            else:
+                bin_addr = int(addr_or_symbol, 16)
+
+            data_name = params['name'] or addr_or_symbol
+
+            tr = _WatchDataTrace(bin_addr)
             _vcd_out.add(tr, data_name)
 
         elif kind == 'vector':
