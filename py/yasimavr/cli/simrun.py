@@ -39,9 +39,11 @@ def _create_argparser():
         X: identifies the GPIO port (ex: 'A', 'B')
     pin PIN[/VARNAME] : Pin digital value tracing
         PIN: identifies the pin (ex: 'PA0')
-    data SYM/[name=VARNAME] :
+    data SYM/[size=SIZE][offset=OFFSET][name=VARNAME] :
         Memory tracing
         SYM: the name of a symbol or an hexadecimal address in data space
+        SIZE: size in bytes of the data to trace (default is the symbol size or 1 for a raw address)
+        OFFSET: (only for symbols) offset in bytes from the symbol base address (default is 0)
         Currently only works if the symbol or address is placed in SRAM
     vector N[/VARNAME] : Interrupt state tracing
         N: the vector index
@@ -232,7 +234,8 @@ def _init_VCD():
             if _probe is None:
                 _probe = _corelib.DeviceDebugProbe(_device)
 
-            addr_or_symbol, params = _parse_trace_params(s_params, {'name': ''})
+            param_map = {'name': '', 'size': 0, 'offset': 0}
+            addr_or_symbol, params = _parse_trace_params(s_params, param_map)
 
             #Create the symbol map if not done yet
             if sym_map is None:
@@ -243,16 +246,23 @@ def _init_VCD():
                 #Get the symbol and check that it is located in data space
                 sym = sym_map[addr_or_symbol]
                 if sym.area != _corelib.Firmware.Area.Data:
-                    raise Exception('Invalid symbol referenced')
+                    raise Exception('Invalid symbol referenced: ' + addr_or_symbol)
 
-                bin_addr = sym.addr
-                size = sym.size
+                #Read the size and offset argument
+                offset = int(params['offset'])
+                bin_addr = sym.addr + offset
+                size = int(params['size']) if params['size'] else sym.size
 
             else:
                 bin_addr = int(addr_or_symbol, 16)
-                size = 1
+                size = int(params['size']) if params['size'] else 1
 
             data_name = params['name'] or addr_or_symbol
+
+            #Check the validity of the address range to trace
+            dataend = _device._descriptor_.mem_spaces['data'].memend
+            if size < 1 or bin_addr < 0 or (bin_addr + size - 1) > dataend:
+                raise Exception('Invalid address or size for ' + data_name)
 
             tr = _WatchDataTrace(bin_addr, size)
             _vcd_out.add(tr, data_name)
