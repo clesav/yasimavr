@@ -113,23 +113,49 @@ _probe = None
 
 class _WatchDataTrace(Formatter):
 
-    def __init__(self, addr):
-        super().__init__('reg', 8, 0)
+    def __init__(self, addr, size):
+        super().__init__('reg', 8 * size, 0)
 
-        self._addr = addr
+        self._lo_addr = addr
+        self._hi_addr = addr + size - 1
+        self._size = size
+        self._byte_flags = [False] * size
+        self._byte_count = 0
+        self._byte_values = bytearray(size)
 
         #Add a watchpoint that raises the signal when the data is written
         #and connect to the watchpoint signal
         f = _corelib.DeviceDebugProbe.WatchpointFlags
-        _probe.insert_watchpoint(addr, 1, f.Write | f.Signal)
+        _probe.insert_watchpoint(addr, size, f.Write | f.Signal)
         _probe.watchpoint_signal().connect(self)
 
+    #Callback override for receiving watchpoint signals on write operations
+    #sigdata.index contains the data address being written and sigdata.data contains the byte value
     def filter(self, sigdata, hooktag):
-        return (sigdata.sigid == _corelib.DeviceDebugProbe.WatchpointFlags.Write and \
-                sigdata.index == self._addr)
+        #Filter on watchpoint writes on the right address range
+        if sigdata.sigid != _corelib.DeviceDebugProbe.WatchpointFlags.Write:
+            return False
+        if not (self._lo_addr <= sigdata.index <= self._hi_addr):
+            return False
+
+        #Update the byte in the private value variable
+        addr_offset = sigdata.index - self._lo_addr
+        self._byte_values[addr_offset] = sigdata.data.as_uint()
+
+        #Filter out the signal unless all bytes have been updated
+        if self._byte_flags[addr_offset]:
+            return False
+        elif self._byte_count < self._size - 1:
+            self._byte_flags[addr_offset] = True
+            self._byte_count += 1
+            return False
+        else:
+            self._byte_flags = [False] * self._size
+            self._byte_count = 0
+            return True
 
     def format(self, sigdata, hooktag):
-        return sigdata.data.as_uint()
+        return int.from_bytes(self._byte_values, 'little')
 
 
 def _print_model_list():
@@ -220,13 +246,15 @@ def _init_VCD():
                     raise Exception('Invalid symbol referenced')
 
                 bin_addr = sym.addr
+                size = sym.size
 
             else:
                 bin_addr = int(addr_or_symbol, 16)
+                size = 1
 
             data_name = params['name'] or addr_or_symbol
 
-            tr = _WatchDataTrace(bin_addr)
+            tr = _WatchDataTrace(bin_addr, size)
             _vcd_out.add(tr, data_name)
 
         elif kind == 'vector':
