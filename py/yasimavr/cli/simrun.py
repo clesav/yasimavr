@@ -39,11 +39,12 @@ def _create_argparser():
         X: identifies the GPIO port (ex: 'A', 'B')
     pin PIN[/VARNAME] : Pin digital value tracing
         PIN: identifies the pin (ex: 'PA0')
-    data SYM/[size=SIZE][offset=OFFSET][name=VARNAME] :
+    data SYM/[size=SIZE],[offset=OFFSET],[mbmode=MBMODE],[name=VARNAME] :
         Memory tracing
         SYM: the name of a symbol or an hexadecimal address in data space
         SIZE: size in bytes of the data to trace (default is the symbol size or 1 for a raw address)
         OFFSET: (only for symbols) offset in bytes from the symbol base address (default is 0)
+        MBMODE: if set to non-zero value, forces a record for each byte write operation.
         Currently only works if the symbol or address is placed in SRAM
     vector N[/VARNAME] : Interrupt state tracing
         N: the vector index
@@ -115,12 +116,13 @@ _probe = None
 
 class _WatchDataTrace(Formatter):
 
-    def __init__(self, addr, size):
+    def __init__(self, addr, size, mb_mode):
         super().__init__('reg', 8 * size, 0)
 
         self._lo_addr = addr
         self._hi_addr = addr + size - 1
         self._size = size
+        self._mb_mode = mb_mode
         self._byte_flags = [False] * size
         self._byte_count = 0
         self._byte_values = bytearray(size)
@@ -144,8 +146,10 @@ class _WatchDataTrace(Formatter):
         addr_offset = sigdata.index - self._lo_addr
         self._byte_values[addr_offset] = sigdata.data.as_uint()
 
+        if self._mb_mode:
+            return True
         #Filter out the signal unless all bytes have been updated
-        if self._byte_flags[addr_offset]:
+        elif self._byte_flags[addr_offset]:
             return False
         elif self._byte_count < self._size - 1:
             self._byte_flags[addr_offset] = True
@@ -234,7 +238,7 @@ def _init_VCD():
             if _probe is None:
                 _probe = _corelib.DeviceDebugProbe(_device)
 
-            param_map = {'name': '', 'size': 0, 'offset': 0}
+            param_map = {'name': '', 'size': 0, 'offset': 0, 'mbmode': 0}
             addr_or_symbol, params = _parse_trace_params(s_params, param_map)
 
             #Create the symbol map if not done yet
@@ -253,9 +257,12 @@ def _init_VCD():
                 bin_addr = sym.addr + offset
                 size = int(params['size']) if params['size'] else sym.size
 
+                mb_mode = bool(int(params['mbmode']))
+
             else:
                 bin_addr = int(addr_or_symbol, 16)
                 size = int(params['size']) if params['size'] else 1
+                mb_mode = True
 
             data_name = params['name'] or addr_or_symbol
 
@@ -264,7 +271,7 @@ def _init_VCD():
             if size < 1 or bin_addr < 0 or (bin_addr + size - 1) > dataend:
                 raise Exception('Invalid address or size for ' + data_name)
 
-            tr = _WatchDataTrace(bin_addr, size)
+            tr = _WatchDataTrace(bin_addr, size, mb_mode)
             _vcd_out.add(tr, data_name)
 
         elif kind == 'vector':
