@@ -107,13 +107,22 @@ Add a variable to be traced. KIND can be one of: ``pin``, ``port``, ``data``, ``
 
     * VARNAME is the variable name as it appears in the VCD file. If not specified, it is the port letter.
 
-* data ADDR[/VARNAME] :
-    Trace of a internal 8-bits data.
+* data SYM_OR_ADDR/[size=SIZE],[offset=OFFSET],[name=VARNAME] :
+    Trace of internal data.
 
-    * ADDR is the address in data space.
-    * VARNAME is the variable name as it appears in the VCD file. If not specified, it is the memory address in hexadecimal format.
+    * SYM_OR_ADDR is either a global symbol name or a raw hexadecimal address in data space.
+    * SIZE is the size in bytes of the data to trace. If not specified, it is the symbol size or 1 for a raw address.
+    * OFFSET (only for symbols) is an optional offset in bytes from the symbol address. If not specified, it is zero.
+    * MBMODE if set to non-zero integer, changes the mode for multibyte data. (see note)
+    * VARNAME is the variable name as it appears in the VCD file. If not specified, it is the symbol name or the address in hexadecimal format.
 
     Currently, it only works if the address corresponds to a SRAM location.
+
+    .. note::
+       | Multibyte data is recorded as (8*size)-bit vectors with big endian order.
+       | The default behaviour for multibyte data is to create a record only once all bytes in the data are written.
+       | For example a 32-bits variable gets written in memory 4 times in a row (once for each byte) but only the last one will generate an entry in the VCD record with the value resulting from the 4 write operations.
+       | Using MBMODE, the behaviour can be altered so that every byte write operation generates a VCD entry.
 
 * vector N[/VARNAME] :
     Trace of an interrupt vector.
