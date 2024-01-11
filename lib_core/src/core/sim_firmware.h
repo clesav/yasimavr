@@ -60,11 +60,19 @@ public:
 
     enum Area {
         Area_Flash,
+        Area_Data,
         Area_EEPROM,
         Area_Fuses,
         Area_Lock,
         Area_Signature,
         Area_UserSignatures,
+    };
+
+    struct Symbol {
+        size_t      addr;
+        size_t      size;
+        std::string name;
+        Area        area;
     };
 
     ///Free attribute, name of the model, not used by the simulation
@@ -99,6 +107,9 @@ public:
     mem_addr_t datasize() const;
     mem_addr_t bsssize() const;
 
+    void add_symbol(const Symbol& s);
+    const std::vector<Symbol>& symbols() const;
+
     Firmware& operator=(const Firmware& other);
 
 private:
@@ -106,6 +117,7 @@ private:
     std::map<Area, std::vector<Block>> m_blocks;
     mem_addr_t m_datasize;
     mem_addr_t m_bsssize;
+    std::vector<Symbol> m_symbols;
 
 };
 
@@ -117,6 +129,11 @@ inline mem_addr_t Firmware::datasize() const
 inline mem_addr_t Firmware::bsssize() const
 {
     return m_bsssize;
+}
+
+inline const std::vector<Firmware::Symbol>& Firmware::symbols() const
+{
+    return m_symbols;
 }
 
 

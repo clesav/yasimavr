@@ -80,6 +80,34 @@ static Elf32_Phdr* elf_find_phdr(Elf32_Phdr* phdr_table, size_t phdr_count, GElf
 }
 
 
+static Firmware::Area addr_to_area(Elf64_Addr addr)
+{
+    if (addr < 0x800000)
+        return Firmware::Area_Flash;
+    else if (addr < 0x810000)
+        return Firmware::Area_Data;
+    else if (addr < 0x820000)
+        return Firmware::Area_EEPROM;
+    else if (addr < 0x830000)
+        return Firmware::Area_Fuses;
+    else if (addr < 0x840000)
+        return Firmware::Area_Lock;
+    else if (addr < 0x850000)
+        return Firmware::Area_Signature;
+    else
+        return Firmware::Area_UserSignatures;
+}
+
+
+static size_t elf_addr_to_area_addr(Elf64_Addr elf_addr)
+{
+    if (elf_addr < 0x800000)
+        return elf_addr;
+    else
+        return elf_addr & 0x00FFFFULL;
+}
+
+
 /**
    Read a ELF file and build a firmware, using the section binary blocks from the file.
    The ELF format decoding relies on the library libelf.
@@ -123,6 +151,29 @@ Firmware* Firmware::read_elf(const std::string& filename)
         //Get the section header and its name
         GElf_Shdr shdr;
         gelf_getshdr(scn, &shdr);
+
+        //Read the symbol table
+        if (shdr.sh_type == SHT_SYMTAB) {
+            Elf_Data* sdata = elf_getdata(scn, nullptr);
+            //the number of symbols is the table size divided by entry size
+            int symbol_count = shdr.sh_size / shdr.sh_entsize;
+            for (int i = 0; i < symbol_count; ++i) {
+                GElf_Sym elf_sym;
+                gelf_getsym(sdata, i, &elf_sym);
+                //Only keep global symbols
+                if (ELF32_ST_TYPE(elf_sym.st_info) == STT_OBJECT) {
+                    //Extract the symbol name and create an entry in our table
+                    const char * sym_name = elf_strptr(elf, shdr.sh_link, elf_sym.st_name);
+                    Symbol sym = { elf_addr_to_area_addr(elf_sym.st_value),
+                                   elf_sym.st_size,
+                                   sym_name,
+                                   addr_to_area(elf_sym.st_value) };
+                    firmware->m_symbols.push_back(sym);
+                }
+            }
+            continue;
+        }
+
         char * name = elf_strptr(elf, elf_header.e_shstrndx, shdr.sh_name);
 
         //For bss and data sections, store the size
@@ -291,6 +342,12 @@ bool Firmware::load_memory(Area area, NonVolatileMemory& memory) const
 }
 
 
+void Firmware::add_symbol(const Symbol& s)
+{
+    m_symbols.push_back(s);
+}
+
+
 Firmware& Firmware::operator=(const Firmware& other)
 {
     for (auto it = m_blocks.begin(); it != m_blocks.end(); ++it) {
@@ -307,6 +364,7 @@ Firmware& Firmware::operator=(const Firmware& other)
     console_register = other.console_register;
     m_datasize = other.m_datasize;
     m_bsssize = other.m_bsssize;
+    m_symbols = other.m_symbols;
 
     for (auto it = other.m_blocks.begin(); it != other.m_blocks.end(); ++it) {
         for (const Block& b : it->second)

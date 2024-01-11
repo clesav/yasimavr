@@ -39,8 +39,13 @@ def _create_argparser():
         X: identifies the GPIO port (ex: 'A', 'B')
     pin PIN[/VARNAME] : Pin digital value tracing
         PIN: identifies the pin (ex: 'PA0')
-    data ADDR[/VARNAME] : Memory tracing, currently only works for SRAM
-        ADDR: the hexadecimal address in data space
+    data SYM/[size=SIZE],[offset=OFFSET],[mbmode=MBMODE],[name=VARNAME] :
+        Memory tracing
+        SYM: the name of a symbol or an hexadecimal address in data space
+        SIZE: size in bytes of the data to trace (default is the symbol size or 1 for a raw address)
+        OFFSET: (only for symbols) offset in bytes from the symbol base address (default is 0)
+        MBMODE: if set to non-zero value, forces a record for each byte write operation.
+        Currently only works if the symbol or address is placed in SRAM
     vector N[/VARNAME] : Interrupt state tracing
         N: the vector index
     signal CTL/[size=SIZE],[id=ID],[ix=IX],[name=VARNAME] : Generic peripheral signal tracing
@@ -111,21 +116,52 @@ _probe = None
 
 class _WatchDataTrace(Formatter):
 
-    def __init__(self, addr):
-        super().__init__('reg', 8, 0)
+    def __init__(self, addr, size, mb_mode):
+        super().__init__('reg', 8 * size, 0)
 
-        self._addr = addr
+        self._lo_addr = addr
+        self._hi_addr = addr + size - 1
+        self._size = size
+        self._mb_mode = mb_mode
+        self._byte_flags = [False] * size
+        self._byte_count = 0
+        self._byte_values = bytearray(size)
 
+        #Add a watchpoint that raises the signal when the data is written
+        #and connect to the watchpoint signal
         f = _corelib.DeviceDebugProbe.WatchpointFlags
-        _probe.insert_watchpoint(addr, 1, f.Write | f.Signal)
+        _probe.insert_watchpoint(addr, size, f.Write | f.Signal)
         _probe.watchpoint_signal().connect(self)
 
+    #Callback override for receiving watchpoint signals on write operations
+    #sigdata.index contains the data address being written and sigdata.data contains the byte value
     def filter(self, sigdata, hooktag):
-        return (sigdata.sigid == _corelib.DeviceDebugProbe.WatchpointFlags.Write and \
-                sigdata.index == self._addr)
+        #Filter on watchpoint writes on the right address range
+        if sigdata.sigid != _corelib.DeviceDebugProbe.WatchpointFlags.Write:
+            return False
+        if not (self._lo_addr <= sigdata.index <= self._hi_addr):
+            return False
+
+        #Update the byte in the private value variable
+        addr_offset = sigdata.index - self._lo_addr
+        self._byte_values[addr_offset] = sigdata.data.as_uint()
+
+        if self._mb_mode:
+            return True
+        #Filter out the signal unless all bytes have been updated
+        elif self._byte_flags[addr_offset]:
+            return False
+        elif self._byte_count < self._size - 1:
+            self._byte_flags[addr_offset] = True
+            self._byte_count += 1
+            return False
+        else:
+            self._byte_flags = [False] * self._size
+            self._byte_count = 0
+            return True
 
     def format(self, sigdata, hooktag):
-        return sigdata.data.as_uint()
+        return int.from_bytes(self._byte_values, 'little')
 
 
 def _print_model_list():
@@ -182,6 +218,9 @@ def _init_VCD():
     global _vcd_out
     _vcd_out = VCD_Recorder(_simloop, _run_args.output)
 
+    #Symbol map, only built if needed
+    sym_map = None
+
     for kind, s_params in _run_args.traces:
 
         if kind == 'port':
@@ -194,15 +233,45 @@ def _init_VCD():
             _vcd_out.add_digital_pin(pin, params['name'])
 
         elif kind == 'data':
+            #Ensure we have a connected probe
             global _probe
             if _probe is None:
                 _probe = _corelib.DeviceDebugProbe(_device)
 
-            hex_addr, params = _parse_trace_params(s_params, {'name': ''})
+            param_map = {'name': '', 'size': 0, 'offset': 0, 'mbmode': 0}
+            addr_or_symbol, params = _parse_trace_params(s_params, param_map)
 
-            data_name = params['name'] or hex_addr
+            #Create the symbol map if not done yet
+            if sym_map is None:
+                #Retrieve the symbol table from the firmware and turn it into a dictionary
+                sym_map = { s.name: s for s in _firmware.symbols() }
 
-            tr = _WatchDataTrace(int(hex_addr, 16))
+            if addr_or_symbol in sym_map:
+                #Get the symbol and check that it is located in data space
+                sym = sym_map[addr_or_symbol]
+                if sym.area != _corelib.Firmware.Area.Data:
+                    raise Exception('Invalid symbol referenced: ' + addr_or_symbol)
+
+                #Read the size and offset argument
+                offset = int(params['offset'])
+                bin_addr = sym.addr + offset
+                size = int(params['size']) if params['size'] else sym.size
+
+                mb_mode = bool(int(params['mbmode']))
+
+            else:
+                bin_addr = int(addr_or_symbol, 16)
+                size = int(params['size']) if params['size'] else 1
+                mb_mode = True
+
+            data_name = params['name'] or addr_or_symbol
+
+            #Check the validity of the address range to trace
+            dataend = _device._descriptor_.mem_spaces['data'].memend
+            if size < 1 or bin_addr < 0 or (bin_addr + size - 1) > dataend:
+                raise Exception('Invalid address or size for ' + data_name)
+
+            tr = _WatchDataTrace(bin_addr, size, mb_mode)
             _vcd_out.add(tr, data_name)
 
         elif kind == 'vector':

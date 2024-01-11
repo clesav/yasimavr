@@ -47,11 +47,19 @@ public:
 
     enum Area {
         Area_Flash           /PyName=Flash/,
+        Area_Data            /PyName=Data/,
         Area_EEPROM          /PyName=EEPROM/,
         Area_Fuses           /PyName=Fuses/,
         Area_Lock            /PyName=Lock/,
         Area_Signature       /PyName=Signature/,
         Area_UserSignatures  /PyName=UserSignatures/,
+    };
+
+    struct Symbol {
+        size_t      addr;
+        size_t      size;
+        std::string name;
+        Area        area;
     };
 
     std::string variant;
@@ -81,5 +89,7 @@ public:
     bool load_memory(Area, NonVolatileMemory&) const;
     mem_addr_t datasize() const;
     mem_addr_t bsssize() const;
+    void add_symbol(const Firmware::Symbol&);
+    const std::vector<Firmware::Symbol>& symbols() const;
 
 };
