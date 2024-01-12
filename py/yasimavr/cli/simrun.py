@@ -179,7 +179,6 @@ def _load_firmware():
         raise Exception('Reading the firmware failed')
 
     _firmware.frequency = _run_args.frequency
-    _firmware.variant = _run_args.mcu
     if _run_args.analog is not None:
         _firmware.vcc = _run_args.analog
         if _run_args.reference is not None:
