@@ -37,8 +37,7 @@ YASIMAVR_USING_NAMESPACE
    Build a empty firmware
  */
 Firmware::Firmware()
-:variant("")
-,frequency(0)
+:frequency(0)
 ,vcc(0.0)
 ,aref(0.0)
 ,console_register(0)
@@ -357,7 +356,6 @@ Firmware& Firmware::operator=(const Firmware& other)
     }
     m_blocks.clear();
 
-    variant = other.variant;
     frequency = other.frequency;
     vcc = other.vcc;
     aref = other.aref;

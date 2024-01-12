@@ -62,7 +62,6 @@ public:
         Area        area;
     };
 
-    std::string variant;
     unsigned long frequency;
     double vcc;
     double aref;

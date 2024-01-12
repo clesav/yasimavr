@@ -75,8 +75,6 @@ public:
         Area        area;
     };
 
-    ///Free attribute, name of the model, not used by the simulation
-    std::string variant;
     ///Main clock frequency in hertz, mandatory to run the simulation.
     unsigned long frequency;
     ///Power supply voltage in volts. If not set, analog peripherals such as ADC are not usable.
