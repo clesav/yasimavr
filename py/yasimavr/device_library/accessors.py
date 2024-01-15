@@ -176,22 +176,25 @@ class EnumFieldAccessor(_FieldAccessor):
 class RegisterAccessor:
     '''Accessor class for a I/O register'''
 
-    def __init__(self, probe, per, addr, reg):
+    def __init__(self, probe, per, addr, name, reg):
         self._probe = probe
         self._per = per
+        self._reg_name = name
 
         if isinstance(reg, ProxyRegisterDescriptor):
             self._reg = reg.reg
             self._addr = addr + reg.offset
+            self._size = 1
         else:
             self._reg = reg
             self._addr = addr
+            self._size = reg.size
 
         self._active = True
 
     @property
     def name(self):
-        return '%s.%s' % (self._per.name, self._reg.name)
+        return '%s.%s' % (self._per.name, self._reg_name)
 
     @property
     def address(self):
@@ -201,7 +204,7 @@ class RegisterAccessor:
         if self._reg.kind == 'ARRAY':
             return self.name + ' ' + str(self.read())
         else:
-            pattern = '%%s [0x%%0%dx]' % (self._reg.size * 2)
+            pattern = '%%s [0x%%0%dx]' % (self._size * 2)
             return pattern % (self.name, self.read())
 
     __repr__ = __str__
@@ -226,12 +229,12 @@ class RegisterAccessor:
             raise ValueError('Cannot write unsupported register ' + self.name)
 
         #Easy and most common case first
-        if self._reg.size == 1:
+        if self._size == 1:
             self._probe.write_ioreg(self._addr, value)
 
         #Array case
         elif self._reg.kind == 'ARRAY':
-            for i in range(self._reg.size):
+            for i in range(self._size):
                 self._probe.write_ioreg(self._addr + i, value[i])
 
         #Multi-byte integer.
@@ -242,18 +245,18 @@ class RegisterAccessor:
             if lsb_first is None:
                 raise Exception('Byte order settings are missing')
 
-            byte_indexes = list(range(self._reg.size))
+            byte_indexes = list(range(self._size))
             if not lsb_first:
                 byte_indexes.reverse()
 
-            byte_values = value.to_bytes(self._reg.size, byteorder='little')
+            byte_values = value.to_bytes(self._size, byteorder='little')
 
             for i in byte_indexes:
                 self._probe.write_ioreg(self._addr + i, byte_values[i])
 
     def read(self):
         #Easy and most common case first
-        if self._reg.size == 1:
+        if self._size == 1:
             return self._probe.read_ioreg(self._addr)
 
         #Array case : no conversion to integer required
@@ -269,11 +272,11 @@ class RegisterAccessor:
         if lsb_first is None:
             raise Exception('Byte order settings are missing')
 
-        byte_indexes = list(range(self._reg.size))
+        byte_indexes = list(range(self._size))
         if not lsb_first:
             byte_indexes.reverse()
 
-        byte_values = bytearray(self._reg.size)
+        byte_values = bytearray(self._size)
         for i in byte_indexes:
             byte_values[i] = self._probe.read_ioreg(self._addr + i)
 
@@ -345,14 +348,14 @@ class PeripheralAccessor:
         else:
             reg_descriptor = self._per.class_descriptor.registers[key]
             reg_addr = self._per.reg_address(key)
-            return RegisterAccessor(self._probe, self, reg_addr, reg_descriptor)
+            return RegisterAccessor(self._probe, self, reg_addr, key, reg_descriptor)
 
     def __setattr__(self, key, value):
         if getattr(self, '_active', False):
             value = value.__index__()
             reg_descriptor = self._per.class_descriptor.registers[key]
             reg_addr = self._per.reg_address(key)
-            reg_accessor = RegisterAccessor(self._probe, self, reg_addr, reg_descriptor)
+            reg_accessor = RegisterAccessor(self._probe, self, reg_addr, key, reg_descriptor)
             reg_accessor.write(value)
         else:
             object.__setattr__(self, key, value)

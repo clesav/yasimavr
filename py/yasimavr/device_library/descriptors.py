@@ -143,6 +143,7 @@ class RegisterFieldDescriptor:
 
         self.readonly = bool(field_config.get('readonly', False))
         self.supported = bool(field_config.get('supported', True))
+        self.alias = str(field_config.get('alias', ''))
 
         if self.kind == 'BIT':
             mask = 1 << self.pos
@@ -172,8 +173,6 @@ class RegisterDescriptor:
             self.address = int(reg_config['address'])
         elif 'offset' in reg_config:
             self.offset = int(reg_config['offset'])
-        else:
-            raise DeviceConfigException('No address for register ' + self.name)
 
         self.size = int(reg_config.get('size', 1))
 
@@ -181,10 +180,19 @@ class RegisterDescriptor:
 
         self.fields = {}
         for field_name, field_config in dict(reg_config.get('fields', {})).items():
-            self.fields[field_name] = RegisterFieldDescriptor(field_name, field_config, self.size * 8)
+            f = RegisterFieldDescriptor(field_name, field_config, self.size * 8)
+            self.fields[field_name] = f
+            if f.alias:
+                self.fields[f.alias] = f
 
         self.readonly = bool(reg_config.get('readonly', False))
         self.supported = bool(reg_config.get('supported', True))
+
+        self.alias = reg_config.get('alias', None)
+        if not (self.alias is None or
+                isinstance(self.alias, str) or
+                (isinstance(self.alias, list) and len(self.alias) == self.size)):
+            raise DeviceConfigException('Invalid alias format', reg=self.name)
 
 
 class ProxyRegisterDescriptor:
@@ -208,6 +216,12 @@ class PeripheralClassDescriptor:
             if r.size == 2:
                 self.registers[r.name + 'L'] = ProxyRegisterDescriptor(r, 0)
                 self.registers[r.name + 'H'] = ProxyRegisterDescriptor(r, 1)
+
+            if isinstance(r.alias, str):
+                self.registers[r.alias] = ProxyRegisterDescriptor(r, 0)
+            elif isinstance(r.alias, list):
+                for offset, alias in enumerate(r.alias):
+                    self.registers[alias] = ProxyRegisterDescriptor(r, offset)
 
         self.config = per_config.get('config', {})
 
@@ -241,12 +255,17 @@ class PeripheralInstanceDescriptor:
         self.class_descriptor = loader.load_peripheral(self.per_class, f['file'])
         self.device = device
         self.config = f.get('config', {})
+        self.register_map = f.get('register_map', {})
 
 
     def _resolve_reg_address(self, reg_desc):
         if isinstance(reg_desc, ProxyRegisterDescriptor):
             proxy_addr = self._resolve_reg_address(reg_desc.reg)
             return proxy_addr + reg_desc.offset
+
+        #if the register is mapped by the peripheral instance
+        if reg_desc.name in self.register_map:
+            return int(self.register_map[reg_desc.name])
 
         #if the register has a fixed address
         if reg_desc.address is not None:
