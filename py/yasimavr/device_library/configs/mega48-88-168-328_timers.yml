@@ -126,13 +126,13 @@ TC0:
         oc_channels:
             - reg_oc: OCR0A
               vector: [ TIMER0_COMPA, 1 ]
-              rb_mode: [ TCCR0A, COMA ]
-              rb_force: [ TCCR0B, FOCA ]
+              rb_mode: TCCR0A/COMA
+              rb_force: TCCR0B/FOCA
 
             - reg_oc: OCR0B
               vector: [ TIMER0_COMPB, 2 ]
-              rb_mode: [ TCCR0A, COMB ]
-              rb_force: [ TCCR0B, FOCB ]
+              rb_mode: TCCR0A/COMB
+              rb_force: TCCR0B/FOCB
 
         com_modes:
             #Non-PWM modes
@@ -165,8 +165,8 @@ TC0:
               0b10: 0x0032         #Clear on up-counting, Set on down-counting
               0b11: 0x0023         #Clear on down-counting, Set on up-counting
 
-        rb_clock: [ TCCR0B, CS ]
-        rbc_mode: [ [ TCCR0A, WGM10 ], [ TCCR0B, WGM2 ] ]
+        rb_clock: TCCR0B/CS
+        rbc_mode: [ TCCR0A/WGM10, TCCR0B/WGM2 ]
         reg_cnt: TCNT0
         reg_int_enable: TIMSK0
         reg_int_flag: TIFR0
@@ -373,13 +373,13 @@ TC1:
         oc_channels:
             - reg_oc: OCR1A
               vector: [ TIMER1_COMPA, 1 ]
-              rb_mode: [ TCCR1A, COMA ]
-              rb_force: [ TCCR1C, FOCA ]
+              rb_mode: TCCR1A/COMA
+              rb_force: TCCR1C/FOCA
 
             - reg_oc: OCR1B
               vector: [ TIMER1_COMPB, 2 ]
-              rb_mode: [ TCCR1A, COMB ]
-              rb_force: [ TCCR1C, FOCB ]
+              rb_mode: TCCR1A/COMB
+              rb_force: TCCR1C/FOCB
 
         com_modes:
             #Non-PWM modes
@@ -412,8 +412,8 @@ TC1:
               0b10: 0x0032         #Clear on up-counting, Set on down-counting
               0b11: 0x0023         #Clear on down-counting, Set on up-counting
 
-        rb_clock: [ TCCR1B, CS ]
-        rbc_mode: [ [ TCCR1A, WGM10 ], [ TCCR1B, WGM32 ] ]
+        rb_clock: TCCR1B/CS
+        rbc_mode: [ TCCR1A/WGM10, TCCR1B/WGM32 ]
         reg_cnt: TCNT1
         reg_icr: ICR1
         reg_int_enable: TIMSK1
@@ -533,13 +533,13 @@ TC2:
         oc_channels:
             - reg_oc: OCR2A
               vector: [ TIMER2_COMPA, 1 ]
-              rb_mode: [ TCCR2A, COMA ]
-              rb_force: [ TCCR2B, FOCA ]
+              rb_mode: TCCR2A/COMA
+              rb_force: TCCR2B/FOCA
 
             - reg_oc: OCR2B
               vector: [ TIMER2_COMPB, 2 ]
-              rb_mode: [ TCCR2A, COMB ]
-              rb_force: [ TCCR2B, FOCB ]
+              rb_mode: TCCR2A/COMB
+              rb_force: TCCR2B/FOCB
 
         com_modes:
             #Non-PWM modes
@@ -572,8 +572,8 @@ TC2:
               0b10: 0x0032         #Clear on up-counting, Set on down-counting
               0b11: 0x0023         #Clear on down-counting, Set on up-counting
 
-        rb_clock: [ TCCR2B, CS ]
-        rbc_mode: [ [ TCCR2A, WGM10 ], [ TCCR2B, WGM2 ] ]
+        rb_clock: TCCR2B/CS
+        rbc_mode: [ TCCR2A/WGM10, TCCR2B/WGM2 ]
         reg_cnt: TCNT2
         reg_int_enable: TIMSK2
         reg_int_flag: TIFR2

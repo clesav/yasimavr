@@ -238,8 +238,8 @@ VREF:
 
     config:
         channels:
-            - rb_select: [ CTRLA, ADC0REFSEL ]
+            - rb_select: CTRLA/ADC0REFSEL
               references: [ 0.55, 1.1, 2.5, 4.3, 1.5 ]
 
-            - rb_select: [ CTRLA, AC0REFSEL ]
+            - rb_select: CTRLA/AC0REFSEL
               references: [ 0.55, 1.1, 2.5, 4.3, 1.5, null, null, AVCC ]

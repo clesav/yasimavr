@@ -56,8 +56,8 @@ SLPCTRL:
             0b011: PowerSave
             0b110: Standby
             0b111: ExtStandby
-        rb_mode: [ SMCR, SM ]
-        rb_enable: [ SMCR, SE ]
+        rb_mode: SMCR/SM
+        rb_enable: SMCR/SE
 
 #========================================================================================
 RSTCTRL:
@@ -110,4 +110,4 @@ CPU:
 #========================================================================================
 MISC:
     config:
-        gpior: [ CPU.GPIOR0, CPU.GPIOR1, CPU.GPIOR2 ]
+        gpior: [ CPU/GPIOR0, CPU/GPIOR1, CPU/GPIOR2 ]
