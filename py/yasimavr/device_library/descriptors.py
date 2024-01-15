@@ -102,6 +102,18 @@ class InterruptMapDescriptor:
         self.sleep_mask =dict(int_config.get('sleep_mask', {}))
 
 
+class ExtendedBitMask(collections.namedtuple('ExtendedBitMask', ['bit', 'mask'])):
+
+    def as_bitmask(self):
+        if self.bit < 8 and self.mask < 0x100:
+            return _corelib.bitmask_t(self.bit, self.mask)
+        else:
+            raise ValueError('Bitmask range error')
+    
+    def __repr__(self):
+        return 'ExtendedBitMask(%d, 0x%x)' % (self.bit, self.mask)
+
+
 class RegisterFieldDescriptor:
     '''Descriptor class for a field of a I/O register'''
 
@@ -147,19 +159,14 @@ class RegisterFieldDescriptor:
 
         if self.kind == 'BIT':
             mask = 1 << self.pos
-            self._shift_mask = (self.pos, mask)
+            self._bitmask = ExtendedBitMask(self.pos, mask)
         else:
             mask = ((1 << (self.MSB - self.LSB + 1)) - 1) << self.LSB
-            self._shift_mask = (self.LSB, mask)
-
-
-    def shift_mask(self):
-        return self._shift_mask
+            self._bitmask = ExtendedBitMask(self.LSB, mask)
 
 
     def bitmask(self):
-        bit, mask = self._shift_mask
-        return _corelib.bitmask_t(bit, mask)
+        return self._bitmask
 
 
 class RegisterDescriptor:
@@ -228,7 +235,7 @@ class PeripheralClassDescriptor:
 
 #This utility function "consolidate" multiple bitmasks over a
 #(possibly multi-byte) register, and merging them in order to
-#have only one bitmask per byte.
+#have only one bitmask per byte maximum.
 def _reduce_bitmasks(bms, reg_size):
     mask = 0
     for bm in bms:
@@ -237,9 +244,14 @@ def _reduce_bitmasks(bms, reg_size):
     if not mask:
         return [_corelib.bitmask_t()]
 
-    cons_bms = [_corelib.bitmask_t(0 if i else bms[0].bit,
-                                   (mask >> (i * 8)) & 0xFF)
-                for i in range(reg_size)]
+    min_bit_shift = min(bm.bit for bm in bms)
+
+    cons_bms = []
+    for i in range(reg_size):
+        m = (mask >> (i * 8)) & 0xFF
+        if m:
+            bit_shift = 0 if len(cons_bms) else (min_bit_shift - i * 8)
+            cons_bms.append((i, _corelib.bitmask_t(bit_shift, m)))
 
     return cons_bms
 
@@ -287,23 +299,25 @@ class PeripheralInstanceDescriptor:
         reg_addr = self._resolve_reg_address(reg_desc)
         reg_size = reg_desc.size
 
-        #Resolve the remaining fields (given by their names) into bitmasks
-        bm_list = []
-        for f in fields:
-            if isinstance(f, _corelib.bitmask_t):
-                bm_list.append(f)
-            else:
-                f_desc = reg_desc.fields[f]
-                bm = f_desc.bitmask()
-                bm_list.append(bm)
+        #Resolve the remaining fields (given by their names) into shift/masks
+        if fields:
+            bm_list = []
+            for f in fields:
+                if isinstance(f, str):
+                    f_desc = reg_desc.fields[f]
+                    bm = f_desc.bitmask()
+                    bm_list.append(bm)
+                else:
+                    bm_list.append(f)
+        else:
+            bm_list = [f_desc.bitmask() for f_desc in reg_desc.fields.values()]
 
         #consolidate the bitmasks
         cons_bm_list = _reduce_bitmasks(bm_list, reg_size)
 
         #convert the consolidated bitmasks into regbits, with the address
         #incremented for each byte
-        rb_list = [_corelib.regbit_t(reg_addr + i, bm)
-                   for i, bm in enumerate(cons_bm_list)]
+        rb_list = [_corelib.regbit_t(reg_addr + i, bm) for i, bm in cons_bm_list]
 
         return rb_list
 
@@ -530,7 +544,7 @@ def _split_reg_path(reg_path):
 def _partial_parse_fields(s):
     #If the field is an integer, it's a bit position
     if isinstance(s, int):
-        return [_corelib.bitmask_t(s)]
+        return [ExtendedBitMask(s, 1 << s)]
 
     bm_list = []
     for f in s.split('|'):
@@ -540,17 +554,17 @@ def _partial_parse_fields(s):
         except ValueError:
             pass
         else:
-            bm_list.append(_corelib.bitmask_t(pos))
+            bm_list.append(ExtendedBitMask(pos, 1 << pos))
             continue
 
         #Try a bit range
-        range_match = re.fullmatch(r'(?P<lsb>[0-7])-(?P<msb>[0-7])', f)
+        range_match = re.fullmatch(r'(?P<lsb>[0-9]{1,2})-(?P<msb>[0-9]{1,2})', f)
         if range_match is not None:
             lsb = int(range_match.group('lsb'))
             msb = int(range_match.group('msb'))
             if lsb > msb: raise ValueError()
             mask = ((1 << (msb - lsb + 1)) - 1) << lsb
-            bm_list.append(_corelib.bitmask_t(lsb, mask))
+            bm_list.append(ExtendedBitMask(lsb, mask))
             continue
 
         #Append as an unparsed string
@@ -594,10 +608,10 @@ def _parse_regpath(path_elements, per, dev):
             #Parse the fields
             parsed_fields = _partial_parse_fields(path_elements[1])
             #The format is valid only if all the fields have been already parsed (i.e. they're all numerical)
-            if not all(isinstance(f, _corelib.bitmask_t) for f in parsed_fields):
+            if not all(isinstance(f, ExtendedBitMask) for f in parsed_fields):
                 raise Exception('All fields must be numeric with a numeric address')
 
-            return [_corelib.regbit_t(parsed_num_addr, bm) for bm in parsed_fields]
+            return [_corelib.regbit_t(parsed_num_addr, f.as_bitmask()) for f in parsed_fields]
 
         #Try to resolve it as a [R, F] format if a peripheral context is specified
         if per:
