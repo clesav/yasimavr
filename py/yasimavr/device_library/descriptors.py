@@ -25,6 +25,7 @@ configuration decoded from YAML configuration files
 import weakref
 import os
 import collections
+import re
 
 from ..lib import core as _corelib
 
@@ -65,21 +66,6 @@ class DeviceConfigException(Exception):
     pass
 
 
-#Internal utility that returns a absolute register address based
-#on its offset and the peripheral base address if it has one.
-def _get_reg_address(reg_descriptor, base):
-
-    if isinstance(reg_descriptor, ProxyRegisterDescriptor):
-        return _get_reg_address(reg_descriptor.reg, base) + reg_descriptor.offset
-    else:
-        if reg_descriptor.address >= 0:
-            return reg_descriptor.address
-        elif base >= 0 and reg_descriptor.offset >= 0:
-            return base + reg_descriptor.offset
-        else:
-            raise DeviceConfigException('Register address cannot be resolved for ' + reg_descriptor.name)
-
-
 MemorySegmentDescriptor = collections.namedtuple('_MemorySegmentDescriptor', ['start', 'end'])
 
 
@@ -114,6 +100,18 @@ class InterruptMapDescriptor:
         self.vector_size = int(int_config['vector_size'])
         self.vectors = list(int_config['vectors'])
         self.sleep_mask =dict(int_config.get('sleep_mask', {}))
+
+
+class ExtendedBitMask(collections.namedtuple('ExtendedBitMask', ['bit', 'mask'])):
+
+    def as_bitmask(self):
+        if self.bit < 8 and self.mask < 0x100:
+            return _corelib.bitmask_t(self.bit, self.mask)
+        else:
+            raise ValueError('Bitmask range error')
+    
+    def __repr__(self):
+        return 'ExtendedBitMask(%d, 0x%x)' % (self.bit, self.mask)
 
 
 class RegisterFieldDescriptor:
@@ -157,13 +155,18 @@ class RegisterFieldDescriptor:
 
         self.readonly = bool(field_config.get('readonly', False))
         self.supported = bool(field_config.get('supported', True))
+        self.alias = str(field_config.get('alias', ''))
 
-    def shift_mask(self):
         if self.kind == 'BIT':
-            return self.pos, 1
+            mask = 1 << self.pos
+            self._bitmask = ExtendedBitMask(self.pos, mask)
         else:
-            mask = (1 << (self.MSB - self.LSB + 1)) - 1
-            return self.LSB, mask
+            mask = ((1 << (self.MSB - self.LSB + 1)) - 1) << self.LSB
+            self._bitmask = ExtendedBitMask(self.LSB, mask)
+
+
+    def bitmask(self):
+        return self._bitmask
 
 
 class RegisterDescriptor:
@@ -172,13 +175,11 @@ class RegisterDescriptor:
     def __init__(self, reg_config):
         self.name = str(reg_config['name'])
 
+        self.address = self.offset = None
         if 'address' in reg_config:
             self.address = int(reg_config['address'])
         elif 'offset' in reg_config:
-            self.address = -1
             self.offset = int(reg_config['offset'])
-        else:
-            raise DeviceConfigException('No address for register ' + self.name)
 
         self.size = int(reg_config.get('size', 1))
 
@@ -186,34 +187,19 @@ class RegisterDescriptor:
 
         self.fields = {}
         for field_name, field_config in dict(reg_config.get('fields', {})).items():
-            self.fields[field_name] = RegisterFieldDescriptor(field_name, field_config, self.size * 8)
+            f = RegisterFieldDescriptor(field_name, field_config, self.size * 8)
+            self.fields[field_name] = f
+            if f.alias:
+                self.fields[f.alias] = f
 
         self.readonly = bool(reg_config.get('readonly', False))
         self.supported = bool(reg_config.get('supported', True))
 
-    def bitmask(self, field_names=None):
-        if field_names is None:
-            fields = self.fields.values()
-        else:
-            fields = [f for n, f in self.fields.items() if n in field_names]
-
-        bitmasks = []
-        for by in range(self.size):
-            bit = 7
-            mask = 0
-            for f in fields:
-                b, m = f.shift_mask()
-                b -= 8 * by
-                m >>= 8 * by
-                if m & 0xFF:
-                    b = max(0, b)
-                    m &= 0xFF
-                    bit = min(bit, b)
-                    mask |= m << b
-
-            bitmasks.append(_corelib.bitmask_t(bit, mask))
-
-        return bitmasks[0] if self.size == 1 else bitmasks
+        self.alias = reg_config.get('alias', None)
+        if not (self.alias is None or
+                isinstance(self.alias, str) or
+                (isinstance(self.alias, list) and len(self.alias) == self.size)):
+            raise DeviceConfigException('Invalid alias format', reg=self.name)
 
 
 class ProxyRegisterDescriptor:
@@ -238,7 +224,36 @@ class PeripheralClassDescriptor:
                 self.registers[r.name + 'L'] = ProxyRegisterDescriptor(r, 0)
                 self.registers[r.name + 'H'] = ProxyRegisterDescriptor(r, 1)
 
+            if isinstance(r.alias, str):
+                self.registers[r.alias] = ProxyRegisterDescriptor(r, 0)
+            elif isinstance(r.alias, list):
+                for offset, alias in enumerate(r.alias):
+                    self.registers[alias] = ProxyRegisterDescriptor(r, offset)
+
         self.config = per_config.get('config', {})
+
+
+#This utility function "consolidate" multiple bitmasks over a
+#(possibly multi-byte) register, and merging them in order to
+#have only one bitmask per byte maximum.
+def _reduce_bitmasks(bms, reg_size):
+    mask = 0
+    for bm in bms:
+        mask |= bm.mask
+
+    if not mask:
+        return [_corelib.bitmask_t()]
+
+    min_bit_shift = min(bm.bit for bm in bms)
+
+    cons_bms = []
+    for i in range(reg_size):
+        m = (mask >> (i * 8)) & 0xFF
+        if m:
+            bit_shift = 0 if len(cons_bms) else (min_bit_shift - i * 8)
+            cons_bms.append((i, _corelib.bitmask_t(bit_shift, m)))
+
+    return cons_bms
 
 
 class PeripheralInstanceDescriptor:
@@ -248,22 +263,78 @@ class PeripheralInstanceDescriptor:
         self.name = name
         self.per_class = f.get('class', name)
         self.ctl_id = f.get('ctl_id', name[:4])
-        self.reg_base = f.get('base', -1)
+        self.reg_base = f.get('base', None)
         self.class_descriptor = loader.load_peripheral(self.per_class, f['file'])
         self.device = device
         self.config = f.get('config', {})
+        self.register_map = f.get('register_map', {})
 
-    def reg_descriptor(self, reg_name):
-        if '.' in reg_name:
-            per_name, reg_name = reg_name.split('.', 1)
-            per = self.device.peripherals[per_name]
+
+    def _resolve_reg_address(self, reg_desc):
+        if isinstance(reg_desc, ProxyRegisterDescriptor):
+            proxy_addr = self._resolve_reg_address(reg_desc.reg)
+            return proxy_addr + reg_desc.offset
+
+        #if the register is mapped by the peripheral instance
+        if reg_desc.name in self.register_map:
+            return int(self.register_map[reg_desc.name])
+
+        #if the register has a fixed address
+        if reg_desc.address is not None:
+            return reg_desc.address
+
+        #if the register is defined by an offset from the peripheral base
+        if reg_desc.offset is not None and self.reg_base is not None:
+            return reg_desc.offset + self.reg_base
+
+        raise DeviceConfigException('Register address cannot be resolved for ' + reg_desc.name)
+
+
+    def _resolve_regbits(self, reg_name, fields):
+        try:
+            reg_desc = self.class_descriptor.registers[reg_name]
+        except KeyError:
+            raise ValueError('Unknown register: ' + reg_name) from None
+
+        reg_addr = self._resolve_reg_address(reg_desc)
+        reg_size = reg_desc.size
+
+        #Resolve the remaining fields (given by their names) into shift/masks
+        if fields:
+            bm_list = []
+            for f in fields:
+                if isinstance(f, str):
+                    f_desc = reg_desc.fields[f]
+                    bm = f_desc.bitmask()
+                    bm_list.append(bm)
+                else:
+                    bm_list.append(f)
         else:
-            per = self
+            bm_list = [f_desc.bitmask() for f_desc in reg_desc.fields.values()]
 
-        return per.class_descriptor.registers[reg_name]
+        #consolidate the bitmasks
+        cons_bm_list = _reduce_bitmasks(bm_list, reg_size)
 
-    def reg_address(self, reg_name, default=None):
-        return self.device._reg_address(reg_name, self, default)
+        #convert the consolidated bitmasks into regbits, with the address
+        #incremented for each byte
+        rb_list = [_corelib.regbit_t(reg_addr + i, bm) for i, bm in cons_bm_list]
+
+        return rb_list
+
+
+    def reg_address(self, reg_path, default=None):
+        if RegPathSeparator in reg_path:
+            return self.device.reg_address(reg_path, default)
+
+        try:
+            reg_desc = self.class_descriptor.registers[reg_path]
+        except KeyError:
+            if default is None:
+                raise ValueError('Unknown register: ' + reg_path) from None
+            else:
+                return default
+        else:
+            return self._resolve_reg_address(reg_desc)
 
 
 #Utility class that manages caches of peripheral configurations and
@@ -277,6 +348,7 @@ class _DeviceDescriptorLoader:
         self.repositories = repositories
         self._yml_cache = {}
         self._per_cache = {}
+
 
     def load_peripheral(self, per_name, per_filepath):
         if per_name in self._per_cache:
@@ -381,33 +453,246 @@ class DeviceDescriptor:
 
 
     def reg_address(self, reg_path, default=None):
-        return self._reg_address(reg_path, None, default)
+        elements = _split_reg_path(reg_path)
 
+        if len(elements) != 2:
+            raise ValueError('Invalid regpath format: ' + reg_path)
 
-    def _reg_address(self, reg_path, per_from, default):
-        if '.' in reg_path:
-            per_name, reg_name = reg_path.split('.', 1)
-            try:
-                per = self.peripherals[per_name]
-            except KeyError:
-                if default is None:
-                    raise DeviceConfigException('Unknown peripheral') from None
-                else:
-                    return default
-
-        elif isinstance(per_from, PeripheralInstanceDescriptor):
-            per = per_from
-            reg_name = reg_path
-
-        else:
-            raise DeviceConfigException('Invalid register name')
+        per_name, reg_name = elements
 
         try:
-            reg_descriptor = per.class_descriptor.registers[reg_name]
-        except KeyError:
+            try:
+                per_desc = self.peripherals[per_name]
+            except KeyError:
+                raise ValueError('Unknown peripheral: ' + per_name) from None
+            try:
+                reg_desc = per_desc.class_descriptor.registers[reg_name]
+            except KeyError:
+                raise ValueError('Unknown register: ' + reg_name) from None
+
+            return per_desc._resolve_reg_address(reg_desc)
+
+        except ValueError:
             if default is None:
-                raise DeviceConfigException('Unknown register') from None
+                raise
             else:
                 return default
+
+
+    def _resolve_regbits(self, per_name, reg_name, fields):
+        try:
+            per_desc = self.peripherals[per_name]
+        except KeyError:
+            raise ValueError('Unknown peripheral: ' + per_name) from None
+
+        return per_desc._resolve_regbits(reg_name, fields)
+
+
+#========================================================================================
+"""
+In device configuration files, registers can be referenced to by what is called a 'reg path'.
+A reg path is a string representing a path through a device description tree to a register or a field.
+It can be absolute (from the root) or relative (from a given peripheral instance).
+
+Valid formats for the regpath are:
+ - [P]/[R]/[F] (1)
+ - [R]/[F]     (2)
+ - [A]/[F]     (3)
+ - [P]/[R]     (4)
+ - [R]         (5)
+where [P] is a peripheral instance name, [R] a register name, [A] a register address,
+[F] a field or a combination of fields using the character '|'.
+
+Register addresses can be decimal or hexadecimal.
+Fields can be represented by a name, a bit number X or a bit range X-Y. However, if the register is given by an address, named fields are not allowed.
+
+Examples:
+ - SLPCTRL/SMCR/SE : absolute path to the bit SE of the SMCR register
+   belonging to the Sleep Controller
+ - CPU/GPIOR0 : absolute path to the GPIOR0 register
+ - SPCR/SPE : relative path to the SPI Enable bit of the SPI Control Register
+   (valid in the context of a SPI interface controller)
+ - EXTINT/PCICR/2 : absolute path to bit 2 of the PCICR register
+ - EXTINT/PCMSK0/0-3 : absolute path to bits 0 to 3 of the PCMSK0 register
+ - 0x49/5|7 : path to the bits 5 and 7 of hexadecimal address 0x49
+ - 2/0 : path to bit 0 of decimal address 2
+
+Notes:
+- A list of path elements can be given as a regpath and is parsed the same way.
+For example, ['USART', 'UCSRB', 'RXEN'] is equivalent to 'USART/UCSRB/RXEN'.
+- In some cases, registers may be split across multiple peripherals.
+For example in ATMega328, MCUCR is split between SLPCTRL (fields BODSE, BODS)
+and CPUINT (fields IVCE, IVSEL).
+In this case, SLPCTRL does not recognize CPUINT fields and vice-versa.
+However, fields are always accessible by bit number. For example,
+SLPCTRL/MCUCR/IVSEL is invalid but SLPCTRL/MCUCR/0 is valid.
+"""
+
+
+RegPathSeparator = '/'
+
+def _split_reg_path(reg_path):
+    return reg_path.split(RegPathSeparator, 3)
+
+
+#Utility function that attempts to parse a combination of fields that can be
+#  - a bit number
+#  - a bit range
+#  - a field name
+#Returns a list of the parsed fields, containing either bitmask objects for
+#the fields that could be immediately parsed, or the name as a string for the others.
+def _partial_parse_fields(s):
+    #If the field is an integer, it's a bit position
+    if isinstance(s, int):
+        return [ExtendedBitMask(s, 1 << s)]
+
+    bm_list = []
+    for f in s.split('|'):
+        #Try to parse as a decimal integer. If so, it is a bit position
+        try:
+            pos = int(f)
+        except ValueError:
+            pass
         else:
-            return _get_reg_address(reg_descriptor, per.reg_base)
+            bm_list.append(ExtendedBitMask(pos, 1 << pos))
+            continue
+
+        #Try a bit range
+        range_match = re.fullmatch(r'(?P<lsb>[0-9]{1,2})-(?P<msb>[0-9]{1,2})', f)
+        if range_match is not None:
+            lsb = int(range_match.group('lsb'))
+            msb = int(range_match.group('msb'))
+            if lsb > msb: raise ValueError()
+            mask = ((1 << (msb - lsb + 1)) - 1) << lsb
+            bm_list.append(ExtendedBitMask(lsb, mask))
+            continue
+
+        #Append as an unparsed string
+        bm_list.append(f)
+
+    return bm_list
+
+
+#Utility function that parses a reg path to a list of regbits
+# path_elements : list of reg path elements as a list
+# per: PeripheralInstanceDescriptor object, used for resolving names
+# dev: DeviceDescriptor object, used for resolving names
+def _parse_regpath(path_elements, per, dev):
+
+    #Utility to try parsing as an integer of any base
+    def _parse_num(s):
+        try:
+            return int(s, 0)
+        except ValueError: pass
+        return None
+
+    if per is not None:
+        dev = per.device
+
+    if len(path_elements) == 1: #format [R]
+        parsed_num_addr = _parse_num(path_elements[0])
+        if parsed_num_addr is not None:
+            return [_corelib.regbit_t(parsed_num_addr)]
+
+        if not per:
+            raise ValueError('Peripheral unspecified')
+
+        return per._resolve_regbits(path_elements[0], [])
+
+    elif len(path_elements) == 2: #formats [A, F], [R, F] or [P, R]
+        reg_or_per = path_elements[0]
+
+        #Try to parse the first element as if it's numeric. If successful, consider it's a register address
+        parsed_num_addr = _parse_num(reg_or_per)
+        if parsed_num_addr is not None:
+            #Parse the fields
+            parsed_fields = _partial_parse_fields(path_elements[1])
+            #The format is valid only if all the fields have been already parsed (i.e. they're all numerical)
+            if not all(isinstance(f, ExtendedBitMask) for f in parsed_fields):
+                raise Exception('All fields must be numeric with a numeric address')
+
+            return [_corelib.regbit_t(parsed_num_addr, f.as_bitmask()) for f in parsed_fields]
+
+        #Try to resolve it as a [R, F] format if a peripheral context is specified
+        if per:
+            parsed_fields = _partial_parse_fields(path_elements[1])
+            try:
+                return per._resolve_regbits(reg_or_per, parsed_fields)
+            except ValueError: pass
+
+        #If [R, F] failed, try to resolve it as [P, R] format in a device context
+        if dev:
+            try:
+                return dev._resolve_regbits(reg_or_per, path_elements[1], [])
+            except ValueError: pass
+
+        raise ValueError('Regpath could not be resolved')
+
+    elif len(path_elements) == 3: #format [P, R, F]
+        if not dev:
+            raise ValueError('Device unspecified')
+
+        per_name, reg_name, combined_fields = path_elements
+        parsed_fields = _partial_parse_fields(combined_fields)
+        return dev._resolve_regbits(per_name, reg_name, parsed_fields)
+
+    else:
+        raise ValueError('Invalid regpath format')
+
+
+def convert_to_regbit(arg, per=None, dev=None):
+    if arg is None:
+        return _corelib.regbit_t()
+
+    if isinstance(arg, int):
+        return _corelib.regbit_t(arg)
+
+    if isinstance(arg, (list, tuple)):
+        elements = arg
+    else:
+        elements = _split_reg_path(arg)
+
+    regbit_list = _parse_regpath(elements, per, dev)
+
+    if len(regbit_list) != 1:
+        raise ValueError('Was expecting one regbit')
+
+    return regbit_list[0]
+
+
+def convert_to_regbit_compound(arg, per=None, dev=None):
+    if not arg:
+        return _corelib.regbit_compound_t()
+
+    if isinstance(arg, (list, tuple)):
+        regpath_list = arg
+    else:
+        regpath_list = [arg]
+
+    regbit_list = []
+    for regpath in regpath_list:
+        l = _parse_regpath(_split_reg_path(regpath), per, dev)
+        regbit_list.extend(l)
+
+        return _corelib.regbit_compound_t(regbit_list)
+
+    else:
+        elements = _split_reg_path(arg)
+        regbit_list = _parse_regpath(elements, per, dev)
+        return _corelib.regbit_compound_t(regbit_list)
+
+
+def convert_to_bitmask(arg, per=None, dev=None):
+    if not arg:
+        return _corelib.bitmask_t()
+
+    try:
+        flist = _partial_parse_fields('|'.join(arg))
+    except ValueError:
+        pass
+    else:
+        if len(flist) == 1 and isinstance(flist[0], _corelib.bitmask_t):
+            return flist[0]
+
+    rb = convert_to_regbit(arg, per, dev)
+    return _corelib.bitmask_t(rb)

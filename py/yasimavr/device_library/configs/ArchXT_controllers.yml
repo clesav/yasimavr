@@ -36,8 +36,8 @@ SLPCTRL:
             0x00: Idle
             0x01: Standby
             0x02: PowerDown
-        rb_mode: [ CTRLA, SMODE ]
-        rb_enable: [ CTRLA, SEN ]
+        rb_mode: CTRLA/SMODE
+        rb_enable: CTRLA/SEN
 
 #========================================================================================
 RSTCTRL:

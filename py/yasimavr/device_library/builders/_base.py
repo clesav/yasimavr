@@ -18,8 +18,8 @@
 # along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
 
 import yasimavr.lib.core as _corelib
+from ..descriptors import convert_to_regbit, convert_to_regbit_compound, convert_to_bitmask
 import inspect
-from ..descriptors import DeviceDescriptor
 
 global VERBOSE
 VERBOSE = False
@@ -175,8 +175,7 @@ class PeripheralConfigBuilder:
             return convert_to_regbit_compound(yml_val, per_desc)
 
         elif attr.startswith('bm_') or isinstance(default_val, _corelib.bitmask_t):
-            rb = convert_to_regbit(yml_val, per_desc)
-            return _corelib.bitmask_t(rb)
+            return convert_to_bitmask(yml_val, per_desc)
 
         elif isinstance(default_val, (int, float)):
             return yml_val
@@ -198,56 +197,6 @@ def get_core_attributes(dev_desc):
             result |= _corelib.CoreConfiguration.Attributes[lib_flag_name]
 
     return result
-
-
-def convert_to_regbit(rb_yml, per_desc):
-    if isinstance(rb_yml, str):
-        reg_name = rb_yml
-        field_names = None
-
-    elif isinstance(rb_yml, (list, tuple)):
-        if not (1 <= len(rb_yml) <= 2):
-            raise ValueError()
-
-        reg_name = rb_yml[0]
-
-        if len(rb_yml) == 2:
-            field_names = [ fn.strip() for fn in rb_yml[1].split('|') ]
-        else:
-            field_names = None
-
-    else:
-        raise ValueError()
-
-    reg_desc = per_desc.reg_descriptor(reg_name)
-    addr = per_desc.reg_address(reg_name)
-    if reg_desc.size == 1:
-        bm = reg_desc.bitmask(field_names)
-        return _corelib.regbit_t(addr, bm)
-    else:
-        bms = reg_desc.bitmask(field_names)
-        return _corelib.regbit_t(addr, bms[0])
-
-
-def convert_to_regbit_compound(rbc_yml, per_desc):
-    if not rbc_yml:
-        return _corelib.regbit_compound_t()
-
-    elif isinstance(rbc_yml, str):
-        reg = per_desc.reg_descriptor(rbc_yml)
-        if reg.size == 1:
-            rb = reg.regbit()
-            return _corelib.regbit_compound_t([rb])
-        else:
-            return reg.regbit()
-
-    elif not all(isinstance(item, list) for item in rbc_yml):
-        rb = convert_to_regbit(rbc_yml, per_desc)
-        return _corelib.regbit_compound_t(rb)
-
-    else:
-        rb_list = [convert_to_regbit(rb_yml, per_desc) for rb_yml in rbc_yml]
-        return _corelib.regbit_compound_t(rb_list)
 
 
 def dummy_config_builder(per_descriptor):

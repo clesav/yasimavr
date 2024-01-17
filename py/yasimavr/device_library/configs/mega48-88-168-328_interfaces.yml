@@ -118,9 +118,9 @@ EXTINT:
         pcint_pins: [ PB0, PB1, PB2, PB3, PB4, PB5, PB6, PB7,
                       PC0, PC1, PC2, PC3, PC4, PC5, PC6, "",
                       PD0, PD1, PD2, PD3, PD4, PD5, PD6, PD7 ]
-        rb_extint_ctrl : [ EICRA, "ISC0 | ISC1" ]
-        rb_extint_mask : [ EIMSK, "INT0 | INT1" ]
-        rb_extint_flag : [ EIFR, "INTF0 | INTF1" ]
+        rb_extint_ctrl : EICRA/ISC0|ISC1
+        rb_extint_mask : EIMSK/INT0|INT1
+        rb_extint_flag : EIFR/INTF0|INTF1
         rb_pcint_ctrl : PCICR
         rb_pcint_flag : PCIFR
         reg_pcint_mask : [ PCMSK0, PCMSK1, PCMSK2 ]
@@ -191,15 +191,15 @@ USART:
 
     config:
         reg_data : UDR
-        rb_rx_enable: [ UCSRB, RXEN ]
-        rb_tx_enable: [ UCSRB, TXEN ]
-        rb_rxc_inten: [ UCSRB, RXCIE ]
-        rb_rxc_flag: [ UCSRA, RXC ]
-        rb_txc_inten: [ UCSRB, TXCIE ]
-        rb_txc_flag: [ UCSRA, TXC ]
-        rb_txe_inten: [ UCSRB, UDRIE ]
-        rb_txe_flag: [ UCSRA, UDRE ]
-        rb_baud_2x: [ UCSRA, U2X ]
+        rb_rx_enable: UCSRB/RXEN
+        rb_tx_enable: UCSRB/TXEN
+        rb_rxc_inten: UCSRB/RXCIE
+        rb_rxc_flag: UCSRA/RXC
+        rb_txc_inten: UCSRB/TXCIE
+        rb_txc_flag: UCSRA/TXC
+        rb_txe_inten: UCSRB/UDRIE
+        rb_txe_flag: UCSRA/UDRE
+        rb_baud_2x: UCSRA/U2X
         reg_baud: UBRR
         baud_bitsize: 12
         rxc_vector: USART_RX
@@ -236,12 +236,12 @@ SPI:
 
     config:
         reg_data: SPDR
-        rb_enable: [ SPCR, SPE ]
-        rb_int_enable: [ SPCR, SPIE ]
-        rb_int_flag: [ SPSR, SPIF ]
-        rb_mode: [ SPCR, MSTR ]
-        rb_clock: [ SPCR, SPR ]
-        rb_clock2x: [ SPSR, SPI2X ]
+        rb_enable: SPCR/SPE
+        rb_int_enable: SPCR/SPIE
+        rb_int_flag: SPSR/SPIF
+        rb_mode: SPCR/MSTR
+        rb_clock: SPCR/SPR
+        rb_clock2x: SPSR/SPI2X
         iv_spi: SPI_STC
 
 #========================================================================================
@@ -301,19 +301,19 @@ TWI:
     config:
         ps_factors: [ 1, 4, 16, 64 ]
         reg_ctrl: TWCR
-        bm_enable: [ TWCR, TWEN ]
-        bm_start: [ TWCR, TWSTA ]
-        bm_stop: [ TWCR, TWSTO ]
-        bm_int_enable: [ TWCR, TWIE ]
-        bm_int_flag: [ TWCR, TWINT ]
-        bm_ack_enable: [ TWCR, TWEA ]
+        bm_enable: TWCR/TWEN
+        bm_start: TWCR/TWSTA
+        bm_stop: TWCR/TWSTO
+        bm_int_enable: TWCR/TWIE
+        bm_int_flag: TWCR/TWINT
+        bm_ack_enable: TWCR/TWEA
         reg_bitrate: TWBR
-        rb_status: [ TWSR, TWS ]
-        rb_prescaler: [ TWSR, TWPS ]
+        rb_status: TWSR/TWS
+        rb_prescaler: TWSR/TWPS
         reg_data: TWDR
-        rb_addr: [ TWAR, TWA ]
-        rb_gencall_enable: [ TWAR, TWGCE ]
-        rb_addr_mask: [ TWAMR, TWAM ]
+        rb_addr: TWAR/TWA
+        rb_gencall_enable: TWAR/TWGCE
+        rb_addr_mask: TWAMR/TWAM
         iv_twi: TWI
 
 #========================================================================================
