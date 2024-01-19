@@ -144,6 +144,10 @@ class GDB_Stub:
 
 
     def handle_socket(self, skt):
+        if self._verbose:
+            print('GDB Stub: Connection open')
+            sys.stdout.flush()
+
         self._socket = skt
         packet_buffer = ''
         try:
@@ -159,7 +163,15 @@ class GDB_Stub:
                     packet_buffer = packet_buffer[n:]
                 else:
                     packet_buffer = ''
+        except ConnectionError:
+            #Exception raised when GDB closes the connection to the stub after a kill command.
+            #We ignore it.
+            pass
         finally:
+            if self._verbose:
+                print('GDB Stub: Connection closed')
+                sys.stdout.flush()
+
             self._socket = None
 
 
@@ -219,7 +231,7 @@ class GDB_Stub:
 
 
     def __run_simloop_join_thread(self):
-        #Wait until the simloop stop
+        #Wait until the simloop stops
         while self._simloop.state() not in (AsyncSimLoop.State.Stopped,
                                             AsyncSimLoop.State.Done):
             time.sleep(0.001)
@@ -378,13 +390,13 @@ class GDB_Stub:
                 val = self._probe.read_gpreg(num)
                 self.__send_reply(hex(val, 2))
             elif num == 32:
-                val = self._probe.read_sreg(num)
+                val = self._probe.read_sreg()
                 self.__send_reply(hex(val, 2))
             elif num == 33:
-                val = self._probe.read_sp(num)
+                val = self._probe.read_sp()
                 self.__send_reply(hex(val, 4, 'big'))
             elif num == 34:
-                val = self._probe.read_pc(num)
+                val = self._probe.read_pc()
                 self.__send_reply(hex(val, 8, 'big'))
 
 
