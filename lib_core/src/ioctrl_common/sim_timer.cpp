@@ -371,7 +371,8 @@ public:
 
     virtual void raised(const signal_data_t&, int) override
     {
-        m_timer.extclock_raised();
+        if (m_timer.m_source == Tick_External)
+            m_timer.add_tick();
     }
 
 private:
@@ -386,15 +387,14 @@ private:
    \param wrap Wrapping value for the counter. For example, a 16-bits counter wrap is 0x10000.
    \param comp_count number of compare channels
  */
-TimerCounter::TimerCounter(PrescaledTimer& timer, long wrap, size_t comp_count)
-:m_source(Tick_Stopped)
-,m_wrap(wrap)
+TimerCounter::TimerCounter(long wrap, size_t comp_count)
+:m_wrap(wrap)
 ,m_counter(0)
 ,m_top(wrap - 1)
+,m_source(Tick_Stopped)
 ,m_slope(Slope_Up)
 ,m_countdown(false)
 ,m_cmp(comp_count)
-,m_timer(timer)
 ,m_next_event_type(0)
 ,m_logger(nullptr)
 {
@@ -412,12 +412,10 @@ TimerCounter::~TimerCounter()
 }
 
 
-/**
-   Set the logger for reporting counter events
- */
-void TimerCounter::set_logger(Logger* logger)
+void TimerCounter::init(CycleManager& cycle_manager, Logger& logger)
 {
-    m_logger = logger;
+    m_timer.init(cycle_manager, logger);
+    m_logger = &logger;
 }
 
 
@@ -426,6 +424,7 @@ void TimerCounter::set_logger(Logger* logger)
  */
 void TimerCounter::reset()
 {
+    m_timer.reset();
     m_source = Tick_Stopped;
     m_slope = Slope_Up;
     m_counter = 0;
@@ -457,6 +456,13 @@ void TimerCounter::reschedule()
 void TimerCounter::set_tick_source(TickSource src)
 {
     m_source = src;
+}
+
+
+void TimerCounter::tick()
+{
+    if (m_source != Tick_Stopped)
+        add_tick();
 }
 
 
@@ -507,6 +513,17 @@ void TimerCounter::set_comp_value(size_t index, long value)
 void TimerCounter::set_comp_enabled(size_t index, bool enable)
 {
     m_cmp[index].enabled = enable;
+}
+
+
+void TimerCounter::set_countdown(bool down)
+{
+    m_countdown = down;
+
+    if (down && m_slope == Slope_Up)
+        m_slope = Slope_Down;
+    else if (!down && m_slope == Slope_Down)
+        m_slope = Slope_Up;
 }
 
 
@@ -586,19 +603,27 @@ void TimerCounter::timer_raised(const signal_data_t& sigdata)
     if (m_logger)
         m_logger->dbg("Updating counters");
 
-    process_ticks(sigdata.data.as_int(), sigdata.index);
+    process_ticks(sigdata.data.as_uint(), sigdata.index);
 }
 
 
 /*
-   Callback for a single external clock tick.
-   Determine the events that should be raised for the current value of
-   the counter, then process one tick.
+ * Callback for a single external clock tick.
  */
 void TimerCounter::extclock_raised()
 {
-    if (m_source != Tick_External) return;
+    if (m_source == Tick_External)
+        tick();
+}
 
+
+/*
+ * Single manual clock tick.
+ * Determine the events that should be raised for the current value of
+ * the counter, then process one tick.
+ */
+void TimerCounter::add_tick()
+{
     m_next_event_type = 0;
     if (m_counter == m_wrap - 1)
         m_next_event_type |= Event_Max;
