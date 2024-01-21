@@ -1452,12 +1452,13 @@ typedef struct TCB_struct
     register8_t reserved_2[2];
 } TCB_t;
 
-/* Clock Select select */
+/* Clock Select */
 typedef enum TCB_CLKSEL_enum
 {
-    TCB_CLKSEL_CLKDIV1_gc = (0x00<<1),  /* CLK_PER (No Prescaling) */
-    TCB_CLKSEL_CLKDIV2_gc = (0x01<<1),  /* CLK_PER/2 (From Prescaler) */
-    TCB_CLKSEL_CLKTCA_gc = (0x02<<1),  /* Use Clock from TCA */
+    TCB_CLKSEL_DIV1_gc = (0x00<<1),  /* CLK_PER */
+    TCB_CLKSEL_DIV2_gc = (0x01<<1),  /* CLK_PER/2 */
+    TCB_CLKSEL_TCA0_gc = (0x02<<1),  /* Use CLK_TCA from TCA0 */
+    TCB_CLKSEL_EVENT_gc = (0x07<<1)  /* Count on event edge */
 } TCB_CLKSEL_t;
 
 /* Timer Mode select */
@@ -3360,39 +3361,34 @@ typedef enum WDT_WINDOW_enum
 #define TCA_SPLIT_DBGRUN_bp  0  /* Debug Run bit position. */
 
 
-
-
-
-
-
-
-
-
-
 /* TCB - 16-bit Timer Type B */
 /* TCB.CTRLA  bit masks and bit positions */
 #define TCB_ENABLE_bm  0x01  /* Enable bit mask. */
 #define TCB_ENABLE_bp  0  /* Enable bit position. */
-#define TCB_CLKSEL_gm  0x06  /* Clock Select group mask. */
+#define TCB_CLKSEL_gm  0x0E  /* Clock Select group mask. */
 #define TCB_CLKSEL_gp  1  /* Clock Select group position. */
-#define TCB_CLKSEL0_bm  (1<<1)  /* Clock Select bit 0 mask. */
-#define TCB_CLKSEL0_bp  1  /* Clock Select bit 0 position. */
-#define TCB_CLKSEL1_bm  (1<<2)  /* Clock Select bit 1 mask. */
-#define TCB_CLKSEL1_bp  2  /* Clock Select bit 1 position. */
+#define TCB_CLKSEL_0_bm  (1<<1)  /* Clock Select bit 0 mask. */
+#define TCB_CLKSEL_0_bp  1  /* Clock Select bit 0 position. */
+#define TCB_CLKSEL_1_bm  (1<<2)  /* Clock Select bit 1 mask. */
+#define TCB_CLKSEL_1_bp  2  /* Clock Select bit 1 position. */
+#define TCB_CLKSEL_2_bm  (1<<3)  /* Clock Select bit 2 mask. */
+#define TCB_CLKSEL_2_bp  3  /* Clock Select bit 2 position. */
 #define TCB_SYNCUPD_bm  0x10  /* Synchronize Update bit mask. */
 #define TCB_SYNCUPD_bp  4  /* Synchronize Update bit position. */
+#define TCB_CASCADE_bm  0x20  /* Cascade two timers bit mask. */
+#define TCB_CASCADE_bp  5  /* Cascade two timers bit position. */
 #define TCB_RUNSTDBY_bm  0x40  /* Run Standby bit mask. */
 #define TCB_RUNSTDBY_bp  6  /* Run Standby bit position. */
 
 /* TCB.CTRLB  bit masks and bit positions */
 #define TCB_CNTMODE_gm  0x07  /* Timer Mode group mask. */
 #define TCB_CNTMODE_gp  0  /* Timer Mode group position. */
-#define TCB_CNTMODE0_bm  (1<<0)  /* Timer Mode bit 0 mask. */
-#define TCB_CNTMODE0_bp  0  /* Timer Mode bit 0 position. */
-#define TCB_CNTMODE1_bm  (1<<1)  /* Timer Mode bit 1 mask. */
-#define TCB_CNTMODE1_bp  1  /* Timer Mode bit 1 position. */
-#define TCB_CNTMODE2_bm  (1<<2)  /* Timer Mode bit 2 mask. */
-#define TCB_CNTMODE2_bp  2  /* Timer Mode bit 2 position. */
+#define TCB_CNTMODE_0_bm  (1<<0)  /* Timer Mode bit 0 mask. */
+#define TCB_CNTMODE_0_bp  0  /* Timer Mode bit 0 position. */
+#define TCB_CNTMODE_1_bm  (1<<1)  /* Timer Mode bit 1 mask. */
+#define TCB_CNTMODE_1_bp  1  /* Timer Mode bit 1 position. */
+#define TCB_CNTMODE_2_bm  (1<<2)  /* Timer Mode bit 2 mask. */
+#define TCB_CNTMODE_2_bp  2  /* Timer Mode bit 2 position. */
 #define TCB_CCMPEN_bm  0x10  /* Pin Output Enable bit mask. */
 #define TCB_CCMPEN_bp  4  /* Pin Output Enable bit position. */
 #define TCB_CCMPINIT_bm  0x20  /* Pin Initial State bit mask. */
@@ -3411,9 +3407,12 @@ typedef enum WDT_WINDOW_enum
 /* TCB.INTCTRL  bit masks and bit positions */
 #define TCB_CAPT_bm  0x01  /* Capture or Timeout bit mask. */
 #define TCB_CAPT_bp  0  /* Capture or Timeout bit position. */
+#define TCB_OVF_bm  0x02  /* Overflow bit mask. */
+#define TCB_OVF_bp  1  /* Overflow bit position. */
 
 /* TCB.INTFLAGS  bit masks and bit positions */
 /* TCB_CAPT  is already defined. */
+/* TCB_OVF  is already defined. */
 
 /* TCB.STATUS  bit masks and bit positions */
 #define TCB_RUN_bm  0x01  /* Run bit mask. */
@@ -3422,8 +3421,6 @@ typedef enum WDT_WINDOW_enum
 /* TCB.DBGCTRL  bit masks and bit positions */
 #define TCB_DBGRUN_bm  0x01  /* Debug Run bit mask. */
 #define TCB_DBGRUN_bp  0  /* Debug Run bit position. */
-
-
 
 
 /* TWI - Two-Wire Interface */

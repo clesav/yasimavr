@@ -34,16 +34,24 @@ YASIMAVR_BEGIN_NAMESPACE
 
 //=======================================================================================
 
+#define AVR_CTLREQ_TCB_GET_EVENT_HOOK         1
+
 /**
    \ingroup api_timer
    \brief Configuration structure for ArchXT_TimerB.
  */
 struct ArchXT_TimerBConfig {
 
+    enum Options {
+        EventCount   = 0x01,
+        OverflowFlag = 0x02,
+    };
+
     /// Base address for the peripheral I/O registers
     reg_addr_t reg_base;
     /// Interrupt vector index for TCB_CAPT
     int_vect_t iv_capt;
+    int options;
 
 };
 
@@ -63,11 +71,23 @@ class AVR_ARCHXT_PUBLIC_API ArchXT_TimerB : public Peripheral, public SignalHook
 
 public:
 
+    enum SignalId {
+        Signal_Capture,
+        Signal_Output,
+    };
+
+    enum CaptureHookTag {
+        Tag_Event,
+        Tag_Count,
+    };
+
     ArchXT_TimerB(int num, const ArchXT_TimerBConfig& config);
+    virtual ~ArchXT_TimerB();
 
     //Override of Peripheral callbacks
     virtual bool init(Device& device) override;
     virtual void reset() override;
+    virtual bool ctlreq(ctlreq_id_t req, ctlreq_data_t* data) override;
     virtual uint8_t ioreg_read_handler(reg_addr_t addr, uint8_t value) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
     virtual void sleep(bool on, SleepMode mode) override;
@@ -76,16 +96,41 @@ public:
 
 private:
 
+    class EventHook;
+    friend class EventHook;
+
+    enum State {
+        State_Ready,
+        State_Run,
+        State_End
+    };
+
     const ArchXT_TimerBConfig& m_config;
 
-    uint8_t m_clk_mode;
+    int m_clk_mode;
+    int m_cnt_mode;
+    State m_cnt_state;
+    uint16_t m_ccmp;
+    bool m_event_state;
 
     //***** Interrupt flag management *****
     InterruptFlag m_intflag;
 
     //***** Timer management *****
-    PrescaledTimer m_timer;
     TimerCounter m_counter;
+
+    EventHook* m_event_hook;
+
+    DataSignal m_signal;
+
+    void set_counter_state(State state);
+    void update_counter_top();
+    void update_on_CCMP_read();
+    void process_capture_event(unsigned char event_state);
+    void hook_raised(const signal_data_t& data, int hooktag);
+    void process_count_event();
+    void raise_capture_flag();
+    void update_output(unsigned char value);
 
 };
 

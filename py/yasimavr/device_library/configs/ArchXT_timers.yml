@@ -309,9 +309,10 @@ TCB:
             CLKSEL:
                 kind: ENUM
                 LSB: 1
-                MSB: 2
-                values: [ DIV1, DIV2, TCA ]
-            SYNCUPD: { kind: BIT, pos: 4 }
+                MSB: 3
+                values: { 0x00: DIV1, 0x01: DIV2, 0x02: TCA0, 0x07: EVENT }
+            SYNCUPD: { kind: BIT, pos: 4, supported: no }
+            CASCADE: { kind: BIT, pos: 5 }
             RUNSTDBY: { kind: BIT, pos: 6 }
 
         - name: CTRLB
@@ -323,22 +324,27 @@ TCB:
                 MSB: 2
                 values: [ INT, TIMEOUT, CAPT, FRQ, PW, FRQPW, SINGLE, PWM8 ]
             CCMPEN: { kind: BIT, pos: 4 }
-            CCMPINIT: { kind: BIT, pos: 5 }
-            ASYNC: { kind: BIT, pos: 6 }
+            CCMPINIT: { kind: BIT, pos: 5, supported: no }
+            ASYNC: { kind: BIT, pos: 6, supported: no }
 
-        - name: EVVTRL
+        - name: EVCTRL
           offset: 0x04
-          supported: no
+          fields:
+            CAPTEI: { kind: BIT, pos: 0, one: enabled, zero: disabled }
+            EDGE: { kind: BIT, pos: 4 }
+            FILTER: { kind: BIT, pos: 6 }
 
         - name: INTCTRL
           offset: 0x05
           fields:
             CAPT: { kind: BIT, pos: 0 }
+            OVF: { kind: BIT, pos: 1 }
 
         - name: INTFLAGS
           offset: 0x06
           fields:
             CAPT: { kind: BIT, pos: 0 }
+            OVF: { kind: BIT, pos: 1 }
 
         - name: STATUS
           offset: 0x07
