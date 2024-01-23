@@ -77,8 +77,8 @@ ArchXT_RTC::ArchXT_RTC(const CFG& config)
 :Peripheral(AVR_IOCTL_RTC)
 ,m_config(config)
 ,m_clk_mode(RTC_Disabled)
-,m_rtc_counter(m_rtc_timer, 0x10000, 1)
-,m_pit_counter(m_pit_timer, 0x10000, 0)
+,m_rtc_counter(0x10000, 1)
+,m_pit_counter(0x10000, 0)
 ,m_rtc_intflag(false)
 ,m_pit_intflag(false)
 {
@@ -125,10 +125,8 @@ bool ArchXT_RTC::init(Device& device)
                                  DEF_REGBIT_B(PITINTFLAGS, RTC_PI),
                                  m_config.iv_pit);
 
-    m_rtc_timer.init(*device.cycle_manager(), logger());
-    m_pit_timer.init(*device.cycle_manager(), logger());
-    m_rtc_counter.set_logger(&logger());
-    m_pit_counter.set_logger(&logger());
+    m_rtc_counter.init(*device.cycle_manager(), logger());
+    m_pit_counter.init(*device.cycle_manager(), logger());
 
     return status;
 }
@@ -138,8 +136,6 @@ void ArchXT_RTC::reset()
     m_clk_mode = RTC_Disabled;
     write_ioreg(REG_ADDR(PERL), 0xFF);
     write_ioreg(REG_ADDR(PERH), 0xFF);
-    m_rtc_timer.reset();
-    m_pit_timer.reset();
     m_rtc_counter.reset();
     m_pit_counter.reset();
 }
@@ -150,7 +146,7 @@ uint8_t ArchXT_RTC::ioreg_read_handler(reg_addr_t addr, uint8_t value)
 
     //16-bits reading of CNT
     if (reg_ofs == REG_OFS(CNTL)) {
-        m_rtc_timer.update();
+        m_rtc_counter.update();
         uint16_t v = (uint16_t) m_rtc_counter.counter();
         value = v & 0x00FF;
         write_ioreg(REG_ADDR(TEMP), v >> 8);
@@ -230,7 +226,7 @@ void ArchXT_RTC::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
     }
     else if (reg_ofs == REG_OFS(PERH)) {
         uint8_t temp = read_ioreg(REG_ADDR(TEMP));
-        m_rtc_timer.update();
+        m_rtc_counter.update();
         m_rtc_counter.set_top(temp | (data.value << 8));
         m_rtc_counter.reschedule();
     }
@@ -241,7 +237,7 @@ void ArchXT_RTC::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
     }
     else if (reg_ofs == REG_OFS(CMPH)) {
         uint8_t temp = read_ioreg(REG_ADDR(TEMP));
-        m_rtc_timer.update();
+        m_rtc_counter.update();
         m_rtc_counter.set_comp_value(0, temp | (data.value << 8));
         m_rtc_counter.reschedule();
     }
@@ -294,8 +290,8 @@ void ArchXT_RTC::configure_timers()
         //Read and configure the prescaler factor
         const unsigned long ps_max = PRESCALER_MAX * clk_factor;
         const unsigned long f = (1 << READ_IOREG_F(CTRLA, RTC_PRESCALER)) * clk_factor;
-        m_rtc_timer.set_prescaler(ps_max, f);
-        m_pit_timer.set_prescaler(ps_max, f);
+        m_rtc_counter.prescaler().set_prescaler(ps_max, f);
+        m_pit_counter.prescaler().set_prescaler(ps_max, f);
 
         //Set the RTC and PIT counters mode
         m_rtc_counter.set_tick_source((m_clk_mode | RTC_Enabled) ? TimerCounter::Tick_Timer : TimerCounter::Tick_Stopped);
@@ -303,8 +299,8 @@ void ArchXT_RTC::configure_timers()
 
     } else {
 
-        m_rtc_timer.set_prescaler(PRESCALER_MAX, 0);
-        m_pit_timer.set_prescaler(PRESCALER_MAX, 0);
+        m_rtc_counter.prescaler().set_prescaler(PRESCALER_MAX, 0);
+        m_rtc_counter.prescaler().set_prescaler(PRESCALER_MAX, 0);
 
     }
 }
@@ -317,7 +313,7 @@ void ArchXT_RTC::sleep(bool on, SleepMode mode)
     //The RTC timer is paused for sleep modes above Standby and in Standby if RTC_RUNSTDBY is not set
     //The PIT timer is not affected by sleep modes
     if (mode > SleepMode::Standby || (mode == SleepMode::Standby && !TEST_IOREG(CTRLA, RTC_RUNSTDBY)))
-        m_rtc_timer.set_paused(on);
+        m_rtc_counter.prescaler().set_paused(on);
 }
 
 /*

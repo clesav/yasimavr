@@ -95,8 +95,6 @@ private:
     int m_clk_mode;
 
     //***** prescaled timer, one for each counter *****
-    PrescaledTimer m_rtc_timer;
-    PrescaledTimer m_pit_timer;
     TimerCounter m_rtc_counter;
     TimerCounter m_pit_counter;
 

@@ -50,8 +50,8 @@ struct ArchXT_TimerBConfig {
     /// Base address for the peripheral I/O registers
     reg_addr_t reg_base;
     /// Interrupt vector index for TCB_CAPT
-    int_vect_t iv_capt;
-    int options;
+    int_vect_t iv_capt = AVR_INTERRUPT_NONE;
+    int options = 0x00;
 
 };
 

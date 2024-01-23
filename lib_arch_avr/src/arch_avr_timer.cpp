@@ -91,17 +91,16 @@ ArchAVR_Timer::ArchAVR_Timer(int num, const CFG& config)
 ,m_config(config)
 ,m_icr(0)
 ,m_temp(0)
-,m_counter(m_timer, (m_config.is_16bits ? 0x10000 : 0x100), m_config.oc_channels.size())
+,m_counter((m_config.is_16bits ? 0x10000 : 0x100), m_config.oc_channels.size())
 ,m_intflag_ovf(true)
 ,m_intflag_icr(true)
 {
     //Calculate the prescaler max value by looking for the highest division factor
-    unsigned long maxdiv = 0;
+    m_clk_ps_max = 0;
     for (auto clkcfg : m_config.clocks) {
-        if (clkcfg.div > maxdiv)
-            maxdiv = clkcfg.div;
+        if (clkcfg.div > m_clk_ps_max)
+            m_clk_ps_max = clkcfg.div;
     }
-    m_clk_ps_max = maxdiv;
 
     m_capt_hook = new CaptureHook(*this);
 
@@ -167,9 +166,7 @@ bool ArchAVR_Timer::init(Device& device)
     add_ioreg(m_config.reg_int_enable, int_bitmask);
     add_ioreg(m_config.reg_int_flag, int_bitmask);
 
-    m_timer.init(*device.cycle_manager(), logger());
-
-    m_counter.set_logger(&logger());
+    m_counter.init(*device.cycle_manager(), logger());
     m_counter.signal().connect(*this);
 
     return status;
@@ -180,9 +177,8 @@ void ArchAVR_Timer::reset()
 {
     m_temp = 0;
     m_mode = m_config.modes[0];
-    m_timer.reset();
-    m_timer.set_prescaler(m_clk_ps_max, 1);
     m_counter.reset();
+    m_counter.prescaler().set_prescaler(m_clk_ps_max, 1);
     m_intflag_ovf.update_from_ioreg();
 
     if (m_config.reg_icr.valid()) {
@@ -221,11 +217,11 @@ uint8_t ArchAVR_Timer::ioreg_read_handler(reg_addr_t addr, uint8_t value)
 {
     //reading of interrupt flags
     if (addr == m_config.reg_int_flag)
-        m_timer.update();
+        m_counter.update();
 
     //8 or 16 bits reading of CNTx
     else if (addr == m_config.reg_cnt) {
-        m_timer.update();
+        m_counter.update();
         uint16_t v = m_counter.counter();
         value = v & 0x00FF;
         if (m_config.is_16bits)
@@ -315,7 +311,7 @@ void ArchAVR_Timer::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& da
                 m_counter.set_tick_source(cfg->source);
                 logger().dbg("Clock changed to 0x%02x", cfg->source);
                 if (cfg->source == TimerCounter::Tick_Timer)
-                    m_timer.set_prescaler(m_clk_ps_max, cfg->div);
+                    m_counter.prescaler().set_prescaler(m_clk_ps_max, cfg->div);
             } else {
                 logger().dbg("Unsupported clock setting: 0x%02x", reg_val);
                 m_counter.set_tick_source(TimerCounter::Tick_Stopped);
@@ -568,7 +564,7 @@ void ArchAVR_Timer::capt_raised()
     //If ICR is used for TOP value, the Input Capture function is disabled
     if (m_mode.top == CFG::Top_OnIC) return;
 
-    m_timer.update();
+    m_counter.update();
     m_icr = m_counter.counter();
     m_intflag_icr.set_flag();
     m_signal.raise(Signal_Capt, 0);

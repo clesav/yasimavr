@@ -368,8 +368,14 @@ void ArchXT_TimerB::process_capture_event(unsigned char event_state)
 
     logger().dbg("Captured edge %s", event_state ? "rising" : "falling");
 
-    //Invert the edge value if the bit EDGE in EVCTRL is set and convert to boolean
-    bool edge_value = TEST_IOREG(EVCTRL, TCB_EDGE) ? (!event_state) : (!!event_state);
+    //Process the effect of the bit EDGE in EVCTRL
+    bool edge_value;
+    if (m_cnt_mode == TCB_CNTMODE_SINGLE_gc)
+        //Special case of SINGLE mode : any edge triggers the counter if EDGE is set
+        edge_value = TEST_IOREG(EVCTRL, TCB_EDGE) || event_state;
+    else
+        //All other modes, invert the edge value if EDGE is set
+        edge_value = TEST_IOREG(EVCTRL, TCB_EDGE) ? (!event_state) : (!!event_state);
 
     m_counter.update();
 
