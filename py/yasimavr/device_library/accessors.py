@@ -57,18 +57,15 @@ class _FieldAccessor:
         return self.read_raw() < other.__index__()
 
     def write_raw(self, raw_value):
-        shift, bitmask = self._field.shift_mask()
-        bitmask <<= shift
-        raw_value <<= shift
-
+        bm = self._field.bitmask()
         rv_in = self._reg.read()
-        rv_out = (rv_in & ~bitmask) | (raw_value & bitmask)
+        rv_out = (rv_in & ~bm.mask) | ((raw_value << bm.bit) & bm.mask)
         self._reg.write(rv_out)
 
     def read_raw(self):
         rv = self._reg.read()
-        shift, bitmask = self._field.shift_mask()
-        return (rv >> shift) & bitmask
+        bm = self._field.bitmask()
+        return (rv & bm.mask) >> bm.bit
 
     def __str__(self):
         return '%s.%s [%s]' % (self._reg.name, self._field.name, str(self.read()))
