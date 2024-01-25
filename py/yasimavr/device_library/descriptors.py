@@ -242,7 +242,7 @@ def _reduce_bitmasks(bms, reg_size):
         mask |= bm.mask
 
     if not mask:
-        return [_corelib.bitmask_t()]
+        return [(i, _corelib.bitmask_t(0, 0xFF)) for i in range(reg_size)]
 
     min_bit_shift = min(bm.bit for bm in bms)
 
