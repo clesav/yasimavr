@@ -43,44 +43,91 @@ YASIMAVR_USING_NAMESPACE
 static const uint16_t PrescalerFactors[8] = { 1, 2, 4, 8, 16, 64, 256, 1024 };
 
 
+typedef ArchXT_TimerAConfig CFG;
+
+
+class ArchXT_TimerA::EventHook : public SignalHook {
+
+public:
+
+    explicit EventHook(ArchXT_TimerA& tmr) : m_tmr(tmr) {}
+
+    virtual void raised(const signal_data_t& sigdata, int hooktag) override
+    {
+        m_tmr.event_raised(sigdata, hooktag);
+    }
+
+private:
+
+    ArchXT_TimerA& m_tmr;
+
+};
+
+
 ArchXT_TimerA::ArchXT_TimerA(const ArchXT_TimerAConfig& config)
 :Peripheral(AVR_IOCTL_TIMER('A', '0'))
 ,m_config(config)
-,m_cnt(0)
-,m_per(0)
-,m_perbuf(0)
-,m_next_event_type(0)
 ,m_ovf_intflag(false)
-{
-    for (int i = 0; i < AVR_TCA_CMP_CHANNEL_COUNT; ++i)
-        m_cmp_intflags[i] = new InterruptFlag(false);
+,m_hunf_intflag(false)
+,m_cmp_intflags{
+    InterruptFlag(false),
+    InterruptFlag(false),
+    InterruptFlag(false),
 }
+,m_split_mode(false)
+,m_sgl_counter(0x10000, 3)
+,m_lo_counter(0x100, 3)
+,m_hi_counter(0x100, 3)
+,m_wgmode(TCA_SINGLE_WGMODE_NORMAL_gc)
+,m_EIA_state(false)
+,m_EIB_state(false)
+,m_timer_block(false)
+{
+    m_event_hook = new EventHook(*this);
+}
+
 
 ArchXT_TimerA::~ArchXT_TimerA()
 {
-    for (int i = 0; i < AVR_TCA_CMP_CHANNEL_COUNT; ++i)
-        delete m_cmp_intflags[i];
+    delete m_event_hook;
 }
+
 
 bool ArchXT_TimerA::init(Device& device)
 {
     bool status = Peripheral::init(device);
 
-    add_ioreg(REG_ADDR(CTRLA), TCA_SINGLE_CLKSEL_gm | TCA_SINGLE_ENABLE_bm);
-    add_ioreg(REG_ADDR(CTRLB), TCA_SINGLE_WGMODE_gm);
-    //CTRLC not implemented
-    //CTRLD not implemented
-    //CTRLECLR not implemented
-    //CTRLESET not implemented
-    add_ioreg(REG_ADDR(CTRLFCLR), TCA_SINGLE_PERBV_bm | TCA_SINGLE_CMP0BV_bm |
-                                  TCA_SINGLE_CMP1BV_bm | TCA_SINGLE_CMP2BV_bm);
-    add_ioreg(REG_ADDR(CTRLFSET), TCA_SINGLE_PERBV_bm | TCA_SINGLE_CMP0BV_bm |
-                                  TCA_SINGLE_CMP1BV_bm | TCA_SINGLE_CMP2BV_bm);
-    //EVCTRL not implemented
-    add_ioreg(REG_ADDR(INTCTRL), TCA_SINGLE_OVF_bm | TCA_SINGLE_CMP0_bm |
-                                 TCA_SINGLE_CMP1_bm | TCA_SINGLE_CMP2_bm);
-    add_ioreg(REG_ADDR(INTFLAGS), TCA_SINGLE_OVF_bm | TCA_SINGLE_CMP0_bm |
-                                  TCA_SINGLE_CMP1_bm | TCA_SINGLE_CMP2_bm);
+    uint8_t ctrla_fields = TCA_SINGLE_CLKSEL_gm | TCA_SINGLE_ENABLE_bm;
+    if (m_config.version >= CFG::V2) ctrla_fields |= TCA_SINGLE_RUNSTDBY_bm;
+    add_ioreg(REG_ADDR(CTRLA), ctrla_fields);
+
+    add_ioreg(REG_ADDR(CTRLB), TCA_SINGLE_WGMODE_gm |
+                               TCA_SINGLE_CMP0EN_bm | TCA_SINGLE_CMP1EN_bm | TCA_SINGLE_CMP2EN_bm |
+                               TCA_SPLIT_LCMP0EN_bm | TCA_SPLIT_LCMP1EN_bm | TCA_SPLIT_LCMP2EN_bm |
+                               TCA_SPLIT_HCMP0EN_bm | TCA_SPLIT_HCMP1EN_bm | TCA_SPLIT_HCMP2EN_bm);
+    add_ioreg(REG_ADDR(CTRLC), TCA_SINGLE_CMP0OV_bm | TCA_SINGLE_CMP1OV_bm | TCA_SINGLE_CMP2OV_bm |
+                               TCA_SPLIT_LCMP0OV_bm | TCA_SPLIT_LCMP1OV_bm | TCA_SPLIT_LCMP2OV_bm |
+                               TCA_SPLIT_HCMP0OV_bm | TCA_SPLIT_HCMP1OV_bm | TCA_SPLIT_HCMP2OV_bm);
+    add_ioreg(REG_ADDR(CTRLD), TCA_SPLIT_SPLITM_bm);
+    add_ioreg(REG_ADDR(CTRLECLR), TCA_SINGLE_DIR_bm | TCA_SINGLE_LUPD_bm | TCA_SINGLE_CMD_gm |
+                                  TCA_SPLIT_CMDEN_gm);
+    add_ioreg(REG_ADDR(CTRLESET), TCA_SINGLE_DIR_bm | TCA_SINGLE_LUPD_bm | TCA_SINGLE_CMD_gm |
+                                  TCA_SPLIT_CMDEN_gm);
+    add_ioreg(REG_ADDR(CTRLFCLR), TCA_SINGLE_PERBV_bm |
+                                  TCA_SINGLE_CMP0BV_bm | TCA_SINGLE_CMP1BV_bm | TCA_SINGLE_CMP2BV_bm);
+    add_ioreg(REG_ADDR(CTRLFSET), TCA_SINGLE_PERBV_bm |
+                                  TCA_SINGLE_CMP0BV_bm | TCA_SINGLE_CMP1BV_bm | TCA_SINGLE_CMP2BV_bm);
+
+    uint8_t evctrl_fields = TCA_SINGLE_CNTAEI_bm | TCA_SINGLE_EVACTA_gm;
+    if (m_config.version >= CFG::V2) evctrl_fields |= TCA_SINGLE_CNTBEI_bm | TCA_SINGLE_EVACTB_gm;
+    add_ioreg(REG_ADDR(EVCTRL), evctrl_fields);
+
+    add_ioreg(REG_ADDR(INTCTRL), TCA_SINGLE_OVF_bm |
+                                 TCA_SINGLE_CMP0_bm | TCA_SINGLE_CMP1_bm | TCA_SINGLE_CMP2_bm |
+                                 TCA_SPLIT_HUNF_bm);
+    add_ioreg(REG_ADDR(INTFLAGS), TCA_SINGLE_OVF_bm |
+                                  TCA_SINGLE_CMP0_bm | TCA_SINGLE_CMP1_bm | TCA_SINGLE_CMP2_bm |
+                                  TCA_SPLIT_HUNF_bm);
     //DBGCTRL not implemented
     add_ioreg(REG_ADDR(TEMP));
     add_ioreg(REG_ADDR(CNTL));
@@ -106,36 +153,96 @@ bool ArchXT_TimerA::init(Device& device)
                                  DEF_REGBIT_B(INTCTRL, TCA_SINGLE_OVF),
                                  DEF_REGBIT_B(INTFLAGS, TCA_SINGLE_OVF),
                                  m_config.iv_ovf);
+    status &= m_hunf_intflag.init(device,
+                                  DEF_REGBIT_B(INTCTRL, TCA_SPLIT_HUNF),
+                                  DEF_REGBIT_B(INTFLAGS, TCA_SPLIT_HUNF),
+                                  m_config.iv_hunf);
 
-    for (int i = 0; i < AVR_TCA_CMP_CHANNEL_COUNT; ++i)
-        status &= m_cmp_intflags[i]->init(device,
-                                          regbit_t(REG_ADDR(INTCTRL), TCA_SINGLE_CMP0_bp + i),
-                                          regbit_t(REG_ADDR(INTFLAGS), TCA_SINGLE_CMP0_bp + i),
-                                          m_config.ivs_cmp[i]);
+    for (int i = 0; i < CFG::CompareChannelCount; ++i)
+        status &= m_cmp_intflags[i].init(device,
+                                         regbit_t(REG_ADDR(INTCTRL), TCA_SINGLE_CMP0_bp + i),
+                                         regbit_t(REG_ADDR(INTFLAGS), TCA_SINGLE_CMP0_bp + i),
+                                         m_config.ivs_cmp[i]);
 
     m_timer.init(*device.cycle_manager(), logger());
-    m_timer.signal().connect(*this);
+
+    m_sgl_counter.init(*device.cycle_manager(), logger());
+    m_timer.register_chained_timer(m_sgl_counter.prescaler());
+    m_sgl_counter.signal().connect(*this, Tag_Single);
+
+    m_lo_counter.init(*device.cycle_manager(), logger());
+    m_timer.register_chained_timer(m_lo_counter.prescaler());
+    m_lo_counter.signal().connect(*this, Tag_SplitLow);
+
+    m_hi_counter.init(*device.cycle_manager(), logger());
+    m_timer.register_chained_timer(m_hi_counter.prescaler());
+    m_hi_counter.signal().connect(*this, Tag_SplitHigh);
 
     return status;
 }
 
+
 void ArchXT_TimerA::reset()
 {
-    Peripheral::reset();
-    m_cnt = 0;
-    m_per = 0xFFFF;
-    m_perbuf = 0xFFFF;
-    for (int i = 0; i < AVR_TCA_CMP_CHANNEL_COUNT; ++i) {
-        m_cmp[i] = 0;
-        m_cmpbuf[i] = 0;
-    }
-    m_next_event_type = 0;
     m_timer.reset();
+
+    m_split_mode = false;
+
+    //Reset the period register value
+    m_per = { 0xFFFF, 0xFFFF, false };
+    WRITE_IOREG(PERL, 0xFF);
+    WRITE_IOREG(PERH, 0xFF);
+
+    //Reset all Output Compare buffered registers, interrupts and signal values
+    for (int i = 0; i < CFG::CompareChannelCount; ++i) {
+        m_cmp[i] = { 0x0000, 0x0000, false };
+        m_cmp_intflags[i].update_from_ioreg();
+        m_signal.set_data(Signal_Waveform, 0, i);
+        m_signal.set_data(Signal_Waveform, 0, i + CFG::CompareChannelCount);
+    }
+
+    //Reset the single mode counter to default settings
+    m_sgl_counter.reset();
+    m_sgl_counter.prescaler().set_prescaler(1, 1);
+    m_sgl_counter.set_tick_source(TimerCounter::Tick_Timer);
+
+    //Reset the split counters to default settings
+    m_lo_counter.reset();
+    m_lo_counter.prescaler().set_prescaler(1, 0);
+    m_lo_counter.set_countdown(true);
+    m_hi_counter.reset();
+    m_hi_counter.prescaler().set_prescaler(1, 0);
+    m_hi_counter.set_countdown(true);
+
+    //Reset the compare modules of the counters
+    for (int i = 0; i < CFG::CompareChannelCount; ++i) {
+        m_sgl_counter.set_comp_enabled(i, true);
+        m_lo_counter.set_comp_enabled(i, true);
+        m_hi_counter.set_comp_enabled(i, true);
+    }
+
+    //Apply the counter default configuration
+    m_sgl_counter.reschedule();
+    m_lo_counter.reschedule();
+    m_hi_counter.reschedule();
+
+    //Reset the Waveform mode
+    m_wgmode = TCA_SINGLE_WGMODE_NORMAL_gc;
+
+    //Reset the event state machines
+    m_EIA_state = false;
+    m_EIB_state = false;
+    m_timer_block = false;
 }
+
 
 bool ArchXT_TimerA::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
 {
-    if (req == AVR_CTLREQ_TCA_REGISTER_TCB) {
+    if (req == AVR_CTLREQ_GET_SIGNAL) {
+        data->data = &m_signal;
+        return true;
+    }
+    else if (req == AVR_CTLREQ_TCA_REGISTER_TCB) {
         PrescaledTimer* t = reinterpret_cast<PrescaledTimer*>(data->data.as_ptr());
         if (data->index)
             m_timer.register_chained_timer(*t);
@@ -143,247 +250,885 @@ bool ArchXT_TimerA::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
             m_timer.unregister_chained_timer(*t);
         return true;
     }
+    else if (req == AVR_CTLREQ_TCA_GET_EVENT_HOOK) {
+        data->data = m_event_hook;
+        return true;
+    }
     return false;
 }
 
+/*
+ * Handler for reading registers.
+ * Delegates to one of the sub-handler depending on the peripheral mode
+*/
 uint8_t ArchXT_TimerA::ioreg_read_handler(reg_addr_t addr, uint8_t value)
 {
     reg_addr_t reg_ofs = addr - m_config.reg_base;
+    if (m_split_mode)
+        return read_ioreg_split(reg_ofs, value);
+    else
+        return read_ioreg_single(reg_ofs, value);
+}
 
-    //16-bits reading of CNT
+/*
+ * Sub-handler for reading registers in single mode
+*/
+uint8_t ArchXT_TimerA::read_ioreg_single(reg_addr_t reg_ofs, uint8_t value)
+{
+    //16-bits reading of CNT/LCNT/HCNT
     if (reg_ofs == REG_OFS(CNTL)) {
-        m_timer.update();
-        value = m_cnt & 0x00FF;
-        write_ioreg(REG_ADDR(TEMP), m_cnt >> 8);
+        m_sgl_counter.update();
+        uint16_t v = m_sgl_counter.counter();
+        value = v & 0x00FF;
+        WRITE_IOREG(TEMP, v >> 8);
     }
     else if (reg_ofs == REG_OFS(CNTH)) {
-        value = read_ioreg(REG_ADDR(TEMP));
+        value = READ_IOREG(TEMP);
     }
 
-    //16-bits reading of PER
+    //16-bits reading of PER/LPER/HPER
     else if (reg_ofs == REG_OFS(PERL)) {
-        value = m_per & 0x00FF;
-        write_ioreg(REG_ADDR(TEMP), m_per >> 8);
+        value = m_per.value & 0x00FF;
+        WRITE_IOREG(TEMP, m_per.value >> 8);
     }
     else if (reg_ofs == REG_OFS(PERH)) {
-        value = read_ioreg(REG_ADDR(TEMP));
+        value = READ_IOREG(TEMP);
     }
 
     //16-bits reading of CMP0,1,2
-    else if (reg_ofs >= REG_OFS(CMP0L) && reg_ofs <= REG_OFS(CMP2H)) {
+    else if (REG_OFS(CMP0L) <= reg_ofs && reg_ofs <= REG_OFS(CMP2H)) {
         int index = (reg_ofs - REG_OFS(CMP0L)) >> 1;
-        bool high_byte = (reg_ofs - REG_OFS(CMP0L)) & 1;
+        bool high_byte = bool((reg_ofs - REG_OFS(CMP0L)) & 1);
         if (high_byte) {
-            value = read_ioreg(REG_ADDR(TEMP));
+            value = READ_IOREG(TEMP);
         } else {
-            value = m_cmp[index] & 0x00FF;
-            write_ioreg(REG_ADDR(TEMP), m_cmp[index] >> 8);
+            value = m_cmp[index].value & 0x00FF;
+            WRITE_IOREG(TEMP, m_cmp[index].value >> 8);
         }
     }
 
     //16-bits reading of PERBUF
     else if (reg_ofs == REG_OFS(PERBUFL)) {
-        value = m_perbuf & 0x00FF;
-        write_ioreg(REG_ADDR(TEMP), m_perbuf >> 8);
+        value = m_per.buffer & 0x00FF;
+        WRITE_IOREG(TEMP, m_per.buffer >> 8);
     }
     else if (reg_ofs == REG_OFS(PERBUFH)) {
-        value = read_ioreg(REG_ADDR(TEMP));
+        value = READ_IOREG(TEMP);
     }
 
     //16-bits reading of CMP0,1,2BUF
-    else if (reg_ofs >= REG_OFS(CMP0BUFL) && reg_ofs <= REG_OFS(CMP2BUFH)) {
+    else if (REG_OFS(CMP0BUFL) <= reg_ofs && reg_ofs <= REG_OFS(CMP2BUFH)) {
         int index = (reg_ofs - REG_OFS(CMP0BUFL)) >> 1;
-        bool high_byte = (reg_ofs - REG_OFS(CMP0BUFL)) & 1;
+        bool high_byte = bool((reg_ofs - REG_OFS(CMP0BUFL)) & 1);
         if (high_byte) {
-            value = read_ioreg(REG_ADDR(TEMP));
+            value = READ_IOREG(TEMP);
         } else {
-            value = m_cmpbuf[index] & 0x00FF;
-            write_ioreg(REG_ADDR(TEMP), m_cmpbuf[index] >> 8);
+            value = m_cmp[index].buffer & 0x00FF;
+            WRITE_IOREG(TEMP, m_cmp[index].buffer >> 8);
         }
     }
 
     return value;
 }
 
+
+uint8_t ArchXT_TimerA::read_ioreg_split(reg_addr_t reg_ofs, uint8_t value)
+{
+    if (reg_ofs == REG_OFS(CNTL)) {
+        m_lo_counter.update();
+        value = m_lo_counter.counter();
+    }
+    else if (reg_ofs == REG_OFS(CNTH)) {
+        m_hi_counter.update();
+        value = m_hi_counter.counter();
+    }
+
+    return value;
+}
+
+
 void ArchXT_TimerA::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
-    bool do_reschedule = false;
     reg_addr_t reg_ofs = addr - m_config.reg_base;
 
     if (reg_ofs == REG_OFS(CTRLA)) {
         if (data.value & TCA_SINGLE_ENABLE_bm) {
-            bitmask_t bm_clksel = DEF_BITMASK_F(TCA_SINGLE_CLKSEL);
-            uint16_t factor = PrescalerFactors[bm_clksel.extract(data.value)];
+            int factor = PrescalerFactors[EXTRACT_F(data.value, TCA_SINGLE_CLKSEL)];
             m_timer.set_prescaler(TIMER_PRESCALER_MAX, factor);
         } else {
             m_timer.set_prescaler(TIMER_PRESCALER_MAX, 0);
         }
     }
 
-    else if (reg_ofs == REG_OFS(CTRLFCLR)) {
-        uint8_t v = data.old & ~data.value;
-        write_ioreg(REG_ADDR(CTRLFSET), v);
-        write_ioreg(REG_ADDR(CTRLFCLR), v);
+    else if (reg_ofs == REG_OFS(CTRLD)) {
+        set_peripheral_mode(data.value & TCA_SINGLE_SPLITM_bm);
     }
-    else if (reg_ofs == REG_OFS(CTRLFCLR)) {
+
+    //CTRLE Register, defined by SET and CLR registers
+    else if (reg_ofs == REG_OFS(CTRLESET)) {
+        //Update the register value by setting bits but the CMD field always ends up zero
         uint8_t v = data.old | data.value;
-        write_ioreg(REG_ADDR(CTRLFSET), v);
-        write_ioreg(REG_ADDR(CTRLFCLR), v);
+        v &= ~TCA_SINGLE_CMD_gm;
+        WRITE_IOREG(CTRLESET, v);
+        WRITE_IOREG(CTRLECLR, v);
+
+        //Extract the command code to execute
+        uint8_t cmd = data.value & TCA_SINGLE_CMD_gm;
+        bool cmden;
+        if (m_split_mode)
+            cmden = data.value & TCA_SPLIT_CMDEN_gm;
+        else
+            cmden = true;
+
+        //Execute the command, returning a boolean if we can update the direction (single mode only)
+        if (execute_command(cmd, cmden) && !m_split_mode)
+            //Update the direction
+            set_direction(data.value & TCA_SINGLE_DIR_bm, true);
     }
 
-    //16-bits writing to CNT
-    else if (reg_ofs == REG_OFS(CNTL)) {
-        write_ioreg(REG_ADDR(TEMP), data.value);
-    }
-    else if (reg_ofs == REG_OFS(CNTH)) {
-        m_cnt = read_ioreg(REG_ADDR(TEMP)) | (data.value << 8);
-        do_reschedule = true;
-    }
+    else if (reg_ofs == REG_OFS(CTRLECLR)) {
+        //Update the register value by clearing bits
+        uint8_t v = data.old & ~data.value;
+        WRITE_IOREG(CTRLESET, v);
+        WRITE_IOREG(CTRLECLR, v);
 
-    //16-bits writing to PER
-    else if (reg_ofs == REG_OFS(PERL)) {
-        write_ioreg(REG_ADDR(TEMP), data.value);
-    }
-    else if (reg_ofs == REG_OFS(PERH)) {
-        m_per = read_ioreg(REG_ADDR(TEMP)) | (data.value << 8);
-        do_reschedule = true;
-    }
-
-    //16-bits writing to CMP0,1,2
-    else if (reg_ofs >= REG_OFS(CMP0L) && reg_ofs <= REG_OFS(CMP2H)) {
-        int index = (reg_ofs - REG_OFS(CMP0L)) >> 1;
-        bool high_byte = (reg_ofs - REG_OFS(CMP0L)) & 1;
-        if (high_byte) {
-            m_cmp[index] = read_ioreg(REG_ADDR(TEMP)) | (data.value << 8);
-            do_reschedule = true;
-        } else {
-            write_ioreg(REG_ADDR(TEMP), data.value);
-        }
-    }
-
-    //16-bits writing to PERBUF
-    //It does not trigger a reschedule but only sets the BV flag in CTRLF
-    else if (reg_ofs == REG_OFS(PERBUFL)) {
-        write_ioreg(REG_ADDR(TEMP), data.value);
-    }
-    else if (reg_ofs == REG_OFS(PERBUFH)) {
-        m_perbuf = read_ioreg(REG_ADDR(TEMP)) | (data.value << 8);
-        set_ioreg(REG_ADDR(CTRLFSET), TCA_SINGLE_PERBV_bp);
-        set_ioreg(REG_ADDR(CTRLFCLR), TCA_SINGLE_PERBV_bp);
-    }
-
-    //16-bits writing to CMP0,1,2BUF
-    //It does not trigger a reschedule but only sets the BV flag in CTRLF
-    else if (reg_ofs >= REG_OFS(CMP0BUFL) && reg_ofs <= REG_OFS(CMP2BUFH)) {
-        int index = (reg_ofs - REG_OFS(CMP0BUFL)) >> 1;
-        bool high_byte = (reg_ofs - REG_OFS(CMP0BUFL)) & 1;
-        if (high_byte) {
-            m_cmpbuf[index] = read_ioreg(REG_ADDR(TEMP)) | (data.value << 8);
-            set_ioreg(REG_ADDR(CTRLFSET), TCA_SINGLE_CMP0BV_bp + index);
-            set_ioreg(REG_ADDR(CTRLFCLR), TCA_SINGLE_CMP0BV_bp + index);
-        } else {
-            write_ioreg(REG_ADDR(TEMP), data.value);
-        }
+        //Update the direction (single mode only)
+        if (!m_split_mode)
+            set_direction(data.value & TCA_SINGLE_DIR_bm, true);
     }
 
     else if (reg_ofs == REG_OFS(INTCTRL)) {
         m_ovf_intflag.update_from_ioreg();
-        for (int i = 0; i < AVR_TCA_CMP_CHANNEL_COUNT; ++i)
-            m_cmp_intflags[i]->update_from_ioreg();
+        m_hunf_intflag.update_from_ioreg();
+        for (auto& cmp : m_cmp_intflags)
+            cmp.update_from_ioreg();
     }
 
-    //If we're writing a 1 to a interrupt flag bit, it clears the bit and cancels the interrupt
+    //If we're writing a 1 to the interrupt flag bit, it clears the bit and cancels the interrupt
     else if (reg_ofs == REG_OFS(INTFLAGS)) {
-        write_ioreg(addr, 0);
-        m_ovf_intflag.clear_flag(EXTRACT_B(data.value, TCA_SINGLE_OVF));
-        for (int i = 0; i < AVR_TCA_CMP_CHANNEL_COUNT; ++i) {
-            bitmask_t bm = bitmask_t(TCA_SINGLE_CMP0_bp + i);
-            m_cmp_intflags[i]->clear_flag(bm.extract(data.value));
+        if (data.value & TCA_SINGLE_OVF_bm)
+            m_ovf_intflag.clear_flag();
+
+        if (data.value & TCA_SPLIT_HUNF_bm)
+            m_hunf_intflag.clear_flag();
+
+        for (int i = 0; i < CFG::CompareChannelCount; ++i) {
+            if (data.value & (TCA_SINGLE_CMP0_bm << i))
+                m_cmp_intflags[i].clear_flag();
         }
     }
 
+    //All other registers are treated differently according to the single/split mode
+    else if (m_split_mode)
+        write_ioreg_split(reg_ofs, data);
+    else
+        write_ioreg_single(reg_ofs, data);
+}
+
+
+void ArchXT_TimerA::write_ioreg_single(reg_addr_t reg_ofs, const ioreg_write_t& data)
+{
+    if (reg_ofs == REG_OFS(CTRLB)) {
+        m_wgmode = data.value & TCA_SINGLE_WGMODE_gm;
+        update_ALUPD_status();
+        configure_single_counter();
+    }
+
+    else if (reg_ofs == REG_OFS(CTRLFSET)) {
+        uint8_t v = data.old | data.value;
+        WRITE_IOREG(CTRLFSET, v);
+        WRITE_IOREG(CTRLFCLR, v);
+    }
+    else if (reg_ofs == REG_OFS(CTRLFCLR)) {
+        uint8_t v = data.old & ~data.value;
+        WRITE_IOREG(CTRLFSET, v);
+        WRITE_IOREG(CTRLFCLR, v);
+    }
+
+    else if (reg_ofs == REG_OFS(EVCTRL)) {
+        m_sgl_counter.update();
+        update_timer_block(data.value);
+        update_tick_sources();
+        m_sgl_counter.reschedule();
+    }
+
+    //16-bits writing to CNT
+    else if (reg_ofs == REG_OFS(CNTL)) {
+        WRITE_IOREG(TEMP, data.value);
+    }
+    else if (reg_ofs == REG_OFS(CNTH)) {
+        //Collate the 16-bits value of CNT using the TEMP register
+        m_sgl_counter.update();
+        m_sgl_counter.set_counter(READ_IOREG(TEMP) | (data.value << 8));
+        m_sgl_counter.reschedule();
+    }
+
+    //16-bits writing to PER
+    else if (reg_ofs == REG_OFS(PERL)) {
+        WRITE_IOREG(TEMP, data.value);
+    }
+    else if (reg_ofs == REG_OFS(PERH)) {
+        m_per.value = READ_IOREG(TEMP) | (data.value << 8);
+        configure_single_counter();
+    }
+
+    //16-bits writing to CMPx
+    else if (REG_OFS(CMP0L) <= reg_ofs && reg_ofs <= REG_OFS(CMP2H)) {
+        int index = (reg_ofs - REG_OFS(CMP0L)) >> 1;
+        bool high_byte = (reg_ofs - REG_OFS(CMP0L)) & 1;
+        if (high_byte) {
+            m_cmp[index].value = READ_IOREG(TEMP) | (data.value << 8);
+            configure_single_counter();
+        } else {
+            WRITE_IOREG(TEMP, data.value);
+        }
+    }
+
+    //16-bits writing to PERBUF
+    else if (reg_ofs == REG_OFS(PERBUFL)) {
+        WRITE_IOREG(TEMP, data.value);
+    }
+    else if (reg_ofs == REG_OFS(PERBUFH)) {
+        m_per.buffer = READ_IOREG(TEMP) | (data.value << 8);
+        m_per.flag = true;
+        SET_IOREG(CTRLFSET, TCA_SINGLE_PERBV);
+        SET_IOREG(CTRLFCLR, TCA_SINGLE_PERBV);
+        update_ALUPD_status();
+    }
+
+    //16-bits writing to CMPxBUF
+    else if (REG_OFS(CMP0BUFL) <= reg_ofs && reg_ofs <= REG_OFS(CMP2BUFH)) {
+        int index = (reg_ofs - REG_OFS(CMP0BUFL)) >> 1;
+        bool high_byte = (reg_ofs - REG_OFS(CMP0BUFL)) & 1;
+        if (high_byte) {
+            m_cmp[index].buffer = READ_IOREG(TEMP) | (data.value << 8);
+            m_cmp[index].flag = true;
+            set_ioreg(REG_ADDR(CTRLFSET), TCA_SINGLE_CMP0BV_bp + index);
+            set_ioreg(REG_ADDR(CTRLFSET), TCA_SINGLE_CMP0BV_bp + index);
+            update_ALUPD_status();
+        } else {
+            WRITE_IOREG(TEMP, data.value);
+        }
+    }
+}
+
+
+void ArchXT_TimerA::write_ioreg_split(reg_addr_t reg_ofs, const ioreg_write_t& data)
+{
+    if (reg_ofs == REG_OFS(CNTL)) {
+        m_lo_counter.update();
+        m_lo_counter.set_counter(data.value);
+        m_lo_counter.reschedule();
+    }
+    else if (reg_ofs == REG_OFS(CNTH)) {
+        m_hi_counter.update();
+        m_hi_counter.set_counter(data.value);
+        m_hi_counter.reschedule();
+    }
+
+    //16-bits writing to PER
+    else if (reg_ofs == REG_OFS(PERL)) {
+        m_per.value = (m_per.value & 0xFF00) | data.value;
+        m_lo_counter.update();
+        m_lo_counter.set_top(data.value);
+        m_lo_counter.reschedule();
+    }
+    else if (reg_ofs == REG_OFS(PERH)) {
+        m_per.value = (m_per.value & 0x00FF) | (data.value << 8);
+        m_hi_counter.update();
+        m_hi_counter.set_top(data.value);
+        m_hi_counter.reschedule();
+    }
+
+    //16-bits writing to CMPx
+    else if (REG_OFS(CMP0L) <= reg_ofs && reg_ofs <= REG_OFS(CMP2H)) {
+        int index = (reg_ofs - REG_OFS(CMP0L)) >> 1;
+        bool high_byte = (reg_ofs - REG_OFS(CMP0L)) & 1;
+        auto& cmp = m_cmp[index];
+        if (high_byte) {
+            cmp.value = (cmp.value & 0xFF00) | data.value;
+            m_hi_counter.update();
+            m_hi_counter.set_comp_value(index, data.value);
+            m_hi_counter.reschedule();
+        } else {
+            cmp.value = (cmp.value & 0x00FF) | (data.value << 8);
+            m_lo_counter.update();
+            m_lo_counter.set_comp_value(index, data.value);
+            m_lo_counter.reschedule();
+        }
+    }
+}
+
+
+void ArchXT_TimerA::update_ALUPD_status()
+{
+    if (TEST_IOREG(CTRLB, TCA_SINGLE_ALUPD)) {
+        //The LUPD bit is set if at least one register buffer flag is not set
+        bool lupd = !m_per.flag;
+        for (auto& cmp : m_cmp)
+            lupd |= !cmp.flag;
+
+        WRITE_IOREG_B(CTRLESET, TCA_SINGLE_LUPD, lupd);
+        WRITE_IOREG_B(CTRLECLR, TCA_SINGLE_LUPD, lupd);
+    }
+}
+
+
+void ArchXT_TimerA::update_buffered_registers()
+{
+    if (TEST_IOREG(CTRLESET, TCA_SINGLE_LUPD)) return;
+
+    bool reconfig = false;
+
+    if (m_per.flag) {
+        m_per.value = m_per.buffer;
+        m_per.flag = false;
+        CLEAR_IOREG(CTRLFSET, TCA_SINGLE_PERBV);
+        CLEAR_IOREG(CTRLFCLR, TCA_SINGLE_PERBV);
+        reconfig = true;
+    }
+
+    for (int i = 0; i < CFG::CompareChannelCount; ++i) {
+        if (m_cmp[i].flag) {
+            m_cmp[i].value = m_cmp[i].buffer;
+            m_cmp[i].flag = false;
+            clear_ioreg(REG_ADDR(CTRLFSET), TCA_SINGLE_CMP0BV_bp + i);
+            clear_ioreg(REG_ADDR(CTRLFCLR), TCA_SINGLE_CMP0BV_bp + i);
+            if (!i)
+                reconfig = true;
+        }
+    }
+
+    if (reconfig)
+        configure_single_counter();
+
+    update_ALUPD_status();
+}
+
+
+void ArchXT_TimerA::set_peripheral_mode(bool split_mode)
+{
+    m_sgl_counter.update();
+    m_lo_counter.update();
+    m_hi_counter.update();
+
+    if (split_mode && !m_split_mode) {
+        uint16_t c = m_sgl_counter.counter();
+        m_lo_counter.set_counter(c & 0x00FF);
+        m_hi_counter.set_counter(c >> 8);
+
+        m_lo_counter.set_top(m_per.value & 0x00FF);
+        m_hi_counter.set_top(m_per.value >> 8);
+
+        for (int i = 0; i < CFG::CompareChannelCount; ++i) {
+            m_lo_counter.set_comp_value(i, m_cmp[i].value & 0x00FF);
+            m_hi_counter.set_comp_value(i, m_cmp[i].value >> 8);
+        }
+    }
+
+    else if (m_split_mode && !split_mode) {
+        long cntl = m_lo_counter.counter();
+        long cnth = m_hi_counter.counter();
+        m_sgl_counter.set_counter((cnth << 8) | cntl);
+
+        configure_single_counter();
+    }
+
+    m_split_mode = split_mode;
+
+    update_tick_sources();
+
+    m_sgl_counter.reschedule();
+    m_lo_counter.reschedule();
+    m_hi_counter.reschedule();
+}
+
+
+void ArchXT_TimerA::update_tick_sources()
+{
+    if (m_split_mode) {
+        m_sgl_counter.set_tick_source(TimerCounter::Tick_Stopped);
+        m_lo_counter.set_tick_source(TimerCounter::Tick_Timer);
+        m_hi_counter.set_tick_source(TimerCounter::Tick_Timer);
+    } else {
+        m_sgl_counter.set_tick_source(m_timer_block ? TimerCounter::Tick_External :
+                                                      TimerCounter::Tick_Timer);
+        m_lo_counter.set_tick_source(TimerCounter::Tick_Stopped);
+        m_hi_counter.set_tick_source(TimerCounter::Tick_Stopped);
+    }
+}
+
+
+/*
+ * Update the settings (top value, compare channel values, slope mode) of the counter
+ * Single mode only
+ */
+void ArchXT_TimerA::configure_single_counter()
+{
+    m_sgl_counter.update();
+
+    //Configure the top value, it's the PER register value except for FREQ mode which uses CMP0
+    m_sgl_counter.set_top(m_wgmode == TCA_SINGLE_WGMODE_FRQ_gc ? m_cmp[0].value : m_per.value);
+
+    //Set the compare channel value and reset the output if the waveform mode is NORMAL
+    for (int i = 0; i < CFG::CompareChannelCount; ++i) {
+        m_sgl_counter.set_comp_value(i, m_cmp[i].value);
+
+        if (m_wgmode == TCA_SINGLE_WGMODE_NORMAL_gc)
+            set_output(i, 0);
+    }
+
+    //Select the slope mode according to the waveform mode
+    TimerCounter::SlopeMode sm;
+    switch (m_wgmode) {
+
+        //Single slope mode: force up-counting
+        case TCA_SINGLE_WGMODE_SINGLESLOPE_gc:
+            sm = TimerCounter::Slope_Up;
+            break;
+
+        //Dual slope modes
+        case TCA_SINGLE_WGMODE_DSTOP_gc:
+        case TCA_SINGLE_WGMODE_DSBOTTOM_gc:
+        case TCA_SINGLE_WGMODE_DSBOTH_gc:
+            sm = TimerCounter::Slope_Double;
+            break;
+
+    //For all other modes, keep the current direction but ensure the dual slope is disabled
+    default:
+        sm = m_sgl_counter.countdown() ? TimerCounter::Slope_Down : TimerCounter::Slope_Up;
+    }
+    m_sgl_counter.set_slope_mode(sm);
+
+    m_sgl_counter.reschedule();
+}
+
+
+/*
+ * Update the timer_block boolean value, depending on the EventInput states (A and B)
+ */
+void ArchXT_TimerA::update_timer_block(uint8_t ev_ctrl)
+{
+    bool eva_enable = ev_ctrl & TCA_SINGLE_CNTAEI_bm;
+    uint8_t eva_mode = ev_ctrl & TCA_SINGLE_EVACTA_gm;
+
+    bool evb_enable;
+    uint8_t evb_mode;
+    if (m_config.version >= CFG::V2) {
+        evb_enable = ev_ctrl & TCA_SINGLE_CNTBEI_bm;
+        evb_mode = ev_ctrl & TCA_SINGLE_EVACTB_gm;
+    } else {
+        evb_enable = false;
+        evb_mode = 0;
+    }
+
+    if (eva_enable) {
+        if (evb_enable && evb_mode == TCA_SINGLE_EVACTB_RESTART_HIGHLVL_gc)
+            m_timer_block = m_EIB_state;
+        else if (eva_mode == TCA_SINGLE_EVACTA_CNT_HIGHLVL_gc)
+            m_timer_block = !m_EIA_state;
+        else if (eva_mode == TCA_SINGLE_EVACTA_UPDOWN_gc)
+            m_timer_block = false;
+        else
+            m_timer_block = true;
+    } else {
+        m_timer_block = false;
+    }
+}
+
+
+/*
+ * Set the counting direction and associated register bits.
+ * Only for single mode.
+ */
+void ArchXT_TimerA::set_direction(bool countdown, bool do_reschedule)
+{
+    //If the waveform mode is SingleSlope, force the counting to be up.
+    if (m_wgmode == TCA_SINGLE_WGMODE_SINGLESLOPE_gc)
+        countdown = false;
+
+   //Update the counting direction, surround by update/reschedule if required.
     if (do_reschedule)
-        m_timer.set_timer_delay(delay_to_event());
+        m_sgl_counter.update();
+
+    m_sgl_counter.set_countdown(countdown);
+
+    if (do_reschedule)
+        m_sgl_counter.reschedule();
+
+    //Update the register bits.
+    WRITE_IOREG_B(CTRLESET, TCA_SINGLE_DIR, countdown);
+    WRITE_IOREG_B(CTRLECLR, TCA_SINGLE_DIR, countdown);
 }
+
 
 /*
- * Defines the types of 'event' that can be triggered by the counter
+ * Set the waveform output for a given compare channel
+ * argument: change==0:clear, change>0:set, change<0:toggle
  */
-enum TimerEventType {
-    TimerEventComp0     = 0x01,
-    TimerEventComp1     = 0x02,
-    TimerEventComp2     = 0x04,
-    TimerEventPer       = 0x80,
-};
+void ArchXT_TimerA::set_output(int index, int8_t change)
+{
+    uint8_t old_value = m_signal.data(Signal_Waveform, index).as_uint();
+
+    uint8_t v;
+    if (change > 0)
+        v = 1;
+    else if (change < 0)
+        v = 1 - old_value;
+    else
+        v = 0;
+
+    uint8_t ov_bit;
+    if (m_split_mode) {
+        if (index < CFG::CompareChannelCount)
+            ov_bit = TCA_SPLIT_LCMP0OV_bp + index;
+        else
+            ov_bit = TCA_SPLIT_HCMP0OV_bp + index - CFG::CompareChannelCount;
+
+        write_ioreg(REG_ADDR(CTRLC), ov_bit, v);
+
+    } else if (index < CFG::CompareChannelCount) {
+        write_ioreg(REG_ADDR(CTRLC), TCA_SINGLE_CMP0OV_bp + index, v);
+    }
+
+    if (v != old_value)
+        m_signal.raise(Signal_Waveform, v, index);
+}
+
+
+void ArchXT_TimerA::raised(const signal_data_t& sigdata, int hooktag)
+{
+    if (hooktag == Tag_Single)
+        process_counter_single(sigdata);
+    else if (hooktag == Tag_SplitLow)
+        process_counter_split(sigdata, true);
+    else
+        process_counter_split(sigdata, false);
+}
+
+
+void ArchXT_TimerA::process_counter_single(const signal_data_t& sigdata)
+{
+    if (sigdata.sigid == TimerCounter::Signal_Event) {
+        int event_flags = sigdata.data.as_uint();
+
+        //The counter reaches the TOP value
+        if (event_flags & TimerCounter::Event_Top) {
+            switch (m_wgmode) {
+                //On normal and frequency modes, when counting up, update the buffered registers
+                //and raise the OVF flag
+                case TCA_SINGLE_WGMODE_NORMAL_gc:
+                case TCA_SINGLE_WGMODE_FRQ_gc:
+                    if (!m_sgl_counter.countdown()) {
+                        update_buffered_registers();
+                        m_ovf_intflag.set_flag();
+                    }
+                    break;
+
+                //For all dual slope modes
+                case TCA_SINGLE_WGMODE_DSTOP_gc:
+                case TCA_SINGLE_WGMODE_DSBOTTOM_gc:
+                case TCA_SINGLE_WGMODE_DSBOTH_gc:
+                    //The counter changes direction so update the register bits
+                    SET_IOREG(CTRLESET, TCA_SINGLE_DIR);
+                    SET_IOREG(CTRLECLR, TCA_SINGLE_DIR);
+                    //In DSBOTH and DSTOP modes, raise the OVF flag
+                    if (m_wgmode == TCA_SINGLE_WGMODE_DSTOP_gc || m_wgmode == TCA_SINGLE_WGMODE_DSBOTH_gc)
+                        m_ovf_intflag.set_flag();
+                    break;
+
+            }
+        }
+
+        //The counter reaches the BOTTOM value
+        if (event_flags & TimerCounter::Event_Bottom) {
+            switch (m_wgmode) {
+
+                //On normal and frequency modes, when counting down, update the buffered registers
+                //and raise the OVF flag
+                case TCA_SINGLE_WGMODE_NORMAL_gc:
+                case TCA_SINGLE_WGMODE_FRQ_gc:
+                    if (m_sgl_counter.countdown()) {
+                        update_buffered_registers();
+                        m_ovf_intflag.set_flag();
+                    }
+                    break;
+
+                //For single slope mode
+                case TCA_SINGLE_WGMODE_SINGLESLOPE_gc:
+                    //Buffered registers update
+                    update_buffered_registers();
+                    //if the compare values are not zero, they are set
+                    for (int i = 0; i < CFG::CompareChannelCount; ++i)
+                        set_output(i, m_sgl_counter.comp_value(i) ? 1 : 0);
+                    break;
+
+                //For all dual slope modes
+                case TCA_SINGLE_WGMODE_DSTOP_gc:
+                case TCA_SINGLE_WGMODE_DSBOTTOM_gc:
+                case TCA_SINGLE_WGMODE_DSBOTH_gc:
+                    //Buffered registers update
+                    update_buffered_registers();
+                    //The counter changes direction so update the register bits
+                    CLEAR_IOREG(CTRLESET, TCA_SINGLE_DIR);
+                    CLEAR_IOREG(CTRLECLR, TCA_SINGLE_DIR);
+                    //In DSBOTH and DSBOTTOM modes, raise the OVF flag
+                    if (m_wgmode == TCA_SINGLE_WGMODE_DSBOTTOM_gc || m_wgmode == TCA_SINGLE_WGMODE_DSBOTH_gc)
+                        m_ovf_intflag.set_flag();
+                    //if the compare values are not zero, they are set
+                    for (int i = 0; i < CFG::CompareChannelCount; ++i)
+                        set_output(i, m_sgl_counter.comp_value(i) ? 1 : 0);
+                    break;
+
+            }
+        }
+    }
+
+    //Compare match event
+    else if (sigdata.sigid == TimerCounter::Signal_CompMatch) {
+        //Set the corresponding interrupt flag
+        m_cmp_intflags[sigdata.index].set_flag();
+
+        switch (m_wgmode) {
+            //In frequency mode, the corresponding waveform output is toggled
+            case TCA_SINGLE_WGMODE_FRQ_gc:
+                set_output(sigdata.index, -1);
+                break;
+
+                //In single slope mode, the corresponding waveform output is cleared
+            case TCA_SINGLE_WGMODE_SINGLESLOPE_gc:
+                set_output(sigdata.index, 0);
+                break;
+
+            //In any dual slope mode, the corresponding waveform output is cleared
+            //when counting up and set when counting down
+            case TCA_SINGLE_WGMODE_DSTOP_gc:
+            case TCA_SINGLE_WGMODE_DSBOTTOM_gc:
+            case TCA_SINGLE_WGMODE_DSBOTH_gc:
+                set_output(sigdata.index, m_sgl_counter.countdown() ? 1 : 0);
+                break;
+
+        }
+    }
+}
+
+
+void ArchXT_TimerA::process_counter_split(const signal_data_t& sigdata, bool low_cnt)
+{
+    if (sigdata.sigid == TimerCounter::Signal_Event) {
+        int event_flags = sigdata.data.as_uint();
+
+        //The counter reaches the BOTTOM value
+        if (event_flags & TimerCounter::Event_Bottom) {
+            if (low_cnt) {
+                //OVF vector is also known as LUNF
+                m_ovf_intflag.set_flag();
+                //Reset the waveform outputs for the lo counter
+                for (int i = 0; i < CFG::CompareChannelCount; ++i)
+                    set_output(i, m_lo_counter.comp_value(i) ? 1 : 0);
+
+            } else {
+                m_hunf_intflag.set_flag();
+                //Reset the waveform outputs for the high counter
+                for (int i = 0; i < CFG::CompareChannelCount; ++i)
+                    set_output(i + CFG::CompareChannelCount, m_hi_counter.comp_value(i) ? 1 : 0);
+            }
+        }
+    }
+
+    //Compare match event
+    else if (sigdata.sigid == TimerCounter::Signal_CompMatch) {
+        if (low_cnt) {
+            //Set the corresponding interrupt flag
+            m_cmp_intflags[sigdata.index].set_flag();
+            //Set the waveform output for the corresponding channel
+            set_output(sigdata.index, 1);
+        } else {
+            //No compare match interrupt flag for the high counter
+            //Set the waveform output for the corresponding channel
+            set_output(sigdata.index + CFG::CompareChannelCount, 1);
+        }
+    }
+}
+
+
+void ArchXT_TimerA::event_raised(const signal_data_t& sigdata, int hooktag)
+{
+    if (m_split_mode) return;
+
+    if (hooktag == Hook_EventA)
+        process_EIA(sigdata.data.as_uint());
+    else if (hooktag == Hook_EventB && m_config.version >= CFG::V2)
+        process_EIB(sigdata.data.as_uint());
+}
+
 
 /*
- * Calculates the delay in source ticks and the type of the next timer/counter event
+ * Process a signal on EventInputA
  */
-uint32_t ArchXT_TimerA::delay_to_event()
+void ArchXT_TimerA::process_EIA(bool event_state)
 {
-    int ticks_to_max = PrescaledTimer::ticks_to_event(m_cnt, 0xFFFF, 0x10000);
-    int ticks_to_next_event = ticks_to_max;
+    //Check that the EIA state actually changes and store the new state
+    if (event_state == m_EIA_state) return;
+    m_EIA_state = event_state;
 
-    int ticks_to_per = PrescaledTimer::ticks_to_event(m_cnt, m_per, 0x10000);
-    if (ticks_to_per < ticks_to_next_event)
-        ticks_to_next_event = ticks_to_per;
+    //If the TCA is disabled, nothing to do
+    if (!TEST_IOREG(CTRLA, TCA_SINGLE_ENABLE)) return;
 
-    int ticks_to_comp[3];
-    for (int i = 0; i < AVR_TCA_CMP_CHANNEL_COUNT; ++i) {
-        int t = PrescaledTimer::ticks_to_event(m_cnt, m_cmp[i], 0x10000);
-        ticks_to_comp[i] = t;
-        if (t < ticks_to_next_event)
-            ticks_to_next_event = t;
+    //If EventInputA is disabled, nothing to do
+    uint8_t ev_ctrl = READ_IOREG(EVCTRL);
+    if (!(ev_ctrl & TCA_SINGLE_CNTAEI_bm)) return;
+
+    m_sgl_counter.update();
+
+    //Update the timer_block value
+    update_timer_block(ev_ctrl);
+
+    //Process the event according to the register settings
+    uint8_t eva_mode = ev_ctrl & TCA_SINGLE_EVACTA_gm;
+    switch(eva_mode) {
+        case TCA_SINGLE_EVACTA_CNT_POSEDGE_gc:
+            if (event_state)
+                m_sgl_counter.tick();
+            break;
+
+        case TCA_SINGLE_EVACTA_CNT_ANYEDGE_gc:
+            m_sgl_counter.tick();
+            break;
+
+        case TCA_SINGLE_EVACTA_CNT_HIGHLVL_gc:
+            m_sgl_counter.set_tick_source(m_timer_block ? TimerCounter::Tick_External:
+                                                          TimerCounter::Tick_Timer);
+            break;
+
+        case TCA_SINGLE_EVACTA_UPDOWN_gc:
+            //if EventInputB is enabled and also set to UPDOWN, do a OR operation
+            if ((ev_ctrl & TCA_SINGLE_CNTBEI_bm) &&
+                ((ev_ctrl & TCA_SINGLE_EVACTB_gm) == TCA_SINGLE_EVACTB_UPDOWN_gc))
+                event_state |= m_EIB_state;
+
+            set_direction(event_state, false);
+            break;
     }
 
-    m_next_event_type = 0;
-
-    if (ticks_to_next_event == ticks_to_per)
-        m_next_event_type |= TimerEventPer;
-
-    for (int i = 0; i < AVR_TCA_CMP_CHANNEL_COUNT; ++i) {
-        if (ticks_to_next_event == ticks_to_comp[i])
-            m_next_event_type |= (TimerEventComp0 << i);
-    }
-
-    return (uint32_t)ticks_to_next_event;
+    m_sgl_counter.reschedule();
 }
 
-void ArchXT_TimerA::raised(const signal_data_t& sigdata, int)
+
+void ArchXT_TimerA::process_EIB(bool event_state)
 {
-    m_cnt += sigdata.data.as_uint();
+    if (event_state == m_EIB_state) return;
+    m_EIB_state = event_state;
 
-    if (!sigdata.index) return;
+    if (TEST_IOREG(CTRLA, TCA_SINGLE_ENABLE)) return;
 
-    logger().dbg("Processing events %02x", m_next_event_type);
+    uint8_t ev_ctrl = READ_IOREG(EVCTRL);
 
-    if (m_next_event_type & TimerEventPer) {
-        m_cnt = 0;
-        m_ovf_intflag.set_flag();
-        update_16bits_buffers();
+    if (!(ev_ctrl & TCA_SINGLE_CNTBEI_bm)) return;
+
+    m_sgl_counter.update();
+
+    update_timer_block(ev_ctrl);
+
+    uint8_t evb_mode = ev_ctrl & TCA_SINGLE_EVACTB_gm;
+    switch (evb_mode) {
+        case TCA_SINGLE_EVACTB_UPDOWN_gc:
+            //if EventInputA is enabled and also set to UPDOWN, do a OR operation
+            if ((ev_ctrl & TCA_SINGLE_CNTAEI_bm) &&
+                ((ev_ctrl & TCA_SINGLE_EVACTA_gm) == TCA_SINGLE_EVACTA_UPDOWN_gc))
+                event_state |= m_EIA_state;
+
+            set_direction(event_state, false);
+            break;
+
+        case TCA_SINGLE_EVACTB_RESTART_POSEDGE_gc:
+            if (event_state)
+                execute_command(TCA_SINGLE_CMD_RESTART_gc, true);
+            break;
+
+        case TCA_SINGLE_EVACTB_RESTART_ANYEDGE_gc:
+            execute_command(TCA_SINGLE_CMD_RESTART_gc, true);
+            break;
+
+        case TCA_SINGLE_EVACTB_RESTART_HIGHLVL_gc:
+            m_sgl_counter.set_tick_source(m_timer_block ? TimerCounter::Tick_External:
+                                                          TimerCounter::Tick_Timer);
+            if (m_EIB_state)
+                execute_command(TCA_SINGLE_CMD_RESTART_gc, true);
+            break;
     }
 
-    for (int i = 0; i < AVR_TCA_CMP_CHANNEL_COUNT; ++i) {
-        if (m_next_event_type & (TimerEventComp0 << i))
-            m_cmp_intflags[i]->set_flag();
-    }
-
-    //Reconfigure the timer delay to the next event
-    m_timer.set_timer_delay(delay_to_event());
+    m_sgl_counter.reschedule();
 }
 
-void ArchXT_TimerA::update_16bits_buffers()
-{
-    m_per = m_perbuf;
-    for (int i = 0; i < AVR_TCA_CMP_CHANNEL_COUNT; ++i)
-        m_cmp[i] = m_cmpbuf[i];
-
-    clear_ioreg(REG_ADDR(CTRLFSET));
-    clear_ioreg(REG_ADDR(CTRLFCLR));
-}
 
 void ArchXT_TimerA::sleep(bool on, SleepMode mode)
 {
-    if (mode > SleepMode::Idle)
-        m_timer.set_paused(on);
+    //For version>=2, in standby mode, keep running if the RUNSTDBY is set.
+    //The peripheral always sleeps for modes above Standby
+    bool do_sleep = ( mode == SleepMode::Standby &&
+                      !(m_config.version >= CFG::V2 && TEST_IOREG(CTRLA, TCA_SINGLE_RUNSTDBY))
+                    ) || mode > SleepMode::Standby;
+
+    m_timer.set_paused(do_sleep and on);
+}
+
+
+bool ArchXT_TimerA::execute_command(int cmd, bool cmden)
+{
+    if (!cmden) return true;
+
+    switch(cmd) {
+        case TCA_SINGLE_CMD_UPDATE_gc:
+            update_buffered_registers();
+            return true;
+
+        case TCA_SINGLE_CMD_RESET_gc:
+            reset();
+
+            //Explicit reset of the control registers
+            WRITE_IOREG(CTRLA, 0);
+            WRITE_IOREG(CTRLB, 0);
+            WRITE_IOREG(CTRLC, 0);
+            WRITE_IOREG(CTRLESET, 0);
+            WRITE_IOREG(CTRLECLR, 0);
+            WRITE_IOREG(CTRLFSET, 0);
+            WRITE_IOREG(CTRLFCLR, 0);
+            WRITE_IOREG(INTCTRL, 0);
+            WRITE_IOREG(INTFLAGS, 0);
+            WRITE_IOREG(TEMP, 0);
+
+            //Signal the reset of all Compare Output values
+            for (int i = 0; i < CFG::CompareChannelCount * 2; ++i)
+                set_output(i, 0);
+
+            return false;
+
+        case TCA_SINGLE_CMD_RESTART_gc:
+            if (m_split_mode) {
+                m_lo_counter.update();
+                m_lo_counter.set_counter(0);
+                m_lo_counter.reschedule();
+
+                m_hi_counter.update();
+                m_hi_counter.set_counter(0);
+                m_hi_counter.reschedule();
+
+            } else {
+
+                m_sgl_counter.update();
+                m_sgl_counter.set_counter(0);
+                set_direction(false, false);
+                m_sgl_counter.reschedule();
+            }
+            //Clear all Compare Output values
+            WRITE_IOREG(CTRLC, 0);
+            for (int i = 0; i < CFG::CompareChannelCount * 2; ++i)
+                set_output(i, 0);
+
+            return false;
+
+        default:
+            return true;
+    }
 }

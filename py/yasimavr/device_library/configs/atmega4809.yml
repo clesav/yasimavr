@@ -207,12 +207,13 @@ peripherals:
             iv_port: PORTF
 
     TCA0:
-        class: TCA_SINGLE
+        class: TCA
         file: ArchXT_timers.yml
         base: 0x0A00
         config:
             iv_ovf: TCA0_OVF
             ivs_cmp: [ TCA0_CMP0, TCA0_CMP1, TCA0_CMP2 ]
+            version: V1
 
     TCB0:
         class: TCB

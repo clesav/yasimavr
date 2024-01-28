@@ -1303,7 +1303,7 @@ typedef struct TCA_SINGLE_struct
     register8_t INTCTRL;  /* Interrupt Control */
     register8_t INTFLAGS;  /* Interrupt Flags */
     register8_t reserved_2[2];
-    register8_t DBGCTRL;  /* Degbug Control */
+    register8_t DBGCTRL;  /* Debug Control */
     register8_t TEMP;  /* Temporary data for 16-bit Access */
     register8_t reserved_3[16];
     _WORDREGISTER(CNT);  /* Count */
@@ -1334,7 +1334,7 @@ typedef struct TCA_SPLIT_struct
     register8_t INTCTRL;  /* Interrupt Control */
     register8_t INTFLAGS;  /* Interrupt Flags */
     register8_t reserved_2[2];
-    register8_t DBGCTRL;  /* Degbug Control */
+    register8_t DBGCTRL;  /* Debug Control */
     register8_t reserved_3[17];
     register8_t LCNT;  /* Low Count */
     register8_t HCNT;  /* High Count */
@@ -1387,14 +1387,24 @@ typedef enum TCA_SINGLE_DIR_enum
     TCA_SINGLE_DIR_DOWN_gc = (0x01<<0),  /* Count down */
 } TCA_SINGLE_DIR_t;
 
-/* Event Action select */
-typedef enum TCA_SINGLE_EVACT_enum
+/* Event Action A select */
+typedef enum TCA_SINGLE_EVACTA_enum
 {
-    TCA_SINGLE_EVACT_POSEDGE_gc = (0x00<<1),  /* Count on positive edge event */
-    TCA_SINGLE_EVACT_ANYEDGE_gc = (0x01<<1),  /* Count on any edge event */
-    TCA_SINGLE_EVACT_HIGHLVL_gc = (0x02<<1),  /* Count on prescaled clock while event line is 1. */
-    TCA_SINGLE_EVACT_UPDOWN_gc = (0x03<<1),  /* Count on prescaled clock. Event controls count direction. Up-count when event line is 0, down-count when event line is 1. */
-} TCA_SINGLE_EVACT_t;
+    TCA_SINGLE_EVACTA_CNT_POSEDGE_gc = (0x00<<1),  /* Count on positive edge event */
+    TCA_SINGLE_EVACTA_CNT_ANYEDGE_gc = (0x01<<1),  /* Count on any edge event */
+    TCA_SINGLE_EVACTA_CNT_HIGHLVL_gc = (0x02<<1),  /* Count on prescaled clock while event line is 1. */
+    TCA_SINGLE_EVACTA_UPDOWN_gc = (0x03<<1)  /* Count on prescaled clock. Event controls count direction. Up-count when event line is 0, down-count when event line is 1. */
+} TCA_SINGLE_EVACTA_t;
+
+/* Event Action B select */
+typedef enum TCA_SINGLE_EVACTB_enum
+{
+    TCA_SINGLE_EVACTB_NONE_gc = (0x00<<5),  /* No Action */
+    TCA_SINGLE_EVACTB_UPDOWN_gc = (0x03<<5),  /* Count on prescaled clock. Event controls count direction. Up-count when event line is 0, down-count when event line is 1. */
+    TCA_SINGLE_EVACTB_RESTART_POSEDGE_gc = (0x04<<5),  /* Restart counter at positive edge event */
+    TCA_SINGLE_EVACTB_RESTART_ANYEDGE_gc = (0x05<<5),  /* Restart counter on any edge event */
+    TCA_SINGLE_EVACTB_RESTART_HIGHLVL_gc = (0x06<<5)  /* Restart counter while event line is 1. */
+} TCA_SINGLE_EVACTB_t;
 
 /* Waveform generation mode select */
 typedef enum TCA_SINGLE_WGMODE_enum
@@ -1407,7 +1417,7 @@ typedef enum TCA_SINGLE_WGMODE_enum
     TCA_SINGLE_WGMODE_DSBOTTOM_gc = (0x07<<0),  /* Dual Slope PWM, overflow on BOTTOM */
 } TCA_SINGLE_WGMODE_t;
 
-/* Clock Selection select */
+/* Clock Selection */
 typedef enum TCA_SPLIT_CLKSEL_enum
 {
     TCA_SPLIT_CLKSEL_DIV1_gc = (0x00<<1),  /* System Clock */
@@ -1428,6 +1438,13 @@ typedef enum TCA_SPLIT_CMD_enum
     TCA_SPLIT_CMD_RESTART_gc = (0x02<<2),  /* Force Restart */
     TCA_SPLIT_CMD_RESET_gc = (0x03<<2),  /* Force Hard Reset */
 } TCA_SPLIT_CMD_t;
+
+/* Command Enable select */
+typedef enum TCA_SPLIT_CMDEN_enum
+{
+    TCA_SPLIT_CMDEN_NONE_gc = (0x00<<0),  /* None */
+    TCA_SPLIT_CMDEN_BOTH_gc = (0x03<<0)  /* Both low byte and high byte counter */
+} TCA_SPLIT_CMDEN_t;
 
 /*
 --------------------------------------------------------------------------
@@ -3172,22 +3189,24 @@ typedef enum WDT_WINDOW_enum
 #define TCA_SINGLE_ENABLE_bp  0  /* Module Enable bit position. */
 #define TCA_SINGLE_CLKSEL_gm  0x0E  /* Clock Selection group mask. */
 #define TCA_SINGLE_CLKSEL_gp  1  /* Clock Selection group position. */
-#define TCA_SINGLE_CLKSEL0_bm  (1<<1)  /* Clock Selection bit 0 mask. */
-#define TCA_SINGLE_CLKSEL0_bp  1  /* Clock Selection bit 0 position. */
-#define TCA_SINGLE_CLKSEL1_bm  (1<<2)  /* Clock Selection bit 1 mask. */
-#define TCA_SINGLE_CLKSEL1_bp  2  /* Clock Selection bit 1 position. */
-#define TCA_SINGLE_CLKSEL2_bm  (1<<3)  /* Clock Selection bit 2 mask. */
-#define TCA_SINGLE_CLKSEL2_bp  3  /* Clock Selection bit 2 position. */
+#define TCA_SINGLE_CLKSEL_0_bm  (1<<1)  /* Clock Selection bit 0 mask. */
+#define TCA_SINGLE_CLKSEL_0_bp  1  /* Clock Selection bit 0 position. */
+#define TCA_SINGLE_CLKSEL_1_bm  (1<<2)  /* Clock Selection bit 1 mask. */
+#define TCA_SINGLE_CLKSEL_1_bp  2  /* Clock Selection bit 1 position. */
+#define TCA_SINGLE_CLKSEL_2_bm  (1<<3)  /* Clock Selection bit 2 mask. */
+#define TCA_SINGLE_CLKSEL_2_bp  3  /* Clock Selection bit 2 position. */
+#define TCA_SINGLE_RUNSTDBY_bm  0x80  /* Run in Standby bit mask. */
+#define TCA_SINGLE_RUNSTDBY_bp  7  /* Run in Standby bit position. */
 
 /* TCA_SINGLE.CTRLB  bit masks and bit positions */
 #define TCA_SINGLE_WGMODE_gm  0x07  /* Waveform generation mode group mask. */
 #define TCA_SINGLE_WGMODE_gp  0  /* Waveform generation mode group position. */
-#define TCA_SINGLE_WGMODE0_bm  (1<<0)  /* Waveform generation mode bit 0 mask. */
-#define TCA_SINGLE_WGMODE0_bp  0  /* Waveform generation mode bit 0 position. */
-#define TCA_SINGLE_WGMODE1_bm  (1<<1)  /* Waveform generation mode bit 1 mask. */
-#define TCA_SINGLE_WGMODE1_bp  1  /* Waveform generation mode bit 1 position. */
-#define TCA_SINGLE_WGMODE2_bm  (1<<2)  /* Waveform generation mode bit 2 mask. */
-#define TCA_SINGLE_WGMODE2_bp  2  /* Waveform generation mode bit 2 position. */
+#define TCA_SINGLE_WGMODE_0_bm  (1<<0)  /* Waveform generation mode bit 0 mask. */
+#define TCA_SINGLE_WGMODE_0_bp  0  /* Waveform generation mode bit 0 position. */
+#define TCA_SINGLE_WGMODE_1_bm  (1<<1)  /* Waveform generation mode bit 1 mask. */
+#define TCA_SINGLE_WGMODE_1_bp  1  /* Waveform generation mode bit 1 position. */
+#define TCA_SINGLE_WGMODE_2_bm  (1<<2)  /* Waveform generation mode bit 2 mask. */
+#define TCA_SINGLE_WGMODE_2_bp  2  /* Waveform generation mode bit 2 position. */
 #define TCA_SINGLE_ALUPD_bm  0x08  /* Auto Lock Update bit mask. */
 #define TCA_SINGLE_ALUPD_bp  3  /* Auto Lock Update bit position. */
 #define TCA_SINGLE_CMP0EN_bm  0x10  /* Compare 0 Enable bit mask. */
@@ -3216,10 +3235,10 @@ typedef enum WDT_WINDOW_enum
 #define TCA_SINGLE_LUPD_bp  1  /* Lock Update bit position. */
 #define TCA_SINGLE_CMD_gm  0x0C  /* Command group mask. */
 #define TCA_SINGLE_CMD_gp  2  /* Command group position. */
-#define TCA_SINGLE_CMD0_bm  (1<<2)  /* Command bit 0 mask. */
-#define TCA_SINGLE_CMD0_bp  2  /* Command bit 0 position. */
-#define TCA_SINGLE_CMD1_bm  (1<<3)  /* Command bit 1 mask. */
-#define TCA_SINGLE_CMD1_bp  3  /* Command bit 1 position. */
+#define TCA_SINGLE_CMD_0_bm  (1<<2)  /* Command bit 0 mask. */
+#define TCA_SINGLE_CMD_0_bp  2  /* Command bit 0 position. */
+#define TCA_SINGLE_CMD_1_bm  (1<<3)  /* Command bit 1 mask. */
+#define TCA_SINGLE_CMD_1_bp  3  /* Command bit 1 position. */
 
 /* TCA_SINGLE.CTRLESET  bit masks and bit positions */
 /* TCA_SINGLE_DIR  is already defined. */
@@ -3243,14 +3262,26 @@ typedef enum WDT_WINDOW_enum
 /* TCA_SINGLE_CMP2BV  is already defined. */
 
 /* TCA_SINGLE.EVCTRL  bit masks and bit positions */
-#define TCA_SINGLE_CNTEI_bm  0x01  /* Count on Event Input bit mask. */
-#define TCA_SINGLE_CNTEI_bp  0  /* Count on Event Input bit position. */
-#define TCA_SINGLE_EVACT_gm  0x06  /* Event Action group mask. */
-#define TCA_SINGLE_EVACT_gp  1  /* Event Action group position. */
-#define TCA_SINGLE_EVACT0_bm  (1<<1)  /* Event Action bit 0 mask. */
-#define TCA_SINGLE_EVACT0_bp  1  /* Event Action bit 0 position. */
-#define TCA_SINGLE_EVACT1_bm  (1<<2)  /* Event Action bit 1 mask. */
-#define TCA_SINGLE_EVACT1_bp  2  /* Event Action bit 1 position. */
+#define TCA_SINGLE_CNTAEI_bm  0x01  /* Count on Event Input A bit mask. */
+#define TCA_SINGLE_CNTAEI_bp  0  /* Count on Event Input A bit position. */
+#define TCA_SINGLE_EVACTA_gm  0x0E  /* Event Action A group mask. */
+#define TCA_SINGLE_EVACTA_gp  1  /* Event Action A group position. */
+#define TCA_SINGLE_EVACTA_0_bm  (1<<1)  /* Event Action A bit 0 mask. */
+#define TCA_SINGLE_EVACTA_0_bp  1  /* Event Action A bit 0 position. */
+#define TCA_SINGLE_EVACTA_1_bm  (1<<2)  /* Event Action A bit 1 mask. */
+#define TCA_SINGLE_EVACTA_1_bp  2  /* Event Action A bit 1 position. */
+#define TCA_SINGLE_EVACTA_2_bm  (1<<3)  /* Event Action A bit 2 mask. */
+#define TCA_SINGLE_EVACTA_2_bp  3  /* Event Action A bit 2 position. */
+#define TCA_SINGLE_CNTBEI_bm  0x10  /* Count on Event Input B bit mask. */
+#define TCA_SINGLE_CNTBEI_bp  4  /* Count on Event Input B bit position. */
+#define TCA_SINGLE_EVACTB_gm  0xE0  /* Event Action B group mask. */
+#define TCA_SINGLE_EVACTB_gp  5  /* Event Action B group position. */
+#define TCA_SINGLE_EVACTB_0_bm  (1<<5)  /* Event Action B bit 0 mask. */
+#define TCA_SINGLE_EVACTB_0_bp  5  /* Event Action B bit 0 position. */
+#define TCA_SINGLE_EVACTB_1_bm  (1<<6)  /* Event Action B bit 1 mask. */
+#define TCA_SINGLE_EVACTB_1_bp  6  /* Event Action B bit 1 position. */
+#define TCA_SINGLE_EVACTB_2_bm  (1<<7)  /* Event Action B bit 2 mask. */
+#define TCA_SINGLE_EVACTB_2_bp  7  /* Event Action B bit 2 position. */
 
 /* TCA_SINGLE.INTCTRL  bit masks and bit positions */
 #define TCA_SINGLE_OVF_bm  0x01  /* Overflow Interrupt bit mask. */
@@ -3272,27 +3303,19 @@ typedef enum WDT_WINDOW_enum
 #define TCA_SINGLE_DBGRUN_bm  0x01  /* Debug Run bit mask. */
 #define TCA_SINGLE_DBGRUN_bp  0  /* Debug Run bit position. */
 
-
-
-
-
-
-
-
-
-
-
 /* TCA_SPLIT.CTRLA  bit masks and bit positions */
 #define TCA_SPLIT_ENABLE_bm  0x01  /* Module Enable bit mask. */
 #define TCA_SPLIT_ENABLE_bp  0  /* Module Enable bit position. */
 #define TCA_SPLIT_CLKSEL_gm  0x0E  /* Clock Selection group mask. */
 #define TCA_SPLIT_CLKSEL_gp  1  /* Clock Selection group position. */
-#define TCA_SPLIT_CLKSEL0_bm  (1<<1)  /* Clock Selection bit 0 mask. */
-#define TCA_SPLIT_CLKSEL0_bp  1  /* Clock Selection bit 0 position. */
-#define TCA_SPLIT_CLKSEL1_bm  (1<<2)  /* Clock Selection bit 1 mask. */
-#define TCA_SPLIT_CLKSEL1_bp  2  /* Clock Selection bit 1 position. */
-#define TCA_SPLIT_CLKSEL2_bm  (1<<3)  /* Clock Selection bit 2 mask. */
-#define TCA_SPLIT_CLKSEL2_bp  3  /* Clock Selection bit 2 position. */
+#define TCA_SPLIT_CLKSEL_0_bm  (1<<1)  /* Clock Selection bit 0 mask. */
+#define TCA_SPLIT_CLKSEL_0_bp  1  /* Clock Selection bit 0 position. */
+#define TCA_SPLIT_CLKSEL_1_bm  (1<<2)  /* Clock Selection bit 1 mask. */
+#define TCA_SPLIT_CLKSEL_1_bp  2  /* Clock Selection bit 1 position. */
+#define TCA_SPLIT_CLKSEL_2_bm  (1<<3)  /* Clock Selection bit 2 mask. */
+#define TCA_SPLIT_CLKSEL_2_bp  3  /* Clock Selection bit 2 position. */
+#define TCA_SPLIT_RUNSTDBY_bm  0x80  /* Run in Standby bit mask. */
+#define TCA_SPLIT_RUNSTDBY_bp  7  /* Run in Standby bit position. */
 
 /* TCA_SPLIT.CTRLB  bit masks and bit positions */
 #define TCA_SPLIT_LCMP0EN_bm  0x01  /* Low Compare 0 Enable bit mask. */
@@ -3327,14 +3350,21 @@ typedef enum WDT_WINDOW_enum
 #define TCA_SPLIT_SPLITM_bp  0  /* Split Mode Enable bit position. */
 
 /* TCA_SPLIT.CTRLECLR  bit masks and bit positions */
+#define TCA_SPLIT_CMDEN_gm  0x03  /* Command Enable group mask. */
+#define TCA_SPLIT_CMDEN_gp  0  /* Command Enable group position. */
+#define TCA_SPLIT_CMDEN_0_bm  (1<<0)  /* Command Enable bit 0 mask. */
+#define TCA_SPLIT_CMDEN_0_bp  0  /* Command Enable bit 0 position. */
+#define TCA_SPLIT_CMDEN_1_bm  (1<<1)  /* Command Enable bit 1 mask. */
+#define TCA_SPLIT_CMDEN_1_bp  1  /* Command Enable bit 1 position. */
 #define TCA_SPLIT_CMD_gm  0x0C  /* Command group mask. */
 #define TCA_SPLIT_CMD_gp  2  /* Command group position. */
-#define TCA_SPLIT_CMD0_bm  (1<<2)  /* Command bit 0 mask. */
-#define TCA_SPLIT_CMD0_bp  2  /* Command bit 0 position. */
-#define TCA_SPLIT_CMD1_bm  (1<<3)  /* Command bit 1 mask. */
-#define TCA_SPLIT_CMD1_bp  3  /* Command bit 1 position. */
+#define TCA_SPLIT_CMD_0_bm  (1<<2)  /* Command bit 0 mask. */
+#define TCA_SPLIT_CMD_0_bp  2  /* Command bit 0 position. */
+#define TCA_SPLIT_CMD_1_bm  (1<<3)  /* Command bit 1 mask. */
+#define TCA_SPLIT_CMD_1_bp  3  /* Command bit 1 position. */
 
 /* TCA_SPLIT.CTRLESET  bit masks and bit positions */
+/* TCA_SPLIT_CMDEN  is already defined. */
 /* TCA_SPLIT_CMD  is already defined. */
 
 /* TCA_SPLIT.INTCTRL  bit masks and bit positions */
