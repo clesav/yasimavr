@@ -235,9 +235,12 @@ class AVR_CORE_PUBLIC_API InterruptFlag : public InterruptHandler {
 
 public:
 
-    explicit InterruptFlag(bool clear_on_ack);
+    explicit InterruptFlag(bool clear_on_ack = false);
+    InterruptFlag(const InterruptFlag& other);
 
     bool init(Device& device, const regbit_t& rb_enable, const regbit_t& rb_flag, int_vect_t vector);
+
+    void set_clear_on_ack(bool clear_on_ack);
 
     int update_from_ioreg();
 
@@ -251,7 +254,7 @@ public:
 
 private:
 
-    const bool m_clr_on_ack;
+    bool m_clr_on_ack;
     regbit_t m_rb_enable;
     regbit_t m_rb_flag;
     int_vect_t m_vector;

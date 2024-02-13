@@ -77,7 +77,7 @@ void PrescaledTimer::reset()
  */
 void PrescaledTimer::set_prescaler(unsigned long ps_max, unsigned long ps_factor)
 {
-    if (!m_updating) update(m_cycle_manager->cycle());
+    if (!m_updating) update();
 
     if (!ps_max) ps_max = 1;
     m_ps_max = ps_max;
@@ -139,22 +139,24 @@ void PrescaledTimer::reschedule()
         m_cycle_manager->cancel(*this);
 }
 
+
 /**
-   Update the timer to catchup with the 'when' cycle.
+   Update the timer to catchup with the last completed cycle.
    Ticks may be generated and the signal may be raised if enough cycles have passed.
 
    If the timer is a child of another timer, the update call is passed on to the parent.
-
-   \param when (optional) Current clock cycle.
-          If omitted, it's obtained via the cycle manager.
  */
+void PrescaledTimer::update()
+{
+    if (m_cycle_manager->cycle())
+        update(m_cycle_manager->cycle() - 1);
+}
+
+
 void PrescaledTimer::update(cycle_count_t when)
 {
     if (m_updating) return;
     m_updating = true;
-
-    if (when == INVALID_CYCLE)
-        when = m_cycle_manager->cycle();
 
     if (m_parent_timer)
         m_parent_timer->update(when);
@@ -170,7 +172,7 @@ void PrescaledTimer::update_timer(cycle_count_t when)
     cycle_count_t dt = when - m_update_cycle;
 
     //Checking for dt != 0 ensures ticks are generated only once
-    if (dt) {
+    if (dt > 0) {
         process_cycles(dt);
         //Remember the update cycle number for the next update
         m_update_cycle = when;
@@ -215,20 +217,19 @@ void PrescaledTimer::process_cycles(cycle_count_t cycles)
         //Update the prescaler counter accordingly
         m_ps_counter = (ticks_dt + m_ps_counter) % m_ps_max;
 
-        m_logger->dbg("Prescaled timer generating %lld ticks, delay=%lld", ticks, m_delay);
-
         //Raise the signal to inform the parent peripheral of ticks to consume
         //Decrement the delay by the number of ticks
         signal_data_t sigdata = { .sigid = 0 };
         if (timeout) {
-            m_logger->dbg("Prescaled timer generating %lld ticks, delay=%lld", ticks, m_delay);
+            m_logger->dbg("Prescaled timer timeout, delay=%lld", m_delay);
             sigdata.index = 1;
             sigdata.data = m_delay;
             m_delay = 0;
         } else {
+            m_delay -= ticks;
+            m_logger->dbg("Prescaled timer generating %lld ticks, remaining=%lld", ticks, m_delay);
             sigdata.index = 0;
             sigdata.data = ticks;
-            m_delay -= ticks;
         }
         m_signal.raise(sigdata);
 
@@ -412,6 +413,9 @@ TimerCounter::~TimerCounter()
 }
 
 
+/**
+   Initialise the counter
+ */
 void TimerCounter::init(CycleManager& cycle_manager, Logger& logger)
 {
     m_timer.init(cycle_manager, logger);
@@ -459,6 +463,9 @@ void TimerCounter::set_tick_source(TickSource src)
 }
 
 
+/**
+   Progress the counter by one unit. Has no effect if if the source is set to Stopped.
+ */
 void TimerCounter::tick()
 {
     if (m_source != Tick_Stopped)
@@ -516,6 +523,10 @@ void TimerCounter::set_comp_enabled(size_t index, bool enable)
 }
 
 
+/**
+   Set the counting up or down. Changes the slope mode accordingly except if the slope
+   mode is Dual.
+ */
 void TimerCounter::set_countdown(bool down)
 {
     m_countdown = down;

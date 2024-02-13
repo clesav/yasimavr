@@ -49,7 +49,6 @@ public:
     CycleManager();
 
     cycle_count_t cycle() const;
-    void set_cycle(cycle_count_t);
     void increment_cycle(cycle_count_t);
 
     void schedule(CycleTimer&, cycle_count_t);

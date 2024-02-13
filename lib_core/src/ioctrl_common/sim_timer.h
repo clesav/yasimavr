@@ -81,7 +81,7 @@ public:
 
     void set_paused(bool paused);
 
-    void update(cycle_count_t when = INVALID_CYCLE);
+    void update();
 
     virtual cycle_count_t next(cycle_count_t when) override;
 
@@ -120,6 +120,7 @@ private:
     PrescaledTimer* m_parent_timer;
 
     void reschedule();
+    void update(cycle_count_t when);
     void update_timer(cycle_count_t when);
     void process_cycles(cycle_count_t cycles);
 
@@ -368,6 +369,7 @@ inline SignalHook& TimerCounter::ext_tick_hook()
     return *reinterpret_cast<SignalHook*>(m_ext_hook);
 }
 
+/// Getter for the internal prescaler
 inline PrescaledTimer& TimerCounter::prescaler()
 {
     return m_timer;

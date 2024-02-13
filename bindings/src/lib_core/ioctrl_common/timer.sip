@@ -38,7 +38,7 @@ public:
     void set_paused(bool);
     void set_timer_delay(cycle_count_t);
     cycle_count_t timer_delay() const;
-    void update(cycle_count_t = -1);
+    void update();
 
     virtual cycle_count_t next(cycle_count_t);
 

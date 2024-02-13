@@ -177,14 +177,13 @@ class RegisterAccessor:
         self._probe = probe
         self._per = per
         self._reg_name = name
+        self._addr = addr
 
         if isinstance(reg, ProxyRegisterDescriptor):
             self._reg = reg.reg
-            self._addr = addr + reg.offset
             self._size = 1
         else:
             self._reg = reg
-            self._addr = addr
             self._size = reg.size
 
         self._active = True
