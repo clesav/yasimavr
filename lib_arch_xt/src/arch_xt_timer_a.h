@@ -110,7 +110,7 @@ class AVR_ARCHXT_PUBLIC_API ArchXT_TimerA : public Peripheral, public SignalHook
 public:
 
     enum SignalId {
-        Signal_Waveform
+        Signal_CompareOutput
     };
 
     enum EventHookTag {
@@ -187,7 +187,7 @@ private:
     void configure_single_counter();
     void update_timer_block(uint8_t ev_ctrl);
     void set_direction(bool countdown, bool do_reschedule);
-    void set_output(int index, int8_t change);
+    void update_output(int index, int change);
 
     void process_counter_single(const signal_data_t& sigdata);
     void process_counter_split(const signal_data_t& sigdata, bool low_cnt);

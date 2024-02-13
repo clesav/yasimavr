@@ -43,7 +43,45 @@ YASIMAVR_USING_NAMESPACE
 static const uint16_t PrescalerFactors[8] = { 1, 2, 4, 8, 16, 64, 256, 1024 };
 
 
+enum OutputChange {
+    Output_NoChange,
+    Output_Clear,
+    Output_Set,
+    Output_Toggle
+};
+
+
 typedef ArchXT_TimerAConfig CFG;
+
+
+/*
+ * Utility function that translates a channel number into the position of
+ * the corresponding CMPxOV bit.
+ */
+static uint8_t index_to_CMPxOV_bit(bool split_mode, int index)
+{
+    if (!split_mode)
+        return TCA_SINGLE_CMP0OV_bp + index;
+    else if (index < CFG::CompareChannelCount)
+        return TCA_SPLIT_LCMP0OV_bp + index;
+    else
+        return TCA_SPLIT_HCMP0OV_bp + index - CFG::CompareChannelCount;
+}
+
+
+/*
+ * Utility function that translates a channel number into the position of
+ * the corresponding CMPxEN bit.
+ */
+static uint8_t index_to_CMPxEN_bit(bool split_mode, int index)
+{
+    if (!split_mode)
+        return TCA_SINGLE_CMP0EN_bp + index;
+    else if (index < CFG::CompareChannelCount)
+        return TCA_SPLIT_LCMP0EN_bp + index;
+    else
+        return TCA_SPLIT_HCMP0EN_bp + index - CFG::CompareChannelCount;
+}
 
 
 class ArchXT_TimerA::EventHook : public SignalHook {
@@ -197,8 +235,8 @@ void ArchXT_TimerA::reset()
     for (int i = 0; i < CFG::CompareChannelCount; ++i) {
         m_cmp[i] = { 0x0000, 0x0000, false };
         m_cmp_intflags[i].update_from_ioreg();
-        m_signal.set_data(Signal_Waveform, 0, i);
-        m_signal.set_data(Signal_Waveform, 0, i + CFG::CompareChannelCount);
+        m_signal.set_data(Signal_CompareOutput, vardata_t(), i);
+        m_signal.set_data(Signal_CompareOutput, vardata_t(), i + CFG::CompareChannelCount);
     }
 
     //Reset the single mode counter to default settings
@@ -675,7 +713,7 @@ void ArchXT_TimerA::configure_single_counter()
         m_sgl_counter.set_comp_value(i, m_cmp[i].value);
 
         if (m_wgmode == TCA_SINGLE_WGMODE_NORMAL_gc)
-            set_output(i, 0);
+            update_output(i, Output_Clear);
     }
 
     //Select the slope mode according to the waveform mode
@@ -763,36 +801,35 @@ void ArchXT_TimerA::set_direction(bool countdown, bool do_reschedule)
 
 
 /*
- * Set the waveform output for a given compare channel
- * argument: change==0:clear, change>0:set, change<0:toggle
+ * Update the waveform output for a given compare channel.
+ * It reads the corresponding CMPxEN and CMPxOV register bits and
+ * raise the signal with the changed value: 0, 1 or Invalid (to indicate disabled)
+ * argument: change should be one of the OutputChange enum values
  */
-void ArchXT_TimerA::set_output(int index, int8_t change)
+void ArchXT_TimerA::update_output(int index, int change)
 {
-    uint8_t old_value = m_signal.data(Signal_Waveform, index).as_uint();
+    vardata_t sig_value;
+    if (m_split_mode || index < CFG::CompareChannelCount) {
+        uint8_t ov_bit = index_to_CMPxOV_bit(m_split_mode, index);
+        uint8_t en_bit = index_to_CMPxEN_bit(m_split_mode, index);
 
-    uint8_t v;
-    if (change > 0)
-        v = 1;
-    else if (change < 0)
-        v = 1 - old_value;
-    else
-        v = 0;
+        uint8_t old_value = test_ioreg(REG_ADDR(CTRLC), ov_bit);
+        uint8_t new_value;
+        switch(change) {
+            case Output_Set:    new_value = 1;             break;
+            case Output_Clear:  new_value = 0;             break;
+            case Output_Toggle: new_value = 1 - old_value; break;
+            default:            new_value = old_value;
+        }
 
-    uint8_t ov_bit;
-    if (m_split_mode) {
-        if (index < CFG::CompareChannelCount)
-            ov_bit = TCA_SPLIT_LCMP0OV_bp + index;
-        else
-            ov_bit = TCA_SPLIT_HCMP0OV_bp + index - CFG::CompareChannelCount;
+        write_ioreg(REG_ADDR(CTRLC), ov_bit, new_value);
 
-        write_ioreg(REG_ADDR(CTRLC), ov_bit, v);
-
-    } else if (index < CFG::CompareChannelCount) {
-        write_ioreg(REG_ADDR(CTRLC), TCA_SINGLE_CMP0OV_bp + index, v);
+        if (test_ioreg(REG_ADDR(CTRLB), en_bit))
+        	sig_value = vardata_t(new_value);
     }
 
-    if (v != old_value)
-        m_signal.raise(Signal_Waveform, v, index);
+    if (sig_value != m_signal.data(Signal_CompareOutput, index))
+        m_signal.raise(Signal_CompareOutput, sig_value, index);
 }
 
 
@@ -860,7 +897,7 @@ void ArchXT_TimerA::process_counter_single(const signal_data_t& sigdata)
                     update_buffered_registers();
                     //if the compare values are not zero, they are set
                     for (int i = 0; i < CFG::CompareChannelCount; ++i)
-                        set_output(i, m_sgl_counter.comp_value(i) ? 1 : 0);
+                        update_output(i, m_sgl_counter.comp_value(i) ? Output_Set : Output_Clear);
                     break;
 
                 //For all dual slope modes
@@ -877,7 +914,7 @@ void ArchXT_TimerA::process_counter_single(const signal_data_t& sigdata)
                         m_ovf_intflag.set_flag();
                     //if the compare values are not zero, they are set
                     for (int i = 0; i < CFG::CompareChannelCount; ++i)
-                        set_output(i, m_sgl_counter.comp_value(i) ? 1 : 0);
+                        update_output(i, m_sgl_counter.comp_value(i) ? Output_Set : Output_Clear);
                     break;
 
             }
@@ -892,12 +929,12 @@ void ArchXT_TimerA::process_counter_single(const signal_data_t& sigdata)
         switch (m_wgmode) {
             //In frequency mode, the corresponding waveform output is toggled
             case TCA_SINGLE_WGMODE_FRQ_gc:
-                set_output(sigdata.index, -1);
+                update_output(sigdata.index, Output_Toggle);
                 break;
 
                 //In single slope mode, the corresponding waveform output is cleared
             case TCA_SINGLE_WGMODE_SINGLESLOPE_gc:
-                set_output(sigdata.index, 0);
+                update_output(sigdata.index, Output_Clear);
                 break;
 
             //In any dual slope mode, the corresponding waveform output is cleared
@@ -905,7 +942,7 @@ void ArchXT_TimerA::process_counter_single(const signal_data_t& sigdata)
             case TCA_SINGLE_WGMODE_DSTOP_gc:
             case TCA_SINGLE_WGMODE_DSBOTTOM_gc:
             case TCA_SINGLE_WGMODE_DSBOTH_gc:
-                set_output(sigdata.index, m_sgl_counter.countdown() ? 1 : 0);
+                update_output(sigdata.index, m_sgl_counter.countdown() ? Output_Set : Output_Clear);
                 break;
 
         }
@@ -925,13 +962,13 @@ void ArchXT_TimerA::process_counter_split(const signal_data_t& sigdata, bool low
                 m_ovf_intflag.set_flag();
                 //Reset the waveform outputs for the lo counter
                 for (int i = 0; i < CFG::CompareChannelCount; ++i)
-                    set_output(i, m_lo_counter.comp_value(i) ? 1 : 0);
+                    update_output(i, m_lo_counter.comp_value(i) ? Output_Set : Output_Clear);
 
             } else {
                 m_hunf_intflag.set_flag();
                 //Reset the waveform outputs for the high counter
                 for (int i = 0; i < CFG::CompareChannelCount; ++i)
-                    set_output(i + CFG::CompareChannelCount, m_hi_counter.comp_value(i) ? 1 : 0);
+                    update_output(i + CFG::CompareChannelCount, m_hi_counter.comp_value(i) ? Output_Set : Output_Clear);
             }
         }
     }
@@ -942,11 +979,11 @@ void ArchXT_TimerA::process_counter_split(const signal_data_t& sigdata, bool low
             //Set the corresponding interrupt flag
             m_cmp_intflags[sigdata.index].set_flag();
             //Set the waveform output for the corresponding channel
-            set_output(sigdata.index, 1);
+            update_output(sigdata.index, Output_Set);
         } else {
             //No compare match interrupt flag for the high counter
             //Set the waveform output for the corresponding channel
-            set_output(sigdata.index + CFG::CompareChannelCount, 1);
+            update_output(sigdata.index + CFG::CompareChannelCount, Output_Set);
         }
     }
 }
@@ -1100,7 +1137,7 @@ bool ArchXT_TimerA::execute_command(int cmd, bool cmden)
 
             //Signal the reset of all Compare Output values
             for (int i = 0; i < CFG::CompareChannelCount * 2; ++i)
-                set_output(i, 0);
+                update_output(i, Output_Clear);
 
             return false;
 
@@ -1124,7 +1161,7 @@ bool ArchXT_TimerA::execute_command(int cmd, bool cmden)
             //Clear all Compare Output values
             WRITE_IOREG(CTRLC, 0);
             for (int i = 0; i < CFG::CompareChannelCount * 2; ++i)
-                set_output(i, 0);
+                update_output(i, Output_Clear);
 
             return false;
 

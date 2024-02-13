@@ -79,7 +79,7 @@ class ArchXT_TimerA : public Peripheral, public SignalHook /NoDefaultCtors/ {
 public:
 
     enum SignalId /BaseType=IntEnum/ {
-        Signal_Waveform         /PyName=Waveform/
+        Signal_CompareOutput         /PyName=CompareOutput/
     };
 
     enum EventHookTag /BaseType=IntEnum/ {
