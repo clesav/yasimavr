@@ -34,7 +34,7 @@ class DictSignalHook(corelib.SignalHook):
 
     def pop(self, sigid=0, index=0):
         k = (int(sigid), index)
-        if (int(sigid), index) in self._signals:
+        if k in self._signals:
             return self._signals.pop(k)
         else:
             return None
@@ -52,3 +52,50 @@ class DictSignalHook(corelib.SignalHook):
     def raised(self, sigdata, tag):
         k = (int(sigdata.sigid), sigdata.index)
         self._signals[k] = (sigdata, tag)
+
+
+class QueuedSignalHook(corelib.SignalHook):
+
+    def __init__(self, signal=None, tag=0, split_by_index=False):
+        super().__init__()
+        if signal is not None:
+            signal.connect(self, tag)
+        self._signals = {}
+        self._split_by_index = split_by_index
+
+    def _make_key(self, sigid, index):
+        if not self._split_by_index: index = 0
+        return int(sigid), index
+
+    def pop(self, sigid=0, index=0):
+        k = self._make_key(sigid, index)
+        if k in self._signals:
+            q = self._signals[k]
+            v = q.popleft()
+            if not len(q):
+                del self._signals[k]
+            return v
+        else:
+            return None
+
+    def pop_data(self, sigid=0, index=0):
+        if self.has_data(sigid, index):
+            return self.pop(sigid, index)[0].data
+        else:
+            return None
+
+    def has_data(self, sigid=0, index=0):
+        k = self._make_key(sigid, index)
+        return k in self._signals
+
+    def raised(self, sigdata, tag):
+        #print('raised: id=%d,ix=%d,v=%s,tag=%d' % (sigdata.sigid, sigdata.index, sigdata.data.value(), tag))
+
+        k = self._make_key(sigdata.sigid, sigdata.index)
+        if k in self._signals:
+            q = self._signals[k]
+        else:
+            q = collections.deque()
+            self._signals[k] = q
+
+        q.append((sigdata, tag))
