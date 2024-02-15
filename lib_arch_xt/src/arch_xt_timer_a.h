@@ -85,7 +85,7 @@ struct ArchXT_TimerAConfig {
     int_vect_t iv_hunf;
     int_vect_t ivs_cmp[CompareChannelCount];
 
-    Version version;
+    Version version = V1;
 
 };
 
@@ -187,7 +187,8 @@ private:
     void configure_single_counter();
     void update_timer_block(uint8_t ev_ctrl);
     void set_direction(bool countdown, bool do_reschedule);
-    void update_output(int index, int change);
+    void set_compare_output(int index, int change);
+    void update_compare_outputs(int change = 0);
 
     void process_counter_single(const signal_data_t& sigdata);
     void process_counter_split(const signal_data_t& sigdata, bool low_cnt);

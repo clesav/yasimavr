@@ -309,6 +309,7 @@ inline long TimerCounter::wrap() const
 }
 
 
+/// Force update of the internal prescaler
 inline void TimerCounter::update()
 {
     m_timer.update();

@@ -212,6 +212,7 @@ peripherals:
         base: 0x0A00
         config:
             iv_ovf: TCA0_OVF
+            iv_hunf: TCA0_HUNF
             ivs_cmp: [ TCA0_CMP0, TCA0_CMP1, TCA0_CMP2 ]
             version: V1
 
