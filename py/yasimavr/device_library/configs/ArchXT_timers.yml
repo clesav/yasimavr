@@ -233,9 +233,9 @@ TCB:
                 LSB: 0
                 MSB: 2
                 values: [ INT, TIMEOUT, CAPT, FRQ, PW, FRQPW, SINGLE, PWM8 ]
-            CCMPEN: { kind: BIT, pos: 4 }
-            CCMPINIT: { kind: BIT, pos: 5, supported: no }
-            ASYNC: { kind: BIT, pos: 6, supported: no }
+            CCMPEN: { kind: BIT, pos: 4, one: enabled, zero: disabled }
+            CCMPINIT: { kind: BIT, pos: 5 }
+            ASYNC: { kind: BIT, pos: 6 }
 
         - name: EVCTRL
           offset: 0x04

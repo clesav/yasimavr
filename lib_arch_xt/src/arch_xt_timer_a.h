@@ -57,7 +57,8 @@ class ArchXT_TimerB;
 
 /**
    \ingroup api_timer
-   Defines the number of comparison channels supported by the TCA
+   Request for the event input hook for a timer type A.
+   It returns with data as a pointer to a SignalHook instance.
  */
 #define AVR_CTLREQ_TCA_GET_EVENT_HOOK      2
 
@@ -74,17 +75,21 @@ struct ArchXT_TimerAConfig {
     static const int CompareChannelCount = 3;
 
     enum Version {
+        /// Base model version, corresponding to ATMega 0-series implementations
         V1,
+        /// V1 + Event Input B and RUNSTDBY bit features
         V2
     };
 
     /// Base address for the peripheral I/O registers
     reg_addr_t reg_base;
-    /// Interrupt vector index for TCA_OVF
+    /// Interrupt vector index for TCA_OVF (a.k.a. TCA_LUNF)
     int_vect_t iv_ovf;
+    /// Interrupt vector index for TCA_HUNF
     int_vect_t iv_hunf;
+    /// Array of vector index for the compare channels interrupts
     int_vect_t ivs_cmp[CompareChannelCount];
-
+    /// Version of the model
     Version version = V1;
 
 };
@@ -93,17 +98,10 @@ struct ArchXT_TimerAConfig {
    \ingroup api_timer
    \brief Implementation of a Timer/Counter type A for the XT core series.
 
-   Only the Normal WGM mode in Single timer configuration is currently implemented.
-   Other unsupported features:
-        - Event control and input
+   Unsupported features:
         - Debug run override
-        - Compare/capture output on pin
-        - Lock Update
-        - Timer command for forced update/restart
 
-   CTLREQs supported:
-    - AVR_CTLREQ_TCA_REGISTER_TCB : Used internally by ArchXT_TimerB instances to
-      link their prescaler clock source to the TCA prescaler output
+  The model supports two versions, defined by the `version`attribute of ArchXT_TimerAConfig
  */
 class AVR_ARCHXT_PUBLIC_API ArchXT_TimerA : public Peripheral, public SignalHook {
 

@@ -157,7 +157,7 @@ def test_core_timer_chain(bch_2tmr):
 
 
 class _BaseBenchCounter(_BaseBench):
-    
+
     def __init__(self):
         super().__init__()
 
@@ -184,7 +184,7 @@ def bch_ctr():
 def test_core_counter_source(bch_ctr):
     #Check that , in Timer source, the counter progresses with
     #the cycle advance
-    
+
     bench, ctr, hook = bch_ctr
 
     ctr.set_tick_source(TC.TickSource.Stopped)
@@ -282,7 +282,7 @@ def test_core_counter_compare(bch_ctr):
     assert hook.has_data(TC.SignalId.CompMatch, 1)
     sig, _ = hook.pop(TC.SignalId.CompMatch, 1)
     assert sig.data.value() & TC.EventType.Compare
-    
+
     bench.advance_cycle(20)
     assert hook.has_data(TC.SignalId.Event)
     assert hook.pop_data(TC.SignalId.Event).value() & TC.EventType.Top

@@ -41,6 +41,15 @@ YASIMAVR_USING_NAMESPACE
 
 #define TIMER_CLOCK_DISABLED -1
 
+
+enum OutputChange {
+    Output_NoChange = 0,
+    Output_Clear,
+    Output_Set,
+    Output_Reset,
+};
+
+
 typedef ArchXT_TimerBConfig CFG;
 
 
@@ -70,6 +79,7 @@ ArchXT_TimerB::ArchXT_TimerB(int num, const CFG& config)
 ,m_cnt_state(State_Run)
 ,m_ccmp(0)
 ,m_event_state(0)
+,m_output(0)
 ,m_intflag(false)
 ,m_counter(0x10000, 1)
 {
@@ -88,7 +98,7 @@ bool ArchXT_TimerB::init(Device& device)
     bool status = Peripheral::init(device);
 
     add_ioreg(REG_ADDR(CTRLA), TCB_RUNSTDBY_bm | TCB_CASCADE_bm | TCB_CLKSEL_gm | TCB_ENABLE_bm);
-    add_ioreg(REG_ADDR(CTRLB), TCB_ASYNC_bm | TCB_CCMPEN_bm | TCB_CNTMODE_gm);
+    add_ioreg(REG_ADDR(CTRLB), TCB_ASYNC_bm | TCB_CCMPINIT_bm | TCB_CCMPEN_bm | TCB_CNTMODE_gm);
     add_ioreg(REG_ADDR(EVCTRL), TCB_FILTER_bm | TCB_EDGE_bm | TCB_CAPTEI_bm);
     add_ioreg(REG_ADDR(STATUS), TCB_RUN_bm, true);
     //DBGCTRL not supported
@@ -129,7 +139,7 @@ void ArchXT_TimerB::reset()
     m_counter.set_comp_value(0, 0);
     m_event_state = 0;
     m_intflag.update_from_ioreg();
-    m_signal.set_data(Signal_Output, 0);
+    update_output(Output_Reset);
 }
 
 
@@ -210,6 +220,7 @@ void ArchXT_TimerB::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& da
 
         set_counter_state(m_cnt_state);
         m_counter.reschedule();
+        update_output(Output_NoChange);
     }
 
     else if (reg_ofs == REG_OFS(CTRLB)) {
@@ -225,6 +236,7 @@ void ArchXT_TimerB::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& da
                                       m_cnt_mode == TCB_CNTMODE_TIMEOUT_gc);
         update_counter_top();
         m_counter.reschedule();
+        update_output(Output_Reset);
     }
 
     //16-bits writing to CNT
@@ -320,21 +332,21 @@ void ArchXT_TimerB::raised(const signal_data_t& data, int hooktag)
         }
         else if (m_cnt_mode == TCB_CNTMODE_SINGLE_gc) {
             raise_capture_flag();
-            update_output(0);
+            update_output(Output_Clear);
             set_counter_state(State_Ready);
         }
     }
 
     if (event_flags & TimerCounter::Event_Bottom) {
         if (m_cnt_mode == TCB_CNTMODE_PWM8_gc)
-            update_output(1);
+            update_output(Output_Set);
     }
 
     if (event_flags & TimerCounter::Event_Compare) {
         if (m_cnt_mode == TCB_CNTMODE_TIMEOUT_gc)
             raise_capture_flag();
         else if (m_cnt_mode == TCB_CNTMODE_PWM8_gc)
-            update_output(0);
+            update_output(Output_Clear);
     }
 
     if (event_flags & TimerCounter::Event_Max) {
@@ -434,7 +446,7 @@ void ArchXT_TimerB::process_capture_event(unsigned char event_state)
             if (edge_value && m_cnt_state == State_Ready) {
                 set_counter_state(State_Run);
                 m_counter.set_counter(0);
-                update_output(1);
+                update_output(Output_Set);
             }
             break;
 
@@ -460,12 +472,31 @@ void ArchXT_TimerB::raise_capture_flag()
  * If the output is enabled (bit CCMPEN in CTRLB register), raise the signal
  * or else, update the value silently.
  */
-void ArchXT_TimerB::update_output(unsigned char value)
+void ArchXT_TimerB::update_output(int change)
 {
-    if (TEST_IOREG(CTRLB, TCB_CCMPEN))
-        m_signal.raise(Signal_Output, value);
-    else
-        m_signal.set_data(Signal_Output, value);
+    switch(change) {
+        case Output_Set:
+            m_output = 1; break;
+
+        case Output_Clear:
+            m_output = 0; break;
+
+        case Output_Reset:
+            if (m_cnt_mode == TCB_CNTMODE_SINGLE_gc || m_cnt_mode == TCB_CNTMODE_PWM8_gc)
+                m_output = 0;
+            else
+                m_output = READ_IOREG_B(CTRLB, TCB_CCMPINIT);
+            break;
+
+        default: break;
+    }
+
+    vardata_t sigdata;
+    if (TEST_IOREG(CTRLA, TCB_ENABLE) && TEST_IOREG(CTRLB, TCB_CCMPEN))
+        sigdata = m_output;
+
+    if (sigdata != m_signal.data(Signal_Output))
+        m_signal.raise(Signal_Output, sigdata);
 }
 
 

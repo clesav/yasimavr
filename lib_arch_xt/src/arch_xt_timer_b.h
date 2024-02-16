@@ -59,12 +59,8 @@ struct ArchXT_TimerBConfig {
    \ingroup api_timer
    \brief Implementation of a Timer/Counter type B for the XT core series
 
-   Only the Periodic Interrupt mode is currently implemented.
-   Other unsupported features:
-   - Event control and input
+   Unsupported features:
    - Debug run override
-   - Compare/capture output on pin
-   - Status register
    - Synchronize Update (SYNCUPD)
  */
 class AVR_ARCHXT_PUBLIC_API ArchXT_TimerB : public Peripheral, public SignalHook {
@@ -112,6 +108,7 @@ private:
     State m_cnt_state;
     uint16_t m_ccmp;
     bool m_event_state;
+    uint8_t m_output;
 
     //***** Interrupt flag management *****
     InterruptFlag m_intflag;
@@ -130,7 +127,7 @@ private:
     void hook_raised(const signal_data_t& data, int hooktag);
     void process_count_event();
     void raise_capture_flag();
-    void update_output(unsigned char value);
+    void update_output(int change);
 
 };
 

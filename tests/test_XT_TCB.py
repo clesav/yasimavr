@@ -72,8 +72,8 @@ class _BenchTCB(BenchXT):
 
         self.hook_out = DictSignalHook(self.dev.TCB0.signal())
 
-        per = self.dev_model.find_peripheral('TCB0')
-        per.logger().set_level(corelib.Logger.Level.Debug)
+        #per = self.dev_model.find_peripheral('TCB0')
+        #per.logger().set_level(corelib.Logger.Level.Debug)
 
     #Helper to set the capture event input level (0 or 1)
     def set_capture_input(self, value):
@@ -331,7 +331,7 @@ def test_xt_tcb_modeSINGLE(bench):
     TCB.CTRLA.ENABLE = 'enabled'
     TCB.CTRLB.CNTMODE = 'SINGLE'
     TCB.EVCTRL.CAPTEI = 'enabled'
-    TCB.CTRLB.CCMPEN = 1
+    TCB.CTRLB.CCMPEN = 'enabled'
     TCB.CCMP = 100
 
     #Check that the counter does not start immediately
