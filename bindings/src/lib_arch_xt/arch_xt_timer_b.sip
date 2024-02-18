@@ -21,13 +21,31 @@
 
 //=======================================================================================
 
+%ModuleCode
+
+#include "arch_xt_timer_b.h"
+const ctlreq_id_t CTLREQ_TCB_GET_EVENT_HOOK = AVR_CTLREQ_TCB_GET_EVENT_HOOK;
+
+%End
+
+const ctlreq_id_t CTLREQ_TCB_GET_EVENT_HOOK;
+
+
+//=======================================================================================
+
 struct ArchXT_TimerBConfig {
 %TypeHeaderCode
 #include "arch_xt_timer_b.h"
 %End
 
+    enum Options /BaseType=IntFlag/ {
+        EventCount,
+        OverflowFlag,
+    };
+
     reg_addr_t reg_base;
     int_vect_t iv_capt;
+    int options;
 
 };
 
@@ -38,6 +56,16 @@ class ArchXT_TimerB : public Peripheral, public SignalHook /NoDefaultCtors/ {
 %End
 
 public:
+
+    enum SignalId /BaseType=IntEnum/ {
+        Signal_Capture   /PyName=Capture/,
+        Signal_Output    /PyName=Output/,
+    };
+
+    enum CaptureHookTag /BaseType=IntEnum/ {
+        Tag_Event        /PyName=Event/,
+        Tag_Count        /PyName=Count/,
+    };
 
     ArchXT_TimerB(int, const ArchXT_TimerBConfig& /KeepReference/);
 

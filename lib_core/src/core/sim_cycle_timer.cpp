@@ -123,14 +123,6 @@ CycleManager::~CycleManager()
 }
 
 /**
-   Set the current value of the cycle counter.
- */
-void CycleManager::set_cycle(cycle_count_t c)
-{
-    m_cycle = c >= 0 ? c : 0;
-}
-
-/**
    Increment the cycle counter.
  */
 void CycleManager::increment_cycle(cycle_count_t count)

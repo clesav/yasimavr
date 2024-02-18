@@ -57,9 +57,10 @@ class ArchXT_TimerB;
 
 /**
    \ingroup api_timer
-   Defines the number of comparison channels supported by the TCA
+   Request for the event input hook for a timer type A.
+   It returns with data as a pointer to a SignalHook instance.
  */
-#define AVR_TCA_CMP_CHANNEL_COUNT           3
+#define AVR_CTLREQ_TCA_GET_EVENT_HOOK      2
 
 
 //=======================================================================================
@@ -70,12 +71,26 @@ class ArchXT_TimerB;
  */
 struct ArchXT_TimerAConfig {
 
+    /// Defines the number of comparison channels supported by the TCA
+    static const int CompareChannelCount = 3;
+
+    enum Version {
+        /// Base model version, corresponding to ATMega 0-series implementations
+        V1,
+        /// V1 + Event Input B and RUNSTDBY bit features
+        V2
+    };
+
     /// Base address for the peripheral I/O registers
     reg_addr_t reg_base;
-    /// Interrupt vector index for TCA_OVF
+    /// Interrupt vector index for TCA_OVF (a.k.a. TCA_LUNF)
     int_vect_t iv_ovf;
-    /// List of interrupt vector indexes for TCB_CMPx
-    int_vect_t ivs_cmp[AVR_TCA_CMP_CHANNEL_COUNT];
+    /// Interrupt vector index for TCA_HUNF
+    int_vect_t iv_hunf;
+    /// Array of vector index for the compare channels interrupts
+    int_vect_t ivs_cmp[CompareChannelCount];
+    /// Version of the model
+    Version version = V1;
 
 };
 
@@ -83,21 +98,23 @@ struct ArchXT_TimerAConfig {
    \ingroup api_timer
    \brief Implementation of a Timer/Counter type A for the XT core series.
 
-   Only the Normal WGM mode in Single timer configuration is currently implemented.
-   Other unsupported features:
-        - Event control and input
+   Unsupported features:
         - Debug run override
-        - Compare/capture output on pin
-        - Lock Update
-        - Timer command for forced update/restart
 
-   CTLREQs supported:
-    - AVR_CTLREQ_TCA_REGISTER_TCB : Used internally by ArchXT_TimerB instances to
-      link their prescaler clock source to the TCA prescaler output
+  The model supports two versions, defined by the `version`attribute of ArchXT_TimerAConfig
  */
 class AVR_ARCHXT_PUBLIC_API ArchXT_TimerA : public Peripheral, public SignalHook {
 
 public:
+
+    enum SignalId {
+        Signal_CompareOutput
+    };
+
+    enum EventHookTag {
+        Hook_EventA,
+        Hook_EventB
+    };
 
     explicit ArchXT_TimerA(const ArchXT_TimerAConfig& config);
     virtual ~ArchXT_TimerA();
@@ -114,30 +131,71 @@ public:
 
 private:
 
+    struct buffered_reg_t {
+        uint16_t value = 0;
+        uint16_t buffer = 0;
+        bool flag = false;
+    };
+
+    enum CounterHookTag {
+        Tag_Single,
+        Tag_SplitLow,
+        Tag_SplitHigh
+    };
+
+    class EventHook;
+    friend class EventHook;
+
     const ArchXT_TimerAConfig& m_config;
 
-    //***** Clock management *****
-    std::vector<ArchXT_TimerB*> m_synched_timers;
-
     //***** Counters *****
-    uint16_t m_cnt;                                 //Current counter register value
-    uint16_t m_per;                                 //Current period register value
-    uint16_t m_cmp[AVR_TCA_CMP_CHANNEL_COUNT];      //Current compare registers values
-    uint16_t m_perbuf;                              //Period buffer register
-    uint16_t m_cmpbuf[AVR_TCA_CMP_CHANNEL_COUNT];   //Compare buffer registers
-
-    //***** Event management *****
-    uint8_t m_next_event_type;
+    buffered_reg_t m_per;
+    buffered_reg_t m_cmp[ArchXT_TimerAConfig::CompareChannelCount];
 
     //***** Interrupt and signal management *****
     InterruptFlag m_ovf_intflag;
-    InterruptFlag* m_cmp_intflags[AVR_TCA_CMP_CHANNEL_COUNT];
+    InterruptFlag m_hunf_intflag;
+    InterruptFlag m_cmp_intflags[ArchXT_TimerAConfig::CompareChannelCount];
+
+    DataSignal m_signal;
 
     //***** Counter management *****
+    bool m_split_mode;
     PrescaledTimer m_timer;
+    TimerCounter m_sgl_counter; //Main counter in Single mode
+    TimerCounter m_lo_counter; //Low-byte counter in Split mode
+    TimerCounter m_hi_counter; //High-byte counter in Split mode
 
-    uint32_t delay_to_event();
-    void update_16bits_buffers();
+    uint8_t m_wgmode;
+
+    bool m_EIA_state;
+    bool m_EIB_state;
+    bool m_timer_block;
+
+    EventHook* m_event_hook;
+
+    uint8_t read_ioreg_single(reg_addr_t reg_ofs, uint8_t value);
+    uint8_t read_ioreg_split(reg_addr_t reg_ofs, uint8_t value);
+    void write_ioreg_single(reg_addr_t reg_ofs, const ioreg_write_t& data);
+    void write_ioreg_split(reg_addr_t reg_ofs, const ioreg_write_t& data);
+    void update_ALUPD_status();
+    void update_buffered_registers();
+    void set_peripheral_mode(bool split_mode);
+    void update_tick_sources();
+    void configure_single_counter();
+    void update_timer_block(uint8_t ev_ctrl);
+    void set_direction(bool countdown, bool do_reschedule);
+    void set_compare_output(int index, int change);
+    void update_compare_outputs(int change = 0);
+
+    void process_counter_single(const signal_data_t& sigdata);
+    void process_counter_split(const signal_data_t& sigdata, bool low_cnt);
+
+    void event_raised(const signal_data_t& sigdata, int hooktag);
+    void process_EIA(bool event_state);
+    void process_EIB(bool event_state);
+
+    bool execute_command(int cmd, bool cmden);
 
 };
 

@@ -238,7 +238,7 @@ void InterruptHandler::interrupt_ack_handler(int_vect_t vector)
    Construct an Interrupt Flag.
 
    \param clear_on_ack if true, the flag will be cleared when the interrupt is ACK'ed
-   by the CPU. If false, the flag can only be cleared by writing to the register
+   by the CPU. If false, (default) the flag can only be cleared by writing to the register.
 */
 InterruptFlag::InterruptFlag(bool clear_on_ack)
 :m_clr_on_ack(clear_on_ack)
@@ -247,6 +247,12 @@ InterruptFlag::InterruptFlag(bool clear_on_ack)
 ,m_flag_reg(nullptr)
 ,m_enable_reg(nullptr)
 {}
+
+
+InterruptFlag::InterruptFlag(const InterruptFlag& other)
+:InterruptFlag(other.m_clr_on_ack)
+{}
+
 
 /**
    Initialise an Interrupt Flag. Allocates the registers for the flag and the enable
@@ -318,6 +324,16 @@ int InterruptFlag::update_from_ioreg()
             return 0;
         }
     }
+}
+
+/**
+   Set the clear_on_ack mode.
+   \param clear_on_ack if true, the flag will be cleared when the interrupt is ACK'ed
+   by the CPU. If false, (default) the flag can only be cleared by writing to the register.
+*/
+void InterruptFlag::set_clear_on_ack(bool clear_on_ack)
+{
+    m_clr_on_ack = clear_on_ack;
 }
 
 /**

@@ -109,7 +109,7 @@ class ExtendedBitMask(collections.namedtuple('ExtendedBitMask', ['bit', 'mask'])
             return _corelib.bitmask_t(self.bit, self.mask)
         else:
             raise ValueError('Bitmask range error')
-    
+
     def __repr__(self):
         return 'ExtendedBitMask(%d, 0x%x)' % (self.bit, self.mask)
 

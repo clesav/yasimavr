@@ -56,7 +56,8 @@ extra-link-args = ["-Wl,-rpath=${ORIGIN}", "-s"]
 sip-file = "src/lib_arch_xt/yasimavr-arch-xt.sip"
 include-dirs = ["../lib_core/src",
                 "../lib_arch_xt/src",
-                "../src"]
+                "src"]
+sources = ["src/utils/buffer_utils.c"]
 libraries = ["yasimavr_core",
              "yasimavr_arch_xt"]
 library-dirs = ["yasimavr/lib"]

@@ -38,7 +38,7 @@ public:
     void set_paused(bool);
     void set_timer_delay(cycle_count_t);
     cycle_count_t timer_delay() const;
-    void update(cycle_count_t = -1);
+    void update();
 
     virtual cycle_count_t next(cycle_count_t);
 
@@ -85,15 +85,20 @@ public:
         Signal_CompMatch    /PyName=CompMatch/,
     };
 
-    TimerCounter(PrescaledTimer&, long, size_t);
+    TimerCounter(long, size_t);
 
-    long wrap() const;
+    void init(CycleManager&, Logger&);
 
     void reset();
     void reschedule();
+    void update();
+
+    long wrap() const;
 
     void set_tick_source(TickSource);
     TickSource tick_source() const;
+
+    void tick();
 
     void set_top(long);
     long top() const;
@@ -111,10 +116,11 @@ public:
     bool comp_enabled(size_t) const;
 
     bool countdown() const;
+    void set_countdown(bool);
 
     Signal& signal();
     SignalHook& ext_tick_hook();
 
-    void set_logger(Logger* logger);
+    PrescaledTimer& prescaler();
 
 };

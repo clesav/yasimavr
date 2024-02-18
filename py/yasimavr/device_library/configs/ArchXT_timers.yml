@@ -19,7 +19,7 @@
 
 ---
 #========================================================================================
-TCA_SINGLE:
+TCA:
     registers:
         - name: CTRLA
           offset: 0x00
@@ -30,6 +30,7 @@ TCA_SINGLE:
                 LSB: 1
                 MSB: 3
                 values: [ DIV1, DIV2, DIV4, DIV8, DIV16, DIV64, DIV256, DIV1024 ]
+            RUNSTBY: { kind: BIT, pos: 7 }
 
         - name: CTRLB
           offset: 0x01
@@ -40,27 +41,41 @@ TCA_SINGLE:
                 MSB: 2
                 values: { 0: NORMAL, 1: FRQ, 3: SINGLESLOPE, 5: DSTOP, 6: DSBOTH, 7:DSBOTTOM }
             ALUPD: { kind: BIT, pos: 3 }
-            CMP0EN: { kind: BIT, pos: 4 }
-            CMP1EN: { kind: BIT, pos: 5 }
-            CMP2EN: { kind: BIT, pos: 6 }
+            CMP0EN: { kind: BIT, pos: 4, one: enabled, zero: disabled, alias: HCMP0EN }
+            CMP1EN: { kind: BIT, pos: 5, one: enabled, zero: disabled, alias: HCMP1EN }
+            CMP2EN: { kind: BIT, pos: 6, one: enabled, zero: disabled, alias: HCMP2EN }
+            LCMP0EN: { kind: BIT, pos: 0 }
+            LCMP1EN: { kind: BIT, pos: 1 }
+            LCMP2EN: { kind: BIT, pos: 2 }
 
         - name: CTRLC
           offset: 0x02
           fields:
-            CMP0OV: { kind: BIT, pos: 0 }
-            CMP1OV: { kind: BIT, pos: 1 }
-            CMP2OV: { kind: BIT, pos: 2 }
+            CMP0OV: { kind: BIT, pos: 0, alias: LCMP0OV }
+            CMP1OV: { kind: BIT, pos: 1, alias: LCMP1OV }
+            CMP2OV: { kind: BIT, pos: 2, alias: LCMP2OV }
+            HCMP0OV: { kind: BIT, pos: 4 }
+            HCMP1OV: { kind: BIT, pos: 5 }
+            HCMP2OV: { kind: BIT, pos: 6 }
 
         - name: CTRLD
           offset: 0x03
           fields:
-            SPLITM: { kind: BIT, pos: 0 }
+            SPLITM: { kind: BIT, pos: 0, one: SPLIT, zero: SINGLE }
 
         - name: CTRLECLR
           offset: 0x04
           fields:
+            #Single mode
             DIR: { kind: BIT, pos: 0, one: down, zero: up }
-            LUPD: { kind: BIT, pos: 0, one: locked, zero: unlocked }
+            LUPD: { kind: BIT, pos: 1, one: locked, zero: unlocked }
+            #Split mode specifics
+            CMDEN:
+                kind: ENUM
+                LSB: 0
+                MSB: 1
+                values: { 0:NONE, 3:BOTH }
+            #Common
             CMD:
                 kind: ENUM
                 LSB: 2
@@ -70,8 +85,16 @@ TCA_SINGLE:
         - name: CTRLESET
           offset: 0x05
           fields:
+            #Single mode
             DIR: { kind: BIT, pos: 0, one: down, zero: up }
-            LUPD: { kind: BIT, pos: 0, one: locked, zero: unlocked }
+            LUPD: { kind: BIT, pos: 1, one: locked, zero: unlocked }
+            #Split mode specifics
+            CMDEN:
+                kind: ENUM
+                LSB: 0
+                MSB: 1
+                values: { 0:NONE, 3:BOTH }
+            #Common
             CMD:
                 kind: ENUM
                 LSB: 2
@@ -96,23 +119,38 @@ TCA_SINGLE:
 
         - name: EVCTRL
           offset: 0x09
-          supported: no
+          fields:
+            CNTAEI: { kind: BIT, pos: 0, one: enabled, zero: disabled, alias: CNTEI }
+            EVACTA:
+                kind: ENUM
+                LSB: 1
+                MSB: 3
+                values: { 0: CNT_POSEDGE, 1: CNT_ANYEDGE, 2: CNT_HIGHLVL, 3: UPDOWN }
+                alias: EVACT
+            CNTBEI: { kind: BIT, pos: 0, one: enabled, zero: disabled }
+            EVACTB:
+                kind: ENUM
+                LSB: 1
+                MSB: 3
+                values: { 0: NONE, 3: UPDOWN, 4: RESTART_POSEDGE, 5: RESTART_ANYEDGE, 6: RESTART_HIGHLVL }
 
         - name: INTCTRL
           offset: 0x0A
           fields:
-            OVF: { kind: BIT, pos: 0 }
-            CMP0: { kind: BIT, pos: 4 }
-            CMP1: { kind: BIT, pos: 5 }
-            CMP2: { kind: BIT, pos: 6 }
+            OVF: { kind: BIT, pos: 0, alias: LUNF }
+            HUNF: { kind: BIT, pos: 1 }
+            CMP0: { kind: BIT, pos: 4, alias: LCMP0 }
+            CMP1: { kind: BIT, pos: 5, alias: LCMP1}
+            CMP2: { kind: BIT, pos: 6, alias: LCMP2 }
 
         - name: INTFLAGS
           offset: 0x0B
           fields:
-            OVF: { kind: BIT, pos: 0 }
-            CMP0: { kind: BIT, pos: 4 }
-            CMP1: { kind: BIT, pos: 5 }
-            CMP2: { kind: BIT, pos: 6 }
+            OVF: { kind: BIT, pos: 0, alias: LUNF }
+            HUNF: { kind: BIT, pos: 1 }
+            CMP0: { kind: BIT, pos: 4, alias: LCMP0 }
+            CMP1: { kind: BIT, pos: 5, alias: LCMP1}
+            CMP2: { kind: BIT, pos: 6, alias: LCMP2 }
 
         - name: DBGCTRL
           offset: 0x0E
@@ -125,26 +163,31 @@ TCA_SINGLE:
           offset: 0x20
           size: 2
           kind: INT
+          alias: [ LCNT, HCNT ]
 
         - name: PER
           offset: 0x26
           size: 2
           kind: INT
+          alias: [ LPER, HPER ]
 
         - name: CMP0
           offset: 0x28
           size: 2
           kind: INT
+          alias: [ LCMP0, HCMP0 ]
 
         - name: CMP1
           offset: 0x2A
           size: 2
           kind: INT
+          alias: [ LCMP1, HCMP1 ]
 
         - name: CMP2
           offset: 0x2C
           size: 2
           kind: INT
+          alias: [ LCMP2, HCMP2 ]
 
         - name: PERBUF
           offset: 0x36
@@ -167,139 +210,6 @@ TCA_SINGLE:
           kind: INT
 
 #========================================================================================
-TCA_SPLIT:
-    registers:
-        - name: CTRLA
-          offset: 0x00
-          fields:
-            ENABLE: { kind: BIT, pos: 0, one: enabled, zero: disabled }
-            CLKSEL:
-                kind: ENUM
-                LSB: 1
-                MSB: 3
-                values: [ DIV1, DIV2, DIV4, DIV8, DIV16, DIV64, DIV256, DIV1024 ]
-
-        - name: CTRLB
-          offset: 0x01
-          fields:
-            LCMP0EN: { kind: BIT, pos: 0 }
-            LCMP1EN: { kind: BIT, pos: 1 }
-            LCMP2EN: { kind: BIT, pos: 2 }
-            HCMP0EN: { kind: BIT, pos: 4 }
-            HCMP1EN: { kind: BIT, pos: 5 }
-            HCMP2EN: { kind: BIT, pos: 6 }
-
-        - name: CTRLC
-          offset: 0x02
-          fields:
-            LCMP0OV: { kind: BIT, pos: 0 }
-            LCMP1OV: { kind: BIT, pos: 1 }
-            LCMP2OV: { kind: BIT, pos: 2 }
-            HCMP0OV: { kind: BIT, pos: 4 }
-            HCMP1OV: { kind: BIT, pos: 5 }
-            HCMP2OV: { kind: BIT, pos: 6 }
-
-        - name: CTRLD
-          offset: 0x03
-          fields:
-            SPLITM: { kind: BIT, pos: 0 }
-
-        - name: CTRLECLR
-          offset: 0x04
-          fields:
-            CMDEN:
-                kind: ENUM
-                LSB: 0
-                MSB: 1
-                values: { 0:NONE, 3:BOTH }
-            CMD:
-                kind: ENUM
-                LSB: 2
-                MSB: 3
-                values: [ NONE, UPDATE, RESTART, RESET ]
-
-        - name: CTRLESET
-          offset: 0x05
-          fields:
-            CMDEN:
-                kind: ENUM
-                LSB: 0
-                MSB: 1
-                values: { 0:NONE, 3:BOTH }
-            CMD:
-                kind: ENUM
-                LSB: 2
-                MSB: 3
-                values: [ NONE, UPDATE, RESTART, RESET ]
-
-        - name: CTRLFCLR
-          offset: 0x06
-          fields:
-            PERBV: { kind: BIT, pos: 0 }
-
-        - name: INTCTRL
-          offset: 0x0A
-          fields:
-            LUNF: { kind: BIT, pos: 0 }
-            HUNF: { kind: BIT, pos: 1 }
-            LCMP0: { kind: BIT, pos: 4 }
-            LCMP1: { kind: BIT, pos: 5 }
-            LCMP2: { kind: BIT, pos: 6 }
-
-        - name: INTFLAGS
-          offset: 0x0B
-          fields:
-            LUNF: { kind: BIT, pos: 0 }
-            HUNF: { kind: BIT, pos: 1 }
-            LCMP0: { kind: BIT, pos: 4 }
-            LCMP1: { kind: BIT, pos: 5 }
-            LCMP2: { kind: BIT, pos: 6 }
-
-        - name: DBGCTRL
-          offset: 0x0E
-          supported: no
-
-        - name: LCNT
-          offset: 0x20
-          kind: INT
-
-        - name: HCNT
-          offset: 0x21
-          kind: INT
-
-        - name: LPER
-          offset: 0x26
-          kind: INT
-
-        - name: HPER
-          offset: 0x27
-          kind: INT
-
-        - name: LCMP0
-          offset: 0x28
-          kind: INT
-
-        - name: HCMP0
-          offset: 0x29
-          kind: INT
-
-        - name: LCMP1
-          offset: 0x2A
-          kind: INT
-
-        - name: HCMP1
-          offset: 0x2B
-          kind: INT
-
-        - name: LCMP2
-          offset: 0x2C
-          kind: INT
-
-        - name: HCMP2
-          offset: 0x2D
-          kind: INT
-
-#========================================================================================
 TCB:
     registers:
         - name: CTRLA
@@ -309,9 +219,10 @@ TCB:
             CLKSEL:
                 kind: ENUM
                 LSB: 1
-                MSB: 2
-                values: [ DIV1, DIV2, TCA ]
-            SYNCUPD: { kind: BIT, pos: 4 }
+                MSB: 3
+                values: { 0x00: DIV1, 0x01: DIV2, 0x02: TCA0, 0x07: EVENT }
+            SYNCUPD: { kind: BIT, pos: 4, supported: no }
+            CASCADE: { kind: BIT, pos: 5 }
             RUNSTDBY: { kind: BIT, pos: 6 }
 
         - name: CTRLB
@@ -322,23 +233,28 @@ TCB:
                 LSB: 0
                 MSB: 2
                 values: [ INT, TIMEOUT, CAPT, FRQ, PW, FRQPW, SINGLE, PWM8 ]
-            CCMPEN: { kind: BIT, pos: 4 }
+            CCMPEN: { kind: BIT, pos: 4, one: enabled, zero: disabled }
             CCMPINIT: { kind: BIT, pos: 5 }
             ASYNC: { kind: BIT, pos: 6 }
 
-        - name: EVVTRL
+        - name: EVCTRL
           offset: 0x04
-          supported: no
+          fields:
+            CAPTEI: { kind: BIT, pos: 0, one: enabled, zero: disabled }
+            EDGE: { kind: BIT, pos: 4 }
+            FILTER: { kind: BIT, pos: 6 }
 
         - name: INTCTRL
           offset: 0x05
           fields:
             CAPT: { kind: BIT, pos: 0 }
+            OVF: { kind: BIT, pos: 1 }
 
         - name: INTFLAGS
           offset: 0x06
           fields:
             CAPT: { kind: BIT, pos: 0 }
+            OVF: { kind: BIT, pos: 1 }
 
         - name: STATUS
           offset: 0x07

@@ -120,9 +120,9 @@ def _get_portmux_builder():
 
 def _tca_convertor(cfg, attr, yml_val, per_desc):
     if attr == 'ivs_cmp':
-        for i, yml_iv in enumerate(yml_val):
-            cfg.ivs_cmp[i] = per_desc.device.interrupt_map.vectors.index(yml_iv)
-        cfg._proxy_touch('ivs_cmp')
+        cfg.ivs_cmp = [per_desc.device.interrupt_map.vectors.index(v) for v in yml_val]
+    elif attr == 'version':
+        cfg.version = _archlib.ArchXT_TimerAConfig.Version[yml_val]
     else:
         raise Exception('Converter not implemented for ' + attr)
 
@@ -354,7 +354,7 @@ class XT_DeviceBuilder(DeviceBuilder):
         'PORT': _get_port_builder,
         'PORTMUX': _get_portmux_builder,
         'RTC': _get_rtc_builder,
-        'TCA_SINGLE': _get_tca_builder,
+        'TCA': _get_tca_builder,
         'TCB': _get_tcb_builder,
         'VREF': _get_vref_builder,
         'ADC': _get_adc_builder,

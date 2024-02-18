@@ -25,7 +25,7 @@
 
 #include "arch_xt_timer_a.h"
 const ctlreq_id_t CTLREQ_TCA_REGISTER_TCB = AVR_CTLREQ_TCA_REGISTER_TCB;
-const unsigned int TCA_CMP_CHANNEL_COUNT = AVR_TCA_CMP_CHANNEL_COUNT;
+const ctlreq_id_t CTLREQ_TCA_GET_EVENT_HOOK = AVR_CTLREQ_TCA_GET_EVENT_HOOK;
 
 %End
 
@@ -33,24 +33,40 @@ const unsigned int TCA_CMP_CHANNEL_COUNT = AVR_TCA_CMP_CHANNEL_COUNT;
 //=======================================================================================
 
 const ctlreq_id_t CTLREQ_TCA_REGISTER_TCB;
-const unsigned int TCA_CMP_CHANNEL_COUNT;
+const ctlreq_id_t CTLREQ_TCA_GET_EVENT_HOOK;
 
 
 struct ArchXT_TimerAConfig {
 %TypeHeaderCode
 #include "arch_xt_timer_a.h"
 %End
+%TypeCode
+#include "utils/buffer_utils.h"
+%End
+
+    static const int CompareChannelCount;
+
+    enum Version {
+        V1,
+        V2
+    };
 
     reg_addr_t reg_base;
 
     int_vect_t iv_ovf;
+    int_vect_t iv_hunf;
 
     //int_vect_t vect_cmp[AVR_TCA_CMP_CHANNEL_COUNT];
-    SIP_PYBUFFER ivs_cmp /NoSetter/ {
+    SIP_PYBUFFER ivs_cmp {
         %GetCode
-            sipPy = sipConvertToArray(sipCpp->ivs_cmp, "h", AVR_TCA_CMP_CHANNEL_COUNT, 0);
+            sipPy = sipConvertToArray(sipCpp->ivs_cmp, "h", sipCpp->CompareChannelCount, 0);
+        %End
+        %SetCode
+            sipErr = import_from_fixedlen_sequence(sipAPI_arch_xt, sipCpp->ivs_cmp, "h", sipCpp->CompareChannelCount, sipPy);
         %End
     };
+
+    Version version;
 
 };
 
@@ -61,6 +77,15 @@ class ArchXT_TimerA : public Peripheral, public SignalHook /NoDefaultCtors/ {
 %End
 
 public:
+
+    enum SignalId /BaseType=IntEnum/ {
+        Signal_CompareOutput         /PyName=CompareOutput/
+    };
+
+    enum EventHookTag /BaseType=IntEnum/ {
+        Hook_EventA             /PyName=EventA/,
+        Hook_EventB             /PyName=EventB/
+    };
 
     ArchXT_TimerA(const ArchXT_TimerAConfig& /KeepReference/);
 

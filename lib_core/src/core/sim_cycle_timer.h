@@ -97,7 +97,6 @@ public:
     ~CycleManager();
 
     cycle_count_t cycle() const;
-    void set_cycle(cycle_count_t c);
     void increment_cycle(cycle_count_t count);
 
     void schedule(CycleTimer& timer, cycle_count_t when);

@@ -81,7 +81,7 @@ public:
 
     void set_paused(bool paused);
 
-    void update(cycle_count_t when = INVALID_CYCLE);
+    void update();
 
     virtual cycle_count_t next(cycle_count_t when) override;
 
@@ -113,13 +113,14 @@ private:
     bool m_paused;                      //Boolean indicating if the timer is paused
     bool m_updating;                    //Boolean used to avoid infinite updating reentrance
     cycle_count_t m_update_cycle;       //Cycle number of the last update
-    Signal m_signal;                //Signal raised for processing ticks
+    Signal m_signal;                    //Signal raised for processing ticks
 
     //***** Timer chain management *****
     std::vector<PrescaledTimer*> m_chained_timers;
     PrescaledTimer* m_parent_timer;
 
     void reschedule();
+    void update(cycle_count_t when);
     void update_timer(cycle_count_t when);
     void process_cycles(cycle_count_t cycles);
 
@@ -210,16 +211,21 @@ public:
         Signal_CompMatch,
     };
 
-    TimerCounter(PrescaledTimer& timer, long wrap, size_t comp_count);
+    TimerCounter(long wrap, size_t comp_count);
     ~TimerCounter();
 
-    long wrap() const;
+    void init(CycleManager& cycle_manager, Logger& logger);
 
     void reset();
     void reschedule();
+    void update();
+
+    long wrap() const;
 
     void set_tick_source(TickSource src);
     TickSource tick_source() const;
+
+    void tick();
 
     void set_top(long top);
     long top() const;
@@ -237,15 +243,16 @@ public:
     bool comp_enabled(size_t index) const;
 
     bool countdown() const;
+    void set_countdown(bool down);
 
     Signal& signal();
     SignalHook& ext_tick_hook();
 
-    void set_logger(Logger* logger);
+    PrescaledTimer& prescaler();
 
     //no copy semantics
-    TimerCounter(const TimerCounter&) = delete;
-    TimerCounter& operator=(const TimerCounter&) = delete;
+    //TimerCounter(const TimerCounter&) = delete;
+    //TimerCounter& operator=(const TimerCounter&) = delete;
 
 private:
 
@@ -276,7 +283,7 @@ private:
     //List of compare units
     std::vector<CompareUnit> m_cmp;
     //Event timer engine
-    PrescaledTimer& m_timer;
+    PrescaledTimer m_timer;
     //Flag variable storing the next event type(s)
     uint8_t m_next_event_type;
     //Signal management
@@ -289,6 +296,7 @@ private:
     long delay_to_event();
     void timer_raised(const signal_data_t& sigdata);
     void extclock_raised();
+    void add_tick();
     long ticks_to_event(long event);
     void process_ticks(long ticks, bool event_reached);
 
@@ -299,6 +307,14 @@ inline long TimerCounter::wrap() const
 {
     return m_wrap;
 }
+
+
+/// Force update of the internal prescaler
+inline void TimerCounter::update()
+{
+    m_timer.update();
+}
+
 
 /// Getter for the tick source mode
 inline TimerCounter::TickSource TimerCounter::tick_source() const
@@ -352,6 +368,12 @@ inline Signal& TimerCounter::signal()
 inline SignalHook& TimerCounter::ext_tick_hook()
 {
     return *reinterpret_cast<SignalHook*>(m_ext_hook);
+}
+
+/// Getter for the internal prescaler
+inline PrescaledTimer& TimerCounter::prescaler()
+{
+    return m_timer;
 }
 
 

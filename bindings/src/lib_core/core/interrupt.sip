@@ -90,10 +90,11 @@ class InterruptFlag : public InterruptHandler /NoDefaultCtors/ {
 
 public:
 
-    InterruptFlag(bool);
+    InterruptFlag(bool = false);
 
     bool init(Device&, const regbit_t&, const regbit_t&, int_vect_t);
     int update_from_ioreg();
+    void set_clear_on_ack(bool);
     bool set_flag(uint8_t = 0xFF);
     bool clear_flag(uint8_t = 0xFF);
     bool raised() const;

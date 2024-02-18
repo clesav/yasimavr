@@ -281,8 +281,6 @@ private:
     ArchAVR_TimerConfig::mode_config_t m_mode;
     //List of output compare modules
     std::vector<OutputCompareChannel*> m_oc_channels;
-    //Event timer engine
-    PrescaledTimer m_timer;
     //Timer counter engine
     TimerCounter m_counter;
     //Interrupt and signal management
