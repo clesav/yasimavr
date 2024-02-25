@@ -114,3 +114,35 @@ Any value specified outside this range will at best be clipped, at worst crash t
    The only exception to the rule above is when configuring internal voltage references.
    On initialisation and configuration, these shall be passed on to the VREF model as absolute voltage values.
    However, during a simulation, whenever a reference is required, it is returned as relative to VCC.
+
+
+Device Crash
+------------
+
+A device crash is not the unexpected termination of ``yasimavr`` (usually !!) but rather a situation where the simulated
+device may enter undefined or dangerous¹ behaviour territory due to some invalid operation or configuration.
+The causes of device crash are varied:
+
+* Executing an invalid opcode,
+* Accessing an invalid memory address or register,
+* Overflow of Program Counter or Stack Pointer,
+* Short-circuiting a pin,
+* Invalid model settings detected at runtime,
+* others...
+
+The crash results in an error message in the log and the simulation loop exiting and refusing to progress further.
+A dump can be performed on the device model to help understand the reasons of the crash.
+
+Some of these crash reasons can be disabled by using the options in the *Device* class. See C++ API Reference of the *Device* class
+for details on the alternate behaviour.
+
+.. note::
+
+   The firmware can use a device crash to force a simulation exit.
+   However, the recommended way is to clear GIE, and enter sleep or execute "RJMP .-2" (see Pseudo-Sleep Mode)
+   which is considered by the ``yasimavr`` simulation loop as a graceful exit and does not write any error message in the log.
+
+.. note::
+
+   ¹ that may result in `magic smoke <https://en.wikipedia.org/wiki/Magic_smoke>`_ if used on a real device.
+

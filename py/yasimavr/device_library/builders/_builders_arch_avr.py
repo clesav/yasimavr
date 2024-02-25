@@ -353,6 +353,8 @@ def _get_twi_builder():
 #========================================================================================
 
 class AVR_BaseDevice(_archlib.ArchAVR_Device):
+    """Specialisation of BaseDevicer for the device models using the AVR architecture.
+    """
 
     def __init__(self, dev_descriptor, builder):
         super().__init__(builder.get_device_config())
@@ -361,6 +363,8 @@ class AVR_BaseDevice(_archlib.ArchAVR_Device):
 #========================================================================================
 
 class AVR_DeviceBuilder(DeviceBuilder):
+    """Specialisation of DeviceBuilder for the device models using the AVR architecture.
+    """
 
     #Dictionary for the builder getters for AVR peripherals
     _per_builder_getters = {

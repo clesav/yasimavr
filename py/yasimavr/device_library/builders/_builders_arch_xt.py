@@ -333,6 +333,8 @@ def _get_userrow_builder():
 #========================================================================================
 
 class XT_BaseDevice(_archlib.ArchXT_Device):
+    """Specialisation of BaseDevice for the device models using the XT architecture.
+    """
 
     def __init__(self, dev_descriptor, builder):
         super().__init__(builder.get_device_config())
@@ -341,6 +343,8 @@ class XT_BaseDevice(_archlib.ArchXT_Device):
 #========================================================================================
 
 class XT_DeviceBuilder(DeviceBuilder):
+    """Specialisation of DeviceBuilder for the device models using the XT architecture.
+    """
 
     #Dictionary for the builder getters for XT core peripherals
     _per_builder_getters = {

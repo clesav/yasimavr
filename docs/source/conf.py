@@ -18,7 +18,7 @@ sys.path.append(os.path.abspath('../../py'))
 # -- Project information -----------------------------------------------------
 
 project = 'yasimavr'
-copyright = '2023, C.Savergne'
+copyright = '2023-2024, C.Savergne'
 author = 'clesav'
 
 
