@@ -17,10 +17,13 @@
 # You should have received a copy of the GNU General Public License
 # along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
 
-'''
-This module defines Descriptor classes that contain the variant
-configuration decoded from YAML configuration files
-'''
+"""
+A descriptor is a Python object storing the information required to build a simulated device model.
+
+There are two ways to load a Device object:
+* by name, using one of the builtin device models, by using DeviceDescriptor.create_from_model()
+* by file, using DeviceDescriptor.create_from_file()
+"""
 
 import weakref
 import os
@@ -43,7 +46,7 @@ LibraryRepository = os.path.join(os.path.dirname(__file__), 'configs')
 LibraryModelDatabase = os.path.join(LibraryRepository, 'devices.yml')
 
 #List of path which are searched for YAML configuration files
-#This can be altered by the used
+#This can be altered by the user
 ConfigRepositories = [
     LibraryRepository
 ]
@@ -66,11 +69,26 @@ class DeviceConfigException(Exception):
     pass
 
 
-MemorySegmentDescriptor = collections.namedtuple('_MemorySegmentDescriptor', ['start', 'end'])
+class MemorySegmentDescriptor(collections.namedtuple('MemorySegmentDescriptor', ['start', 'end'])):
+    """Named tuple class for a memory segment, representing a continuous addressable range
+
+    :param int start: lowermost address of the range
+    :param int end: uppermost address of the range
+    """
 
 
 class MemorySpaceDescriptor:
-    '''Descriptor class for a memory space'''
+    """Descriptor class for a memory space, representing an addressing space for the device
+    e.g. data space, programe space, eeprom, etc.
+    A memory space is composed of one or more 'segments' representing a continuous addressable range.
+
+    :param str name: name of the memory space given by the device descriptor
+    :param mem_config: YAML configuration section for the memory space
+
+    :var str name: name given to the memory space
+    :var dict[str,MemorySegmentDescriptor] segments: dictionary of segments composing the address space
+    :var int memend: uppermost address of the memory space
+    """
 
     def __init__(self, name, mem_config):
         self.name = name
@@ -94,7 +112,21 @@ class MemorySpaceDescriptor:
 
 
 class InterruptMapDescriptor:
-    '''Descriptor class for a interrupt vector map'''
+    """Descriptor class for an interrupt vector map
+    It includes the list of interrupt vectors with their names ordered by index.
+    It also includes the sleep mask map. This maps the sleep modes supported by the device
+    to the interrupts that can wake up the device.
+
+    Each sleep mask is a list of 8-bits flags where each bit enable or disable a vector.
+    Example: with sleep_mask=[0xFF,0x80]: vectors 0 to 7 and 15 are enabled whilst vectors 8 to 14
+    and above 15 are disabled.
+
+    :param int_config: YAML configuration section for the interrupt vectors
+
+    :var int vector_size: size in bytes of each vector
+    :var list[str] vectors: list of the vector names
+    :var dict[name:list[int]] sleep_mask: dict mapping the sleep masks to each sleep mode name
+    """
 
     def __init__(self, int_config):
         self.vector_size = int(int_config['vector_size'])
@@ -115,7 +147,26 @@ class ExtendedBitMask(collections.namedtuple('ExtendedBitMask', ['bit', 'mask'])
 
 
 class RegisterFieldDescriptor:
-    '''Descriptor class for a field of a I/O register'''
+    """Descriptor class for a field of a I/O register
+
+    :param str field_name: name of the field
+    :param field_config: YAML configuration section for the field
+    :param int reg_size: size of the register in bits
+
+    Note that variables differ depending on the kind of field
+
+    :var str name: name of the field
+    :var str kind: data type of the field: one of 'RAW', 'INT', 'BIT', 'ENUM'
+    :var bool readonly: indicates if the field is readonly (true) or writable (false) for the CPU
+    :var bool supported: indicates if the field is supported by the simulation model
+    :var int pos: (BIT only) bit position
+    :var str one: (BIT only) interpretation of the 'one' value (by default: 1)
+    :var str zero: (BIT only) interpretation of the 'zero' value (by default: 0)
+    :var int LSB: (RAW, INT and ENUM) lowest significant bit position
+    :var int MSB: (RAW, INT and ENUM) most significant bit position
+    :var dist[int,str] values: (ENUM only) interpretation for the binary values
+    :var str unit: (INT only) unit of the values
+    """
 
     def __init__(self, field_name, field_config, reg_size):
         self.name = field_name
@@ -170,7 +221,19 @@ class RegisterFieldDescriptor:
 
 
 class RegisterDescriptor:
-    '''Descriptor class for a I/O register'''
+    """Descriptor class for a I/O register
+
+    :param reg_config: YAML configuration section for the register
+
+    :var str name: name of the register
+    :var int address: absolute address of the register (or -1 if not relevant)
+    :var int offset: offset of the register from the peripheral base address (or -1 if not relevant)
+    :var int size: size in bytes of the register
+    :var str kind: kind of the register, one of 'RAW', 'INT' or ''
+    :var dict[str,RegisterFieldDescriptor] fields: dict of fields composing the register
+    :var bool readonly: indicates if the register is readonly (true) or writable (false) for the CPU
+    :var bool supported: indicates if the register is supported by the simulation model
+    """
 
     def __init__(self, reg_config):
         self.name = str(reg_config['name'])
@@ -203,16 +266,26 @@ class RegisterDescriptor:
 
 
 class ProxyRegisterDescriptor:
-    '''Descriptor class for a register proxy, used to represent the
-    high and low parts of a 16-bits register'''
+    """Descriptor class for a register proxy, used to represent the
+    high and low parts of a 16-bits register
 
-    def __init__(self, r, offset):
-        self.reg = r
+    :var RegisterDescriptor reg: full-length register descriptor
+    :var int offset: offset of the part from the register address
+    """
+
+    def __init__(self, reg, offset):
+        self.reg = reg
         self.offset = offset
 
 
 class PeripheralClassDescriptor:
-    '''Descriptor class for a peripheral type'''
+    """Descriptor class for a peripheral class
+
+    :param per_config: YAML configuration section for the peripheral class
+
+    :var dict[str,RegisterDescriptor] registers: map of the registers owned by the peripheral class
+    :var dict config: YAML section storing the settings for configuring the peripheral simulation model
+    """
 
     def __init__(self, per_config):
         self.registers = {}
@@ -257,7 +330,19 @@ def _reduce_bitmasks(bms, reg_size):
 
 
 class PeripheralInstanceDescriptor:
-    '''Descriptor class for the instantiation of a peripheral type'''
+    """Descriptor class for the instantiation of a peripheral class.
+
+    For example, a device may have PORTA, PORTB, PORTC, all are instances
+    of a PORT peripheral class.
+
+    :var str name: name of the instance
+    :var str per_class: class name of the peripheral
+    :var str ctl_id: CTLID used for the peripheral model instance
+    :var int reg_base: base address of the peripheral (-1 if not relevant)
+    :var PeripheralClassDescriptor class_descriptor: descriptor of the class of the peripheral
+    :var DeviceDescriptor device: top-level device descriptor owning the peripheral
+    :var dict config: YAML section storing the settings for configuring the peripheral model
+    """
 
     def __init__(self, name, loader, f, device):
         self.name = name
@@ -323,6 +408,14 @@ class PeripheralInstanceDescriptor:
 
 
     def reg_address(self, reg_path, default=None):
+        """Utility method that resolves a reg path and returns the address of the register.
+        If the register could not be resolved, with a given default value, the default value
+        is returned otherwise a ValueError exception is raised.
+
+        :param str reg_path: reg path to a register, must be of format [R] or [P]/[R] (P: peripheral name, R: register name)
+        :param any default: if set to any value other than None, sets the default value
+        """
+
         if RegPathSeparator in reg_path:
             return self.device.reg_address(reg_path, default)
 
@@ -371,9 +464,20 @@ class _DeviceDescriptorLoader:
 
 
 class DeviceDescriptor:
-    '''Top-level descriptor for a device variant, storing the configuration
+    """Top-level descriptor for a device variant, storing the configuration
     from a YAML configuration file.
-    '''
+    It contains information about pins, interrupts, memory space layout, etc.
+
+    :var str name: name of the device model.
+    :var str architecture: one of supported architectures, currently 'AVR' or 'XT'
+    :var dict[str,MemorySpaceDescriptor] mem_spaces: dictionary of the memory spaces
+    :var dict[str,bool] core_attributes: dictionary of the attribute values to configure the device model
+    :var dict[str,int] fuses: default values for the device fuses, usually taken from factory values
+    :var dict[str,bool] access_config: dictionary of configuration values for Accessor objects
+    :var list[str] pins: list of the pin names
+    :var InterruptMapDescriptor interrupt_map: configuration values for interrupts
+    :var dict[str,PeripheralInstanceDescriptor] peripherals: dictionary of the peripheral instances
+    """
 
     #Instance cache to speed up the loading of a device several times
     _cache = weakref.WeakValueDictionary()
@@ -381,6 +485,16 @@ class DeviceDescriptor:
 
     @classmethod
     def create_from_model(cls, model):
+        """Instantiate a device descriptor from a pre-defined device model configuration.
+
+        :param str model: Model/variant name. the value is case insensitive
+
+        To be valid, the model name must be included in the device list file pointed to by the
+        global variable LibraryDatabase.
+
+        Note that device descriptor are cached and a previously instantiated descriptor may be returned.
+        """
+
         lower_model = model.lower()
         if lower_model in cls._cache:
             return cls._cache[lower_model]
@@ -403,6 +517,12 @@ class DeviceDescriptor:
 
     @classmethod
     def create_from_file(cls, filename, repositories=()):
+        """Instantiate a device descriptor from an arbitrary configuration file.
+
+        :param str filename: Device configuration file path
+        :param list repositories: list of locations for finding peripheral class configuration files
+        """
+
         if repositories:
             r = repositories + ConfigRepositories
         else:
@@ -453,6 +573,14 @@ class DeviceDescriptor:
 
 
     def reg_address(self, reg_path, default=None):
+        """Utility method that resolves a reg path and returns the address of the register.
+        If the register could not be resolved, with a given default value, the default value
+        is returned otherwise a ValueError exception is raised.
+
+        :param str reg_path: reg path to a register, must be of format [P]/[R] (P: peripheral name, R: register name)
+        :param any default: if set to any value other than None, sets the default value
+        """
+
         elements = _split_reg_path(reg_path)
 
         if len(elements) != 2:
@@ -489,45 +617,6 @@ class DeviceDescriptor:
 
 
 #========================================================================================
-"""
-In device configuration files, registers can be referenced to by what is called a 'reg path'.
-A reg path is a string representing a path through a device description tree to a register or a field.
-It can be absolute (from the root) or relative (from a given peripheral instance).
-
-Valid formats for the regpath are:
- - [P]/[R]/[F] (1)
- - [R]/[F]     (2)
- - [A]/[F]     (3)
- - [P]/[R]     (4)
- - [R]         (5)
-where [P] is a peripheral instance name, [R] a register name, [A] a register address,
-[F] a field or a combination of fields using the character '|'.
-
-Register addresses can be decimal or hexadecimal.
-Fields can be represented by a name, a bit number X or a bit range X-Y. However, if the register is given by an address, named fields are not allowed.
-
-Examples:
- - SLPCTRL/SMCR/SE : absolute path to the bit SE of the SMCR register
-   belonging to the Sleep Controller
- - CPU/GPIOR0 : absolute path to the GPIOR0 register
- - SPCR/SPE : relative path to the SPI Enable bit of the SPI Control Register
-   (valid in the context of a SPI interface controller)
- - EXTINT/PCICR/2 : absolute path to bit 2 of the PCICR register
- - EXTINT/PCMSK0/0-3 : absolute path to bits 0 to 3 of the PCMSK0 register
- - 0x49/5|7 : path to the bits 5 and 7 of hexadecimal address 0x49
- - 2/0 : path to bit 0 of decimal address 2
-
-Notes:
-- A list of path elements can be given as a regpath and is parsed the same way.
-For example, ['USART', 'UCSRB', 'RXEN'] is equivalent to 'USART/UCSRB/RXEN'.
-- In some cases, registers may be split across multiple peripherals.
-For example in ATMega328, MCUCR is split between SLPCTRL (fields BODSE, BODS)
-and CPUINT (fields IVCE, IVSEL).
-In this case, SLPCTRL does not recognize CPUINT fields and vice-versa.
-However, fields are always accessible by bit number. For example,
-SLPCTRL/MCUCR/IVSEL is invalid but SLPCTRL/MCUCR/0 is valid.
-"""
-
 
 RegPathSeparator = '/'
 
@@ -641,6 +730,23 @@ def _parse_regpath(path_elements, per, dev):
 
 
 def convert_to_regbit(arg, per=None, dev=None):
+    """Utility method that resolves a reg path and returns a regbit_t object.
+    If the register could not be resolved, or if the result spans several bytes,
+    a ValueError exception is raised.
+
+    If ``arg`` is an integer, it is interpreted as a register address and a regbit_t object
+    representing the whole register is returned.
+    If ``arg`` is a list, it is interpreted as the elements of a reg path.
+
+    One of ``per`` or ``dev`` arguments should be specified to resolve reg path with names.
+    ``per`` is required to resolve relative reg paths.
+    If ``per`` is given, ``dev`` doesn't need to be.
+
+    :param str|int|list arg: reg path to convert
+    :param PeripheralInstanceDescriptor per: used to resolve reg paths
+    :param DeviceDescriptor dev: used to resolve reg paths
+    """
+
     if arg is None:
         return _corelib.regbit_t()
 
@@ -661,6 +767,20 @@ def convert_to_regbit(arg, per=None, dev=None):
 
 
 def convert_to_regbit_compound(arg, per=None, dev=None):
+    """Utility method that resolves a reg path and returns a regbit_compound_t object.
+    If the register could not be resolved, a ValueError exception is raised.
+
+    If ``arg`` is a list, it is interpreted as a list of reg path to merge.
+
+    One of ``per`` or ``dev`` arguments should be specified to resolve reg path with names.
+    ``per`` is required to resolve relative reg paths.
+    If ``per`` is given, ``dev`` doesn't need to be.
+
+    :param str|list[str] arg: reg path or list of reg paths
+    :param PeripheralInstanceDescriptor per: used to resolve reg paths
+    :param DeviceDescriptor dev: used to resolve reg paths
+    """
+
     if not arg:
         return _corelib.regbit_compound_t()
 
@@ -683,6 +803,20 @@ def convert_to_regbit_compound(arg, per=None, dev=None):
 
 
 def convert_to_bitmask(arg, per=None, dev=None):
+    """Utility method that resolves a reg path and returns a bitmask_t object.
+    If the register could not be resolved, a ValueError exception is raised.
+
+    If ``arg`` is a list, it is interpreted as a list of reg path to merge.
+
+    One of ``per`` or ``dev`` arguments should be specified to resolve reg path with names.
+    ``per`` is required to resolve relative reg paths.
+    If ``per`` is given, ``dev`` doesn't need to be.
+
+    :param str|list arg: reg path to a register or field
+    :param PeripheralInstanceDescriptor per: used to resolve reg paths
+    :param DeviceDescriptor dev: used to resolve reg paths
+    """
+
     if not arg:
         return _corelib.bitmask_t()
 

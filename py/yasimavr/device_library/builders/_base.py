@@ -54,7 +54,6 @@ class _ConfigProxy:
         self._touched.add(arg)
 
 
-
 class PeripheralConfigBuilder:
     '''Helper class to build a peripheral configuration structure
 
@@ -220,34 +219,33 @@ def dummy_config_builder(per_descriptor):
 
 
 class PeripheralBuilder:
-    '''
-    Default class for a peripheral builder
+    """Default class for a peripheral builder
     Peripheral builder instances build peripheral model instances
-    '''
+    """
 
     def __init__(self, per_model, config_builder):
-        '''Initialise a peripheral builder
+        """Initialise a peripheral builder
         per_model: peripheral model class
         config_builder: callable object that returns a configuration object to
                         be passed on to create a peripheral model
-        '''
+        """
         self.per_model = per_model
         self.config_builder = config_builder
 
     def build(self, per_name, per_config):
-        '''Constructs a new peripheral model instance
+        """Constructs a new peripheral model instance
         per_name : Name of the peripheral model instance to construct
         per_config : Configuration object to use for the build
         Returns a new peripheral model instance that can be attached to a device
-        '''
+        """
         build_args = self._get_build_args(per_name, per_config)
         per_instance = self.per_model(*build_args)
         return per_instance
 
     def _get_build_args(self, per_name, per_config):
-        '''Provides the arguments to the peripheral model constructor.
+        """Provides the arguments to the peripheral model constructor.
         The default implementation only uses the per_config object.
-        '''
+        """
         return (per_config,)
 
     def __repr__(self):
@@ -255,12 +253,12 @@ class PeripheralBuilder:
 
 
 class IndexedPeripheralBuilder(PeripheralBuilder):
-    '''Specialisation of PeripheralBuilder for peripherals with an indexed name,
+    """Specialisation of PeripheralBuilder for peripherals with an indexed name,
     such as USART0, USART1, ...
     The index is extracted from the name and passed on as 1st argument to the
     model constructor.
     The index is optional, and if absent, 0 is used.
-    '''
+    """
 
     def _get_build_args(self, per_name, per_config):
         try:
@@ -272,21 +270,20 @@ class IndexedPeripheralBuilder(PeripheralBuilder):
 
 
 class LetteredPeripheralBuilder(PeripheralBuilder):
-    '''Specialisation of PeripheralBuilder for peripherals with an lettered name,
+    """Specialisation of PeripheralBuilder for peripherals with an lettered name,
     such as PORTA, PORTB, ...
     The index is extracted from the name and passed on as 1st argument to the
     model constructor.
-    '''
+    """
 
     def _get_build_args(self, per_name, per_config):
         return (per_name[-1], per_config)
 
 
 class DummyPeripheralBuilder(PeripheralBuilder):
-
-    '''Specialisation of PeripheralBuilder for dummy peripherals (
+    """Specialisation of PeripheralBuilder for dummy peripherals (
     using the DummyController model) requiring the CTLID.
-    '''
+    """
 
     def __init__(self, ctl_id):
         super().__init__(_corelib.DummyController, dummy_config_builder)
@@ -297,15 +294,17 @@ class DummyPeripheralBuilder(PeripheralBuilder):
 
 
 class DeviceBuildError(Exception):
-    '''Error type raised during the device and peripheral building process.
-    '''
+    """Error type raised during the device and peripheral building process.
+    """
     pass
 
 
 class DeviceBuilder:
-    '''Generic device builder object, factory for device simulation models
-    It implements a cache for both peripheral builders and configuration structure
-    '''
+    """Generic device builder object, factory for device simulation models.
+    Users don't normally have to instantiate directly this class but rather use one of
+    he sub-classes for each of the core architectures.
+    It implements a cache for both peripheral builders and configuration structure.
+    """
 
     _builder_cache = {}
 
@@ -334,6 +333,13 @@ class DeviceBuilder:
         return self._dev_config
 
     def build_peripheral(self, device, per_name):
+        """Build a peripheral from the device descriptor and attach it to
+        a device model.
+
+        :param device: instance of Device model
+        :param per_names: name of the peripheral instance to build
+        """
+
         if VERBOSE:
             print('  Building peripheral', per_name)
 
@@ -364,6 +370,13 @@ class DeviceBuilder:
         device.attach_peripheral(per_instance)
 
     def build_peripherals(self, device, per_names):
+        """Build a list of peripherals from the device descriptor and attach them to
+        a device model.
+
+        :param device: instance of Device model
+        :param per_names: list of peripheral names to build
+        """
+
         for per_name in per_names:
             self.build_peripheral(device, per_name)
 
@@ -372,6 +385,12 @@ class DeviceBuilder:
 
     @classmethod
     def build_device(cls, dev_desc, dev_class):
+        """Builds a device simulator model using the information from a descriptor.
+
+        :param dev_desc: device descriptor object
+        :param dev_class: base class for the device model to build and configure
+        """
+
         model = dev_desc.name
         #Find the appropriate builder instance (use the cache)
         if model in cls._builder_cache:
@@ -391,6 +410,9 @@ class DeviceBuilder:
 
     @classmethod
     def clear_cache(cls):
+        """Clears the internal class cache for device builders
+        """
+
         cls._builder_cache.clear()
 
 

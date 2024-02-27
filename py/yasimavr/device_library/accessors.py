@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
 
-'''
+"""
 This module defines Accessor classes that allow to read and write
 directly to I/O registers with a 'user-friendly' syntax.
 It uses the descriptor classes to translate read/write field values
@@ -28,7 +28,7 @@ These classes are mainly meant for debugging purposes, either
 for debugging the peripheral simulation itself such as unit test cases,
 or for debugging a firmware by looking at the I/O registers during the
 simulation.
-'''
+"""
 
 from functools import total_ordering
 
@@ -38,10 +38,13 @@ from ..lib import core as _corelib
 
 @total_ordering
 class _FieldAccessor:
-    '''Generic accessor class for a field of a I/O register.
-    Field accessor can be converted and compared to integers
-    (it uses the raw bit field value)
-    '''
+    """Generic accessor class for a field of a I/O register.
+    Field accessor can be converted and compared to integers (it uses the raw bit field value)
+
+    It uses the information stored in a field descriptor
+    (:py:class:`RegisterFieldDescriptor <yasimavr.device_library.descriptors.RegisterFieldDescriptor>`)
+    to decode/encode the value.
+    """
 
     def __init__(self, reg, field):
         self._reg = reg
@@ -57,12 +60,18 @@ class _FieldAccessor:
         return self.read_raw() < other.__index__()
 
     def write_raw(self, raw_value):
+        """Write a raw integer value for the field to the I/O register.
+        """
+
         bm = self._field.bitmask()
         rv_in = self._reg.read()
         rv_out = (rv_in & ~bm.mask) | ((raw_value << bm.bit) & bm.mask)
         self._reg.write(rv_out)
 
     def read_raw(self):
+        """Read a raw integer value for the field from the I/O register.
+        """
+
         rv = self._reg.read()
         bm = self._field.bitmask()
         return (rv & bm.mask) >> bm.bit
@@ -70,16 +79,24 @@ class _FieldAccessor:
     def __str__(self):
         return '%s.%s [%s]' % (self._reg.name, self._field.name, str(self.read()))
 
-    __repr__ = __str__
+    def __repr__(self):
+        return str(self.read())
 
 
 class BitFieldAccessor(_FieldAccessor):
-    '''Accessor class for a field of a I/O register consisting of one bit
-    Bit fields can be written with 0, 1, False, True or any value corresponding
+    """Accessor class for a field of a I/O register consisting of one bit.
+
+    Bit fields can be written with 0, 1, False, True or any string corresponding
     to the defined 'zero' or 'one' parameters in the descriptor.
-    '''
+    """
 
     def write(self, value):
+        """Write the value for the field to the I/O register.
+
+        :param value integer (raw value), boolean (True or False) or
+        the 'one' or 'zero' values defined in the field descriptor.
+        """
+
         if isinstance(value, int):
             value = bool(value)
 
@@ -91,6 +108,10 @@ class BitFieldAccessor(_FieldAccessor):
             raise ValueError('Unknown bit value: ' + str(value))
 
     def read(self):
+        """Read the value for the field from the I/O register.
+
+        :return the 'one' or 'zero' values defined in the field descriptor.
+        """
         if self.read_raw():
             return self._field.one
         else:
@@ -107,13 +128,18 @@ class BitFieldAccessor(_FieldAccessor):
 
 
 class IntFieldAccessor(_FieldAccessor):
-    '''Accessor class for a field of a I/O register consisting of
-    an integer value
-    '''
+    """Accessor class for a field of a I/O register consisting of
+    an integer value.
+    """
+
     def write(self, value):
+        """Write the value for the field to the I/O register.
+        """
         self.write_raw(value.__index__())
 
     def read(self):
+        """Read a value for the field from the I/O register.
+        """
         return self.read_raw()
 
     def __eq__(self, other):
@@ -121,20 +147,25 @@ class IntFieldAccessor(_FieldAccessor):
 
 
 class RawFieldAccessor(IntFieldAccessor):
-    '''Accessor class for a field of a I/O register consisting of
-    an raw value. It identical to INT except it's printed in hexadecimal.
-    '''
+    """Accessor class for a field of a I/O register consisting of
+    an raw value. It's identical to IntFieldAccessor except it's printed in hexadecimal.
+    """
 
     def __str__(self):
         return '%s.%s [%s]' % (self._reg.name, self._field.name, hex(self.read()))
 
 
 class EnumFieldAccessor(_FieldAccessor):
-    '''Accessor class for a field of a I/O register consisting of
-    an enumeration value
-    '''
+    """Accessor class for a field of a I/O register consisting of
+    an enumeration value.
+    """
 
     def write(self, value):
+        """Write the value for the field to the I/O register.
+
+        :param value integer (raw value) or a string from one of the enumeration values
+        """
+
         #If the value is an int, we use it directly
         if isinstance(value, int):
             rv = value
@@ -143,8 +174,8 @@ class EnumFieldAccessor(_FieldAccessor):
         #if it's not possible
         elif self._field.values is None:
             rv = value.__index__()
-        #If an enumartion is defined, find it in the values dictionary
-        #an use the corresponding index
+        #If an enumeration is defined, look in the values dictionary
+        #and use the corresponding index
         else:
             rv = None
             for k, v in self._field.values.items():
@@ -158,6 +189,12 @@ class EnumFieldAccessor(_FieldAccessor):
         self.write_raw(rv)
 
     def read(self):
+        """Write the value for the field to the I/O register.
+
+        Return one of the enumeration values if a enum dictionary is specified
+        or else the raw integer value.
+        """
+
         #If no enumeration is defined, return the raw index as value
         rv = self.read_raw()
         if self._field.values is None:
@@ -171,7 +208,13 @@ class EnumFieldAccessor(_FieldAccessor):
 
 @total_ordering
 class RegisterAccessor:
-    '''Accessor class for a I/O register'''
+    """Accessor class for a I/O register.
+
+    This class allows to access the whole 8-bits of the register
+    or by using each field composing it.
+
+    It supports ordering and comparison to integers.
+    """
 
     def __init__(self, probe, per, addr, name, reg):
         self._probe = probe
@@ -190,10 +233,14 @@ class RegisterAccessor:
 
     @property
     def name(self):
+        """Getter for the register name
+        """
         return '%s.%s' % (self._per.name, self._reg_name)
 
     @property
     def address(self):
+        """Getter for the register address
+        """
         return self._addr
 
     def __str__(self):
@@ -218,6 +265,13 @@ class RegisterAccessor:
         return self.read() < other
 
     def write(self, value):
+        """Write a value to the I/O register
+
+        :param value integer (for INT or RAW kinds) or bytes-like object (for ARRAY kind)
+
+        Raise an exception if the register is read-only or unsupported
+        """
+
         if self._reg.readonly:
             raise ValueError('Cannot write readonly register ' + self.name)
 
@@ -251,6 +305,13 @@ class RegisterAccessor:
                 self._probe.write_ioreg(self._addr + i, byte_values[i])
 
     def read(self):
+        """Read a value from the I/O register
+
+        Return an integer (for INT or RAW kinds) or a bytes object (for ARRAY kind)
+
+        The read always succeeds even for unsupported registers.
+        """
+
         #Easy and most common case first
         if self._size == 1:
             return self._probe.read_ioreg(self._addr)
@@ -309,7 +370,8 @@ class RegisterAccessor:
 
 
 class PeripheralAccessor:
-    '''Accessor class for a peripheral instance'''
+    """Accessor class for a peripheral instance
+    """
 
     def __init__(self, probe, name, per, byteorders):
         self._probe = probe
@@ -320,17 +382,25 @@ class PeripheralAccessor:
 
     @property
     def name(self):
+        """Getter for the peripheral name
+        """
         return self._name
 
     @property
     def class_descriptor(self):
+        """Getter for the peripheral class descriptor
+        """
         return self._per.per_class
 
     @property
     def base(self):
+        """Getter for the peripheral base address (when relevant)
+        """
         return self._per.reg_base
 
     def signal(self):
+        """Getter for the peripheral signal (or None if not used)
+        """
         ctl_id = _corelib.str_to_id(self._per.ctl_id)
         ok, d = self._probe.device().ctlreq(ctl_id, _corelib.CTLREQ_GET_SIGNAL)
         if ok:
@@ -358,19 +428,21 @@ class PeripheralAccessor:
 
 
 class DeviceAccessor:
-    '''Accessor class for a device'''
+    """Accessor class for a device.
+
+    It is initialised from either a probe or a device.
+
+    If the 1st argument is a probe, it must be already attached to a device.
+    If it's a device, the accessor will create a debug probe and attach it.
+
+    :param DeviceDebugProbe|Device arg:
+    :param DeviceDescriptor descriptor: optional device descriptor object. If not specified, the
+        descriptor is obtained from the _descriptor_ field of the device model instance.
+
+    :var dict pins: dictionary of the device model pins
+    """
 
     def __init__(self, arg, descriptor=None):
-        '''Initialisation of a device accessor from either a probe or a device
-
-        If the 1st argument is a probe, it must be already attached to a device.
-        If it's a device, the accessor will create a debug probe and attach it.
-
-        descriptor: optional device descriptor object. If not specified, the
-                    descriptor is obtained from the _descriptor_ field of the
-                    device model instance
-        '''
-
         if isinstance(arg, _corelib.DeviceDebugProbe):
             self._probe = arg
             if not self._probe.attached():
@@ -392,15 +464,20 @@ class DeviceAccessor:
 
     @property
     def name(self):
-        'Name of the device model corresponding to the descriptor used'
+        """Name of the device model corresponding to the descriptor used
+        """
         return self._desc.name
 
     @property
     def aliases(self):
+        """Aliases of the device model corresponding to the descriptor used
+        """
         return tuple(self._desc.aliases)
 
     @property
     def descriptor(self):
+        """Getter for the device descriptor
+        """
         return self._desc
 
     def __getattr__(self, key):
