@@ -307,3 +307,154 @@ NonVolatileMemory& NonVolatileMemory::operator=(const NonVolatileMemory& other)
 
     return *this;
 }
+
+
+//=======================================================================================
+
+MemorySectionManager::MemorySectionManager(flash_addr_t page_count, flash_addr_t page_size, unsigned int section_count)
+:m_page_count(page_count)
+,m_page_size(page_size)
+,m_section_count(section_count)
+,m_current_section(section_count)
+,m_limits(section_count + 1, page_count)
+,m_flags(section_count * section_count, 0x00)
+,m_pages(page_count, 0x00)
+{
+    m_limits[0] = 0;
+}
+
+
+/**
+   Set the section limits in page number.
+  Limits must be given as an array and must be organised as :
+   [ L0, L1, ..., Ln-2] where Li is the 1st page of section i+1 and n the number of sections.
+   For example, with 3 sections, limits = { 16, 32 } will set Section 0 as range [0;15], Section 1 as [16;31] and
+   Section 2 as [32;end].
+ */
+void MemorySectionManager::set_section_limits(const std::vector<flash_addr_t>& limits)
+{
+    for (unsigned int i = 0; i < m_section_count - 1; ++i) {
+        if (i < limits.size())
+            m_limits[i + 1] = limits[i];
+        else
+            m_limits[i + 1] = m_page_count;
+    }
+
+    invalidate_page_access_map();
+}
+
+
+/**
+   Return the section index containing the given page number
+ */
+unsigned int MemorySectionManager::page_to_section(flash_addr_t page) const
+{
+    //Find the section boundaries containing the given page to find the new current section
+    flash_addr_t start = 0, end;
+    for (unsigned int index = 0; index < m_section_count; ++index) {
+        end = m_limits[index + 1];
+        if (start <= page && page < end) {
+            return index;
+        }
+        start = end;
+    }
+    return m_section_count - 1;
+}
+
+
+
+/**
+   Set the access flags from one section to another.
+
+   /example set_access_flags(0, 1, Read) means that code in section 0
+   can read but cannot write data located in section 1.
+
+   /param src : Section source
+   /param dst : Section destination
+   /param flags : OR'ed combination of access flags
+ */
+void MemorySectionManager::set_access_flags(unsigned int src, unsigned int dst, uint8_t flags)
+{
+    unsigned int index = src * m_section_count + dst;
+    m_flags[index] = (m_flags[index] & ~ACCESS_FLAGS_MASK) | (flags & ACCESS_FLAGS_MASK);
+
+    invalidate_page_access_map();
+}
+
+/**
+   Set the access flags from one section to itself.
+ */
+void MemorySectionManager::set_access_flags(unsigned int section, uint8_t flags)
+{
+    set_access_flags(section, section, flags);
+}
+
+
+void MemorySectionManager::set_fetch_allowed(unsigned int section, bool allowed)
+{
+    unsigned int index = section * (m_section_count + 1);
+    if (allowed)
+        m_flags[index] |= FETCH_ALLOWED;
+    else
+        m_flags[index] &= ~FETCH_ALLOWED;
+
+    invalidate_page_access_map();
+}
+
+
+bool MemorySectionManager::fetch_address(flash_addr_t addr)
+{
+    flash_addr_t page = addr / m_page_size;
+
+    if (!(m_pages[page] & CURRENT_SECTION))
+        update_current_section(page);
+
+    return m_pages[page] & FETCH_ALLOWED;
+}
+
+
+void MemorySectionManager::update_current_section(flash_addr_t page)
+{
+    unsigned int old_section = m_current_section;
+
+    //Find the section boundaries containing the given page to find the new current section
+    flash_addr_t start = 0, end;
+    for (unsigned int index = 0; index < m_section_count; ++index) {
+        end = m_limits[index + 1];
+        if (start <= page && page < end) {
+            m_current_section = index;
+            break;
+        }
+        start = end;
+    }
+
+    //If changing section (from a valid section), signal the exit
+    if (m_current_section != old_section && old_section < m_section_count)
+        m_signal.raise(Signal_SectionLeave, old_section);
+
+    //Update the page access map
+    start = 0;
+    for (unsigned int index = 0; index < m_section_count; ++index) {
+        end = m_limits[index + 1];
+        if (start < end) {
+            //Get the access flags with src=current, dst=index
+            uint8_t f = m_flags[m_current_section * m_section_count + index];
+            //Set the 8th bit for the current section
+            if (index == m_current_section) f |= CURRENT_SECTION;
+            //Mark the section pages with the access flags
+            memset(m_pages.data() + start, f, end - start);
+        }
+        //Move the boundaries to the next section
+        start = end;
+    }
+
+    //If changing section, signal the entry
+    if (m_current_section != old_section)
+        m_signal.raise(Signal_SectionEnter, m_current_section);
+}
+
+
+void MemorySectionManager::invalidate_page_access_map()
+{
+    memset(m_pages.data(), 0x00, m_page_count);
+}
