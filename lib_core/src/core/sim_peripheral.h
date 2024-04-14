@@ -170,6 +170,10 @@ typedef int ctlreq_id_t;
  */
 #define AVR_CTLREQ_CORE_HALT        9
 
+
+#define AVR_CTLREQ_CORE_SECTIONS    10
+
+
 /**
    Request sent by the CPU to the watchdog when executing a WDR instruction, no data provided
  */

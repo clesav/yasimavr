@@ -180,6 +180,7 @@ void ArchXT_Core::dbg_write_data(mem_addr_t addr, const uint8_t* buf, mem_addr_t
 ArchXT_Device::ArchXT_Device(const ArchXT_DeviceConfig& config)
 :Device(m_core_impl, config)
 ,m_core_impl(reinterpret_cast<const ArchXT_CoreConfig&>(config.core))
+,m_sections((config.core.flashend + 1) / 256, 256, Section_Count)
 {}
 
 
@@ -202,10 +203,16 @@ bool ArchXT_Device::core_ctlreq(ctlreq_id_t req, ctlreq_data_t* reqdata)
             return Device::core_ctlreq(req, reqdata);
 
         return true;
-    } else {
+    }
+    else if (req == AVR_CTLREQ_CORE_SECTIONS) {
+        reqdata->data = &m_sections;
+        return true;
+    }
+    else {
         return Device::core_ctlreq(req, reqdata);
     }
 }
+
 
 bool ArchXT_Device::program(const Firmware& firmware)
 {

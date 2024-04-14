@@ -83,7 +83,9 @@ ArchXT_Fuses::ArchXT_Fuses(reg_addr_t base)
 :Peripheral(chr_to_id('F', 'U', 'S', 'E'))
 ,m_reg_base(base)
 ,m_fuses(nullptr)
+,m_section_manager(nullptr)
 {}
+
 
 bool ArchXT_Fuses::init(Device& device)
 {
@@ -96,12 +98,59 @@ bool ArchXT_Fuses::init(Device& device)
     m_fuses = reinterpret_cast<NonVolatileMemory*>(req.data.as_ptr());
 
     //Allocate a register in read-only access for each fuse
-    for (unsigned int i = 0; i < sizeof(FUSE_t); ++i) {
+    for (unsigned int i = 0; i < sizeof(FUSE_t); ++i)
         add_ioreg(m_reg_base + i, 0xFF, true);
-        write_ioreg(m_reg_base + i, (*m_fuses)[i]);
-    }
+
+    //Obtain the pointer to the flash section manager
+    if (!device.ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_SECTIONS, &req))
+        return false;
+    m_section_manager = reinterpret_cast<MemorySectionManager*>(req.data.as_ptr());
 
     return status;
+}
+
+
+void ArchXT_Fuses::reset()
+{
+    for (unsigned int i = 0; i < sizeof(FUSE_t); ++i)
+        write_ioreg(m_reg_base + i, (*m_fuses)[i]);
+
+    configure_flash_sections();
+}
+
+
+/*
+ * This function configures the flash sections according to the value of the fuses BOOTEND and APPEND
+ * The flash has 3 sections Boot, AppCode, AppData
+ */
+void ArchXT_Fuses::configure_flash_sections()
+{
+    //Read the BOOTEND and APPEND fuse values as page numbers (of 256 bytes)
+    flash_addr_t bootend = (*m_fuses)[offsetof(FUSE_t, BOOTEND)];
+    flash_addr_t append = (*m_fuses)[offsetof(FUSE_t, APPEND)];
+    //Flash end as a page number
+    flash_addr_t flashend = (device()->core().config().flashend + 1) / 256;
+
+    //Log a warning if the fuse values are off limits.
+    if (bootend > flashend || append > flashend)
+        logger().wng("Invalid fuses values: BOOTEND=%d, APPEND=%d", bootend, append);
+
+    //Go through the various combinations of bootend/append values to find the section boundaries
+    flash_addr_t limit1, limit2;
+    if (!bootend || bootend > flashend) {
+        //If BOOTEND is zero, the entire flash is boot
+        limit1 = limit2 = flashend;
+    } else {
+        limit1 = bootend;
+        if (!append || append > flashend)
+            limit2 = flashend; //makes the AppData section empty
+        else if (append < bootend)
+            limit2 = bootend; //makes the AppCode section empty
+        else
+            limit2 = append;
+    }
+
+    m_section_manager->set_section_limits({ limit1, limit2 });
 }
 
 

@@ -60,10 +60,11 @@ private:
 //=======================================================================================
 
 /**
-   \brief Implementation of a fuse NVM peripheral for Mega0/Mega1 series
+   \brief Implementation of a fuse NVM peripheral for XT series
 
-   The purpose of this class is to allow access to the fuse NVM block from
-   the I/O address space.
+   This controller:
+    - allows access to the fuse NVM block from the I/O address space.
+    - configures the NVM sections during initialisation from reading the fuse values
  */
 class AVR_ARCHXT_PUBLIC_API ArchXT_Fuses : public Peripheral {
 
@@ -72,11 +73,15 @@ public:
     explicit ArchXT_Fuses(reg_addr_t base);
 
     virtual bool init(Device& device) override;
+    virtual void reset() override;
 
 private:
 
     const reg_addr_t m_reg_base;
     NonVolatileMemory* m_fuses;
+    MemorySectionManager* m_section_manager;
+
+    void configure_flash_sections();
 
 };
 

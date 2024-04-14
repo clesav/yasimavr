@@ -73,6 +73,13 @@ class ArchXT_Device : public Device /NoDefaultCtors/ {
 
 public:
 
+    enum FlashSection /BaseType=IntEnum/ {
+        Section_Boot        /PyName=Boot/,
+        Section_AppCode     /PyName=AppCode/,
+        Section_AppData     /PyName=AppData/,
+        Section_Count       /PyName=Count/
+    };
+
     ArchXT_Device(const ArchXT_DeviceConfig& /KeepReference/);
 
 };
