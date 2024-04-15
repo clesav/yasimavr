@@ -123,8 +123,17 @@ void ArchAVR_Core::dbg_write_data(mem_addr_t addr, const uint8_t* buf, mem_addr_
 
 ArchAVR_Device::ArchAVR_Device(const ArchAVR_DeviceConfig& config)
 :Device(m_core_impl, config)
-,m_core_impl(config.core)
-{}
+,m_core_impl(reinterpret_cast<const ArchAVR_CoreConfig&>(config.core))
+,m_sections(config.core.flash_page_count(),
+            config.core.flash_page_size ? config.core.flash_page_size : (config.core.flashend + 1),
+            Section_Count)
+{
+    //On initialisation, make the whole flash a Boot Section with Read&Fetch flags,
+    //effectively making any access control or self-programming features disabled by default.
+    //A peripheral can set them up properly later if implemented.
+    m_sections.set_access_flags(Section_Boot, MemorySectionManager::Access_Read);
+    m_sections.set_fetch_allowed(Section_Boot, true);
+}
 
 
 ArchAVR_Device::~ArchAVR_Device()
@@ -144,10 +153,16 @@ bool ArchAVR_Device::core_ctlreq(ctlreq_id_t req, ctlreq_data_t* reqdata)
             return Device::core_ctlreq(req, reqdata);
 
         return true;
-    } else {
+    }
+    else if (req == AVR_CTLREQ_CORE_SECTIONS) {
+        reqdata->data = &m_sections;
+        return true;
+    }
+    else {
         return Device::core_ctlreq(req, reqdata);
     }
 }
+
 
 bool ArchAVR_Device::program(const Firmware& firmware)
 {

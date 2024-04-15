@@ -65,6 +65,12 @@ class ArchAVR_Device : public Device /NoDefaultCtors/ {
 
 public:
 
+    enum FlashSection /BaseType=IntEnum/ {
+        Section_AppRWW        /PyName=AppRWW/,
+        Section_AppNRWW       /PyName=AppNRWW/,
+        Section_Boot          /PyName=Boot/
+    };
+
     ArchAVR_Device(const ArchAVR_DeviceConfig& /KeepReference/);
 
     SIP_PYOBJECT __str__();

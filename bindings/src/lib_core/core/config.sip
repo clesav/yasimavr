@@ -45,6 +45,10 @@ struct CoreConfiguration {
     mem_addr_t          fusesize;
     UnsignedInt8Vector  fuses;
 
+    flash_addr_t        flash_page_size;
+
+    flash_addr_t flash_page_count() const;
+
 };
 
 
