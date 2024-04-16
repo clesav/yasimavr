@@ -161,6 +161,7 @@ protected:
     unsigned int m_int_inhib_counter;
     ///Pointer to the generic debug probe
     DeviceDebugProbe* m_debug_probe;
+    MemorySectionManager* m_section_manager;
 
     //CPU access to I/O registers in I/O address space
     uint8_t cpu_read_ioreg(reg_addr_t addr);

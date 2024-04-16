@@ -128,6 +128,8 @@ ArchAVR_Device::ArchAVR_Device(const ArchAVR_DeviceConfig& config)
             config.core.flash_page_size ? config.core.flash_page_size : (config.core.flashend + 1),
             Section_Count)
 {
+    m_core_impl.m_section_manager = &m_sections;
+
     //On initialisation, make the whole flash a Boot Section with Read&Fetch flags,
     //effectively making any access control or self-programming features disabled by default.
     //A peripheral can set them up properly later if implemented.

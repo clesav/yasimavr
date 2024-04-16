@@ -254,6 +254,14 @@ cycle_count_t Core::run_instruction()
         return 0;
     }
 
+#ifndef YASIMAVR_NO_ACC_CTRL
+    if (m_section_manager && !m_section_manager->fetch_address(m_pc)) {
+        m_device->logger().err("CPU fetching a locked flash address: 0x%04x", m_pc);
+        m_device->crash(CRASH_ACCESS_REFUSED, "Instruction fetch refused");
+        return 0;
+    }
+#endif
+
     uint32_t        opcode = get_flash16le(m_pc);
     flash_addr_t    new_pc = m_pc + 2;  // future "default" pc
     int             cycle = 1;

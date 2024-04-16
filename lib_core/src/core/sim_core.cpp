@@ -48,6 +48,7 @@ Core::Core(const CoreConfiguration& config)
 ,m_pc(0)
 ,m_int_inhib_counter(0)
 ,m_debug_probe(nullptr)
+,m_section_manager(nullptr)
 ,m_intrctl(nullptr)
 {
     //Allocate the SRAM in RAM

@@ -181,7 +181,9 @@ ArchXT_Device::ArchXT_Device(const ArchXT_DeviceConfig& config)
 :Device(m_core_impl, config)
 ,m_core_impl(reinterpret_cast<const ArchXT_CoreConfig&>(config.core))
 ,m_sections(config.core.flash_page_count(), config.core.flash_page_size, Section_Count)
-{}
+{
+    m_core_impl.m_section_manager = &m_sections;
+}
 
 
 ArchXT_Device::~ArchXT_Device()
