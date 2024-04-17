@@ -93,6 +93,8 @@ public:
 
     void set_console_register(reg_addr_t addr);
 
+    void set_direct_LPM_enabled(bool enabled);
+
 protected:
 
     uint8_t cpu_read_ioreg(reg_addr_t);
@@ -101,7 +103,7 @@ protected:
     void cpu_write_gpreg(uint8_t, uint8_t);
     virtual uint8_t cpu_read_data(mem_addr_t) = 0;
     virtual void cpu_write_data(mem_addr_t, uint8_t) = 0;
-    uint8_t cpu_read_flash(flash_addr_t pgm_addr);
+    int16_t cpu_read_flash(flash_addr_t pgm_addr);
 
     bool use_extended_addressing() const;
 

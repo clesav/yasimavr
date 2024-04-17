@@ -86,7 +86,7 @@ const ctlreq_id_t CTLREQ_CORE_NVM         = AVR_CTLREQ_CORE_NVM;
 const ctlreq_id_t CTLREQ_CORE_HALT        = AVR_CTLREQ_CORE_HALT;
 const ctlreq_id_t CTLREQ_CORE_SECTIONS    = AVR_CTLREQ_CORE_SECTIONS;
 const ctlreq_id_t CTLREQ_WATCHDOG_RESET   = AVR_CTLREQ_WATCHDOG_RESET;
-const ctlreq_id_t CTLREQ_NVM_WRITE        = AVR_CTLREQ_NVM_WRITE;
+const ctlreq_id_t CTLREQ_NVM_REQUEST      = AVR_CTLREQ_NVM_REQUEST;
 const ctlreq_id_t CTLREQ_SLEEP_CALL       = AVR_CTLREQ_SLEEP_CALL;
 const ctlreq_id_t CTLREQ_SLEEP_PSEUDO     = AVR_CTLREQ_SLEEP_PSEUDO;
 
@@ -131,7 +131,7 @@ const ctlreq_id_t CTLREQ_CORE_NVM;
 const ctlreq_id_t CTLREQ_CORE_HALT;
 const ctlreq_id_t CTLREQ_CORE_SECTIONS;
 const ctlreq_id_t CTLREQ_WATCHDOG_RESET;
-const ctlreq_id_t CTLREQ_NVM_WRITE;
+const ctlreq_id_t CTLREQ_NVM_REQUEST;
 const ctlreq_id_t CTLREQ_SLEEP_CALL;
 const ctlreq_id_t CTLREQ_SLEEP_PSEUDO;
 
@@ -141,10 +141,11 @@ struct NVM_request_t {
 #include "core/sim_peripheral.h"
 %End
 
+    int kind;
     int nvm;
     mem_addr_t addr;
     uint16_t data;
-    flash_addr_t instr;
+    int result;
 
 };
 

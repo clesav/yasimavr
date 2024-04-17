@@ -135,6 +135,8 @@ public:
 
     void set_console_register(reg_addr_t addr);
 
+    void set_direct_LPM_enabled(bool enabled);
+
     //Disable copy semantics
     Core(const Core&) = delete;
     Core& operator=(const Core&) = delete;
@@ -200,7 +202,7 @@ protected:
      */
     virtual void cpu_write_data(mem_addr_t data_addr, uint8_t value) = 0;
 
-    uint8_t cpu_read_flash(flash_addr_t pgm_addr);
+    int16_t cpu_read_flash(flash_addr_t pgm_addr);
 
     inline bool use_extended_addressing() const
     {
@@ -248,6 +250,9 @@ private:
     reg_addr_t m_reg_console;
     std::string m_console_buffer;
 
+    //Boolean to indicate if the direct mode for the LPM instruction is enabled
+    bool m_direct_LPM;
+
     //Helpers for managing the SREG register
     uint8_t read_sreg();
     void write_sreg(uint8_t value);
@@ -274,6 +279,12 @@ inline const CoreConfiguration& Core::config() const
 inline void Core::set_console_register(reg_addr_t addr)
 {
     m_reg_console = addr;
+}
+
+
+inline void Core::set_direct_LPM_enabled(bool enabled)
+{
+    m_direct_LPM = enabled;
 }
 
 

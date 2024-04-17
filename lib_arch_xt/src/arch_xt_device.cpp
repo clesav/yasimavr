@@ -87,27 +87,29 @@ void ArchXT_Core::cpu_write_data(mem_addr_t data_addr, uint8_t value)
     else if (data_addr >= cfg.eepromstart_ds && data_addr <= cfg.eepromend_ds) {
         //Prepare the NVM Write request
         NVM_request_t nvm_req = {
+            .kind = 0,
             .nvm = NVM_EEPROM,
             .addr = data_addr - cfg.eepromstart_ds, //translate the address into EEPROM space
             .data = value,
-            .instr = m_pc,
+            .result = 0,
         };
         //Send a request to write in the memory
         ctlreq_data_t d = { .data = &nvm_req };
-        m_device->ctlreq(AVR_IOCTL_NVM, AVR_CTLREQ_NVM_WRITE, &d);
+        m_device->ctlreq(AVR_IOCTL_NVM, AVR_CTLREQ_NVM_REQUEST, &d);
     }
     //Write in the Flash section => send a request to the NVM controller
     else if (data_addr >= cfg.flashstart_ds && data_addr <= cfg.flashend_ds) {
         //Prepare the NVM Write request
         NVM_request_t nvm_req = {
+            .kind = 0,
             .nvm = NVM_Flash,
             .addr = data_addr - cfg.flashstart_ds, //translate the address into flash space
             .data = value,
-            .instr = m_pc,
+            .result = 0,
         };
         //Send a request to write in the memory
         ctlreq_data_t d = { .data = &nvm_req };
-        m_device->ctlreq(AVR_IOCTL_NVM, AVR_CTLREQ_NVM_WRITE, &d);
+        m_device->ctlreq(AVR_IOCTL_NVM, AVR_CTLREQ_NVM_REQUEST, &d);
     }
     //Write in any other area => generate a device crash if the option to ignore it is not set
     else if (!m_device->test_option(Device::Option_IgnoreBadCpuIO)) {

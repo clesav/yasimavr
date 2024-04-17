@@ -39,6 +39,7 @@ ArchXT_USERROW::ArchXT_USERROW(reg_addr_t base)
 ,m_userrow(nullptr)
 {}
 
+
 bool ArchXT_USERROW::init(Device& device)
 {
     bool status = Peripheral::init(device);
@@ -59,17 +60,19 @@ bool ArchXT_USERROW::init(Device& device)
     return status;
 }
 
+
 void ArchXT_USERROW::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
     //Send a NVM write request with the new data value
     NVM_request_t nvm_req = {
+        .kind = 0,
         .nvm = ArchXT_Core::NVM_USERROW,
         .addr = (mem_addr_t) addr - m_reg_base, //translate the address into userrow space
         .data = data.value,
-        //.instr = device()->core()->program_counter(), //TODO:
+        .result = 0,
     };
     ctlreq_data_t d = { .data = &nvm_req };
-    device()->ctlreq(AVR_IOCTL_NVM, AVR_CTLREQ_NVM_WRITE, &d);
+    device()->ctlreq(AVR_IOCTL_NVM, AVR_CTLREQ_NVM_REQUEST, &d);
     //The write operation is only effective by a command to the NVM controller
     //Meanwhile, reading the register after a write actually returns the NVM block value
     //not yet overwritten. Here this value is in data.old and must be restored into the register.
@@ -246,7 +249,7 @@ bool ArchXT_NVM::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
 {
     //Write request from the core when writing to a data space
     //location mapped to one of the NVM blocks
-    if (req == AVR_CTLREQ_NVM_WRITE) {
+    if (req == AVR_CTLREQ_NVM_REQUEST) {
         NVM_request_t* nvm_req = reinterpret_cast<NVM_request_t*>(data->data.as_ptr());
         write_nvm(*nvm_req);
         return true;

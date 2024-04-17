@@ -180,10 +180,11 @@ typedef int ctlreq_id_t;
 #define AVR_CTLREQ_WATCHDOG_RESET   1
 
 /**
-   Request sent by the CPU to the NVM controller when executing a SPM instruction
+   Request sent by the CPU to the NVM controller when executing a SPM instruction,
+   or a LPM instruction if the LPM direct mode is disabled with the core.
     - data.p points to a NVM_request_t structure filled with the instruction information
  */
-#define AVR_CTLREQ_NVM_WRITE        1
+#define AVR_CTLREQ_NVM_REQUEST      1
 
 /**
    Request sent by the CPU to the Sleep Controller when executing a SLEEP instruction, no data provided
@@ -198,16 +199,18 @@ typedef int ctlreq_id_t;
 /// @}
 
 
-/** Structure used for AVR_CTLREQ_NVM_WRITE requests */
+/** Structure used for AVR_CTLREQ_NVM_REQUEST requests */
 struct NVM_request_t {
-    /// Memory block being written : -1 if unknown/irrelevant, otherwise one of AVR_NVM enumeration values
+    /// Kind of request : 0:write (SPM), 1:read (LPM)
+    int kind;
+    /// Memory block being written/read : -1 if unknown/irrelevant, otherwise one of AVR_NVM enumeration values
     int nvm;
-    /// Address to write (in the appropriate block address space)
+    /// Address to write/read (in the appropriate block address space)
     mem_addr_t addr;
-    /// Value to write to the NVM
+    /// Value [to write to/read from] the NVM
     uint16_t data;
-    /// Write instruction address (future use for access control)
-    flash_addr_t instr;
+    /// Result of the request : >0:success, 0:ignored, <0:error/refused
+    int result;
 };
 
 
