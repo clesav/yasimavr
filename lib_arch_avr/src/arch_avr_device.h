@@ -91,6 +91,10 @@ public:
         Section_Count
     };
 
+    enum FlashSectionFlags {
+        Access_RWW            = 0x04,
+    };
+
     explicit ArchAVR_Device(const ArchAVR_DeviceConfig& config);
     virtual ~ArchAVR_Device();
 

@@ -476,8 +476,6 @@ int16_t Core::cpu_read_flash(flash_addr_t pgm_addr)
                 return nvm_req.data;
             else if (nvm_req.result < 0)
                 return -1;
-            else
-                return 0;
         }
         //If there is no NVM controller, revert to the direct mode.
     }

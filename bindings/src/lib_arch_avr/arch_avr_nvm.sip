@@ -1,7 +1,7 @@
 /*
- * yasimavr-arch-avr.sip
+ * arch_avr_nvm.sip
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -19,32 +19,40 @@
     along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
 //=======================================================================================
 
-%Module(name=yasimavr.lib.arch_avr)
-
-%Import ../lib_core/yasimavr-core.sip
-
-%License "GPLv3 (see LICENSE file)"
-
-%DefaultEncoding(name = "UTF-8")
-
-%UnitPostIncludeCode
-#include "core/sim_globals.h"
-YASIMAVR_USING_NAMESPACE
+struct ArchAVR_FusesConfig {
+%TypeHeaderCode
+#include "arch_avr_nvm.h"
 %End
 
-//=======================================================================================
+    struct bootsize_config_t : base_reg_config_t {
+        unsigned long boot_size;
+    };
 
-%Include arch_avr_acp.sip
-%Include arch_avr_adc.sip
-%Include arch_avr_device.sip
-%Include arch_avr_extint.sip
-%Include arch_avr_misc.sip
-%Include arch_avr_nvm.sip
-%Include arch_avr_port.sip
-%Include arch_avr_spi.sip
-%Include arch_avr_timer.sip
-%Include arch_avr_twi.sip
-%Include arch_avr_usart.sip
-%Include arch_avr_wdt.sip
+    regbit_t rb_bootsz;
+    regbit_t rb_bootrst;
+    regbit_t rb_bootlockbit;
+    regbit_t rb_applockbit;
+
+    flash_addr_t nrww_start;
+
+    std::vector<ArchAVR_FusesConfig::bootsize_config_t> boot_sizes;
+
+};
+
+
+class ArchAVR_Fuses : public Peripheral /NoDefaultCtors/ {
+%TypeHeaderCode
+#include "arch_avr_nvm.h"
+%End
+
+public:
+
+    ArchAVR_Fuses(const ArchAVR_FusesConfig&);
+
+    virtual bool init(Device&);
+    virtual void reset();
+
+};
