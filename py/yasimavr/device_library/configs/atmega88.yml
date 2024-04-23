@@ -31,12 +31,18 @@ memory:
         RAMEND: 0x4FF
     flash:
         FLASHEND: 0x1FFF
+        page_size: 64
     eeprom:
         EEPROMEND: 0x1FF
 
 core:
     extended_addressing: no
     clear_GIE_on_int: yes
+
+fuses:
+    size: 3
+    factory_values: [ 0x62, 0xDF, 0xF9 ]
+    lock_byte: 0xFF
 
 access:
     lsb_first_on_write: yes
@@ -101,6 +107,14 @@ peripherals:
     SLPCTRL:
         file: mega48-88-168-328_controllers.yml
         ctl_id: SLP
+
+    FUSES:
+        class: FUSES_88_168
+        file: mega48-88-168-328_controllers.yml
+        ctl_id: FUSE
+        config:
+            nrww_start: 96
+            boot_sizes: [ 32, 16, 8, 4 ]
 
     MISC:
         file: mega48-88-168-328_controllers.yml

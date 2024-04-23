@@ -67,6 +67,29 @@ def _get_slpctrl_builder():
     return PeripheralBuilder(_corelib.SleepController, cfg_builder)
 
 
+
+#========================================================================================
+#Fuses controller configuration
+
+def _fuses_convertor(cfg, attr, yml_val, per_desc):
+    if attr == 'boot_sizes':
+        sizes = []
+        for i, s in enumerate(yml_val):
+            size_cfg = _archlib.ArchAVR_FusesConfig.bootsize_config_t()
+            size_cfg.reg_value = i
+            size_cfg.boot_size = s
+            sizes.append(size_cfg)
+
+        cfg.boot_sizes = sizes
+
+    else:
+        raise Exception('Converter not implemented for ' + attr)
+
+def _get_fuses_builder():
+    cfg_builder = PeripheralConfigBuilder(_archlib.ArchAVR_FusesConfig, _fuses_convertor)
+    return PeripheralBuilder(_archlib.ArchAVR_Fuses, cfg_builder)
+
+
 #========================================================================================
 #Misc register configuration
 
@@ -371,6 +394,9 @@ class AVR_DeviceBuilder(DeviceBuilder):
         'CPU': None,
         'CPUINT': _get_intctrl_builder,
         'SLPCTRL': _get_slpctrl_builder,
+        'FUSES_48': _get_fuses_builder,
+        'FUSES_88_168': _get_fuses_builder,
+        'FUSES_328': _get_fuses_builder,
         'MISC': _get_misc_builder,
         'PORT': _get_port_builder,
         'EXTINT': _get_extint_builder,
@@ -396,6 +422,9 @@ class AVR_DeviceBuilder(DeviceBuilder):
         cfg.eind = dev_desc.reg_address('CPU/EIND', _corelib.INVALID_REGISTER)
         cfg.rampz = dev_desc.reg_address('CPU/RAMPZ', _corelib.INVALID_REGISTER)
         cfg.vector_size = dev_desc.interrupt_map.vector_size
+        cfg.fusesize = dev_desc.fuses['size']
+        cfg.fuses = bytes(dev_desc.fuses['factory_values'])
+        cfg.flash_page_size = dev_desc.mem_spaces['flash'].page_size
         return cfg
 
     def _build_device_config(self, dev_desc, core_cfg):

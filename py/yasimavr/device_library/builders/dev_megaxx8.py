@@ -35,6 +35,7 @@ class dev_megaxx8(AVR_BaseDevice):
         peripherals = [
             'CPUINT',
             'SLPCTRL',
+            'FUSES',
             'MISC',
             'PORTB',
             'PORTC',
