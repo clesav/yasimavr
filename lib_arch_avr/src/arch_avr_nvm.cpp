@@ -105,7 +105,7 @@ void ArchAVR_Fuses::reset()
             return;
         }
 
-        flash_addr_t boot_start = device()->core().config().flashend + 1 - m_config.boot_sizes[bsi].boot_size;
+        flash_addr_t boot_start = m_sections->page_count() - m_config.boot_sizes[bsi].boot_size;
         m_sections->set_section_limits({ m_config.nrww_start, boot_start });
 
         uint8_t boot_lockbit = read_fuse(m_config.rb_bootlockbit);
@@ -137,13 +137,13 @@ void ArchAVR_Fuses::reset()
     } else {
 
         //If no bootloader support, make the whole flash an app section
-    	flash_addr_t s = device()->core().config().flashend + 1;
-        m_sections->set_section_limits({s, s});
+        m_sections->set_section_limits({ m_sections->page_count(), m_sections->page_count() });
 
     }
 
     //Set the access control flags in the section manager
     for (unsigned int i = 0; i < SECTION_COUNT; ++i) {
+        m_sections->set_fetch_allowed(i,  true);
         for (unsigned int j = 0; j < SECTION_COUNT; ++j)
             m_sections->set_access_flags(i, j, section_flags[i][j]);
     }

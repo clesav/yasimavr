@@ -146,8 +146,8 @@ public:
     };
 
     enum SignalId /BaseType=IntEnum/ {
-        Signal_SectionLeave     /PyName=SectionLeave/,
-        Signal_SectionEnter     /PyName=SectionEnter/,
+        Signal_Leave     /PyName=Leave/,
+        Signal_Enter     /PyName=Enter/,
     };
 
     MemorySectionManager(flash_addr_t, flash_addr_t, unsigned int);

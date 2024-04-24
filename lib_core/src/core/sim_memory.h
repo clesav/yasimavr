@@ -151,8 +151,8 @@ public:
     };
 
     enum SignalId {
-        Signal_SectionLeave,
-        Signal_SectionEnter,
+        Signal_Leave,
+        Signal_Enter,
     };
 
     MemorySectionManager(flash_addr_t page_count, flash_addr_t page_size, unsigned int section_count);

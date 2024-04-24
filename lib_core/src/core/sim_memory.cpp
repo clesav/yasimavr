@@ -430,7 +430,7 @@ void MemorySectionManager::update_current_section(flash_addr_t page)
 
     //If changing section (from a valid section), signal the exit
     if (m_current_section != old_section && old_section < m_section_count)
-        m_signal.raise(Signal_SectionLeave, old_section);
+        m_signal.raise(Signal_Leave, old_section);
 
     //Update the page access map
     start = 0;
@@ -450,7 +450,7 @@ void MemorySectionManager::update_current_section(flash_addr_t page)
 
     //If changing section, signal the entry
     if (m_current_section != old_section)
-        m_signal.raise(Signal_SectionEnter, m_current_section);
+        m_signal.raise(Signal_Enter, m_current_section);
 }
 
 
