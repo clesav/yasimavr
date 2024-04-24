@@ -170,6 +170,25 @@ void ArchXT_Fuses::configure_flash_sections()
 #define NVM_INDEX_INVALID   -2
 
 
+//Definition for default access control flags
+#define SECTION_COUNT     ArchXT_Device::Section_Count
+#define ACC_RO            MemorySectionManager::Access_Read
+#define ACC_RW            MemorySectionManager::Access_Read | MemorySectionManager::Access_Write
+
+
+//Default access control definitions for Flash memory sections at reset:
+// - All sections are readable from anywhere
+// - Boot can write to AppCode and AppData
+// - AppCode can write to AppData only
+// - AppData cannot write
+const uint8_t SECTION_ACCESS_FLAGS[SECTION_COUNT][SECTION_COUNT] = {
+//To:   Boot,       AppCode     AppData
+      { ACC_RO,     ACC_RW,     ACC_RW }, //From:Boot
+      { ACC_RO,     ACC_RO,     ACC_RW }, //From:AppCode
+      { ACC_RO,     ACC_RO,     ACC_RO }, //From:AppData
+};
+
+
 class ArchXT_NVM::Timer : public CycleTimer {
 
 public:
@@ -197,9 +216,11 @@ ArchXT_NVM::ArchXT_NVM(const ArchXT_NVMConfig& config)
 ,m_mem_index(NVM_INDEX_NONE)
 ,m_page(0)
 ,m_ee_intflag(false)
+,m_section_manager(nullptr)
 {
     m_timer = new Timer(*this);
 }
+
 
 ArchXT_NVM::~ArchXT_NVM()
 {
@@ -210,6 +231,7 @@ ArchXT_NVM::~ArchXT_NVM()
     if (m_bufset)
         free(m_bufset);
 }
+
 
 bool ArchXT_NVM::init(Device& device)
 {
@@ -232,8 +254,15 @@ bool ArchXT_NVM::init(Device& device)
                                 DEF_REGBIT_B(INTFLAGS, NVMCTRL_EEREADY),
                                 m_config.iv_eeready);
 
+    //Obtain the pointer to the flash section manager
+    ctlreq_data_t req;
+    if (!device.ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_SECTIONS, &req))
+        return false;
+    m_section_manager = reinterpret_cast<MemorySectionManager*>(req.data.as_ptr());
+
     return status;
 }
+
 
 void ArchXT_NVM::reset()
 {
@@ -243,19 +272,46 @@ void ArchXT_NVM::reset()
     m_ee_intflag.set_flag();
     //Internals
     m_state = State_Idle;
+
+    //Set the default access control flags
+    for (unsigned int i = 0; i < SECTION_COUNT; ++i) {
+        for (unsigned int j = 0; j < SECTION_COUNT; ++j)
+            m_section_manager->set_access_flags(i, j, SECTION_ACCESS_FLAGS[i][j]);
+
+        //Set all sections as executable by default
+        m_section_manager->set_fetch_allowed(i, true);
+    }
 }
+
 
 bool ArchXT_NVM::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
 {
-    //Write request from the core when writing to a data space
+    //NVM request from the core when writing to a data space
     //location mapped to one of the NVM blocks
     if (req == AVR_CTLREQ_NVM_REQUEST) {
         NVM_request_t* nvm_req = reinterpret_cast<NVM_request_t*>(data->data.as_ptr());
-        write_nvm(*nvm_req);
+
+        //Only process write requests
+        if (!nvm_req->kind) {
+
+        //Check that the operation is allowed wrt. section access control. If not, crash the device.
+    #ifndef YASIMAVR_NO_ACC_CTRL
+            if (!m_section_manager->can_write(nvm_req->addr)) {
+                device()->logger().err("CPU writing a locked flash address: 0x%04x", nvm_req->addr);
+                device()->crash(CRASH_ACCESS_REFUSED, "Flash write refused");
+                nvm_req->result = -1;
+                return true;
+            }
+    #endif
+
+            write_nvm(*nvm_req);
+        }
+
         return true;
     }
     return false;
 }
+
 
 void ArchXT_NVM::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
@@ -276,6 +332,7 @@ void ArchXT_NVM::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
     }
 }
 
+
 NonVolatileMemory* ArchXT_NVM::get_memory(int nvm_index)
 {
     ctlreq_data_t req = { .index = nvm_index };
@@ -284,6 +341,7 @@ NonVolatileMemory* ArchXT_NVM::get_memory(int nvm_index)
     return reinterpret_cast<NonVolatileMemory*>(req.data.as_ptr());
 }
 
+
 void ArchXT_NVM::clear_buffer()
 {
     memset(m_buffer, 0xFF, m_config.flash_page_size);
@@ -291,8 +349,11 @@ void ArchXT_NVM::clear_buffer()
     m_mem_index = NVM_INDEX_NONE;
 }
 
-void ArchXT_NVM::write_nvm(const NVM_request_t& nvm_req)
+
+void ArchXT_NVM::write_nvm(NVM_request_t& nvm_req)
 {
+    nvm_req.result = -1;
+
     if (m_mem_index == NVM_INDEX_INVALID) return;
 
     //Determine the page size, depending on which NVM block is
@@ -334,9 +395,12 @@ void ArchXT_NVM::write_nvm(const NVM_request_t& nvm_req)
     //Storing the page number
     m_page = nvm_req.addr / page_size;
 
+    nvm_req.result = 1;
+
     logger().dbg("Buffer write addr=%04x, index=%d, page=%d, value=%02x",
                  nvm_req.addr, m_mem_index, m_page, nvm_req.data);
 }
+
 
 void ArchXT_NVM::execute_command(Command cmd)
 {
@@ -403,6 +467,7 @@ void ArchXT_NVM::execute_command(Command cmd)
     }
 }
 
+
 unsigned int ArchXT_NVM::execute_page_command(Command cmd)
 {
     unsigned int delay_usecs = 0;
@@ -468,6 +533,7 @@ unsigned int ArchXT_NVM::execute_page_command(Command cmd)
 
     return delay_usecs;
 }
+
 
 void ArchXT_NVM::timer_next()
 {

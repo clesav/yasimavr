@@ -116,7 +116,6 @@ struct ArchXT_NVMConfig {
    \brief Implementation of a NVM controller for Mega0/Mega1 series
 
    Limitations:
-    - Read or write protections for the various flash sections are not supported
     - The Configuration Change Protection for SPM registers has no effect
 
    CTLREQs supported:
@@ -166,9 +165,11 @@ private:
 
     InterruptFlag m_ee_intflag;
 
+    MemorySectionManager* m_section_manager;
+
     NonVolatileMemory* get_memory(int nvm_index);
     void clear_buffer();
-    void write_nvm(const NVM_request_t& nvm_req);
+    void write_nvm(NVM_request_t& nvm_req);
     void execute_command(Command cmd);
     unsigned int execute_page_command(Command cmd);
     void timer_next();
