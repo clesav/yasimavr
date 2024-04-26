@@ -119,6 +119,8 @@ public:
         Section_Count
     };
 
+    static const size_t SECTION_PAGE_SIZE = 256;
+
     explicit ArchXT_Device(const ArchXT_DeviceConfig& config);
     virtual ~ArchXT_Device();
 

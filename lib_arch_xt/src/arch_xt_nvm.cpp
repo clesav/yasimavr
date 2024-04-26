@@ -132,7 +132,7 @@ void ArchXT_Fuses::configure_flash_sections()
     flash_addr_t bootend = (*m_fuses)[offsetof(FUSE_t, BOOTEND)];
     flash_addr_t append = (*m_fuses)[offsetof(FUSE_t, APPEND)];
     //Flash end as a page number
-    flash_addr_t flashend = (device()->core().config().flashend + 1) / 256;
+    flash_addr_t flashend = (device()->core().config().flashend + 1) / ArchXT_Device::SECTION_PAGE_SIZE;
 
     //Log a warning if the fuse values are off limits.
     if (bootend > flashend || append > flashend)

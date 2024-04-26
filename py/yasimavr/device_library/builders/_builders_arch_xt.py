@@ -394,6 +394,8 @@ class XT_DeviceBuilder(DeviceBuilder):
         cfg.fusesize = dev_desc.fuses['size']
         cfg.fuses = bytes(dev_desc.fuses['factory_values'])
 
+        cfg.flash_page_size = dev_desc.mem_spaces['flash'].page_size
+
         return cfg
 
     def _build_device_config(self, dev_desc, core_cfg):
