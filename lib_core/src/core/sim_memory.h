@@ -145,13 +145,17 @@ class AVR_CORE_PUBLIC_API MemorySectionManager {
 
 public:
 
+    /// Generic Read/Write access flags
     enum AccessFlag {
         Access_Read = 0x01,
         Access_Write = 0x02,
     };
 
+    /// SignalID raised by the section manager
     enum SignalId {
+        /// Raised when the current address leaves a section. data is set to the section index (integer)
         Signal_Leave,
+        /// Raised when the current address enters a section. data is set to the section index (integer)
         Signal_Enter,
     };
 
@@ -208,37 +212,37 @@ private:
 
 };
 
-
+/// Getter for the page count. (as given to the constructor)
 inline flash_addr_t MemorySectionManager::page_count() const
 {
     return m_page_count;
 }
 
-
+/// Getter for the page size in bytes. (as given to the constructor)
 inline flash_addr_t MemorySectionManager::page_size() const
 {
     return m_page_size;
 }
 
-
+/// Getter for the number of sections.
 inline unsigned int MemorySectionManager::section_count() const
 {
     return m_section_count;
 }
 
-
+/// Return the section containing the current address.
 inline unsigned int MemorySectionManager::current_section() const
 {
     return m_current_section;
 }
 
-
+/// Return the section start address.
 inline flash_addr_t MemorySectionManager::section_start(unsigned int index) const
 {
     return m_limits[index];
 }
 
-
+/// Return the section end address.
 inline flash_addr_t MemorySectionManager::section_end(unsigned int index) const
 {
     if (m_limits[index] < m_page_count)
@@ -247,51 +251,53 @@ inline flash_addr_t MemorySectionManager::section_end(unsigned int index) const
         return m_page_count;
 }
 
-
+/// Return the size in bytes of a section.
 inline flash_addr_t MemorySectionManager::section_size(unsigned int index) const
 {
     return m_limits[index + 1] - m_limits[index];
 }
 
-/**
-   Return the section index containing the given memory address.
- */
+///  Return the section index containing the given memory address.
 inline unsigned int MemorySectionManager::address_to_section(flash_addr_t addr) const
 {
     return page_to_section(addr / m_page_size);
 }
 
-
+/**
+   Return the access flags currently set containing the given memory address.
+   \param section_src : Section source
+   \param sectiondst : Section destination
+ */
 inline uint8_t MemorySectionManager::access_flags(unsigned int section_src, unsigned int section_dst) const
 {
     return m_flags[section_src * m_section_count + section_dst] & ACCESS_FLAGS_MASK;
 }
 
-
+/// Return the access flags currently set from one section to itself.
 inline uint8_t MemorySectionManager::access_flags(unsigned int section) const
 {
     return m_flags[section * (m_section_count + 1)] & ACCESS_FLAGS_MASK;
 }
 
-
+/// Return the read access flag for a given address.
 inline bool MemorySectionManager::can_read(flash_addr_t addr) const
 {
     return m_pages[addr / m_page_size] & Access_Read;
 }
 
-
+/// Return the write access flag for a given address.
 inline bool MemorySectionManager::can_write(flash_addr_t addr) const
 {
     return m_pages[addr / m_page_size] & Access_Write;
 }
 
-
+/// Return the access flags for a given address.
 inline uint8_t MemorySectionManager::address_access_flags(flash_addr_t addr) const
 {
     return m_pages[addr / m_page_size] & ACCESS_FLAGS_MASK;
 }
 
-
+/// Getter for the signal of the section manager.
 inline Signal& MemorySectionManager::signal()
 {
     return m_signal;

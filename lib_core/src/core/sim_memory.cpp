@@ -311,6 +311,12 @@ NonVolatileMemory& NonVolatileMemory::operator=(const NonVolatileMemory& other)
 
 //=======================================================================================
 
+/**
+   Construct a section manager.
+   \param page_count number of pages covering the whole memory area
+   \param page_size page size in bytes
+   \param section_count number of sections
+ */
 MemorySectionManager::MemorySectionManager(flash_addr_t page_count, flash_addr_t page_size, unsigned int section_count)
 :m_page_count(page_count)
 ,m_page_size(page_size)
@@ -326,7 +332,7 @@ MemorySectionManager::MemorySectionManager(flash_addr_t page_count, flash_addr_t
 
 /**
    Set the section limits in page number.
-  Limits must be given as an array and must be organised as :
+   Limits must be given as an array and must be organised as :
    [ L0, L1, ..., Ln-2] where Li is the 1st page of section i+1 and n the number of sections.
    For example, with 3 sections, limits = { 16, 32 } will set Section 0 as range [0;15], Section 1 as [16;31] and
    Section 2 as [32;end].
@@ -345,7 +351,7 @@ void MemorySectionManager::set_section_limits(const std::vector<flash_addr_t>& l
 
 
 /**
-   Return the section index containing the given page number
+   Return the section index containing the given page number.
  */
 unsigned int MemorySectionManager::page_to_section(flash_addr_t page) const
 {
@@ -366,12 +372,12 @@ unsigned int MemorySectionManager::page_to_section(flash_addr_t page) const
 /**
    Set the access flags from one section to another.
 
-   /example set_access_flags(0, 1, Read) means that code in section 0
+   Example: set_access_flags(0, 1, Read) means that code in section 0
    can read but cannot write data located in section 1.
 
-   /param src : Section source
-   /param dst : Section destination
-   /param flags : OR'ed combination of access flags
+   \param src : Section source
+   \param dst : Section destination
+   \param flags : OR'ed combination of access flags
  */
 void MemorySectionManager::set_access_flags(unsigned int src, unsigned int dst, uint8_t flags)
 {
@@ -389,7 +395,9 @@ void MemorySectionManager::set_access_flags(unsigned int section, uint8_t flags)
     set_access_flags(section, section, flags);
 }
 
-
+/**
+   Set the fetch flag for a section.
+ */
 void MemorySectionManager::set_fetch_allowed(unsigned int section, bool allowed)
 {
     unsigned int index = section * (m_section_count + 1);
@@ -401,7 +409,9 @@ void MemorySectionManager::set_fetch_allowed(unsigned int section, bool allowed)
     invalidate_page_access_map();
 }
 
-
+/**
+   Change the current address and return the fetch access flag for the containing section.
+ */
 bool MemorySectionManager::fetch_address(flash_addr_t addr)
 {
     flash_addr_t page = addr / m_page_size;
@@ -417,7 +427,7 @@ void MemorySectionManager::update_current_section(flash_addr_t page)
 {
     unsigned int old_section = m_current_section;
 
-    //Find the section boundaries containing the given page to find the new current section
+    //Find the section boundaries containing the given page to find the new current section.
     flash_addr_t start = 0, end;
     for (unsigned int index = 0; index < m_section_count; ++index) {
         end = m_limits[index + 1];

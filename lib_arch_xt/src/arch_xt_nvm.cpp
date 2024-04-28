@@ -82,6 +82,29 @@ void ArchXT_USERROW::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& d
 
 //=======================================================================================
 
+//Definition for default access control flags
+#define SECTION_COUNT     ArchXT_Device::Section_Count
+#define ACC_RO            MemorySectionManager::Access_Read
+#define ACC_RW            MemorySectionManager::Access_Read | MemorySectionManager::Access_Write
+
+
+//Default access control definitions for Flash memory sections at reset:
+// - All sections are readable from anywhere
+// - Boot can write to AppCode and AppData
+// - AppCode can write to AppData only
+// - AppData cannot write
+const uint8_t SECTION_ACCESS_FLAGS[SECTION_COUNT][SECTION_COUNT] = {
+//To:   Boot,       AppCode     AppData
+      { ACC_RO,     ACC_RW,     ACC_RW }, //From:Boot
+      { ACC_RO,     ACC_RO,     ACC_RW }, //From:AppCode
+      { ACC_RO,     ACC_RO,     ACC_RO }, //From:AppData
+};
+
+
+/**
+   Constructor of a Fuse controller.
+   \param base base address in the data space for the fuse bytes
+ */
 ArchXT_Fuses::ArchXT_Fuses(reg_addr_t base)
 :Peripheral(chr_to_id('F', 'U', 'S', 'E'))
 ,m_reg_base(base)
@@ -123,8 +146,8 @@ void ArchXT_Fuses::reset()
 
 
 /*
- * This function configures the flash sections according to the value of the fuses BOOTEND and APPEND
- * The flash has 3 sections Boot, AppCode, AppData
+ * This function configures the flash sections according to the value of the fuses BOOTEND and APPEND.
+ * The flash has 3 sections Boot, AppCode, AppData.
  */
 void ArchXT_Fuses::configure_flash_sections()
 {
@@ -154,6 +177,15 @@ void ArchXT_Fuses::configure_flash_sections()
     }
 
     m_section_manager->set_section_limits({ limit1, limit2 });
+
+    //Set the default access control flags
+    for (unsigned int i = 0; i < SECTION_COUNT; ++i) {
+        for (unsigned int j = 0; j < SECTION_COUNT; ++j)
+            m_section_manager->set_access_flags(i, j, SECTION_ACCESS_FLAGS[i][j]);
+
+        //Set all sections as executable by default
+        m_section_manager->set_fetch_allowed(i, true);
+    }
 }
 
 
@@ -168,25 +200,6 @@ void ArchXT_Fuses::configure_flash_sections()
 
 #define NVM_INDEX_NONE      -1
 #define NVM_INDEX_INVALID   -2
-
-
-//Definition for default access control flags
-#define SECTION_COUNT     ArchXT_Device::Section_Count
-#define ACC_RO            MemorySectionManager::Access_Read
-#define ACC_RW            MemorySectionManager::Access_Read | MemorySectionManager::Access_Write
-
-
-//Default access control definitions for Flash memory sections at reset:
-// - All sections are readable from anywhere
-// - Boot can write to AppCode and AppData
-// - AppCode can write to AppData only
-// - AppData cannot write
-const uint8_t SECTION_ACCESS_FLAGS[SECTION_COUNT][SECTION_COUNT] = {
-//To:   Boot,       AppCode     AppData
-      { ACC_RO,     ACC_RW,     ACC_RW }, //From:Boot
-      { ACC_RO,     ACC_RO,     ACC_RW }, //From:AppCode
-      { ACC_RO,     ACC_RO,     ACC_RO }, //From:AppData
-};
 
 
 class ArchXT_NVM::Timer : public CycleTimer {
@@ -272,15 +285,6 @@ void ArchXT_NVM::reset()
     m_ee_intflag.set_flag();
     //Internals
     m_state = State_Idle;
-
-    //Set the default access control flags
-    for (unsigned int i = 0; i < SECTION_COUNT; ++i) {
-        for (unsigned int j = 0; j < SECTION_COUNT; ++j)
-            m_section_manager->set_access_flags(i, j, SECTION_ACCESS_FLAGS[i][j]);
-
-        //Set all sections as executable by default
-        m_section_manager->set_fetch_allowed(i, true);
-    }
 }
 
 

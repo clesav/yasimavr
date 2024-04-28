@@ -43,19 +43,27 @@ struct ArchAVR_FusesConfig {
         unsigned long boot_size;
     };
 
+    /// Regbit for the boot size fuse bits
     regbit_t                         rb_bootsz;
+    /// Regbit for the boot reset fuse bit
     regbit_t                         rb_bootrst;
+    /// Regbit for the boot part of the lockbits
     regbit_t                         rb_bootlockbit;
+    /// Regbit for the application part of the lockbits
     regbit_t                         rb_applockbit;
 
-    /// Start of NRWW (No Read-While-Write) section
+    /// Start of NRWW (No Read-While-Write) section, in number of section pages
     flash_addr_t                     nrww_start;
-    /// Boot_sizes mapping
+    /// Boot_sizes mapping, in number of section pages
     std::vector<bootsize_config_t>   boot_sizes;
 
 };
 
 /**
+   \brief Implementation of a fuse NVM peripheral for AVR series
+
+   The purpose of this controller is to use the values of the fuses to configure the section
+   access control flags on a device reset.
  */
 class AVR_ARCHAVR_PUBLIC_API ArchAVR_Fuses : public Peripheral {
 

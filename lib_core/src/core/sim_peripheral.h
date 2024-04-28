@@ -199,7 +199,16 @@ typedef int ctlreq_id_t;
 /// @}
 
 
-/** Structure used for AVR_CTLREQ_NVM_REQUEST requests */
+/**
+ * \brief Structure used for AVR_CTLREQ_NVM_REQUEST requests.
+
+   These structure are used when :
+   - a SPM instruction is executed, or
+   - flash memory is read and direct mode is disabled.
+
+   These requests are processed by the NVM controller (if it exists) and returned with the result field set.
+   This system allows to implement access control measures and self-programming features.
+ */
 struct NVM_request_t {
     /// Kind of request : 0:write (SPM), 1:read (LPM)
     int kind;

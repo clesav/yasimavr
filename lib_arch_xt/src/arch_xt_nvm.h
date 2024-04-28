@@ -64,7 +64,7 @@ private:
 
    This controller:
     - allows access to the fuse NVM block from the I/O address space.
-    - configures the NVM sections during initialisation from reading the fuse values
+    - configures the NVM sections during initialisation from reading the fuse values.
  */
 class AVR_ARCHXT_PUBLIC_API ArchXT_Fuses : public Peripheral {
 
