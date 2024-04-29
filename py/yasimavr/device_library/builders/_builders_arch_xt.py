@@ -336,6 +336,12 @@ class XT_BaseDevice(_archlib.ArchXT_Device):
     """Specialisation of BaseDevice for the device models using the XT architecture.
     """
 
+    _NVMs_ = { 'Flash': _corelib.Core.NVM.Flash,
+               'Fuses': _corelib.Core.NVM.Fuses,
+               'EEPROM': _archlib.ArchXT_Core.ArchXT_NVM.EEPROM,
+               'USERROW': _archlib.ArchXT_Core.ArchXT_NVM.USERROW,
+    }
+
     def __init__(self, dev_descriptor, builder):
         super().__init__(builder.get_device_config())
 

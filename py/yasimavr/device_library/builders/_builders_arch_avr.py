@@ -379,6 +379,11 @@ class AVR_BaseDevice(_archlib.ArchAVR_Device):
     """Specialisation of BaseDevicer for the device models using the AVR architecture.
     """
 
+    _NVMs_ = { 'Flash': _corelib.Core.NVM.Flash,
+               'Fuses': _corelib.Core.NVM.Fuses,
+               'EEPROM': _archlib.ArchAVR_Core.ArchAVR_NVM.EEPROM,
+    }
+
     def __init__(self, dev_descriptor, builder):
         super().__init__(builder.get_device_config())
 

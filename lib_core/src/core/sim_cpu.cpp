@@ -636,7 +636,7 @@ cycle_count_t Core::run_instruction()
                 } break;
                 default: {
                     switch (opcode & 0xfe0f) {
-                        case 0x9000: {  // LDS -- Load Direct from Data Space, 32 bits -- 1001 0000 0000 0000
+                        case 0x9000: {  // LDS -- Load Direct from Data Space, 32 bits -- 1001 000d dddd 0000
                             get_d5(opcode);
                             uint16_t x = get_flash16le(new_pc);
                             new_pc += 2;
@@ -748,7 +748,7 @@ cycle_count_t Core::run_instruction()
                             if (op == 1) y++;
                             set_r16le(R_YL, y);
                         }   break;
-                        case 0x9200: {  // STS -- Store Direct to Data Space, 32 bits -- 1001 0010 0000 0000
+                        case 0x9200: {  // STS -- Store Direct to Data Space, 32 bits -- 1001 001d dddd 0000
                             get_vd5(opcode);
                             uint16_t x = get_flash16le(new_pc);
                             new_pc += 2;
