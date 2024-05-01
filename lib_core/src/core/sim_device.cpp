@@ -238,7 +238,7 @@ bool Device::program(const Firmware& firmware)
     }
 
     if (firmware.has_memory(Firmware::Area_Fuses)) {
-        if (!firmware.load_memory(Firmware::Area_Fuses, m_core.m_fuses)) {
+        if (firmware.load_memory(Firmware::Area_Fuses, m_core.m_fuses)) {
             m_logger.dbg("Firmware load: fuses loaded");
         } else {
             m_logger.err("Firmware load: Error programming the fuses");

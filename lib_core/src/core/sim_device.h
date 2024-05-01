@@ -50,6 +50,7 @@ enum class SleepMode;
 #define CRASH_INVALID_OPCODE        0x05
 #define CRASH_INVALID_CONFIG        0x06
 #define CRASH_FLASH_ADDR_OVERFLOW   0x07
+#define CRASH_ACCESS_REFUSED        0x08
 
 
 //=======================================================================================

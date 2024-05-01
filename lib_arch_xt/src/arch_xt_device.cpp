@@ -87,27 +87,29 @@ void ArchXT_Core::cpu_write_data(mem_addr_t data_addr, uint8_t value)
     else if (data_addr >= cfg.eepromstart_ds && data_addr <= cfg.eepromend_ds) {
         //Prepare the NVM Write request
         NVM_request_t nvm_req = {
+            .kind = 0,
             .nvm = NVM_EEPROM,
             .addr = data_addr - cfg.eepromstart_ds, //translate the address into EEPROM space
             .data = value,
-            .instr = m_pc,
+            .result = 0,
         };
         //Send a request to write in the memory
         ctlreq_data_t d = { .data = &nvm_req };
-        m_device->ctlreq(AVR_IOCTL_NVM, AVR_CTLREQ_NVM_WRITE, &d);
+        m_device->ctlreq(AVR_IOCTL_NVM, AVR_CTLREQ_NVM_REQUEST, &d);
     }
     //Write in the Flash section => send a request to the NVM controller
     else if (data_addr >= cfg.flashstart_ds && data_addr <= cfg.flashend_ds) {
         //Prepare the NVM Write request
         NVM_request_t nvm_req = {
+            .kind = 0,
             .nvm = NVM_Flash,
             .addr = data_addr - cfg.flashstart_ds, //translate the address into flash space
             .data = value,
-            .instr = m_pc,
+            .result = 0,
         };
         //Send a request to write in the memory
         ctlreq_data_t d = { .data = &nvm_req };
-        m_device->ctlreq(AVR_IOCTL_NVM, AVR_CTLREQ_NVM_WRITE, &d);
+        m_device->ctlreq(AVR_IOCTL_NVM, AVR_CTLREQ_NVM_REQUEST, &d);
     }
     //Write in any other area => generate a device crash if the option to ignore it is not set
     else if (!m_device->test_option(Device::Option_IgnoreBadCpuIO)) {
@@ -180,7 +182,17 @@ void ArchXT_Core::dbg_write_data(mem_addr_t addr, const uint8_t* buf, mem_addr_t
 ArchXT_Device::ArchXT_Device(const ArchXT_DeviceConfig& config)
 :Device(m_core_impl, config)
 ,m_core_impl(reinterpret_cast<const ArchXT_CoreConfig&>(config.core))
-{}
+,m_sections((config.core.flashend + 1) / SECTION_PAGE_SIZE, SECTION_PAGE_SIZE, Section_Count)
+{
+    m_core_impl.m_section_manager = &m_sections;
+
+    //On initialisation, make the whole flash an Boot Section with Read&Fetch flags,
+    //effectively making any access control or self-programming features disabled by default.
+    //A peripheral can set them up properly later if implemented.
+    m_sections.set_section_limits({ m_sections.page_count(), m_sections.page_count() });
+    m_sections.set_access_flags(Section_Boot, MemorySectionManager::Access_Read);
+    m_sections.set_fetch_allowed(Section_Boot, true);
+}
 
 
 ArchXT_Device::~ArchXT_Device()
@@ -202,10 +214,16 @@ bool ArchXT_Device::core_ctlreq(ctlreq_id_t req, ctlreq_data_t* reqdata)
             return Device::core_ctlreq(req, reqdata);
 
         return true;
-    } else {
+    }
+    else if (req == AVR_CTLREQ_CORE_SECTIONS) {
+        reqdata->data = &m_sections;
+        return true;
+    }
+    else {
         return Device::core_ctlreq(req, reqdata);
     }
 }
+
 
 bool ArchXT_Device::program(const Firmware& firmware)
 {

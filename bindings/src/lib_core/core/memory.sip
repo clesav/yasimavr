@@ -131,3 +131,52 @@ public:
     %End
 
 };
+
+
+class MemorySectionManager /NoDefaultCtors/ {
+%TypeHeaderCode
+#include "core/sim_memory.h"
+%End
+
+public:
+
+    enum AccessFlag /BaseType=IntFlag/ {
+        Access_Read             /PyName=Read/,
+        Access_Write            /PyName=Write/,
+    };
+
+    enum SignalId /BaseType=IntEnum/ {
+        Signal_Leave     /PyName=Leave/,
+        Signal_Enter     /PyName=Enter/,
+    };
+
+    MemorySectionManager(flash_addr_t, flash_addr_t, unsigned int);
+
+    flash_addr_t page_count() const;
+    flash_addr_t page_size() const;
+    unsigned int section_count() const;
+
+    unsigned int current_section() const;
+
+    void set_section_limits(const UnsignedLongVector&);
+    flash_addr_t section_start(unsigned int) const;
+    flash_addr_t section_end(unsigned int) const;
+    flash_addr_t section_size(unsigned int) const;
+
+    unsigned int page_to_section(flash_addr_t) const;
+    unsigned int address_to_section(flash_addr_t) const;
+
+    void set_access_flags(unsigned int, unsigned int, uint8_t);
+    void set_access_flags(unsigned int, uint8_t);
+    uint8_t access_flags(unsigned int, unsigned int) const;
+    uint8_t access_flags(unsigned int) const;
+    bool can_read(flash_addr_t) const;
+    bool can_write(flash_addr_t) const;
+    uint8_t address_access_flags(flash_addr_t) const;
+
+    void set_fetch_allowed(unsigned int, bool);
+    bool fetch_address(flash_addr_t);
+
+    Signal& signal();
+
+};

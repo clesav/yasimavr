@@ -110,6 +110,8 @@ class MemorySpaceDescriptor:
 
         self.memend = int(mem_config.get('memend', memend))
 
+        self.page_size = int(mem_config.get('page_size', 1))
+
 
 class InterruptMapDescriptor:
     """Descriptor class for an interrupt vector map

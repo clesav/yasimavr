@@ -83,6 +83,18 @@ class AVR_ARCHAVR_PUBLIC_API ArchAVR_Device : public Device {
 
 public:
 
+    //Definitions for the memory section manager
+    enum FlashSection {
+        Section_AppRWW = 0,
+        Section_AppNRWW,
+        Section_Boot,
+        Section_Count
+    };
+
+    enum FlashSectionFlags {
+        Access_RWW            = 0x04,
+    };
+
     explicit ArchAVR_Device(const ArchAVR_DeviceConfig& config);
     virtual ~ArchAVR_Device();
 
@@ -96,6 +108,7 @@ protected:
 private:
 
     ArchAVR_Core m_core_impl;
+    MemorySectionManager m_sections;
 
 };
 

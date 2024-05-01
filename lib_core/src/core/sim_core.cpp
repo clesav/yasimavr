@@ -48,7 +48,9 @@ Core::Core(const CoreConfiguration& config)
 ,m_pc(0)
 ,m_int_inhib_counter(0)
 ,m_debug_probe(nullptr)
+,m_section_manager(nullptr)
 ,m_intrctl(nullptr)
+,m_direct_LPM(true)
 {
     //Allocate the SRAM in RAM
     size_t sram_size = m_config.ramend - m_config.ramstart + 1;
@@ -134,6 +136,8 @@ void Core::reset()
     if (m_console_buffer.size())
         m_device->logger().wng("Console output lost by reset");
     m_console_buffer.clear();
+
+    m_direct_LPM = true;
 }
 
 /**
@@ -460,14 +464,39 @@ void Core::ioctl_write_ioreg(const regbit_t& rb, uint8_t value)
 
    \return value content at the flash address
  */
-uint8_t Core::cpu_read_flash(flash_addr_t pgm_addr)
+int16_t Core::cpu_read_flash(flash_addr_t pgm_addr)
 {
+    //If the LPM direct mode is disabled, obtain the data by a request to the NVM controller.
+    if (!m_direct_LPM) {
+        NVM_request_t nvm_req = { .kind = 1, .nvm = -1, .addr = pgm_addr, .data = 0, .result = 0 };
+        ctlreq_data_t d = { .data = &nvm_req };
+        //If the request has been processed, return the value from the request
+        if (m_device->ctlreq(AVR_IOCTL_NVM, AVR_CTLREQ_NVM_REQUEST, &d)) {
+            if (nvm_req.result > 0)
+                return nvm_req.data;
+            else if (nvm_req.result < 0)
+                return -1;
+        }
+        //If there is no NVM controller or the request result is 0, revert to the direct mode.
+    }
+
+    //Direct mode, first do a range check
     if (pgm_addr > m_config.flashend) {
         m_device->logger().err("CPU reading an invalid flash address: 0x%04x", pgm_addr);
         m_device->crash(CRASH_FLASH_ADDR_OVERFLOW, "Invalid flash address");
-        return 0;
+        return -1;
     }
 
+    //Access control check
+#ifndef YASIMAVR_NO_ACC_CTRL
+    if (m_section_manager && !m_section_manager->can_read(pgm_addr)) {
+        m_device->logger().err("CPU reading a locked flash address: 0x%04x", pgm_addr);
+        m_device->crash(CRASH_ACCESS_REFUSED, "Flash read refused");
+        return -1;
+    }
+#endif
+
+    //Program loading check
     if (!m_flash.programmed(pgm_addr)) {
         m_device->logger().wng("CPU reading an unprogrammed flash address: 0x%04x", pgm_addr);
         if (!m_device->test_option(Device::Option_IgnoreBadCpuLPM)) {

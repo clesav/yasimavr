@@ -32,6 +32,7 @@ enum {
     Crash_Invalid_Opcode = CRASH_INVALID_OPCODE,
     Crash_Invalid_Config = CRASH_INVALID_CONFIG,
     Crash_Flash_Addr_Overflow = CRASH_FLASH_ADDR_OVERFLOW,
+    Crash_Access_Refused = CRASH_ACCESS_REFUSED,
 };
 
 %End
@@ -43,7 +44,8 @@ enum CoreCrashCodes {
     Crash_Bad_CTL_IO,
     Crash_Invalid_Opcode,
     Crash_Invalid_Config,
-    Crash_Flash_Addr_Overflow
+    Crash_Flash_Addr_Overflow,
+    Crash_Access_Refused,
 };
 
 

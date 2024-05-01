@@ -111,6 +111,16 @@ class AVR_ARCHXT_PUBLIC_API ArchXT_Device : public Device {
 
 public:
 
+    //Definitions for the memory section manager
+    enum FlashSection {
+        Section_Boot = 0,
+        Section_AppCode,
+        Section_AppData,
+        Section_Count
+    };
+
+    static const size_t SECTION_PAGE_SIZE = 256;
+
     explicit ArchXT_Device(const ArchXT_DeviceConfig& config);
     virtual ~ArchXT_Device();
 
@@ -125,6 +135,7 @@ protected:
 private:
 
     ArchXT_Core m_core_impl;
+    MemorySectionManager m_sections;
 
 };
 

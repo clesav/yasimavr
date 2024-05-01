@@ -462,6 +462,15 @@ class DeviceAccessor:
         #Convenience dictionary for accessing the pins of the device model
         self.pins = {name : dev_model.find_pin(name) for name in self._desc.pins}
 
+        #Convenience dictionary for accessing the non-volatile memories
+        self.nvms = {}
+        for n, v in dev_model._NVMs_.items():
+            req = _corelib.ctlreq_data_t()
+            req.index = v
+            ok, req = dev_model.ctlreq(_corelib.IOCTL_CORE, _corelib.CTLREQ_CORE_NVM, req)
+            if ok:
+                self.nvms[n] = req.data.value(_corelib.NonVolatileMemory)
+
     @property
     def name(self):
         """Name of the device model corresponding to the descriptor used

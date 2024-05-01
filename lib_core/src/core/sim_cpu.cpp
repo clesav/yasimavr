@@ -254,6 +254,14 @@ cycle_count_t Core::run_instruction()
         return 0;
     }
 
+#ifndef YASIMAVR_NO_ACC_CTRL
+    if (m_section_manager && !m_section_manager->fetch_address(m_pc)) {
+        m_device->logger().err("CPU fetching a locked flash address: 0x%04x", m_pc);
+        m_device->crash(CRASH_ACCESS_REFUSED, "Instruction fetch refused");
+        return 0;
+    }
+#endif
+
     uint32_t        opcode = get_flash16le(m_pc);
     flash_addr_t    new_pc = m_pc + 2;  // future "default" pc
     int             cycle = 1;
@@ -553,18 +561,22 @@ cycle_count_t Core::run_instruction()
                     if (RAMPZ_VALID)
                         z |= cpu_read_ioreg(m_config.rampz) << 16;
                     uint16_t w = (CPU_READ_GPREG(1) << 8) | CPU_READ_GPREG(0);
-                    NVM_request_t nvm_req = { .nvm = -1, .addr = z, .data = w, .instr = m_pc };
-                    TRACE_OP("spm Z[%04x]%s %02x", z, (op ? "+" : ""), w);
-
-                    if (op) {
-                        z += 2;
-                        if (RAMPZ_VALID)
-                            cpu_write_ioreg(m_config.rampz, z >> 16);
-                        set_r16le(R_ZL, z);
-                    }
-
+                    NVM_request_t nvm_req = { .kind = 0, .nvm = -1, .addr = z, .data = w, .result = 0 };
                     ctlreq_data_t d = { .data = &nvm_req };
-                    m_device->ctlreq(AVR_IOCTL_NVM, AVR_CTLREQ_NVM_WRITE, &d);
+                    m_device->ctlreq(AVR_IOCTL_NVM, AVR_CTLREQ_NVM_REQUEST, &d);
+                    if (nvm_req.result < 0) {
+                        new_pc = m_pc;
+                        cycle = 0;
+                        TRACE_OP("spm Z[%04x]%s %02x - error", z, (op ? "+" : ""), w);
+                    } else {
+                        TRACE_OP("spm Z[%04x]%s %02x", z, (op ? "+" : ""), w);
+                        if (op) {
+                            z += 2;
+                            if (RAMPZ_VALID)
+                                cpu_write_ioreg(m_config.rampz, z >> 16);
+                            set_r16le(R_ZL, z);
+                        }
+                    }
                 }   break;
                 case 0x9409:   // IJMP -- Indirect jump -- 1001 0100 0000 1001
                 case 0x9419: { // EIJMP -- Indirect jump -- 1001 0100 0001 1001   bit 4 is "extended"
@@ -611,14 +623,20 @@ cycle_count_t Core::run_instruction()
                     uint16_t z = get_r16le(R_Z);
                     if (e)
                         z |= cpu_read_ioreg(m_config.rampz) << 16;
-                    uint8_t res = cpu_read_flash(z);
-                    CPU_WRITE_GPREG(0, res);
-                    cycle += 2; // 3 cycles
-                    TRACE_OP("%slpm r0, (Z[%04x]) = %02x", (e ? "e" : ""), z, res);
+                    int16_t res = cpu_read_flash(z);
+                    if (res >= 0) {
+                        CPU_WRITE_GPREG(0, (uint8_t) res);
+                        cycle += 2; // 3 cycles
+                        TRACE_OP("%slpm r0, (Z[%04x]) = %02x", (e ? "e" : ""), z, (uint8_t) res);
+                    } else {
+                        new_pc = m_pc;
+                        cycle = 0;
+                        TRACE_OP("%slpm r0, (Z[%04x]) access refused", (e ? "e" : ""), z);
+                    }
                 } break;
                 default: {
                     switch (opcode & 0xfe0f) {
-                        case 0x9000: {  // LDS -- Load Direct from Data Space, 32 bits -- 1001 0000 0000 0000
+                        case 0x9000: {  // LDS -- Load Direct from Data Space, 32 bits -- 1001 000d dddd 0000
                             get_d5(opcode);
                             uint16_t x = get_flash16le(new_pc);
                             new_pc += 2;
@@ -632,14 +650,20 @@ cycle_count_t Core::run_instruction()
                             get_d5(opcode);
                             uint16_t z = get_r16le(R_Z);
                             int op = opcode & 1;
-                            uint8_t res = cpu_read_flash(z);
-                            TRACE_OP("lpm r0, (Z[%04x]%s) = %02x", z, op ? "+" : "", res);
-                            CPU_WRITE_GPREG(d, res);
-                            if (op) {
-                                z++;
-                                set_r16le(R_ZL, z);
+                            int16_t res = cpu_read_flash(z);
+                            if (res >= 0) {
+                                TRACE_OP("lpm r0, (Z[%04x]%s) = %02x", z, op ? "+" : "", res);
+                                CPU_WRITE_GPREG(d, res);
+                                if (op) {
+                                    z++;
+                                    set_r16le(R_ZL, z);
+                                }
+                                cycle += 2; // 3 cycles
+                            } else {
+                                TRACE_OP("lpm r0, (Z[%04x]%s) access refused", z, op ? "+" : "");
+                                new_pc = m_pc;
+                                cycle = 0;
                             }
-                            cycle += 2; // 3 cycles
                         }   break;
                         case 0x9006:
                         case 0x9007: {  // ELPM -- Extended Load Program Memory -- 1001 000d dddd 01oo
@@ -648,15 +672,21 @@ cycle_count_t Core::run_instruction()
                             uint32_t z = get_r16le(R_Z) | (cpu_read_ioreg(m_config.rampz) << 16);
                             get_d5(opcode);
                             int op = opcode & 1;
-                            uint8_t res = cpu_read_flash(z);
-                            TRACE_OP("elpm r%d, (Z[%02x:%04x]%s) = %02x", d, z >> 16, z & 0xffff, op ? "+" : "", res);
-                            CPU_WRITE_GPREG(d, res);
-                            if (op) {
-                                z++;
-                                cpu_write_ioreg(m_config.rampz, z >> 16);
-                                set_r16le(R_ZL, z);
+                            int16_t res = cpu_read_flash(z);
+                            if (res >= 0) {
+                                TRACE_OP("elpm r%d, (Z[%02x:%04x]%s) = %02x", d, z >> 16, z & 0xffff, op ? "+" : "", res);
+                                CPU_WRITE_GPREG(d, res);
+                                if (op) {
+                                    z++;
+                                    cpu_write_ioreg(m_config.rampz, z >> 16);
+                                    set_r16le(R_ZL, z);
+                                }
+                                cycle += 2; // 3 cycles
+                            } else {
+                                TRACE_OP("elpm r%d, (Z[%02x:%04x]%s) access refused", d, z >> 16, z & 0xffff, op ? "+" : "");
+                                new_pc = m_pc;
+                                cycle = 0;
                             }
-                            cycle += 2; // 3 cycles
                         }   break;
                         /*
                          * Load store instructions
@@ -718,7 +748,7 @@ cycle_count_t Core::run_instruction()
                             if (op == 1) y++;
                             set_r16le(R_YL, y);
                         }   break;
-                        case 0x9200: {  // STS -- Store Direct to Data Space, 32 bits -- 1001 0010 0000 0000
+                        case 0x9200: {  // STS -- Store Direct to Data Space, 32 bits -- 1001 001d dddd 0000
                             get_vd5(opcode);
                             uint16_t x = get_flash16le(new_pc);
                             new_pc += 2;

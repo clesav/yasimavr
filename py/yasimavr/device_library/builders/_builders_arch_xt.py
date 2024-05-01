@@ -336,6 +336,12 @@ class XT_BaseDevice(_archlib.ArchXT_Device):
     """Specialisation of BaseDevice for the device models using the XT architecture.
     """
 
+    _NVMs_ = { 'Flash': _corelib.Core.NVM.Flash,
+               'Fuses': _corelib.Core.NVM.Fuses,
+               'EEPROM': _archlib.ArchXT_Core.ArchXT_NVM.EEPROM,
+               'USERROW': _archlib.ArchXT_Core.ArchXT_NVM.USERROW,
+    }
+
     def __init__(self, dev_descriptor, builder):
         super().__init__(builder.get_device_config())
 
@@ -393,6 +399,8 @@ class XT_DeviceBuilder(DeviceBuilder):
 
         cfg.fusesize = dev_desc.fuses['size']
         cfg.fuses = bytes(dev_desc.fuses['factory_values'])
+
+        cfg.flash_page_size = dev_desc.mem_spaces['flash'].page_size
 
         return cfg
 
