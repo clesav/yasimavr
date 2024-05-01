@@ -185,6 +185,13 @@ ArchXT_Device::ArchXT_Device(const ArchXT_DeviceConfig& config)
 ,m_sections((config.core.flashend + 1) / SECTION_PAGE_SIZE, SECTION_PAGE_SIZE, Section_Count)
 {
     m_core_impl.m_section_manager = &m_sections;
+
+    //On initialisation, make the whole flash an Boot Section with Read&Fetch flags,
+    //effectively making any access control or self-programming features disabled by default.
+    //A peripheral can set them up properly later if implemented.
+    m_sections.set_section_limits({ m_sections.page_count(), m_sections.page_count() });
+    m_sections.set_access_flags(Section_Boot, MemorySectionManager::Access_Read);
+    m_sections.set_fetch_allowed(Section_Boot, true);
 }
 
 
