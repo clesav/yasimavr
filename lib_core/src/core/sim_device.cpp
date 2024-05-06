@@ -163,11 +163,21 @@ void Device::reset(int reset_flag)
     for (auto per : m_peripherals)
         per->reset();
 
+    m_core.m_pc = reset_vector();
+
     if (m_state >= State_Running && m_state < State_Done)
         m_state = (m_reset_flags & Reset_Halt) ? State_Halted : State_Running;
 
     m_reset_flags = 0;
     m_sleep_mode = SleepMode::Active;
+}
+
+/**
+   Returns the reset vector address in bytes. The default implementation returns 0x0000.
+ */
+flash_addr_t Device::reset_vector()
+{
+    return 0x0000;
 }
 
 /**

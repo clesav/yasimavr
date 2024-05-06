@@ -185,6 +185,8 @@ protected:
 
     void erase_peripherals();
 
+    virtual flash_addr_t reset_vector();
+
 private:
 
     Core& m_core;

@@ -116,7 +116,8 @@ bool Core::init(Device& d)
  */
 void Core::reset()
 {
-    //Jump to the reset interrupt vector
+    //Jump to the reset interrupt vector. 0x0000 is the default Reset Vector address.
+    //If the address should be different, it's up to the Device object to rewrite it.
     m_pc = 0;
     //Resets all the general registers to 0x00
     std::memset(m_regs, 0x00, 32);
