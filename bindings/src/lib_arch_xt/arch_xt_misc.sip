@@ -79,6 +79,7 @@ struct ArchXT_IntCtrlConfig {
 %End
 
     unsigned int vector_count;
+    unsigned int vector_size;
     reg_addr_t reg_base;
 
 };
@@ -100,7 +101,7 @@ public:
 protected:
 
     virtual void cpu_ack_irq(int_vect_t);
-    virtual int_vect_t get_next_irq() const;
+    virtual InterruptController::IRQ_t get_next_irq() const /Factory/;
 
 };
 

@@ -58,6 +58,14 @@ public:
         State_Reset                 /PyName=Reset/
     };
 
+    struct IRQ_t {
+        int_vect_t vector;
+        flash_addr_t address;
+        bool nmi;
+    };
+
+    static const IRQ_t NO_INTERRUPT;
+
     InterruptController(unsigned int);
 
     virtual void reset();

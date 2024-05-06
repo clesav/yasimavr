@@ -40,11 +40,11 @@ class ArchAVR_IntCtrl : public InterruptController /NoDefaultCtors/ {
 
 public:
 
-    ArchAVR_IntCtrl(unsigned int);
+    ArchAVR_IntCtrl(unsigned int, unsigned int);
 
 protected:
 
-    virtual int_vect_t get_next_irq() const;
+    virtual InterruptController::IRQ_t get_next_irq() const /Factory/;
 
 };
 

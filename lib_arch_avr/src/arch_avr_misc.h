@@ -56,11 +56,15 @@ class AVR_ARCHAVR_PUBLIC_API ArchAVR_IntCtrl : public InterruptController {
 
 public:
 
-    explicit ArchAVR_IntCtrl(unsigned int size);
+    ArchAVR_IntCtrl(unsigned int vector_count, unsigned int vector_size);
 
 protected:
 
-    virtual int_vect_t get_next_irq() const override;
+    virtual IRQ_t get_next_irq() const override;
+
+private:
+
+    unsigned int m_vector_size;
 
 };
 

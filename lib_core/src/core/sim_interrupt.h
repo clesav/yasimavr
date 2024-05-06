@@ -98,8 +98,23 @@ public:
         State_Reset           = 0x50
     };
 
+    /**
+       Structure returned by the interrupt controller to the CPU containing the information
+       of the interrupt to process.
+     */
+    struct IRQ_t {
+        /// Vector index
+        int_vect_t vector;
+        /// Address (in bytes) of the interrupt vector
+        flash_addr_t address;
+        /// Non-maskable (by GIE) indicator flag
+        bool nmi;
+    };
+
+    static constexpr IRQ_t NO_INTERRUPT = { AVR_INTERRUPT_NONE, 0, false };
+
     //===== Constructor/destructor =====
-    explicit InterruptController(unsigned int size);
+    explicit InterruptController(unsigned int vector_count);
 
     //===== Override of IO_CTL virtual methods =====
     virtual void reset() override;
@@ -107,7 +122,8 @@ public:
     virtual void sleep(bool on, SleepMode mode) override;
 
     //===== Interface API for the CPU =====
-    int_vect_t cpu_get_irq() const;
+    bool cpu_has_irq() const;
+    IRQ_t cpu_get_irq() const;
     void cpu_ack_irq();
     virtual void cpu_reti();
 
@@ -129,7 +145,7 @@ protected:
 
        \return Vector index to be executed next or AVR_INTERRUPT_NONE
     */
-    virtual int_vect_t get_next_irq() const = 0;
+    virtual IRQ_t get_next_irq() const = 0;
 
     void update_irq();
 
@@ -145,7 +161,7 @@ private:
     //Interrupt vector table
     std::vector<interrupt_t> m_interrupts;
     //Variable holding the vector to be executed next
-    int_vect_t m_irq_vector;
+    IRQ_t m_irq;
     //Signal raised with changes of interrupt state
     Signal m_signal;
 
@@ -163,9 +179,17 @@ private:
 
    \return a vector index if there is an IRQ raised, AVR_INTERRUPT_NONE if not.
 */
-inline int_vect_t InterruptController::cpu_get_irq() const
+inline bool InterruptController::cpu_has_irq() const
 {
-    return m_irq_vector;
+    return m_irq.vector > AVR_INTERRUPT_NONE;
+}
+
+inline InterruptController::IRQ_t InterruptController::cpu_get_irq() const
+{
+    if (m_irq.vector > AVR_INTERRUPT_NONE)
+        return m_irq;
+    else
+        return NO_INTERRUPT;
 }
 
 ///Interrupt table size getter

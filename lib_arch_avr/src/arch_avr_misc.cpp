@@ -37,21 +37,23 @@ ArchAVR_VREF::ArchAVR_VREF(double band_gap)
 
 //=======================================================================================
 
-ArchAVR_IntCtrl::ArchAVR_IntCtrl(unsigned int size)
-:InterruptController(size)
+ArchAVR_IntCtrl::ArchAVR_IntCtrl(unsigned int vector_count, unsigned int vector_size)
+:InterruptController(vector_count)
+,m_vector_size(vector_size)
 {}
 
 /**
    Implementation of the interrupt arbiration as per the AVR series.
    The lowest vectors have higher priority.
  */
-int_vect_t ArchAVR_IntCtrl::get_next_irq() const
+InterruptController::IRQ_t ArchAVR_IntCtrl::get_next_irq() const
 {
     for (int_vect_t i = 0; i < intr_count(); ++i) {
         if (interrupt_raised(i))
-            return i;
+            return { i, i * m_vector_size, false };
     }
-    return AVR_INTERRUPT_NONE;
+
+    return InterruptController::NO_INTERRUPT;
 }
 
 
