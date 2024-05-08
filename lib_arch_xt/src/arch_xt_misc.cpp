@@ -22,6 +22,7 @@
 //=======================================================================================
 
 #include "arch_xt_misc.h"
+#include "arch_xt_device.h"
 #include "arch_xt_io.h"
 #include "arch_xt_io_utils.h"
 #include "core/sim_device.h"
@@ -176,7 +177,7 @@ InterruptController::IRQ_t ArchXT_IntCtrl::get_next_irq() const
         pos = 1;
 
     //Compute the flash address of the vector
-    flash_addr_t addr = pos * m_config.vector_size;
+    flash_addr_t addr = get_table_base() + pos * m_config.vector_size;
 
     //NMI flag
     bool nmi = vect_info.priority == IntrPriorityNMI;
@@ -246,6 +247,22 @@ void ArchXT_IntCtrl::cpu_reti()
         clear_ioreg(INT_REG_ADDR(STATUS), IntrPriorityLevel0);
 
     InterruptController::cpu_reti();
+}
+
+
+flash_addr_t ArchXT_IntCtrl::get_table_base() const
+{
+    //If IVSEL is cleared, the interrupt vector table is placed at the start of the
+    //application code section, if it exists (which we check by testing its size).
+    //Otherwise, the table is at the start of the boot section.
+    bool ivsel = test_ioreg(INT_REG_ADDR(CTRLA), CPUINT_IVSEL_bp);
+    unsigned int s;
+    if (!ivsel && m_sections->section_size(ArchXT_Device::Section_AppCode))
+        s = ArchXT_Device::Section_AppCode;
+    else
+        s = ArchXT_Device::Section_Boot;
+
+    return m_sections->section_start(s) * m_sections->page_size();
 }
 
 

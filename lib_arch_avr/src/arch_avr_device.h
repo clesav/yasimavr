@@ -105,6 +105,8 @@ protected:
     /// Override to load the EEPROM
     virtual bool program(const Firmware& firmware) override;
 
+    virtual flash_addr_t reset_vector() override;
+
 private:
 
     ArchAVR_Core m_core_impl;

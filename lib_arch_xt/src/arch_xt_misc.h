@@ -26,6 +26,7 @@
 
 #include "arch_xt_globals.h"
 #include "core/sim_interrupt.h"
+#include "core/sim_memory.h"
 #include "core/sim_types.h"
 #include "ioctrl_common/sim_vref.h"
 
@@ -124,8 +125,10 @@ protected:
 private:
 
     const ArchXT_IntCtrlConfig& m_config;
+    MemorySectionManager* m_sections;
 
     vect_info_t get_next_vector() const;
+    flash_addr_t get_table_base() const;
 
 };
 
