@@ -150,6 +150,19 @@ void ArchAVR_Fuses::reset()
 }
 
 
+bool ArchAVR_Fuses::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
+{
+    if (req == AVR_CTLREQ_FUSE_VALUE) {
+        if (data->index == Fuse_BootRst && m_config.rb_bootrst.valid())
+            data->data = read_fuse(m_config.rb_bootrst);
+        else
+            data->data = -1;
+        return true;
+    }
+    return false;
+}
+
+
 uint8_t ArchAVR_Fuses::read_fuse(const regbit_t& rb) const
 {
     return rb.extract((*m_fuses)[rb.addr]);

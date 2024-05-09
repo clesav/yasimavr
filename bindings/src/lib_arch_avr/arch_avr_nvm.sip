@@ -22,6 +22,17 @@
 
 //=======================================================================================
 
+%ModuleCode
+
+#include "arch_avr_timer.h"
+
+const ctlreq_id_t CTLREQ_FUSE_VALUE = AVR_CTLREQ_FUSE_VALUE;
+
+%End
+
+const ctlreq_id_t CTLREQ_FUSE_VALUE;
+
+
 struct ArchAVR_FusesConfig {
 %TypeHeaderCode
 #include "arch_avr_nvm.h"
@@ -50,9 +61,14 @@ class ArchAVR_Fuses : public Peripheral /NoDefaultCtors/ {
 
 public:
 
+    enum Fuses /BaseType=IntEnum/ {
+        Fuse_BootRst         /PyName=BootRst/,
+    };
+
     ArchAVR_Fuses(const ArchAVR_FusesConfig&);
 
     virtual bool init(Device&);
     virtual void reset();
+    virtual bool ctlreq(ctlreq_id_t, ctlreq_data_t*);
 
 };

@@ -101,6 +101,7 @@ enum InterruptPriority {
 ArchXT_IntCtrl::ArchXT_IntCtrl(const ArchXT_IntCtrlConfig& config)
 :InterruptController(config.vector_count)
 ,m_config(config)
+,m_sections(nullptr)
 {}
 
 
@@ -112,6 +113,12 @@ bool ArchXT_IntCtrl::init(Device& device)
     add_ioreg(INT_REG_ADDR(STATUS), CPUINT_NMIEX_bm | CPUINT_LVL1EX_bm | CPUINT_LVL0EX_bm, true);
     add_ioreg(INT_REG_ADDR(LVL0PRI));
     add_ioreg(INT_REG_ADDR(LVL1VEC));
+
+    //Obtain the pointer to the flash section manager
+    ctlreq_data_t req;
+    if (!device.ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_SECTIONS, &req))
+        return false;
+    m_sections = reinterpret_cast<MemorySectionManager*>(req.data.as_ptr());
 
     return status;
 }

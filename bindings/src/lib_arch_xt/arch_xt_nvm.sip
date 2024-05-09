@@ -45,6 +45,7 @@ public:
     ArchXT_Fuses(reg_addr_t);
 
     virtual bool init(Device&);
+    virtual void reset();
 
 };
 
