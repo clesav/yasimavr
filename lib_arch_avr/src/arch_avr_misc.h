@@ -26,6 +26,7 @@
 
 #include "arch_avr_globals.h"
 #include "core/sim_interrupt.h"
+#include "core/sim_memory.h"
 #include "ioctrl_common/sim_vref.h"
 
 YASIMAVR_BEGIN_NAMESPACE
@@ -58,6 +59,8 @@ public:
 
     ArchAVR_IntCtrl(unsigned int vector_count, unsigned int vector_size);
 
+    virtual bool init(Device& device) override;
+
 protected:
 
     virtual IRQ_t get_next_irq() const override;
@@ -65,6 +68,7 @@ protected:
 private:
 
     unsigned int m_vector_size;
+    MemorySectionManager* m_sections;
 
 };
 

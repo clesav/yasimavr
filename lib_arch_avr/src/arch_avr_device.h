@@ -93,6 +93,7 @@ public:
 
     enum FlashSectionFlags {
         Access_RWW            = 0x04,
+        Access_IntDisabled    = 0x08,
     };
 
     explicit ArchAVR_Device(const ArchAVR_DeviceConfig& config);

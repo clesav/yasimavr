@@ -108,6 +108,7 @@ void ArchAVR_Fuses::reset()
         flash_addr_t boot_start = m_sections->page_count() - m_config.boot_sizes[bsi].boot_size;
         m_sections->set_section_limits({ m_config.nrww_start, boot_start });
 
+        uint8_t boot_rst = read_fuse(m_config.rb_bootrst);
         uint8_t boot_lockbit = read_fuse(m_config.rb_bootlockbit);
 
         //if the boot lock bit 0 is cleared, the boot loader cannot write in the boot section
@@ -115,9 +116,12 @@ void ArchAVR_Fuses::reset()
             section_flags[SECTION_BOOT][SECTION_BOOT] &= ~MemorySectionManager::Access_Write;
 
         //if the boot lock bit 1 is cleared, the app code cannot read the boot section
+        //and if the IVT is in the app section (BOOTRST=1), interrupts are disabled for the boot code
         if (!(boot_lockbit & LOCK_FLAG_LPM)) {
             section_flags[SECTION_APPRWW][SECTION_BOOT] &= ~MemorySectionManager::Access_Read;
             section_flags[SECTION_APPNRWW][SECTION_BOOT] &= ~MemorySectionManager::Access_Read;
+            if (boot_rst)
+                section_flags[SECTION_BOOT][SECTION_BOOT] |= ArchAVR_Device::Access_IntDisabled;
         }
 
         uint8_t app_lockbit = read_fuse(m_config.rb_applockbit);
@@ -129,9 +133,14 @@ void ArchAVR_Fuses::reset()
         }
 
         //if the app lock bit 1 is cleared, the boot loader cannot read the app sections
+        //and if the IVT is in the boot section (BOOTRST=0), interrupts are disabled for the app code
         if (!(app_lockbit & LOCK_FLAG_LPM)) {
             section_flags[SECTION_BOOT][SECTION_APPRWW] &= ~MemorySectionManager::Access_Read;
             section_flags[SECTION_BOOT][SECTION_APPNRWW] &= ~MemorySectionManager::Access_Read;
+            if (!boot_rst) {
+                section_flags[SECTION_APPRWW][SECTION_APPRWW] |= ArchAVR_Device::Access_IntDisabled;
+                section_flags[SECTION_APPNRWW][SECTION_APPNRWW] |= ArchAVR_Device::Access_IntDisabled;
+            }
         }
 
     } else {
