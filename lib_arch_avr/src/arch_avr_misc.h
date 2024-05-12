@@ -36,7 +36,7 @@ YASIMAVR_BEGIN_NAMESPACE
 /**
    \ingroup api_vref
    \brief Implementation of a Voltage Reference controller for AVR series
-   
+
    It supports only one fixed reference.
  */
 

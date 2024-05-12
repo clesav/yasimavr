@@ -40,7 +40,9 @@ YASIMAVR_BEGIN_NAMESPACE
  */
 
 /**
-   Request to obtain a pointer to the SignalHook entry point for external clock ticks
+   Request to obtain the value of a fuse.
+
+   index should be one of ArchAVR_Fuses::Fuses enum values
  */
 #define AVR_CTLREQ_FUSE_VALUE          1
 

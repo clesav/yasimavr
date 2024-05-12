@@ -62,7 +62,7 @@ bool ArchAVR_IntCtrl::init(Device& device)
 }
 
 /**
-   Implementation of the interrupt arbiration as per the AVR series.
+   Implementation of the interrupt arbitration as per the AVR series.
    The lowest vectors have higher priority.
  */
 InterruptController::IRQ_t ArchAVR_IntCtrl::get_next_irq() const

@@ -126,8 +126,10 @@ void InterruptController::cpu_ack_irq()
 }
 
 /**
-   Called by cpu_ack_irq() with the vector obtained by cpu_get_irq()
-   \n Sets the interrupt state back to Idle and calls the handler
+   Called by the CPU when it acknowledges a vector, i.e. it is about to execute
+   the vector address in the flash.
+   \n The base implementation calls the ACK handler of the vector and
+   raise the signal with the "Acknowledged" state.
 */
 void InterruptController::cpu_ack_irq(int_vect_t vector)
 {
@@ -140,7 +142,7 @@ void InterruptController::cpu_ack_irq(int_vect_t vector)
 }
 
 /**
-   Called by the CPU when returning from an ISR.
+   Called by the CPU when returning from an ISR (executing a RETI instruction).
    \n The base implementation calls update_irq to determine the next vector to be
    given to the CPU.
 */
