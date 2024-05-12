@@ -53,13 +53,14 @@ public:
 /**
    \brief Implementation of a interrupt controller for AVR series
  */
-class AVR_ARCHAVR_PUBLIC_API ArchAVR_IntCtrl : public InterruptController {
+class AVR_ARCHAVR_PUBLIC_API ArchAVR_IntCtrl : public InterruptController, SignalHook {
 
 public:
 
     ArchAVR_IntCtrl(unsigned int vector_count, unsigned int vector_size);
 
     virtual bool init(Device& device) override;
+    virtual void raised(const signal_data_t& sigdata, int hooktag) override;
 
 protected:
 

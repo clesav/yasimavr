@@ -42,6 +42,9 @@ public:
 
     ArchAVR_IntCtrl(unsigned int, unsigned int);
 
+    virtual bool init(Device&);
+    virtual void raised(const signal_data_t&, int);
+
 protected:
 
     virtual InterruptController::IRQ_t get_next_irq() const /Factory/;

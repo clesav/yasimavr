@@ -55,6 +55,9 @@ bool ArchAVR_IntCtrl::init(Device& device)
         return false;
     m_sections = reinterpret_cast<MemorySectionManager*>(req.data.as_ptr());
 
+    if (m_sections)
+        m_sections->signal().connect(*this);
+
     return status;
 }
 
@@ -65,7 +68,7 @@ bool ArchAVR_IntCtrl::init(Device& device)
 InterruptController::IRQ_t ArchAVR_IntCtrl::get_next_irq() const
 {
     //Check if interrupts are disabled for the current section of flash
-	if (m_sections->access_flags(m_sections->current_section()) & ArchAVR_Device::Access_IntDisabled)
+    if (m_sections->access_flags(m_sections->current_section()) & ArchAVR_Device::Access_IntDisabled)
         return InterruptController::NO_INTERRUPT;
 
     for (int_vect_t i = 0; i < intr_count(); ++i) {
@@ -74,6 +77,16 @@ InterruptController::IRQ_t ArchAVR_IntCtrl::get_next_irq() const
     }
 
     return InterruptController::NO_INTERRUPT;
+}
+
+/**
+   Implementation of the signal hook. On a section change, the IRQs need to updated to take into account
+   the access flag IntDisabled.
+ */
+void ArchAVR_IntCtrl::raised(const signal_data_t& sigdata, int)
+{
+    if (sigdata.sigid == MemorySectionManager::Signal_Enter)
+        update_irq();
 }
 
 
