@@ -80,6 +80,6 @@ unsigned int static_int;
 
 char eeprom_data[] EEMEM = "EEPROM";
 
-FUSES = { 0x12, 0x34, 0x56 };
+FUSES = { 0xAA, 0xD9, 0xFF };
 
-uint8_t lockbit LOCKMEM = 0xC5;
+uint8_t lockbit LOCKMEM = 0xEF;
