@@ -93,6 +93,7 @@ public:
 
     enum FlashSectionFlags {
         Access_RWW            = 0x04,
+        Access_IntDisabled    = 0x08,
     };
 
     explicit ArchAVR_Device(const ArchAVR_DeviceConfig& config);
@@ -104,6 +105,8 @@ protected:
 
     /// Override to load the EEPROM
     virtual bool program(const Firmware& firmware) override;
+
+    virtual flash_addr_t reset_vector() override;
 
 private:
 

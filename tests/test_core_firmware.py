@@ -62,13 +62,13 @@ def test_eeprom(firmware):
     assert bytes(b.buf) == b'EEPROM\0'
 
 
-def test_fusesm(firmware):
+def test_fuses(firmware):
     blocks = firmware.blocks(Area.Fuses)
     assert len(blocks) == 1
 
     b = blocks[0]
     assert b.base == 0
-    assert bytes(b.buf) == bytes([0x12, 0x34, 0x56])
+    assert bytes(b.buf) == bytes([0xAA, 0xD9, 0xFF])
 
 
 def test_memory_load(firmware):

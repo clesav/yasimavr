@@ -26,6 +26,7 @@
 
 #include "arch_xt_globals.h"
 #include "core/sim_interrupt.h"
+#include "core/sim_memory.h"
 #include "core/sim_types.h"
 #include "ioctrl_common/sim_vref.h"
 
@@ -91,18 +92,15 @@ struct ArchXT_IntCtrlConfig {
 
     /// Number of interrupt vector
     unsigned int vector_count;
+    /// Size in bytes of each vector
+    unsigned int vector_size;
     /// Base address for the controller registers
     reg_addr_t reg_base;
 
 };
 
 /**
-   \brief Implementation of a Interrupt controller for XT core series
-
-   Unsupported features:
-     - Round-robin scheduling
-     - Compact vector table
-     - Interrupt Vector Select feature
+   \brief Implementation of a Interrupt Controller for XT core series
  */
 class AVR_ARCHXT_PUBLIC_API ArchXT_IntCtrl : public InterruptController {
 
@@ -116,12 +114,21 @@ public:
 
 protected:
 
+    struct vect_info_t {
+        int_vect_t vector;
+        int priority;
+    };
+
     virtual void cpu_ack_irq(int_vect_t vector) override;
-    virtual int_vect_t get_next_irq() const override;
+    virtual IRQ_t get_next_irq() const override;
 
 private:
 
     const ArchXT_IntCtrlConfig& m_config;
+    MemorySectionManager* m_sections;
+
+    vect_info_t get_next_vector() const;
+    flash_addr_t get_table_base() const;
 
 };
 

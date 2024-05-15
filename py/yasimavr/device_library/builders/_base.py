@@ -76,7 +76,7 @@ class PeripheralConfigBuilder:
     '''
 
     #Special attributes names that do not need to be in the YAML file
-    _SpecialAttributes = ['vector_count', 'reg_base']
+    _SpecialAttributes = ['vector_count', 'vector_size', 'reg_base']
 
 
     def __init__(self, cfg_class, converter=None):
@@ -152,6 +152,9 @@ class PeripheralConfigBuilder:
 
         if attr == 'vector_count':
             return len(per_desc.device.interrupt_map.vectors)
+
+        elif attr == 'vector_size':
+            return per_desc.device.interrupt_map.vector_size
 
         elif attr == 'reg_base':
             return per_desc.reg_base

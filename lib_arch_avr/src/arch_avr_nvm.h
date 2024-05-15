@@ -33,6 +33,21 @@ YASIMAVR_BEGIN_NAMESPACE
 
 
 //=======================================================================================
+/**
+   \file
+   \name Controller requests definition for ArchAVR_Fuses
+   @{
+ */
+
+/**
+   Request to obtain the value of a fuse.
+
+   index should be one of ArchAVR_Fuses::Fuses enum values
+ */
+#define AVR_CTLREQ_FUSE_VALUE          1
+
+/// @}
+
 
 /**
    \brief Configuration structure for ArchAVR_Fuses.
@@ -69,9 +84,14 @@ class AVR_ARCHAVR_PUBLIC_API ArchAVR_Fuses : public Peripheral {
 
 public:
 
+    enum Fuses {
+        Fuse_BootRst,
+    };
+
     explicit ArchAVR_Fuses(const ArchAVR_FusesConfig& config);
 
     virtual bool init(Device& device) override;
+    virtual bool ctlreq(ctlreq_id_t req, ctlreq_data_t* data) override;
     virtual void reset() override;
 
 private:

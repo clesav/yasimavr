@@ -22,6 +22,7 @@
 //=======================================================================================
 
 #include "arch_xt_misc.h"
+#include "arch_xt_device.h"
 #include "arch_xt_io.h"
 #include "arch_xt_io_utils.h"
 #include "core/sim_device.h"
@@ -88,43 +89,68 @@ void ArchXT_VREF::set_channel_reference(unsigned int index, uint8_t reg_value)
 //=======================================================================================
 
 enum InterruptPriority {
-    IntrPriorityLevel0 = 0,
-    IntrPriorityLevel1 = 1
+    IntrPriorityLevel0 = CPUINT_LVL0EX_bp,
+    IntrPriorityLevel1 = CPUINT_LVL1EX_bp,
+    IntrPriorityNMI    = CPUINT_NMIEX_bp
 };
 
 #define INT_REG_ADDR(reg) \
     (m_config.reg_base + offsetof(CPUINT_t, reg))
 
+
 ArchXT_IntCtrl::ArchXT_IntCtrl(const ArchXT_IntCtrlConfig& config)
 :InterruptController(config.vector_count)
 ,m_config(config)
+,m_sections(nullptr)
 {}
+
 
 bool ArchXT_IntCtrl::init(Device& device)
 {
     bool status = InterruptController::init(device);
 
-    //CTRLA not implemented
-    add_ioreg(INT_REG_ADDR(STATUS));
+    add_ioreg(INT_REG_ADDR(CTRLA), CPUINT_IVSEL_bm | CPUINT_CVT_bm | CPUINT_LVL0RR_bm);
+    add_ioreg(INT_REG_ADDR(STATUS), CPUINT_NMIEX_bm | CPUINT_LVL1EX_bm | CPUINT_LVL0EX_bm, true);
     add_ioreg(INT_REG_ADDR(LVL0PRI));
     add_ioreg(INT_REG_ADDR(LVL1VEC));
 
+    //Obtain the pointer to the flash section manager
+    ctlreq_data_t req;
+    if (!device.ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_SECTIONS, &req))
+        return false;
+    m_sections = reinterpret_cast<MemorySectionManager*>(req.data.as_ptr());
+
     return status;
 }
+
 
 void ArchXT_IntCtrl::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
     update_irq();
 }
 
+
 void ArchXT_IntCtrl::cpu_ack_irq(int_vect_t vector)
 {
     //When a interrupt is acked (its routine is about to be executed),
     //set the corresponding priority level flag
     if (vector > 0) {
-        uint8_t priority_bit = (vector == read_ioreg(INT_REG_ADDR(LVL1VEC))) ?
-                                IntrPriorityLevel1 : IntrPriorityLevel0;
-        set_ioreg(INT_REG_ADDR(STATUS), priority_bit);
+
+        //Retrieve the priority of the vector
+        uint8_t priority;
+        if (vector <= 1)
+            priority = IntrPriorityNMI;
+        else if (vector == read_ioreg(INT_REG_ADDR(LVL1VEC)))
+            priority = IntrPriorityLevel1;
+        else
+            priority = IntrPriorityLevel0;
+
+        //Set the bit corresponding to the priority in the STATUS register
+        set_ioreg(INT_REG_ADDR(STATUS), priority);
+
+        //In Round-Robin Scheduling, LVL0PRI us updated with the latest acknowledged LVL0 interrupt.
+        if (priority == IntrPriorityLevel0 && test_ioreg(INT_REG_ADDR(CTRLA), CPUINT_LVL0RR_bp))
+            write_ioreg(INT_REG_ADDR(LVL0PRI), (uint8_t) vector);
     }
 
     InterruptController::cpu_ack_irq(vector);
@@ -132,49 +158,120 @@ void ArchXT_IntCtrl::cpu_ack_irq(int_vect_t vector)
     set_interrupt_raised(vector, true);
 }
 
-int_vect_t ArchXT_IntCtrl::get_next_irq() const
+
+InterruptController::IRQ_t ArchXT_IntCtrl::get_next_irq() const
+{
+    vect_info_t vect_info = get_next_vector();
+
+    //If no vector is raised, return a IRQ NONE
+    if (vect_info.vector == AVR_INTERRUPT_NONE)
+        return NO_INTERRUPT;
+
+    //We have a raised vector, we need to compute the vector flash address
+    //and Non-Maskable Interrupt flag
+
+    //Get the vector position in the table, depending on the CVT bit and the priority
+    unsigned int pos;
+    //Normal vector table case, the offset is the vector index
+    if (!test_ioreg(INT_REG_ADDR(CTRLA), CPUINT_CVT_bp))
+        pos = vect_info.vector;
+    //Compact Vector Table cases
+    else if (vect_info.priority == IntrPriorityLevel0)
+        pos = 3;
+    else if (vect_info.priority == IntrPriorityLevel1)
+        pos = 2;
+    else
+        pos = 1;
+
+    //Compute the flash address of the vector
+    flash_addr_t addr = get_table_base() + pos * m_config.vector_size;
+
+    //NMI flag
+    bool nmi = vect_info.priority == IntrPriorityNMI;
+
+    //Return the IRQ info
+    return { vect_info.vector, addr, nmi };
+}
+
+
+ArchXT_IntCtrl::vect_info_t ArchXT_IntCtrl::get_next_vector() const
 {
     uint8_t status_ex = read_ioreg(INT_REG_ADDR(STATUS));
 
+    //NMI priority vector check
+    //If a NMI vector is raised, nothing to report
+    if (BITSET(status_ex, IntrPriorityNMI))
+        return { AVR_INTERRUPT_NONE, 0 };
+
+    //For now, only 1 NMI vector at index 1 is supported
+    if (interrupt_raised(1))
+        return { 1, IntrPriorityNMI };
+
+    //Priority level 1 check
+    //If a level 1 vector is set, nothing to report
     if (BITSET(status_ex, IntrPriorityLevel1))
-        return AVR_INTERRUPT_NONE;
+        return { AVR_INTERRUPT_NONE, 0 };
 
-    int lvl1_vector = read_ioreg(INT_REG_ADDR(LVL1VEC));
+    //If LVL1VEC is set, it is the priority level 1 vector
+    int_vect_t lvl1_vector = read_ioreg(INT_REG_ADDR(LVL1VEC));
     if (lvl1_vector > 0 && interrupt_raised(lvl1_vector))
-        return lvl1_vector;
+        return { lvl1_vector, IntrPriorityLevel1 };
 
+    //Priority level 0 check
     if (BITSET(status_ex, IntrPriorityLevel0))
-        return AVR_INTERRUPT_NONE;
+        return { AVR_INTERRUPT_NONE, 0 };
 
-    int lvl0_vector = read_ioreg(INT_REG_ADDR(LVL0PRI));
+    int_vect_t lvl0_vector = read_ioreg(INT_REG_ADDR(LVL0PRI));
     if (!lvl0_vector) {
+        //If LVL0PRI is zero, use static priority: lowest index = highest priority
         for (int_vect_t i = 0; i < intr_count(); ++i) {
             if (interrupt_raised(i))
-                return i;
+                return { i, IntrPriorityLevel0 };
         }
     } else {
+        //If LVL0PRI is non-zero, use round-robin priority:
+        //LVL0PRI has lowest priority, (LVL0PRI + 1) modulo INTR_COUNT has highest priority
         for (int_vect_t i = 1; i <= intr_count(); ++i) {
             int_vect_t v = (i + lvl0_vector) % intr_count();
             if (interrupt_raised(v))
-                return v;
+                return { v, IntrPriorityLevel0 };
         }
     }
 
-    return AVR_INTERRUPT_NONE;
+    return { AVR_INTERRUPT_NONE, 0 };
 }
+
 
 void ArchXT_IntCtrl::cpu_reti()
 {
     //The priority level flag must be cleared
     uint8_t status_ex = read_ioreg(INT_REG_ADDR(STATUS));
-    if (BITSET(status_ex, IntrPriorityLevel1)) {
+    if (BITSET(status_ex, IntrPriorityNMI))
+        clear_ioreg(INT_REG_ADDR(STATUS), IntrPriorityNMI);
+    else if (BITSET(status_ex, IntrPriorityLevel1))
         clear_ioreg(INT_REG_ADDR(STATUS), IntrPriorityLevel1);
-    } else {
+    else
         clear_ioreg(INT_REG_ADDR(STATUS), IntrPriorityLevel0);
-    }
 
     InterruptController::cpu_reti();
 }
+
+
+flash_addr_t ArchXT_IntCtrl::get_table_base() const
+{
+    //If IVSEL is cleared, the interrupt vector table is placed at the start of the
+    //application code section, if it exists (which we check by testing its size).
+    //Otherwise, the table is at the start of the boot section.
+    bool ivsel = test_ioreg(INT_REG_ADDR(CTRLA), CPUINT_IVSEL_bp);
+    unsigned int s;
+    if (!ivsel && m_sections->section_size(ArchXT_Device::Section_AppCode))
+        s = ArchXT_Device::Section_AppCode;
+    else
+        s = ArchXT_Device::Section_Boot;
+
+    return m_sections->section_start(s) * m_sections->page_size();
+}
+
 
 //=======================================================================================
 

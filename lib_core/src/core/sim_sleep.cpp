@@ -107,9 +107,9 @@ bool SleepController::ctlreq(ctlreq_id_t req, ctlreq_data_t*)
 
 void SleepController::raised(const signal_data_t& sigdata, int)
 {
-    //data.u contains the state of the interrupt. We only do something on a 'Raise'
-    if (sigdata.sigid != InterruptController::Signal_StateChange ||
-        sigdata.data.as_int() != InterruptController::State_Raised)
+    //data.u contains the state of the interrupt. We only do something on a raised interrupt
+    //identifiable by the bit 0
+    if (sigdata.sigid != InterruptController::Signal_StateChange || !(sigdata.data.as_int() & 0x01))
         return;
 
     int_vect_t vector = sigdata.index;

@@ -26,6 +26,7 @@
 
 #include "arch_avr_globals.h"
 #include "core/sim_interrupt.h"
+#include "core/sim_memory.h"
 #include "ioctrl_common/sim_vref.h"
 
 YASIMAVR_BEGIN_NAMESPACE
@@ -35,7 +36,7 @@ YASIMAVR_BEGIN_NAMESPACE
 /**
    \ingroup api_vref
    \brief Implementation of a Voltage Reference controller for AVR series
-   
+
    It supports only one fixed reference.
  */
 
@@ -52,15 +53,23 @@ public:
 /**
    \brief Implementation of a interrupt controller for AVR series
  */
-class AVR_ARCHAVR_PUBLIC_API ArchAVR_IntCtrl : public InterruptController {
+class AVR_ARCHAVR_PUBLIC_API ArchAVR_IntCtrl : public InterruptController, SignalHook {
 
 public:
 
-    explicit ArchAVR_IntCtrl(unsigned int size);
+    ArchAVR_IntCtrl(unsigned int vector_count, unsigned int vector_size);
+
+    virtual bool init(Device& device) override;
+    virtual void raised(const signal_data_t& sigdata, int hooktag) override;
 
 protected:
 
-    virtual int_vect_t get_next_irq() const override;
+    virtual IRQ_t get_next_irq() const override;
+
+private:
+
+    unsigned int m_vector_size;
+    MemorySectionManager* m_sections;
 
 };
 

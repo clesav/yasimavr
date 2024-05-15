@@ -395,8 +395,6 @@ class XT_DeviceBuilder(DeviceBuilder):
         cfg.eind = dev_desc.reg_address('CPU/EIND', _corelib.INVALID_REGISTER)
         cfg.rampz = dev_desc.reg_address('CPU/RAMPZ', _corelib.INVALID_REGISTER)
 
-        cfg.vector_size = dev_desc.interrupt_map.vector_size
-
         cfg.fusesize = dev_desc.fuses['size']
         cfg.fuses = bytes(dev_desc.fuses['factory_values'])
 

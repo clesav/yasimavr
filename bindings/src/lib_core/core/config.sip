@@ -32,7 +32,6 @@ struct CoreConfiguration {
     };
 
     uint32_t            attributes;
-    unsigned short      vector_size;
     mem_addr_t          iostart;
     mem_addr_t          ioend;
     mem_addr_t          ramstart;

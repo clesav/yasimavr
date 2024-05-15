@@ -88,6 +88,13 @@ class QueuedSignalHook(corelib.SignalHook):
         k = self._make_key(sigid, index)
         return k in self._signals
 
+    def clear(self):
+        self._signals.clear()
+
+    def queue(self, sigid=0, index=0):
+        k = self._make_key(sigid, index)
+        return self._signals.get(k, [])
+
     def raised(self, sigdata, tag):
         #print('raised: id=%d,ix=%d,v=%s,tag=%d' % (sigdata.sigid, sigdata.index, sigdata.data.value(), tag))
 

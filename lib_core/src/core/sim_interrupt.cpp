@@ -33,10 +33,10 @@ YASIMAVR_USING_NAMESPACE
 /**
    Construct the controller with the given vector table size
 */
-InterruptController::InterruptController(unsigned int size)
+InterruptController::InterruptController(unsigned int vector_count)
 :Peripheral(AVR_IOCTL_INTR)
-,m_interrupts(size)
-,m_irq_vector(AVR_INTERRUPT_NONE)
+,m_interrupts(vector_count)
+,m_irq(NO_INTERRUPT)
 {
     m_interrupts[0].used = true; //The reset vector is always available
 }
@@ -49,7 +49,7 @@ void InterruptController::reset()
         m_signal.raise(Signal_StateChange, State_Reset, i);
     }
 
-    m_irq_vector = AVR_INTERRUPT_NONE;
+    m_irq = NO_INTERRUPT;
 }
 
 bool InterruptController::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
@@ -121,13 +121,15 @@ void InterruptController::sleep(bool on, SleepMode mode)
 */
 void InterruptController::cpu_ack_irq()
 {
-    cpu_ack_irq(m_irq_vector);
+    cpu_ack_irq(m_irq.vector);
     update_irq();
 }
 
 /**
-   Called by cpu_ack_irq() with the vector obtained by cpu_get_irq()
-   \n Sets the interrupt state back to Idle and calls the handler
+   Called by the CPU when it acknowledges a vector, i.e. it is about to execute
+   the vector address in the flash.
+   \n The base implementation calls the ACK handler of the vector and
+   raise the signal with the "Acknowledged" state.
 */
 void InterruptController::cpu_ack_irq(int_vect_t vector)
 {
@@ -140,7 +142,7 @@ void InterruptController::cpu_ack_irq(int_vect_t vector)
 }
 
 /**
-   Called by the CPU when returning from an ISR.
+   Called by the CPU when returning from an ISR (executing a RETI instruction).
    \n The base implementation calls update_irq to determine the next vector to be
    given to the CPU.
 */
@@ -155,7 +157,7 @@ void InterruptController::cpu_reti()
 */
 void InterruptController::update_irq()
 {
-    m_irq_vector = get_next_irq();
+    m_irq = get_next_irq();
 }
 
 ///Interrupt state setter
@@ -179,7 +181,7 @@ void InterruptController::cancel_interrupt(int_vect_t vector)
     if (m_interrupts[vector].used && m_interrupts[vector].raised) {
         m_interrupts[vector].raised = false;
         m_signal.raise(Signal_StateChange, State_Cancelled, vector);
-        if (m_irq_vector == vector)
+        if (m_irq.vector == vector)
             update_irq();
     }
 }

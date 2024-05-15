@@ -25,6 +25,7 @@
 #include "core/sim_debug.h"
 #include "core/sim_peripheral.h"
 #include "core/sim_firmware.h"
+#include "arch_avr_nvm.h"
 #include <cstring>
 
 YASIMAVR_USING_NAMESPACE
@@ -182,4 +183,28 @@ bool ArchAVR_Device::program(const Firmware& firmware)
     }
 
     return true;
+}
+
+/**
+   \brief Override to provide the reset vector depending on fuse settings.
+   The FUSE peripheral is queried for the value of the fuse BOOTRST.\n
+   If BOOTRST is 1, 0x0000 is returned.\n
+   If BOOTRST is 0, the 1st address of the Boot section is returned.
+ */
+flash_addr_t ArchAVR_Device::reset_vector()
+{
+    flash_addr_t addr = 0x0000;
+
+    //Ask the Fuse Controller for the value of BOOTRST
+    //Don't use Device::ctlreq because it logs a warning if no fuse peripheral is attached which is useless log noise here.
+    Peripheral* fuse_per = find_peripheral(chr_to_id('F', 'U', 'S', 'E'));
+    if (fuse_per) {
+        ctlreq_data_t reqdata = { .index = ArchAVR_Fuses::Fuse_BootRst };
+        bool ok = fuse_per->ctlreq(AVR_CTLREQ_FUSE_VALUE, &reqdata);
+        //if the BOOTRST fuse is zero, the reset vector is at the start of the Boot section. Otherwise keep the default value.
+        if (ok && reqdata.data.as_int() == 0)
+            addr = m_sections.section_start(Section_Boot) * m_sections.page_size();
+    }
+
+    return addr;
 }

@@ -71,6 +71,11 @@ public:
         Section_Boot          /PyName=Boot/
     };
 
+    enum FlashSectionFlags /BaseType=IntFlag/ {
+        Access_RWW            /PyName=RWW/,
+        Access_IntDisabled    /PyName=IntDisabled/,
+    };
+
     ArchAVR_Device(const ArchAVR_DeviceConfig& /KeepReference/);
 
     SIP_PYOBJECT __str__();

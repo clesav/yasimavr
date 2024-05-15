@@ -116,7 +116,8 @@ bool Core::init(Device& d)
  */
 void Core::reset()
 {
-    //Jump to the reset interrupt vector
+    //Jump to the reset interrupt vector. 0x0000 is the default Reset Vector address.
+    //If the address should be different, it's up to the Device object to rewrite it.
     m_pc = 0;
     //Resets all the general registers to 0x00
     std::memset(m_regs, 0x00, 32);
@@ -149,16 +150,19 @@ void Core::reset()
 int Core::exec_cycle()
 {
     //Check if we have a interrupt request and if we can handle it
-    int_vect_t irq_vector;
-    if ((irq_vector = m_intrctl->cpu_get_irq()) != AVR_INTERRUPT_NONE && m_sreg[SREG_I] && !m_int_inhib_counter) {
-        //Acknowledge the vector with the Interrupt Controller
-        m_intrctl->cpu_ack_irq();
-        //Push the current PC to the stack and jump to the vector table entry
-        cpu_push_flash_addr(m_pc >> 1);
-        m_pc = irq_vector * m_config.vector_size;
-        //Clear the GIE flag if allowed by the core options
-        if (m_config.attributes & CoreConfiguration::ClearGIEOnInt)
-            m_sreg[SREG_I] = 0;
+    if (m_intrctl->cpu_has_irq() && !m_int_inhib_counter) {
+        InterruptController::IRQ_t irq = m_intrctl->cpu_get_irq();
+        //If the GIE flag is set or the vector is non-maskable
+        if (m_sreg[SREG_I] || irq.nmi) {
+            //Acknowledge the vector with the Interrupt Controller
+            m_intrctl->cpu_ack_irq();
+            //Push the current PC to the stack and jump to the vector table entry
+            cpu_push_flash_addr(m_pc >> 1);
+            m_pc = irq.address;
+            //Clear the GIE flag if allowed by the core options
+            if (m_config.attributes & CoreConfiguration::ClearGIEOnInt)
+                m_sreg[SREG_I] = 0;
+        }
     }
 
     //Decrement the instruction counter if used.

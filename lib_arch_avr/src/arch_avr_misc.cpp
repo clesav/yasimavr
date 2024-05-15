@@ -22,6 +22,7 @@
 //=======================================================================================
 
 #include "arch_avr_misc.h"
+#include "arch_avr_device.h"
 
 YASIMAVR_USING_NAMESPACE
 
@@ -37,21 +38,55 @@ ArchAVR_VREF::ArchAVR_VREF(double band_gap)
 
 //=======================================================================================
 
-ArchAVR_IntCtrl::ArchAVR_IntCtrl(unsigned int size)
-:InterruptController(size)
+ArchAVR_IntCtrl::ArchAVR_IntCtrl(unsigned int vector_count, unsigned int vector_size)
+:InterruptController(vector_count)
+,m_vector_size(vector_size)
+,m_sections(nullptr)
 {}
 
+
+bool ArchAVR_IntCtrl::init(Device& device)
+{
+    bool status = InterruptController::init(device);
+
+    //Obtain the pointer to the flash section manager
+    ctlreq_data_t req;
+    if (!device.ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_SECTIONS, &req))
+        return false;
+    m_sections = reinterpret_cast<MemorySectionManager*>(req.data.as_ptr());
+
+    if (m_sections)
+        m_sections->signal().connect(*this);
+
+    return status;
+}
+
 /**
-   Implementation of the interrupt arbiration as per the AVR series.
+   Implementation of the interrupt arbitration as per the AVR series.
    The lowest vectors have higher priority.
  */
-int_vect_t ArchAVR_IntCtrl::get_next_irq() const
+InterruptController::IRQ_t ArchAVR_IntCtrl::get_next_irq() const
 {
+    //Check if interrupts are disabled for the current section of flash
+    if (m_sections->access_flags(m_sections->current_section()) & ArchAVR_Device::Access_IntDisabled)
+        return InterruptController::NO_INTERRUPT;
+
     for (int_vect_t i = 0; i < intr_count(); ++i) {
         if (interrupt_raised(i))
-            return i;
+            return { i, i * m_vector_size, false };
     }
-    return AVR_INTERRUPT_NONE;
+
+    return InterruptController::NO_INTERRUPT;
+}
+
+/**
+   Implementation of the signal hook. On a section change, the IRQs need to updated to take into account
+   the access flag IntDisabled.
+ */
+void ArchAVR_IntCtrl::raised(const signal_data_t& sigdata, int)
+{
+    if (sigdata.sigid == MemorySectionManager::Signal_Enter)
+        update_irq();
 }
 
 
