@@ -104,7 +104,7 @@ jobs:
     - name: Build and install package using the sdist
       run: |
         pip install --upgrade pip
-        find dist -type f -name *.tar.gz -fprint dist_req.txt
+        find sdist -type f -name *.tar.gz -fprint dist_req.txt
         pip install -r dist_req.txt -v
 
     - name: Run pytest
@@ -115,4 +115,4 @@ jobs:
     - name: Run twine check
       run: |
         pip install twine
-        twine check dist/*
+        twine check sdist/*
