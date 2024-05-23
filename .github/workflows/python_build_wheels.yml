@@ -51,7 +51,7 @@ jobs:
 
     - uses: actions/upload-artifact@v4
       with:
-        name: dist
+        name: wheel-{{ matrix.python-version }}
         path: |
           wheelhouse/*.whl
 
@@ -76,7 +76,7 @@ jobs:
 
     - uses: actions/upload-artifact@v4
       with:
-        name: dist
+        name: sdist
         path: dist/*.tar.gz
 
 
