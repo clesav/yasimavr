@@ -51,7 +51,7 @@ jobs:
 
     - uses: actions/upload-artifact@v4
       with:
-        name: wheel-{{ matrix.python-version }}
+        name: wheel-${{ matrix.python-version }}
         path: |
           wheelhouse/*.whl
 
@@ -88,7 +88,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
 
     - name: Set up Python
       uses: actions/setup-python@v5
