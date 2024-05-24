@@ -35,7 +35,7 @@ YASIMAVR_USING_NAMESPACE
 
 ArchAVR_Core::ArchAVR_Core(const ArchAVR_CoreConfig& config)
 :Core(config)
-,m_eeprom(config.eepromend ? (config.eepromend + 1) : 0, "eeprom")
+,m_eeprom(config.eepromend ? (config.eepromend + 1) : 0)
 {}
 
 uint8_t ArchAVR_Core::cpu_read_data(mem_addr_t data_addr)

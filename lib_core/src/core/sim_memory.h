@@ -26,7 +26,6 @@
 
 #include "sim_types.h"
 #include "sim_signal.h"
-#include <stddef.h>
 
 YASIMAVR_BEGIN_NAMESPACE
 
@@ -53,12 +52,11 @@ class AVR_CORE_PUBLIC_API NonVolatileMemory {
 
 public:
 
-    explicit NonVolatileMemory(size_t size, const std::string& name = "");
+    explicit NonVolatileMemory(size_t size);
     NonVolatileMemory(const NonVolatileMemory& other);
     ~NonVolatileMemory();
 
     size_t size() const;
-    const std::string& name() const;
 
     bool programmed(size_t pos) const;
     size_t programmed(unsigned char* buf, size_t base, size_t len) const;
@@ -89,7 +87,6 @@ private:
     size_t m_size;
     unsigned char* m_memory;
     unsigned char* m_tag;
-    std::string m_name;
 
 };
 
@@ -99,14 +96,6 @@ private:
 inline size_t NonVolatileMemory::size() const
 {
     return m_size;
-}
-
-/**
-   Return the name of the NVM.
- */
-inline const std::string& NonVolatileMemory::name() const
-{
-    return m_name;
 }
 
 /**
