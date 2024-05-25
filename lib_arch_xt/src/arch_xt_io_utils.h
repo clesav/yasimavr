@@ -30,6 +30,7 @@
 #ifndef __YASIMAVR_XT_IO_UTILS_H__
 #define __YASIMAVR_XT_IO_UTILS_H__
 
+#include <stddef.h>
 
 #define DEF_BITMASK_F(field) \
     bitmask_t(field ## _gp, field ## _gm)

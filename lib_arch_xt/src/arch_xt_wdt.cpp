@@ -23,6 +23,7 @@
 
 #include "arch_xt_wdt.h"
 #include "arch_xt_io.h"
+#include "arch_xt_io_utils.h"
 #include "core/sim_device.h"
 
 YASIMAVR_USING_NAMESPACE
