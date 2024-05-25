@@ -76,16 +76,40 @@ class _Dumper:
         self._empty_line = True
 
 
-    def dump_nvm(self, nvm):
+    def dump_nvm(self, nvm, name):
         indent = ' ' * (self.indent * 4)
-        self.stream.write(indent + nvm.name() + ':\n')
+        self.stream.write(indent + name + ':\n')
         indent += ' ' * 4
-        for i in range(0, nvm.size(), 16):
-            line_values = ( ('%02x' % nvm[j]) if nvm.programmed(j) else '--'
-                            for j in range(i, i + 16) )
 
-            sv = ' '.join(line_values)
-            self.stream.write('%s%04x : %s\n' % (indent, i, sv))
+        def print_line(addr, values, progs):
+            s = ' '.join((('%02x' % v) if p else '--') for v, p in zip(values, progs))
+            self.stream.write('%s%04x : %s\n' % (indent, addr, s))
+
+        skipping = 0
+        nvm_size = nvm.size()
+        for line_pos in range(0, nvm_size, 16):
+            line_size = min(16, nvm_size - line_pos)
+            is_last_line = (line_pos + line_size >= nvm_size)
+            line_values = nvm.block(line_pos, line_size)
+            line_programmed = nvm.programmed(line_pos, line_size)
+            is_line_to_print = any(line_programmed) or is_last_line
+
+            if is_line_to_print and skipping:
+                if skipping > 4:
+                    self.stream.write(indent + '....\n')
+                else:
+                    empty_line_values = [0] * 16
+                    empty_line_programmed= [False] * 16
+                    for j in range(line_pos - skipping, line_pos):
+                        print_line(j, empty_line_values, empty_line_programmed)
+
+                skipping = 0
+
+            if is_line_to_print or not skipping:
+                print_line(line_pos, line_values, line_programmed)
+
+            if not is_line_to_print:
+                skipping += 1
 
         self.stream.write('\n')
         self._empty_line = True
@@ -132,18 +156,13 @@ def _serialize_RAM(device, probe, dumper):
 
 
 def _serialize_NVM(device, dumper):
-    reqdata = corelib.ctlreq_data_t()
-    reqdata.index = corelib.Core.NVM.GetCount
-    device.ctlreq(corelib.IOCTL_CORE, corelib.CTLREQ_CORE_NVM, reqdata)
-    nvm_count = reqdata.data.as_uint()
-
-    for i in range(nvm_count):
+    for name, index in device._NVMs_.items():
         reqdata = corelib.ctlreq_data_t()
-        reqdata.index = i
+        reqdata.index = index
         device.ctlreq(corelib.IOCTL_CORE, corelib.CTLREQ_CORE_NVM, reqdata)
         nvm = reqdata.data.as_ptr(corelib.NonVolatileMemory)
         if nvm:
-            dumper.dump_nvm(nvm)
+            dumper.dump_nvm(nvm, name)
 
 
 def _serialize_CPU(probe, dumper):

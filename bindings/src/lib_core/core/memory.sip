@@ -31,11 +31,10 @@ class NonVolatileMemory /NoDefaultCtors/ {
 
 public:
 
-    NonVolatileMemory(size_t, const std::string = "");
+    NonVolatileMemory(size_t);
     NonVolatileMemory(const NonVolatileMemory&);
 
     size_t size() const;
-    const std::string& name() const;
 
     bool programmed(size_t) const;
     SIP_PYOBJECT programmed(size_t, size_t) const /TypeHint="bytes"/;

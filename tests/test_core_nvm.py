@@ -24,14 +24,13 @@ import yasimavr.lib.core as corelib
 
 @pytest.fixture
 def nvm():
-    return corelib.NonVolatileMemory(1024, 'test')
+    return corelib.NonVolatileMemory(1024)
 
 data = bytearray([1, 5, 7, 9])
 
 
 def test_nvm_init(nvm):
     assert nvm.size() == 1024
-    assert nvm.name() == 'test'
 
     #Check that the NVM is initially fully unprogrammed
     for i in range(1024):

@@ -41,9 +41,8 @@ YASIMAVR_USING_NAMESPACE
    filling it with the default value 0xFF.
    \param size size of the NVM in bytes
  */
-NonVolatileMemory::NonVolatileMemory(size_t size, const std::string& name)
+NonVolatileMemory::NonVolatileMemory(size_t size)
 :m_size(size)
-,m_name(name)
 {
     if (size) {
         m_memory = (unsigned char*) malloc(m_size);
@@ -68,7 +67,7 @@ NonVolatileMemory::~NonVolatileMemory()
 
 
 NonVolatileMemory::NonVolatileMemory(const NonVolatileMemory& other)
-:NonVolatileMemory(0, nullptr)
+:NonVolatileMemory(0)
 {
     *this = other;
 }
@@ -294,7 +293,6 @@ NonVolatileMemory& NonVolatileMemory::operator=(const NonVolatileMemory& other)
     }
 
     m_size = other.m_size;
-    m_name = other.m_name;
 
     if (m_size) {
         m_memory = (unsigned char*) malloc(m_size);
