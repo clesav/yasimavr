@@ -119,10 +119,10 @@ struct ArchXT_NVMConfig {
     - The Configuration Change Protection for SPM registers has no effect
 
    CTLREQs supported:
-    - AVR_CTLREQ_NVM_WRITE : Used internally when the CPU writes to a data space address
+    - AVR_CTLREQ_NVM_REQUEST : Used internally when the CPU writes to a data space address
     mapped to a NVM block. Used to redirect the write to the page buffer.
  */
-class AVR_ARCHXT_PUBLIC_API ArchXT_NVM : public Peripheral {
+class AVR_ARCHXT_PUBLIC_API ArchXT_NVM : public Peripheral, public SignalHook {
 
 public:
 
@@ -133,6 +133,7 @@ public:
     virtual void reset() override;
     virtual bool ctlreq(ctlreq_id_t req, ctlreq_data_t* data) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
+    virtual void raised(const signal_data_t& sigdata, int hooktag) override;
 
 private:
 
@@ -166,6 +167,7 @@ private:
     InterruptFlag m_ee_intflag;
 
     MemorySectionManager* m_section_manager;
+    bool m_pending_bootlock;
 
     NonVolatileMemory* get_memory(int nvm_index);
     void clear_buffer();

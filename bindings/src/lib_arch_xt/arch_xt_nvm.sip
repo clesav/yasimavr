@@ -72,7 +72,7 @@ struct ArchXT_NVMConfig {
 };
 
 
-class ArchXT_NVM : public Peripheral /NoDefaultCtors/ {
+class ArchXT_NVM : public Peripheral, public SignalHook /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_xt_nvm.h"
 %End
@@ -85,5 +85,6 @@ public:
     virtual void reset();
     virtual bool ctlreq(ctlreq_id_t, ctlreq_data_t*);
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
+    virtual void raised(const signal_data_t&, int);
 
 };

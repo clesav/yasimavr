@@ -230,6 +230,7 @@ ArchXT_NVM::ArchXT_NVM(const ArchXT_NVMConfig& config)
 ,m_page(0)
 ,m_ee_intflag(false)
 ,m_section_manager(nullptr)
+,m_pending_bootlock(false)
 {
     m_timer = new Timer(*this);
 }
@@ -256,7 +257,7 @@ bool ArchXT_NVM::init(Device& device)
 
     //Allocate the registers
     add_ioreg(REG_ADDR(CTRLA), NVMCTRL_CMD_gm);
-    //CTRLB not implemented
+    add_ioreg(REG_ADDR(CTRLB), NVMCTRL_BOOTLOCK_bm | NVMCTRL_APCWP_bm);
     add_ioreg(REG_ADDR(STATUS), NVMCTRL_WRERROR_bm | NVMCTRL_EEBUSY_bm | NVMCTRL_FBUSY_bm, true);
     add_ioreg(REG_ADDR(INTCTRL), NVMCTRL_EEREADY_bm);
     add_ioreg(REG_ADDR(INTFLAGS), NVMCTRL_EEREADY_bm);
@@ -285,6 +286,7 @@ void ArchXT_NVM::reset()
     m_ee_intflag.set_flag();
     //Internals
     m_state = State_Idle;
+    m_pending_bootlock = false;
 }
 
 
@@ -325,6 +327,33 @@ void ArchXT_NVM::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
         Command cmd = (Command) EXTRACT_F(data.value, NVMCTRL_CMD);
         execute_command(cmd);
         WRITE_IOREG_F(CTRLA, NVMCTRL_CMD, 0x00);
+    }
+
+    else if (reg_ofs == REG_OFS(CTRLB)) {
+        //If APCWP is written to 1
+        if (EXTRACT_B(data.posedge(), NVMCTRL_APCWP)) {
+            //Change all the access control flags where APPCODE is the destination section to clear the WRITE flag
+            for (unsigned int i = 0; i < SECTION_COUNT; ++i) {
+                uint8_t f = m_section_manager->access_flags(i, ArchXT_Device::Section_AppCode);
+                m_section_manager->set_access_flags(i, ArchXT_Device::Section_AppCode, f & ~MemorySectionManager::Access_Write);
+            }
+        }
+
+        //If BOOTLOCK is written to 1
+        if (EXTRACT_B(data.posedge(), NVMCTRL_BOOTLOCK)) {
+            //Writing BOOTLOCK is only allowed from the boot section
+            if (m_section_manager->current_section() == ArchXT_Device::Section_Boot)
+                //Defer the boot lock until exiting the boot section
+                m_pending_bootlock = true;
+            else
+                CLEAR_IOREG(CTRLB, NVMCTRL_BOOTLOCK);
+        }
+
+        //Prevent attempts to clear the APCWP or BOOTLOCK bits
+        if (EXTRACT_B(data.negedge(), NVMCTRL_APCWP))
+            SET_IOREG(CTRLB, NVMCTRL_APCWP);
+        if (EXTRACT_B(data.negedge(), NVMCTRL_BOOTLOCK))
+            SET_IOREG(CTRLB, NVMCTRL_BOOTLOCK);
     }
 
     else if (reg_ofs == REG_OFS(INTCTRL)) {
@@ -552,4 +581,23 @@ void ArchXT_NVM::timer_next()
     }
     //Update the state
     m_state = State_Idle;
+}
+
+
+void ArchXT_NVM::raised(const signal_data_t& sigdata, int)
+{
+    //If there is a pending bootlock and the CPU is leaving the boot section
+    if (m_pending_bootlock &&
+        sigdata.sigid == MemorySectionManager::Signal_Leave &&
+        sigdata.data == ArchXT_Device::Section_Boot) {
+
+        //Clear all access rights to the boot section
+        m_section_manager->set_access_flags(ArchXT_Device::Section_AppCode, ArchXT_Device::Section_Boot, 0x00);
+        m_section_manager->set_access_flags(ArchXT_Device::Section_AppData, ArchXT_Device::Section_Boot, 0x00);
+        //Set the boot section as non-executable
+        m_section_manager->set_fetch_allowed(ArchXT_Device::Section_Boot, false);
+
+        m_pending_bootlock = false;
+    }
+
 }
