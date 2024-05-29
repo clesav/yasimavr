@@ -36,6 +36,7 @@ YASIMAVR_USING_NAMESPACE
 ArchAVR_Core::ArchAVR_Core(const ArchAVR_CoreConfig& config)
 :Core(config)
 ,m_eeprom(config.eepromend ? (config.eepromend + 1) : 0)
+,m_lockbit(1)
 {}
 
 uint8_t ArchAVR_Core::cpu_read_data(mem_addr_t data_addr)
@@ -151,8 +152,10 @@ bool ArchAVR_Device::core_ctlreq(ctlreq_id_t req, ctlreq_data_t* reqdata)
     if (req == AVR_CTLREQ_CORE_NVM) {
         if (reqdata->index == ArchAVR_Core::NVM_EEPROM)
             reqdata->data = &(m_core_impl.m_eeprom);
+        else if (reqdata->index == ArchAVR_Core::NVM_Lockbit)
+        	reqdata->data = &(m_core_impl.m_lockbit);
         else if (reqdata->index == Core::NVM_GetCount)
-            reqdata->data = (unsigned int) (Core::NVM_CommonCount + 1);
+            reqdata->data = (unsigned int) (Core::NVM_CommonCount + 2);
         else
             return Device::core_ctlreq(req, reqdata);
 
@@ -178,6 +181,15 @@ bool ArchAVR_Device::program(const Firmware& firmware)
             logger().dbg("Firmware load: EEPROM loaded");
         } else {
             logger().err("Firmware load: Error loading the EEPROM");
+            return false;
+        }
+    }
+
+    if (firmware.has_memory(Firmware::Area_Lock)) {
+        if (firmware.load_memory(Firmware::Area_Lock, m_core_impl.m_lockbit)) {
+            logger().dbg("Firmware load: lockbit loaded");
+        } else {
+            logger().err("Firmware load: Error loading the lockbit");
             return false;
         }
     }

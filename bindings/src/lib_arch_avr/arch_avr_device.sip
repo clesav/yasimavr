@@ -46,6 +46,7 @@ public:
 
     enum ArchAVR_NVM /BaseType=IntEnum/ {
         NVM_EEPROM          /PyName=EEPROM/,
+        NVM_Lockbit         /PyName=Lockbit/,
     };
 
     ArchAVR_Core(const ArchAVR_CoreConfig& /KeepReference/);

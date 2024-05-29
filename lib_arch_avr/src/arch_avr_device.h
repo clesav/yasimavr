@@ -54,6 +54,7 @@ public:
     /// Additional NVM enumerations
     enum ArchAVR_NVM {
         NVM_EEPROM = NVM_ArchDefined,
+        NVM_Lockbit = NVM_ArchDefined + 1,
     };
 
     explicit ArchAVR_Core(const ArchAVR_CoreConfig& config);
@@ -69,6 +70,7 @@ protected:
 private:
 
     NonVolatileMemory m_eeprom;
+    NonVolatileMemory m_lockbit;
 
 friend class ArchAVR_Device;
 
