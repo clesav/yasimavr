@@ -19,7 +19,8 @@
 
 
 import pytest
-from yasimavr.device_library.descriptors import DeviceDescriptor, convert_to_regbit, convert_to_regbit_compound
+from yasimavr.device_library.descriptors import (DeviceDescriptor, convert_to_regbit,
+                                                 convert_to_regbit_compound, convert_to_bitmask)
 from yasimavr.lib.core import regbit_t
 
 
@@ -87,3 +88,23 @@ def test_convert_regbit_compound():
     assert rbc[1].addr == 0x0801
     assert rbc[1].mask == 0x80
     assert rbc[1].bit == 0
+
+
+def test_convert_bitmask():
+    dev = DeviceDescriptor.create_from_model('atmega328')
+
+    bm = convert_to_bitmask('2-3')
+    assert bm.bit == 2
+    assert bm.mask == 0x0c
+
+    bm = convert_to_bitmask('4')
+    assert bm.bit == 4
+    assert bm.mask == 0x10
+
+    bm = convert_to_bitmask('0x33/4-5')
+    assert bm.bit == 4
+    assert bm.mask == 0x30
+
+    bm = convert_to_bitmask('SLPCTRL/SMCR/SE', dev=dev)
+    assert bm.bit == 0
+    assert bm.mask == 0x01
