@@ -57,6 +57,7 @@ ArchAVR_Fuses::ArchAVR_Fuses(const ArchAVR_FusesConfig& config)
 :Peripheral(chr_to_id('F', 'U', 'S', 'E'))
 ,m_config(config)
 ,m_fuses(nullptr)
+,m_lockbit(nullptr)
 ,m_sections(nullptr)
 {}
 
@@ -70,6 +71,12 @@ bool ArchAVR_Fuses::init(Device& device)
     if (!device.ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_NVM, &req))
         return false;
     m_fuses = reinterpret_cast<NonVolatileMemory*>(req.data.as_ptr());
+
+    //Obtain the pointer to the lockbit NVM
+    req.index = ArchAVR_Core::NVM_Lockbit;
+    if (!device.ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_NVM, &req))
+        return false;
+    m_lockbit = reinterpret_cast<NonVolatileMemory*>(req.data.as_ptr());
 
     //Obtain the pointer to the flash section manager
     if (!device.ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_SECTIONS, &req))
@@ -109,7 +116,7 @@ void ArchAVR_Fuses::reset()
         m_sections->set_section_limits({ m_config.nrww_start, boot_start });
 
         uint8_t boot_rst = read_fuse(m_config.rb_bootrst);
-        uint8_t boot_lockbit = read_fuse(m_config.rb_bootlockbit);
+        uint8_t boot_lockbit = m_config.bm_bootlockbit.extract((*m_lockbit)[0]);
 
         //if the boot lock bit 0 is cleared, the boot loader cannot write in the boot section
         if (!(boot_lockbit & LOCK_FLAG_SPM))
@@ -124,7 +131,7 @@ void ArchAVR_Fuses::reset()
                 section_flags[SECTION_BOOT][SECTION_BOOT] |= ArchAVR_Device::Access_IntDisabled;
         }
 
-        uint8_t app_lockbit = read_fuse(m_config.rb_applockbit);
+        uint8_t app_lockbit = m_config.bm_applockbit.extract((*m_lockbit)[0]);
 
         //if the app lock bit 0 is cleared, the boot loader cannot write in the app sections
         if (!(app_lockbit & LOCK_FLAG_SPM)) {
