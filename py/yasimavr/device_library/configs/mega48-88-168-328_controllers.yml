@@ -122,13 +122,13 @@ FUSES_88_168:
     config:
         rb_bootsz: 0x02/1-2
         rb_bootrst: 0x02/0
-        rb_bootlockbit: 0x00/4-5
-        rb_applockbit: 0x00/2-3
+        bm_bootlockbit: 4-5
+        bm_applockbit: 2-3
 
 #========================================================================================
 FUSES_328:
     config:
         rb_bootsz: 0x01/1-2
         rb_bootrst: 0x01/0
-        rb_bootlockbit: 0x00/4-5
-        rb_applockbit: 0x00/2-3
+        bm_bootlockbit: 4-5
+        bm_applockbit: 2-3

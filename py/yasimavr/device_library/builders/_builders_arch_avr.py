@@ -387,6 +387,7 @@ class AVR_BaseDevice(_archlib.ArchAVR_Device):
     _NVMs_ = { 'Flash': _corelib.Core.NVM.Flash,
                'Fuses': _corelib.Core.NVM.Fuses,
                'EEPROM': _archlib.ArchAVR_Core.ArchAVR_NVM.EEPROM,
+               'Lockbit': _archlib.ArchAVR_Core.ArchAVR_NVM.Lockbit,
     }
 
     def __init__(self, dev_descriptor, builder):

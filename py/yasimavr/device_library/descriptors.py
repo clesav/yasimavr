@@ -1,6 +1,6 @@
 # descriptors.py
 #
-# Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -821,14 +821,18 @@ def convert_to_bitmask(arg, per=None, dev=None):
 
     if not arg:
         return _corelib.bitmask_t()
+    elif isinstance(arg, (list, tuple)):
+        regpath_list = arg
+    else:
+        regpath_list = [arg]
 
     try:
-        flist = _partial_parse_fields('|'.join(arg))
+        flist = _partial_parse_fields('|'.join(regpath_list))
     except ValueError:
         pass
     else:
-        if len(flist) == 1 and isinstance(flist[0], _corelib.bitmask_t):
-            return flist[0]
+        if len(flist) == 1 and isinstance(flist[0], ExtendedBitMask):
+            return flist[0].as_bitmask()
 
     rb = convert_to_regbit(arg, per, dev)
     return _corelib.bitmask_t(rb)

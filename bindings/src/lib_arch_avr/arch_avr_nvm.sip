@@ -44,8 +44,8 @@ struct ArchAVR_FusesConfig {
 
     regbit_t rb_bootsz;
     regbit_t rb_bootrst;
-    regbit_t rb_bootlockbit;
-    regbit_t rb_applockbit;
+    bitmask_t bm_bootlockbit;
+    bitmask_t bm_applockbit;
 
     flash_addr_t nrww_start;
 

@@ -63,9 +63,9 @@ struct ArchAVR_FusesConfig {
     /// Regbit for the boot reset fuse bit
     regbit_t                         rb_bootrst;
     /// Regbit for the boot part of the lockbits
-    regbit_t                         rb_bootlockbit;
+    bitmask_t                        bm_bootlockbit;
     /// Regbit for the application part of the lockbits
-    regbit_t                         rb_applockbit;
+    bitmask_t                        bm_applockbit;
 
     /// Start of NRWW (No Read-While-Write) section, in number of section pages
     flash_addr_t                     nrww_start;
@@ -99,6 +99,7 @@ private:
     const ArchAVR_FusesConfig& m_config;
 
     NonVolatileMemory* m_fuses;
+    NonVolatileMemory* m_lockbit;
     MemorySectionManager* m_sections;
 
     void configure_sections();
