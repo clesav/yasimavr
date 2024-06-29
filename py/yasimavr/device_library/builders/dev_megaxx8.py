@@ -1,6 +1,6 @@
 # dev_megaxx8.py
 #
-# Copyright 2023 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2023-2024 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -36,6 +36,7 @@ class dev_megaxx8(AVR_BaseDevice):
             'CPUINT',
             'SLPCTRL',
             'FUSES',
+            'NVMCTRL',
             'MISC',
             'PORTB',
             'PORTC',

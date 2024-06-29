@@ -1,6 +1,6 @@
 # _builders_arch_avr.py
 #
-# Copyright 2022 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2022-2024 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -93,6 +93,14 @@ def _fuses_convertor(cfg, attr, yml_val, per_desc):
 def _get_fuses_builder():
     cfg_builder = PeripheralConfigBuilder(_archlib.ArchAVR_FusesConfig, _fuses_convertor)
     return PeripheralBuilder(_archlib.ArchAVR_Fuses, cfg_builder)
+
+
+#========================================================================================
+#NVM controller configuration
+
+def _get_nvmctrl_builder():
+    cfg_builder = PeripheralConfigBuilder(_archlib.ArchAVR_NVMConfig)
+    return PeripheralBuilder(_archlib.ArchAVR_NVM, cfg_builder)
 
 
 #========================================================================================
@@ -408,6 +416,7 @@ class AVR_DeviceBuilder(DeviceBuilder):
         'FUSES_48': _get_fuses_builder,
         'FUSES_88_168': _get_fuses_builder,
         'FUSES_328': _get_fuses_builder,
+        'NVMCTRL': _get_nvmctrl_builder,
         'MISC': _get_misc_builder,
         'PORT': _get_port_builder,
         'EXTINT': _get_extint_builder,
