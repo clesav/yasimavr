@@ -1,7 +1,7 @@
 /*
  * sim_config.h
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -57,14 +57,6 @@ struct CoreConfiguration {
 
     mem_addr_t              fusesize;
     std::vector<uint8_t>    fuses;          //Fuse bytes factory values
-
-    flash_addr_t            flash_page_size;
-
-
-    constexpr inline flash_addr_t flash_page_count() const
-    {
-        return flash_page_size ? ((flashend + 1) / flash_page_size) : 1;
-    }
 
 };
 
