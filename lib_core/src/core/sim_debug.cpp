@@ -1,7 +1,7 @@
 /*
  * sim_debug.cpp
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -207,8 +207,10 @@ mem_addr_t DeviceDebugProbe::read_sp() const
 
 void DeviceDebugProbe::write_pc(flash_addr_t value) const
 {
-    if (m_device)
+    if (m_device) {
         m_device->core().m_pc = value;
+        m_device->core().m_section_manager->fetch_address(value);
+    }
 }
 
 flash_addr_t DeviceDebugProbe::read_pc() const

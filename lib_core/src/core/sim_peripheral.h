@@ -1,7 +1,7 @@
 /*
  * sim_peripheral.h
  *
- *  Copyright 2022 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022-2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -211,7 +211,7 @@ typedef int ctlreq_id_t;
  */
 struct NVM_request_t {
     /// Kind of request : 0:write (SPM), 1:read (LPM)
-    int kind;
+    unsigned char kind;
     /// Memory block being written/read : -1 if unknown/irrelevant, otherwise one of AVR_NVM enumeration values
     int nvm;
     /// Address to write/read (in the appropriate block address space)
@@ -219,7 +219,9 @@ struct NVM_request_t {
     /// Value [to write to/read from] the NVM
     uint16_t data;
     /// Result of the request : >0:success, 0:ignored, <0:error/refused
-    int result;
+    signed char result;
+    /// Number of cycles to be consumed, only for write (SPM) requests and if result>=0
+    unsigned short cycles;
 };
 
 

@@ -353,6 +353,8 @@ int ArchAVR_NVM::process_NVM_read(NVM_request_t& req)
 
 int ArchAVR_NVM::process_NVM_write(NVM_request_t& req)
 {
+    req.cycles = 3;
+
     if (m_spm_state == State_Idle) {
         //Write request with no command set => bug of the firmware
         device()->logger().wng("SPM instruction but no operation enabled.");
@@ -374,17 +376,20 @@ int ArchAVR_NVM::process_NVM_write(NVM_request_t& req)
         }
     }
 
+    //Clear the bit 0 of the address, the SPM instruction only uses word-aligned addresses.
+    flash_addr_t addr = req.addr & ~1UL;
+
     //Address range check
-    if (req.addr >= device()->core().config().flashend) {
-        device()->logger().err("CPU writing an invalid flash address: 0x%04x", req.addr);
+    if (addr >= device()->config().core.flashend) {
+        device()->logger().err("CPU writing an invalid flash address: 0x%04x", addr);
         device()->crash(CRASH_FLASH_ADDR_OVERFLOW, "Invalid flash address");
         return -1;
     }
 
     //Check that the operation is allowed wrt. section access control. If not, crash the device.
 #ifndef YASIMAVR_NO_ACC_CTRL
-    if (!m_section_manager->can_write(req.addr)) {
-        device()->logger().err("CPU writing a locked flash address: 0x%04x", req.addr);
+    if (!m_section_manager->can_write(addr)) {
+        device()->logger().err("CPU writing a locked flash address: 0x%04x", addr);
         device()->crash(CRASH_ACCESS_REFUSED, "Flash write refused");
         return -1;
     }
@@ -393,22 +398,24 @@ int ArchAVR_NVM::process_NVM_write(NVM_request_t& req)
     if (m_spm_command == SPM_SigRead) return 0;
 
     cycle_count_t delay = 0;
-    flash_addr_t addr = req.addr & ~1;
 
     switch (m_spm_command) {
         case SPM_BufferLoad: {
             flash_addr_t a = addr % m_spm_page_size;
-            m_spm_buffer[a] = req.data & 0xFF;
-            m_spm_buffer[a+1] = (req.data >> 8) & 0xFF;
-            m_spm_bufset[a] = 1;
-            m_spm_bufset[a+1] = 1;
+            if (!m_spm_bufset[a]) {
+                m_spm_buffer[a] = req.data & 0xFF;
+                m_spm_buffer[a+1] = (req.data >> 8) & 0xFF;
+                m_spm_bufset[a] = 1;
+                m_spm_bufset[a+1] = 1;
+            }
+            req.cycles = 6;
         } break;
 
         case SPM_PageErase: {
             NonVolatileMemory* flash = get_nvm(ArchAVR_Core::NVM_Flash);
             flash_addr_t a = (addr / m_spm_page_size) * m_spm_page_size;
             flash->erase(a, m_spm_page_size);
-            delay = (device()->frequency() * m_config.spm_erase_delay) / 1000000L;
+            delay = (device()->frequency() * m_config.spm_erase_delay) / 1000000UL;
         } break;
 
         case SPM_PageWrite: {
@@ -416,7 +423,7 @@ int ArchAVR_NVM::process_NVM_write(NVM_request_t& req)
             flash_addr_t a = (addr / m_spm_page_size) * m_spm_page_size;
             flash->spm_write(m_spm_buffer, m_spm_bufset, a, m_spm_page_size);
             clear_spm_buffer();
-            delay = (device()->frequency() * m_config.spm_write_delay) / 1000000L;
+            delay = (device()->frequency() * m_config.spm_write_delay) / 1000000UL;
         } break;
 
         case SPM_LockBits: {
@@ -438,6 +445,7 @@ int ArchAVR_NVM::process_NVM_write(NVM_request_t& req)
         } else {
             ctlreq_data_t d = { .data = 1 };
             device()->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_HALT, &d);
+            m_halt = true;
         }
     } else {
         m_spm_state = State_Idle;
@@ -493,14 +501,14 @@ void ArchAVR_NVM::start_eeprom_command(uint8_t command)
         case EE_ModeErase: {
             m_ee_prog_mode = EE_ModeErase;
             eeprom->erase(addr, 1);
-            delay = (device()->frequency() * m_config.ee_erase_delay) / 1000000L;
+            delay = (device()->frequency() * m_config.ee_erase_delay) / 1000000UL;
         } break;
 
         case EE_ModeWrite: {
             m_ee_prog_mode = EE_ModeWrite;
             uint8_t data = read_ioreg(m_config.reg_ee_data);
             eeprom->spm_write(data, addr);
-            delay = (device()->frequency() * m_config.ee_write_delay) / 1000000L;
+            delay = (device()->frequency() * m_config.ee_write_delay) / 1000000UL;
         } break;
 
         case EE_ModeEraseWrite: {
@@ -508,7 +516,7 @@ void ArchAVR_NVM::start_eeprom_command(uint8_t command)
             uint8_t data = read_ioreg(m_config.reg_ee_data);
             eeprom->erase(addr, 1);
             eeprom->spm_write(data, addr);
-            delay = (device()->frequency() * m_config.ee_erase_write_delay) / 1000000L;
+            delay = (device()->frequency() * m_config.ee_erase_write_delay) / 1000000UL;
         } break;
     }
 
