@@ -120,6 +120,7 @@ FUSES_48:
 #========================================================================================
 FUSES_88_168:
     config:
+        #0:Fuse Low Byte , 1:Fuse High Byte , 2:Fuse Ext Byte
         rb_bootsz: 0x02/1-2
         rb_bootrst: 0x02/0
         bm_bootlockbit: 4-5
@@ -128,6 +129,7 @@ FUSES_88_168:
 #========================================================================================
 FUSES_328:
     config:
+        #0:Fuse Low Byte , 1:Fuse High Byte , 2:Fuse Ext Byte
         rb_bootsz: 0x01/1-2
         rb_bootrst: 0x01/0
         bm_bootlockbit: 4-5
@@ -173,7 +175,7 @@ NVMCTRL:
 
     config:
         reg_spm_ctrl: SPMCSR
-        bm_spm_cmd: SPMCSR/PGERS|PGWRT|BLBSET|SIGRD
+        bm_spm_cmd: SPMCSR/PGERS|PGWRT|BLBSET|RWWSRE|SIGRD
         bm_spm_enable: SPMCSR/SPMEN
         bm_spm_inten: SPMCSR/SPMIE
         bm_spm_rww_busy: SPMCSR/RWWSB

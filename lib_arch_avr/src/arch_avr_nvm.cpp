@@ -176,6 +176,7 @@ bool ArchAVR_NVM::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
 void ArchAVR_NVM::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
     if (addr == m_config.reg_spm_ctrl) {
+        logger().dbg("CPU writing 0x%02x to SPMCR", data.value);
         //If a Flash or eeprom write operation is in progress, the SPM control register is blocked
         if (m_spm_state == State_Idle && m_ee_state != State_Write) {
             //If the enable bit is set, read the command and wait for a SPM instruction (that will arrive
@@ -282,7 +283,7 @@ int ArchAVR_NVM::process_NVM_read(NVM_request_t& req)
     if (m_spm_state == State_Idle) {
         //Read request, should not happen because the direct LPM mode is disabled.
         //=> bug of the simulator
-        device()->logger().err("LPM instruction but no operation enabled.");
+        logger().err("LPM instruction but no operation enabled.");
         device()->crash(CRASH_INVALID_CONFIG, "LPM instruction but no operation enabled.");
         return -1;
     }
@@ -309,23 +310,29 @@ int ArchAVR_NVM::process_NVM_read(NVM_request_t& req)
 
     //Command to return fuses and lockbits. The address determines which byte is returned.
     if (m_spm_command == SPM_LockBits) {
-        NonVolatileMemory* fuses = get_nvm(ArchAVR_Core::NVM_Fuses);
         switch (req.addr) {
-            case 0x0000:
-                req.data = (*fuses)[0]; break;
+            case 0x0000: { //Fuse low byte
+                NonVolatileMemory* fuses = get_nvm(ArchAVR_Core::NVM_Fuses);
+                req.data = (*fuses)[0];
+            } break;
 
-            case 0x0001:
-                //TODO: return lockbits
-                req.data = 0; break;
+            case 0x0001: { //Lock bits
+                NonVolatileMemory* lockbit = get_nvm(ArchAVR_Core::NVM_Lockbit);
+                req.data = (*lockbit)[0];
+            } break;
 
-            case 0x0002:
-                req.data = (*fuses)[3]; break;
+            case 0x0002: { //Fuse extended byte
+                NonVolatileMemory* fuses = get_nvm(ArchAVR_Core::NVM_Fuses);
+                req.data = (*fuses)[2];
+            }break;
 
-            case 0x0003:
-                req.data = (*fuses)[4]; break;
+            case 0x0003: { //Fuse high byte
+                NonVolatileMemory* fuses = get_nvm(ArchAVR_Core::NVM_Fuses);
+                req.data = (*fuses)[1];
+            } break;
 
             default:
-                device()->logger().err("Invalid Z value for LockBits operation.");
+                logger().err("Invalid Z value for LockBits operation.");
         }
 
     //Command to read the device signature
@@ -342,7 +349,7 @@ int ArchAVR_NVM::process_NVM_read(NVM_request_t& req)
                 req.data = (m_config.dev_id >> 16) & 0xFF; break;
 
             default:
-                device()->logger().err("Invalid Z value for SigRead operation.");
+                logger().err("Invalid Z value for SigRead operation.");
                 req.data = 0; break;
         }
     }
@@ -357,7 +364,7 @@ int ArchAVR_NVM::process_NVM_write(NVM_request_t& req)
 
     if (m_spm_state == State_Idle) {
         //Write request with no command set => bug of the firmware
-        device()->logger().wng("SPM instruction but no operation enabled.");
+        logger().wng("SPM instruction but no operation enabled.");
         if (device()->test_option(Device::Option_IgnoreBadCpuLPM)) {
             return 0;
         } else {
@@ -367,7 +374,7 @@ int ArchAVR_NVM::process_NVM_write(NVM_request_t& req)
     }
     else if (m_spm_state != State_Pending) {
         //Write request with command already in progress => bug of the firmware
-        device()->logger().wng("SPM instruction but NVM controller busy.");
+        logger().wng("SPM instruction but NVM controller busy.");
         if (device()->test_option(Device::Option_IgnoreBadCpuLPM)) {
             return 0;
         } else {
@@ -377,53 +384,60 @@ int ArchAVR_NVM::process_NVM_write(NVM_request_t& req)
     }
 
     //Clear the bit 0 of the address, the SPM instruction only uses word-aligned addresses.
-    flash_addr_t addr = req.addr & ~1UL;
+    flash_addr_t spm_addr = req.addr & ~1UL;
 
     //Address range check
-    if (addr >= device()->config().core.flashend) {
-        device()->logger().err("CPU writing an invalid flash address: 0x%04x", addr);
+    if (spm_addr >= device()->config().core.flashend) {
+        logger().err("CPU writing an invalid flash address: 0x%04x", spm_addr);
         device()->crash(CRASH_FLASH_ADDR_OVERFLOW, "Invalid flash address");
         return -1;
     }
 
     //Check that the operation is allowed wrt. section access control. If not, crash the device.
 #ifndef YASIMAVR_NO_ACC_CTRL
-    if (!m_section_manager->can_write(addr)) {
-        device()->logger().err("CPU writing a locked flash address: 0x%04x", addr);
-        device()->crash(CRASH_ACCESS_REFUSED, "Flash write refused");
-        return -1;
+    if (!m_section_manager->can_write(spm_addr)) {
+        logger().err("CPU writing a locked flash address: 0x%04x", spm_addr);
+        if (device()->test_option(Device::Option_IgnoreBadCpuLPM)) {
+            return 0;
+        } else {
+            device()->crash(CRASH_ACCESS_REFUSED, "Flash write refused");
+            return -1;
+        }
     }
 #endif
 
     if (m_spm_command == SPM_SigRead) return 0;
 
     cycle_count_t delay = 0;
+    flash_addr_t page_offset = spm_addr % m_spm_page_size;
 
     switch (m_spm_command) {
         case SPM_BufferLoad: {
-            flash_addr_t a = addr % m_spm_page_size;
-            if (!m_spm_bufset[a]) {
-                m_spm_buffer[a] = req.data & 0xFF;
-                m_spm_buffer[a+1] = (req.data >> 8) & 0xFF;
-                m_spm_bufset[a] = 1;
-                m_spm_bufset[a+1] = 1;
+            logger().dbg("SPM buffer write at flash address: 0x%04x", spm_addr);
+            if (!m_spm_bufset[page_offset]) {
+                m_spm_buffer[page_offset] = req.data & 0xFF;
+                m_spm_buffer[page_offset+1] = (req.data >> 8) & 0xFF;
+                m_spm_bufset[page_offset] = 1;
+                m_spm_bufset[page_offset+1] = 1;
             }
             req.cycles = 6;
         } break;
 
         case SPM_PageErase: {
             NonVolatileMemory* flash = get_nvm(ArchAVR_Core::NVM_Flash);
-            flash_addr_t a = (addr / m_spm_page_size) * m_spm_page_size;
-            flash->erase(a, m_spm_page_size);
+            flash_addr_t spm_page_start = spm_addr - page_offset;
+            flash->erase(spm_page_start, m_spm_page_size);
             delay = (device()->frequency() * m_config.spm_erase_delay) / 1000000UL;
+            logger().dbg("SPM page erase starting on [0x%04x;0x%04x] (%d cycles)", spm_page_start, spm_page_start + m_spm_page_size - 1, delay);
         } break;
 
         case SPM_PageWrite: {
             NonVolatileMemory* flash = get_nvm(ArchAVR_Core::NVM_Flash);
-            flash_addr_t a = (addr / m_spm_page_size) * m_spm_page_size;
-            flash->spm_write(m_spm_buffer, m_spm_bufset, a, m_spm_page_size);
+            flash_addr_t spm_page_start = spm_addr - page_offset;
+            flash->spm_write(m_spm_buffer, m_spm_bufset, spm_page_start, m_spm_page_size);
             clear_spm_buffer();
             delay = (device()->frequency() * m_config.spm_write_delay) / 1000000UL;
+            logger().dbg("SPM page write starting on [0x%04x;0x%04x] (%d cycles)", spm_page_start, spm_page_start + m_spm_page_size - 1, delay);
         } break;
 
         case SPM_LockBits: {
@@ -439,10 +453,11 @@ int ArchAVR_NVM::process_NVM_write(NVM_request_t& req)
         m_spm_state = State_Write;
         //if writing to a RWW page, we need to control each LPM
         //if writing elsewhere, halt the CPU
-        if (m_section_manager->address_access_flags(req.addr) & ArchAVR_Device::Access_RWW) {
+        if (m_section_manager->address_access_flags(spm_addr) & ArchAVR_Device::Access_RWW) {
             device()->core().set_direct_LPM_enabled(false);
             set_ioreg(m_config.reg_spm_ctrl, m_config.bm_spm_rww_busy);
         } else {
+            logger().dbg("SPM page op out of RWW section : halting the CPU");
             ctlreq_data_t d = { .data = 1 };
             device()->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_HALT, &d);
             m_halt = true;
@@ -459,8 +474,11 @@ int ArchAVR_NVM::process_NVM_write(NVM_request_t& req)
 
 void ArchAVR_NVM::spm_timer_next()
 {
-    if (m_spm_state > State_Pending && test_ioreg(m_config.reg_spm_ctrl, m_config.bm_spm_inten))
-        raise_interrupt(m_config.iv_spm_ready);
+    if (m_spm_state > State_Pending) {
+        logger().dbg("SPM page operation complete");
+        if (test_ioreg(m_config.reg_spm_ctrl, m_config.bm_spm_inten))
+            raise_interrupt(m_config.iv_spm_ready);
+    }
 
     m_spm_state = State_Idle;
 
@@ -468,7 +486,10 @@ void ArchAVR_NVM::spm_timer_next()
     clear_ioreg(m_config.reg_spm_ctrl, m_config.bm_spm_enable);
     clear_ioreg(m_config.reg_spm_ctrl, m_config.bm_spm_rww_busy);
 
+    device()->core().set_direct_LPM_enabled(true);
+
     if (m_halt) {
+        logger().dbg("Dehalting the CPU");
         //De-halt the core
         ctlreq_data_t d = { .index = 0 };
         device()->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_HALT, &d);
@@ -534,7 +555,7 @@ void ArchAVR_NVM::ee_timer_next()
         } break;
 
         case State_Write: {
-            device()->logger().dbg("EEPROM write operation complete");
+            logger().dbg("EEPROM write operation complete");
             //The EEPROM completed a write or erase, clear the bit and raise the interrupt
             clear_ioreg(m_config.rb_ee_write);
             clear_ioreg(m_config.rb_ee_mode);
@@ -644,7 +665,7 @@ void ArchAVR_Fuses::reset()
         uint8_t bsf = read_fuse(m_config.rb_bootsz);
         int bsi = find_reg_config<ArchAVR_FusesConfig::bootsize_config_t>(m_config.boot_sizes, bsf);
         if (bsi < 0) {
-            device()->logger().err("Error in boot size fuse config");
+            logger().err("Error in boot size fuse config");
             device()->crash(CRASH_INVALID_CONFIG, "Boot size fuses");
             return;
         }
