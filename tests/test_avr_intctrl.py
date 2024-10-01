@@ -20,13 +20,13 @@
 import pytest
 import yasimavr.lib.core as corelib
 import yasimavr.lib.arch_avr as archlib
-from _test_bench_avr import BenchAVR
+from _test_bench_avr import bench_m328
 from _test_utils import DictSignalHook, QueuedSignalHook
 
 
 @pytest.fixture
 def bench():
-    bench = BenchAVR()
+    bench = bench_m328()
 
     _, reqdata = bench.dev_model.ctlreq(corelib.IOCTL_INTR, corelib.CTLREQ_GET_SIGNAL)
     bench.irq_sig = reqdata.data.value(corelib.Signal)

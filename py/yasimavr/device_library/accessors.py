@@ -1,6 +1,6 @@
 # accessors.py
 #
-# Copyright 2022 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2022-2024 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -31,6 +31,7 @@ simulation.
 """
 
 from functools import total_ordering
+import re
 
 from .descriptors import ProxyRegisterDescriptor
 from ..lib import core as _corelib
@@ -427,6 +428,66 @@ class PeripheralAccessor:
             object.__setattr__(self, key, value)
 
 
+class CoreAccessor:
+    """Accessor class for the core, giving access to the CPU registers (Rxx, PC, SP, SREG)
+    """
+
+    def __init__(self, probe):
+        self._probe = probe
+        self._active = True
+
+    def _match_GPREG(self, key):
+        if not re.fullmatch('R[0-9]{1,2}', key):
+            raise AttributeError('Invalid register name: ' + str(key))
+        i = int(key[1:])
+        if not (0 <= i < 32):
+            raise AttributeError('Invalid register index: ' + str(i))
+        return i
+
+    def __getattr__(self, key):
+        if key.startswith('_'):
+            raise AttributeError()
+
+        if key == 'PC':
+            return self._probe.read_pc()
+        if key == 'SP':
+            return self._probe.read_sp()
+        if key == 'SREG':
+            return self._probe.read_sreg()
+        if key == 'RX':
+            return (self._probe.read_gpreg(27) << 8) | self._probe.read_gpreg(26)
+        if key == 'RY':
+            return (self._probe.read_gpreg(29) << 8) | self._probe.read_gpreg(28)
+        if key == 'RZ':
+            return (self._probe.read_gpreg(31) << 8) | self._probe.read_gpreg(30)
+
+        return self._probe.read_gpreg(self._match_GPREG(key))
+
+    def __setattr__(self, key, value):
+        if not getattr(self, '_active', False):
+            object.__setattr__(self, key, value)
+            return
+
+        v = int(value)
+        if key == 'PC':
+            self._probe.write_pc(v)
+        elif key == 'SP':
+            self._probe.write_sp(v)
+        elif key == 'SREG':
+            self._probe.write_sreg(v)
+        elif key == 'RX':
+            self._probe.write_gpreg(26, v & 0xFF)
+            self._probe.write_gpreg(27, (v >> 8) & 0xFF)
+        elif key == 'RY':
+            self._probe.write_gpreg(28, v & 0xFF)
+            self._probe.write_gpreg(29, (v >> 8) & 0xFF)
+        elif key == 'RZ':
+            self._probe.write_gpreg(30, v & 0xFF)
+            self._probe.write_gpreg(31, (v >> 8) & 0xFF)
+        else:
+            self._probe.write_gpreg(self._match_GPREG(key), v)
+
+
 class DeviceAccessor:
     """Accessor class for a device.
 
@@ -490,6 +551,9 @@ class DeviceAccessor:
         return self._desc
 
     def __getattr__(self, key):
+        if key == 'core':
+            return CoreAccessor(self._probe)
+
         byteorders = (self._desc.access_config.get('lsb_first_on_write', None),
                       self._desc.access_config.get('lsb_first_on_read', None))
         return PeripheralAccessor(self._probe, key, self._desc.peripherals[key], byteorders)
