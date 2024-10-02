@@ -164,7 +164,7 @@ def test_avr_spm_write_3(bench):
     nvm_req = _send_SPM_request(bench.dev_model, 0x7000, 0x55AA)
     assert nvm_req.result > 0
     assert bench.dev_model.state() == corelib.Device.State.Halted
-    bench.sim_advance(1000)
+    bench.sim_advance(4600)
     assert bench.dev_model.state() == corelib.Device.State.Sleeping
     assert not NVMCTRL.SPMCSR.read()
     assert flash[0x7000] == 0xAA
@@ -175,7 +175,7 @@ def test_avr_spm_write_3(bench):
     nvm_req = _send_SPM_request(bench.dev_model, 0x7000, 0x55AA)
     assert nvm_req.result > 0
     assert bench.dev_model.state() == corelib.Device.State.Halted
-    bench.sim_advance(1000)
+    bench.sim_advance(4600)
     assert bench.dev_model.state() == corelib.Device.State.Sleeping
     assert not NVMCTRL.SPMCSR.read()
     assert not flash.programmed(0x7000) and not flash.programmed(0x7001)
