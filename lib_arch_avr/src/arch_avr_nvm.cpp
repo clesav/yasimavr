@@ -427,7 +427,7 @@ int ArchAVR_NVM::process_NVM_write(NVM_request_t& req)
             NonVolatileMemory* flash = get_nvm(ArchAVR_Core::NVM_Flash);
             flash_addr_t spm_page_start = spm_addr - page_offset;
             flash->erase(spm_page_start, m_spm_page_size);
-            delay = (device()->frequency() * m_config.spm_erase_delay) / 1000000UL;
+            delay = ((unsigned long long) device()->frequency() * m_config.spm_erase_delay) / 1000000ULL;
             logger().dbg("SPM page erase starting on [0x%04x;0x%04x] (%d cycles)", spm_page_start, spm_page_start + m_spm_page_size - 1, delay);
         } break;
 
@@ -436,7 +436,7 @@ int ArchAVR_NVM::process_NVM_write(NVM_request_t& req)
             flash_addr_t spm_page_start = spm_addr - page_offset;
             flash->spm_write(m_spm_buffer, m_spm_bufset, spm_page_start, m_spm_page_size);
             clear_spm_buffer();
-            delay = (device()->frequency() * m_config.spm_write_delay) / 1000000UL;
+            delay = ((unsigned long long) device()->frequency() * m_config.spm_write_delay) / 1000000ULL;
             logger().dbg("SPM page write starting on [0x%04x;0x%04x] (%d cycles)", spm_page_start, spm_page_start + m_spm_page_size - 1, delay);
         } break;
 
@@ -522,14 +522,14 @@ void ArchAVR_NVM::start_eeprom_command(uint8_t command)
         case EE_ModeErase: {
             m_ee_prog_mode = EE_ModeErase;
             eeprom->erase(addr, 1);
-            delay = (device()->frequency() * m_config.ee_erase_delay) / 1000000UL;
+            delay = ((unsigned long long) device()->frequency() * m_config.ee_erase_delay) / 1000000ULL;
         } break;
 
         case EE_ModeWrite: {
             m_ee_prog_mode = EE_ModeWrite;
             uint8_t data = read_ioreg(m_config.reg_ee_data);
             eeprom->spm_write(data, addr);
-            delay = (device()->frequency() * m_config.ee_write_delay) / 1000000UL;
+            delay = ((unsigned long long) device()->frequency() * m_config.ee_write_delay) / 1000000ULL;
         } break;
 
         case EE_ModeEraseWrite: {
@@ -537,7 +537,7 @@ void ArchAVR_NVM::start_eeprom_command(uint8_t command)
             uint8_t data = read_ioreg(m_config.reg_ee_data);
             eeprom->erase(addr, 1);
             eeprom->spm_write(data, addr);
-            delay = (device()->frequency() * m_config.ee_erase_write_delay) / 1000000UL;
+            delay = ((unsigned long long) device()->frequency() * m_config.ee_erase_write_delay) / 1000000ULL;
         } break;
     }
 
