@@ -1,7 +1,7 @@
 /*
  * arch_avr_device.cpp
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -123,11 +123,13 @@ void ArchAVR_Core::dbg_write_data(mem_addr_t addr, const uint8_t* buf, mem_addr_
 
 //=======================================================================================
 
+#define CORE_CONFIG reinterpret_cast<const ArchAVR_CoreConfig&>(config.core)
+
 ArchAVR_Device::ArchAVR_Device(const ArchAVR_DeviceConfig& config)
 :Device(m_core_impl, config)
-,m_core_impl(reinterpret_cast<const ArchAVR_CoreConfig&>(config.core))
-,m_sections(config.core.flash_page_count(),
-            config.core.flash_page_size ? config.core.flash_page_size : (config.core.flashend + 1),
+,m_core_impl(CORE_CONFIG)
+,m_sections(CORE_CONFIG.flash_page_count(),
+            CORE_CONFIG.flash_page_size ? CORE_CONFIG.flash_page_size : (CORE_CONFIG.flashend + 1),
             Section_Count)
 {
     m_core_impl.m_section_manager = &m_sections;
@@ -153,7 +155,7 @@ bool ArchAVR_Device::core_ctlreq(ctlreq_id_t req, ctlreq_data_t* reqdata)
         if (reqdata->index == ArchAVR_Core::NVM_EEPROM)
             reqdata->data = &(m_core_impl.m_eeprom);
         else if (reqdata->index == ArchAVR_Core::NVM_Lockbit)
-        	reqdata->data = &(m_core_impl.m_lockbit);
+            reqdata->data = &(m_core_impl.m_lockbit);
         else if (reqdata->index == Core::NVM_GetCount)
             reqdata->data = (unsigned int) (Core::NVM_CommonCount + 2);
         else

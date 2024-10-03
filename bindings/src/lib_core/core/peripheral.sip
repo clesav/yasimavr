@@ -1,7 +1,7 @@
 /*
  * peripheral.sip
  *
- *  Copyright 2022 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022-2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -141,12 +141,12 @@ struct NVM_request_t {
 #include "core/sim_peripheral.h"
 %End
 
-    int kind;
+    unsigned char kind /PyInt/;
     int nvm;
     mem_addr_t addr;
     uint16_t data;
-    int result;
-
+    signed char result /PyInt/;
+    unsigned short cycles;
 };
 
 

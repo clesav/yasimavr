@@ -26,6 +26,7 @@
 
 #include "core/sim_types.h"
 #include "core/sim_peripheral.h"
+#include "core/sim_interrupt.h"
 #include "core/sim_memory.h"
 #include "arch_avr_globals.h"
 
@@ -33,6 +34,129 @@ YASIMAVR_BEGIN_NAMESPACE
 
 
 //=======================================================================================
+
+/**
+   \brief Configuration structure for ArchAVR_NVM.
+ */
+struct ArchAVR_NVMConfig {
+
+    reg_addr_t        reg_spm_ctrl;
+    bitmask_t         bm_spm_cmd;
+    bitmask_t         bm_spm_enable;
+    bitmask_t         bm_spm_inten;
+    bitmask_t         bm_spm_rww_busy;
+
+    regbit_compound_t rbc_ee_addr;
+    reg_addr_t        reg_ee_data;
+    regbit_t          rb_ee_read;
+    regbit_t          rb_ee_write;
+    regbit_t          rb_ee_wren;
+    regbit_t          rb_ee_inten;
+    regbit_t          rb_ee_mode;
+
+    /// Flash/EEPROM page write operation delay in usecs
+    unsigned int      spm_write_delay;
+    /// Flash/EEPROM page erase operation delay in usecs
+    unsigned int      spm_erase_delay;
+    /// EEPROM Write delay in usecs
+    unsigned int      ee_write_delay;
+    /// EEPROM Erase delay in usecs
+    unsigned int      ee_erase_delay;
+    /// EEPROM Erase/Write delay in usecs
+    unsigned int      ee_erase_write_delay;
+    /// Interrupt vector for SPM
+    int_vect_t        iv_spm_ready;
+    /// Interrupt vector index for EEREADY
+    int_vect_t        iv_ee_ready;
+    /// Device ID
+    uint32_t          dev_id;
+
+};
+
+
+/**
+   \brief Implementation of a NVM controller for AVR series
+
+   Limitations:
+    - The Configuration Change Protection for SPM registers has no effect
+
+   CTLREQs supported:
+    - AVR_CTLREQ_NVM_REQUEST : Used internally when the CPU writes to a data space address
+    mapped to a NVM block. Used to redirect the write to the page buffer.
+ */
+class AVR_ARCHAVR_PUBLIC_API ArchAVR_NVM : public Peripheral, public InterruptHandler {
+
+public:
+
+    explicit ArchAVR_NVM(const ArchAVR_NVMConfig& config);
+    virtual ~ArchAVR_NVM();
+
+    virtual bool init(Device& device) override;
+    virtual void reset() override;
+    virtual bool ctlreq(ctlreq_id_t req, ctlreq_data_t* data) override;
+    virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
+    virtual void interrupt_ack_handler(int_vect_t vector) override;
+
+private:
+
+    class SPM_Timer;
+    friend class SPM_Timer;
+
+    class EE_Timer;
+    friend class EE_Timer;
+
+    enum State {
+        State_Idle = 0,
+        State_Pending,
+        State_Read,
+        State_Write,
+    };
+
+    enum SPM_Command {
+        SPM_BufferLoad  = 0x00,
+        SPM_PageErase   = 0x01,
+        SPM_PageWrite   = 0x02,
+        SPM_LockBits    = 0x04,
+        SPM_RWWEnable   = 0x08,
+        SPM_SigRead     = 0x10,
+    };
+
+    enum EEPROM_Mode {
+        EE_ModeEraseWrite = 0,
+        EE_ModeErase,
+        EE_ModeWrite,
+        EE_ModeRead
+    };
+
+    const ArchAVR_NVMConfig& m_config;
+
+    uint8_t* m_spm_buffer;
+    uint8_t* m_spm_bufset;
+    flash_addr_t m_spm_page_size;
+    State m_spm_state;
+    int m_spm_command;
+    SPM_Timer* m_spm_timer;
+    bool m_halt;
+
+    State m_ee_state;
+    uint8_t m_ee_prog_mode;
+    EE_Timer* m_ee_timer;
+
+    MemorySectionManager* m_section_manager;
+
+    NonVolatileMemory* get_nvm(int nvm_index);
+    void clear_spm_buffer();
+    int process_NVM_read(NVM_request_t& req);
+    int process_NVM_write(NVM_request_t& req);
+    void spm_timer_next();
+    void start_eeprom_command(uint8_t command);
+    void ee_timer_next();
+
+};
+
+
+//=======================================================================================
+
 /**
    \file
    \name Controller requests definition for ArchAVR_Fuses

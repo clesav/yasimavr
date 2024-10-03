@@ -19,6 +19,56 @@
     along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+//=======================================================================================
+
+struct ArchAVR_NVMConfig {
+%TypeHeaderCode
+#include "arch_avr_nvm.h"
+%End
+
+    reg_addr_t        reg_spm_ctrl;
+    bitmask_t         bm_spm_cmd;
+    bitmask_t         bm_spm_enable;
+    bitmask_t         bm_spm_inten;
+    bitmask_t         bm_spm_rww_busy;
+
+    regbit_compound_t rbc_ee_addr;
+    reg_addr_t        reg_ee_data;
+    regbit_t          rb_ee_read;
+    regbit_t          rb_ee_write;
+    regbit_t          rb_ee_wren;
+    regbit_t          rb_ee_inten;
+    regbit_t          rb_ee_mode;
+
+    unsigned int      spm_write_delay;
+    unsigned int      spm_erase_delay;
+    unsigned int      ee_write_delay;
+    unsigned int      ee_erase_delay;
+    unsigned int      ee_erase_write_delay;
+    int_vect_t        iv_spm_ready;
+    int_vect_t        iv_ee_ready;
+    uint32_t          dev_id;
+
+};
+
+
+class ArchAVR_NVM : public Peripheral, public InterruptHandler /NoDefaultCtors/ {
+%TypeHeaderCode
+#include "arch_avr_nvm.h"
+%End
+
+public:
+
+    ArchAVR_NVM(const ArchAVR_NVMConfig&);
+
+    virtual bool init(Device&);
+    virtual void reset();
+    virtual bool ctlreq(ctlreq_id_t, ctlreq_data_t*);
+    virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
+    virtual void interrupt_ack_handler(int_vect_t);
+
+};
+
 
 //=======================================================================================
 

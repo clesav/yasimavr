@@ -1,7 +1,7 @@
 /*
  * arch_avr_device.sip
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -25,6 +25,11 @@ struct ArchAVR_CoreConfig : public CoreConfiguration {
 %TypeHeaderCode
 #include "arch_avr_device.h"
 %End
+
+    flash_addr_t flash_page_size;
+
+    flash_addr_t flash_page_count() const;
+
 };
 
 struct ArchAVR_DeviceConfig : public DeviceConfiguration /NoDefaultCtors/ {

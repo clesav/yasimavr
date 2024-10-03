@@ -1,7 +1,7 @@
 /*
  * arch_avr_device.h
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -38,7 +38,20 @@ YASIMAVR_BEGIN_NAMESPACE
 //Variant configuration structure. Nothing to add compared to generic ones
 //so we just use typedef
 
-typedef CoreConfiguration ArchAVR_CoreConfig;
+struct ArchAVR_CoreConfig : CoreConfiguration {
+
+    flash_addr_t            flash_page_size;
+
+    constexpr flash_addr_t flash_page_count() const
+    {
+        return flash_page_size ? ((flashend + 1) / flash_page_size) : 1;
+    }
+
+};
+
+/**
+   \brief Configuration structure for ArchXT_Core
+ */
 typedef DeviceConfiguration ArchAVR_DeviceConfig;
 
 

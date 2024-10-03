@@ -1,6 +1,6 @@
 # test_avr_port.py
 #
-# Copyright 2023 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2023-2024 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -18,7 +18,7 @@
 # along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
 
 import pytest
-from _test_bench_avr import BenchAVR
+from _test_bench_avr import bench_m328
 from _test_utils import PinState, DictSignalHook
 
 
@@ -29,7 +29,7 @@ Test of the GPIO port controller on ATMega328
 
 @pytest.fixture
 def bench():
-    return BenchAVR()
+    return bench_m328()
 
 
 def test_avr_port_output(bench):

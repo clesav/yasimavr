@@ -1,6 +1,6 @@
 # YAML configuration file for atmega48-88-168-328 variants
 #
-# Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -120,6 +120,7 @@ FUSES_48:
 #========================================================================================
 FUSES_88_168:
     config:
+        #0:Fuse Low Byte , 1:Fuse High Byte , 2:Fuse Ext Byte
         rb_bootsz: 0x02/1-2
         rb_bootrst: 0x02/0
         bm_bootlockbit: 4-5
@@ -128,7 +129,65 @@ FUSES_88_168:
 #========================================================================================
 FUSES_328:
     config:
+        #0:Fuse Low Byte , 1:Fuse High Byte , 2:Fuse Ext Byte
         rb_bootsz: 0x01/1-2
         rb_bootrst: 0x01/0
         bm_bootlockbit: 4-5
         bm_applockbit: 2-3
+
+#========================================================================================
+NVMCTRL:
+    registers:
+        - name: SPMCSR
+          address: 0x37
+          fields:
+            SPMEN: { kind: BIT, pos: 0 }
+            PGERS: { kind: BIT, pos: 1 }
+            PGWRT: { kind: BIT, pos: 2 }
+            BLBSET: { kind: BIT, pos: 3 }
+            RWWSRE: { kind: BIT, pos: 4 }
+            SIGRD: { kind: BIT, pos: 5 }
+            RWWSB: { kind: BIT, pos: 6, readonly: yes }
+            SPMIE: { kind: BIT, pos: 7 }
+
+        - name: EECR
+          address: 0x1F
+          fields:
+            EERE: { kind: BIT, pos: 0 }
+            EEPE: { kind: BIT, pos: 1 }
+            EEMPE: { kind: BIT, pos: 2 }
+            EERIE: { kind: BIT, pos: 3 }
+            EEPM:
+                kind: ENUM
+                LSB: 4
+                MSB: 5
+                values: [ EraseWrite, Erase, Write ]
+
+        - name: EEAR
+          address: 0x21
+          size: 2
+          alias: [ EEARL, EEARH ]
+          fields:
+            EEAR: { kind: INT, LSB: 0, MSB: 9 }
+
+        - name: EEDR
+          address: 0x20
+
+    config:
+        reg_spm_ctrl: SPMCSR
+        bm_spm_cmd: SPMCSR/PGERS|PGWRT|BLBSET|RWWSRE|SIGRD
+        bm_spm_enable: SPMCSR/SPMEN
+        bm_spm_inten: SPMCSR/SPMIE
+        bm_spm_rww_busy: SPMCSR/RWWSB
+        rbc_ee_addr: [ EEAR/EEAR ]
+        reg_ee_data: EEDR
+        rb_ee_read: EECR/EERE
+        rb_ee_write: EECR/EEPE
+        rb_ee_wren: EECR/EEMPE
+        rb_ee_inten: EECR/EERIE
+        rb_ee_mode: EECR/EEPM
+        spm_write_delay: 4500
+        spm_erase_delay: 4500
+        ee_write_delay: 1800
+        ee_erase_delay: 1800
+        ee_erase_write_delay: 3400

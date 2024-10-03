@@ -1,6 +1,6 @@
 # _test_bench_avr.py
 #
-# Copyright 2023 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2023-2024 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -23,21 +23,25 @@ import yasimavr.lib.arch_avr as archlib
 from yasimavr.device_library import load_device, DeviceAccessor
 
 
-fw_path = os.path.join(os.path.dirname(__file__), 'fw', 'testfw_atmega328.elf')
+PATH_TESTFW_M328 = os.path.join(os.path.dirname(__file__), 'fw', 'testfw_atmega328.elf')
 
 
 class BenchAVR:
 
-    def __init__(self):
-        self.dev_model = load_device('atmega328')
+    def __init__(self, dev_model, path_fw):
+        if isinstance(dev_model, str):
+            self.dev_model = load_device(dev_model)
+        else:
+            self.dev_model = dev_model
+
         self.dev_model.logger().set_level(corelib.Logger.Level.Trace)
         self.dev_model.set_option(corelib.Device.Option.InfiniteLoopDetect, False)
 
         self.loop = corelib.SimLoop(self.dev_model)
         self.loop.set_fast_mode(True)
 
-        self.fw = corelib.Firmware.read_elf(fw_path)
-        self.fw.frequency = 1000
+        self.fw = corelib.Firmware.read_elf(path_fw)
+        self.fw.frequency = 1000000
         self.fw.vcc = 5.0
         self.fw.aref = 5.0
         self.dev_model.load_firmware(self.fw)
@@ -58,3 +62,7 @@ class BenchAVR:
                 if self.loop.state() == self.loop.State.Done and not expect_end:
                     raise Exception('Device stopped unexpectedly')
                 break
+
+
+def bench_m328():
+    return BenchAVR('atmega328', PATH_TESTFW_M328)

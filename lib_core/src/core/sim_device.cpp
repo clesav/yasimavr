@@ -1,7 +1,7 @@
 /*
  * sim_device.cpp
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -421,11 +421,14 @@ bool Device::core_ctlreq(ctlreq_id_t req, ctlreq_data_t* reqdata)
     }
 
     else if (req == AVR_CTLREQ_CORE_WAKEUP) {
-        m_logger.dbg("Device waking up");
-        for (auto per : m_peripherals)
-            per->sleep(false, m_sleep_mode);
+        if (m_state == State_Sleeping) {
+            m_logger.dbg("Device waking up");
+            for (auto per : m_peripherals)
+                per->sleep(false, m_sleep_mode);
 
-        m_state = State_Running;
+            m_state = State_Running;
+        }
+
         m_sleep_mode = SleepMode::Active;
 
         return true;
@@ -472,13 +475,16 @@ bool Device::core_ctlreq(ctlreq_id_t req, ctlreq_data_t* reqdata)
     }
 
     else if (req == AVR_CTLREQ_CORE_HALT) {
-        if (m_state == State_Running && reqdata->data.as_uint()) {
-            m_state = State_Halted;
-            m_logger.dbg("Device halted");
-        }
-        else if (m_state == State_Halted && !reqdata->data.as_uint()) {
-            m_state = State_Running;
-            m_logger.dbg("Device resuming from halt");
+        if (reqdata->data.as_uint()) {
+            if (m_state == State_Running || m_state == State_Sleeping) {
+                m_state = State_Halted;
+                m_logger.dbg("Device halted");
+            }
+        } else {
+            if (m_state == State_Halted) {
+                m_state = (m_sleep_mode == SleepMode::Active) ? State_Running : State_Sleeping;
+                m_logger.dbg("Device resuming from halt");
+            }
         }
         return true;
     }

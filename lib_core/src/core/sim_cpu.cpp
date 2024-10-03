@@ -1,7 +1,7 @@
 /*
  * sim_cpu.cpp
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -561,14 +561,11 @@ cycle_count_t Core::run_instruction()
                     if (RAMPZ_VALID)
                         z |= cpu_read_ioreg(m_config.rampz) << 16;
                     uint16_t w = (CPU_READ_GPREG(1) << 8) | CPU_READ_GPREG(0);
-                    NVM_request_t nvm_req = { .kind = 0, .nvm = -1, .addr = z, .data = w, .result = 0 };
+                    NVM_request_t nvm_req = { .kind = 0, .nvm = -1, .addr = z, .data = w, .result = 0, .cycles = 3 };
                     ctlreq_data_t d = { .data = &nvm_req };
-                    m_device->ctlreq(AVR_IOCTL_NVM, AVR_CTLREQ_NVM_REQUEST, &d);
-                    if (nvm_req.result < 0) {
-                        new_pc = m_pc;
-                        cycle = 0;
-                        TRACE_OP("spm Z[%04x]%s %02x - error", z, (op ? "+" : ""), w);
-                    } else {
+                    bool ok = m_device->ctlreq(AVR_IOCTL_NVM, AVR_CTLREQ_NVM_REQUEST, &d);
+                    if (ok && nvm_req.result >= 0) {
+                        cycle = nvm_req.cycles;
                         TRACE_OP("spm Z[%04x]%s %02x", z, (op ? "+" : ""), w);
                         if (op) {
                             z += 2;
@@ -576,6 +573,13 @@ cycle_count_t Core::run_instruction()
                                 cpu_write_ioreg(m_config.rampz, z >> 16);
                             set_r16le(R_ZL, z);
                         }
+                    } else {
+                        if (!ok && !m_device->test_option(Device::Option_IgnoreBadCpuLPM))
+                            m_device->crash(CRASH_BAD_CPU_IO, "SPM with no NVM controller");
+
+                        new_pc = m_pc;
+                        cycle = 0;
+                        TRACE_OP("spm Z[%04x]%s %02x - error", z, (op ? "+" : ""), w);
                     }
                 }   break;
                 case 0x9409:   // IJMP -- Indirect jump -- 1001 0100 0000 1001
