@@ -1,6 +1,6 @@
 # Makefile for the python bindings of yasim-avr
 
-# Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
 
 # This file is part of yasim-avr.
 
@@ -66,7 +66,7 @@ bindings: siplib
 	-@$(MAKE_DIR) Release
 	$(COPY_FILE) $(SRC_DIR_BKSL)pyproject.Release.toml $(SIPGEN_DIR_BKSL)pyproject.toml
 	$(COPY_FILE) project.py sipgen
-	cd sipgen && sip-build
+	cd sipgen && python -m sipbuild.tools.build
 	$(COPY_FILE) $(SIPGEN_DIR_BKSL)*.$(LIB_EXT) Release
 	$(COPY_FILE) $(SIPGEN_DIR_BKSL)*.pyi Release
 	$(COPY_FILE) $(SIPLIB_DIR_BKSL)_sip*.$(LIB_EXT) Release
@@ -76,7 +76,7 @@ bindings-debug: siplib
 	-@$(MAKE_DIR) Debug
 	$(COPY_FILE) $(SRC_DIR_BKSL)pyproject.Debug.toml $(SIPGEN_DIR_BKSL)pyproject.toml
 	$(COPY_FILE) project.py sipgen
-	cd sipgen && sip-build --tracing --gdb --no-line-directive
+	cd sipgen && python -m sipbuild.tools.build --tracing --gdb --no-line-directive
 	$(COPY_FILE) $(SIPGEN_DIR_BKSL)*.$(LIB_EXT) Debug
 	$(COPY_FILE) $(SIPGEN_DIR_BKSL)*.pyi Debug
 	$(COPY_FILE) $(SIPLIB_DIR_BKSL)_sip*.$(LIB_EXT) Debug

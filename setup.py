@@ -24,6 +24,15 @@ PROJECT_URLS = {
     'Bug Tracker': 'https://github.com/clesav/yasimavr/issues',
 }
 
+
+YASIMAVR_COMPILE_OPTIONS = [
+    #('YASIMAVR_NAMESPACE, 'avr'),
+    #('YASIMAVR_NO_TRACE', None),
+    #('YASIMAVR_NO_ACC_CTRL', None)
+]
+
+
+
 import glob
 import os
 import shutil
@@ -156,7 +165,7 @@ class _BindingsSubPackageBuilder(yasimavr_bindings_builder):
         #Create the corresponding Extension instance and fill it
         ext = Extension(buildable.fq_name,
                         buildable.sources,
-                        define_macros=define_macros,
+                        define_macros=define_macros + YASIMAVR_COMPILE_OPTIONS,
                         extra_compile_args=buildable.extra_compile_args + GCC_EXT_COMPILER_EXTRA_ARGS,
                         extra_link_args=buildable.extra_link_args + GCC_EXT_LINKER_EXTRA_ARGS,
                         extra_objects=buildable.extra_objects,
@@ -376,7 +385,7 @@ setup(
         Library(name='yasimavr.lib.yasimavr_core',
                 sources=LIBRARIES['core'].get_sources(),
                 libraries=['elf'],
-                define_macros=[('YASIMAVR_CORE_DLL', None)],
+                define_macros=[('YASIMAVR_CORE_DLL', None)] + YASIMAVR_COMPILE_OPTIONS,
                 extra_compile_args=GCC_SHLIB_COMPILER_EXTRA_ARGS,
                 extra_link_args=GCC_SHLIB_LINKER_EXTRA_ARGS,
         ),
@@ -386,7 +395,7 @@ setup(
                 include_dirs=['lib_core/src'],
                 libraries=['yasimavr_core'],
                 library_dirs = ['yasimavr/lib'],
-                define_macros=[('YASIMAVR_AVR_DLL', None)],
+                define_macros=[('YASIMAVR_AVR_DLL', None)] + YASIMAVR_COMPILE_OPTIONS,
                 extra_compile_args=GCC_SHLIB_COMPILER_EXTRA_ARGS,
                 extra_link_args=GCC_SHLIB_LINKER_EXTRA_ARGS,
         ),
@@ -396,7 +405,7 @@ setup(
                 include_dirs=['lib_core/src'],
                 libraries=['yasimavr_core'],
                 library_dirs = ['yasimavr/lib'],
-                define_macros=[('YASIMAVR_XT_DLL', None)],
+                define_macros=[('YASIMAVR_XT_DLL', None)] + YASIMAVR_COMPILE_OPTIONS,
                 extra_compile_args=GCC_SHLIB_COMPILER_EXTRA_ARGS,
                 extra_link_args=GCC_SHLIB_LINKER_EXTRA_ARGS,
         ),
