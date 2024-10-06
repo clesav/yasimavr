@@ -1,6 +1,6 @@
 # Makefile for yasimavr_core library
 #
-# Copyright 2023 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2023-2024 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -67,13 +67,16 @@ endif
 all: build
 
 # Main-build Target
-build: build-dirs $(BUILD_ARTIFACT)
+build: build-dirs build-version $(BUILD_ARTIFACT)
 
 build-dirs:
 	-@$(MAKE_DIR) "$(BUILD_DIR)"
 	-@$(MAKE_DIR) "$(BUILD_DIR)/core"
 	-@$(MAKE_DIR) "$(BUILD_DIR)/ioctrl_common"
 	-@$(MAKE_DIR) "$(BUILD_DIR)/sim"
+
+build-version: build-dirs make_version_source.py $(MAKEFILE)
+	python make_version_source.py ../VERSION $(BUILD_DIR)/sim_version.h
 
 # Linker invocations
 $(BUILD_ARTIFACT): $(OBJS) $(MAKEFILE)

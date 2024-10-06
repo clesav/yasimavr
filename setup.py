@@ -1,5 +1,4 @@
 NAME = "yasimavr"
-VERSION = "0.1.2"
 DESCRIPTION = "Yet Another SIMulator for AVR"
 LICENSE = "GPLv3"
 AUTHOR = "C. Savergne"
@@ -62,6 +61,13 @@ if p not in sys.path:
 
 from bindings.project import yasimavr_bindings_project, yasimavr_bindings_builder
 
+#Extract the version from the VERSION file and prepare the defines for the core library
+from lib_core.make_version_source import extract_version
+VERSION_STR, VERSION_INT = extract_version('VERSION')
+VERSION_DEFS = [
+    ('YASIMAVR_VERSION', VERSION_INT),
+    ('YASIMAVR_VERSION_STR', VERSION_STR)
+]
 
 @dataclasses.dataclass
 class LibraryData:
@@ -352,7 +358,7 @@ class yasimavr_build_ext(build_ext):
 
 setup(
     name = NAME,
-    version = VERSION,
+    version = VERSION_STR,
     description = DESCRIPTION,
     long_description = open("README.rst").read(),
     long_description_content_type = "text/x-rst",
@@ -385,7 +391,7 @@ setup(
         Library(name='yasimavr.lib.yasimavr_core',
                 sources=LIBRARIES['core'].get_sources(),
                 libraries=['elf'],
-                define_macros=[('YASIMAVR_CORE_DLL', None)] + YASIMAVR_COMPILE_OPTIONS,
+                define_macros=[('YASIMAVR_CORE_DLL', None)] + VERSION_DEFS + YASIMAVR_COMPILE_OPTIONS,
                 extra_compile_args=GCC_SHLIB_COMPILER_EXTRA_ARGS,
                 extra_link_args=GCC_SHLIB_LINKER_EXTRA_ARGS,
         ),

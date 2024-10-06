@@ -1,7 +1,7 @@
 /*
  * sim_globals.h
  *
- *  Copyright 2023 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2023-2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -61,5 +61,12 @@
     #define YASIMAVR_QUALIFIED_NAME(name) name
 #endif
 
+
+YASIMAVR_BEGIN_NAMESPACE
+
+AVR_CORE_PUBLIC_API extern const unsigned long LIB_VERSION;
+AVR_CORE_PUBLIC_API extern const char* LIB_VERSION_STR;
+
+YASIMAVR_END_NAMESPACE
 
 #endif //__YASIMAVR_GLOBALS_H__

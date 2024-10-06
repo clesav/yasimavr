@@ -29,3 +29,7 @@ include bindings/Makefile
 
 #Device configuration files, are part of the wheel
 recursive-include py/yasimavr/device_library *.yml
+
+#Version management
+include VERSION
+include lib_core/make_version_source.py
