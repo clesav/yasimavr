@@ -1,6 +1,6 @@
 # generate_siplib.py
 #
-# Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -17,12 +17,22 @@
 # You should have received a copy of the GNU General Public License
 # along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
 
-from sipbuild import module as sipmod
-from sipbuild.module.main import main as module_main
+
+
 import sys
 import os
 import shutil
 import tarfile
+import glob
+
+from sipbuild import module as sip_module
+#Ensure the function 'module' is visible from the sipbuild.module package.
+#Resolves a discrepancy of import introduced with SIP 6.8.4.
+from sipbuild.version import SIP_VERSION
+if SIP_VERSION <= 0x060803:
+    from sipbuild.module.main import main as module_main
+else:
+    from sipbuild.tools.module import main as module_main
 
 sys.argv = [sys.argv[0],
             '--sdist',
@@ -33,17 +43,20 @@ module_main()
 
 #shutil.copyfile('siplib-makefile', '../siplib/Makefile')
 
-sip_abi_version = sipmod.abi_version.resolve_abi_version('')
+sip_abi_version = sip_module.abi_version.resolve_abi_version('')
 abi_major_version = sip_abi_version.split('.')[0]
-module_version = sipmod.abi_version.get_sip_module_version(abi_major_version)
-print(module_version)
-
-sdist_name = 'yasimavr_lib__sip-' + module_version
+module_version = sip_module.abi_version.get_sip_module_version(abi_major_version)
 
 old_pwd = os.getcwd()
 os.chdir('../siplib')
 
-with tarfile.open(sdist_name + '.tar.gz') as f:
+sdist_glob = glob.glob('yasimavr_lib*.tar.gz')
+if not len(sdist_glob):
+    raise Exception()
+sdist_tarfn = sdist_glob[0]
+sdist_name = sdist_tarfn.rsplit('.', 2)[0]
+
+with tarfile.open(sdist_tarfn) as f:
     def is_within_directory(directory, target):
 
         abs_directory = os.path.abspath(directory)
@@ -62,8 +75,8 @@ with tarfile.open(sdist_name + '.tar.gz') as f:
 
         tar.extractall(path, members, numeric_owner=numeric_owner)
 
-
     safe_extract(f)
+
 
 if not os.path.isdir(sdist_name):
     raise Exception()

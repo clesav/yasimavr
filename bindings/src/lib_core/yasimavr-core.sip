@@ -76,3 +76,8 @@ YASIMAVR_USING_NAMESPACE
 //=======================================================================================
 
 %Include sim/sim_loop.sip
+
+//=======================================================================================
+
+const unsigned long LIB_VERSION;
+const char* LIB_VERSION_STR;

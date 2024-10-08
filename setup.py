@@ -1,5 +1,4 @@
 NAME = "yasimavr"
-VERSION = "0.1.2"
 DESCRIPTION = "Yet Another SIMulator for AVR"
 LICENSE = "GPLv3"
 AUTHOR = "C. Savergne"
@@ -23,6 +22,15 @@ PROJECT_URLS = {
     'Source Code': 'https://github.com/clesav/yasimavr',
     'Bug Tracker': 'https://github.com/clesav/yasimavr/issues',
 }
+
+
+YASIMAVR_COMPILE_OPTIONS = [
+    #('YASIMAVR_NAMESPACE, 'avr'),
+    #('YASIMAVR_NO_TRACE', None),
+    #('YASIMAVR_NO_ACC_CTRL', None)
+]
+
+
 
 import glob
 import os
@@ -53,6 +61,13 @@ if p not in sys.path:
 
 from bindings.project import yasimavr_bindings_project, yasimavr_bindings_builder
 
+#Extract the version from the VERSION file and prepare the defines for the core library
+from lib_core.make_version_source import extract_version
+VERSION_STR, VERSION_INT = extract_version('VERSION')
+VERSION_DEFS = [
+    ('YASIMAVR_VERSION', VERSION_INT),
+    ('YASIMAVR_VERSION_STR', VERSION_STR)
+]
 
 @dataclasses.dataclass
 class LibraryData:
@@ -156,7 +171,7 @@ class _BindingsSubPackageBuilder(yasimavr_bindings_builder):
         #Create the corresponding Extension instance and fill it
         ext = Extension(buildable.fq_name,
                         buildable.sources,
-                        define_macros=define_macros,
+                        define_macros=define_macros + YASIMAVR_COMPILE_OPTIONS,
                         extra_compile_args=buildable.extra_compile_args + GCC_EXT_COMPILER_EXTRA_ARGS,
                         extra_link_args=buildable.extra_link_args + GCC_EXT_LINKER_EXTRA_ARGS,
                         extra_objects=buildable.extra_objects,
@@ -343,7 +358,7 @@ class yasimavr_build_ext(build_ext):
 
 setup(
     name = NAME,
-    version = VERSION,
+    version = VERSION_STR,
     description = DESCRIPTION,
     long_description = open("README.rst").read(),
     long_description_content_type = "text/x-rst",
@@ -376,7 +391,7 @@ setup(
         Library(name='yasimavr.lib.yasimavr_core',
                 sources=LIBRARIES['core'].get_sources(),
                 libraries=['elf'],
-                define_macros=[('YASIMAVR_CORE_DLL', None)],
+                define_macros=[('YASIMAVR_CORE_DLL', None)] + VERSION_DEFS + YASIMAVR_COMPILE_OPTIONS,
                 extra_compile_args=GCC_SHLIB_COMPILER_EXTRA_ARGS,
                 extra_link_args=GCC_SHLIB_LINKER_EXTRA_ARGS,
         ),
@@ -386,7 +401,7 @@ setup(
                 include_dirs=['lib_core/src'],
                 libraries=['yasimavr_core'],
                 library_dirs = ['yasimavr/lib'],
-                define_macros=[('YASIMAVR_AVR_DLL', None)],
+                define_macros=[('YASIMAVR_AVR_DLL', None)] + YASIMAVR_COMPILE_OPTIONS,
                 extra_compile_args=GCC_SHLIB_COMPILER_EXTRA_ARGS,
                 extra_link_args=GCC_SHLIB_LINKER_EXTRA_ARGS,
         ),
@@ -396,7 +411,7 @@ setup(
                 include_dirs=['lib_core/src'],
                 libraries=['yasimavr_core'],
                 library_dirs = ['yasimavr/lib'],
-                define_macros=[('YASIMAVR_XT_DLL', None)],
+                define_macros=[('YASIMAVR_XT_DLL', None)] + YASIMAVR_COMPILE_OPTIONS,
                 extra_compile_args=GCC_SHLIB_COMPILER_EXTRA_ARGS,
                 extra_link_args=GCC_SHLIB_LINKER_EXTRA_ARGS,
         ),
