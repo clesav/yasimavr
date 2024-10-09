@@ -1,7 +1,7 @@
 /*
  * sim_debug.h
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -92,6 +92,7 @@ public:
     //the same as a CPU access
     void write_ioreg(reg_addr_t addr, uint8_t value) const;
     uint8_t read_ioreg(reg_addr_t addr) const;
+    bool has_ioreg(reg_addr_t addr) const;
 
     //Access to the flash memory
     void write_flash(flash_addr_t addr, const uint8_t* buf, flash_addr_t len) const;

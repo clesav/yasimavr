@@ -258,6 +258,21 @@ uint8_t DeviceDebugProbe::read_ioreg(reg_addr_t reg_addr) const
     return 0;
 }
 
+bool DeviceDebugProbe::has_ioreg(reg_addr_t reg_addr) const
+{
+    if (!m_device || !reg_addr.valid()) return false;
+
+    unsigned short addr = (unsigned short) reg_addr;
+
+    if (addr == R_SREG) return true;
+
+    Core& core = m_device->core();
+    const mem_addr_t iosize = core.config().ioend - core.config().iostart + 1;
+    if (addr >= iosize) return false;
+
+    return core.m_ioregs[addr] != nullptr;
+}
+
 void DeviceDebugProbe::write_flash(flash_addr_t addr, const uint8_t* buf, flash_addr_t len) const
 {
     if (!m_device) return;

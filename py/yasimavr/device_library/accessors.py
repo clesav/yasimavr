@@ -244,12 +244,30 @@ class RegisterAccessor:
         """
         return self._addr
 
+    @property
+    def size(self):
+        """Getter for the register size
+        """
+        return self._size
+
+    @property
+    def allocated(self):
+        """Returns true is the register is properly allocated in the device model
+        """
+        return all(self._probe.has_ioreg(self._addr + i)
+                   for i in range(self._size))
+
     def __str__(self):
+        try:
+            value = self.read()
+        except Exception:
+            return self.name + ' [*error*]'
+
         if self._reg.kind == 'ARRAY':
-            return self.name + ' ' + str(self.read())
+            return self.name + ' ' + str(value)
         else:
             pattern = '%%s [0x%%0%dx]' % (self._size * 2)
-            return pattern % (self.name, self.read())
+            return pattern % (self.name, value)
 
     __repr__ = __str__
 
@@ -264,6 +282,11 @@ class RegisterAccessor:
 
     def __lt__(self, other):
         return self.read() < other
+
+    def _write_byte(self, addr, value):
+        if not self._probe.has_ioreg(addr):
+            raise ValueError('Writing to unallocated register %s [0x%04x]' % (self.name, addr))
+        self._probe.write_ioreg(addr, value)
 
     def write(self, value):
         """Write a value to the I/O register
@@ -281,12 +304,12 @@ class RegisterAccessor:
 
         #Easy and most common case first
         if self._size == 1:
-            self._probe.write_ioreg(self._addr, value)
+            self._write_byte(self._addr, value)
 
         #Array case
         elif self._reg.kind == 'ARRAY':
             for i in range(self._size):
-                self._probe.write_ioreg(self._addr + i, value[i])
+                self._write_byte(self._addr + i, value[i])
 
         #Multi-byte integer.
         #Convert the value to bytes (big-endian) and write the bytes
@@ -303,7 +326,12 @@ class RegisterAccessor:
             byte_values = value.to_bytes(self._size, byteorder='little')
 
             for i in byte_indexes:
-                self._probe.write_ioreg(self._addr + i, byte_values[i])
+                self._write_byte(self._addr + i, byte_values[i])
+
+    def _read_byte(self, addr):
+        if not self._probe.has_ioreg(addr):
+            raise ValueError('Reading unallocated register %s [0x%04x]' % (self.name, addr))
+        return self._probe.read_ioreg(addr)
 
     def read(self):
         """Read a value from the I/O register
@@ -315,11 +343,11 @@ class RegisterAccessor:
 
         #Easy and most common case first
         if self._size == 1:
-            return self._probe.read_ioreg(self._addr)
+            return self._read_byte(self._addr)
 
         #Array case : no conversion to integer required
         if self._reg.kind == 'ARRAY':
-            values = bytes(self._probe.read_ioreg(self._addr + i)
+            values = bytes(self._read_byte(self._addr + i)
                            for i in range(self._reg.size))
             return values
 
@@ -336,7 +364,7 @@ class RegisterAccessor:
 
         byte_values = bytearray(self._size)
         for i in byte_indexes:
-            byte_values[i] = self._probe.read_ioreg(self._addr + i)
+            byte_values[i] = self._read_byte(self._addr + i)
 
         v = int.from_bytes(byte_values, byteorder='little')
         return v
@@ -349,7 +377,7 @@ class RegisterAccessor:
             return self._get_field_accessor(field_descriptor)
 
     def __setattr__(self, key, value):
-        if getattr(self, '_active', False):
+        if getattr(self, '_active', False) and not key.startswith('_'):
             field_descriptor = self._reg.fields[key]
             accessor = self._get_field_accessor(field_descriptor)
             accessor.write(value)
@@ -505,9 +533,9 @@ class DeviceAccessor:
 
     def __init__(self, arg, descriptor=None):
         if isinstance(arg, _corelib.DeviceDebugProbe):
-            self._probe = arg
-            if not self._probe.attached():
+            if not arg.attached():
                 raise Exception('the probe is not attached to a device')
+            self._probe = arg
             dev_model = arg.device()
         elif isinstance(arg, _corelib.Device):
             self._probe = _corelib.DeviceDebugProbe(arg)
@@ -551,8 +579,15 @@ class DeviceAccessor:
         return self._desc
 
     def __getattr__(self, key):
-        if key == 'core':
+        if key == 'CPU':
             return CoreAccessor(self._probe)
+
+        if key not in self._desc.peripherals:
+            raise NameError(key + ' : unknown peripheral')
+
+        ctl_id = self._desc.peripherals[key].ctl_id
+        if self._probe.device().find_peripheral(ctl_id) is None:
+            raise AttributeError(key + ' : peripheral not attached')
 
         byteorders = (self._desc.access_config.get('lsb_first_on_write', None),
                       self._desc.access_config.get('lsb_first_on_read', None))
