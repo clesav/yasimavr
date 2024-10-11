@@ -91,7 +91,7 @@ public:
     //Access to I/O registers. From the peripherals point of view, it's
     //the same as a CPU access
     void write_ioreg(reg_addr_t addr, uint8_t value) const;
-    uint8_t read_ioreg(reg_addr_t addr) const;
+    uint8_t read_ioreg(reg_addr_t addr, bool as_cpu = true) const;
     bool has_ioreg(reg_addr_t addr) const;
 
     //Access to the flash memory

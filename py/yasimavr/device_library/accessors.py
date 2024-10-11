@@ -37,6 +37,40 @@ from .descriptors import ProxyRegisterDescriptor
 from ..lib import core as _corelib
 
 
+class _ProbeIO:
+
+    def __init__(self, probe):
+        self._probe = probe
+        self._hold_counter = 0
+        self._hold_map = {}
+
+    @property
+    def probe():
+        return self._probe
+
+    def inc_hold(self):
+        self._hold_counter += 1
+
+    def dec_hold(self):
+        self._hold_counter = max(0, self._hold_counter - 1)
+        if not self._hold_counter:
+            for addr, value in self._hold_map.items():
+                self._probe.write_ioreg(addr, value)
+            self._hold_map.clear()
+
+    def read_ioreg(self, addr):
+        if self._hold_counter and addr in self._hold_map:
+            return self._hold_map[addr]
+        else:
+            return self._probe.read_ioreg(addr)
+
+    def write_ioreg(self, addr, value):
+        if not self._hold_counter:
+            self._probe.write_ioreg(addr, value)
+        else:
+            self._hold_map[addr] = value
+
+
 @total_ordering
 class _FieldAccessor:
     """Generic accessor class for a field of a I/O register.
@@ -217,11 +251,12 @@ class RegisterAccessor:
     It supports ordering and comparison to integers.
     """
 
-    def __init__(self, probe, per, addr, name, reg):
-        self._probe = probe
+    def __init__(self, probeIO, per, addr, name, reg):
+        self._probeIO = probeIO
         self._per = per
         self._reg_name = name
         self._addr = addr
+        self._read_as_cpu = True
 
         if isinstance(reg, ProxyRegisterDescriptor):
             self._reg = reg.reg
@@ -254,8 +289,11 @@ class RegisterAccessor:
     def allocated(self):
         """Returns true is the register is properly allocated in the device model
         """
-        return all(self._probe.has_ioreg(self._addr + i)
+        return all(self._probeIO.probe.has_ioreg(self._addr + i)
                    for i in range(self._size))
+
+    def set_read_as_cpu(self, enable):
+        self._read_as_cpu = enable
 
     def __str__(self):
         try:
@@ -284,9 +322,9 @@ class RegisterAccessor:
         return self.read() < other
 
     def _write_byte(self, addr, value):
-        if not self._probe.has_ioreg(addr):
+        if not self._probeIO.probe.has_ioreg(addr):
             raise ValueError('Writing to unallocated register %s [0x%04x]' % (self.name, addr))
-        self._probe.write_ioreg(addr, value)
+        self._probeIO.write_ioreg(addr, value)
 
     def write(self, value):
         """Write a value to the I/O register
@@ -329,9 +367,9 @@ class RegisterAccessor:
                 self._write_byte(self._addr + i, byte_values[i])
 
     def _read_byte(self, addr):
-        if not self._probe.has_ioreg(addr):
+        if not self._probeIO.probe.has_ioreg(addr):
             raise ValueError('Reading unallocated register %s [0x%04x]' % (self.name, addr))
-        return self._probe.read_ioreg(addr)
+        return self._probeIO.read_ioreg(addr, self._read_as_cpu)
 
     def read(self):
         """Read a value from the I/O register
@@ -397,13 +435,19 @@ class RegisterAccessor:
         else:
             raise ValueError('Unknown field kind: ' + k)
 
+    def __enter__(self):
+        self._probeIO.inc_hold()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self._probeIO.dec_hold()
+
 
 class PeripheralAccessor:
     """Accessor class for a peripheral instance
     """
 
-    def __init__(self, probe, name, per, byteorders):
-        self._probe = probe
+    def __init__(self, probeIO, name, per, byteorders):
+        self._probeIO = probeIO
         self._name = name
         self._per = per
         self._byteorders = byteorders
@@ -431,7 +475,7 @@ class PeripheralAccessor:
         """Getter for the peripheral signal (or None if not used)
         """
         ctl_id = _corelib.str_to_id(self._per.ctl_id)
-        ok, d = self._probe.device().ctlreq(ctl_id, _corelib.CTLREQ_GET_SIGNAL)
+        ok, d = self._probeIO.probe.device().ctlreq(ctl_id, _corelib.CTLREQ_GET_SIGNAL)
         if ok:
             return d.data.as_ptr(_corelib.Signal)
         else:
@@ -443,17 +487,23 @@ class PeripheralAccessor:
         else:
             reg_descriptor = self._per.class_descriptor.registers[key]
             reg_addr = self._per.reg_address(key)
-            return RegisterAccessor(self._probe, self, reg_addr, key, reg_descriptor)
+            return RegisterAccessor(self._probeIO, self, reg_addr, key, reg_descriptor)
 
     def __setattr__(self, key, value):
         if getattr(self, '_active', False):
             value = value.__index__()
             reg_descriptor = self._per.class_descriptor.registers[key]
             reg_addr = self._per.reg_address(key)
-            reg_accessor = RegisterAccessor(self._probe, self, reg_addr, key, reg_descriptor)
+            reg_accessor = RegisterAccessor(self._probeIO, self, reg_addr, key, reg_descriptor)
             reg_accessor.write(value)
         else:
             object.__setattr__(self, key, value)
+
+    def __enter__(self):
+        self._probeIO.inc_hold()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self._probeIO.dec_hold()
 
 
 class CoreAccessor:
@@ -543,6 +593,8 @@ class DeviceAccessor:
         else:
             raise TypeError('First arg must be a device or a attached probe')
 
+        self._probeIO = _ProbeIO(self._probe)
+
         if descriptor is not None:
             self._desc = descriptor
         else:
@@ -591,4 +643,4 @@ class DeviceAccessor:
 
         byteorders = (self._desc.access_config.get('lsb_first_on_write', None),
                       self._desc.access_config.get('lsb_first_on_read', None))
-        return PeripheralAccessor(self._probe, key, self._desc.peripherals[key], byteorders)
+        return PeripheralAccessor(self._probeIO, key, self._desc.peripherals[key], byteorders)

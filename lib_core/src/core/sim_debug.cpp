@@ -238,7 +238,7 @@ void DeviceDebugProbe::write_ioreg(reg_addr_t reg_addr, uint8_t value) const
     }
 }
 
-uint8_t DeviceDebugProbe::read_ioreg(reg_addr_t reg_addr) const
+uint8_t DeviceDebugProbe::read_ioreg(reg_addr_t reg_addr, bool as_cpu) const
 {
     if (!m_device || !reg_addr.valid()) return 0;
 
@@ -252,8 +252,12 @@ uint8_t DeviceDebugProbe::read_ioreg(reg_addr_t reg_addr) const
     }
     else if (addr < iosize) {
         IO_Register *ioreg = core.m_ioregs[addr];
-        if (ioreg)
-            return ioreg->cpu_read(addr);
+        if (ioreg) {
+            if (as_cpu)
+                return ioreg->cpu_read(addr);
+            else
+                return ioreg->value();
+        }
     }
     return 0;
 }
