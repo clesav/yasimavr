@@ -1,6 +1,6 @@
 # sim_dump.py
 #
-# Copyright 2022 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2022-2024 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -122,7 +122,8 @@ def _serialize_registers(probe, dumper):
 
     for per_name, per_descriptor in accessor.descriptor.peripherals.items():
         per_class_descriptor = per_descriptor.class_descriptor
-        per_accessor = getattr(accessor, per_name)
+        per_accessor = getattr(accessor, per_name, None)
+        if per_accessor is None: continue
 
         reg_names = list(per_class_descriptor.registers)
         for reg_name in list(reg_names):
