@@ -136,11 +136,19 @@ def _serialize_registers(probe, dumper):
         dumper.inc_level(per_name)
 
         for reg_name in reg_names:
-            v = getattr(per_accessor, reg_name).read()
+            reg_accessor = getattr(per_accessor, reg_name)
+            reg_accessor.set_read_as_cpu(False)
+            try:
+                v = reg_accessor.read()
+            except Exception:
+                v = '--'
+
             if isinstance(v, int):
                 dumper[reg_name] = hex(v)
             elif isinstance(v, bytes):
                 dumper.dump_bytes(reg_name, v)
+            elif isinstance(v, str):
+                dumper[reg_name] = v
             else:
                 dumper[reg_name] = repr(v)
 

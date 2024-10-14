@@ -45,7 +45,7 @@ class _ProbeIO:
         self._hold_map = {}
 
     @property
-    def probe():
+    def probe(self):
         return self._probe
 
     def inc_hold(self):
@@ -58,11 +58,11 @@ class _ProbeIO:
                 self._probe.write_ioreg(addr, value)
             self._hold_map.clear()
 
-    def read_ioreg(self, addr):
+    def read_ioreg(self, addr, as_cpu=True):
         if self._hold_counter and addr in self._hold_map:
             return self._hold_map[addr]
         else:
-            return self._probe.read_ioreg(addr)
+            return self._probe.read_ioreg(addr, as_cpu)
 
     def write_ioreg(self, addr, value):
         if not self._hold_counter:
@@ -506,64 +506,125 @@ class PeripheralAccessor:
         self._probeIO.dec_hold()
 
 
-class CoreAccessor:
-    """Accessor class for the core, giving access to the CPU registers (Rxx, PC, SP, SREG)
+@total_ordering
+class CPURegisterAccessor:
+    """Accessor class for a CPU register: R0-R31, X, Y, Z, PC.
     """
 
-    def __init__(self, probe):
+    def __init__(self, probe, name, index=-1):
         self._probe = probe
-        self._active = True
+        self._name = name
+        self._index = index
+
+    @property
+    def name(self):
+        """Getter for the register name
+        """
+        return 'CPU.' + self._name
+
+    @property
+    def size(self):
+        """Getter for the register size
+        """
+        return 2 if self._name in ('PC', 'X', 'Y', 'Z') else 1
+
+    def __str__(self):
+        try:
+            value = self.read()
+        except Exception:
+            return self.name + ' [*error*]'
+
+        pattern = '%%s [0x%%0%dx]' % (self.size * 2)
+        return pattern % (self.name, value)
+
+    __repr__ = __str__
+
+    def __int__(self):
+        return self.read()
+
+    def __index__(self):
+        return self.read()
+
+    def __eq__(self, other):
+        return other == self.read()
+
+    def __lt__(self, other):
+        return self.read() < other
+
+    def write(self, value):
+        """Write a value to the I/O register
+        :param value integer (8 or 16-bits depending on the register size)
+        """
+
+        if self._name == 'PC':
+            self._probe.write_pc(value)
+        elif self._name == 'X':
+            self._probe.write_gpreg(26, value & 0xFF)
+            self._probe.write_gpreg(27, (value >> 8) & 0xFF)
+        elif self._name == 'Y':
+            self._probe.write_gpreg(28, value & 0xFF)
+            self._probe.write_gpreg(29, (value >> 8) & 0xFF)
+        elif self._name == 'Z':
+            self._probe.write_gpreg(30, value & 0xFF)
+            self._probe.write_gpreg(31, (value >> 8) & 0xFF)
+        else:
+            self._probe.write_gpreg(self._index, value & 0xFF)
+
+    def read(self):
+        """Read a value from the I/O register
+        """
+
+        if self._name == 'PC':
+            return self._probe.read_pc()
+        elif self._name == 'X':
+            return (self._probe.read_gpreg(27) << 8) | self._probe.read_gpreg(26)
+        elif self._name == 'Y':
+            return (self._probe.read_gpreg(29) << 8) | self._probe.read_gpreg(28)
+        elif self._name == 'Z':
+            return (self._probe.read_gpreg(31) << 8) | self._probe.read_gpreg(30)
+        else:
+            self._probe.read_gpreg(self._index)
+
+
+class CPUAccessor(PeripheralAccessor):
+    """Accessor class for the core, giving access to the CPU registers (Rxx, PC) along with
+    access to those located in the I/O space (SREG, SP)
+    """
 
     def _match_GPREG(self, key):
-        if not re.fullmatch('R[0-9]{1,2}', key):
-            raise AttributeError('Invalid register name: ' + str(key))
-        i = int(key[1:])
-        if not (0 <= i < 32):
-            raise AttributeError('Invalid register index: ' + str(i))
-        return i
+        if re.fullmatch('R[0-9]{1,2}', key):
+            i = int(key[1:])
+            if 0 <= i < 32:
+                return i
+        return None
 
     def __getattr__(self, key):
-        if key.startswith('_'):
-            raise AttributeError()
+        if key in ('PC', 'X', 'Y', 'Z'):
+            return CPURegisterAccessor(self._probeIO.probe, key)
 
-        if key == 'PC':
-            return self._probe.read_pc()
-        if key == 'SP':
-            return self._probe.read_sp()
-        if key == 'SREG':
-            return self._probe.read_sreg()
-        if key == 'RX':
-            return (self._probe.read_gpreg(27) << 8) | self._probe.read_gpreg(26)
-        if key == 'RY':
-            return (self._probe.read_gpreg(29) << 8) | self._probe.read_gpreg(28)
-        if key == 'RZ':
-            return (self._probe.read_gpreg(31) << 8) | self._probe.read_gpreg(30)
+        gpreg_index = self._match_GPREG(key)
+        if gpreg_index is not None:
+            return CPURegisterAccessor(self._probeIO.probe, key, gpreg_index)
 
-        return self._probe.read_gpreg(self._match_GPREG(key))
+        return super().__getattr__(key)
 
     def __setattr__(self, key, value):
         if not getattr(self, '_active', False):
             object.__setattr__(self, key, value)
             return
 
-        v = int(value)
-        if key == 'PC':
-            self._probe.write_pc(v)
-        elif key == 'SP':
-            self._probe.write_sp(v)
-        elif key == 'SREG':
-            self._probe.write_sreg(v)
-        elif key == 'RX':
-            self._probe.write_gpreg(26, v & 0xFF)
-            self._probe.write_gpreg(27, (v >> 8) & 0xFF)
-        elif key == 'RY':
-            self._probe.write_gpreg(28, v & 0xFF)
-            self._probe.write_gpreg(29, (v >> 8) & 0xFF)
-        elif key == 'RZ':
-            self._probe.write_gpreg(30, v & 0xFF)
-            self._probe.write_gpreg(31, (v >> 8) & 0xFF)
-        else:
-            self._probe.write_gpreg(self._match_GPREG(key), v)
+        if key in ('PC', 'X', 'Y', 'Z'):
+            reg_accessor = CPURegisterAccessor(self._probeIO.probe, key)
+            reg_accessor.write(value)
+            return
+
+        gpreg_index = self._match_GPREG(key)
+        if gpreg_index is not None:
+            reg_accessor = CPURegisterAccessor(self._probeIO.probe, key, gpreg_index)
+            reg_accessor.write(value)
+            return
+
+        super().__setattr__(key, value)
 
 
 class DeviceAccessor:
@@ -631,16 +692,18 @@ class DeviceAccessor:
         return self._desc
 
     def __getattr__(self, key):
-        if key == 'CPU':
-            return CoreAccessor(self._probe)
-
-        if key not in self._desc.peripherals:
-            raise NameError(key + ' : unknown peripheral')
-
-        ctl_id = self._desc.peripherals[key].ctl_id
-        if self._probe.device().find_peripheral(ctl_id) is None:
-            raise AttributeError(key + ' : peripheral not attached')
-
         byteorders = (self._desc.access_config.get('lsb_first_on_write', None),
                       self._desc.access_config.get('lsb_first_on_read', None))
-        return PeripheralAccessor(self._probeIO, key, self._desc.peripherals[key], byteorders)
+
+        try:
+            per_descriptor = self._desc.peripherals[key]
+        except KeyError:
+            raise NameError(key + ' : unknown peripheral') from None
+
+        if key == 'CPU':
+            return CPUAccessor(self._probeIO, key, per_descriptor, byteorders)
+
+        if self._probe.device().find_peripheral(per_descriptor.ctl_id) is None:
+            raise AttributeError(key + ' : peripheral not attached')
+
+        return PeripheralAccessor(self._probeIO, key, per_descriptor, byteorders)
