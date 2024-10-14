@@ -1,6 +1,6 @@
 # sim_dump.py
 #
-# Copyright 2022 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2022-2024 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -122,7 +122,8 @@ def _serialize_registers(probe, dumper):
 
     for per_name, per_descriptor in accessor.descriptor.peripherals.items():
         per_class_descriptor = per_descriptor.class_descriptor
-        per_accessor = getattr(accessor, per_name)
+        per_accessor = getattr(accessor, per_name, None)
+        if per_accessor is None: continue
 
         reg_names = list(per_class_descriptor.registers)
         for reg_name in list(reg_names):
@@ -135,11 +136,19 @@ def _serialize_registers(probe, dumper):
         dumper.inc_level(per_name)
 
         for reg_name in reg_names:
-            v = getattr(per_accessor, reg_name).read()
+            reg_accessor = getattr(per_accessor, reg_name)
+            reg_accessor.set_read_as_cpu(False)
+            try:
+                v = reg_accessor.read()
+            except Exception:
+                v = '--'
+
             if isinstance(v, int):
                 dumper[reg_name] = hex(v)
             elif isinstance(v, bytes):
                 dumper.dump_bytes(reg_name, v)
+            elif isinstance(v, str):
+                dumper[reg_name] = v
             else:
                 dumper[reg_name] = repr(v)
 

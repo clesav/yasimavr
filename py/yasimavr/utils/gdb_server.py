@@ -1,6 +1,6 @@
 # gdb_server.py
 #
-# Copyright 2022 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2022-2024 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -30,7 +30,9 @@ from yasimavr.lib.core import DeviceDebugProbe, AsyncSimLoop, Device
 #Templates for query replies and register descriptions
 
 mem_map_query_tpl = '''<memory-map>
-<memory type="flash" start="0" length="{flashlen}"/>
+<memory type="flash" start="0" length="{flashlen}">
+<property name="blocksize">0x80</property>
+</memory>
 <memory type="ram" start="0x800000" length="{datalen}"/>
 </memory-map>
 '''
@@ -210,7 +212,7 @@ class GDB_Stub:
 
     def __send_reply(self, reply):
         if self._verbose:
-            print('GDB <<< Stub : ', reply)
+            print('GDB <<< Stub : ', repr(reply))
             sys.stdout.flush()
 
         if isinstance(reply, str):
@@ -287,7 +289,7 @@ class GDB_Stub:
 
     def __handle_cmd_query(self, cmdargs):
         if cmdargs.startswith('Supported'):
-            self.__send_reply("qXfer:memory-map:read+;qXfer:exec-file:read+")
+            self.__send_reply("qXfer:memory-map:read+;qXfer:exec-file:read+;swbreak+;hwbreak+")
 
         elif cmdargs == 'Attached':
             self.__send_reply('1')
@@ -433,19 +435,19 @@ class GDB_Stub:
 
             elif content_addr < 0x810000: #Data & I/O register area
                 data_addr = content_addr - 0x800000
-                if data_addr == core_cfg.ramend + 1 and content_len == 2:
+                if (data_addr + content_len - 1) <= core_cfg.dataend:
+                    buf = self._probe.read_data(data_addr, content_len)
+                elif data_addr == core_cfg.ramend + 1 and content_len == 2:
                     #Allow GDB to read a value just after end of stack.
                     #This is necessary to make instruction stepping work when stack is empty
-                    buf = b'\0\0\0\0'
-                else:
-                    buf = self._probe.read_data(data_addr, content_len)
+                    buf = b'\0\0'
 
             # else: #EEPROM area
             #   eeprom_addr = data_addr - 0x810000
             #   if (eeprom_addr + content_len) <= self._core_config.eepromend:
             #       buf = self._probe.read_eeprom(eeprom_addr, content_len)
 
-        if buf:
+        if buf is not None:
             hexbuf = binascii.hexlify(buf)
             self.__send_reply(hexbuf)
         else:

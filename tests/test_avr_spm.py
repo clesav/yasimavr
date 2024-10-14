@@ -87,15 +87,15 @@ def test_avr_spm_write_request(dummy_spm_bench):
     '''
 
     bench = dummy_spm_bench
-    core = bench.dev.core
+    CPU = bench.dev.CPU
     #Write the SPM opcode in a empty flash address and set the Program Counter to it
     bench.dev.nvms['Flash'].program(SPM_OPCODE, 0x7000)
-    core.PC = 0x7000
+    CPU.PC = 0x7000
     #Set the Z register to the address to write
-    core.RZ = 0x0500
+    CPU.Z = 0x0500
     #Set R0+R1 to the data to write
-    core.R0 = 0xAA
-    core.R1 = 0x55
+    CPU.R0 = 0xAA
+    CPU.R1 = 0x55
     #Wakeup the device and execute the instruction
     bench.probe.set_device_state(corelib.Device.State.Running)
     bench.sim_advance(1)
@@ -114,7 +114,7 @@ def test_avr_spm_write_1(bench):
     IgnoreBadCpuLPM
     '''
 
-    bench.dev.core.PC = 0x07F00
+    bench.dev.CPU.PC = 0x07F00
 
     bench.dev_model.set_option(corelib.Device.Option.IgnoreBadCpuLPM, True)
     nvm_req = _send_SPM_request(bench.dev_model, 0x7000, 0x55AA)
@@ -145,11 +145,11 @@ def test_avr_spm_write_3(bench):
     '''Check that the CPU is halted during a flash write
     Check that the flash is writting and/or erased according to the SPM operation
     '''
-    
+
     flash = bench.dev.nvms['Flash']
     NVMCTRL = bench.dev.NVMCTRL
 
-    bench.dev.core.PC = 0x07F00
+    bench.dev.CPU.PC = 0x07F00
 
     #Check that the SPMCR=0x01 has no effect
     NVMCTRL.SPMCSR = 0x01

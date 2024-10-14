@@ -238,7 +238,7 @@ void DeviceDebugProbe::write_ioreg(reg_addr_t reg_addr, uint8_t value) const
     }
 }
 
-uint8_t DeviceDebugProbe::read_ioreg(reg_addr_t reg_addr) const
+uint8_t DeviceDebugProbe::read_ioreg(reg_addr_t reg_addr, bool as_cpu) const
 {
     if (!m_device || !reg_addr.valid()) return 0;
 
@@ -252,10 +252,29 @@ uint8_t DeviceDebugProbe::read_ioreg(reg_addr_t reg_addr) const
     }
     else if (addr < iosize) {
         IO_Register *ioreg = core.m_ioregs[addr];
-        if (ioreg)
-            return ioreg->cpu_read(addr);
+        if (ioreg) {
+            if (as_cpu)
+                return ioreg->cpu_read(addr);
+            else
+                return ioreg->value();
+        }
     }
     return 0;
+}
+
+bool DeviceDebugProbe::has_ioreg(reg_addr_t reg_addr) const
+{
+    if (!m_device || !reg_addr.valid()) return false;
+
+    unsigned short addr = (unsigned short) reg_addr;
+
+    if (addr == R_SREG) return true;
+
+    Core& core = m_device->core();
+    const mem_addr_t iosize = core.config().ioend - core.config().iostart + 1;
+    if (addr >= iosize) return false;
+
+    return core.m_ioregs[addr] != nullptr;
 }
 
 void DeviceDebugProbe::write_flash(flash_addr_t addr, const uint8_t* buf, flash_addr_t len) const
