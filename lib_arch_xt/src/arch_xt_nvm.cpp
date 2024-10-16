@@ -1,7 +1,7 @@
 /*
  * arch_xt_nvm.cpp
  *
- *  Copyright 2022 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022-2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -391,19 +391,22 @@ void ArchXT_NVM::write_nvm(NVM_request_t& nvm_req)
 
     //Determine the page size, depending on which NVM block is
     //addressed
-    mem_addr_t page_size;
+    mem_addr_t page_offset, page_num;
     int block;
     if (nvm_req.nvm == ArchXT_Core::NVM_Flash) {
         block = ArchXT_Core::NVM_Flash;
-        page_size = m_config.flash_page_size;
+        page_num = nvm_req.addr / m_config.flash_page_size;
+        page_offset = nvm_req.addr % m_config.flash_page_size;
     }
     else if (nvm_req.nvm == ArchXT_Core::NVM_EEPROM) {
         block = ArchXT_Core::NVM_EEPROM;
-        page_size = m_config.flash_page_size >> 1;
+        page_num = nvm_req.addr / m_config.eeprom_page_size;
+        page_offset = nvm_req.addr % m_config.eeprom_page_size;
     }
     else if (nvm_req.nvm == ArchXT_Core::NVM_USERROW) {
         block = ArchXT_Core::NVM_USERROW;
-        page_size = m_config.flash_page_size >> 1;
+        page_num = 0;
+        page_offset = nvm_req.addr;
     }
     else {
         m_mem_index = NVM_INDEX_INVALID;
@@ -421,12 +424,11 @@ void ArchXT_NVM::write_nvm(NVM_request_t& nvm_req)
     }
 
     //Write to the page buffer
-    mem_addr_t page_offset = nvm_req.addr % page_size;
     m_buffer[page_offset] &= nvm_req.data;
     m_bufset[page_offset] = 1;
 
     //Storing the page number
-    m_page = nvm_req.addr / page_size;
+    m_page = page_num;
 
     nvm_req.result = 1;
 
@@ -517,9 +519,7 @@ unsigned int ArchXT_NVM::execute_page_command(Command cmd)
     }
 
     //Get the page size
-    size_t page_size = m_config.flash_page_size;
-    if (!is_flash_op)
-        page_size /= 2;
+    mem_addr_t page_size = is_flash_op ? m_config.flash_page_size : m_config.eeprom_page_size;
 
     //Erase the page if required by the command
     //If it's to the flash, it's the whole page, otherwise

@@ -1,7 +1,7 @@
 /*
  * arch_xt_nvm.sip
  *
- *  Copyright 2022 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022-2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -58,6 +58,7 @@ struct ArchXT_NVMConfig {
     reg_addr_t reg_base;
 
     mem_addr_t flash_page_size;
+    mem_addr_t eeprom_page_size;
 
     unsigned int buffer_erase_delay;
 

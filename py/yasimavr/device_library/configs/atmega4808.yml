@@ -1,6 +1,6 @@
 # YAML configuration file for atmega4808 variant
 #
-# Copyright 2023 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2023-2024 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -131,6 +131,7 @@ peripherals:
         ctl_id: NVM
         config:
            flash_page_size: 128
+           eeprom_page_size: 64
            iv_eeready: NVMCTRL_EE
 
     MISC:

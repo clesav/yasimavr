@@ -1,7 +1,7 @@
 /*
  * arch_xt_nvm.h
  *
- *  Copyright 2022 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022-2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -95,8 +95,10 @@ struct ArchXT_NVMConfig {
 
     /// Base address for the peripheral I/O registers
     reg_addr_t reg_base;
-    /// Page size for the flash. The EEPROM page size is assumed to be half of it.
+    /// Page size for the flash
     mem_addr_t flash_page_size;
+    /// Page size for the EEPROM
+    mem_addr_t eeprom_page_size;
     /// Page buffer erase delay in cycles
     unsigned int buffer_erase_delay;
     /// Flash/EEPROM page write operation delay in usecs
