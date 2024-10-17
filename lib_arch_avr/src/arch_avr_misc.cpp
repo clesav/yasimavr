@@ -1,7 +1,7 @@
 /*
  * arch_avr_misc.cpp
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -105,4 +105,89 @@ bool ArchAVR_MiscRegCtrl::init(Device& device)
         add_ioreg(r);
 
     return status;
+}
+
+
+//=======================================================================================
+
+ArchAVR_ResetCtrl::ArchAVR_ResetCtrl(const ArchAVR_ResetCtrlConfig& config)
+:Peripheral(AVR_IOCTL_RST)
+,m_config(config)
+,m_rst_flags(0)
+{}
+
+
+bool ArchAVR_ResetCtrl::init(Device& device)
+{
+    bool status = Peripheral::init(device);
+
+    add_ioreg(m_config.rb_PORF);
+    add_ioreg(m_config.rb_EXTRF);
+    add_ioreg(m_config.rb_BORF);
+    add_ioreg(m_config.rb_WDRF);
+
+    return status;
+}
+
+
+void ArchAVR_ResetCtrl::reset()
+{
+    Peripheral::reset();
+
+    //Request the value of the reset flags from the device and set the flags accordingly
+    ctlreq_data_t reqdata;
+    device()->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_RESET_FLAG, &reqdata);
+    int flags = reqdata.data.as_int();
+
+    if (flags & Device::Reset_PowerOn) {
+
+        //On a Power On reset, all the other reset flag bits must be cleared
+        m_rst_flags = Device::Reset_PowerOn;
+        if (m_config.rb_PORF.valid())
+            set_ioreg(m_config.rb_PORF);
+
+    } else {
+
+        m_rst_flags |= flags;
+
+        if ((m_rst_flags & Device::Reset_BOD) && m_config.rb_BORF.valid())
+            set_ioreg(m_config.rb_BORF);
+
+        if ((m_rst_flags & Device::Reset_WDT) && m_config.rb_WDRF.valid())
+            set_ioreg(m_config.rb_WDRF);
+
+        if ((m_rst_flags & Device::Reset_Ext) && m_config.rb_EXTRF.valid())
+            set_ioreg(m_config.rb_EXTRF);
+
+    }
+}
+
+
+void ArchAVR_ResetCtrl::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
+{
+    if (addr == m_config.rb_PORF.addr)
+        check_flag_write(m_config.rb_PORF, data.value, Device::Reset_PowerOn);
+
+    if (addr == m_config.rb_BORF.addr)
+        check_flag_write(m_config.rb_BORF, data.value, Device::Reset_BOD);
+
+    if (addr == m_config.rb_WDRF.addr)
+        check_flag_write(m_config.rb_WDRF, data.value, Device::Reset_WDT);
+
+    if (addr == m_config.rb_EXTRF.addr)
+        check_flag_write(m_config.rb_EXTRF, data.value, Device::Reset_Ext);
+}
+
+
+void ArchAVR_ResetCtrl::check_flag_write(const regbit_t& rb, uint8_t write_value, int flag)
+{
+    if (!rb.extract(write_value)) {
+        //Flags are reset by writing a zero to it
+        clear_ioreg(rb);
+        m_rst_flags &= ~flag;
+    } else {
+        //Otherwise, restore the flag value
+        write_ioreg(rb, m_rst_flags & flag ? 1 : 0);
+    }
+
 }

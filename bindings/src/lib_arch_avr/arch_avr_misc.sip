@@ -1,7 +1,7 @@
 /*
  * arch_avr_misc.sip
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -71,6 +71,35 @@ public:
 
     ArchAVR_MiscRegCtrl(const ArchAVR_MiscConfig& /KeepReference/);
 
-    virtual bool init(Device& device);
+    virtual bool init(Device&);
+
+};
+
+
+struct ArchAVR_ResetCtrlConfig {
+%TypeHeaderCode
+#include "arch_avr_misc.h"
+%End
+
+    regbit_t rb_PORF;
+    regbit_t rb_EXTRF;
+    regbit_t rb_BORF;
+    regbit_t rb_WDRF;
+
+};
+
+
+class ArchAVR_ResetCtrl : public Peripheral /NoDefaultCtors/ {
+%TypeHeaderCode
+#include "arch_avr_misc.h"
+%End
+
+public:
+
+    ArchAVR_ResetCtrl(const ArchAVR_ResetCtrlConfig& /KeepReference/);
+
+    virtual bool init(Device&);
+    virtual void reset();
+    virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
 
 };

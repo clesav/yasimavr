@@ -1,7 +1,7 @@
 /*
  * arch_avr_misc.h
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -81,13 +81,13 @@ private:
 struct ArchAVR_MiscConfig {
 
     /// Array of addresses for the GPIORx registers
-	std::vector<reg_addr_t> gpior;
+    std::vector<reg_addr_t> gpior;
 
 };
 
 /**
    \brief Implementation of a misc controller for AVR series
-   
+
    This implementation supports the general purpose registers GPIORx.
  */
 class AVR_ARCHAVR_PUBLIC_API ArchAVR_MiscRegCtrl : public Peripheral {
@@ -101,6 +101,43 @@ public:
 private:
 
     const ArchAVR_MiscConfig& m_config;
+
+};
+
+
+//=======================================================================================
+
+/**
+   \brief Configuration structure for ArchAVR_ResetCtrl
+ */
+struct ArchAVR_ResetCtrlConfig {
+
+    regbit_t rb_PORF;    ///< Power On Reset flag bit
+    regbit_t rb_EXTRF;   ///< External Reset flag bit
+    regbit_t rb_BORF;    ///< Brown Out Reset flag bit
+    regbit_t rb_WDRF;    ///< Watchdog Reset flag bit
+
+};
+
+/**
+   \brief Implementation of a Reset controller for AVR core series
+ */
+class AVR_ARCHAVR_PUBLIC_API ArchAVR_ResetCtrl : public Peripheral {
+
+public:
+
+    explicit ArchAVR_ResetCtrl(const ArchAVR_ResetCtrlConfig& config);
+
+    virtual bool init(Device& device) override;
+    virtual void reset() override;
+    virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
+
+private:
+
+    const ArchAVR_ResetCtrlConfig& m_config;
+    uint32_t m_rst_flags;
+
+    void check_flag_write(const regbit_t& rb, uint8_t write_value, int flag);
 
 };
 

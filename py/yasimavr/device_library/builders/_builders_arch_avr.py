@@ -47,6 +47,14 @@ def _get_intctrl_builder():
 
 
 #========================================================================================
+#Reset controller configuration
+
+def _get_rstctrl_builder():
+    cfg_builder = PeripheralConfigBuilder(_archlib.ArchAVR_ResetCtrlConfig)
+    return PeripheralBuilder(_archlib.ArchAVR_ResetCtrl, cfg_builder)
+
+
+#========================================================================================
 #Sleep controller configuration
 
 def _slpctrl_convertor(cfg, attr, yml_val, per_desc):
@@ -412,6 +420,7 @@ class AVR_DeviceBuilder(DeviceBuilder):
     _per_builder_getters = {
         'CPU': None,
         'CPUINT': _get_intctrl_builder,
+        'RSTCTRL': _get_rstctrl_builder,
         'SLPCTRL': _get_slpctrl_builder,
         'FUSES_48': _get_fuses_builder,
         'FUSES_88_168': _get_fuses_builder,
