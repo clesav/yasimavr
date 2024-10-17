@@ -70,6 +70,12 @@ RSTCTRL:
             BORF: { kind: BIT, pos: 2 }
             WDRF: { kind: BIT, pos: 3 }
 
+    config:
+        rb_PORF: MCUSR/PORF
+        rb_EXTRF: MCUSR/EXTRF
+        rb_BORF: MCUSR/BORF
+        rb_WDRF: MCUSR/WDRF
+
 #========================================================================================
 CPUINT:
     registers:
