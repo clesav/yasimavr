@@ -395,6 +395,21 @@ def _get_twi_builder():
 
 
 #========================================================================================
+#Watchdog timer configuration
+
+def _wdt_convertor(cfg, attr, yml_val, per_desc):
+    if attr == 'delays':
+        cfg.delays = list(yml_val)
+    else:
+        raise Exception('Converter not implemented for ' + attr)
+
+
+def _get_wdt_builder():
+    cfg_builder = PeripheralConfigBuilder(_archlib.ArchAVR_WDTConfig, _wdt_convertor)
+    return PeripheralBuilder(_archlib.ArchAVR_WDT, cfg_builder)
+
+
+#========================================================================================
 
 class AVR_BaseDevice(_archlib.ArchAVR_Device):
     """Specialisation of BaseDevicer for the device models using the AVR architecture.
@@ -438,6 +453,7 @@ class AVR_DeviceBuilder(DeviceBuilder):
         'USART': _get_usart_builder,
         'SPI': _get_spi_builder,
         'TWI': _get_twi_builder,
+        'WDT': _get_wdt_builder,
     }
 
     def _build_core_config(self, dev_desc):
