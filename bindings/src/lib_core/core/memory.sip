@@ -1,7 +1,7 @@
 /*
  * memory.sip
  *
- *  Copyright 2022 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022-2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -85,12 +85,12 @@ public:
         }
     %End
 
-    int dbg_read(size_t) const;
-    SIP_PYOBJECT dbg_read(size_t, size_t) const /TypeHint="bytes"/;
+    int read(size_t) const;
+    SIP_PYOBJECT read(size_t, size_t) const /TypeHint="bytes"/;
     %MethodCode
         if (a1) {
             unsigned char* buf = (unsigned char*) sipMalloc(a1);
-            size_t len_res = sipCpp->dbg_read(buf, a0, a1);
+            size_t len_res = sipCpp->read(buf, a0, a1);
             sipRes = export_to_pybuffer(sipAPI_core, buf, len_res);
             sipFree(buf);
         } else {
@@ -98,13 +98,13 @@ public:
         }
     %End
 
-    void dbg_write(unsigned char /PyInt/, size_t);
-    void dbg_write(SIP_PYBUFFER, size_t);
+    void write(unsigned char /PyInt/, size_t);
+    void write(SIP_PYBUFFER, size_t);
     %MethodCode
         unsigned char* buf;
         size_t len = import_from_pybuffer(sipAPI_core, &buf, a0);
         if (len) {
-            sipCpp->dbg_write(buf, a1, len);
+            sipCpp->write(buf, a1, len);
             sipFree(buf);
         }
     %End

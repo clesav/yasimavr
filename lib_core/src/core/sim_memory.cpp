@@ -1,7 +1,7 @@
 /*
  * sim_memory.cpp
  *
- *  Copyright 2022 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022-2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -192,7 +192,7 @@ mem_block_t NonVolatileMemory::block(size_t base, size_t size) const
    \param pos address of the byte to read
    \return the byte value or -1 if the address is invalid
  */
-int NonVolatileMemory::dbg_read(size_t pos) const
+int NonVolatileMemory::read(size_t pos) const
 {
     if (pos < m_size)
         return m_memory[pos];
@@ -207,7 +207,7 @@ int NonVolatileMemory::dbg_read(size_t pos) const
    \param len length of the area to be read, in bytes
    \return length of data actually read
  */
-size_t NonVolatileMemory::dbg_read(unsigned char* buf, size_t base, size_t len) const
+size_t NonVolatileMemory::read(unsigned char* buf, size_t base, size_t len) const
 {
     if (!m_size || !len) return 0;
 
@@ -219,29 +219,32 @@ size_t NonVolatileMemory::dbg_read(unsigned char* buf, size_t base, size_t len) 
 }
 
 /**
-   Write a byte of the NVM without affecting the programmed state.
+   Write a byte of the NVM.
    \param v data to be written
    \param pos address to be written
  */
-void NonVolatileMemory::dbg_write(unsigned char v, size_t pos)
+void NonVolatileMemory::write(unsigned char v, size_t pos)
 {
-    if (pos < m_size)
+    if (pos < m_size) {
         m_memory[pos] = v;
+        m_tag[pos] = 1;
+    }
 }
 
 /**
-   Write bytes of the NVM without affecting the programmed state.
+   Write bytes of the NVM.
    \param buf data to be copied into the NVM
    \param base first address to be written
    \param len length of data to write
  */
-void NonVolatileMemory::dbg_write(const unsigned char* buf, size_t base, size_t len)
+void NonVolatileMemory::write(const unsigned char* buf, size_t base, size_t len)
 {
     if (!m_size || !len) return;
 
     ADJUST_BASE_LEN(base, len, m_size);
 
     memcpy(m_memory + base, buf, len);
+    memset(m_tag + base, 1, len);
 }
 
 /**
