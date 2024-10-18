@@ -1,7 +1,7 @@
 /*
  * arch_avr_wdt.h
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -57,7 +57,7 @@ struct ArchAVR_WDTConfig {
 	/// Regbit for the reset flag
     regbit_t rb_reset_flag;
     /// Interrupt vector index
-    int_vect_t vector;
+    int_vect_t iv_wdt;
 
 };
 

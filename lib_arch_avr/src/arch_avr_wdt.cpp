@@ -1,7 +1,7 @@
 /*
- * arch_avr_wdp.cpp
+ * arch_avr_wdt.cpp
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -41,7 +41,7 @@ bool ArchAVR_WDT::init(Device& device)
 
     add_ioreg(m_config.reg_wdt);
 
-    status &= register_interrupt(m_config.vector, *this);
+    status &= register_interrupt(m_config.iv_wdt, *this);
 
     return status;
 }
@@ -118,7 +118,7 @@ void ArchAVR_WDT::timeout()
     //restart the timer
     if (int_enable && !int_flag) {
         set_ioreg(m_config.reg_wdt, m_config.bm_int_flag);
-        raise_interrupt(m_config.vector);
+        raise_interrupt(m_config.iv_wdt);
         if (rst_enable) {
             uint8_t delay_index = m_config.bm_delay.extract(reg_value);
             configure_timer(rst_enable, delay_index);

@@ -1,7 +1,7 @@
 /*
  * sim_wdt.cpp
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -70,7 +70,7 @@ private:
  * Constructor of a generic watchdog timer
  */
 WatchdogTimer::WatchdogTimer()
-:Peripheral(AVR_IOCTL_WTDG)
+:Peripheral(AVR_IOCTL_WDT)
 ,m_clk_factor(0)
 ,m_win_start(0)
 ,m_win_end(0)

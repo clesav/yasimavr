@@ -56,7 +56,7 @@ enum class SleepMode;
 /** CTLID for the core: "CORE" */
 #define AVR_IOCTL_CORE              chr_to_id('C', 'O', 'R', 'E')
 /** CTLID for the watchdog timer: "WTDG" */
-#define AVR_IOCTL_WTDG              chr_to_id('W', 'T', 'D', 'G')
+#define AVR_IOCTL_WDT               chr_to_id('W', 'D', 'T', '\0')
 /** CTLID for the interrupt controller: "INTR" */
 #define AVR_IOCTL_INTR              chr_to_id('I', 'N', 'T', 'R')
 /** CTLID for the sleep controller: "SLP" */

@@ -1,7 +1,7 @@
 /*
  * arch_avr_wdt.sip
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -37,7 +37,7 @@ struct ArchAVR_WDTConfig {
     bitmask_t bm_int_flag;
     regbit_t rb_reset_flag;
 
-    int_vect_t vector;
+    int_vect_t iv_wdt;
 
 };
 
