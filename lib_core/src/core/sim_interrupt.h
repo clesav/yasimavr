@@ -1,7 +1,7 @@
 /*
  * sim_interrupt.h
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -231,6 +231,7 @@ public:
     //registered with the controller
     void raise_interrupt(int_vect_t vector) const;
     void cancel_interrupt(int_vect_t vector) const;
+    bool interrupt_raised(int_vect_t vector) const;
     virtual void interrupt_ack_handler(int_vect_t vector);
 
     //Disable copy semantics
@@ -286,7 +287,6 @@ private:
     regbit_t m_rb_enable;
     regbit_t m_rb_flag;
     int_vect_t m_vector;
-    bool m_raised;
 
     IO_Register* m_flag_reg;
     IO_Register* m_enable_reg;
@@ -298,7 +298,7 @@ private:
 /// Returns the raised state of the interrupt flag
 inline bool InterruptFlag::raised() const
 {
-    return m_raised;
+    return interrupt_raised(m_vector);
 }
 
 

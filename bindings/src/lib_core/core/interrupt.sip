@@ -1,7 +1,7 @@
 /*
  * interrupt.sip
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -86,6 +86,7 @@ public:
 
     void raise_interrupt(int_vect_t) const;
     void cancel_interrupt(int_vect_t) const;
+    bool interrupt_raised(int_vect_t vector) const;
     virtual void interrupt_ack_handler(int_vect_t);
 
 };
