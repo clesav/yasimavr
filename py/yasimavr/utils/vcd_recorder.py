@@ -1,6 +1,6 @@
 # vcd_recorder.py
 #
-# Copyright 2022 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2022-2024 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -184,7 +184,7 @@ class VCD_Recorder:
         self._file = open(file, 'w')
 
         kwargs['timescale'] = '10ns'
-        kwargs['init_timestamp'] = 0
+        kwargs['init_timestamp'] = self._ts_ratio * self._simloop.cycle()
         self._writer = vcd.VCDWriter(self._file, **kwargs)
 
         self._formatters = {}
