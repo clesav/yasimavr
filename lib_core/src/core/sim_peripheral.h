@@ -345,6 +345,7 @@ protected:
     bool register_interrupt(int_vect_t vector, InterruptHandler& handler) const;
 
     Signal* get_signal(ctl_id_t ctl_id) const;
+    Signal* get_signal(const char* name) const;
 
 private:
 
@@ -453,7 +454,12 @@ inline void Peripheral::write_ioreg(reg_addr_t reg, const bitmask_t& bm, uint8_t
 
 inline void Peripheral::write_ioreg(reg_addr_t reg, uint8_t bit, uint8_t value)
 {
-    write_ioreg(regbit_t(reg, bit), value);
+    write_ioreg(regbit_t(reg, bit), value ? 1 : 0);
+}
+
+inline Signal* Peripheral::get_signal(const char* name) const
+{
+    return get_signal(str_to_id(name));
 }
 
 

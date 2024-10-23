@@ -231,6 +231,7 @@ protected:
     bool register_interrupt(int_vect_t, InterruptHandler&) const;
 
     Signal* get_signal(ctl_id_t) const;
+    Signal* get_signal(const char*) const;
 
 };
 
