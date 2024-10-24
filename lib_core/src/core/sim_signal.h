@@ -1,7 +1,7 @@
 /*
  * sim_signal.h
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -219,6 +219,30 @@ inline bool DataSignalMux::connected() const
 {
     return (m_sel_index < m_items.size()) ? !!m_items[m_sel_index].signal : false;
 }
+
+
+//=======================================================================================
+
+template<class C>
+class BoundFunctionSignalHook : public SignalHook {
+
+public:
+
+    using bound_fct_t = void(C::*)(const signal_data_t&, int);
+
+    constexpr BoundFunctionSignalHook(C& _c, bound_fct_t _f) : c(_c), f(_f) {}
+
+    virtual void raised(const signal_data_t& sigdata, int hooktag) override final
+    {
+        (c.*f)(sigdata, hooktag);
+    }
+
+private:
+
+    C& c;
+    bound_fct_t f;
+
+};
 
 
 YASIMAVR_END_NAMESPACE
