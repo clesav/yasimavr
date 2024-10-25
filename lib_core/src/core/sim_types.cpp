@@ -173,6 +173,14 @@ uint8_t regbit_compound_t::extract(uint64_t v, size_t index) const
     return m_regbits[index].extract((v >> m_offsets[index]) & 0xFF);
 }
 
+int regbit_compound_t::bitcount() const
+{
+    int n = 0;
+    for (auto& rb : m_regbits)
+        n += rb.bitcount();
+    return n;
+}
+
 regbit_compound_t& regbit_compound_t::operator=(const std::vector<regbit_t>& v)
 {
     m_regbits.clear();
