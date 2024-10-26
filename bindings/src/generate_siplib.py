@@ -50,7 +50,7 @@ module_version = sip_module.abi_version.get_sip_module_version(abi_major_version
 old_pwd = os.getcwd()
 os.chdir('../siplib')
 
-sdist_glob = glob.glob('yasimavr_lib*.tar.gz')
+sdist_glob = glob.glob(f'yasimavr_lib*{sip_abi_version}.*.tar.gz')
 if not len(sdist_glob):
     raise Exception()
 sdist_tarfn = sdist_glob[0]
