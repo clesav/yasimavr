@@ -1,7 +1,7 @@
 /*
  * sim_firmware.h
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -49,6 +49,8 @@ YASIMAVR_BEGIN_NAMESPACE
       Lock              | .lock                 | 0x830000
       Signature         | .signature            | 0x840000
       UserSignatures    | .user_signatures      | 0x850000
+
+   \note The area in which a section is loaded depends on the LMA, not the section name.
  */
 class AVR_CORE_PUBLIC_API Firmware {
 

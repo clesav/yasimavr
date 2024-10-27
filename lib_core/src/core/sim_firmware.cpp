@@ -1,7 +1,7 @@
 /*
  * sim_firmware.cpp
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -79,7 +79,7 @@ static Elf32_Phdr* elf_find_phdr(Elf32_Phdr* phdr_table, size_t phdr_count, GElf
 }
 
 
-static Firmware::Area addr_to_area(Elf64_Addr addr)
+static int addr_to_area(Elf64_Addr addr)
 {
     if (addr < 0x800000)
         return Firmware::Area_Flash;
@@ -93,8 +93,10 @@ static Firmware::Area addr_to_area(Elf64_Addr addr)
         return Firmware::Area_Lock;
     else if (addr < 0x850000)
         return Firmware::Area_Signature;
-    else
+    else if (addr < 0x860000)
         return Firmware::Area_UserSignatures;
+    else
+        return -1;
 }
 
 
@@ -119,12 +121,12 @@ Firmware* Firmware::read_elf(const std::string& filename)
     std::FILE *file;                // File Descriptor
 
     if ((file = fopen(filename.c_str(), "rb")) == nullptr) {
-        global_logger().err("Unable to open ELF file '%s'", filename.c_str());
+        global_logger().err("FW : Unable to open ELF file '%s'", filename.c_str());
         return nullptr;
     }
 
     if (fread(&elf_header, sizeof(elf_header), 1, file) == 0) {
-        global_logger().err("Unable to read ELF file '%s'", filename.c_str());
+        global_logger().err("FW : Unable to read ELF file '%s'", filename.c_str());
         fclose(file);
         return nullptr;
     }
@@ -160,15 +162,17 @@ Firmware* Firmware::read_elf(const std::string& filename)
                 GElf_Sym elf_sym;
                 gelf_getsym(sdata, i, &elf_sym);
                 //Only keep global symbols
-                if (ELF32_ST_TYPE(elf_sym.st_info) == STT_OBJECT) {
-                    //Extract the symbol name and create an entry in our table
-                    const char * sym_name = elf_strptr(elf, shdr.sh_link, elf_sym.st_name);
-                    Symbol sym = { elf_addr_to_area_addr(elf_sym.st_value),
-                                   elf_sym.st_size,
-                                   sym_name,
-                                   addr_to_area(elf_sym.st_value) };
-                    firmware->m_symbols.push_back(sym);
-                }
+                if (ELF32_ST_TYPE(elf_sym.st_info) != STT_OBJECT) continue;
+                //Check that the symbol points to a supported section
+                int area = addr_to_area(elf_sym.st_value);
+                if (area < 0) continue;
+                //Extract the symbol name and create an entry in our table
+                const char * sym_name = elf_strptr(elf, shdr.sh_link, elf_sym.st_name);
+                Symbol sym = { elf_addr_to_area_addr(elf_sym.st_value),
+                               elf_sym.st_size,
+                               sym_name,
+                               (Area) area };
+                firmware->m_symbols.push_back(sym);
             }
             continue;
         }
@@ -194,12 +198,15 @@ Firmware* Firmware::read_elf(const std::string& filename)
 
         //Find the Program Header segment containing this section
         Elf32_Phdr* phdr = elf_find_phdr(phdr_table, phdr_count, &shdr);
-        if (!phdr) continue;
+        if (!phdr) {
+            global_logger().err("FW : No segment found for section '%s'. ELF file potentially ill-formed.", name);
+            continue;
+        }
 
         Elf_Data* scn_data = elf_getdata(scn, nullptr);
 
         //Load Memory Address calculation
-        unsigned int lma = phdr->p_paddr + shdr.sh_offset - phdr->p_offset;
+        Elf64_Addr lma = phdr->p_paddr + shdr.sh_offset - phdr->p_offset;
 
         //Create the memory block
         Block b = { 0, nullptr, 0 };
@@ -210,39 +217,21 @@ Firmware* Firmware::read_elf(const std::string& filename)
         }
 
         //Add the firmware chunk to the corresponding memory area (Flash, etc...)
-        if (!strcmp(name, ".text") || !strcmp(name, ".data") || !strcmp(name, ".rodata")) {
-            b.base = lma;
-            firmware->m_blocks[Area_Flash].push_back(b);
-        }
-        else if (!strcmp(name, ".eeprom")) {
-            b.base = lma - 0x810000;
-            firmware->m_blocks[Area_EEPROM].push_back(b);
-        }
-        else if (!strcmp(name, ".fuse")) {
-            b.base = lma - 0x820000;
-            firmware->m_blocks[Area_Fuses].push_back(b);
-        }
-        else if (!strcmp(name, ".lock")) {
-            b.base = lma - 0x830000;
-            firmware->m_blocks[Area_Lock].push_back(b);
-        }
-        else if (!strcmp(name, ".signature")) {
-            b.base = lma - 0x840000;
-            firmware->m_blocks[Area_Signature].push_back(b);
-        }
-        else if (!strcmp(name, ".user_signatures")) {
-            b.base = lma - 0x850000;
-            firmware->m_blocks[Area_UserSignatures].push_back(b);
-        }
-        else {
-            global_logger().err("Firmware section unknown: '%s'", name);
+        int area = addr_to_area(lma);
+        if (area >= 0) {
+            b.base = elf_addr_to_area_addr(lma);
+            firmware->m_blocks[(Area) area].push_back(b);
+            global_logger().dbg("FW : Read section '%s' (%zu bytes @ 0x%06zx)", name, b.size, lma);
+        } else {
+            if (b.buf) free(b.buf);
+            global_logger().err("FW : Firmware section unsupported: '%s'", name);
         }
     }
 
     elf_end(elf);
     fclose(file);
 
-    global_logger().dbg("Firmware read from ELF file '%s'", filename.c_str());
+    global_logger().dbg("FW : End of load of ELF file '%s'", filename.c_str());
 
     return firmware;
 }
