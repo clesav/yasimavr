@@ -180,7 +180,7 @@ typedef int ctlreq_id_t;
    Request to get the section manager.
    data.p is returned pointing to the instance of MemorySectionManager.
  */
-#define AVR_CTLREQ_CORE_SECTIONS    10
+#define AVR_CTLREQ_CORE_SECTIONS    (AVR_CTLREQ_BASE + 10)
 
 /**
    Request sent by the CPU to the watchdog when executing a WDR instruction, no data provided

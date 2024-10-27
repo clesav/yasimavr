@@ -48,12 +48,12 @@ class InterruptHandler;
 //Notes:
 //   . a vector can only be registered once
 //   . the vector 0 cannot be registered
-#define AVR_CTLREQ_INTR_REGISTER    1
+#define AVR_CTLREQ_INTR_REGISTER    (AVR_CTLREQ_BASE + 1)
 
 //Request sent to raise or clear artificially any interrupt
 //The index shall be the interrupt vector index
 //The value 'u' shall be 1 for raising the interrupt, 0 for clearing it.
-#define AVR_CTLREQ_INTR_RAISE       2
+#define AVR_CTLREQ_INTR_RAISE       (AVR_CTLREQ_BASE + 2)
 
 #define AVR_INTERRUPT_NONE          -1
 
