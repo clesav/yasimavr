@@ -74,6 +74,7 @@ ctl_id_t IOCTL_TWI(char n)
 }
 
 
+const ctlreq_id_t CTLREQ_BASE             = AVR_CTLREQ_BASE;
 const ctlreq_id_t CTLREQ_GET_SIGNAL       = AVR_CTLREQ_GET_SIGNAL;
 const ctlreq_id_t CTLREQ_CORE_BREAK       = AVR_CTLREQ_CORE_BREAK;
 const ctlreq_id_t CTLREQ_CORE_SLEEP       = AVR_CTLREQ_CORE_SLEEP;
@@ -119,6 +120,7 @@ ctl_id_t IOCTL_TWI(char);
 
 typedef int ctlreq_id_t;
 
+const ctlreq_id_t CTLREQ_BASE;
 const ctlreq_id_t CTLREQ_GET_SIGNAL;
 const ctlreq_id_t CTLREQ_CORE_BREAK;
 const ctlreq_id_t CTLREQ_CORE_SLEEP;

@@ -40,7 +40,7 @@ YASIMAVR_BEGIN_NAMESPACE
  */
 
 //Request to obtain the DAC output value
-#define AVR_CTLREQ_ACP_GET_DAC         1
+#define AVR_CTLREQ_ACP_GET_DAC         (AVR_CTLREQ_BASE + 1)
 
 
 //=======================================================================================

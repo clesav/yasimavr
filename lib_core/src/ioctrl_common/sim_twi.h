@@ -66,7 +66,7 @@ YASIMAVR_BEGIN_NAMESPACE
    Request to get the TWI endpoint.
     - data->p must be pointing at a TWIEndPoint object.
  */
-#define AVR_CTLREQ_TWI_ENDPOINT     1
+#define AVR_CTLREQ_TWI_ENDPOINT     (AVR_CTLREQ_BASE + 1)
 
 /// @}
 /// @}

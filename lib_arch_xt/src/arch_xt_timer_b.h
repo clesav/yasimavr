@@ -34,7 +34,7 @@ YASIMAVR_BEGIN_NAMESPACE
 
 //=======================================================================================
 
-#define AVR_CTLREQ_TCB_GET_EVENT_HOOK         1
+#define AVR_CTLREQ_TCB_GET_EVENT_HOOK         (AVR_CTLREQ_BASE + 1)
 
 /**
    \ingroup api_timer

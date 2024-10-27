@@ -112,6 +112,12 @@ typedef int ctlreq_id_t;
 
 
 /**
+   Base value for peripheral-specific requests.
+   The range 0-255 is reserved for generic requests
+ */
+#define AVR_CTLREQ_BASE             0x100
+
+/**
    Common request identifier used to obtain a pointer to a particular signal
     - data.index should contain the identifier of the signal
     - data.p is returned pointing to the signal
@@ -121,80 +127,82 @@ typedef int ctlreq_id_t;
 /**
    Request sent by the CPU to the core when a BREAK instruction is executed, no data provided.
  */
-#define AVR_CTLREQ_CORE_BREAK       1
+#define AVR_CTLREQ_CORE_BREAK       (AVR_CTLREQ_BASE + 1)
 
 /**
    Request sent by the Sleep Controller to the core to enter a sleep mode
     - data.u contains the sleep mode enum value
  */
-#define AVR_CTLREQ_CORE_SLEEP       2
+#define AVR_CTLREQ_CORE_SLEEP       (AVR_CTLREQ_BASE + 2)
 
 /**
    Request sent by the Sleep Controller to the core to wake up from a sleep mode, no data provided
  */
-#define AVR_CTLREQ_CORE_WAKEUP      3
+#define AVR_CTLREQ_CORE_WAKEUP      (AVR_CTLREQ_BASE + 3)
 
 /**
    Request sent by the Port Controller to the core when a pin shorting is detected
  */
-#define AVR_CTLREQ_CORE_SHORTING    4
+#define AVR_CTLREQ_CORE_SHORTING    (AVR_CTLREQ_BASE + 4)
 
 /**
    Request sent to the core to crash.
     - data.index is the reason code,
     - data.p is the optional reason string
  */
-#define AVR_CTLREQ_CORE_CRASH       5
+#define AVR_CTLREQ_CORE_CRASH       (AVR_CTLREQ_BASE + 5)
 
 /**
    Request sent to the core to trigger a MCU reset.
     - data.u is the corresponding ResetFlag enum value
  */
-#define AVR_CTLREQ_CORE_RESET       6
+#define AVR_CTLREQ_CORE_RESET       (AVR_CTLREQ_BASE + 6)
 
 /**
    Request sent to the core to query the latest cause of reset.
     - data.u is set to the ResetFlag enum value
  */
-#define AVR_CTLREQ_CORE_RESET_FLAG  7
+#define AVR_CTLREQ_CORE_RESET_FLAG  (AVR_CTLREQ_BASE + 7)
 
 /**
    Request sent to the core to query the pointer to a NVM block
     - data.index indicates which block with one of the AVR_NVM enum values
  */
-#define AVR_CTLREQ_CORE_NVM         8
+#define AVR_CTLREQ_CORE_NVM         (AVR_CTLREQ_BASE + 8)
 
 /**
    Request to halt the CPU, used during a SPM instruction.
    a non-zero data.u enables the halt, data.u == 0 disables the halt.
  */
-#define AVR_CTLREQ_CORE_HALT        9
+#define AVR_CTLREQ_CORE_HALT        (AVR_CTLREQ_BASE + 9)
 
-
+/**
+   Request to get the section manager.
+   data.p is returned pointing to the instance of MemorySectionManager.
+ */
 #define AVR_CTLREQ_CORE_SECTIONS    10
-
 
 /**
    Request sent by the CPU to the watchdog when executing a WDR instruction, no data provided
  */
-#define AVR_CTLREQ_WATCHDOG_RESET   1
+#define AVR_CTLREQ_WATCHDOG_RESET   (AVR_CTLREQ_BASE + 1)
 
 /**
    Request sent by the CPU to the NVM controller when executing a SPM instruction,
    or a LPM instruction if the LPM direct mode is disabled with the core.
     - data.p points to a NVM_request_t structure filled with the instruction information
  */
-#define AVR_CTLREQ_NVM_REQUEST      1
+#define AVR_CTLREQ_NVM_REQUEST      (AVR_CTLREQ_BASE + 1)
 
 /**
    Request sent by the CPU to the Sleep Controller when executing a SLEEP instruction, no data provided
  */
-#define AVR_CTLREQ_SLEEP_CALL       1
+#define AVR_CTLREQ_SLEEP_CALL       (AVR_CTLREQ_BASE + 1)
 
 /**
    Request sent by the CPU to the Sleep Controller when executing a "RJMP .-2" instruction, no data provided
  */
-#define AVR_CTLREQ_SLEEP_PSEUDO     2
+#define AVR_CTLREQ_SLEEP_PSEUDO     (AVR_CTLREQ_BASE + 2)
 
 /// @}
 
