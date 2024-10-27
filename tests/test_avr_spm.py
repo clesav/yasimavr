@@ -228,7 +228,7 @@ def test_avr_eeprom_write(bench):
     assert NVMCTRL.EECR.EEMPE == 0
     bench.sim_advance(4000)
     assert NVMCTRL.EECR.EEPE == 0
-    assert bytes(eeprom.dbg_read(0, 7)) == b'SEPROM\0'
+    assert bytes(eeprom.read(0, 7)) == b'SEPROM\0'
 
     #Check the erase operation
     NVMCTRL.EECR.EEPM = 1

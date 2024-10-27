@@ -86,7 +86,7 @@ public:
 
     void raise_interrupt(int_vect_t) const;
     void cancel_interrupt(int_vect_t) const;
-    bool interrupt_raised(int_vect_t vector) const;
+    bool interrupt_raised(int_vect_t) const;
     virtual void interrupt_ack_handler(int_vect_t);
 
 };
