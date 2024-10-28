@@ -123,9 +123,9 @@ bool Device::init(CycleManager& cycle_manager)
 
     m_log_handler.init(cycle_manager);
 
-    m_logger.dbg("Initialisation of %s core", m_config.name);
+    m_logger.dbg("Initialisation of %s core", m_config.name.c_str());
     if (!m_core.init(*this)) {
-        m_logger.err("Initialisation of %s core failed.", m_config.name);
+        m_logger.err("Initialisation of %s core failed.", m_config.name.c_str());
         return false;
     }
 
@@ -143,7 +143,7 @@ bool Device::init(CycleManager& cycle_manager)
     m_state = State_Ready;
     reset();
 
-    m_logger.dbg("Initialisation of device '%s' complete", m_config.name);
+    m_logger.dbg("Initialisation of device '%s' complete", m_config.name.c_str());
 
     return true;
 }
