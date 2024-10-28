@@ -1,6 +1,6 @@
 # simrun.py
 #
-# Copyright 2023 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2023-2024 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -213,6 +213,23 @@ def _parse_trace_params(s_params, default_values={}):
         raise Exception('Argument error for a signal trace') from e
 
 
+def _convertSignalId(sigid_arg, ctl):
+    if sigid_arg is None:
+        return None
+
+    try:
+        sigid = ctl.SignalId[sigid_arg]
+    except Exception:
+        pass
+    else:
+        return sigid.value
+
+    try:
+        return int(sigid)
+    except Exception:
+        raise Exception('SIGID invalid value') from None
+
+
 def _init_VCD():
     global _vcd_out
     _vcd_out = VCD_Recorder(_simloop, _run_args.output)
@@ -295,15 +312,9 @@ def _init_VCD():
 
             var_name = params['name'] or ('sig_' + per_id)
 
-            if params['id'] is None:
-                bin_sigid = None
-            else:
-                bin_sigid = int(params['id'])
+            bin_sigid = _convertSignalId(params['id'], _device.find_peripheral(bin_per_id))
 
-            if params['ix'] is None:
-                bin_sigix = None
-            else:
-                bin_sigix = int(params['ix'])
+            bin_sigix = None if params['ix'] is None else int(params['ix'])
 
             _vcd_out.add_signal(sig,
                                 var_name=var_name,

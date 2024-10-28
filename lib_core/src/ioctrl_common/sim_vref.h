@@ -48,7 +48,7 @@ YASIMAVR_BEGIN_NAMESPACE
    For Internal references, data shall be set to the required channel, as an unsigned integer.\n
    On return, data is set to the reference value as a double. Except for VCC, all values are relative to VCC.
  */
-#define AVR_CTLREQ_VREF_GET             1
+#define AVR_CTLREQ_VREF_GET             (AVR_CTLREQ_BASE + 1)
 
 /**
    Request to set VCC or AREF reference values.\n
@@ -56,7 +56,7 @@ YASIMAVR_BEGIN_NAMESPACE
    data shall be set to the required value as a double.\n
    VCC shall be an absolute value in Volts, AREF shall be relative to VCC and contrainted to the range [0; 1].
  */
-#define AVR_CTLREQ_VREF_SET             2
+#define AVR_CTLREQ_VREF_SET             (AVR_CTLREQ_BASE + 2)
 
 /// @}
 /// @}

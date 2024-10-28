@@ -1,7 +1,7 @@
 /*
  * sim_cycle_timer.h
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -81,6 +81,48 @@ private:
 };
 
 
+template<class C>
+class BoundFunctionCycleTimer : public CycleTimer {
+
+public:
+
+    using bound_full_fct_t = cycle_count_t(C::*)(cycle_count_t);
+    using bound_noret_fct_t = void(C::*)(cycle_count_t);
+    using bound_noarg_fct_t = void(C::*)(void);
+
+    constexpr BoundFunctionCycleTimer(C& _c, bound_full_fct_t _f) : CycleTimer(), c(_c), m(Full), f_full(_f) {}
+    constexpr BoundFunctionCycleTimer(C& _c, bound_noret_fct_t _f) : CycleTimer(), c(_c), m(NoRet), f_noret(_f) {}
+    constexpr BoundFunctionCycleTimer(C& _c, bound_noarg_fct_t _f) : CycleTimer(), c(_c), m(NoArg), f_noarg(_f) {}
+
+    virtual cycle_count_t next(cycle_count_t when) override final
+    {
+        if (m == Full) {
+            return (c.*f_full)(when);
+        } else if (m == NoRet) {
+            (c.*f_noret)(when);
+            return 0;
+        } else {
+            (c.*f_noarg)();
+            return 0;
+        }
+    }
+
+private:
+
+    enum Mode { Full, NoRet, NoArg };
+
+    C& c;
+    const Mode m;
+
+    union {
+        const bound_full_fct_t f_full;
+        const bound_noret_fct_t f_noret;
+        const bound_noarg_fct_t f_noarg;
+    };
+
+};
+
+
 //=======================================================================================
 /**
    Class to manage the simulation cycle counter and cycle timers
@@ -101,7 +143,7 @@ public:
 
     void schedule(CycleTimer& timer, cycle_count_t when);
 
-    void delay(CycleTimer& timer, cycle_count_t delay);
+    void delay(CycleTimer& timer, cycle_count_t d);
 
     void cancel(CycleTimer& timer);
 

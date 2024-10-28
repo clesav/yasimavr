@@ -49,7 +49,7 @@ YASIMAVR_BEGIN_NAMESPACE
    which can then be used to send & receive data via signaling both ways.\n
    data is set to point to the UARTEndPoint structure to connect to.
  */
-#define AVR_CTLREQ_UART_ENDPOINT        1
+#define AVR_CTLREQ_UART_ENDPOINT        (AVR_CTLREQ_BASE + 1)
 
 
 /**

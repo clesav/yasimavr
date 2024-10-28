@@ -1,7 +1,7 @@
 /*
  * cycle_timer.sip
  *
- *  Copyright 2022 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022-2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -35,6 +35,71 @@ public:
     cycle_count_t remaining_delay() const;
 
     virtual cycle_count_t next(cycle_count_t when) = 0;
+
+};
+
+
+class CallableCycleTimer : public CycleTimer {
+%TypeHeaderCode
+#include "core/sim_cycle_timer.h"
+%End
+
+%TypeCode
+class CallableCycleTimer : public CycleTimer {
+
+public:
+
+    CallableCycleTimer(PyObject* callback)
+    :m_callback(callback)
+    {
+        Py_INCREF(m_callback);
+    }
+
+    CallableCycleTimer(const CallableCycleTimer& other)
+    :CallableCycleTimer(other.m_callback)
+    {}
+
+    virtual ~CallableCycleTimer()
+    {
+        Py_DECREF(m_callback);
+    }
+
+    virtual cycle_count_t next(cycle_count_t when) override final
+    {
+        //Ensure the GIL is held for the callback
+        PyGILState_STATE pystate = PyGILState_Ensure();
+        //Call the callback
+        PyObject* py_res = PyObject_CallFunction(m_callback, "L", when);
+        //Conversion of the result to C++ domain
+        cycle_count_t res = PyLong_AsLongLong(py_res);
+        Py_XDECREF(py_res);
+        //Release the GIL
+        PyGILState_Release(pystate);
+        //Return the result
+        return res;
+    }
+
+    CallableCycleTimer& operator=(const CallableCycleTimer& other)
+    {
+        Py_DECREF(m_callback);
+        m_callback = other.m_callback;
+        Py_INCREF(m_callback);
+        return *this;
+    }
+
+private:
+
+    PyObject* m_callback;
+
+};
+%End
+
+public:
+
+    CallableCycleTimer(SIP_PYCALLABLE);
+    CallableCycleTimer(const CallableCycleTimer&);
+
+    virtual cycle_count_t next(cycle_count_t when) final;
 
 };
 

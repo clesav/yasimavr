@@ -127,7 +127,7 @@ def test_avr_intr_reset_vector(bench):
 
     #Clear BOOTRST (bit 0 of high fuse byte) and reset to apply the value
     fuse_nvm = bench.dev.nvms['Fuses']
-    fuse_nvm.dbg_write(fuse_nvm[0x01] & 0xFE, 0x01)
+    fuse_nvm.write(fuse_nvm[0x01] & 0xFE, 0x01)
     bench.dev_model.reset(corelib.Device.ResetFlag.PowerOn)
 
     #Check that after a reset, the PC is at the start of the Boot section

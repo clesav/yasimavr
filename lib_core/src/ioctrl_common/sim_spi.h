@@ -49,19 +49,19 @@ YASIMAVR_BEGIN_NAMESPACE
    Request to register a SPI client to a SPI interface
     - data must be a pointer to a SPIClient object
  */
-#define AVR_CTLREQ_SPI_ADD_CLIENT       1
+#define AVR_CTLREQ_SPI_ADD_CLIENT       (AVR_CTLREQ_BASE + 1)
 
 /**
    Request to obtain a pointer to the SPI interface as a SPI client
     - data is returned as a pointer to a SPIClient object
  */
-#define AVR_CTLREQ_SPI_CLIENT           2
+#define AVR_CTLREQ_SPI_CLIENT           (AVR_CTLREQ_BASE + 2)
 
 /**
    Request to select/deselect the SPI interface when used as a client
     - data must be an integer : select if > 0, deselect if == 0
  */
-#define AVR_CTLREQ_SPI_SELECT           3
+#define AVR_CTLREQ_SPI_SELECT           (AVR_CTLREQ_BASE + 3)
 
 /// @}
 /// @}

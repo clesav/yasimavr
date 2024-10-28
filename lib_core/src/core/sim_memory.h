@@ -1,7 +1,7 @@
 /*
  * sim_memory.h
  *
- *  Copyright 2022 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022-2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -72,10 +72,10 @@ public:
     void erase(size_t base, size_t size);
     void erase(const unsigned char* buf, size_t base, size_t len);
 
-    int dbg_read(size_t pos) const;
-    size_t dbg_read(unsigned char* buf, size_t base, size_t len) const;
-    void dbg_write(unsigned char v, size_t pos);
-    void dbg_write(const unsigned char* buf, size_t base, size_t len);
+    int read(size_t pos) const;
+    size_t read(unsigned char* buf, size_t base, size_t len) const;
+    void write(unsigned char v, size_t pos);
+    void write(const unsigned char* buf, size_t base, size_t len);
 
     void spm_write(unsigned char v, size_t pos);
     void spm_write(const unsigned char* buf, const unsigned char* bufset, size_t base, size_t len);
