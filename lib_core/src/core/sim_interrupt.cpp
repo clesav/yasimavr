@@ -1,7 +1,7 @@
 /*
  * sim_interrupt.cpp
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -225,6 +225,14 @@ void InterruptHandler::cancel_interrupt(int_vect_t vector) const
         m_intctl->cancel_interrupt(vector);
 }
 
+bool InterruptHandler::interrupt_raised(int_vect_t vector) const
+{
+    if (m_intctl)
+        return m_intctl->interrupt_raised(vector);
+    else
+        return false;
+}
+
 /**
    Callback method called when a vector has been ACK'ed by the CPU.
    (i.e. the CPU is about to jump to the corresponding vector table entry)
@@ -245,7 +253,6 @@ void InterruptHandler::interrupt_ack_handler(int_vect_t vector)
 InterruptFlag::InterruptFlag(bool clear_on_ack)
 :m_clr_on_ack(clear_on_ack)
 ,m_vector(AVR_INTERRUPT_NONE)
-,m_raised(false)
 ,m_flag_reg(nullptr)
 ,m_enable_reg(nullptr)
 {}
@@ -307,20 +314,16 @@ bool InterruptFlag::init(Device& device,
 */
 int InterruptFlag::update_from_ioreg()
 {
-    bool raised = flag_raised();
-
-    if (m_raised) {
-        if (!raised) {
+    if (raised()) {
+        if (!flag_raised()) {
             cancel_interrupt(m_vector);
-            m_raised = false;
             return -1;
         } else {
             return 0;
         }
     } else {
-        if (raised) {
+        if (flag_raised()) {
             raise_interrupt(m_vector);
-            m_raised = true;
             return 1;
         } else {
             return 0;
@@ -348,9 +351,8 @@ bool InterruptFlag::set_flag(uint8_t mask)
     uint8_t new_flag_reg = m_rb_flag.set_to(m_flag_reg->value(), mask);
     m_flag_reg->set(new_flag_reg);
 
-    if (!m_raised && flag_raised()) {
+    if (!raised() && flag_raised()) {
         raise_interrupt(m_vector);
-        m_raised = true;
         return true;
     } else {
         return false;
@@ -367,9 +369,8 @@ bool InterruptFlag::clear_flag(uint8_t mask)
     uint8_t new_flag_reg = m_rb_flag.clear_from(m_flag_reg->value(), mask);
     m_flag_reg->set(new_flag_reg);
 
-    if (m_raised && !flag_raised()) {
+    if (raised() && !flag_raised()) {
         cancel_interrupt(m_vector);
-        m_raised = false;
         return true;
     } else {
         return false;
@@ -392,6 +393,5 @@ void InterruptFlag::interrupt_ack_handler(int_vect_t vector)
     if (m_clr_on_ack) {
         m_flag_reg->set(m_rb_flag.clear_from(m_flag_reg->value()));
         cancel_interrupt(m_vector);
-        m_raised = false;
     }
 }

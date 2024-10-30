@@ -162,7 +162,7 @@ private:
 
 #define MCU_REVID                       0xFF
 
-#define AVR_CTLREQ_WRITE_SIGROW         1
+#define AVR_CTLREQ_WRITE_SIGROW         (AVR_CTLREQ_BASE + 1)
 
 /**
    \brief Configuration structure for ArchXT_MiscRegCtrl

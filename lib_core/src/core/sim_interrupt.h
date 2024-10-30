@@ -1,7 +1,7 @@
 /*
  * sim_interrupt.h
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -48,12 +48,12 @@ class InterruptHandler;
 //Notes:
 //   . a vector can only be registered once
 //   . the vector 0 cannot be registered
-#define AVR_CTLREQ_INTR_REGISTER    1
+#define AVR_CTLREQ_INTR_REGISTER    (AVR_CTLREQ_BASE + 1)
 
 //Request sent to raise or clear artificially any interrupt
 //The index shall be the interrupt vector index
 //The value 'u' shall be 1 for raising the interrupt, 0 for clearing it.
-#define AVR_CTLREQ_INTR_RAISE       2
+#define AVR_CTLREQ_INTR_RAISE       (AVR_CTLREQ_BASE + 2)
 
 #define AVR_INTERRUPT_NONE          -1
 
@@ -231,6 +231,7 @@ public:
     //registered with the controller
     void raise_interrupt(int_vect_t vector) const;
     void cancel_interrupt(int_vect_t vector) const;
+    bool interrupt_raised(int_vect_t vector) const;
     virtual void interrupt_ack_handler(int_vect_t vector);
 
     //Disable copy semantics
@@ -286,7 +287,6 @@ private:
     regbit_t m_rb_enable;
     regbit_t m_rb_flag;
     int_vect_t m_vector;
-    bool m_raised;
 
     IO_Register* m_flag_reg;
     IO_Register* m_enable_reg;
@@ -298,7 +298,7 @@ private:
 /// Returns the raised state of the interrupt flag
 inline bool InterruptFlag::raised() const
 {
-    return m_raised;
+    return interrupt_raised(m_vector);
 }
 
 

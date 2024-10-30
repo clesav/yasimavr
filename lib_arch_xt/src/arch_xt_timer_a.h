@@ -51,7 +51,7 @@ class ArchXT_TimerB;
    Request for a Timer type B to register with the timer type A. this is necessary
    for the TCB to use the same "clock" as the TCA.
  */
-#define AVR_CTLREQ_TCA_REGISTER_TCB         1
+#define AVR_CTLREQ_TCA_REGISTER_TCB         (AVR_CTLREQ_BASE + 1)
 
 /// @}
 
@@ -60,7 +60,7 @@ class ArchXT_TimerB;
    Request for the event input hook for a timer type A.
    It returns with data as a pointer to a SignalHook instance.
  */
-#define AVR_CTLREQ_TCA_GET_EVENT_HOOK      2
+#define AVR_CTLREQ_TCA_GET_EVENT_HOOK      (AVR_CTLREQ_BASE + 2)
 
 
 //=======================================================================================

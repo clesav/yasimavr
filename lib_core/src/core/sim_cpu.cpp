@@ -1101,10 +1101,10 @@ void Core::dbg_insert_breakpoint(breakpoint_t& bp)
     uint32_t curr_opcode = get_flash16le(bp.addr);
     bp.instr_len = _is_instruction_32_bits(curr_opcode) ? 4 : 2;
     //Backup the program instruction
-    m_flash.dbg_read(bp.instr, bp.addr, bp.instr_len);
+    m_flash.read(bp.instr, bp.addr, bp.instr_len);
     //Replace the program instruction by a break
-    m_flash.dbg_write(AVR_BREAK_OPCODE & 0xFF, bp.addr);
-    m_flash.dbg_write(AVR_BREAK_OPCODE >> 8, bp.addr + 1);
+    m_flash.write(AVR_BREAK_OPCODE & 0xFF, bp.addr);
+    m_flash.write(AVR_BREAK_OPCODE >> 8, bp.addr + 1);
 }
 
 /**
@@ -1117,5 +1117,5 @@ void Core::dbg_insert_breakpoint(breakpoint_t& bp)
 void Core::dbg_remove_breakpoint(breakpoint_t& bp)
 {
     //Restore the original instruction in flash
-    m_flash.dbg_write(bp.instr, bp.addr, bp.instr_len);
+    m_flash.write(bp.instr, bp.addr, bp.instr_len);
 }

@@ -168,7 +168,7 @@ private:
 
    index should be one of ArchAVR_Fuses::Fuses enum values
  */
-#define AVR_CTLREQ_FUSE_VALUE          1
+#define AVR_CTLREQ_FUSE_VALUE          (AVR_CTLREQ_BASE + 1)
 
 /// @}
 

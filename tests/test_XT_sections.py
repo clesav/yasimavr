@@ -48,7 +48,7 @@ def test_xt_sections(bench):
     fuse_nvm = bench.dev.nvms['Fuses']
 
     #Setting BOOTEND to 4
-    fuse_nvm.dbg_write(100, 0x08)
+    fuse_nvm.write(100, 0x08)
     #Check that the update is only taken into account on a reset
     assert bench.dev.FUSES.BOOTEND == 0
     assert _sections_sizes(bench.sections) == [192, 0, 0]
@@ -57,14 +57,14 @@ def test_xt_sections(bench):
     assert _sections_sizes(bench.sections) == [100, 92, 0]
 
     #Setting APPEND to 150
-    fuse_nvm.dbg_write(150, 0x07)
+    fuse_nvm.write(150, 0x07)
     assert bench.dev.FUSES.APPEND == 0
     bench.dev_model.reset()
     assert bench.dev.FUSES.APPEND == 150
     assert _sections_sizes(bench.sections) == [100, 50, 42]
 
     #Setting APPEND to 50 => the section disappears
-    fuse_nvm.dbg_write(50, 0x07)
+    fuse_nvm.write(50, 0x07)
     bench.dev_model.reset()
     assert _sections_sizes(bench.sections) == [100, 0, 92]
 
@@ -75,8 +75,8 @@ def test_xt_sections_write_protections(bench):
     '''
 
     fuse_nvm = bench.dev.nvms['Fuses']
-    fuse_nvm.dbg_write(80, 0x08)
-    fuse_nvm.dbg_write(120, 0x07)
+    fuse_nvm.write(80, 0x08)
+    fuse_nvm.write(120, 0x07)
     bench.dev_model.reset()
 
     assert bench.sections.fetch_address(50*256)
@@ -101,8 +101,8 @@ def test_xt_sections_signal(bench):
     hook = DictSignalHook(bench.sections.signal())
 
     fuse_nvm = bench.dev.nvms['Fuses']
-    fuse_nvm.dbg_write(80, 0x08)
-    fuse_nvm.dbg_write(120, 0x07)
+    fuse_nvm.write(80, 0x08)
+    fuse_nvm.write(120, 0x07)
     bench.dev_model.reset()
 
     bench.sections.fetch_address(100*256)
@@ -130,8 +130,8 @@ def test_xt_read_restrictions(bench):
 
     #Setting BOOTEND to 100 and APPEND to 0, therefore the AppCode section starts at 0x6400
     fuse_nvm = bench.dev.nvms['Fuses']
-    fuse_nvm.dbg_write(100, 0x08)
-    fuse_nvm.dbg_write(0, 0x07)
+    fuse_nvm.write(100, 0x08)
+    fuse_nvm.write(0, 0x07)
     #Reset to apply the fuse changes and confirm the section start
     bench.dev_model.reset()
     assert bench.sections.section_start(Sections.AppCode) == 100
@@ -155,8 +155,8 @@ def test_xt_write_restrictions(bench):
 
     #Setting BOOTEND to 100 and APPEND to 0, therefore the AppCode section starts at 0x6400
     fuse_nvm = bench.dev.nvms['Fuses']
-    fuse_nvm.dbg_write(100, 0x08)
-    fuse_nvm.dbg_write(0, 0x07)
+    fuse_nvm.write(100, 0x08)
+    fuse_nvm.write(0, 0x07)
     #Reset to apply the fuse changes and confirm the section start
     bench.dev_model.reset()
     assert bench.sections.section_start(Sections.AppCode) == 100

@@ -234,6 +234,9 @@ public:
     ///Extracts a compound value for a specified regbit piece
     uint8_t extract(uint64_t v, size_t index) const;
 
+    ///Returns the number of bits in the field
+    int bitcount() const;
+
     ///Assigns the regbit pieces
     regbit_compound_t& operator=(const std::vector<regbit_t>& v);
 

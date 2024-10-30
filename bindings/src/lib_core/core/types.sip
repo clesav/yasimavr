@@ -1,7 +1,7 @@
 /*
  * types.sip
  *
- *  Copyright 2022 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022-2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -210,6 +210,8 @@ public:
     uint64_t compound(uint8_t, size_t) const;
     uint8_t extract(uint64_t, size_t) const;
 
+    int bitcount() const;
+
 };
 
 
@@ -368,6 +370,13 @@ public:
         vardata_t v;
         fill_vardata_with_pyobj(&v, a0);
         sipRes = (*sipCpp == v);
+    %End
+
+    bool __ne__(SIP_PYOBJECT) const;
+    %MethodCode
+        vardata_t v;
+        fill_vardata_with_pyobj(&v, a0);
+        sipRes = (*sipCpp != v);
     %End
 
 };

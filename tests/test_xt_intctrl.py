@@ -257,7 +257,7 @@ def test_xt_intr_ivsel(bench):
     bench.dev.nvms['Flash'].program(BREAK_OPCODE, APPCODE_BASE*256 + INTR6_OFFSET)
     #Set BOOTEND to APPCODE_BASE
     fuse_nvm = bench.dev.nvms['Fuses']
-    fuse_nvm.dbg_write(APPCODE_BASE, 0x08)
+    fuse_nvm.write(APPCODE_BASE, 0x08)
     #Reset the device to apply the new fuse value and run the simulation
     bench.dev_model.reset(corelib.Device.ResetFlag.PowerOn)
     bench.sim_advance(1000)

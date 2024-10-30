@@ -285,7 +285,7 @@ void DeviceDebugProbe::write_flash(flash_addr_t addr, const uint8_t* buf, flash_
 
     ADJUST_ADDR_LEN(addr, len, core.config().flashend);
 
-    core.m_flash.dbg_write(buf, addr, len);
+    core.m_flash.write(buf, addr, len);
 }
 
 flash_addr_t DeviceDebugProbe::read_flash(flash_addr_t addr, uint8_t* buf, flash_addr_t len) const
@@ -296,7 +296,7 @@ flash_addr_t DeviceDebugProbe::read_flash(flash_addr_t addr, uint8_t* buf, flash
 
     ADJUST_ADDR_LEN(addr, len, core.config().flashend);
 
-    core.m_flash.dbg_read(buf, addr, len);
+    core.m_flash.read(buf, addr, len);
 
     return len;
 }

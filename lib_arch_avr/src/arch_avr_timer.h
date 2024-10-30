@@ -44,12 +44,12 @@ YASIMAVR_BEGIN_NAMESPACE
    \ingroup api_timer
    Request to obtain a pointer to the SignalHook entry point for external clock ticks
  */
-#define AVR_CTLREQ_TMR_GET_EXTCLK_HOOK        1
+#define AVR_CTLREQ_TMR_GET_EXTCLK_HOOK        (AVR_CTLREQ_BASE + 1)
 
 /**
    Request to obtain a pointer to the SignalHook entry point for event capture
  */
-#define AVR_CTLREQ_TMR_GET_CAPT_HOOK          2
+#define AVR_CTLREQ_TMR_GET_CAPT_HOOK          (AVR_CTLREQ_BASE + 2)
 
 /// @}
 
