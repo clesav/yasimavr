@@ -275,7 +275,7 @@ cycle_count_t Device::exec_cycle()
         cycle_delta = 1;
 
     if (m_state == State_Reset)
-        reset();
+        reset(m_reset_flags);
 
     return cycle_delta;
 }

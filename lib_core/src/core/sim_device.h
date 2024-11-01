@@ -1,7 +1,7 @@
 /*
  * sim_device.h
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -74,7 +74,7 @@ public:
         State_Running       = 0x21, //!< Device executing the firmware
         State_Sleeping      = 0x31, //!< Device in sleep mode
         State_Halted        = 0x41, //!< CPU halted but peripherals are running normally
-        State_Reset         = 0x50, //!< Device being reset (taken into account at the next cycle)
+        State_Reset         = 0x51, //!< Device being reset (taken into account at the next cycle)
         State_Break         = 0x60, //!< Device halted by a BREAK instruction
         State_Done          = 0x70, //!< Final state without any error
         State_Crashed       = 0x80, //!< Final state with error
