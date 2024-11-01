@@ -27,7 +27,6 @@
 #include "arch_avr_globals.h"
 #include "core/sim_cycle_timer.h"
 #include "core/sim_interrupt.h"
-#include "ioctrl_common/sim_wdt.h"
 
 YASIMAVR_BEGIN_NAMESPACE
 
@@ -39,22 +38,22 @@ YASIMAVR_BEGIN_NAMESPACE
 struct ArchAVR_WDTConfig {
 
     /// Clock frequency used by the watchdog timer
-	unsigned long clock_frequency;
-	/// List of selectable delays
+    unsigned long clock_frequency;
+    /// List of selectable delays
     std::vector<unsigned long> delays;
     /// WDT configuration register address
     reg_addr_t reg_wdt;
-	/// Bitmask for the delay select
-    bitmask_t bm_delay;
-	/// Bitmask for the Change Enable bit
+    /// Bitmask for the delay select
+    regbit_compound_t rbc_delay;
+    /// Bitmask for the Change Enable bit
     bitmask_t bm_chg_enable;
-	/// Bitmask for the Reset Enable bit
+    /// Bitmask for the Reset Enable bit
     bitmask_t bm_reset_enable;
-	/// Bitmask for the Interrupt Enable bit
+    /// Bitmask for the Interrupt Enable bit
     bitmask_t bm_int_enable;
-	/// Bitmask for the Interrupt Flag bit
+    /// Bitmask for the Interrupt Flag bit
     bitmask_t bm_int_flag;
-	/// Regbit for the reset flag
+    /// Regbit for the reset flag
     regbit_t rb_reset_flag;
     /// Interrupt vector index
     int_vect_t iv_wdt;
@@ -65,7 +64,7 @@ struct ArchAVR_WDTConfig {
 /**
    \brief Implementation of a Watchdog Timer for AVR series
  */
-class AVR_ARCHAVR_PUBLIC_API ArchAVR_WDT : public WatchdogTimer, public InterruptHandler {
+class AVR_ARCHAVR_PUBLIC_API ArchAVR_WDT : public Peripheral, public InterruptHandler {
 
 public:
 
@@ -73,21 +72,23 @@ public:
 
     virtual bool init(Device& device) override;
     virtual void reset() override;
+    virtual bool ctlreq(ctlreq_id_t req, ctlreq_data_t* data) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
     virtual void interrupt_ack_handler(int_vect_t vector) override;
 
-protected:
-
-    virtual void timeout() override;
-
 private:
 
-    //Device variant configuration
     const ArchAVR_WDTConfig& m_config;
-    //cycle number when the register have been unlocked for modification
-    cycle_count_t m_unlock_cycle;
+    cycle_count_t m_timer_start_cycle;
+    BoundFunctionCycleTimer<ArchAVR_WDT> m_wdt_timer;
+    BoundFunctionCycleTimer<ArchAVR_WDT> m_lock_timer;
 
+    void reschedule_timer();
+    cycle_count_t calculate_timeout_delay();
     void configure_timer(bool enable, uint8_t delay_index);
+    cycle_count_t wdt_timeout(cycle_count_t when);
+    void lock_timeout();
+    void timeout();
 
 };
 

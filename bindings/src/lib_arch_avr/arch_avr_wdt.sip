@@ -30,7 +30,7 @@ struct ArchAVR_WDTConfig {
     UnsignedLongVector delays;
 
     reg_addr_t reg_wdt;
-    bitmask_t bm_delay;
+    regbit_compound_t rbc_delay;
     bitmask_t bm_chg_enable;
     bitmask_t bm_reset_enable;
     bitmask_t bm_int_enable;
@@ -41,7 +41,7 @@ struct ArchAVR_WDTConfig {
 
 };
 
-class ArchAVR_WDT : public WatchdogTimer, public InterruptHandler /NoDefaultCtors/ {
+class ArchAVR_WDT : public Peripheral, public InterruptHandler /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_avr_wdt.h"
 %End
@@ -52,11 +52,9 @@ public:
 
     virtual bool init(Device&);
     virtual void reset();
+    virtual bool ctlreq(ctlreq_id_t, ctlreq_data_t*);
+    virtual uint8_t ioreg_read_handler(reg_addr_t, uint8_t);
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
     virtual void interrupt_ack_handler(int_vect_t);
-
-protected:
-
-    virtual void timeout();
 
 };

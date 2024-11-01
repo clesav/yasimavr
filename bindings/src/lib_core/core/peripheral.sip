@@ -26,7 +26,7 @@
 #include "core/sim_peripheral.h"
 
 const ctl_id_t IOCTL_CORE       = AVR_IOCTL_CORE;
-const ctl_id_t IOCTL_WTDG       = AVR_IOCTL_WTDG;
+const ctl_id_t IOCTL_WDT        = AVR_IOCTL_WDT;
 const ctl_id_t IOCTL_INTR       = AVR_IOCTL_INTR;
 const ctl_id_t IOCTL_SLEEP      = AVR_IOCTL_SLEEP;
 const ctl_id_t IOCTL_CLOCK      = AVR_IOCTL_CLOCK;
@@ -97,7 +97,7 @@ const ctlreq_id_t CTLREQ_SLEEP_PSEUDO     = AVR_CTLREQ_SLEEP_PSEUDO;
 //=======================================================================================
 
 const ctl_id_t IOCTL_CORE;
-const ctl_id_t IOCTL_WTDG;
+const ctl_id_t IOCTL_WDT;
 const ctl_id_t IOCTL_INTR;
 const ctl_id_t IOCTL_SLEEP;
 const ctl_id_t IOCTL_CLOCK;

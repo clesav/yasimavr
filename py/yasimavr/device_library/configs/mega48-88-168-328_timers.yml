@@ -600,7 +600,7 @@ WDT:
         clock_frequency: 128000
         delays: [ 2048, 4096, 8192, 16384, 32768, 65536, 131072, 262144, 524288, 1048576 ]
         reg_wdt: WDT/WDTCSR
-        bm_delay: WDTCSR/WDP|WDP3
+        rbc_delay: [ WDTCSR/WDP, WDTCSR/WDP3 ]
         bm_chg_enable: WDTCSR/WDCE
         bm_reset_enable: WDTCSR/WDE
         bm_int_enable: WDTCSR/WDIE
