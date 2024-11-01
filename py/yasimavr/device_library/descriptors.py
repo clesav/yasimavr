@@ -796,12 +796,7 @@ def convert_to_regbit_compound(arg, per=None, dev=None):
         l = _parse_regpath(_split_reg_path(regpath), per, dev)
         regbit_list.extend(l)
 
-        return _corelib.regbit_compound_t(regbit_list)
-
-    else:
-        elements = _split_reg_path(arg)
-        regbit_list = _parse_regpath(elements, per, dev)
-        return _corelib.regbit_compound_t(regbit_list)
+    return _corelib.regbit_compound_t(regbit_list)
 
 
 def convert_to_bitmask(arg, per=None, dev=None):
