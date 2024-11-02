@@ -85,10 +85,8 @@ private:
 
     void reschedule_timer();
     cycle_count_t calculate_timeout_delay();
-    void configure_timer(bool enable, uint8_t delay_index);
     cycle_count_t wdt_timeout(cycle_count_t when);
     void lock_timeout();
-    void timeout();
 
 };
 

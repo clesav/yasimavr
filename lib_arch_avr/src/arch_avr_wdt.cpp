@@ -153,16 +153,6 @@ void ArchAVR_WDT::reschedule_timer()
 
 cycle_count_t ArchAVR_WDT::wdt_timeout(cycle_count_t when)
 {
-    timeout();
-    m_timer_start_cycle = when;
-    cycle_count_t timeout_cycle = calculate_timeout_delay() + when;
-    logger().dbg("Next timeout scheduled at : %lld", timeout_cycle);
-    return timeout_cycle;
-}
-
-
-void ArchAVR_WDT::timeout()
-{
     logger().dbg("timeout");
 
     //If the interrupt is enabled but not raised yet, raise it.
@@ -171,6 +161,12 @@ void ArchAVR_WDT::timeout()
         logger().dbg("Raising interrupt");
         set_ioreg(m_config.reg_wdt, m_config.bm_int_flag);
         raise_interrupt(m_config.iv_wdt);
+
+        //Reschedule the timer for the next interrupt/reset
+        m_timer_start_cycle = when;
+        cycle_count_t timeout_cycle = calculate_timeout_delay() + when;
+        logger().dbg("Next timeout scheduled at : %lld", timeout_cycle);
+        return timeout_cycle;
     }
     //of else, WDE is set or WDIF is already raised so trigger the reset.
     //Don't call reset() itself because we want the current
@@ -180,6 +176,9 @@ void ArchAVR_WDT::timeout()
         logger().dbg("Triggering a device reset");
         ctlreq_data_t reqdata = { .data = Device::Reset_WDT };
         device()->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_RESET, &reqdata);
+
+        //No need to reschedule the timer, the reset handler will do it
+        return 0;
     }
 }
 
