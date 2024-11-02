@@ -33,8 +33,8 @@ ArchAVR_WDT::ArchAVR_WDT(const ArchAVR_WDTConfig& config)
 :Peripheral(AVR_IOCTL_WDT)
 ,m_config(config)
 ,m_timer_start_cycle(0)
-,m_wdt_timer(*this, wdt_timeout)
-,m_lock_timer(*this, lock_timeout)
+,m_wdt_timer(*this, &ArchAVR_WDT::wdt_timeout)
+,m_lock_timer(*this, &ArchAVR_WDT::lock_timeout)
 {}
 
 
