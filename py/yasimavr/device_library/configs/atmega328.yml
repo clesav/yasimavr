@@ -163,7 +163,6 @@ peripherals:
 
     WDT:
         file: mega48-88-168-328_timers.yml
-        ctl_id: WTDG
 
     ADC:
         file: mega48-88-168-328_analog.yml

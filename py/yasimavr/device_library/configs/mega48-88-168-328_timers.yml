@@ -1,6 +1,6 @@
 # YAML configuration file for atmega48-88-168-328 variants
 #
-# Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -595,5 +595,17 @@ WDT:
             WDP3: { kind: BIT, pos: 5 }
             WDIE: { kind: BIT, pos: 6 }
             WDIF: { kind: BIT, pos: 7 }
+
+    config:
+        clock_frequency: 128000
+        delays: [ 2048, 4096, 8192, 16384, 32768, 65536, 131072, 262144, 524288, 1048576 ]
+        reg_wdt: WDT/WDTCSR
+        rbc_delay: [ WDTCSR/WDP, WDTCSR/WDP3 ]
+        bm_chg_enable: WDTCSR/WDCE
+        bm_reset_enable: WDTCSR/WDE
+        bm_int_enable: WDTCSR/WDIE
+        bm_int_flag: WDTCSR/WDIF
+        rb_reset_flag: RSTCTRL/MCUSR/WDRF
+        iv_wdt: WDT
 
 #========================================================================================

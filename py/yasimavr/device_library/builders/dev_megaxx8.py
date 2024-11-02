@@ -52,6 +52,7 @@ class dev_megaxx8(AVR_BaseDevice):
             'USART',
             'SPI',
             'TWI',
+            'WDT',
         ]
 
         builder.build_peripherals(self, peripherals)
