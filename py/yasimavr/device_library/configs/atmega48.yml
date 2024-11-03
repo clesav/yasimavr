@@ -44,6 +44,8 @@ fuses:
     factory_values: [ 0x62, 0xDF, 0xFF ]
     lock_byte: 0xFF
 
+device_signature: [ 0x1E, 0x92, 0x05 ]
+
 access:
     lsb_first_on_write: yes
     lsb_first_on_read: no

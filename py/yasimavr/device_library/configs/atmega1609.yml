@@ -48,6 +48,8 @@ fuses:
                       0xC0, 0x07, 0x00, 0x00, 0x00,
                       0xC5 ]
 
+device_signature: [ 0x1E, 0x94, 0x26 ]
+
 access:
     lsb_first_on_write: yes
     lsb_first_on_read: yes
@@ -144,8 +146,6 @@ peripherals:
 
     MISC:
         file: ArchXT_controllers.yml
-        config:
-            dev_id: 0x0026941E
 
     PORTA:
         class: PORT

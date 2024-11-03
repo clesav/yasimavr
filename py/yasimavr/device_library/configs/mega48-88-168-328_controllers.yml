@@ -197,3 +197,4 @@ NVMCTRL:
         ee_write_delay: 1800
         ee_erase_delay: 1800
         ee_erase_write_delay: 3400
+        dev_id:
