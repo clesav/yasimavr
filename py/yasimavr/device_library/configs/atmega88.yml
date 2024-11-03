@@ -44,6 +44,8 @@ fuses:
     factory_values: [ 0x62, 0xDF, 0xF9 ]
     lock_byte: 0xFF
 
+device_signature: [ 0x1E, 0x93, 0x0A ]
+
 access:
     lsb_first_on_write: yes
     lsb_first_on_read: no
@@ -116,6 +118,13 @@ peripherals:
             nrww_start: 96
             boot_sizes: [ 32, 16, 8, 4 ]
 
+    NVMCTRL:
+        file: mega48-88-168-328_controllers.yml
+        ctl_id: NVM
+        config:
+            iv_spm_ready: SPM_READY
+            iv_ee_ready: EE_READY
+
     MISC:
         file: mega48-88-168-328_controllers.yml
 
@@ -143,12 +152,15 @@ peripherals:
 
     TC0:
         file: mega48-88-168-328_timers.yml
+        ctl_id: TC_0
 
     TC1:
         file: mega48-88-168-328_timers.yml
+        ctl_id: TC_1
 
     TC2:
         file: mega48-88-168-328_timers.yml
+        ctl_id: TC_2
 
     WDT:
         file: mega48-88-168-328_timers.yml

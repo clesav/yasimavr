@@ -33,6 +33,7 @@ memory:
         FLASHEND: 0xBFFF
     flash:
         FLASHEND: 0x7FFF
+        page_size: 128
     eeprom:
         EEPROMEND: 0xFF
     userrow:
@@ -47,6 +48,8 @@ fuses:
     factory_values: [ 0x00, 0x00, 0x02, 0x00, 0x00,
                       0xC0, 0x07, 0x00, 0x00, 0x00,
                       0xC5 ]
+
+device_signature: [ 0x1E, 0x95, 0x31 ]
 
 access:
     lsb_first_on_write: yes
@@ -144,8 +147,6 @@ peripherals:
 
     MISC:
         file: ArchXT_controllers.yml
-        config:
-            dev_id: 0x0031951E
 
     PORTA:
         class: PORT

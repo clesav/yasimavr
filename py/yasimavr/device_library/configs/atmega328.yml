@@ -47,6 +47,8 @@ fuses:
     factory_values: [ 0x62, 0xD9, 0xFF ]
     lock_byte: 0xFF
 
+device_signature: [ 0x1E, 0x95, 0x14 ]
+
 access:
     lsb_first_on_write: yes
     lsb_first_on_read: no
@@ -125,7 +127,6 @@ peripherals:
         config:
             iv_spm_ready: SPM_READY
             iv_ee_ready: EE_READY
-            dev_id: 0x0014951E
 
     MISC:
         file: mega48-88-168-328_controllers.yml
@@ -154,12 +155,15 @@ peripherals:
 
     TC0:
         file: mega48-88-168-328_timers.yml
+        ctl_id: TC_0
 
     TC1:
         file: mega48-88-168-328_timers.yml
+        ctl_id: TC_1
 
     TC2:
         file: mega48-88-168-328_timers.yml
+        ctl_id: TC_2
 
     WDT:
         file: mega48-88-168-328_timers.yml

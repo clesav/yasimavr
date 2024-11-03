@@ -569,6 +569,8 @@ class DeviceDescriptor:
 
         self.interrupt_map = InterruptMapDescriptor(dict(yml_cfg['interrupts']))
 
+        self.device_signature = list(yml_cfg['device_signature'])
+
         self.peripherals = {}
         for per_name, f in dict(yml_cfg['peripherals']).items():
             self.peripherals[per_name] = PeripheralInstanceDescriptor(per_name, dev_loader, f, self)

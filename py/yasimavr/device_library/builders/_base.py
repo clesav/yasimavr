@@ -1,6 +1,6 @@
 # _base.py
 #
-# Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -178,6 +178,10 @@ class PeripheralConfigBuilder:
 
         elif attr.startswith('bm_') or isinstance(default_val, _corelib.bitmask_t):
             return convert_to_bitmask(yml_val, per_desc)
+
+        elif attr == 'dev_id':
+            v = per_desc.device.device_signature
+            return int.from_bytes(v, byteorder='little', signed=False)
 
         elif isinstance(default_val, (int, float)):
             return yml_val
