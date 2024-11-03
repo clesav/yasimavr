@@ -33,6 +33,7 @@ memory:
         FLASHEND: 0xFFFF
     flash:
         FLASHEND: 0xBFFF
+        page_size: 128
     eeprom:
         EEPROMEND: 0xFF
     userrow:

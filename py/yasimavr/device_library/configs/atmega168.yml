@@ -118,6 +118,13 @@ peripherals:
             nrww_start: 112
             boot_sizes: [ 16, 8, 4, 2 ]
 
+    NVMCTRL:
+        file: mega48-88-168-328_controllers.yml
+        ctl_id: NVM
+        config:
+            iv_spm_ready: SPM_READY
+            iv_ee_ready: EE_READY
+
     MISC:
         file: mega48-88-168-328_controllers.yml
 
