@@ -589,7 +589,7 @@ WDT:
                 kind: ENUM
                 LSB: 0
                 MSB: 2
-                values: [ 2K, 4K, 8K, 16K, 32K, 64K, 128K, 256K, 512K, 1024K ]
+                values: [ 2K, 4K, 8K, 16K, 32K, 64K, 128K, 256K ]
             WDE: { kind: BIT, pos: 3 }
             WDCE: { kind: BIT, pos: 4 }
             WDP3: { kind: BIT, pos: 5 }
