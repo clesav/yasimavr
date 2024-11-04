@@ -20,9 +20,6 @@
 ---
 name: atmega328
 
-aliases:
-   - atmega328p
-
 architecture: AVR
 
 memory:

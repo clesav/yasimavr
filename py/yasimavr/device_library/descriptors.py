@@ -545,9 +545,18 @@ class DeviceDescriptor:
 
         self.name = str(yml_cfg['name'])
 
+        self.device_signature = list(yml_cfg['device_signature'])
+
         if 'aliasof' in yml_cfg:
             alias = str(yml_cfg['aliasof']).lower()
-            yml_cfg = self._read_config(alias, repositories)
+            fn = _find_config_file(alias + '.yml', ConfigRepositories)
+            if fn is None:
+                raise DeviceConfigException('No configuration found for alias ' + alias)
+            try:
+                yml_cfg = load_config_file(fn)
+            except Exception as exc:
+                msg = 'Error reading the configuration file for ' + alias
+                raise DeviceConfigException(msg) from exc
 
         dev_loader = _DeviceDescriptorLoader(yml_cfg, repositories)
 
@@ -568,8 +577,6 @@ class DeviceDescriptor:
         self.pins = list(yml_cfg['pins'])
 
         self.interrupt_map = InterruptMapDescriptor(dict(yml_cfg['interrupts']))
-
-        self.device_signature = list(yml_cfg['device_signature'])
 
         self.peripherals = {}
         for per_name, f in dict(yml_cfg['peripherals']).items():
