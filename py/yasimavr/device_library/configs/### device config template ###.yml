@@ -1,6 +1,6 @@
 # Template of a YAML configuration file for a device variant
 #
-# Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -22,7 +22,7 @@
 #Full name of the device variant
 name: Atmel AVR ATMegaxxxx
 
-#If this entry is present, only the name is kept while the rest of the
+#If this entry is present, only the name and the device signature bytes are kept while the rest of the
 #file is ignored and the configuration for atmegayyyy is loaded instead.
 aliasof: atmegayyyy
 
@@ -60,6 +60,15 @@ memory:
 core:
     extended_addressing: yes
     clear_GIE_on_int: no
+
+#Definition of factory values for the fuses and lock bits
+fuses:
+    size: 3
+    factory_values: [ 0x62, 0xD9, 0xFF ]
+    lock_byte: 0xFF
+
+#Signature bytes for the device model, LSB first
+device_signature: [ 0x01, 0x23, 0x45 ]
 
 access:
     #For 16-bits registers, these define the order in which the
