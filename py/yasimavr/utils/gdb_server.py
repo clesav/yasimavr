@@ -24,7 +24,8 @@ import threading
 import socketserver
 import time
 import os, sys
-from yasimavr.lib.core import DeviceDebugProbe, AsyncSimLoop, Device
+from ..lib.core import DeviceDebugProbe, AsyncSimLoop, Device
+from ..device_library.accessors import DeviceAccessor
 
 
 #Templates for query replies and register descriptions
@@ -53,6 +54,15 @@ def _decode_hexa_int(hs):
     for i, b in enumerate(s):
         v += b << (i * 8)
     return v
+
+
+_NVM_MAP = {
+	0x810000: 'EEPROM',
+	0x820000: 'Fuses',
+	0x830000: 'Lockbit',
+	0x840000: 'DeviceSignature',
+	0x850000: 'USERROW'
+}
 
 
 class _GDB_SocketHandler(socketserver.BaseRequestHandler):
@@ -117,14 +127,26 @@ class GDB_Stub:
 
         self._verbose = False
 
+        self._command_hook = None
+
+
+    def set_command_hook(self, hook):
+        self._command_hook = hook
+
+
+    def _call_command_hook(self, cmd):
+        if self._command_hook:
+            try:
+                self._command_hook(cmd)
+            except Exception: pass
+
 
     def set_simloop(self, simloop):
         if self._ownloop: return
         self._probe.detach()
         self._simloop = simloop
         self._device = simloop.device()
-        self._probe = DeviceDebugProbe()
-        self._probe.attach(self._device)
+        self._probe = DeviceDebugProbe(self._device)
 
 
     def start(self):
@@ -143,6 +165,10 @@ class GDB_Stub:
                 self._simloop.loop_kill()
 
             self._simloopthread.join()
+
+
+    def attached(self):
+        return self._socket is not None
 
 
     def handle_socket(self, skt):
@@ -212,7 +238,7 @@ class GDB_Stub:
 
     def __send_reply(self, reply):
         if self._verbose:
-            print('GDB <<< Stub : ', repr(reply))
+            print('GDB <<< Stub : ' + repr(reply))
             sys.stdout.flush()
 
         if isinstance(reply, str):
@@ -248,7 +274,7 @@ class GDB_Stub:
 
     def __decode_command(self, cmdline):
         if self._verbose:
-            print('GDB >>> Stub : ', cmdline)
+            print('GDB >>> Stub : ' + cmdline)
             sys.stdout.flush()
 
         cmd = cmdline[0]
@@ -323,12 +349,18 @@ class GDB_Stub:
             rcmd_hexa = cmdargs.split(',')[1]
             rcmd_bytes = binascii.unhexlify(rcmd_hexa)
             rcmd = rcmd_bytes.decode('ascii')
-            if rcmd == 'reset':
-                with self._simloop:
-                    self._probe.reset_device()
-            elif rcmd == 'halt':
-                with self._simloop:
-                    self._probe.set_device_state(Device.State.Done)
+            if self._verbose:
+                print('GDB Stub: command ' + rcmd)
+
+            for cmd in rcmd.split():
+                if cmd == 'reset':
+                    with self._simloop:
+                        self._probe.reset_device()
+                elif cmd == 'halt':
+                    with self._simloop:
+                        self._probe.set_device_state(Device.State.Done)
+
+                self._call_command_hook(cmd)
 
             self.__send_reply('OK')
 
@@ -338,6 +370,9 @@ class GDB_Stub:
             self.__send_reply('l')
         elif cmdargs == 'C': #Querying the current thread. There is only one
             self.__send_reply('0')
+
+        elif cmdargs == 'Symbol::': #GDB can serve symbols request. Not used by the stub.
+            self.__send_reply('OK')
 
         else:
             self.__send_reply('')
@@ -442,10 +477,15 @@ class GDB_Stub:
                     #This is necessary to make instruction stepping work when stack is empty
                     buf = b'\0\0'
 
-            # else: #EEPROM area
-            #   eeprom_addr = data_addr - 0x810000
-            #   if (eeprom_addr + content_len) <= self._core_config.eepromend:
-            #       buf = self._probe.read_eeprom(eeprom_addr, content_len)
+            elif content_addr < 0x860000:
+                nvm_name = _NVM_MAP[content_addr & 0xFF0000]
+                if nvm_name == 'DeviceSignature':
+                    buf = bytes(self._device._descriptor_.device_signature)
+                else:
+                    dev_acc = DeviceAccessor(self._probe)
+                    if nvm_name in dev_acc.nvms:
+                        nvm = dev_acc.nvms[nvm_name]
+                        buf = nvm.read(content_addr & 0x00FFFF, content_len)
 
         if buf is not None:
             hexbuf = binascii.hexlify(buf)
@@ -476,11 +516,14 @@ class GDB_Stub:
                 self._probe.write_data(content_addr - 0x800000, buf)
                 ok = True
 
-            # else : #EEPROM area
-            #   eeprom_addr = data_addr - 0x810000
-            #   if (eeprom_addr + content_len) <= core_cfg.eepromend:
-            #       self._probe.write_eeprom(eeprom_addr, buf)
-            #       ok = True
+            elif content_addr < 0x860000:
+                nvm_name = _NVM_MAP[content_addr & 0xFF0000]
+                if nvm_name != 'DeviceSignature':
+                    dev_acc = DeviceAccessor(self._probe)
+                    if nvm_name in dev_acc.nvms:
+                        nvm = dev_acc.nvms[nvm_name]
+                        buf = nvm.write(content_addr & 0x00FFFF, content_len)
+                ok = True
 
         self.__send_reply('OK' if ok else 'E01')
 
@@ -504,6 +547,7 @@ class GDB_Stub:
     def __handle_cmd_kill(self):
         with self._simloop:
             self._simloop.loop_kill()
+        self._call_command_hook('kill')
         self.__send_reply('OK')
 
 
@@ -513,6 +557,9 @@ class GDB_Stub:
 
 
     def __handle_cmd_detach(self):
+        with self._simloop:
+            self._simloop.loop_kill()
+        self._call_command_hook('kill')
         self.__send_reply('OK')
 
 
