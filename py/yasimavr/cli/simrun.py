@@ -19,6 +19,7 @@
 
 import argparse
 import threading
+import time
 
 from ..lib import core as _corelib
 from ..device_library import load_device, model_list
@@ -326,6 +327,23 @@ def _init_VCD():
             raise ValueError('Invalid trace kind: ' + kind)
 
 
+def _flush_output_files():
+    if _vcd_out:
+        _vcd_out.flush()
+        _vcd_out.close()
+
+    if _run_args.dump is not None:
+        from ..utils.sim_dump import sim_dump
+        f = open(_run_args.dump, 'w')
+        sim_dump(_simloop, f)
+        f.close()
+
+
+def _gdb_command_hook(cmd):
+    if cmd == 'kill':
+        _flush_output_files()
+
+
 def _run_syncloop():
     global _simloop
 
@@ -340,6 +358,8 @@ def _run_syncloop():
         _vcd_out.record_on()
 
     _simloop.run(_run_args.cycles)
+
+    _flush_output_files()
 
 
 def _run_asyncloop(args):
@@ -357,19 +377,27 @@ def _run_asyncloop(args):
         _init_VCD()
         _vcd_out.record_on()
 
+    simloop_thread = threading.Thread(target=_simloop.run)
+    simloop_thread.start()
+    time.sleep(0.1)
+
     gdb = GDB_Stub(conn_point=('127.0.0.1', args.gdb),
                    fw_source=args.firmware,
                    simloop=_simloop)
+
+    gdb.set_command_hook(_gdb_command_hook)
 
     if args.verbose:
         gdb.set_verbose(True)
 
     gdb.start()
 
-    th = threading.Thread(target=_simloop.run)
-    th.start()
+    #Wait until the simulation has finished
+    simloop_thread.join()
 
-    th.join()
+    #Poll until the stub is detached from GDB, to take into account any post-mortem action
+    while gdb.attached():
+        time.sleep(0.1)
 
 
 def main(args=None):
@@ -407,13 +435,6 @@ def main(args=None):
             _run_asyncloop(_run_args)
     except KeyboardInterrupt:
         print('Simulation interrupted !!')
-
-    if _vcd_out:
-        _vcd_out.flush()
-
-    if _run_args.dump is not None:
-        from ..utils.sim_dump import sim_dump
-        sim_dump(_simloop, open(_run_args.dump, 'w'))
 
 
 def clean():
