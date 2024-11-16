@@ -18,6 +18,7 @@
 # along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
 
 import io
+import collections
 
 from ..lib import core as corelib
 from ..device_library.accessors import DeviceAccessor
@@ -116,44 +117,79 @@ class _Dumper:
 
 
 def _serialize_registers(probe, dumper):
+
+    RegData = collections.namedtuple('RegData', ('per', 'name', 'addr', 'size', 'value'))
+
+    hex_addr = lambda x : '0x%04x' % x
+
+    def _reg_value_to_str(reg_data):
+        if isinstance(reg_data.value, int):
+            return ('0x%%0%dx' % (reg_data.size * 2)) % reg_data.value
+        elif isinstance(reg_data.value, bytes):
+            dumper.dump_bytes(reg_name, reg_data.value)
+        elif isinstance(reg_data.value, str):
+            return reg_data.value
+        else:
+            return repr(reg_data.value)
+
     dumper.inc_level('I/O Registers')
 
     accessor = DeviceAccessor(probe)
 
+    #Prepare the list of RegData objects
+    reg_data_list = []
     for per_name, per_descriptor in accessor.descriptor.peripherals.items():
         per_class_descriptor = per_descriptor.class_descriptor
         per_accessor = getattr(accessor, per_name, None)
         if per_accessor is None: continue
 
+        #Extract the list of register name for this peripheral
+        #If a register is 16 bits, the list may also have the same name with 'L' or 'H' prefix.
+        #Remove those to avoid redundancy.
         reg_names = list(per_class_descriptor.registers)
         for reg_name in list(reg_names):
             if (reg_name + 'L') in reg_names:
                 reg_names.remove(reg_name + 'L')
                 reg_names.remove(reg_name + 'H')
 
-        if not reg_names: continue
+        #Create the RegData objects.
+        for reg_name in reg_names:
+            #Read the register values, but not as CPU to avoid triggering behaviour
+            r = getattr(getattr(accessor, per_name), reg_name)
+            if r.allocated:
+                r.set_read_as_cpu(False)
+                v = r.read()
+            else:
+                v = '--' * r.size
+
+            reg_data = RegData(per_name, reg_name, r.address, r.size, v)
+            reg_data_list.append(reg_data)
+
+    #Dump the register list sorted by address
+    dumper.inc_level('Address map')
+    for r in sorted(reg_data_list, key=lambda r : r.addr):
+        sa = hex_addr(r.addr) if r.size == 1 else (hex_addr(r.addr) + '-' + hex_addr(r.addr + r.size - 1))
+        t = r.per + '.' + r.name + ' [' + _reg_value_to_str(r) + ']'
+        dumper[sa] = t
+    dumper.dec_level()
+
+    #Dump the register list sorted by peripheral
+    dumper.inc_level('Peripheral map')
+    for per_name in accessor.descriptor.peripherals:
+        per_reg_data = [ r for r in reg_data_list if r.per == per_name]
+        if not per_reg_data: continue
 
         dumper.inc_level(per_name)
 
-        for reg_name in reg_names:
-            reg_accessor = getattr(per_accessor, reg_name)
-            reg_accessor.set_read_as_cpu(False)
-            try:
-                v = reg_accessor.read()
-            except Exception:
-                v = '--'
-
-            if isinstance(v, int):
-                dumper[reg_name] = hex(v)
-            elif isinstance(v, bytes):
-                dumper.dump_bytes(reg_name, v)
-            elif isinstance(v, str):
-                dumper[reg_name] = v
+        for reg_data in sorted(per_reg_data, key=lambda r : r.addr):
+            if isinstance(reg_data.value, bytes):
+                dumper.dump_bytes(reg_data.name, reg_data.value)
             else:
-                dumper[reg_name] = repr(v)
+                dumper[reg_data.name] = _reg_value_to_str(reg_data)
 
         dumper.dec_level()
 
+    dumper.dec_level()
     dumper.dec_level()
 
 
