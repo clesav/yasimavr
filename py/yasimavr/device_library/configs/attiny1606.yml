@@ -1,6 +1,6 @@
-# YAML configuration file for atmega3208 variant
+# YAML configuration file for attiny1608 variant
 #
-# Copyright 2023-2024 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2024 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -18,7 +18,7 @@
 # along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
 
 ---
-name: atmega3208
+name: attiny1608
 
 architecture: XT
 
@@ -27,17 +27,16 @@ memory:
         IOEND: 0x13FF
         EEPROMSTART: 0x1400
         EEPROMEND: 0x14FF
-        RAMSTART: 0x3000
+        RAMSTART: 0x3C00
         RAMEND: 0x3FFF
-        FLASHSTART: 0x4000
+        FLASHSTART: 0x8000
         FLASHEND: 0xBFFF
     flash:
-        FLASHEND: 0x7FFF
-        page_size: 128
+        FLASHEND: 0x3FFF
     eeprom:
         EEPROMEND: 0xFF
     userrow:
-        USERROWEND: 0x3F
+        USERROWEND: 0x1F
 
 core:
     extended_addressing: no
@@ -46,19 +45,18 @@ core:
 fuses:
     size: 11
     factory_values: [ 0x00, 0x00, 0x02, 0x00, 0x00,
-                      0xC0, 0x07, 0x00, 0x00, 0x00,
+                      0xF6, 0x07, 0x00, 0x00, 0x00,
                       0xC5 ]
 
-device_signature: [ 0x1E, 0x95, 0x30 ]
+device_signature: [ 0x1E, 0x94, 0x24 ]
 
 access:
     lsb_first_on_write: yes
     lsb_first_on_read: yes
 
 pins: [ PA0, PA1, PA2, PA3, PA4, PA5, PA6, PA7,
-        PC0, PC1, PC2, PC3,
-        PD0, PD1, PD2, PD3, PD4, PD5, PD6, PD7,
-        PF0, PF1, PF2, PF3, PF4, PF5, PF6 ]
+        PB0, PB1, PB2, PB3, PB4, PB5,
+        PC0, PC1, PC2, PC3 ]
 
 interrupts:
     vector_size: 4
@@ -67,42 +65,32 @@ interrupts:
         - RESET
         - CRCSCAN
         - BOD
+        - PORTA
+        - PORTB
+        - PORTC
         - RTC_CNT
         - RTC_PIT
-        - CCL
-        - PORTA
         - TCA0_OVF
         - TCA0_HUNF
         - TCA0_CMP0
         - TCA0_CMP1
         - TCA0_CMP2
         - TCB0
-        - TCB1
+        - AC0
+        - ADC0_RESRDY
+        - ADC0_WCOMP
         - TWI0_TWIS
         - TWI0_TWIM
         - SPI0
         - USART0_RXC
         - USART0_DRE
         - USART0_TXC
-        - PORTD
-        - AC0
-        - ADC0_RESRDY
-        - ADC0_WCOMP
-        - PORTC
-        - TCB2
-        - USART1_RXC
-        - USART1_DRE
-        - USART1_TXC
-        - PORTF
         - NVMCTRL_EE
-        - USART2_RXC
-        - USART2_DRE
-        - USART2_TXC
 
     sleep_mask:
-        Idle:       [ 0xFF, 0xFF, 0xFF, 0xFF, 0x03 ]
-        Standby:    [ 0x7F, 0x70, 0xB2, 0xA7, 0x00 ]
-        PowerDown:  [ 0x77, 0x40, 0x10, 0x21, 0x00 ]
+        Idle:       [ 0xFF, 0xFF, 0xFF ]
+        Standby:    [ 0xFF, 0xE0, 0x01 ]
+        PowerDown:  [ 0xBF, 0x00, 0x00 ]
 
 peripherals:
     CPU:
@@ -133,8 +121,8 @@ peripherals:
         base: 0x1000
         ctl_id: NVM
         config:
-           flash_page_size: 128
-           eeprom_page_size: 64
+           flash_page_size: 64
+           eeprom_page_size: 32
            iv_eeready: NVMCTRL_EE
 
     MISC:
@@ -150,6 +138,16 @@ peripherals:
             reg_base_vport: 0x0000
             iv_port: PORTA
 
+    PORTB:
+        class: PORT
+        file: ArchXT_interfaces.yml
+        base: 0x0420
+        ctl_id: IOGB
+        config:
+            reg_base_port: 0x0420
+            reg_base_vport: 0x0004
+            iv_port: PORTB
+
     PORTC:
         class: PORT
         file: ArchXT_interfaces.yml
@@ -159,26 +157,6 @@ peripherals:
             reg_base_port: 0x0440
             reg_base_vport: 0x0008
             iv_port: PORTC
-
-    PORTD:
-        class: PORT
-        file: ArchXT_interfaces.yml
-        base: 0x0460
-        ctl_id: IOGD
-        config:
-            reg_base_port: 0x0460
-            reg_base_vport: 0x000C
-            iv_port: PORTD
-
-    PORTF:
-        class: PORT
-        file: ArchXT_interfaces.yml
-        base: 0x04A0
-        ctl_id: IOGF
-        config:
-            reg_base_port: 0x04A0
-            reg_base_vport: 0x0014
-            iv_port: PORTF
 
     TCA0:
         class: TCA
@@ -193,23 +171,9 @@ peripherals:
     TCB0:
         class: TCB
         file: ArchXT_timers.yml
-        base: 0x0A80
+        base: 0x0A40
         config:
             iv_capt: TCB0
-
-    TCB1:
-        class: TCB
-        file: ArchXT_timers.yml
-        base: 0x0A90
-        config:
-            iv_capt: TCB1
-
-    TCB2:
-        class: TCB
-        file: ArchXT_timers.yml
-        base: 0x0AA0
-        config:
-            iv_capt: TCB2
 
     RTC:
         file: ArchXT_timers.yml
@@ -223,7 +187,7 @@ peripherals:
         # base: 0x0100
 
     VREF:
-        class: VREF_mega0
+        class: VREF_tiny0
         file: ArchXT_analog.yml
         base: 0x00A0
 
@@ -233,38 +197,35 @@ peripherals:
         base: 0x0600
         config:
             channels:
-                0x00: [ SingleEnded, PD0 ]
-                0x01: [ SingleEnded, PD1 ]
-                0x02: [ SingleEnded, PD2 ]
-                0x03: [ SingleEnded, PD3 ]
-                0x04: [ SingleEnded, PD4 ]
-                0x05: [ SingleEnded, PD5 ]
-                0x06: [ SingleEnded, PD6 ]
-                0x07: [ SingleEnded, PD7 ]
-                0x0C: [ SingleEnded, PF2 ]
-                0x0D: [ SingleEnded, PF3 ]
-                0x0E: [ SingleEnded, PF4 ]
-                0x0F: [ SingleEnded, PF5 ]
-                0x1C: AcompRef
+                0x00: [ SingleEnded, PA0 ]
+                0x01: [ SingleEnded, PA1 ]
+                0x02: [ SingleEnded, PA2 ]
+                0x03: [ SingleEnded, PA3 ]
+                0x04: [ SingleEnded, PA4 ]
+                0x05: [ SingleEnded, PA5 ]
+                0x06: [ SingleEnded, PA6 ]
+                0x07: [ SingleEnded, PA7 ]
+                0x08: [ SingleEnded, PB5 ]
+                0x09: [ SingleEnded, PB4 ]
+                0x0A: [ SingleEnded, PB1 ]
+                0x0B: [ SingleEnded, PB0 ]
+                0x1D: IntRef
                 0x1E: Temperature
                 0x1F: Zero
             vref_channel: 0
 
     ACP0:
-        class: ACP_mega0
+        class: ACP_tiny0
         file: ArchXT_analog.yml
         base: 0x0680
         config:
             pos_channels:
-                0x0: [ Pin, PD2 ]
-                0x1: [ Pin, PD4 ]
-                0x2: [ Pin, PD6 ]
-                0x3: [ Pin, PD1 ]
+                0x0: [ Pin, PA7 ]
+                0x1: [ Pin, PB5 ]
             neg_channels:
-                0x0: [ Pin, PD3 ]
-                0x1: [ Pin, PD5 ]
-                0x2: [ Pin, PD7 ]
-                0x3: [ AcompRef ]
+                0x0: [ Pin, PA6 ]
+                0x1: [ Pin, PB4 ]
+                0x2: [ IntRef ]
             vref_channel: 1
             iv_cmp: AC0
 
@@ -278,30 +239,10 @@ peripherals:
             iv_txc: USART0_TXC
             iv_txe: USART0_DRE
 
-    USART1:
-        class: USART
-        file: ArchXT_interfaces.yml
-        base: 0x0820
-        ctl_id: UAX1
-        config:
-            iv_rxc: USART1_RXC
-            iv_txc: USART1_TXC
-            iv_txe: USART1_DRE
-
-    USART2:
-        class: USART
-        file: ArchXT_interfaces.yml
-        base: 0x0840
-        ctl_id: UAX2
-        config:
-            iv_rxc: USART2_RXC
-            iv_txc: USART2_TXC
-            iv_txe: USART2_DRE
-
     SPI0:
         class: SPI
         file: ArchXT_interfaces.yml
-        base: 0x08C0
+        base: 0x0820
         config:
             pin_select: null
             iv_spi: SPI0
@@ -309,14 +250,14 @@ peripherals:
     TWI0:
         class: TWI
         file: ArchXT_interfaces.yml
-        base: 0x08A0
+        base: 0x0810
         config:
             iv_master: TWI0_TWIM
             iv_slave: TWI0_TWIS
 
     PORTMUX:
         file: ArchXT_interfaces.yml
-        base: 0x05E0
+        base: 0x0200
         ctl_id: IOMX
 
     FUSES:
@@ -325,7 +266,7 @@ peripherals:
         ctl_id: FUSE
 
     USERROW:
-        class: USERROW_64
+        class: USERROW_32
         file: ArchXT_controllers.yml
         base: 0x1300
         ctl_id: UROW
