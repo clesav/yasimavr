@@ -52,6 +52,7 @@ The package includes a predefined set of MCU models:
 
 * ATMegaxx8 series (ATMega48/88/168/328)
 * ATMega 0-series (ATMega808/809/1608/1609/3208/3209/4808/4809)
+* ATTiny 0-series (ATTiny202/204/402/404/406/804/806/807/1604/1606/1607)
 
 Other device models can be easily simulated by creating a YAML config file.
 A template is provided, and the example _atgiga4809_ shows how to load and use a customised device configuration.
