@@ -1,6 +1,6 @@
 # _builders_arch_xt.py
 #
-# Copyright 2022 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2022-2024 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -366,9 +366,11 @@ class XT_DeviceBuilder(DeviceBuilder):
         'RTC': _get_rtc_builder,
         'TCA': _get_tca_builder,
         'TCB': _get_tcb_builder,
-        'VREF': _get_vref_builder,
+        'VREF_mega0': _get_vref_builder,
+        'VREF_tiny0': _get_vref_builder,
         'ADC': _get_adc_builder,
-        'ACP': _get_acp_builder,
+        'ACP_mega0': _get_acp_builder,
+        'ACP_tiny0': _get_acp_builder,
         'USART': _get_usart_builder,
         'SPI': _get_spi_builder,
         'TWI': _get_twi_builder,

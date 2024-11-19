@@ -223,6 +223,7 @@ peripherals:
         # base: 0x0100
 
     VREF:
+        class: VREF_mega0
         file: ArchXT_analog.yml
         base: 0x00A0
 
@@ -250,7 +251,7 @@ peripherals:
             vref_channel: 0
 
     ACP0:
-        class: ACP
+        class: ACP_mega0
         file: ArchXT_analog.yml
         base: 0x0680
         config:

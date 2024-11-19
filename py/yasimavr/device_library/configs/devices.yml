@@ -28,6 +28,19 @@ dev_mega_0series:
     - atmega4808
     - atmega4809
 
+dev_tiny_0series:
+    - attiny202
+    - attiny204
+    - attiny402
+    - attiny404
+    - attiny406
+    - attiny804
+    - attiny806
+    - attiny807
+    - attiny1604
+    - attiny1606
+    - attiny1607
+
 dev_megaxx8:
     - atmega48
     - atmega48p

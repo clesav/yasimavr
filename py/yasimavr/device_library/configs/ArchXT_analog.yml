@@ -1,6 +1,6 @@
 # YAML configuration file for AVR XT core architecture
 #
-# Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -157,7 +157,7 @@ ADC:
         vref_channel: 0
         clk_ps_factors: [ 2, 4, 8, 16, 32, 64, 128, 256 ]
         clk_ps_max: 256
-        init_delays: [0, 16, 32, 64, 128, 256 ]
+        init_delays: [ 0, 16, 32, 64, 128, 256 ]
         iv_resready: ADC0_RESRDY
         iv_wincmp: ADC0_WCOMP
         #arbitrary values below
@@ -165,7 +165,7 @@ ADC:
         temp_cal_coef: 0.0011
 
 #========================================================================================
-ACP:
+ACP_mega0:
     registers:
         - name: CTRLA
           offset: 0x00
@@ -215,8 +215,55 @@ ACP:
             CMP: { kind: BIT, pos: 0 }
             STATE: { kind: BIT, pos: 4, readonly: yes }
 
+
+ACP_tiny0:
+    registers:
+        - name: CTRLA
+          offset: 0x00
+          fields:
+            ENABLE: { kind: BIT, pos: 0, one: enabled, zero: disabled }
+            HYSMODE:
+                kind: ENUM
+                LSB: 1
+                MSB: 2
+                values: [ NONE, SMALL, MEDIUM, LARGE ]
+            LPMODE: { kind: BIT, pos: 3, one: enabled, zero: disabled }
+            INTMODE:
+                kind: ENUM
+                LSB: 4
+                MSB: 5
+                values: { 0x00: BOTHEDGE, 0x02: NEGEDGE, 0x03: POSEDGE }
+            OUTEN: { kind: BIT, pos: 0, supported: no }
+            RUNSTDBY: { kind: BIT, pos: 7, one: enabled, zero: disabled }
+
+        - name: MUXCTRL
+          offset: 0x02
+          fields:
+            MUXNEG:
+                kind: ENUM
+                LSB: 0
+                MSB: 1
+                values: [ AINN0, AINN1 ]
+            MUXPOS:
+                kind: ENUM
+                LSB: 3
+                MSB: 4
+                values: [ AINP0, AINP1, VREF ]
+            INVERT: { kind: BIT, pos: 7, one: enabled, zero: disabled }
+
+        - name: INTCTRL
+          offset: 0x06
+          fields:
+            CMP: { kind: BIT, pos: 0 }
+
+        - name: STATUS
+          offset: 0x07
+          fields:
+            CMP: { kind: BIT, pos: 0 }
+            STATE: { kind: BIT, pos: 4, readonly: yes }
+
 #========================================================================================
-VREF:
+VREF_mega0:
     registers:
         - name: CTRLA
           offset: 0x00
@@ -243,3 +290,32 @@ VREF:
 
             - rb_select: CTRLA/AC0REFSEL
               references: [ 0.55, 1.1, 2.5, 4.3, 1.5, null, null, AVCC ]
+
+
+VREF_tiny0:
+    registers:
+        - name: CTRLA
+          offset: 0x00
+          fields:
+            DAC0REFSEL:
+                kind: ENUM
+                LSB: 0
+                MSB: 2
+                values: [ 0V55, 1V1, 2V5, 4V3, 1V5 ]
+            ADC0REFSEL:
+                kind: ENUM
+                LSB: 4
+                MSB: 6
+                values: [ 0V55, 1V1, 2V5, 4V3, 1V5 ]
+
+        - name: CTRLB
+          offset: 0x01
+          supported: no
+
+    config:
+        channels:
+            - rb_select: CTRLA/ADC0REFSEL
+              references: [ 0.55, 1.1, 2.5, 4.3, 1.5 ]
+
+            - rb_select: CTRLA/DAC0REFSEL
+              references: [ 0.55, 1.1, 2.5, 4.3, 1.5 ]
