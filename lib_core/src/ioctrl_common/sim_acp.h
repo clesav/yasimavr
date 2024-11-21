@@ -1,7 +1,7 @@
 /*
  * sim_acp.h
  *
- *  Copyright 2022 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022-2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -48,7 +48,9 @@ public:
         /// External pin analog input
         Channel_Pin,
         /// Internal DAC voltage
-        Channel_AcompRef
+        Channel_AcompRef,
+        /// Internal reference voltage
+        Channel_IntRef
     };
 
     struct channel_config_t : base_reg_config_t {

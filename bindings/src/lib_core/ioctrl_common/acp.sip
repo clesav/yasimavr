@@ -1,7 +1,7 @@
 /*
  * acp.sip
  *
- *  Copyright 2022 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022-2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -32,6 +32,7 @@ public:
     enum Channel {
         Channel_Pin         /PyName=Pin/,
         Channel_AcompRef    /PyName=AcompRef/,
+        Channel_IntRef      /PyName=IntRef/,
     };
 
      struct channel_config_t : base_reg_config_t {

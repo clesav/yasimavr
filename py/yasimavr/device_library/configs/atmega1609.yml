@@ -290,7 +290,7 @@ peripherals:
             vref_channel: 0
 
     ACP0:
-        class: ACP
+        class: ACP_mega0
         file: ArchXT_analog.yml
         base: 0x0680
         config:

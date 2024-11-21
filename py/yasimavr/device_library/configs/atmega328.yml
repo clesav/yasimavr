@@ -182,7 +182,7 @@ peripherals:
 
     SPI:
        file: mega48-88-168-328_interfaces.yml
-       ctl_id: TWI0
+       ctl_id: SPI0
        config:
            pin_select: PB2
 

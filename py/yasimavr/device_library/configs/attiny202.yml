@@ -199,10 +199,8 @@ peripherals:
         config:
             pos_channels:
                 0x0: [ Pin, PA7 ]
-                0x1: [ Pin, PB5 ]
             neg_channels:
                 0x0: [ Pin, PA6 ]
-                0x1: [ Pin, PB4 ]
                 0x2: [ IntRef ]
             vref_channel: 1
             iv_cmp: AC0
