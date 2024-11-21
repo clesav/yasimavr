@@ -1,7 +1,7 @@
 /*
  * arch_xt_io.h
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -154,24 +154,6 @@ typedef enum AC_LPMODE_enum
     AC_LPMODE_EN_gc = (0x01<<3),  /* Low power mode enabled */
 } AC_LPMODE_t;
 
-/* Negative Input MUX Selection select */
-typedef enum AC_MUXNEG_enum
-{
-    AC_MUXNEG_PIN0_gc = (0x00<<0),  /* Negative Pin 0 */
-    AC_MUXNEG_PIN1_gc = (0x01<<0),  /* Negative Pin 1 */
-    AC_MUXNEG_PIN2_gc = (0x02<<0),  /* Negative Pin 2 */
-    AC_MUXNEG_DACREF_gc = (0x03<<0),  /* DAC Voltage Reference */
-} AC_MUXNEG_t;
-
-/* Positive Input MUX Selection select */
-typedef enum AC_MUXPOS_enum
-{
-    AC_MUXPOS_PIN0_gc = (0x00<<3),  /* Positive Pin 0 */
-    AC_MUXPOS_PIN1_gc = (0x01<<3),  /* Positive Pin 1 */
-    AC_MUXPOS_PIN2_gc = (0x02<<3),  /* Positive Pin 2 */
-    AC_MUXPOS_PIN3_gc = (0x03<<3),  /* Positive Pin 3 */
-} AC_MUXPOS_t;
-
 /*
 --------------------------------------------------------------------------
 ADC - Analog to Digital Converter
@@ -248,6 +230,7 @@ typedef enum ADC_MUXPOS_enum
     ADC_MUXPOS_AIN14_gc = (0x0E<<0),  /* ADC input pin 14 */
     ADC_MUXPOS_AIN15_gc = (0x0F<<0),  /* ADC input pin 15 */
     ADC_MUXPOS_DACREF_gc = (0x1C<<0),  /* AC DAC Reference */
+    ADC_MUXPOS_INTREF_gc = (0x1D<<0),  /* Internal Ref */
     ADC_MUXPOS_TEMPSENSE_gc = (0x1E<<0),  /* Temperature sensor */
     ADC_MUXPOS_GND_gc = (0x1F<<0),  /* 0V (GND) */
 } ADC_MUXPOS_t;

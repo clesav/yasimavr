@@ -1,7 +1,7 @@
 /*
  * arch_xt_acp.cpp
  *
- *  Copyright 2022 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022-2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -84,10 +84,12 @@ bool ArchXT_ACP::init(Device& device)
                              m_config.iv_cmp);
 
     m_vref_signal = dynamic_cast<DataSignal*>(get_signal(AVR_IOCTL_VREF));
-    if (m_vref_signal)
+    if (m_vref_signal) {
         m_vref_signal->connect(*this, HookTag_VREF);
-    else
+    } else {
+        logger().err("No VREF peripheral found.");
         status = false;
+    }
 
     status &= register_channels(m_pos_mux, m_config.pos_channels);
     status &= register_channels(m_neg_mux, m_config.neg_channels);
@@ -104,14 +106,20 @@ bool ArchXT_ACP::register_channels(DataSignalMux& mux, const std::vector<channel
         switch(channel.type) {
             case Channel_Pin: {
                 Pin* pin = device()->find_pin(channel.pin);
-                if (pin)
+                if (pin) {
                     mux.add_mux(pin->signal(), Pin::Signal_VoltageChange);
-                else
+                } else {
+                    logger().err("Pin %s not found.", id_to_str(channel.pin).c_str());
                     return false;
+                }
             } break;
 
             case Channel_AcompRef:
                 mux.add_mux();
+                break;
+
+            case Channel_IntRef:
+                mux.add_mux(*m_vref_signal, VREF::Signal_IntRefChange, m_config.vref_channel);
                 break;
         }
     }

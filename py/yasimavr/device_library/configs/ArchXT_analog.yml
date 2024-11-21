@@ -243,12 +243,12 @@ ACP_tiny0:
                 kind: ENUM
                 LSB: 0
                 MSB: 1
-                values: [ AINN0, AINN1 ]
+                values: [ AINN0, AINN1, VREF ]
             MUXPOS:
                 kind: ENUM
                 LSB: 3
                 MSB: 4
-                values: [ AINP0, AINP1, VREF ]
+                values: [ AINP0, AINP1 ]
             INVERT: { kind: BIT, pos: 7, one: enabled, zero: disabled }
 
         - name: INTCTRL
