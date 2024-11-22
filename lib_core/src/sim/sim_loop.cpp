@@ -1,7 +1,7 @@
 /*
  * sim_loop.cpp
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -150,7 +150,7 @@ void SimLoop::run(cycle_count_t nbcycles)
             long long sleep_time_us = sim_deadline_us - curr_time_us;
             if (sleep_time_us > MIN_SLEEP_THRESHOLD) {
                 //WARNING_LOG(m_device.logger(), "LOOP : Sleeping %dus", sleep_time_us);
-                std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time_us));
+                std::this_thread::sleep_for(std::chrono::microseconds(sleep_time_us));
             }
         }
 

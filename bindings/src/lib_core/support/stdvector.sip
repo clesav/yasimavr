@@ -1,7 +1,7 @@
 /*
  * stdvector.sip
  *
- *  Copyright 2022 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022-2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -119,7 +119,7 @@ template<_TYPE_>
 
     for (size_t i = 0; i < sipCpp->size(); i++) {
         _TYPE_* t = (*sipCpp)[i];
-        PyObject* tobj = sipConvertFromNewType((void *)t, sipType__TYPE_, sipTransferObj);
+        PyObject* tobj = sipConvertFromType((void *)t, sipType__TYPE_, sipTransferObj);
 
         if (!tobj) {
             Py_DECREF(l);
@@ -135,7 +135,6 @@ template<_TYPE_>
     PyObject* iter = PyObject_GetIter(sipPy);
     PyObject* item;
     Py_ssize_t index = 0;
-    int state;
 
     if (!sipIsErr) {
         Py_XDECREF(iter);
@@ -149,12 +148,9 @@ template<_TYPE_>
 
     std::vector<_TYPE_*>* v = new std::vector<_TYPE_*>;
     while ((item = PyIter_Next(iter)) != NULL) {
-        _TYPE_* t = reinterpret_cast<_TYPE_*>(sipForceConvertToType(item,
-                                                                    sipType__TYPE_,
-                                                                    sipTransferObj,
-                                                                    SIP_NOT_NONE,
-                                                                    &state,
-                                                                    sipIsErr));
+        _TYPE_* t = reinterpret_cast<_TYPE_*>(sipConvertToType(item,
+                                                               sipType__TYPE_,
+                                                               0, 0, 0, sipIsErr));
         if (*sipIsErr) {
             PyErr_Format(PyExc_TypeError,
                          "index %zd has type '%s' but '_TYPE_' is expected", index,
@@ -164,7 +160,6 @@ template<_TYPE_>
         }
 
         v->push_back(t);
-        sipReleaseType(t, sipType__TYPE_, state);
         Py_DECREF(item);
         index++;
     }
