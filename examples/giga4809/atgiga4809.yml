@@ -30,6 +30,8 @@ fuses:
                       0xC0, 0x07, 0x00, 0x00, 0x00,
                       0xC5 ]
 
+device_signature: [ 0x1E, 0x96, 0x51 ]
+
 access:
     lsb_first_on_write: yes
     lsb_first_on_read: yes
@@ -128,13 +130,11 @@ peripherals:
         ctl_id: NVM
         config:
            flash_page_size: 128
+           eeprom_page_size: 64
            iv_eeready: NVMCTRL_EE
 
     MISC:
-        class: MISC
         file: ArchXT_controllers.yml
-        config:
-            dev_id: 0x00FFFFFF
 
     PORTA:
         class: PORT
@@ -250,7 +250,7 @@ peripherals:
         class: PORT
         file: ArchXT_interfaces.yml
         base: 0x0580
-        ctl_id: IOGN
+        ctl_id: IOGM
         config:
             reg_base_port: 0x0580
             reg_base_vport: 0x0024
@@ -260,19 +260,21 @@ peripherals:
         class: PORT
         file: ArchXT_interfaces.yml
         base: 0x05C0
-        ctl_id: IOGP
+        ctl_id: IOGN
         config:
             reg_base_port: 0x05C0
             reg_base_vport: 0x0028
             iv_port: PORTN
 
     TCA0:
-        class: TCA_SINGLE
+        class: TCA
         file: ArchXT_timers.yml
         base: 0x0A00
         config:
             iv_ovf: TCA0_OVF
+            iv_hunf: TCA0_HUNF
             ivs_cmp: [ TCA0_CMP0, TCA0_CMP1, TCA0_CMP2 ]
+            version: V1
 
     TCB0:
         class: TCB
@@ -331,6 +333,7 @@ peripherals:
             iv_capt: TCB7
 
     VREF:
+        class: VREF_mega0
         file: ArchXT_analog.yml
         base: 0x00A0
 

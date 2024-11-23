@@ -59,7 +59,7 @@ class Number(QtWidgets.QLCDNumber):
         if sigdata.sigid == corelib.Pin.SignalId.DigitalChange:
 
             #Store the new pin state, extracted from the signal data
-            if sigdata.data.as_uint() == corelib.Pin.State.High:
+            if sigdata.data.as_uint():
                 self.pin_values[pin_index] = 1
             else:
                 self.pin_values[pin_index] = 0

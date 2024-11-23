@@ -10,7 +10,7 @@ def pin_hook(sigdata, hooktag):
     if sigdata.sigid == corelib.Pin.SignalId.DigitalChange:
         #Obtain the new pin state
         pin_state = sigdata.data.as_uint()
-        led_state = 'ON' if pin_state == corelib.Pin.State.High else 'OFF'
+        led_state = 'ON' if pin_state else 'OFF'
         #Print the state
         print('LED state:', led_state)
 

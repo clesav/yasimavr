@@ -44,7 +44,7 @@ class LED(QtWidgets.QWidget):
             #Obtain the new pin state and emit the widget signal
             pin_state = sigdata.data.as_uint()
             #turn on the LED only if the pin is driven high
-            led_state = (pin_state == corelib.Pin.State.High)
+            led_state = bool(pin_state)
             self.sig_pin_changed.emit(led_state)
 
 

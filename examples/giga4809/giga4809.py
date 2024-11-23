@@ -13,7 +13,7 @@ simloop = SimLoop(dev)
 dev_acc = device_library.DeviceAccessor(dev)
 
 fw = Firmware.read_elf('../mega4809_blink/mega4809_blink_fw.elf')
-fw.frequency = 1000
+fw.frequency = 1000000
 dev.load_firmware(fw)
 
 #Iterate over all the GPIO port,set all pins to output and set the output value
