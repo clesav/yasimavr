@@ -56,7 +56,8 @@ class _Dumper:
 
     def dump_bytes(self, tag, value):
         indent = ' ' * (self.indent * 4)
-        self.stream.write(indent + tag + ':\n')
+        if tag:
+            self.stream.write(indent + tag + ':\n')
         indent += ' ' * 4
         for i in range(0, len(value), 16):
             sv = ' '.join('%02x' % v for v in value[i:(i+16)])
@@ -125,8 +126,6 @@ def _serialize_registers(probe, dumper):
     def _reg_value_to_str(reg_data):
         if isinstance(reg_data.value, int):
             return ('0x%%0%dx' % (reg_data.size * 2)) % reg_data.value
-        elif isinstance(reg_data.value, bytes):
-            dumper.dump_bytes(reg_name, reg_data.value)
         elif isinstance(reg_data.value, str):
             return reg_data.value
         else:
@@ -169,8 +168,13 @@ def _serialize_registers(probe, dumper):
     dumper.inc_level('Address map')
     for r in sorted(reg_data_list, key=lambda r : r.addr):
         sa = hex_addr(r.addr) if r.size == 1 else (hex_addr(r.addr) + '-' + hex_addr(r.addr + r.size - 1))
-        t = r.per + '.' + r.name + ' [' + _reg_value_to_str(r) + ']'
-        dumper[sa] = t
+        t = r.per + '.' + r.name
+        if isinstance(r.value, bytes):
+            dumper[sa] = t
+            dumper.dump_bytes('', r.value)
+        else:
+            dumper[sa] = t + ' [' + _reg_value_to_str(r) + ']'
+
     dumper.dec_level()
 
     #Dump the register list sorted by peripheral
