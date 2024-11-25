@@ -16,6 +16,7 @@ Documentation
    concepts
    reference/reference
    examples/examples
+   IDE_integration
 
 
 Indices and tables
