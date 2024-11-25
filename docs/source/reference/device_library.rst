@@ -198,11 +198,19 @@ Reference (Accessor structure)
     :members:
 
 
+.. autoclass:: yasimavr.device_library.accessors.CPUAccessor
+    :members:
+
+
 .. autoclass:: yasimavr.device_library.accessors.PeripheralAccessor
     :members:
 
 
 .. autoclass:: yasimavr.device_library.accessors.RegisterAccessor
+    :members:
+
+
+.. autoclass:: yasimavr.device_library.accessors.CPURegisterAccessor
     :members:
 
 

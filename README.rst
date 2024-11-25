@@ -4,7 +4,7 @@ yasimavr
 Yet another simulator for Microchip AVR microcontrollers, inspired from simavr
 ------------------------------------------------------------------------------
 
-_yasimavr_ is a simulator for AVR 8-bits microcontrollers.
+`yasimavr` is a simulator for AVR 8-bits microcontrollers.
 It is mainly aimed at the Mega0 and Mega1 series (ATmega80x-160x-320x-480x and others)
 with a possibility to work with the "classic" series. (ATMega48/88/168/328 and others)
 
@@ -19,8 +19,8 @@ Installation
 Prerequisites:
 **************
 
-* Python (version >=3.7) and PIP
-* For Ubuntu, libelf is required: ``sudo apt-get install libelf-dev``
+* Python (>=3.7) and PIP
+* For Linux distributions, libelf is required: (for example: ``sudo apt-get install libelf-dev``)
 
 Install:
 ********
@@ -55,7 +55,7 @@ The package includes a predefined set of MCU models:
 * ATTiny 0-series (ATTiny202/204/402/404/406/804/806/807/1604/1606/1607)
 
 Other device models can be easily simulated by creating a YAML config file.
-A template is provided, and the example _atgiga4809_ shows how to load and use a customised device configuration.
+A template is provided, and the example `atgiga4809` shows how to load and use a customised device configuration.
 New simulation models for peripherals can be created in Python or C++ using the provided API.
 
 Features
@@ -71,7 +71,7 @@ Features
 How to use
 ----------
 
-_yasimavr_ can be used as a Python package to run a prepared simulation script.
+`yasimavr` can be used as a Python package to run a prepared simulation script.
 (See the examples for how it looks like)
 
 It also supports direct command line use:
