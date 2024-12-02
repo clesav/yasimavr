@@ -1,7 +1,7 @@
 /*
  * arch_avr_timer.h
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
