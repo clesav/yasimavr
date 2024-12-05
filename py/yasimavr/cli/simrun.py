@@ -58,12 +58,10 @@ def _create_argparser():
 
     p.add_argument('-f', '--frequency',
                    metavar='FREQ', type=int,
-                   required=True,
                    help="[Mandatory] Set the clock frequency in Hertz for the MCU")
 
     p.add_argument('-m', '--mcu',
                    metavar='MCU',
-                   required=True,
                    help="[Mandatory] Set the MCU model")
 
     p.add_argument('--list-models',
@@ -414,6 +412,12 @@ def main(args=None):
 
     if _run_args.firmware is None:
         raise argparse.ArgumentError(None, 'No firmware provided')
+
+    if _run_args.frequency is None:
+        raise argparse.ArgumentError(None, 'No frequency provided')
+
+    if _run_args.mcu is None:
+        raise argparse.ArgumentError(None, 'No MCU model provided')
 
     _device = load_device(_run_args.mcu, _run_args.verbose > 1)
 
