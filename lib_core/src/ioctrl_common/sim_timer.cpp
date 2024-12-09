@@ -1,7 +1,7 @@
 /*
  * sim_timer.cpp
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -77,6 +77,8 @@ void PrescaledTimer::reset()
  */
 void PrescaledTimer::set_prescaler(unsigned long ps_max, unsigned long ps_factor)
 {
+    if (ps_max == m_ps_max && ps_factor == m_ps_factor) return;
+
     if (!m_updating) update();
 
     if (!ps_max) ps_max = 1;
@@ -111,6 +113,7 @@ void PrescaledTimer::set_paused(bool paused)
  */
 void PrescaledTimer::set_timer_delay(cycle_count_t delay)
 {
+    if (delay == m_delay) return;
     if (!m_updating) update();
     m_delay = delay;
     if (!m_updating) reschedule();
@@ -211,11 +214,11 @@ void PrescaledTimer::process_cycles(cycle_count_t cycles)
 
         //Exact number of clock cycle required to generate the available ticks,
         //limiting it to the timeout delay, so that we can loop with the remaining amount
-        cycle_count_t ticks_dt = (timeout ? m_delay : ticks) * m_ps_factor;
-        cycles -= ticks_dt;
-
+        cycle_count_t used_ps_cycles = (timeout ? m_delay : ticks) * m_ps_factor;
+        cycle_count_t used_update_cycles = used_ps_cycles - m_ps_counter % m_ps_factor;
+        cycles -= used_update_cycles;
         //Update the prescaler counter accordingly
-        m_ps_counter = (ticks_dt + m_ps_counter) % m_ps_max;
+        m_ps_counter = (m_ps_counter + used_update_cycles) % m_ps_max;
 
         //Raise the signal to inform the parent peripheral of ticks to consume
         //Decrement the delay by the number of ticks
