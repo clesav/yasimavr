@@ -1,7 +1,7 @@
 /*
  * arch_avr_timer.cpp
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -248,6 +248,8 @@ void ArchAVR_Timer::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& da
 {
     bool do_reschedule = false;
     bool do_com_reconfig = false;
+
+    m_counter.update();
 
     //8 or 16 bits writing to CNTx
     if (addr == m_config.reg_cnt) {
