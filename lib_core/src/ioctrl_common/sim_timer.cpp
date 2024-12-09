@@ -392,10 +392,10 @@ private:
    \param comp_count number of compare channels
  */
 TimerCounter::TimerCounter(long wrap, size_t comp_count)
-:m_wrap(wrap)
+:m_source(Tick_Stopped)
+,m_wrap(wrap)
 ,m_counter(0)
 ,m_top(wrap - 1)
-,m_source(Tick_Stopped)
 ,m_slope(Slope_Up)
 ,m_countdown(false)
 ,m_cmp(comp_count)
