@@ -35,6 +35,7 @@ CPP_SRCS := \
 	src/core/sim_signal.cpp \
 	src/core/sim_sleep.cpp \
 	src/core/sim_types.cpp \
+	src/core/sim_wire.cpp \
 	src/ioctrl_common/sim_port.cpp \
 	src/ioctrl_common/sim_spi.cpp \
 	src/ioctrl_common/sim_timer.cpp \
@@ -61,6 +62,7 @@ OBJS := \
 	$(BUILD_DIR)/core/sim_signal.o \
 	$(BUILD_DIR)/core/sim_sleep.o \
 	$(BUILD_DIR)/core/sim_types.o \
+	$(BUILD_DIR)/core/sim_wire.o \
 	$(BUILD_DIR)/ioctrl_common/sim_port.o \
 	$(BUILD_DIR)/ioctrl_common/sim_spi.o \
 	$(BUILD_DIR)/ioctrl_common/sim_timer.o \
@@ -87,6 +89,7 @@ CPP_DEPS := \
 	$(BUILD_DIR)/core/sim_signal.d \
 	$(BUILD_DIR)/core/sim_sleep.d \
 	$(BUILD_DIR)/core/sim_types.d \
+	$(BUILD_DIR)/core/sim_wire.d \
 	$(BUILD_DIR)/ioctrl_common/sim_port.d \
 	$(BUILD_DIR)/ioctrl_common/sim_spi.d \
 	$(BUILD_DIR)/ioctrl_common/sim_timer.d \
