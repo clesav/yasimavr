@@ -1,7 +1,7 @@
 /*
  * sim_port.h
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -49,7 +49,7 @@ YASIMAVR_BEGIN_NAMESPACE
       ----|---------|-----------------------------------|-----------------
       0   | -       |  Digital state change by any pin  |  port IN value
  */
-class AVR_CORE_PUBLIC_API Port : public Peripheral, public SignalHook {
+class AVR_CORE_PUBLIC_API Port : public Peripheral {
 
 public:
 
@@ -58,23 +58,25 @@ public:
     virtual bool init(Device& device) override;
     virtual void reset() override;
     virtual bool ctlreq(ctlreq_id_t req, ctlreq_data_t* data) override;
-    virtual void raised(const signal_data_t& sigdata, int hooktag) override;
 
 protected:
 
     uint8_t pin_mask() const;
     Pin* pin(uint8_t num) const;
-    void set_pin_internal_state(uint8_t num, Pin::State state);
+    void set_pin_internal_state(uint8_t num, const Pin::controls_t& controls);
 
-    virtual void pin_state_changed(uint8_t num, Pin::State state);
+    virtual void pin_state_changed(uint8_t num, Wire::StateEnum state);
 
 private:
 
     const char m_name;
     uint8_t m_pinmask;
+    BoundFunctionSignalHook<Port> m_pin_signal_hook;
     Signal m_signal;
-    std::vector<Pin*> m_pins;
+    Pin* m_pins[8];
     uint8_t m_port_value;
+
+    void pin_signal_raised(const signal_data_t& sigdata, int hooktag);
 
 };
 
