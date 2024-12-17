@@ -237,11 +237,7 @@ def _serialize_pins(device, dumper):
 
     for pin_name in device.config().pins:
         pin = device.find_pin(pin_name)
-        if pin.state() == corelib.Pin.State.Analog:
-            s = 'Analog V=' + str(pin.analog_value())
-        else:
-            s = pin.state()._name_
-        dumper[pin_name] = s
+        dumper[pin_name] = repr(pin.state())
 
     dumper.dec_level()
 
