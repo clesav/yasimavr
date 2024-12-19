@@ -56,7 +56,7 @@ class Number(QtWidgets.QLCDNumber):
     #The pin_index value (0 to 7) gives the pin that actually raised the signal
     def _pin_signal_raised(self, sigdata, pin_index):
         #Filter on digital state changes
-        if sigdata.sigid == corelib.Pin.SignalId.DigitalChange:
+        if sigdata.sigid == corelib.Wire.SignalId.DigitalChange:
 
             #Store the new pin state, extracted from the signal data
             if sigdata.data.as_uint():
@@ -97,13 +97,11 @@ class Button(QtWidgets.QPushButton):
 
     def press_button(self):
         with simloop:
-            self.pin.set_external_state(corelib.Pin.State.Low)
-            #simloop.loop_continue()
+            self.pin.set_external_state('L')
 
     def release_button(self):
         with simloop:
-            self.pin.set_external_state(corelib.Pin.State.Floating)
-            #simloop.loop_continue()
+            self.pin.set_external_state('Z')
 
 
 def main():

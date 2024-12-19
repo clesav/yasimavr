@@ -40,7 +40,7 @@ class LED(QtWidgets.QWidget):
 
     def _pin_signal_raised(self, sigdata, _):
         #Filter on digital state changes
-        if sigdata.sigid == corelib.Pin.SignalId.DigitalChange:
+        if sigdata.sigid == corelib.Wire.SignalId.DigitalChange:
             #Obtain the new pin state and emit the widget signal
             pin_state = sigdata.data.as_uint()
             #turn on the LED only if the pin is driven high
