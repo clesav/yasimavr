@@ -1,6 +1,6 @@
 # test_core_pin.py
 #
-# Copyright 2023 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2023-2024 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -20,16 +20,17 @@
 
 import pytest
 import yasimavr.lib.core as corelib
-from _test_utils import DictSignalHook
+from _test_utils import PinState, DictSignalHook
 
 
-Floating = corelib.Pin.State.Floating
-Analog = corelib.Pin.State.Analog
-High = corelib.Pin.State.High
-Low = corelib.Pin.State.Low
-PullDown = corelib.Pin.State.PullDown
-PullUp = corelib.Pin.State.PullUp
-Shorted = corelib.Pin.State.Shorted
+Floating = PinState.Floating
+Analog = PinState.Analog
+High = PinState.High
+Low = PinState.Low
+PullDown = PinState.PullDown
+PullUp = PinState.PullUp
+Shorted = PinState.Shorted
+StateError = PinState.Error
 
 states = [Floating, PullDown, PullUp, Analog, High, Low]
 
@@ -37,89 +38,141 @@ resolved_matrix = [
     [Floating, PullDown, PullUp, Analog,  High,    Low    ],
     [PullDown, PullDown, PullUp, Analog,  High,    Low    ],
     [PullUp,   PullUp,   PullUp, Analog,  High,    Low    ],
-    [Floating, PullDown, PullUp, Analog,  High,    Low    ],
+    [Analog,   Analog,   Analog, Analog,  Shorted, Shorted],
     [High,     High,     High,   Shorted, High,    Shorted],
     [Low,      Low,      Low,    Shorted, Shorted, Low    ],
 ]
 
 
 @pytest.fixture
+def wire():
+    return corelib.Wire()
+
+@pytest.fixture
 def pin():
     return corelib.Pin(corelib.str_to_id('test'))
 
 
-def test_pin_initial_state(pin):
-    assert pin.id() == corelib.str_to_id('test')
-    assert pin.state() == Floating
-    assert pin.voltage() == 0.5
-    assert not pin.digital_state()
+def test_wire_initial_state(wire):
+    assert wire.state() == Floating
+    assert wire.state().level() == 0.5
+    assert not wire.digital_state()
 
 
-def test_pin_external_voltage(pin):
-    pin.set_external_state(Analog, 0.25)
-    assert pin.voltage() == 0.25
+def test_wire_voltage(wire):
+    wire.set_state(Analog, 0.25)
+    assert wire.voltage() == 0.25
 
-    pin.set_external_state(Analog, 0.75)
-    assert pin.voltage() == 0.75
+    wire.set_state(Analog, 0.75)
+    assert wire.voltage() == 0.75
 
     #Check bounds
-    pin.set_external_state(Analog, 1.5)
-    assert pin.voltage() == 1.0
-    pin.set_external_state(Analog, -0.5)
-    assert pin.voltage() == 0.0
+    wire.set_state(Analog, 1.5)
+    assert wire.voltage() == 1.0
+    wire.set_state(Analog, -0.5)
+    assert wire.voltage() == 0.0
 
     #Check forced value for digital states
-    pin.set_external_state(Low, 0.75)
-    assert pin.voltage() ==  0.0
-    pin.set_external_state(High, 0.25)
-    assert pin.voltage() == 1.0
+    wire.set_state(Low, 0.75)
+    assert wire.voltage() ==  0.0
+    wire.set_state(High, 0.25)
+    assert wire.voltage() == 1.0
 
 
-def test_pin_resolution(pin):
+def test_wire_resolution():
+    w1 = corelib.Wire()
+    w2 = corelib.Wire()
+    w1.attach(w2)
     for i, s1 in enumerate(states):
         for j, s2 in enumerate(states):
             sr = resolved_matrix[i][j]
-            pin.set_gpio_state(s1)
-            pin.set_external_state(s2)
-            assert pin.state() == sr
+            w1.set_state(s1, 0.5)
+            w2.set_state(s2, 0.5)
+            assert w1.state() == sr
+            assert w2.state() == sr
+
+    w1.set_state(Analog, 0.3)
+    w1.set_state(Analog, 0.5)
+    assert w1.state() == Shorted
+    assert w2.state() == Shorted
 
 
-def test_pin_signal(pin):
-    hook = DictSignalHook(pin.signal())
+def test_wire_signal(wire):
+    hook = DictSignalHook(wire.signal())
 
-    StateChange = corelib.Pin.SignalId.StateChange
-    VoltageChange = corelib.Pin.SignalId.VoltageChange
-    DigitalChange = corelib.Pin.SignalId.DigitalChange
+    StateChange = corelib.Wire.SignalId.StateChange
+    VoltageChange = corelib.Wire.SignalId.VoltageChange
+    DigitalChange = corelib.Wire.SignalId.DigitalChange
 
-    pin.set_external_state(Low)
-    assert hook.has_data(StateChange)
-    assert hook.pop(StateChange)[0].data == Low
-    assert hook.has_data(VoltageChange)
-    assert hook.pop(VoltageChange)[0].data == 0.0
+    wire.set_state(Low)
+    assert hook.pop_data(StateChange) == Low
+    assert hook.pop_data(VoltageChange) == 0.0
 
-    pin.set_external_state(PullUp)
-    assert hook.has_data(StateChange)
-    assert hook.pop(StateChange)[0].data == PullUp
-    assert hook.has_data(VoltageChange)
-    assert hook.pop(VoltageChange)[0].data == 1.0
-    assert hook.has_data(DigitalChange)
-    assert hook.pop(DigitalChange)[0].data == 1
+    wire.set_state(PullUp)
+    assert hook.pop_data(StateChange) == PullUp
+    assert hook.pop_data(VoltageChange) == 1.0
+    assert hook.pop_data(DigitalChange) == 1
 
-    pin.set_external_state(Analog, 1.0)
-    assert hook.has_data(StateChange)
-    assert hook.pop(StateChange)[0].data == Analog
+    wire.set_state(Analog, 1.0)
+    assert hook.pop_data(StateChange) == Analog
     assert not hook.has_data(VoltageChange)
     assert not hook.has_data(DigitalChange)
 
-    pin.set_external_state(Analog, 0.75)
-    assert not hook.has_data(StateChange)
-    assert hook.has_data(VoltageChange)
-    assert hook.pop(VoltageChange)[0].data == 0.75
+    wire.set_state(Analog, 0.75)
+    assert hook.has_data(StateChange)
+    assert hook.pop_data(VoltageChange) == 0.75
     assert not hook.has_data(DigitalChange)
 
-    pin.set_external_state(Analog, 0.25)
-    assert not hook.has_data(StateChange)
-    assert hook.has_data(VoltageChange)
-    assert hook.pop(VoltageChange)[0].data == 0.25
-    assert hook.has_data(DigitalChange)
-    assert hook.pop(DigitalChange)[0].data == 0
+    wire.set_state(Analog, 0.25)
+    assert hook.has_data(StateChange)
+    assert hook.pop_data(VoltageChange) == 0.25
+    assert hook.pop_data(DigitalChange) == 0
+
+
+def test_wire_attach():
+    a = corelib.Wire()
+    b = corelib.Wire()
+
+    assert not a.attached()
+    assert a.siblings() == [a]
+    assert not b.attached()
+    assert b.siblings() == [b]
+
+    a.attach(b)
+    assert a.attached()
+    assert a.attached(b)
+    assert b.attached(a)
+    assert set(a.siblings()) == {a, b}
+    assert set(b.siblings()) == {a, b}
+
+    c = corelib.Wire(a)
+    assert set(a.siblings()) == {a, b, c}
+
+    del b
+    assert set(a.siblings()) == {a, c}
+
+
+def test_wire_char_state(wire):
+    wire.set_state('H')
+    assert wire.state() == High
+
+    wire.set_state('L')
+    assert wire.state() == Low
+
+    wire.set_state('U')
+    assert wire.state() == PullUp
+
+    wire.set_state('D')
+    assert wire.state() == PullDown
+
+    wire.set_state('Z')
+    assert wire.state() == Floating
+
+    wire.set_state('A')
+    assert wire.state() == Analog
+
+    wire.set_state('S')
+    assert wire.state() == Shorted
+
+    wire.set_state('B')
+    assert wire.state() == StateError

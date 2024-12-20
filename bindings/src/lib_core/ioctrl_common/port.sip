@@ -1,7 +1,7 @@
 /*
  * port.sip
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -21,7 +21,7 @@
 
 //=======================================================================================
 
-class Port : public Peripheral, public SignalHook /NoDefaultCtors/ {
+class Port : public Peripheral /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "ioctrl_common/sim_port.h"
 %End
@@ -33,6 +33,5 @@ public:
     virtual bool init(Device&);
     virtual void reset();
     virtual bool ctlreq(ctlreq_id_t, ctlreq_data_t*);
-    virtual void raised(const signal_data_t&, int);
 
 };

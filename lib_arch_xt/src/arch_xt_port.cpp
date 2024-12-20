@@ -1,7 +1,7 @@
 /*
  * arch_xt_port.cpp
  *
- *  Copyright 2022 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022-2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -24,8 +24,6 @@
 #include "arch_xt_port.h"
 #include "arch_xt_io.h"
 #include "arch_xt_io_utils.h"
-#include "core/sim_device.h"
-#include <cstddef>
 
 YASIMAVR_USING_NAMESPACE
 
@@ -217,7 +215,7 @@ void ArchXT_Port::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
 
 void ArchXT_Port::update_pin_states()
 {
-    Pin::State state;
+    Pin::controls_t controls;
     uint8_t valdir = m_dir_value;
     uint8_t valport = m_port_value;
     uint8_t pinmask = pin_mask();
@@ -225,18 +223,10 @@ void ArchXT_Port::update_pin_states()
     for (int i = 0; i < 8; ++i) {
         if (pinmask & 0x01) {
             uint8_t pin_cfg = read_ioreg(m_config.reg_base_port + 0x10 + i);
-            if (valdir & 0x01) {
-                if (valport & 0x01)
-                    state = Pin::State_High;
-                else
-                    state = Pin::State_Low;
-            } else {
-                if (BITSET(pin_cfg, PORT_PULLUPEN_bp))
-                    state = Pin::State_PullUp;
-                else
-                    state = Pin::State_Floating;
-            }
-            set_pin_internal_state(i, state);
+            controls.dir = valdir & 1;
+            controls.drive = valport & 1;
+            controls.pull_up = pin_cfg & PORT_PULLUPEN_bm;
+            set_pin_internal_state(i, controls);
         }
 
         valdir >>= 1;
@@ -245,7 +235,7 @@ void ArchXT_Port::update_pin_states()
     }
 }
 
-void ArchXT_Port::pin_state_changed(uint8_t num, Pin::State state)
+void ArchXT_Port::pin_state_changed(uint8_t num, Wire::StateEnum state)
 {
     Port::pin_state_changed(num, state);
     if (state == Pin::State_Shorted) return;

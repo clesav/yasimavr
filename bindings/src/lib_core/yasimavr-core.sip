@@ -60,6 +60,7 @@ YASIMAVR_USING_NAMESPACE
 %Include core/signal.sip
 %Include core/sleep.sip
 %Include core/types.sip
+%Include core/wire.sip
 
 //=======================================================================================
 

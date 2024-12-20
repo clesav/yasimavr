@@ -1,6 +1,6 @@
 # _test_utils.py
 #
-# Copyright 2023 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2023-2024 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -21,7 +21,7 @@ import yasimavr.lib.core as corelib
 import collections
 
 
-PinState = corelib.Pin.State
+PinState = corelib.Wire.StateEnum
 
 
 class DictSignalHook(corelib.SignalHook):
