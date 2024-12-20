@@ -33,7 +33,7 @@ YASIMAVR_BEGIN_NAMESPACE
 //=======================================================================================
 
 /**
-   \brief General Purpose Input/Ouput model.
+   \brief General Purpose wire model.
 
    This class models a logical line used to represents digital/analog electrical signals.
    Its main purpose is to serve as base class for the MCU pin models and can be used
@@ -42,7 +42,7 @@ YASIMAVR_BEGIN_NAMESPACE
    Wires need to be *attached* to each other. An attachment represents an electrical connection
    between two input and/or output circuits.
    Wires have a individual state (one of the State enum values) representing how the local circuit
-   is driving them (or not driving) and a resolved state, shared by all attached WireS
+   is driving them (or not driving) and a resolved state, shared by all attached Wires
    representing the common state.
 
    For example, if Wires A and B are attached, A's state is Floating, B's state is High, the
@@ -237,6 +237,8 @@ inline double Wire::voltage() const
 
 /**
    Set the state of the wire using one of the StateEnum values
+   \param state new Wire state
+   \param level voltage level (only for the Analog state)
  */
 inline void Wire::set_state(StateEnum state, double level)
 {
@@ -246,6 +248,8 @@ inline void Wire::set_state(StateEnum state, double level)
 /**
    Set the state of the wire using a charcode
    \sa char2state
+   \param state new Wire state
+   \param level voltage level (only for the Analog state)
  */
 inline void Wire::set_state(char state, double level)
 {

@@ -41,16 +41,24 @@ typedef sim_id_t pin_id_t;
    The pin has two electrical states given by the external circuit and the internal circuit (the GPIO port),
    which are resolved into a single electrical state. In case of conflict, the SHORTED state is
    set.
+   The internal circuit state is set by GPIO controls.
  */
 class AVR_CORE_PUBLIC_API Pin : public Wire {
 
 public:
 
+    /**
+       Structure for defining the controls of a GPIO
+     */
     struct controls_t {
 
+        /// Direction control: 0=IN, 1=OUT
         unsigned char dir = 0;
+        /// Driving state: 0=LOW, 1=HIGH
         unsigned char drive = 0;
+        /// Enable inversion of the driving state
         bool inverted = false;
+        /// Enable the pull up
         bool pull_up = false;
 
     };
@@ -77,8 +85,6 @@ private:
 
     virtual state_t state_for_resolution() const override;
 
-    void update_pin_state();
-
 };
 
 
@@ -87,25 +93,33 @@ inline pin_id_t Pin::id() const
     return m_id;
 }
 
-
+/**
+   Set the state applied to the pin by the external circuit
+ */
 inline void Pin::set_external_state(const state_t& state)
 {
     set_state(state);
 }
 
-
+/**
+   Set the state applied to the pin by the external circuit
+ */
 inline void Pin::set_external_state(StateEnum state, double level)
 {
     set_state(state, level);
 }
 
-
+/**
+   Set the state applied to the pin by the external circuit
+ */
 inline void Pin::set_external_state(char state, double level)
 {
     set_state(state, level);
 }
 
-
+/**
+   Getter for the GPIO controls currently applied
+ */
 inline Pin::controls_t Pin::gpio_controls() const
 {
     return m_gpio_controls;

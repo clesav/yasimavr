@@ -53,10 +53,14 @@ Pin::Pin(pin_id_t id)
 {}
 
 
+/**
+   Set the controls for the internal circuit state
+ */
 void Pin::set_gpio_controls(const controls_t& controls)
 {
     m_gpio_controls = controls;
-    update_pin_state();
+    m_gpio_state = controls_to_state(m_gpio_controls);
+    auto_resolve_state();
 }
 
 
@@ -64,11 +68,4 @@ Wire::state_t Pin::state_for_resolution() const
 {
     state_t ext_pin_state = Wire::state_for_resolution();
     return resolve_two_states(ext_pin_state, m_gpio_state);
-}
-
-
-void Pin::update_pin_state()
-{
-    m_gpio_state = controls_to_state(m_gpio_controls);
-    auto_resolve_state();
 }

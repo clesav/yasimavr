@@ -40,12 +40,6 @@ YASIMAVR_USING_NAMESPACE
 
 //=======================================================================================
 
-/*bool Wire::state_t::digital_value() const
-{
-    return (m_value & 0x01) ? (m_value & 0x02) : (m_level > 0.5);
-}*/
-
-
 /**
    Returns a string representation of the wire state
  */
@@ -120,7 +114,7 @@ Wire::Wire()
 }
 
 /**
-   Build a Wire already attached to another Wire.
+   Build a Wire by copy and attach to another Wire.
  */
 Wire::Wire(Wire& other)
 :Wire()
@@ -205,16 +199,16 @@ void Wire::attach(Wire& other)
         return;
     }
 
-    //From this point onwards, both 'p_this' and 'p_other' are the primaries we want to attach together.
+    //From this point onwards, both 'this' and 'other' are the primaries we want to attach together.
 
-    //Make 'other' a secondary of 'p_this'
+    //Make 'other' a secondary of 'this'
     other.m_primary = this;
     m_secondaries.push_back(&other);
 
     //Transfer all secondaries of 'other' to 'this'
     for (auto s : other.m_secondaries) {
         s->m_primary = this;
-        this->m_secondaries.push_back(s);
+        m_secondaries.push_back(s);
     }
     other.m_secondaries.clear();
 
@@ -222,7 +216,7 @@ void Wire::attach(Wire& other)
 }
 
 /**
-   Detach from all Wire this is attached to.
+   Detach from all Wire 'this' is attached to.
  */
 void Wire::detach()
 {
@@ -256,8 +250,6 @@ void Wire::detach()
 
 /**
    Set the state of the Wire.
-   \param state new Wire state
-   \param level voltage level (only for the Analog state)
  */
 void Wire::set_state(const state_t& state)
 {
@@ -365,7 +357,9 @@ bool Wire::digital_state() const
     return m_resolved_state.digital_value();
 }
 
-
+/**
+   Copy assignment with attachment
+ */
 Wire& Wire::operator=(Wire& other)
 {
     m_state = other.m_state;
@@ -373,7 +367,9 @@ Wire& Wire::operator=(Wire& other)
     return *this;
 }
 
-
+/**
+   Copy assignment without attachment
+ */
 Wire& Wire::operator=(const Wire& other)
 {
     m_state = other.m_state;
