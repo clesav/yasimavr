@@ -1,7 +1,7 @@
 /*
  * arch_avr_port.cpp
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -86,15 +86,13 @@ void ArchAVR_Port::update_pin_states(uint8_t portr, uint8_t ddr)
 {
     //Filters the pins to update to only those for which portr or ddr has actually changed
     uint8_t pinmask = ((portr ^ m_portr_value) | (ddr ^ m_ddr_value)) & pin_mask();
-    Pin::State state;
+    Pin::controls_t controls;
     for (int i = 0; i < 8; ++i) {
         if (pinmask & 1) {
-            if (ddr & 1) {
-                state = portr & 1 ? Pin::State_High : Pin::State_Low;
-            } else {
-                state = portr & 1 ? Pin::State_PullUp : Pin::State_Floating;
-            }
-            set_pin_internal_state(i, state);
+            controls.dir = ddr & 1;
+            controls.drive = portr & 1;
+            controls.pull_up = (portr & ~ddr) & 1;
+            set_pin_internal_state(i, controls);
         }
         pinmask >>= 1;
         portr >>= 1;
@@ -105,7 +103,7 @@ void ArchAVR_Port::update_pin_states(uint8_t portr, uint8_t ddr)
 /*
  * Callback for a state change of a pin. Update PINR with the new value
  */
-void ArchAVR_Port::pin_state_changed(uint8_t num, Pin::State state)
+void ArchAVR_Port::pin_state_changed(uint8_t num, Wire::StateEnum state)
 {
     Port::pin_state_changed(num, state);
     //The SHORTED case is taken care of by Port

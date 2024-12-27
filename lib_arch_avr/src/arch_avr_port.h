@@ -1,7 +1,7 @@
 /*
  * arch_avr_port.h
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -58,7 +58,7 @@ public:
 
 protected:
 
-    virtual void pin_state_changed(uint8_t num, Pin::State state) override;
+    virtual void pin_state_changed(uint8_t num, Wire::StateEnum state) override;
 
 private:
 

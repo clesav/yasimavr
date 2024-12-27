@@ -1,7 +1,7 @@
 /*
  * sim_port.cpp
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -23,6 +23,7 @@
 
 #include "sim_port.h"
 #include "../core/sim_device.h"
+#include <sstream>
 
 YASIMAVR_USING_NAMESPACE
 
@@ -37,7 +38,7 @@ Port::Port(char name)
 :Peripheral(AVR_IOCTL_PORT(name))
 ,m_name(name)
 ,m_pinmask(0)
-,m_pins(8)
+,m_pin_signal_hook(*this, &Port::pin_signal_raised)
 ,m_port_value(0)
 {}
 
@@ -54,7 +55,7 @@ bool Port::init(Device& device)
         std::sprintf(pinname, "P%c%d", m_name, i);
         Pin *pin = device.find_pin(pinname);
         if (pin) {
-            pin->signal().connect(*this, i);
+            pin->signal().connect(m_pin_signal_hook, i);
             m_pinmask |= (1 << i);
         }
         m_pins[i] = pin;
@@ -68,9 +69,10 @@ void Port::reset()
 {
     //On reset, we set the internal state of all the pins to floating
     uint8_t pinmask = m_pinmask;
+    Pin::controls_t default_ctrl = Pin::controls_t();
     for (int i = 0; i < 8; ++i) {
         if (pinmask & 1)
-            m_pins[i]->set_gpio_state(Pin::State_Floating);
+            m_pins[i]->set_gpio_controls(default_ctrl);
         pinmask >>= 1;
     }
 
@@ -95,19 +97,29 @@ bool Port::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
    \param state new state for the pin
    \sa pin_state_changed
  */
-void Port::set_pin_internal_state(uint8_t num, Pin::State state)
+void Port::set_pin_internal_state(uint8_t num, const Pin::controls_t& controls)
 {
     if (num < 8 && ((m_pinmask >> num) & 1)) {
-        logger().dbg("Pin %d set to %s", num, Pin::StateName(state));
-        m_pins[num]->set_gpio_state(state);
+        std::ostringstream s;
+        s << "Dir " << (controls.dir ? "Out" : "In");
+        if (controls.dir) {
+            s << "Out , " << (controls.drive ? "High" : "Low");
+            if (controls.inverted) s << ", Inv";
+        } else {
+            s << "In";
+            if (controls.pull_up) s << ", P/U";
+        }
+        logger().dbg("Pin %d set to %s", num, s.str().c_str());
+
+        m_pins[num]->set_gpio_controls(controls);
     }
 }
 
 
-void Port::raised(const signal_data_t& sigdata, int hooktag)
+void Port::pin_signal_raised(const signal_data_t& sigdata, int hooktag)
 {
     if (sigdata.sigid == Pin::Signal_StateChange) {
-        Pin::State pin_state = (Pin::State) sigdata.data.as_int();
+        Wire::StateEnum pin_state = (Wire::StateEnum) sigdata.data.as_int();
         uint8_t pin_num = hooktag;
         pin_state_changed(pin_num, pin_state);
     }
@@ -118,9 +130,10 @@ void Port::raised(const signal_data_t& sigdata, int hooktag)
    Callback method called when the resolved state of a pin has changed.
    \sa set_pin_internal_state
  */
-void Port::pin_state_changed(uint8_t num, Pin::State state)
+void Port::pin_state_changed(uint8_t num, Wire::StateEnum state)
 {
-    logger().dbg("Detected Pin %d change to %s", num, Pin::StateName(state));
+    std::string s = Wire::state_t(state).to_string();
+    logger().dbg("Detected Pin %d change to %s", num, s.c_str());
     if (state == Pin::State_Shorted) {
         ctlreq_data_t d = { .data = m_pins[num]->id() };
         device()->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_SHORTING, &d);

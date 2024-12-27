@@ -1,7 +1,7 @@
 /*
  * pin.sip
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -23,47 +23,32 @@
 
 typedef sim_id_t pin_id_t;
 
-class Pin : public SignalHook /NoDefaultCtors/ {
+class Pin : public Wire /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "core/sim_pin.h"
 %End
 
 public:
 
-    enum State /BaseType=IntEnum/ {
-        State_Floating  /PyName=Floating/,
-        State_PullUp    /PyName=PullUp/,
-        State_PullDown  /PyName=PullDown/,
-        State_Analog    /PyName=Analog/,
-        State_High      /PyName=High/,
-        State_Low       /PyName=Low/,
-        State_Shorted   /PyName=Shorted/,
-    };
+    struct controls_t {
+        unsigned char dir /PyInt/;
+        unsigned char drive /PyInt/;
+        bool inverted;
+        bool pull_up;
 
-    enum SignalId /BaseType=IntEnum/ {
-        Signal_StateChange          /PyName=StateChange/,
-        Signal_DigitalChange        /PyName=DigitalChange/,
-        Signal_VoltageChange        /PyName=VoltageChange/,
+        controls_t(unsigned char /PyInt/ = 0, unsigned char /PyInt/ = 0, bool = false, bool = false);
+        %MethodCode
+           sipCpp = new Pin::controls_t{a0, a1, a2, a3};
+        %End
     };
-
-    struct state_t {
-        Pin::State state;
-        double level;
-    };
-
-    static const char* StateName(Pin::State);
 
     Pin(pin_id_t);
 
-    void set_external_state(Pin::State, double = 0.0);
-    void set_gpio_state(Pin::State);
     pin_id_t id() const;
-    Pin::State state() const;
-    bool digital_state() const;
-    double voltage() const;
-
-    DataSignal& signal();
-
-    virtual void raised(const signal_data_t&, int);
+    void set_external_state(const Wire::state_t&);
+    void set_external_state(Wire::StateEnum, double = 0.0);
+    void set_external_state(char, double = 0.0);
+    void set_gpio_controls(const controls_t&);
+    controls_t gpio_controls() const;
 
 };

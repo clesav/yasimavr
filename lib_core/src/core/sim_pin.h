@@ -1,7 +1,7 @@
 /*
  * sim_pin.h
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -24,17 +24,15 @@
 #ifndef __YASIMAVR_PIN_H__
 #define __YASIMAVR_PIN_H__
 
-#include "sim_types.h"
-#include "sim_signal.h"
+#include "sim_wire.h"
 
 YASIMAVR_BEGIN_NAMESPACE
-
-class Port;
 
 
 //=======================================================================================
 
 typedef sim_id_t pin_id_t;
+
 
 /**
    \brief MCU pin model.
@@ -43,133 +41,89 @@ typedef sim_id_t pin_id_t;
    The pin has two electrical states given by the external circuit and the internal circuit (the GPIO port),
    which are resolved into a single electrical state. In case of conflict, the SHORTED state is
    set.
-   Analog voltage levels are relative to VCC, hence limited to the range [0.0, 1.0].
+   The internal circuit state is set by GPIO controls.
  */
-class AVR_CORE_PUBLIC_API Pin : public SignalHook {
+class AVR_CORE_PUBLIC_API Pin : public Wire {
 
 public:
 
     /**
-       Pin state enum.
-       All the possible logical/analog electrical states that the pin can take.
+       Structure for defining the controls of a GPIO
      */
-    enum State {
-        //The enum values are partially a bitset:
-        //bit 0 indicates that it is a stable digital state if set
-        //bit 1 is the boolean value (only if bit 0 is set too)
-        //bit 2 indicates a 'driver' state if set or 'weak' if clear
-        //'Weak' states
-        State_Floating  = 0x00,
-        State_PullUp    = 0x03,
-        State_PullDown  = 0x01,
-        //'Driver' states
-        State_Analog    = 0x04,
-        State_High      = 0x07,
-        State_Low       = 0x05,
-        //Special state
-        State_Shorted   = 0xFF
+    struct controls_t {
+
+        /// Direction control: 0=IN, 1=OUT
+        unsigned char dir = 0;
+        /// Driving state: 0=LOW, 1=HIGH
+        unsigned char drive = 0;
+        /// Enable inversion of the driving state
+        bool inverted = false;
+        /// Enable the pull up
+        bool pull_up = false;
+
     };
-
-    /**
-       Signal IDs raised by the pin.
-       For all signals, the index is set to the pin ID.
-     */
-    enum SignalId {
-        /**
-          Signal raised for any change of the resolved state.
-          data is set to the new state (one of State enum values)
-         */
-        Signal_StateChange,
-
-        /**
-          Signal raised for any change of the resolved digital state.
-          data is set to the new digital state (0 or 1).
-         */
-        Signal_DigitalChange,
-
-        /**
-           Signal raised for any change to the analog value, including
-           when induced by a digital state change.
-           data is set to the analog value (double, in range [0;1])
-         */
-        Signal_VoltageChange,
-    };
-
-
-    struct state_t {
-        State state;
-        double level;
-    };
-
-    static const char* StateName(State state);
 
     explicit Pin(pin_id_t id);
 
-    void set_external_state(State state, double voltage = 0.0);
-
-    void set_gpio_state(State state);
-
     pin_id_t id() const;
 
-    State state() const;
+    void set_external_state(const state_t& state);
+    void set_external_state(StateEnum state, double level = 0.0);
+    void set_external_state(char state, double level = 0.0);
 
-    bool digital_state() const;
+    void set_gpio_controls(const controls_t& controls);
+    controls_t gpio_controls() const;
 
-    double voltage() const;
-
-    DataSignal& signal();
-
-    virtual void raised(const signal_data_t& sigdata, int hooktag) override;
+    Pin(const Pin&) = delete;
+    Pin& operator=(const Pin&) = delete;
 
 private:
 
-    friend class Port;
-
     pin_id_t m_id;
-    state_t m_ext_state;
+    controls_t m_gpio_controls;
     state_t m_gpio_state;
-    state_t m_resolved_state;
-    DataSignal m_signal;
 
-    static state_t resolved_state(const state_t& gpio, const state_t& ext);
-    static double normalise_level(State state, double level);
-
-    void update_resolved_state();
+    virtual state_t state_for_resolution() const override;
 
 };
 
-/**
-   \return the identifier of the pin
- */
+
 inline pin_id_t Pin::id() const
 {
     return m_id;
-};
-
-/**
-   \return the resolved state
- */
-inline Pin::State Pin::state() const
-{
-    return m_resolved_state.state;
-};
-
-/**
-   \return the pin voltage value
- */
-inline double Pin::voltage() const
-{
-    return m_resolved_state.level;
 }
 
 /**
-   \return the signal raising the state/value changes
+   Set the state applied to the pin by the external circuit
  */
-inline DataSignal& Pin::signal()
+inline void Pin::set_external_state(const state_t& state)
 {
-    return m_signal;
+    set_state(state);
 }
 
+/**
+   Set the state applied to the pin by the external circuit
+ */
+inline void Pin::set_external_state(StateEnum state, double level)
+{
+    set_state(state, level);
+}
+
+/**
+   Set the state applied to the pin by the external circuit
+ */
+inline void Pin::set_external_state(char state, double level)
+{
+    set_state(state, level);
+}
+
+/**
+   Getter for the GPIO controls currently applied
+ */
+inline Pin::controls_t Pin::gpio_controls() const
+{
+    return m_gpio_controls;
+}
 
 YASIMAVR_END_NAMESPACE
 
