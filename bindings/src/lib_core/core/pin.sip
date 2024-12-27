@@ -31,12 +31,12 @@ class Pin : public Wire /NoDefaultCtors/ {
 public:
 
     struct controls_t {
-        uint8_t dir;
-        uint8_t drive;
+        unsigned char dir /PyInt/;
+        unsigned char drive /PyInt/;
         bool inverted;
         bool pull_up;
 
-        controls_t(uint8_t = 0, uint8_t = 0, bool = false, bool = false);
+        controls_t(unsigned char /PyInt/ = 0, unsigned char /PyInt/ = 0, bool = false, bool = false);
         %MethodCode
            sipCpp = new Pin::controls_t{a0, a1, a2, a3};
         %End

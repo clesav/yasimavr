@@ -60,7 +60,7 @@ public:
        Pin state enum.
        All the possible logical/analog electrical states that the wire can take.
      */
-    enum StateEnum : uint8_t {
+    enum StateEnum {
         //The enum values are partially a bitset (using StateFlag values) :
         //bit 0 indicates that it is a stable digital state if set
         //bit 1 is the boolean value (only if bit 0 is set too)
