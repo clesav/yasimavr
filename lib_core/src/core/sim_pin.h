@@ -138,6 +138,20 @@ inline Pin::controls_t Pin::gpio_controls() const
 
 //=======================================================================================
 
+/**
+   \brief MCU pin driver.
+
+   PinDriver is an interface that allows to override the controls of a MCU pin.
+   It is usually used as a sub-object of a peripheral that, under some conditions,
+   takes control of a GPIO.
+   The PinDriver does not know which pins it controls. The driver only references pins by a
+   arbitrary integer index (0 to N) that has meaning only for the driver.
+
+   To operate, a driver must be registered with the PinManager object during the device initialisation
+   phase.
+
+   \sa Pin, PinManager
+ */
 class AVR_CORE_PUBLIC_API PinDriver {
 
 public:
@@ -160,7 +174,16 @@ public:
     PinDriver(const PinDriver&) = delete;
     PinDriver& operator=(const PinDriver&) = delete;
 
+    /**
+       Stub called when a state resolution is taking place on a pin that the driver is controlling.
+       The reimplementation should make a copy of the controls structure in argument, change its members
+       according to the override state and return the result.
+       \param pin_index index of the pin
+       \param controls pin controls as configured by the GPIO port controller
+       \return the controls to apply to the pin
+     */
     virtual Pin::controls_t override_gpio(pin_index_t pin_index, const Pin::controls_t& controls) = 0;
+
     virtual void digital_state_changed(pin_index_t pin_index, bool state);
 
 private:
@@ -177,6 +200,14 @@ private:
 
 //=======================================================================================
 
+/**
+   \brief MCU pin manager.
+
+   Class managing a set of pins and the mux configurations between the pin drivers and the
+   pins.
+
+   \sa Pin, PinDriver
+ */
 class AVR_CORE_PUBLIC_API PinManager {
 
 public:
@@ -187,7 +218,7 @@ public:
     ~PinManager();
 
     bool register_driver(PinDriver& drv);
-    bool attach_driver(ctl_id_t drv, const std::vector<pin_id_t>& pins, mux_index_t mux_index = 0);
+    bool add_mux_config(ctl_id_t drv, const std::vector<pin_id_t>& pins, mux_index_t mux_index = 0);
 
     void set_current_mux(ctl_id_t drv, mux_index_t index);
     mux_index_t current_mux_index(ctl_id_t drv) const;

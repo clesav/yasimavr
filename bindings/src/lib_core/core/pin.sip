@@ -101,7 +101,7 @@ public:
     PinManager(const pin_id_vector_t&);
 
     bool register_driver(PinDriver&);
-    bool attach_driver(ctl_id_t, const pin_id_vector_t&, mux_index_t = 0);
+    bool add_mux_config(ctl_id_t, const pin_id_vector_t&, mux_index_t = 0);
     void set_current_mux(ctl_id_t, mux_index_t);
     mux_index_t current_mux_index(ctl_id_t) const;
     pin_id_vector_t current_mux_pins(ctl_id_t) const;

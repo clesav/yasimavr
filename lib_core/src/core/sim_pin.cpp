@@ -94,7 +94,7 @@ void Pin::update_pin_state()
 
 /**
    Construct a pin driver.
-   \param id Driver ID, usually the same ID as a peripheral controller the driver
+   \param id Driver ID, usually the same ID as the parent peripheral
    \param pin_count number of pin driven by this driver
  */
 PinDriver::PinDriver(ctl_id_t id, pin_index_t pin_count)
@@ -119,20 +119,31 @@ PinDriver::~PinDriver()
         delete[] m_pins;
 }
 
+/**
+   Enable/disable the override for all the pins.
+   \param enabled enable/disable the driver
+ */
 void PinDriver::set_enabled(bool enabled)
 {
     for (pin_index_t i = 0; i < m_pin_count; ++i)
         set_enabled(i, enabled);
 }
 
-
+/**
+   Enable/disable a pin override.
+   \param pin_index Index of the pin
+   \param enabled Enable/disable the driver
+ */
 void PinDriver::set_enabled(pin_index_t pin_index, bool enabled)
 {
     if (m_manager)
         m_manager->set_driver_enabled(*this, pin_index, enabled);
 }
 
-
+/**
+   Returns the enable/disable override state for one pin.
+   \param pin_index Index of the pin
+ */
 bool PinDriver::enabled(pin_index_t pin_index) const
 {
     if (m_manager)
@@ -141,22 +152,32 @@ bool PinDriver::enabled(pin_index_t pin_index) const
         return false;
 }
 
-
+/**
+   Forces a state resolution for one pin.
+   No-op if the driver is disabled for that pin.
+   \param pin_index Index of the pin to update
+ */
 void PinDriver::update_pin_state(pin_index_t pin_index)
 {
-    if (pin_index < m_pin_count && m_pins[pin_index])
+    if (pin_index < m_pin_count && m_pins[pin_index] && enabled(pin_index))
         m_pins[pin_index]->update_pin_state();
 }
 
-
+/**
+   Forces a state resolution of all the pins.
+   No-op if the driver is disabled for all pins.
+ */
 void PinDriver::update_pin_states()
 {
     for (pin_index_t i = 0; i < m_pin_count; ++i)
-        if (m_pins[i])
+        if (m_pins[i] && enabled(i))
             m_pins[i]->update_pin_state();
 }
 
-
+/**
+   Returns the resolved state of a pin.
+   \param pin_index Index of the pin
+ */
 Wire::state_t PinDriver::pin_state(pin_index_t pin_index) const
 {
     if (pin_index < m_pin_count && m_pins[pin_index])
@@ -165,7 +186,10 @@ Wire::state_t PinDriver::pin_state(pin_index_t pin_index) const
         return Wire::State_Error;
 }
 
-
+/**
+   Returns the GPIO controls of a pin, as configured by the GPIO port controller.
+   \param pin_index Index of the pin
+ */
 Pin::controls_t PinDriver::gpio_controls(pin_index_t pin_index) const
 {
     if (pin_index < m_pin_count && m_pins[pin_index])
@@ -174,7 +198,11 @@ Pin::controls_t PinDriver::gpio_controls(pin_index_t pin_index) const
         return Pin::controls_t();
 }
 
-
+/**
+   Stub called when the digital state of a pin has changed after a state resolution.
+   \param pin_index Index of the pin
+   \param state New digital state of the pin
+ */
 void PinDriver::digital_state_changed(pin_index_t pin_index, bool state)
 {}
 
@@ -241,6 +269,11 @@ struct PinManager::drv_entry_t {
 };
 
 
+/**
+   Construct a pin manager.
+   \param pin_ids array of the pin IDs managed by this. A Pin object is constructed for each
+   of these IDs.
+ */
 PinManager::PinManager(const std::vector<pin_id_t>& pin_ids)
 {
     for (pin_id_t i : pin_ids)
@@ -261,7 +294,10 @@ PinManager::~PinManager()
     }
 }
 
-
+/**
+   Register a pin driver with this manager.
+   \param drv driver to register
+ */
 bool PinManager::register_driver(PinDriver& drv)
 {
     if (m_drivers.count(drv.m_id) || !drv.m_pin_count || drv.m_manager) return false;
@@ -274,8 +310,13 @@ bool PinManager::register_driver(PinDriver& drv)
     return true;
 }
 
-
-bool PinManager::attach_driver(ctl_id_t drv_id, const std::vector<pin_id_t>& pin_ids, mux_index_t mux_index)
+/**
+   Add a mux configuration for a pin driver.
+   \param drv_id ID of the driver
+   \param pin_ids Array of the pin IDs corresponding to the indexes used by the driver
+   \param mux_index Index value for the mux config, must be >= 0
+ */
+bool PinManager::add_mux_config(ctl_id_t drv_id, const std::vector<pin_id_t>& pin_ids, mux_index_t mux_index)
 {
     if (!m_drivers.count(drv_id)) return false;
     drv_entry_t* drv_entry = m_drivers.at(drv_id);
@@ -296,7 +337,11 @@ bool PinManager::attach_driver(ctl_id_t drv_id, const std::vector<pin_id_t>& pin
     return true;
 }
 
-
+/**
+   Returns the currently activated mux config for a pin driver.
+   If no mux is activate, returns -1.
+   \param drv_id ID of the driver
+ */
 PinManager::mux_index_t PinManager::current_mux_index(ctl_id_t drv_id) const
 {
     auto it = m_drivers.find(drv_id);
@@ -304,7 +349,11 @@ PinManager::mux_index_t PinManager::current_mux_index(ctl_id_t drv_id) const
     return it->second->current_mux_index;
 }
 
-
+/**
+   Returns the pin IDs to which a driver is attached according to its currently activated mux config.
+   If no mux config is activated for this driver, an array filled with zeros is returned.
+   \param drv_id ID of the driver
+ */
 std::vector<pin_id_t> PinManager::current_mux_pins(ctl_id_t drv_id) const
 {
     auto it = m_drivers.find(drv_id);
@@ -319,7 +368,11 @@ std::vector<pin_id_t> PinManager::current_mux_pins(ctl_id_t drv_id) const
     }
 }
 
-
+/**
+   Activate a mux configuration for a pin driver.
+   \param drv_id ID of the driver
+   \param mux_index index of the new configuration to activate. May be -1 i.e. no mux is activated.
+ */
 void PinManager::set_current_mux(ctl_id_t drv_id, mux_index_t mux_index)
 {
     drv_entry_t* drv_entry = m_drivers.at(drv_id);
@@ -409,7 +462,10 @@ bool PinManager::driver_enabled(const PinDriver& drv, PinDriver::pin_index_t pin
     return drv_entry->enabled_pins[pin_index];
 }
 
-
+/**
+   Return a pointer to a Pin object
+   \param drv_id ID of the pin
+ */
 Pin* PinManager::pin(pin_id_t pin_id) const
 {
     if (m_pins.count(pin_id))
