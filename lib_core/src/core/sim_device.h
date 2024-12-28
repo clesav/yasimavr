@@ -30,7 +30,6 @@
 #include "sim_logger.h"
 #include <string>
 #include <vector>
-#include <map>
 
 YASIMAVR_BEGIN_NAMESPACE
 
@@ -168,6 +167,7 @@ public:
 
     Pin* find_pin(const char* name);
     Pin* find_pin(pin_id_t id);
+    PinManager& pin_manager();
 
     LogHandler& log_handler();
     Logger& logger();
@@ -199,11 +199,9 @@ private:
     LogHandler m_log_handler;
     Logger m_logger;
     std::vector<Peripheral*> m_peripherals;
-    std::map<pin_id_t, Pin*> m_pins;
+    PinManager m_pin_manager;
     CycleManager* m_cycle_manager;
     int m_reset_flags;
-
-    std::string& name_from_pin(Pin* pin);
 
     void set_state(State state);
 
@@ -257,6 +255,11 @@ inline Logger& Device::logger()
 inline CycleManager* Device::cycle_manager()
 {
     return m_cycle_manager;
+}
+
+inline PinManager& Device::pin_manager()
+{
+    return m_pin_manager;
 }
 
 

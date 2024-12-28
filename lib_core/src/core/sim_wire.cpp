@@ -346,8 +346,13 @@ void Wire::set_resolved_state(const state_t& s)
     bool dig_state = s.digital_value();
     if (dig_state != old_resolved_state.digital_value()) {
         m_signal.raise(Signal_DigitalChange, (unsigned char) dig_state);
+        notify_digital_state(dig_state);
     }
 }
+
+
+void Wire::notify_digital_state(bool state)
+{}
 
 /**
    Returns the resolved state reduced to a boolean.
