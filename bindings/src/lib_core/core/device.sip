@@ -154,4 +154,16 @@ public:
 
     void crash(uint16_t, const char*);
 
+protected:
+
+    virtual bool arch_init();
+    %VirtualCatcherCode
+        PyObject *pyRes = sipCallMethod(&sipIsErr, sipMethod, "");
+        if (PyErr_Occurred())
+            sipRes = false;
+        else
+            sipParseResult(&sipIsErr, sipMethod, pyRes, "b", &sipRes);
+        Py_XDECREF(pyRes);
+    %End
+
 };

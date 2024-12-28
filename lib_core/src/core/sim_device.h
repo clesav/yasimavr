@@ -179,6 +179,8 @@ public:
 
 protected:
 
+    virtual bool arch_init();
+
     virtual bool core_ctlreq(ctlreq_id_t req, ctlreq_data_t* reqdata);
 
     virtual bool program(const Firmware& firmware);

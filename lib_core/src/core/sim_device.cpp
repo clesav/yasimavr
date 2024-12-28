@@ -136,11 +136,25 @@ bool Device::init(CycleManager& cycle_manager)
         }
     }
 
+    if (!arch_init()) {
+        m_logger.err("Architecture initialisation stub failed.", m_config.name);
+        return false;
+    }
+
     m_state = State_Ready;
     reset();
 
     m_logger.dbg("Initialisation of device '%s' complete", m_config.name.c_str());
 
+    return true;
+}
+
+/**
+   Stub for any architecture specific initialisation step. The default implementation does nothing.
+   \return true if initialisation is successful, false in case of error.
+ */
+bool Device::arch_init()
+{
     return true;
 }
 
