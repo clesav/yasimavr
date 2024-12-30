@@ -1,6 +1,6 @@
 # YAML configuration file for AVR XT core architecture
 #
-# Copyright 2022 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2022-2024 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -536,9 +536,25 @@ PORTMUX:
                 MSB: 5
                 values: { 0: DEFAULT, 1: ALT1, 2: ALT2 }
 
+        - name: TCAROUTEA
+          offset: 0x04
+          fields:
+            TCA0:
+                kind: ENUM
+                LSB: 0
+                MSB: 2
+                values: { 0: PORTA, 1: PORTB, 2: PORTC, 3: PORTD, 4: PORTE, 5: PORTF }
+
+        - name: TCBROUTEA
+          offset: 0x05
+          fields:
+            TCB0: { kind: BIT, pos: 0, one: DEFAULT, zero: ALT1 }
+            TCB1: { kind: BIT, pos: 1, one: DEFAULT, zero: ALT1 }
+            TCB2: { kind: BIT, pos: 2, one: DEFAULT, zero: ALT1 }
+            TCB3: { kind: BIT, pos: 3, one: DEFAULT, zero: ALT1 }
+
     config:
-        regs:
-            - EVSYSROUTEA
-            - CCLROUTEA
-            - USARTROUTEA
-            - TWISPIROUTEA
+        mux_configs:
+           TCB0:
+              reg: TCBROUTEA/TCB0
+              map: { 0x00: DFLT, 0x01: ALT1 }

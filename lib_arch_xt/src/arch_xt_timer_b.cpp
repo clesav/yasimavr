@@ -1,7 +1,7 @@
 /*
  * arch_xt_timer_b.cpp
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -53,6 +53,8 @@ enum OutputChange {
 typedef ArchXT_TimerBConfig CFG;
 
 
+//=======================================================================================
+
 class ArchXT_TimerB::EventHook : public SignalHook {
 
 public:
@@ -70,6 +72,38 @@ private:
 
 };
 
+//=======================================================================================
+
+class ArchXT_TimerB::_PinDriver : public PinDriver {
+
+public:
+
+    inline _PinDriver(ctl_id_t per_id)
+    :PinDriver(per_id, 1)
+    ,m_drive(0)
+    {}
+
+    inline void set_drive(unsigned char d)
+    {
+        m_drive = d;
+        update_pin_state(0);
+    }
+
+    virtual Pin::controls_t override_gpio(pin_index_t, const Pin::controls_t& controls) override
+    {
+        Pin::controls_t c = controls;
+        c.drive = m_drive;
+        return c;
+    }
+
+private:
+
+    unsigned char m_drive;
+
+};
+
+
+//=======================================================================================
 
 ArchXT_TimerB::ArchXT_TimerB(int num, const CFG& config)
 :Peripheral(AVR_IOCTL_TIMER('B', 0x30 + num))
@@ -84,12 +118,14 @@ ArchXT_TimerB::ArchXT_TimerB(int num, const CFG& config)
 ,m_counter(0x10000, 1)
 {
     m_event_hook = new EventHook(*this);
+    m_pin_driver = new _PinDriver(id());
 }
 
 
 ArchXT_TimerB::~ArchXT_TimerB()
 {
     delete m_event_hook;
+    delete m_pin_driver;
 }
 
 
@@ -122,6 +158,8 @@ bool ArchXT_TimerB::init(Device& device)
 
     m_counter.init(*device.cycle_manager(), logger());
     m_counter.signal().connect(*this);
+
+    status &= device.pin_manager().register_driver(*m_pin_driver);
 
     return status;
 }
@@ -491,8 +529,14 @@ void ArchXT_TimerB::update_output(int change)
         default: break;
     }
 
+    bool drv_en = TEST_IOREG(CTRLA, TCB_ENABLE) && TEST_IOREG(CTRLB, TCB_CCMPEN);
+
+    if (!drv_en) m_pin_driver->set_enabled(false);
+    m_pin_driver->set_drive(m_output);
+    if (drv_en) m_pin_driver->set_enabled(true);
+
     vardata_t sigdata;
-    if (TEST_IOREG(CTRLA, TCB_ENABLE) && TEST_IOREG(CTRLB, TCB_CCMPEN))
+    if (drv_en)
         sigdata = m_output;
 
     if (sigdata != m_signal.data(Signal_Output))

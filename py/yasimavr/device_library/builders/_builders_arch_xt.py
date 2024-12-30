@@ -111,8 +111,31 @@ def _get_port_builder():
 #========================================================================================
 #Portmuxconfiguration
 
+def _portmux_convertor(cfg, attr, yml_val, per_desc):
+    if attr == 'mux_configs':
+        mux_configs = []
+        for drv_id, yml_mux_cfg in yml_val.items():
+            mux_cfg = _archlib.ArchXT_PortMuxConfig.mux_config_t()
+            mux_cfg.reg = convert_to_regbit(yml_mux_cfg['reg'], per=per_desc)
+            mux_cfg.drv_id = _corelib.str_to_id(drv_id)
+            mux_configs.append(mux_cfg)
+
+            mux_map = []
+            for reg_value, mux_id in yml_mux_cfg['map'].items():
+                mux_map_entry = _archlib.ArchXT_PortMuxConfig.mux_map_entry_t()
+                mux_map_entry.reg_value = reg_value
+                mux_map_entry.mux_id = _corelib.str_to_id(mux_id)
+                mux_map.append(mux_map_entry)
+            mux_cfg.mux_map = mux_map
+
+        cfg.mux_configs = mux_configs
+
+    else:
+        raise Exception('Converter not implemented for ' + attr)
+
 def _get_portmux_builder():
-    return DummyPeripheralBuilder(_corelib.IOCTL_PORTMUX)
+    cfg_builder = PeripheralConfigBuilder(_archlib.ArchXT_PortMuxConfig, _portmux_convertor)
+    return PeripheralBuilder(_archlib.ArchXT_PortMuxCtrl, cfg_builder)
 
 
 #========================================================================================

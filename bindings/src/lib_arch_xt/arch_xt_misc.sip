@@ -1,7 +1,7 @@
 /*
  * arch_xt_misc.sip
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -149,6 +149,42 @@ public:
     virtual void reset();
     virtual bool ctlreq(ctlreq_id_t, ctlreq_data_t*);
     virtual uint8_t ioreg_read_handler(reg_addr_t, uint8_t);
+    virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
+
+};
+
+
+struct ArchXT_PortMuxConfig {
+%TypeHeaderCode
+#include "arch_xt_misc.h"
+%End
+
+    struct mux_map_entry_t : base_reg_config_t {
+        PinManager::mux_id_t mux_id;
+    };
+
+    struct mux_config_t {
+        regbit_t reg;
+        ctl_id_t drv_id;
+        std::vector<ArchXT_PortMuxConfig::mux_map_entry_t> mux_map;
+    };
+
+    std::vector<ArchXT_PortMuxConfig::mux_config_t> mux_configs;
+
+};
+
+
+class ArchXT_PortMuxCtrl : public Peripheral /NoDefaultCtors/ {
+%TypeHeaderCode
+#include "arch_xt_misc.h"
+%End
+
+public:
+
+    ArchXT_PortMuxCtrl(const ArchXT_PortMuxConfig& /KeepReference/);
+
+    virtual bool init(Device&);
+    virtual void reset();
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
 
 };

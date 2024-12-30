@@ -378,3 +378,8 @@ peripherals:
         file: ArchXT_controllers.yml
         base: 0x1300
         ctl_id: UROW
+
+iomux:
+    TCB0:
+        DFLT: [ PA2 ]
+        ALT1: [ PF4 ]

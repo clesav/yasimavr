@@ -135,3 +135,11 @@ peripherals:
         base: 0x3333
         config:
             iv_a: Vector3
+
+#Definition of IO pin mux configuration for the PinManager object
+iomux:
+    DRV_ID1:
+        MUX_ID1: [ pin1, pin2, ... ]
+        MUX_ID2: [ pin3, pin4, ... ]
+        MUX_ID3: [] #mux deactivated
+
