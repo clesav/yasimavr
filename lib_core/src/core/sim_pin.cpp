@@ -224,13 +224,13 @@ struct PinManager::pin_entry_t {
 struct PinManager::drv_entry_t {
 
     PinDriver& driver;
-    std::unordered_map<mux_index_t, pin_id_t*> mux_configs;
+    std::unordered_map<mux_id_t, pin_id_t*> mux_configs;
     bool* enabled_pins;
-    mux_index_t current_mux_index;
+    mux_id_t current_mux;
 
     explicit drv_entry_t(PinDriver& drv)
     :driver(drv)
-    ,current_mux_index(-1)
+    ,current_mux(0)
     {
         enabled_pins = new bool[drv.m_pin_count];
         std::fill(enabled_pins, enabled_pins + drv.m_pin_count, false);
@@ -243,7 +243,7 @@ struct PinManager::drv_entry_t {
             delete[] pins;
     }
 
-    void add_mux(mux_index_t mux_index, const std::vector<pin_id_t>& pins)
+    void add_mux(mux_id_t mux_index, const std::vector<pin_id_t>& pins)
     {
         PinDriver::pin_index_t n = pin_count();
         pin_id_t* mux_config = new pin_id_t[n];
@@ -251,14 +251,14 @@ struct PinManager::drv_entry_t {
         mux_configs[mux_index] = mux_config;
     }
 
-    bool has_mux(mux_index_t mux_index) const
+    bool has_mux(mux_id_t mux_id) const
     {
-        return mux_configs.find(mux_index) != mux_configs.end();
+        return mux_configs.find(mux_id) != mux_configs.end();
     }
 
-    inline pin_id_t pin_id(PinDriver::pin_index_t pin_index, mux_index_t mux_index) const
+    inline pin_id_t pin_id(PinDriver::pin_index_t pin_index, mux_id_t mux_id) const
     {
-        return mux_configs.at(mux_index)[pin_index];
+        return mux_configs.at(mux_id)[pin_index];
     }
 
     inline PinDriver::pin_index_t pin_count() const
@@ -314,9 +314,12 @@ bool PinManager::register_driver(PinDriver& drv)
    Add a mux configuration for a pin driver.
    \param drv_id ID of the driver
    \param pin_ids Array of the pin IDs corresponding to the indexes used by the driver
-   \param mux_index Index value for the mux config, must be >= 0
+   \param mux_id ID for the mux config (unique for the driver), must be > 0
+   \return true if the operation succeeded
+
+   \note the first mux config is automatically activated.
  */
-bool PinManager::add_mux_config(ctl_id_t drv_id, const std::vector<pin_id_t>& pin_ids, mux_index_t mux_index)
+bool PinManager::add_mux_config(ctl_id_t drv_id, const std::vector<pin_id_t>& pin_ids, mux_id_t mux_id)
 {
     if (!m_drivers.count(drv_id)) return false;
     drv_entry_t* drv_entry = m_drivers.at(drv_id);
@@ -326,27 +329,27 @@ bool PinManager::add_mux_config(ctl_id_t drv_id, const std::vector<pin_id_t>& pi
     for (size_t i =  0; i < pin_ids.size(); ++i)
         if (!m_pins.count(pin_ids[i])) return false;
 
-    if (mux_index < 0 || drv_entry->has_mux(mux_index)) return false;
+    if (!mux_id || drv_entry->has_mux(mux_id)) return false;
 
-    drv_entry->add_mux(mux_index, pin_ids);
+    drv_entry->add_mux(mux_id, pin_ids);
 
     //If this is the first mux config for this driver, make it current
     if (drv_entry->mux_configs.size() == 1)
-        set_current_mux(drv_id, mux_index);
+        set_current_mux(drv_id, mux_id);
 
     return true;
 }
 
 /**
-   Returns the currently activated mux config for a pin driver.
-   If no mux is activate, returns -1.
+   Returns the ID of the currently activated mux config for a pin driver.
+   If no mux is activated, returns 0.
    \param drv_id ID of the driver
  */
-PinManager::mux_index_t PinManager::current_mux_index(ctl_id_t drv_id) const
+PinManager::mux_id_t PinManager::current_mux(ctl_id_t drv_id) const
 {
     auto it = m_drivers.find(drv_id);
-    if (it == m_drivers.end()) return -1;
-    return it->second->current_mux_index;
+    if (it == m_drivers.end()) return 0;
+    return it->second->current_mux;
 }
 
 /**
@@ -360,8 +363,8 @@ std::vector<pin_id_t> PinManager::current_mux_pins(ctl_id_t drv_id) const
     if (it == m_drivers.end()) return std::vector<pin_id_t>();
     drv_entry_t* drv_entry = it->second;
 
-    if (drv_entry->current_mux_index >= 0) {
-        pin_id_t* mux_config = drv_entry->mux_configs.at(drv_entry->current_mux_index);
+    if (drv_entry->current_mux) {
+        pin_id_t* mux_config = drv_entry->mux_configs.at(drv_entry->current_mux);
         return std::vector<pin_id_t>(mux_config, mux_config + drv_entry->pin_count());
     } else {
         return std::vector<pin_id_t>(drv_entry->pin_count(), 0);
@@ -371,17 +374,22 @@ std::vector<pin_id_t> PinManager::current_mux_pins(ctl_id_t drv_id) const
 /**
    Activate a mux configuration for a pin driver.
    \param drv_id ID of the driver
-   \param mux_index index of the new configuration to activate. May be -1 i.e. no mux is activated.
+   \param mux_index index of the new configuration to activate. May be 0 i.e. no mux is activated.
  */
-void PinManager::set_current_mux(ctl_id_t drv_id, mux_index_t mux_index)
+void PinManager::set_current_mux(ctl_id_t drv_id, mux_id_t mux_id)
 {
     drv_entry_t* drv_entry = m_drivers.at(drv_id);
-    if (!drv_entry || (mux_index >= 0 && !drv_entry->has_mux(mux_index))) return;
+    //Validity checks
+    if (!drv_entry) return;
+    if (mux_id) {
+        if (!drv_entry->has_mux(mux_id)) return;
+        if (mux_id == drv_entry->current_mux) return;
+    }
 
     //Disconnect the driver from the pins in the previous mux configuration if it was valid
-    if (drv_entry->current_mux_index >= 0) {
+    if (drv_entry->current_mux) {
         for (PinDriver::pin_index_t pin_index = 0; pin_index < drv_entry->pin_count(); ++pin_index) {
-            pin_id_t old_pin_id = drv_entry->pin_id(pin_index, drv_entry->current_mux_index);
+            pin_id_t old_pin_id = drv_entry->pin_id(pin_index, drv_entry->current_mux);
             if (old_pin_id) {
                 drv_entry->driver.m_pins[pin_index] = nullptr;
                 if (drv_entry->enabled_pins[pin_index])
@@ -391,9 +399,9 @@ void PinManager::set_current_mux(ctl_id_t drv_id, mux_index_t mux_index)
     }
 
     //Connect the driver to the new pins in the new mux configuration if it is valid
-    if (mux_index >= 0) {
+    if (mux_id) {
         for (PinDriver::pin_index_t pin_index = 0; pin_index < drv_entry->pin_count(); ++pin_index) {
-            pin_id_t new_pin_id = drv_entry->pin_id(pin_index, mux_index);
+            pin_id_t new_pin_id = drv_entry->pin_id(pin_index, mux_id);
             if (new_pin_id) {
                 pin_entry_t* pin_entry = m_pins.at(new_pin_id);
                 drv_entry->driver.m_pins[pin_index] = &pin_entry->pin;
@@ -403,7 +411,7 @@ void PinManager::set_current_mux(ctl_id_t drv_id, mux_index_t mux_index)
         }
     }
 
-    drv_entry->current_mux_index = mux_index;
+    drv_entry->current_mux = mux_id;
 }
 
 
@@ -440,11 +448,11 @@ void PinManager::set_driver_enabled(PinDriver& drv, PinDriver::pin_index_t pin_i
     if (enabled == drv_entry->enabled_pins[pin_index]) return;
     drv_entry->enabled_pins[pin_index] = enabled;
 
-    //A negative mux index indicates that this driver has no mux configuration at all. No point continuing.
-    if (drv_entry->current_mux_index < 0) return;
+    //A zero mux id indicates that this driver has no mux configuration at all. No point continuing.
+    if (!drv_entry->current_mux) return;
 
     //Get the current mux configuration for this driver
-    pin_id_t* pin_ids = drv_entry->mux_configs[drv_entry->current_mux_index];
+    pin_id_t* pin_ids = drv_entry->mux_configs[drv_entry->current_mux];
 
     if (enabled) {
         //If enabling, add this driver to each pin in its mux config

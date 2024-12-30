@@ -96,14 +96,15 @@ class PinManager /NoDefaultCtors/ {
 
 public:
 
-    typedef int mux_index_t;
+    typedef sim_id_t mux_id_t;
+    static const mux_id_t default_mux_id;
 
     PinManager(const pin_id_vector_t&);
 
     bool register_driver(PinDriver&);
-    bool add_mux_config(ctl_id_t, const pin_id_vector_t&, mux_index_t = 0);
-    void set_current_mux(ctl_id_t, mux_index_t);
-    mux_index_t current_mux_index(ctl_id_t) const;
+    bool add_mux_config(ctl_id_t, const pin_id_vector_t&, mux_id_t = PinManager::default_mux_id);
+    void set_current_mux(ctl_id_t, mux_id_t);
+    mux_id_t current_mux(ctl_id_t) const;
     pin_id_vector_t current_mux_pins(ctl_id_t) const;
     Pin* pin(pin_id_t) const;
 
