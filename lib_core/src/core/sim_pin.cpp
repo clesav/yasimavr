@@ -1,7 +1,7 @@
 /*
  * sim_pin.cpp
  *
- *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -451,15 +451,16 @@ void PinManager::set_driver_enabled(PinDriver& drv, PinDriver::pin_index_t pin_i
     //A zero mux id indicates that this driver has no mux configuration at all. No point continuing.
     if (!drv_entry->current_mux) return;
 
-    //Get the current mux configuration for this driver
-    pin_id_t* pin_ids = drv_entry->mux_configs[drv_entry->current_mux];
+    //Get the pin entry from the pin index and the current mux configuration for this driver
+    pin_id_t pin_id = drv_entry->pin_id(pin_index, drv_entry->current_mux);
+    pin_entry_t& pin_entry = *m_pins.at(pin_id);
 
     if (enabled) {
         //If enabling, add this driver to each pin in its mux config
-        add_driver_to_pin(*m_pins.at(*pin_ids), drv, pin_index);
+        add_driver_to_pin(pin_entry, drv, pin_index);
     } else {
         //If disabling, remove this driver from each pin in its mux config
-        remove_driver_from_pin(*m_pins.at(*pin_ids), drv, pin_index);
+        remove_driver_from_pin(pin_entry, drv, pin_index);
     }
 }
 
