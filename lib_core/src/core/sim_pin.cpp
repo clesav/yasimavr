@@ -23,6 +23,7 @@
 
 #include "sim_pin.h"
 #include <set>
+#include <cstring>
 
 YASIMAVR_USING_NAMESPACE
 
