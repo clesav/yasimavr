@@ -203,6 +203,7 @@ protected:
 
     void auto_resolve_state();
 
+    virtual void notify_digital_state(bool state);
     virtual state_t state_for_resolution() const;
 
 private:

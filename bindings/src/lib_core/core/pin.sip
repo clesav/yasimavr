@@ -52,3 +52,60 @@ public:
     controls_t gpio_controls() const;
 
 };
+
+
+//=======================================================================================
+
+class PinDriver /NoDefaultCtors/ {
+%TypeHeaderCode
+#include "core/sim_pin.h"
+%End
+
+public:
+
+    typedef unsigned int pin_index_t;
+
+    PinDriver(ctl_id_t, pin_index_t);
+
+    void set_enabled(bool);
+    void set_enabled(pin_index_t, bool);
+    bool enabled(pin_index_t) const;
+
+    void update_pin_state(pin_index_t);
+    void update_pin_states();
+
+    Wire::state_t pin_state(pin_index_t) const;
+    Pin::controls_t gpio_controls(pin_index_t) const;
+
+    virtual Pin::controls_t override_gpio(pin_index_t, const Pin::controls_t&) = 0;
+    virtual void digital_state_changed(pin_index_t, bool);
+
+};
+
+
+//=======================================================================================
+
+typedef UnsignedLongVector pin_id_vector_t /NoTypeName/;
+
+
+
+class PinManager /NoDefaultCtors/ {
+%TypeHeaderCode
+#include "core/sim_pin.h"
+%End
+
+public:
+
+    typedef sim_id_t mux_id_t;
+    static const mux_id_t default_mux_id;
+
+    PinManager(const pin_id_vector_t&);
+
+    bool register_driver(PinDriver&);
+    bool add_mux_config(ctl_id_t, const pin_id_vector_t&, mux_id_t = PinManager::default_mux_id);
+    void set_current_mux(ctl_id_t, mux_id_t);
+    mux_id_t current_mux(ctl_id_t) const;
+    pin_id_vector_t current_mux_pins(ctl_id_t) const;
+    Pin* pin(pin_id_t) const;
+
+};

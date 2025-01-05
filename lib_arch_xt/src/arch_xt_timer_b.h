@@ -95,6 +95,9 @@ private:
     class EventHook;
     friend class EventHook;
 
+    class _PinDriver;
+    friend class _PinDriver;
+
     enum State {
         State_Ready,
         State_Run,
@@ -119,6 +122,8 @@ private:
     EventHook* m_event_hook;
 
     DataSignal m_signal;
+
+    _PinDriver* m_pin_driver;
 
     void set_counter_state(State state);
     void update_counter_top();

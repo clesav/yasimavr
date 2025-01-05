@@ -31,6 +31,15 @@ YASIMAVR_USING_NAMESPACE
 
 //=======================================================================================
 
+static std::vector<pin_id_t> convert_pin_ids(const std::vector<std::string> pin_names)
+{
+    std::vector<pin_id_t> pin_ids = std::vector<pin_id_t>(pin_names.size());
+    for (unsigned int i = 0; i < pin_names.size(); ++i)
+        pin_ids[i] = str_to_id(pin_names[i]);
+    return pin_ids;
+}
+
+
 /**
    Construct a device model
  */
@@ -43,16 +52,10 @@ Device::Device(Core& core, const DeviceConfiguration& config)
 ,m_sleep_mode(SleepMode::Active)
 ,m_debugger(nullptr)
 ,m_logger(chr_to_id('D', 'E', 'V', 0), m_log_handler)
+,m_pin_manager(convert_pin_ids(config.pins))
 ,m_cycle_manager(nullptr)
 ,m_reset_flags(0)
-{
-    //Allocate the pin array
-    for (unsigned int i = 0; i < config.pins.size(); ++i) {
-        pin_id_t id = str_to_id(config.pins[i]);
-        Pin* pin = new Pin(id);
-        m_pins[id] = pin;
-    }
-}
+{}
 
 /**
    Destroy the device model and all the attached peripheral.
@@ -72,13 +75,6 @@ void Device::erase_peripherals()
         delete per;
     }
     m_peripherals.clear();
-
-    //Destroys the device pins.
-    for (auto it = m_pins.begin(); it != m_pins.end(); ++it) {
-        Pin* pin = it->second;
-        delete pin;
-    }
-    m_pins.clear();
 }
 
 
@@ -140,11 +136,25 @@ bool Device::init(CycleManager& cycle_manager)
         }
     }
 
+    if (!arch_init()) {
+        m_logger.err("Architecture initialisation stub failed.", m_config.name);
+        return false;
+    }
+
     m_state = State_Ready;
     reset();
 
     m_logger.dbg("Initialisation of device '%s' complete", m_config.name.c_str());
 
+    return true;
+}
+
+/**
+   Stub for any architecture specific initialisation step. The default implementation does nothing.
+   \return true if initialisation is successful, false in case of error.
+ */
+bool Device::arch_init()
+{
     return true;
 }
 
@@ -511,11 +521,7 @@ Pin* Device::find_pin(const char* name)
  */
 Pin* Device::find_pin(pin_id_t id)
 {
-    auto search = m_pins.find(id);
-    if (search == m_pins.end())
-        return nullptr;
-    else
-        return search->second;
+    return m_pin_manager.pin(id);
 }
 
 

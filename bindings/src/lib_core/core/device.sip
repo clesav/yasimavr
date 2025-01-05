@@ -1,7 +1,7 @@
 /*
  * device.sip
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -147,10 +147,23 @@ public:
 
     Pin* find_pin(const char*);
     Pin* find_pin(pin_id_t);
+    PinManager& pin_manager();
 
     LogHandler& log_handler();
     Logger& logger();
 
     void crash(uint16_t, const char*);
+
+protected:
+
+    virtual bool arch_init();
+    %VirtualCatcherCode
+        PyObject *pyRes = sipCallMethod(&sipIsErr, sipMethod, "");
+        if (PyErr_Occurred())
+            sipRes = false;
+        else
+            sipParseResult(&sipIsErr, sipMethod, pyRes, "b", &sipRes);
+        Py_XDECREF(pyRes);
+    %End
 
 };

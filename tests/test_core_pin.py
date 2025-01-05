@@ -1,6 +1,6 @@
 # test_core_pin.py
 #
-# Copyright 2023-2024 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2023-2025 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -176,3 +176,63 @@ def test_wire_char_state(wire):
 
     wire.set_state('B')
     assert wire.state() == StateError
+
+
+def test_pin_driver():
+
+    class TestPinDriver(corelib.PinDriver):
+
+        def __init__(self):
+            super().__init__(0x10, 2)
+            self.controls = corelib.Pin.controls_t()
+    
+        def override_gpio(self, index, controls):
+            return self.controls
+
+    pm = corelib.PinManager([0xAA, 0xBB, 0xCC, 0xDD])
+    pinAA = pm.pin(0xAA)
+    pinBB = pm.pin(0xBB)
+    pinCC = pm.pin(0xCC)
+    pinDD = pm.pin(0xDD)
+
+    drv = TestPinDriver()
+    result = pm.register_driver(drv)
+    assert result
+
+    assert drv.pin_state(0) == StateError
+    assert drv.pin_state(1) == StateError
+    assert pm.current_mux(0x10) == 0
+    assert pm.current_mux_pins(0x10) == [0, 0]
+
+    result = pm.add_mux_config(0x10, [0xAA, 0xBB], 1)
+    assert result
+    result = pm.add_mux_config(0x10, [0xCC, 0xDD], 2)
+    assert result
+
+    assert pm.current_mux(0x10) == 1
+    assert pm.current_mux_pins(0x10) == [0xAA, 0xBB]
+
+    pinAA.set_gpio_controls(corelib.Pin.controls_t(1, 0))
+    pinBB.set_gpio_controls(corelib.Pin.controls_t(1, 1))
+    assert pinAA.state() == Low
+    assert pinBB.state() == High
+    assert drv.pin_state(0) == Low
+    assert drv.pin_state(1) == High
+
+    drv.set_enabled(True)
+    assert drv.pin_state(0) == Floating
+    assert drv.pin_state(1) == Floating
+    assert pinAA.state() == Floating
+    assert pinBB.state() == Floating
+
+    drv.controls.pull_up = True
+    drv.update_pin_state(0)
+    assert pinAA.state() == PullUp
+
+    pm.set_current_mux(0x10, 2)
+    assert pm.current_mux(0x10) == 2
+    assert pm.current_mux_pins(0x10) == [0xCC, 0xDD]
+    assert pinAA.state() == Low
+    assert pinBB.state() == High
+    assert pinCC.state() == PullUp
+    assert pinDD.state() == PullUp

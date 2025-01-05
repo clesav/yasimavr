@@ -28,6 +28,7 @@
 #include "core/sim_interrupt.h"
 #include "core/sim_memory.h"
 #include "core/sim_types.h"
+#include "core/sim_pin.h"
 #include "ioctrl_common/sim_vref.h"
 
 YASIMAVR_BEGIN_NAMESPACE
@@ -214,6 +215,50 @@ private:
 
     const ArchXT_MiscConfig& m_config;
     uint8_t* m_sigrow;
+
+};
+
+
+//=======================================================================================
+
+/**
+   \brief Configuration structure for ArchXT_PortMuxCtrl
+ */
+struct ArchXT_PortMuxConfig {
+
+    /// Structure defining the mux ID corresponding to a register field value
+    struct mux_map_entry_t : base_reg_config_t {
+        PinManager::mux_id_t mux_id;
+    };
+
+    struct mux_config_t {
+        regbit_t reg;
+        ctl_id_t drv_id;
+        std::vector<mux_map_entry_t> mux_map;
+    };
+
+    std::vector<mux_config_t> mux_configs;
+
+};
+
+/**
+   \brief Implementation of a generic portmux controller for XT core series
+ */
+class AVR_ARCHXT_PUBLIC_API ArchXT_PortMuxCtrl : public Peripheral {
+
+public:
+
+    ArchXT_PortMuxCtrl(const ArchXT_PortMuxConfig& config);
+
+    virtual bool init(Device& device) override;
+    virtual void reset() override;
+    virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
+
+private:
+
+    const ArchXT_PortMuxConfig& m_config;
+
+    void activate_mux(const ArchXT_PortMuxConfig::mux_config_t& cfg, uint8_t reg_value);
 
 };
 

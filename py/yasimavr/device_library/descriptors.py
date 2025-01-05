@@ -582,6 +582,11 @@ class DeviceDescriptor:
         for per_name, f in dict(yml_cfg['peripherals']).items():
             self.peripherals[per_name] = PeripheralInstanceDescriptor(per_name, dev_loader, f, self)
 
+        self.iomux = {}
+        yml_iomux = dict(yml_cfg.get('iomux', {}))
+        for drv_name, cfg in yml_iomux.items():
+            self.iomux[drv_name] = dict(cfg)
+
 
     def reg_address(self, reg_path, default=None):
         """Utility method that resolves a reg path and returns the address of the register.

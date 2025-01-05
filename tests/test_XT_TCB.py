@@ -1,6 +1,6 @@
 # test_XT_TCB.py
 #
-# Copyright 2024 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2024-2025 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -25,7 +25,7 @@ Automatic tests for the Timer type B simulation model (XT architecture)
 
 import pytest
 from _test_bench_xt import BenchXT, TESTFW_M4809
-from _test_utils import DictSignalHook
+from _test_utils import DictSignalHook, PinState
 import yasimavr.lib.core as corelib
 import yasimavr.lib.arch_xt as archlib
 from yasimavr.device_library.arch_XT import XT_BaseDevice
@@ -42,7 +42,7 @@ class _TestDeviceModelTCB(XT_BaseDevice):
 
     def __init__(self, dev_descriptor, dev_builder):
         super().__init__(dev_descriptor, dev_builder)
-        dev_builder.build_peripherals(self, ['CPUINT', 'SLPCTRL', 'TCA0'])
+        dev_builder.build_peripherals(self, ['CPUINT', 'SLPCTRL', 'TCA0', 'PORTA'])
 
         tmr_cfg = CFG_CLASS()
         tmr_cfg.reg_base = dev_descriptor.peripherals['TCB0'].reg_base
@@ -51,6 +51,10 @@ class _TestDeviceModelTCB(XT_BaseDevice):
 
         self.tmr = TMR_CLASS(0, tmr_cfg)
         self.attach_peripheral(self.tmr)
+
+    def arch_init(self):
+        self._builder_.add_pin_driver_mux_configs(self, 'TCB0')
+        return True
 
 
 class _BenchTCB(BenchXT):
@@ -73,6 +77,8 @@ class _BenchTCB(BenchXT):
         self.hook_out = DictSignalHook(self.dev.TCB0.signal())
 
         #per = self.dev_model.find_peripheral('TCB0')
+        #per.logger().set_level(corelib.Logger.Level.Debug)
+        #per = self.dev_model.find_peripheral('IOGA')
         #per.logger().set_level(corelib.Logger.Level.Debug)
 
     #Helper to set the capture event input level (0 or 1)
@@ -326,6 +332,8 @@ def test_xt_tcb_modeFRQPW(bench):
 
 def test_xt_tcb_modeSINGLE(bench):
     TCB = bench.dev.TCB0
+    porta = bench.dev.PORTA
+    pin = bench.dev.pins['PA2']
 
     TCB.CTRLA.CLKSEL = 'DIV1'
     TCB.CTRLA.ENABLE = 'enabled'
@@ -333,9 +341,13 @@ def test_xt_tcb_modeSINGLE(bench):
     TCB.EVCTRL.CAPTEI = 'enabled'
     TCB.CTRLB.CCMPEN = 'enabled'
     TCB.CCMP = 100
+    porta.OUT = 0x00
+    porta.DIR = 0x04
 
     #Check that the counter does not start immediately
     assert not TCB.STATUS.RUN
+    assert pin.state() == PinState.Low
+    assert porta.IN == 0x00
 
     #Check that an edge starts the counter and sets the output signal to 1
     bench.set_capture_input(1)
@@ -343,6 +355,8 @@ def test_xt_tcb_modeSINGLE(bench):
     assert bench.hook_out.has_data(TMR_CLASS.SignalId.Output)
     data = bench.hook_out.pop_data(TMR_CLASS.SignalId.Output)
     assert data.value() == 1
+    assert pin.state() == PinState.High
+    assert porta.IN == 0x04
 
     #Check that the counter stops when CNT reaches CCMP, the interrupt flag is raised
     #and the output signal is set to 0
@@ -356,6 +370,8 @@ def test_xt_tcb_modeSINGLE(bench):
     assert bench.hook_out.has_data(TMR_CLASS.SignalId.Output)
     data = bench.hook_out.pop_data(TMR_CLASS.SignalId.Output)
     assert data.value() == 0
+    assert pin.state() == PinState.Low
+    assert porta.IN == 0x00
 
 
 def test_xt_tcb_EventCount(bench):

@@ -1,7 +1,7 @@
 /*
  * arch_xt_misc.cpp
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -429,4 +429,47 @@ void ArchXT_MiscRegCtrl::ioreg_write_handler(reg_addr_t addr, const ioreg_write_
             write_ioreg(addr, 0x00);
         }
     }
+}
+
+
+//=======================================================================================
+
+ArchXT_PortMuxCtrl::ArchXT_PortMuxCtrl(const ArchXT_PortMuxConfig& config)
+:Peripheral(AVR_IOCTL_PORTMUX)
+,m_config(config)
+{}
+
+
+bool ArchXT_PortMuxCtrl::init(Device& device)
+{
+    bool status = Peripheral::init(device);
+
+    for (auto& cfg : m_config.mux_configs)
+        add_ioreg(cfg.reg);
+
+    return status;
+}
+
+
+void ArchXT_PortMuxCtrl::reset()
+{
+    for (auto& mux_cfg : m_config.mux_configs)
+        activate_mux(mux_cfg, 0x00);
+}
+
+
+void ArchXT_PortMuxCtrl::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
+{
+    for (auto& mux_cfg : m_config.mux_configs) {
+        if (addr == mux_cfg.reg.addr)
+            activate_mux(mux_cfg, mux_cfg.reg.extract(data.value));
+    }
+}
+
+
+void ArchXT_PortMuxCtrl::activate_mux(const ArchXT_PortMuxConfig::mux_config_t& mux_cfg, uint8_t reg_value)
+{
+    int ix = find_reg_config(mux_cfg.mux_map, reg_value);
+    PinManager::mux_id_t mux_id = (ix >= 0) ? mux_cfg.mux_map[ix].mux_id : 0;
+    device()->pin_manager().set_current_mux(mux_cfg.drv_id, mux_id);
 }
