@@ -76,7 +76,7 @@ class dev_mega_0series(XT_BaseDevice):
 
 
     def arch_init(self):
-        self._builder_.build_pin_driver(self, 'TCB0')
+        self._builder_.add_pin_driver_mux_configs(self, 'TCB0')
 
         return True
 

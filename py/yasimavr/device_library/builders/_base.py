@@ -422,24 +422,23 @@ class DeviceBuilder:
 
         cls._builder_cache.clear()
 
-    def build_pin_driver(self, device, per_name):
+    def add_pin_driver_mux_configs(self, device, drv_name):
         if VERBOSE:
-            print('  Creating pin driver iomux configs for', per_name)
+            print('  Creating pin driver iomux configs for', drv_name)
 
         try:
-            drv_mux_configs = device._descriptor_.iomux[per_name]
+            drv_mux_configs = device._descriptor_.iomux[drv_name]
         except KeyError:
-            raise Exception('Peripheral absent from IOMUX config: ' + per_name)
+            raise Exception('Pin driver absent from IOMUX config: ' + drv_name)
 
-        per_ctl_name = device._descriptor_.peripherals[per_name].ctl_id
-        drv_id = _corelib.str_to_id(per_ctl_name)
+        drv_id = _corelib.str_to_id(drv_name)
         for mux_id, mux_cfg in drv_mux_configs.items():
             mux_id = _corelib.str_to_id(mux_id)
             if mux_cfg:
                 pin_ids = [_corelib.str_to_id(pin_name) for pin_name in mux_cfg]
                 result = device.pin_manager().add_mux_config(drv_id, pin_ids, mux_id)
                 if not result:
-                    raise Exception('Attaching pin driver failed: ' + per_name)
+                    raise Exception('Attaching pin driver failed: ' + drv_name)
 
 
 def convert_enum_member(klass, v):
