@@ -1,7 +1,7 @@
 /*
  * arch_xt_port.cpp
  *
- *  Copyright 2022-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022-2025 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -67,14 +67,14 @@ bool ArchXT_Port::init(Device& device)
     add_ioreg(PORT_REG_ADDR(IN));
     add_ioreg(PORT_REG_ADDR(INTFLAGS));
     //PORTCTRL not implemented
-    add_ioreg(PORT_REG_ADDR(PIN0CTRL), PORT_ISC_gm | PORT_PULLUPEN_bm);
-    add_ioreg(PORT_REG_ADDR(PIN1CTRL), PORT_ISC_gm | PORT_PULLUPEN_bm);
-    add_ioreg(PORT_REG_ADDR(PIN2CTRL), PORT_ISC_gm | PORT_PULLUPEN_bm);
-    add_ioreg(PORT_REG_ADDR(PIN3CTRL), PORT_ISC_gm | PORT_PULLUPEN_bm);
-    add_ioreg(PORT_REG_ADDR(PIN4CTRL), PORT_ISC_gm | PORT_PULLUPEN_bm);
-    add_ioreg(PORT_REG_ADDR(PIN5CTRL), PORT_ISC_gm | PORT_PULLUPEN_bm);
-    add_ioreg(PORT_REG_ADDR(PIN6CTRL), PORT_ISC_gm | PORT_PULLUPEN_bm);
-    add_ioreg(PORT_REG_ADDR(PIN7CTRL), PORT_ISC_gm | PORT_PULLUPEN_bm);
+    add_ioreg(PORT_REG_ADDR(PIN0CTRL), PORT_ISC_gm | PORT_PULLUPEN_bm | PORT_INVEN_bm);
+    add_ioreg(PORT_REG_ADDR(PIN1CTRL), PORT_ISC_gm | PORT_PULLUPEN_bm | PORT_INVEN_bm);
+    add_ioreg(PORT_REG_ADDR(PIN2CTRL), PORT_ISC_gm | PORT_PULLUPEN_bm | PORT_INVEN_bm);
+    add_ioreg(PORT_REG_ADDR(PIN3CTRL), PORT_ISC_gm | PORT_PULLUPEN_bm | PORT_INVEN_bm);
+    add_ioreg(PORT_REG_ADDR(PIN4CTRL), PORT_ISC_gm | PORT_PULLUPEN_bm | PORT_INVEN_bm);
+    add_ioreg(PORT_REG_ADDR(PIN5CTRL), PORT_ISC_gm | PORT_PULLUPEN_bm | PORT_INVEN_bm);
+    add_ioreg(PORT_REG_ADDR(PIN6CTRL), PORT_ISC_gm | PORT_PULLUPEN_bm | PORT_INVEN_bm);
+    add_ioreg(PORT_REG_ADDR(PIN7CTRL), PORT_ISC_gm | PORT_PULLUPEN_bm | PORT_INVEN_bm);
 
     //Virtual port registers
     add_ioreg(VPORT_REG_ADDR(DIR));
@@ -226,6 +226,7 @@ void ArchXT_Port::update_pin_states()
             controls.dir = valdir & 1;
             controls.drive = valport & 1;
             controls.pull_up = pin_cfg & PORT_PULLUPEN_bm;
+            controls.inverted = pin_cfg & PORT_INVEN_bm;
             set_pin_internal_state(i, controls);
         }
 
