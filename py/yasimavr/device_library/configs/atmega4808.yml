@@ -1,6 +1,6 @@
 # YAML configuration file for atmega4808 variant
 #
-# Copyright 2023-2024 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2023-2025 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -329,3 +329,16 @@ peripherals:
         file: ArchXT_controllers.yml
         base: 0x1300
         ctl_id: UROW
+
+iomux:
+    TCB0:
+        DFLT: [ PA2 ]
+        ALT1: [ PF4 ]
+
+    TCB1:
+        DFLT: [ PA3 ]
+        ALT1: [ PF5 ]
+
+    TCB2:
+        DFLT: [ PC0 ]
+        ALT1: [ "" ]
