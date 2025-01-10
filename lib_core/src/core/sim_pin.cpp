@@ -328,7 +328,7 @@ bool PinManager::add_mux_config(ctl_id_t drv_id, const std::vector<pin_id_t>& pi
     if (pin_ids.size() != drv_entry->pin_count()) return false;
 
     for (size_t i =  0; i < pin_ids.size(); ++i)
-        if (!m_pins.count(pin_ids[i])) return false;
+        if (pin_ids[i] && !m_pins.count(pin_ids[i])) return false;
 
     if (!mux_id || drv_entry->has_mux(mux_id)) return false;
 
@@ -454,6 +454,7 @@ void PinManager::set_driver_enabled(PinDriver& drv, PinDriver::pin_index_t pin_i
 
     //Get the pin entry from the pin index and the current mux configuration for this driver
     pin_id_t pin_id = drv_entry->pin_id(pin_index, drv_entry->current_mux);
+    if (!pin_id) return;
     pin_entry_t& pin_entry = *m_pins.at(pin_id);
 
     if (enabled) {
@@ -509,7 +510,7 @@ void PinManager::notify_digital_state(pin_id_t pin_id, bool state)
 void PinManager::unregister_driver(PinDriver& drv)
 {
     drv_entry_t* drv_entry = m_drivers.at(drv.m_id);
-    set_current_mux(drv.m_id, -1);
+    set_current_mux(drv.m_id, 0);
     m_drivers.erase(drv.m_id);
     delete drv_entry;
 

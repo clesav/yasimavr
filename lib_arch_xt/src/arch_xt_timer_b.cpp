@@ -1,7 +1,7 @@
 /*
  * arch_xt_timer_b.cpp
  *
- *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -55,30 +55,11 @@ typedef ArchXT_TimerBConfig CFG;
 
 //=======================================================================================
 
-class ArchXT_TimerB::EventHook : public SignalHook {
-
-public:
-
-    explicit EventHook(ArchXT_TimerB& tmr) : m_tmr(tmr) {}
-
-    virtual void raised(const signal_data_t& sigdata, int hooktag) override
-    {
-        m_tmr.hook_raised(sigdata, hooktag);
-    }
-
-private:
-
-    ArchXT_TimerB& m_tmr;
-
-};
-
-//=======================================================================================
-
 class ArchXT_TimerB::_PinDriver : public PinDriver {
 
 public:
 
-    inline _PinDriver(ctl_id_t per_id)
+    explicit _PinDriver(ctl_id_t per_id)
     :PinDriver(per_id, 1)
     ,m_drive(0)
     {}
@@ -116,15 +97,14 @@ ArchXT_TimerB::ArchXT_TimerB(int num, const CFG& config)
 ,m_output(0)
 ,m_intflag(false)
 ,m_counter(0x10000, 1)
+,m_event_hook(*this, ArchXT_TimerB::event_hook_raised)
 {
-    m_event_hook = new EventHook(*this);
     m_pin_driver = new _PinDriver(id());
 }
 
 
 ArchXT_TimerB::~ArchXT_TimerB()
 {
-    delete m_event_hook;
     delete m_pin_driver;
 }
 
@@ -188,7 +168,7 @@ bool ArchXT_TimerB::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
         return true;
     }
     else if (req == AVR_CTLREQ_TCB_GET_EVENT_HOOK) {
-        data->data = m_event_hook;
+        data->data = &m_event_hook;
         return true;
     }
     return false;
@@ -230,7 +210,7 @@ void ArchXT_TimerB::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& da
 
     if (reg_ofs == REG_OFS(CTRLA)) {
         m_counter.update();
-        uint8_t old_clk_mode = m_clk_mode;
+        int old_clk_mode = m_clk_mode;
 
         if (data.value & TCB_ENABLE_bm)
             m_clk_mode = data.value & TCB_CLKSEL_gm;
@@ -394,7 +374,7 @@ void ArchXT_TimerB::raised(const signal_data_t& data, int hooktag)
 }
 
 
-void ArchXT_TimerB::hook_raised(const signal_data_t& sigdata, int hooktag)
+void ArchXT_TimerB::event_hook_raised(const signal_data_t& sigdata, int hooktag)
 {
     if (hooktag == Tag_Event) {
         unsigned char event_state = sigdata.data.as_uint() ? 1 : 0;

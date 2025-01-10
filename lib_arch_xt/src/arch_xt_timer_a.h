@@ -1,7 +1,7 @@
 /*
  * arch_xt_timer_a.h
  *
- *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -143,8 +143,7 @@ private:
         Tag_SplitHigh
     };
 
-    class EventHook;
-    friend class EventHook;
+    class _PinDriver;
 
     const ArchXT_TimerAConfig& m_config;
 
@@ -172,7 +171,9 @@ private:
     bool m_EIB_state;
     bool m_timer_block;
 
-    EventHook* m_event_hook;
+    BoundFunctionSignalHook<ArchXT_TimerA> m_event_hook;
+
+    _PinDriver* m_pin_driver;
 
     uint8_t read_ioreg_single(reg_addr_t reg_ofs, uint8_t value);
     uint8_t read_ioreg_split(reg_addr_t reg_ofs, uint8_t value);
@@ -185,7 +186,7 @@ private:
     void configure_single_counter();
     void update_timer_block(uint8_t ev_ctrl);
     void set_direction(bool countdown, bool do_reschedule);
-    void set_compare_output(int index, int change);
+    void set_compare_output(unsigned int index, int change);
     void update_compare_outputs(int change = 0);
 
     void process_counter_single(const signal_data_t& sigdata);
