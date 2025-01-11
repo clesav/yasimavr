@@ -1,6 +1,6 @@
 # test_XT_TCA.py
 #
-# Copyright 2024 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2024-2025 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -462,6 +462,33 @@ def test_xt_tca_split_mode(bench):
     bench.sim_advance(40)
     assert TCA.LCNT == 42
     assert TCA.HCNT == 21
+
+
+def test_xt_tca_output_on_pin():
+    bench = BenchXT('atmega4809', TESTFW_M4809)
+
+    TCA = bench.dev.TCA0
+    porta = bench.dev.PORTA
+
+    TCA.CTRLA.ENABLE = 'enabled'
+    TCA.CTRLB.WGMODE = 'FRQ'
+    TCA.CTRLB.CMP1EN = 'enabled'
+    TCA.CTRLB.CMP0EN = 'enabled'
+    TCA.CMP0 = 1000
+    TCA.CMP1 = 500
+    porta.DIR = 0x0F
+
+    bench.sim_advance(501)
+    assert porta.IN == 0x02
+
+    bench.sim_advance(500)
+    assert porta.IN == 0x03
+
+    bench.sim_advance(501)
+    assert porta.IN == 0x01
+
+    bench.sim_advance(500)
+    assert porta.IN == 0x00
 
 
 if __name__ == "__main__":

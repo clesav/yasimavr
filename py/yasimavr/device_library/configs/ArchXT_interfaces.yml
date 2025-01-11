@@ -548,13 +548,17 @@ PORTMUX:
         - name: TCBROUTEA
           offset: 0x05
           fields:
-            TCB0: { kind: BIT, pos: 0, one: DEFAULT, zero: ALT1 }
-            TCB1: { kind: BIT, pos: 1, one: DEFAULT, zero: ALT1 }
-            TCB2: { kind: BIT, pos: 2, one: DEFAULT, zero: ALT1 }
-            TCB3: { kind: BIT, pos: 3, one: DEFAULT, zero: ALT1 }
+            TCB0: { kind: BIT, pos: 0, zero: DEFAULT, one: ALT1 }
+            TCB1: { kind: BIT, pos: 1, zero: DEFAULT, one: ALT1 }
+            TCB2: { kind: BIT, pos: 2, zero: DEFAULT, one: ALT1 }
+            TCB3: { kind: BIT, pos: 3, zero: DEFAULT, one: ALT1 }
 
     config:
         mux_configs:
+           TCA0:
+              reg: TCAROUTEA/TCA0
+              map: { 0x00: PA, 0x01: PB, 0x02: PC, 0x03: PD, 0x04: PE, 0x05: PF }
+
            TCB0:
               reg: TCBROUTEA/TCB0
               map: { 0x00: DFLT, 0x01: ALT1 }
