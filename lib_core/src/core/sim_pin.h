@@ -1,7 +1,7 @@
 /*
  * sim_pin.h
  *
- *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -228,7 +228,8 @@ public:
     bool add_mux_config(ctl_id_t drv, const std::vector<pin_id_t>& pins, mux_id_t mux_id = default_mux_id);
 
     void set_current_mux(ctl_id_t drv, mux_id_t index);
-    mux_id_t current_mux(ctl_id_t drv) const;
+    void set_current_mux(ctl_id_t drv, PinDriver::pin_index_t, mux_id_t index);
+    mux_id_t current_mux(ctl_id_t drv, PinDriver::pin_index_t pin_index) const;
     std::vector<pin_id_t> current_mux_pins(ctl_id_t drv) const;
 
     Pin* pin(pin_id_t pin_id) const;
@@ -252,6 +253,7 @@ private:
 
     Wire::state_t override_gpio(pin_id_t pin_id, const Pin::controls_t& gpio_controls);
     void notify_digital_state(pin_id_t pin_id, bool state);
+    void set_current_pin_mux(drv_entry_t& drv, PinDriver::pin_index_t index, mux_id_t mux_id);
     void set_driver_enabled(PinDriver& drv, PinDriver::pin_index_t index, bool enabled);
     bool driver_enabled(const PinDriver& drv, PinDriver::pin_index_t index) const;
     void unregister_driver(PinDriver& drv);

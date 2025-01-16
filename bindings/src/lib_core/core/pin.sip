@@ -1,7 +1,7 @@
 /*
  * pin.sip
  *
- *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -104,7 +104,8 @@ public:
     bool register_driver(PinDriver&);
     bool add_mux_config(ctl_id_t, const pin_id_vector_t&, mux_id_t = PinManager::default_mux_id);
     void set_current_mux(ctl_id_t, mux_id_t);
-    mux_id_t current_mux(ctl_id_t) const;
+    void set_current_mux(ctl_id_t, PinDriver::pin_index_t, mux_id_t);
+    mux_id_t current_mux(ctl_id_t, PinDriver::pin_index_t) const;
     pin_id_vector_t current_mux_pins(ctl_id_t) const;
     Pin* pin(pin_id_t) const;
 

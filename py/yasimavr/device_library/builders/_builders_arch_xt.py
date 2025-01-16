@@ -1,6 +1,6 @@
 # _builders_arch_xt.py
 #
-# Copyright 2022-2024 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2022-2025 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -118,6 +118,7 @@ def _portmux_convertor(cfg, attr, yml_val, per_desc):
             mux_cfg = _archlib.ArchXT_PortMuxConfig.mux_config_t()
             mux_cfg.reg = convert_to_regbit(yml_mux_cfg['reg'], per=per_desc)
             mux_cfg.drv_id = _corelib.str_to_id(drv_id)
+            mux_cfg.pin_index = yml_mux_cfg.get('pin', -1)
             mux_configs.append(mux_cfg)
 
             mux_map = []
