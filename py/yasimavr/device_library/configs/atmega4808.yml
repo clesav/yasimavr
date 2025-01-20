@@ -331,6 +331,14 @@ peripherals:
         ctl_id: UROW
 
 iomux:
+    TCA0:
+        PA: [ PA0, PA1, PA2, PA3, PA4, PA5 ]
+        PB: [ "" , "" , "" , "" , "" , ""  ]
+        PC: [ PC0, PC1, PC2, PC3, "" , ""  ]
+        PD: [ PD0, PD1, PD2, PD3, PD4, PD5 ]
+        PE: [ "" , "" , "" , "",  "",  ""  ]
+        PF: [ PF0, PF1, PF2, PF3, PF4, PF5 ]
+
     TCB0:
         DFLT: [ PA2 ]
         ALT1: [ PF4 ]

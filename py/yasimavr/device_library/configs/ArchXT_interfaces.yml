@@ -488,7 +488,7 @@ TWI:
                 MSB: 7
 
 #========================================================================================
-PORTMUX:
+PORTMUX_mega0:
     registers:
         - name: EVSYSROUTEA
           offset: 0x00
@@ -548,10 +548,10 @@ PORTMUX:
         - name: TCBROUTEA
           offset: 0x05
           fields:
-            TCB0: { kind: BIT, pos: 0, zero: DEFAULT, one: ALT1 }
-            TCB1: { kind: BIT, pos: 1, zero: DEFAULT, one: ALT1 }
-            TCB2: { kind: BIT, pos: 2, zero: DEFAULT, one: ALT1 }
-            TCB3: { kind: BIT, pos: 3, zero: DEFAULT, one: ALT1 }
+            TCB0: { kind: BIT, pos: 0, one: ALT, zero: DEFAULT }
+            TCB1: { kind: BIT, pos: 1, one: ALT, zero: DEFAULT }
+            TCB2: { kind: BIT, pos: 2, one: ALT, zero: DEFAULT }
+            TCB3: { kind: BIT, pos: 3, one: ALT, zero: DEFAULT }
 
     config:
         mux_configs:
@@ -574,3 +574,66 @@ PORTMUX:
            TCB3:
               reg: TCBROUTEA/TCB3
               map: { 0x00: DFLT, 0x01: ALT1 }
+
+
+#========================================================================================
+PORTMUX_tiny0:
+    registers:
+        - name: CTRLA
+          offset: 0x00
+          supported: no
+
+        - name: CTRLB
+          offset: 0x01
+          supported: no
+
+        - name: CTRLC
+          offset: 0x02
+          fields:
+            TCA00: { kind: BIT, pos: 0, one: ALT, zero: DEFAULT }
+            TCA01: { kind: BIT, pos: 1, one: ALT, zero: DEFAULT }
+            TCA02: { kind: BIT, pos: 2, one: ALT, zero: DEFAULT }
+            TCA03: { kind: BIT, pos: 3, one: ALT, zero: DEFAULT }
+            TCA04: { kind: BIT, pos: 4, one: ALT, zero: DEFAULT }
+            TCA05: { kind: BIT, pos: 5, one: ALT, zero: DEFAULT }
+
+        - name: CTRLD
+          offset: 0x03
+          fields:
+            TCB0: { kind: BIT, pos: 0, one: ALT, zero: DEFAULT }
+
+    config:
+        mux_configs:
+           TCA00:
+              reg: TCAROUTEA/TCA00
+              pin: 0
+              map: { 0x00: DLFT, 0x01: ALT }
+
+           TCA01:
+              reg: TCAROUTEA/TCA01
+              pin: 1
+              map: { 0x00: DLFT, 0x01: ALT }
+
+           TCA02:
+              reg: TCAROUTEA/TCA02
+              pin: 2
+              map: { 0x00: DLFT, 0x01: ALT }
+
+           TCA03:
+              reg: TCAROUTEA/TCA03
+              pin: 3
+              map: { 0x00: DLFT, 0x01: ALT }
+
+           TCA04:
+              reg: TCAROUTEA/TCA04
+              pin: 4
+              map: { 0x00: DLFT, 0x01: ALT }
+
+           TCA05:
+              reg: TCAROUTEA/TCA05
+              pin: 5
+              map: { 0x00: DLFT, 0x01: ALT }
+
+           TCB0:
+              reg: TCBROUTEA/TCB0
+              map: { 0x00: DFLT, 0x01: ALT }

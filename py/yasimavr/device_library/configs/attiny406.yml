@@ -1,6 +1,6 @@
 # YAML configuration file for attiny406 variant
 #
-# Copyright 2024 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2024-2025 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -270,3 +270,12 @@ peripherals:
         file: ArchXT_controllers.yml
         base: 0x1300
         ctl_id: UROW
+
+iomux:
+    TCA0:
+        DLFT: [ PB0, PB1, PB2, PA3, PA4, PA5 ]
+        ALT:  [ PB3, PB4, PB5, PC3, "", "" ]
+
+    TCB0:
+        DFLT: [ PA5 ]
+        ALT:  [ PC0 ]
