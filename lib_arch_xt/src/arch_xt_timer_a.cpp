@@ -132,7 +132,7 @@ ArchXT_TimerA::ArchXT_TimerA(const ArchXT_TimerAConfig& config)
 ,m_EIA_state(false)
 ,m_EIB_state(false)
 ,m_timer_block(false)
-,m_event_hook(*this, ArchXT_TimerA::event_raised)
+,m_event_hook(*this, &ArchXT_TimerA::event_raised)
 {
     for (int i = 0; i < CFG::CompareChannelCount; ++i)
         m_cmp_intflags[i].set_clear_on_ack(false);

@@ -97,7 +97,7 @@ ArchXT_TimerB::ArchXT_TimerB(int num, const CFG& config)
 ,m_output(0)
 ,m_intflag(false)
 ,m_counter(0x10000, 1)
-,m_event_hook(*this, ArchXT_TimerB::event_hook_raised)
+,m_event_hook(*this, &ArchXT_TimerB::event_hook_raised)
 {
     m_pin_driver = new _PinDriver(id());
 }
