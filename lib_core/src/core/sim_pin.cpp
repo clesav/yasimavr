@@ -389,8 +389,9 @@ std::vector<pin_id_t> PinManager::current_mux_pins(ctl_id_t drv_id) const
  */
 void PinManager::set_current_mux(ctl_id_t drv_id, mux_id_t mux_id)
 {
-    drv_entry_t* drv_entry = m_drivers.at(drv_id);
-    if (!drv_entry) return;
+    auto it = m_drivers.find(drv_id);
+    if (it == m_drivers.end()) return;
+    drv_entry_t* drv_entry = it->second;
 
     //Validity checks
     if (mux_id && !drv_entry->has_mux(mux_id)) return;
@@ -402,8 +403,9 @@ void PinManager::set_current_mux(ctl_id_t drv_id, mux_id_t mux_id)
 
 void PinManager::set_current_mux(ctl_id_t drv_id, PinDriver::pin_index_t pin_index, mux_id_t mux_id)
 {
-    drv_entry_t* drv_entry = m_drivers.at(drv_id);
-    if (!drv_entry) return;
+    auto it = m_drivers.find(drv_id);
+    if (it == m_drivers.end()) return;
+    drv_entry_t* drv_entry = it->second;
 
     if (mux_id && !drv_entry->has_mux(mux_id)) return;
 
@@ -467,7 +469,7 @@ void PinManager::remove_driver_from_pin(pin_entry_t& pin_entry, PinDriver& drv, 
 void PinManager::set_driver_enabled(PinDriver& drv, PinDriver::pin_index_t pin_index, bool enabled)
 {
     //Find the driver entry for this driver ID
-    drv_entry_t* drv_entry = m_drivers[drv.m_id];
+    drv_entry_t* drv_entry = m_drivers.at(drv.m_id);
 
     //Only continue if there's an actual change
     if (enabled == drv_entry->enabled_pins[pin_index]) return;

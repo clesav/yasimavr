@@ -256,6 +256,7 @@ peripherals:
             iv_slave: TWI0_TWIS
 
     PORTMUX:
+        class: PORTMUX_tiny0
         file: ArchXT_interfaces.yml
         base: 0x0200
         ctl_id: IOMX
