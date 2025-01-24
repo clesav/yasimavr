@@ -1,7 +1,7 @@
 /*
  * arch_xt_misc.cpp
  *
- *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -471,5 +471,8 @@ void ArchXT_PortMuxCtrl::activate_mux(const ArchXT_PortMuxConfig::mux_config_t& 
 {
     int ix = find_reg_config(mux_cfg.mux_map, reg_value);
     PinManager::mux_id_t mux_id = (ix >= 0) ? mux_cfg.mux_map[ix].mux_id : 0;
-    device()->pin_manager().set_current_mux(mux_cfg.drv_id, mux_id);
+    if (mux_cfg.pin_index >= 0)
+        device()->pin_manager().set_current_mux(mux_cfg.drv_id, (PinDriver::pin_index_t) mux_cfg.pin_index, mux_id);
+    else
+        device()->pin_manager().set_current_mux(mux_cfg.drv_id, mux_id);
 }

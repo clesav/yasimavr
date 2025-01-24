@@ -1,6 +1,6 @@
 # dev_mega_0series.py
 #
-# Copyright 2023-2024 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2023-2025 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -76,7 +76,13 @@ class dev_mega_0series(XT_BaseDevice):
 
 
     def arch_init(self):
+        self._builder_.add_pin_driver_mux_configs(self, 'TCA0')
         self._builder_.add_pin_driver_mux_configs(self, 'TCB0')
+        self._builder_.add_pin_driver_mux_configs(self, 'TCB1')
+        self._builder_.add_pin_driver_mux_configs(self, 'TCB2')
+
+        if self._descriptor_.name in ('atmega809', 'atmega1609', 'atmega3209', 'atmega4809'):
+            self._builder_.add_pin_driver_mux_configs(self, 'TCB3')
 
         return True
 

@@ -1,7 +1,7 @@
 /*
  * arch_xt_misc.h
  *
- *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -234,6 +234,7 @@ struct ArchXT_PortMuxConfig {
     struct mux_config_t {
         regbit_t reg;
         ctl_id_t drv_id;
+        int pin_index;
         std::vector<mux_map_entry_t> mux_map;
     };
 

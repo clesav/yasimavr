@@ -1,6 +1,6 @@
 # YAML configuration file for attiny202 variant
 #
-# Copyright 2024 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2024-2025 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -232,6 +232,7 @@ peripherals:
             iv_slave: TWI0_TWIS
 
     PORTMUX:
+        class: PORTMUX_tiny0
         file: ArchXT_interfaces.yml
         base: 0x0200
         ctl_id: IOMX
@@ -246,3 +247,11 @@ peripherals:
         file: ArchXT_controllers.yml
         base: 0x1300
         ctl_id: UROW
+
+iomux:
+    TCA0:
+        DLFT: [ PA3, PA1, PA2, PA3, "", "" ]
+        ALT:  [ PA7, PA1, PA2, PA3, "", "" ]
+
+    TCB0:
+        DFLT: [ PA6 ]

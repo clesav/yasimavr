@@ -1,6 +1,6 @@
 # YAML configuration file for atmega4809 variant
 #
-# Copyright 2022-2024 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2022-2025 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -364,6 +364,7 @@ peripherals:
             iv_slave: TWI0_TWIS
 
     PORTMUX:
+        class: PORTMUX_mega0
         file: ArchXT_interfaces.yml
         base: 0x05E0
         ctl_id: IOMX
@@ -380,6 +381,26 @@ peripherals:
         ctl_id: UROW
 
 iomux:
+    TCA0:
+        PA: [ PA0, PA1, PA2, PA3, PA4, PA5 ]
+        PB: [ PB0, PB1, PB2, PB3, PB4, PB5 ]
+        PC: [ PC0, PC1, PC2, PC3, PC4, PC5 ]
+        PD: [ PD0, PD1, PD2, PD3, PD4, PD5 ]
+        PE: [ PE0, PE1, PE2, "",  "",  "" ]
+        PF: [ PF0, PF1, PF2, PF3, PF4, PF5 ]
+
     TCB0:
         DFLT: [ PA2 ]
         ALT1: [ PF4 ]
+
+    TCB1:
+        DFLT: [ PA3 ]
+        ALT1: [ PF5 ]
+
+    TCB2:
+        DFLT: [ PC0 ]
+        ALT1: [ PB4 ]
+
+    TCB3:
+        DFLT: [ PB5 ]
+        ALT1: [ PC1 ]

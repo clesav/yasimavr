@@ -201,7 +201,8 @@ def test_pin_driver():
 
     assert drv.pin_state(0) == StateError
     assert drv.pin_state(1) == StateError
-    assert pm.current_mux(0x10) == 0
+    assert pm.current_mux(0x10, 0) == 0
+    assert pm.current_mux(0x10, 1) == 0
     assert pm.current_mux_pins(0x10) == [0, 0]
 
     result = pm.add_mux_config(0x10, [0xAA, 0xBB], 1)
@@ -209,7 +210,8 @@ def test_pin_driver():
     result = pm.add_mux_config(0x10, [0xCC, 0xDD], 2)
     assert result
 
-    assert pm.current_mux(0x10) == 1
+    assert pm.current_mux(0x10, 0) == 1
+    assert pm.current_mux(0x10, 1) == 1
     assert pm.current_mux_pins(0x10) == [0xAA, 0xBB]
 
     pinAA.set_gpio_controls(corelib.Pin.controls_t(1, 0))
@@ -230,9 +232,15 @@ def test_pin_driver():
     assert pinAA.state() == PullUp
 
     pm.set_current_mux(0x10, 2)
-    assert pm.current_mux(0x10) == 2
+    assert pm.current_mux(0x10, 0) == 2
+    assert pm.current_mux(0x10, 1) == 2
     assert pm.current_mux_pins(0x10) == [0xCC, 0xDD]
     assert pinAA.state() == Low
     assert pinBB.state() == High
     assert pinCC.state() == PullUp
     assert pinDD.state() == PullUp
+
+    pm.set_current_mux(0x10, 0, 1)
+    assert pm.current_mux(0x10, 0) == 1
+    assert pm.current_mux(0x10, 1) == 2
+    assert pm.current_mux_pins(0x10) == [0xAA, 0xDD]

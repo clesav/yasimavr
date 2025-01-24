@@ -1,6 +1,6 @@
 # _builders_arch_xt.py
 #
-# Copyright 2022-2024 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2022-2025 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -118,6 +118,7 @@ def _portmux_convertor(cfg, attr, yml_val, per_desc):
             mux_cfg = _archlib.ArchXT_PortMuxConfig.mux_config_t()
             mux_cfg.reg = convert_to_regbit(yml_mux_cfg['reg'], per=per_desc)
             mux_cfg.drv_id = _corelib.str_to_id(drv_id)
+            mux_cfg.pin_index = yml_mux_cfg.get('pin', -1)
             mux_configs.append(mux_cfg)
 
             mux_map = []
@@ -385,7 +386,8 @@ class XT_DeviceBuilder(DeviceBuilder):
         'NVMCTRL': _get_nvmctrl_builder,
         'MISC': _get_misc_builder,
         'PORT': _get_port_builder,
-        'PORTMUX': _get_portmux_builder,
+        'PORTMUX_mega0': _get_portmux_builder,
+        'PORTMUX_tiny0': _get_portmux_builder,
         'RTC': _get_rtc_builder,
         'TCA': _get_tca_builder,
         'TCB': _get_tcb_builder,

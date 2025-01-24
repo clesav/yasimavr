@@ -1,7 +1,7 @@
 /*
  * arch_xt_timer_a.cpp
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -84,20 +84,32 @@ static uint8_t index_to_CMPxEN_bit(bool split_mode, int index)
 }
 
 
-class ArchXT_TimerA::EventHook : public SignalHook {
+class ArchXT_TimerA::_PinDriver : public PinDriver {
 
 public:
 
-    explicit EventHook(ArchXT_TimerA& tmr) : m_tmr(tmr) {}
+    explicit _PinDriver(ctl_id_t per_id)
+    :PinDriver(per_id, CFG::CompareChannelCount * 2)
+    ,m_drive{ 0, 0, 0, 0, 0, 0 }
+    {}
 
-    virtual void raised(const signal_data_t& sigdata, int hooktag) override
+    inline void set_drive(pin_index_t index, unsigned char d)
     {
-        m_tmr.event_raised(sigdata, hooktag);
+        m_drive[index] = d;
+        update_pin_state(index);
+    }
+
+
+    virtual Pin::controls_t override_gpio(pin_index_t index, const Pin::controls_t& controls) override
+    {
+        Pin::controls_t c = controls;
+        c.drive = m_drive[index];
+        return c;
     }
 
 private:
 
-    ArchXT_TimerA& m_tmr;
+    unsigned char m_drive[CFG::CompareChannelCount * 2];
 
 };
 
@@ -120,17 +132,18 @@ ArchXT_TimerA::ArchXT_TimerA(const ArchXT_TimerAConfig& config)
 ,m_EIA_state(false)
 ,m_EIB_state(false)
 ,m_timer_block(false)
+,m_event_hook(*this, &ArchXT_TimerA::event_raised)
 {
     for (int i = 0; i < CFG::CompareChannelCount; ++i)
         m_cmp_intflags[i].set_clear_on_ack(false);
 
-    m_event_hook = new EventHook(*this);
+    m_pin_driver = new _PinDriver(id());
 }
 
 
 ArchXT_TimerA::~ArchXT_TimerA()
 {
-    delete m_event_hook;
+    delete m_pin_driver;
 }
 
 
@@ -224,6 +237,8 @@ bool ArchXT_TimerA::init(Device& device)
     m_timer.register_chained_timer(m_hi_counter.prescaler());
     m_hi_counter.signal().connect(*this, Tag_SplitHigh);
 
+    device.pin_manager().register_driver(*m_pin_driver);
+
     return status;
 }
 
@@ -239,12 +254,16 @@ void ArchXT_TimerA::reset()
     WRITE_IOREG(PERL, 0xFF);
     WRITE_IOREG(PERH, 0xFF);
 
-    //Reset all Output Compare buffered registers, interrupts and signal values
+    //Reset all Output Compare buffered registers, interrupts, signal and pin driver values
     for (int i = 0; i < CFG::CompareChannelCount; ++i) {
         m_cmp[i] = { 0x0000, 0x0000, false };
         m_cmp_intflags[i].update_from_ioreg();
         m_signal.raise(Signal_CompareOutput, vardata_t(), i);
         m_signal.raise(Signal_CompareOutput, vardata_t(), i + CFG::CompareChannelCount);
+        m_pin_driver->set_enabled(i, false);
+        m_pin_driver->set_enabled(i + CFG::CompareChannelCount, false);
+        m_pin_driver->set_drive(i, 0);
+        m_pin_driver->set_drive(i + CFG::CompareChannelCount, 0);
     }
 
     //Reset the single mode counter to default settings
@@ -297,7 +316,7 @@ bool ArchXT_TimerA::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
         return true;
     }
     else if (req == AVR_CTLREQ_TCA_GET_EVENT_HOOK) {
-        data->data = m_event_hook;
+        data->data = &m_event_hook;
         return true;
     }
     return false;
@@ -404,6 +423,8 @@ void ArchXT_TimerA::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& da
         } else {
             m_timer.set_prescaler(TIMER_PRESCALER_MAX, 0);
         }
+
+        update_compare_outputs(Output_NoChange);
     }
 
     else if (reg_ofs == REG_OFS(CTRLD)) {
@@ -755,7 +776,7 @@ void ArchXT_TimerA::configure_single_counter()
     m_sgl_counter.set_top(m_wgmode == TCA_SINGLE_WGMODE_FRQ_gc ? m_cmp[0].value : m_per.value);
 
     //Set the compare channel value and reset the output if the waveform mode is NORMAL
-    for (int i = 0; i < CFG::CompareChannelCount; ++i) {
+    for (unsigned int i = 0; i < CFG::CompareChannelCount; ++i) {
         m_sgl_counter.set_comp_value(i, m_cmp[i].value);
 
         if (m_wgmode == TCA_SINGLE_WGMODE_NORMAL_gc)
@@ -852,15 +873,16 @@ void ArchXT_TimerA::set_direction(bool countdown, bool do_reschedule)
  * raise the signal with the changed value: 0, 1 or Invalid (to indicate disabled)
  * argument: change should be one of the OutputChange enum values
  */
-void ArchXT_TimerA::set_compare_output(int index, int change)
+void ArchXT_TimerA::set_compare_output(unsigned int index, int change)
 {
-    vardata_t sig_value;
-    if (m_split_mode || index < CFG::CompareChannelCount) {
+    bool drv_enable;
+    unsigned char new_value;
+
+    if (TEST_IOREG(CTRLA, TCA_SINGLE_ENABLE) && (m_split_mode || index < CFG::CompareChannelCount)) {
         uint8_t ov_bit = index_to_CMPxOV_bit(m_split_mode, index);
         uint8_t en_bit = index_to_CMPxEN_bit(m_split_mode, index);
 
-        uint8_t old_value = test_ioreg(REG_ADDR(CTRLC), ov_bit);
-        uint8_t new_value;
+        unsigned char old_value = test_ioreg(REG_ADDR(CTRLC), ov_bit);
         switch(change) {
             case Output_Set:    new_value = 1;             break;
             case Output_Clear:  new_value = 0;             break;
@@ -874,12 +896,24 @@ void ArchXT_TimerA::set_compare_output(int index, int change)
         // - the corresponding CMPxEN bit is set and,
         // - split mode, or in single mode, the waveform generation mode is not NORMAL and,
         // - the peripheral is counting clock ticks, not events (CNTAEI == 0)
-        if (test_ioreg(REG_ADDR(CTRLB), en_bit) &&
-            (m_split_mode || m_wgmode != TCA_SINGLE_WGMODE_NORMAL_gc) &&
-            !TEST_IOREG(EVCTRL, TCA_SINGLE_CNTAEI))
+        drv_enable = test_ioreg(REG_ADDR(CTRLB), en_bit) &&
+                     (m_split_mode || m_wgmode != TCA_SINGLE_WGMODE_NORMAL_gc) &&
+                     !TEST_IOREG(EVCTRL, TCA_SINGLE_CNTAEI);
 
-            sig_value = vardata_t(new_value);
+    } else {
+
+        drv_enable = false;
+        new_value= 0;
+
     }
+
+    if (!drv_enable) m_pin_driver->set_enabled(index, false);
+    m_pin_driver->set_drive(index, new_value);
+    if (drv_enable) m_pin_driver->set_enabled(index, true);
+
+    vardata_t sig_value;
+    if (drv_enable)
+        sig_value = vardata_t(new_value);
 
     if (sig_value != m_signal.data(Signal_CompareOutput, index))
         m_signal.raise(Signal_CompareOutput, sig_value, index);
@@ -888,7 +922,7 @@ void ArchXT_TimerA::set_compare_output(int index, int change)
 
 void ArchXT_TimerA::update_compare_outputs(int change)
 {
-    for (int i = 0; i < CFG::CompareChannelCount * 2; ++i)
+    for (unsigned int i = 0; i < CFG::CompareChannelCount * 2; ++i)
         set_compare_output(i, change);
 }
 
@@ -956,7 +990,7 @@ void ArchXT_TimerA::process_counter_single(const signal_data_t& sigdata)
                     //Buffered registers update
                     update_buffered_registers();
                     //if the compare values are not zero, they are set
-                    for (int i = 0; i < CFG::CompareChannelCount; ++i)
+                    for (unsigned int i = 0; i < CFG::CompareChannelCount; ++i)
                         set_compare_output(i, m_sgl_counter.comp_value(i) ? Output_Set : Output_Clear);
                     break;
 
@@ -973,7 +1007,7 @@ void ArchXT_TimerA::process_counter_single(const signal_data_t& sigdata)
                     if (m_wgmode == TCA_SINGLE_WGMODE_DSBOTTOM_gc || m_wgmode == TCA_SINGLE_WGMODE_DSBOTH_gc)
                         m_ovf_intflag.set_flag();
                     //if the compare values are not zero, they are set
-                    for (int i = 0; i < CFG::CompareChannelCount; ++i)
+                    for (unsigned int i = 0; i < CFG::CompareChannelCount; ++i)
                         set_compare_output(i, m_sgl_counter.comp_value(i) ? Output_Set : Output_Clear);
                     break;
 
@@ -1021,13 +1055,13 @@ void ArchXT_TimerA::process_counter_split(const signal_data_t& sigdata, bool low
                 //OVF vector is also known as LUNF
                 m_ovf_intflag.set_flag();
                 //Reset the waveform outputs for the lo counter
-                for (int i = 0; i < CFG::CompareChannelCount; ++i)
+                for (unsigned int i = 0; i < CFG::CompareChannelCount; ++i)
                     set_compare_output(i, m_lo_counter.comp_value(i) ? Output_Set : Output_Clear);
 
             } else {
                 m_hunf_intflag.set_flag();
                 //Reset the waveform outputs for the high counter
-                for (int i = 0; i < CFG::CompareChannelCount; ++i)
+                for (unsigned int i = 0; i < CFG::CompareChannelCount; ++i)
                     set_compare_output(i + CFG::CompareChannelCount, m_hi_counter.comp_value(i) ? Output_Set : Output_Clear);
             }
         }

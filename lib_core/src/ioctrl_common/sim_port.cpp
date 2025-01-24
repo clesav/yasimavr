@@ -1,7 +1,7 @@
 /*
  * sim_port.cpp
  *
- *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -101,9 +101,9 @@ void Port::set_pin_internal_state(uint8_t num, const Pin::controls_t& controls)
 {
     if (num < 8 && ((m_pinmask >> num) & 1)) {
         std::ostringstream s;
-        s << "Dir " << (controls.dir ? "Out" : "In");
+        s << "Dir ";
         if (controls.dir) {
-            s << "Out , " << (controls.drive ? "High" : "Low");
+            s << "Out, " << (controls.drive ? "High" : "Low");
             if (controls.inverted) s << ", Inv";
         } else {
             s << "In";

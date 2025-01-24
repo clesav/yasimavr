@@ -1,7 +1,7 @@
 /*
  * arch_xt_timer_b.h
  *
- *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -92,9 +92,6 @@ public:
 
 private:
 
-    class EventHook;
-    friend class EventHook;
-
     class _PinDriver;
     friend class _PinDriver;
 
@@ -119,7 +116,7 @@ private:
     //***** Timer management *****
     TimerCounter m_counter;
 
-    EventHook* m_event_hook;
+    BoundFunctionSignalHook<ArchXT_TimerB> m_event_hook;
 
     DataSignal m_signal;
 
@@ -129,7 +126,7 @@ private:
     void update_counter_top();
     void update_on_CCMP_read();
     void process_capture_event(unsigned char event_state);
-    void hook_raised(const signal_data_t& data, int hooktag);
+    void event_hook_raised(const signal_data_t& data, int hooktag);
     void process_count_event();
     void raise_capture_flag();
     void update_output(int change);
