@@ -1,7 +1,7 @@
 /*
  * debug.sip
  *
- *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -63,7 +63,7 @@ public:
     flash_addr_t read_pc() const;
 
     void write_ioreg(reg_addr_t, uint8_t) const;
-    uint8_t read_ioreg(reg_addr_t, bool=true) const;
+    uint8_t read_ioreg(reg_addr_t, bool=false) const;
     bool has_ioreg(reg_addr_t) const;
 
     void write_flash(flash_addr_t, SIP_PYBUFFER) const;

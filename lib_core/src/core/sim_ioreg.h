@@ -1,7 +1,7 @@
 /*
  * sim_ioreg.h
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -76,8 +76,19 @@ public:
        Callback for a CPU I/O read access. On-the-fly modifications of the
        register content are possible.
        \param addr address of the register read, in I/O address space
+       \param value current cached value of the register
+       \return actual value of the register
     */
     virtual uint8_t ioreg_read_handler(reg_addr_t addr, uint8_t value) = 0;
+
+    /**
+       Callback for a I/O peek access. On-the-fly modifications of the
+       register content are possible.
+       \param addr address of the register read, in I/O address space
+       \param value current cached value of the register
+       \return actual value of the register
+    */
+    virtual uint8_t ioreg_peek_handler(reg_addr_t addr, uint8_t value) = 0;
 
     /**
        Callback for a CPU I/O write access. Note that the register has already been
@@ -120,6 +131,8 @@ public:
 
     uint8_t ioctl_read(reg_addr_t addr);
     void ioctl_write(reg_addr_t addr, uint8_t value);
+
+    uint8_t dbg_peek(reg_addr_t addr);
 
     IO_Register& operator=(const IO_Register&) = delete;
 

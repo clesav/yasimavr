@@ -1,7 +1,7 @@
 /*
  * sim_peripheral.h
  *
- *  Copyright 2022-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022-2025 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -300,6 +300,8 @@ public:
     virtual bool ctlreq(ctlreq_id_t req, ctlreq_data_t* data);
 
     virtual uint8_t ioreg_read_handler(reg_addr_t addr, uint8_t value) override;
+
+    virtual uint8_t ioreg_peek_handler(reg_addr_t addr, uint8_t value) override;
 
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
 
