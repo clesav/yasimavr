@@ -1,7 +1,7 @@
 /*
  * spi.sip
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -87,6 +87,7 @@ public:
     bool tfr_in_progress() const;
     size_t rx_available() const;
     uint8_t pop_rx();
+    uint8_t peek_rx() const;
     virtual cycle_count_t next(cycle_count_t);
     virtual bool selected() const;
     virtual uint8_t start_transfer(uint8_t);

@@ -1,7 +1,7 @@
 /*
  * sim_spi.h
  *
- *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -165,6 +165,8 @@ public:
     size_t rx_available() const;
 
     uint8_t pop_rx();
+
+    uint8_t peek_rx() const;
 
     //Reimplementation of CycleTimer interface
     virtual cycle_count_t next(cycle_count_t when) override;

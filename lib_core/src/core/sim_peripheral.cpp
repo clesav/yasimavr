@@ -1,7 +1,7 @@
 /*
  * sim_peripheral.cpp
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -86,12 +86,28 @@ bool Peripheral::ctlreq(ctlreq_id_t, ctlreq_data_t*)
    Virtual method called when the CPU is reading a I/O register allocated by this peripheral.
    The value has not been read yet so the module can modify it before the CPU gets it.
    \param addr the register address in I/O space
+   \param value current cached value of the register
+   \return actual value of the register
 */
 uint8_t Peripheral::ioreg_read_handler(reg_addr_t addr, uint8_t value)
 {
     return value;
 }
 
+/**
+   Virtual method called when a debug probe is peeking the value of a register.
+   The value has not been read yet so the module can modify it before the CPU gets it.
+   The difference between a peek and a read is that a peek should not modify
+   the state of the peripheral.
+   By default, ioreg_read_handler is called to obtain the value.
+   \param addr the register address in I/O space
+   \param value current cached value of the register
+   \return actual value of the register
+*/
+uint8_t Peripheral::ioreg_peek_handler(reg_addr_t addr, uint8_t value)
+{
+    return ioreg_read_handler(addr, value);
+}
 
 /**
    Virtual method called when the CPU is writing a I/O register allocated by this peripheral.

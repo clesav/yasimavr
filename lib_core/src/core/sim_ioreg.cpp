@@ -1,7 +1,7 @@
 /*
  * sim_ioreg.cpp
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -60,6 +60,14 @@ public:
     {
         for (auto handler : m_handlers)
             handler->ioreg_write_handler(addr, value);
+    }
+
+    virtual uint8_t ioreg_peek_handler(reg_addr_t addr, uint8_t value) override
+    {
+        for (auto handler : m_handlers)
+            value = handler->ioreg_read_handler(addr, value);
+
+        return value;
     }
 
 private:
@@ -186,4 +194,15 @@ uint8_t IO_Register::ioctl_read(reg_addr_t addr)
 void IO_Register::ioctl_write(reg_addr_t addr, uint8_t value)
 {
     m_value = value;
+}
+
+/**
+   I/O peripheral interface for peek operation (for debug purpose) on this register
+ */
+uint8_t IO_Register::dbg_peek(reg_addr_t addr)
+{
+    if (m_handler)
+        m_value = m_handler->ioreg_peek_handler(addr, m_value);
+
+    return m_value;
 }

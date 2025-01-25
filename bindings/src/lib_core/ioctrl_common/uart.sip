@@ -1,7 +1,7 @@
 /*
  * uart.sip
  *
- *  Copyright 2022 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022-2025 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -82,6 +82,7 @@ public:
     void set_rx_enabled(bool);
     uint8_t rx_available() const;
     uint8_t pop_rx();
+    uint8_t peek_rx() const;
     bool has_rx_overflow() const;
     void clear_rx_overflow();
 

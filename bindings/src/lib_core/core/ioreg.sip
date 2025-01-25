@@ -1,7 +1,7 @@
 /*
  * ioreg.sip
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -44,6 +44,7 @@ class IO_RegHandler {
 public:
 
     virtual uint8_t ioreg_read_handler(reg_addr_t, uint8_t) = 0;
+    virtual uint8_t ioreg_peek_handler(reg_addr_t, uint8_t) = 0;
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&) = 0;
 
 };
@@ -69,6 +70,8 @@ public:
 
     uint8_t ioctl_read(reg_addr_t);
     void ioctl_write(reg_addr_t, uint8_t);
+
+    uint8_t dbg_peek(reg_addr_t);
 
 private:
 
