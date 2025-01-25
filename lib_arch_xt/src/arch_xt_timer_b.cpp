@@ -204,6 +204,22 @@ uint8_t ArchXT_TimerB::ioreg_read_handler(reg_addr_t addr, uint8_t value)
 }
 
 
+uint8_t ArchXT_TimerB::ioreg_peek_handler(reg_addr_t addr, uint8_t value)
+{
+    reg_addr_t reg_ofs = addr - m_config.reg_base;
+    if (reg_ofs == REG_OFS(CNTL)) {
+        m_counter.update();
+        value = m_counter.counter() && 0x00FF;
+    }
+    else if (reg_ofs == REG_OFS(CNTH)) {
+        m_counter.update();
+        value = m_counter.counter() >> 8;
+    }
+
+    return value;
+}
+
+
 void ArchXT_TimerB::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
     reg_addr_t reg_ofs = addr - m_config.reg_base;

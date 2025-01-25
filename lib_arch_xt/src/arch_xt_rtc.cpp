@@ -1,7 +1,7 @@
 /*
  * arch_xt_rtc.cpp
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -177,6 +177,23 @@ uint8_t ArchXT_RTC::ioreg_read_handler(reg_addr_t addr, uint8_t value)
 
     return value;
 }
+
+
+uint8_t ArchXT_RTC::ioreg_peek_handler(reg_addr_t addr, uint8_t value)
+{
+    reg_addr_t reg_ofs = addr - m_config.reg_base;
+    if (reg_ofs == REG_OFS(CNTL)) {
+        m_rtc_counter.update();
+        value = m_rtc_counter.counter() && 0x00FF;
+    }
+    else if (reg_ofs == REG_OFS(CNTH)) {
+        m_rtc_counter.update();
+        value = m_rtc_counter.counter() >> 8;
+    }
+
+    return value;
+}
+
 
 void ArchXT_RTC::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {

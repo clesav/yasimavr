@@ -1,7 +1,7 @@
 /*
  * arch_xt_timer_b.sip
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -73,6 +73,7 @@ public:
     virtual void reset();
     virtual bool ctlreq(ctlreq_id_t, ctlreq_data_t*);
     virtual uint8_t ioreg_read_handler(reg_addr_t, uint8_t);
+    virtual uint8_t ioreg_peek_handler(reg_addr_t, uint8_t);
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
     virtual void sleep(bool, SleepMode);
     virtual void raised(const signal_data_t&, int);

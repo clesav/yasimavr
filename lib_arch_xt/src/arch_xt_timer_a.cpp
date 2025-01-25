@@ -412,6 +412,33 @@ uint8_t ArchXT_TimerA::read_ioreg_split(reg_addr_t reg_ofs, uint8_t value)
 }
 
 
+uint8_t ArchXT_TimerA::ioreg_peek_handler(reg_addr_t addr, uint8_t value)
+{
+    reg_addr_t reg_ofs = addr - m_config.reg_base;
+    if (m_split_mode) {
+        if (reg_ofs == REG_OFS(CNTL)) {
+            m_lo_counter.update();
+            value = m_lo_counter.counter();
+        }
+        else if (reg_ofs == REG_OFS(CNTH)) {
+            m_hi_counter.update();
+            value = m_hi_counter.counter();
+        }
+    } else {
+        if (reg_ofs == REG_OFS(CNTL)) {
+            m_sgl_counter.update();
+            value = m_sgl_counter.counter() && 0x00FF;
+        }
+        else if (reg_ofs == REG_OFS(CNTH)) {
+            m_sgl_counter.update();
+            value = m_sgl_counter.counter() >> 8;
+        }
+    }
+
+    return value;
+}
+
+
 void ArchXT_TimerA::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
     reg_addr_t reg_ofs = addr - m_config.reg_base;
