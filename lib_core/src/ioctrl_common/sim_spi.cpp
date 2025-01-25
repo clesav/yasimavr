@@ -1,7 +1,7 @@
 /*
  * sim_spi.cpp
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -219,6 +219,15 @@ uint8_t SPI::pop_rx()
         return 0;
     }
 }
+
+/**
+   Peek the front frame from the RX buffer, return 0 if there aren't any.
+ */
+uint8_t SPI::peek_rx() const
+{
+    return m_rx_buffer.size() ? m_rx_buffer.front() : 0;
+}
+
 
 void SPI::start_transfer_as_host()
 {
