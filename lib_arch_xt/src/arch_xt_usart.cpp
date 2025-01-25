@@ -1,7 +1,7 @@
 /*
  * arch_xt_usart.cpp
  *
- *  Copyright 2022 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022-2025 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -123,6 +123,17 @@ uint8_t ArchXT_USART::ioreg_read_handler(reg_addr_t addr, uint8_t value)
 
     return value;
 }
+
+
+uint8_t ArchXT_USART::ioreg_peek_handler(reg_addr_t addr, uint8_t value)
+{
+    //Avoid triggering an action by peeking RXDATA
+    if (addr == REG_ADDR(RXDATAL))
+        value = m_uart.peek_rx();
+
+    return value;
+}
+
 
 void ArchXT_USART::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {

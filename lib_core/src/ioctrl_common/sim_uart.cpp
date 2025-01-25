@@ -1,7 +1,7 @@
 /*
  * sim_uart.cpp
  *
- *  Copyright 2022 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022-2025 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -259,6 +259,16 @@ uint8_t UART::pop_rx()
     } else {
         return 0;
     }
+}
+
+/**
+   Peek the front frame from the RX buffer.
+   Use rx_available() to know if any frame is available.
+   \return the front frame, 0 if no frame is available.
+ */
+uint8_t UART::peek_rx() const
+{
+    return m_rx_count ? m_rx_buffer.front() : 0;
 }
 
 void UART::start_rx()
