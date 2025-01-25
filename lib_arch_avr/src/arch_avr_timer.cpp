@@ -1,7 +1,7 @@
 /*
  * arch_avr_timer.cpp
  *
- *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -235,6 +235,27 @@ uint8_t ArchAVR_Timer::ioreg_read_handler(reg_addr_t addr, uint8_t value)
         value = m_icr & 0x00FF;
         if (m_config.is_16bits)
             m_temp = m_icr >> 8;
+    }
+    else if (m_config.is_16bits && addr == m_config.reg_icr + 1) {
+        value = m_icr >> 8;
+    }
+
+    return value;
+}
+
+
+uint8_t ArchAVR_Timer::ioreg_peek_handler(reg_addr_t addr, uint8_t value)
+{
+    if (addr == m_config.reg_cnt) {
+        m_counter.update();
+        value = m_counter.counter() & 0x00FF;
+    }
+    else if (m_config.is_16bits && addr == m_config.reg_cnt + 1) {
+        m_counter.update();
+        value = m_counter.counter() >> 8;
+    }
+    else if (addr == m_config.reg_icr) {
+        value = m_icr & 0x00FF;
     }
     else if (m_config.is_16bits && addr == m_config.reg_icr + 1) {
         value = m_icr >> 8;
