@@ -1,7 +1,7 @@
 /*
  * twi.sip
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -19,184 +19,191 @@
     along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
 //=======================================================================================
 
 %ModuleCode
 
 #include "ioctrl_common/sim_twi.h"
 
-const ctlreq_id_t CTLREQ_TWI_ENDPOINT = AVR_CTLREQ_TWI_ENDPOINT;
+const ctlreq_id_t CTLREQ_TWI_BUS_ERROR = AVR_CTLREQ_TWI_BUS_ERROR;
 
+%End
+
+
+const ctlreq_id_t CTLREQ_TWI_BUS_ERROR;
+
+
+//=======================================================================================
+
+namespace TWI {
+%TypeHeaderCode
+#include "ioctrl_common/sim_twi.h"
 %End
 
 
 //=======================================================================================
 
-const ctlreq_id_t CTLREQ_TWI_ENDPOINT;
-
-class TWIPacket {
-%TypeHeaderCode
-#include "ioctrl_common/sim_twi.h"
-%End
-
-public:
-
-    enum Cmd /BaseType=IntEnum/ {
-        Cmd_Invalid         /PyName=Invalid/,
-        Cmd_Address         /PyName=Address/,
-        Cmd_AddrAck         /PyName=AddrAck/,
-        Cmd_DataRequest     /PyName=DataRequest/,
-        Cmd_Data            /PyName=Data/,
-        Cmd_DataAck         /PyName=DataAck/,
-    };
-
-    enum /BaseType=IntEnum/ {
-        Nack,
-        Ack,
-        Write,
-        Read,
-    };
-
-    uint8_t cmd;
-    uint8_t addr;
-    uint8_t rw;
-    uint8_t data;
-    uint8_t ack;
-    uint8_t hold;
-
-    TWIPacket();
-
+enum Line /BaseType=IntEnum/ {
+    Line_Clock   /PyName=Clock/,
+    Line_Data    /PyName=Data/,
 };
 
 
-class TWIEndPoint /NoDefaultCtors/ {
+enum BusState /BaseType=IntEnum/ {
+    Bus_Idle     /PyName=Idle/,
+    Bus_Busy     /PyName=Busy/,
+    Bus_Owned    /PyName=Owned/,
+};
+
+
+enum SignalId /BaseType=IntEnum/ {
+    Signal_StateChanged      /PyName=StateChanged/,
+    Signal_BusStateChanged   /PyName=BusStateChanged/,
+    Signal_Start             /PyName=Start/,
+    Signal_AddressStandby    /PyName=AddressStandby/,
+    Signal_AddressSent       /PyName=AddressSent/,
+    Signal_AddressReceived   /PyName=AddressReceived/,
+    Signal_DataStandby       /PyName=DataStandby/,
+    Signal_DataSent          /PyName=DataSent/,
+    Signal_DataAckReceived   /PyName=DataAckReceived/,
+    Signal_DataReceived      /PyName=DataReceived/,
+    Signal_DataAckSent       /PyName=DataAckSent/,
+    Signal_ArbitrationLost   /PyName=ArbitrationLost/,
+    Signal_BusCollision      /PyName=BusCollision/,
+    Signal_Stop              /PyName=Stop/,
+};
+
+
+class EndPoint {
 %TypeHeaderCode
 #include "ioctrl_common/sim_twi.h"
 %End
 
 public:
 
-    TWIEndPoint();
+    EndPoint();
 
-    TWIBus* bus() const;
+    void line_state_changed(Line, bool);
+
+    bool get_clock_drive() const;
+    bool get_data_drive() const;
 
 protected:
 
-    bool acquire_bus();
-    void release_bus();
-    void send_packet(TWIPacket&);
-    void end_packet(TWIPacket&);
+    virtual void clock_level_changed(bool) = 0;
+    virtual void data_level_changed(bool) = 0;
+    virtual void set_line_state(Line, bool) = 0;
 
-    virtual void packet(TWIPacket&) = 0;
-    virtual void packet_ended(TWIPacket&) = 0;
-    virtual void bus_acquired() = 0;
-    virtual void bus_released() = 0;
+    void set_clock_drive(bool);
+    bool get_clock_level() const;
+    void set_data_drive(bool);
+    bool get_data_level() const;
 
 };
 
 
-class TWIBus /NoDefaultCtors/ {
+//=======================================================================================
+
+class Client : public EndPoint, public CycleTimer {
 %TypeHeaderCode
 #include "ioctrl_common/sim_twi.h"
 %End
 
 public:
 
-    enum SignalId /BaseType=IntEnum/ {
-        Signal_Start        /PyName=Start/,
-        Signal_Address      /PyName=Address/,
-        Signal_Data         /PyName=Data/,
-        Signal_Packet_End   /PyName=Packet_End/,
-        Signal_Ack          /PyName=Ack/,
-        Signal_Stop         /PyName=Stop/,
+    enum State /BaseType=IntEnum/ {
+        State_Disabled      /PyName=Disabled/,
+        State_Idle          /PyName=Idle/,
+        State_Start         /PyName=Start/,
+        State_AddressRx     /PyName=AddressRx/,
+        State_AddressRAck   /PyName=AddressRAck/,
+        State_AddressWAck   /PyName=AddressWAck/,
+        State_DataTx        /PyName=DataTx/,
+        State_DataTxAck     /PyName=DataTxAck/,
+        State_DataRx        /PyName=DataRx/,
+        State_DataRxAck     /PyName=DataRxAck/,
     };
 
-    TWIBus();
+    Client();
 
-    Signal& signal();
-
-    void add_endpoint(TWIEndPoint&);
-    void remove_endpoint(TWIEndPoint&);
-
-};
-
-class TWI : public TWIEndPoint /NoDefaultCtors/ {
-%TypeHeaderCode
-#include "ioctrl_common/sim_twi.h"
-%End
-
-public:
-
-    enum SignalId /BaseType=IntEnum/ {
-        Signal_StateChange      /PyName=StateChange/,
-        Signal_BusStateChange   /PyName=BusStateChange/,
-        Signal_Address          /PyName=Address/,
-        Signal_AddrAck          /PyName=AddrAck/,
-        Signal_TxComplete       /PyName=TxComplete/,
-        Signal_RxComplete       /PyName=RxComplete/,
-    };
-
-    enum Component /BaseType=IntEnum/ {
-        Cpt_Any                 /PyName=Any/,
-        Cpt_Master              /PyName=Master/,
-        Cpt_Slave               /PyName=Slave/,
-    };
-
-    enum BusState /BaseType=IntEnum/ {
-        Bus_Idle,
-        Bus_Busy,
-        Bus_Owned,
-    };
-
-    enum State /BaseType=IntFlag/ {
-        StateFlag_Active        /PyName=Flag_Active/,
-        StateFlag_Busy          /PyName=Flag_Busy/,
-        StateFlag_Data          /PyName=Flag_Data/,
-        StateFlag_Tx            /PyName=Flag_Tx/,
-
-        State_Disabled          /PyName=Disabled/,
-        State_Idle              /PyName=Idle/,
-        State_Waiting           /PyName=Waiting/,
-        State_Addr              /PyName=Addr/,
-        State_Addr_Busy         /PyName=Addr_Busy/,
-        State_TX                /PyName=TX/,
-        State_TX_Req            /PyName=TX_Req/,
-        State_TX_Busy           /PyName=TX_Busy/,
-        State_TX_Ack            /PyName=TX_Ack/,
-        State_RX                /PyName=RX/,
-        State_RX_Req            /PyName=RX_Req/,
-        State_RX_Busy           /PyName=RX_Busy/,
-        State_RX_Ack            /PyName=RX_Ack/,
-    };
-
-    TWI();
-
-    void init(CycleManager&, Logger&);
+    void init(CycleManager&);
+    State state() const;
+    void set_enabled(bool);
+    bool enabled() const;
     void reset();
+    bool active() const;
+    bool clock_hold() const;
+    unsigned char rw() const /PyInt/;
+    bool ack() const;
+    void set_ack(bool);
+    void start_data_tx(uint8_t);
+    void start_data_rx();
     Signal& signal();
 
-    void set_master_enabled(bool);
-    void set_bit_delay(cycle_count_t);
-    bool start_transfer();
-    void end_transfer();
-    bool send_address(uint8_t, bool);
-    bool start_master_tx(uint8_t);
-    bool start_master_rx();
-    void set_master_ack(bool);
-
-    void set_slave_enabled(bool);
-    bool start_slave_tx(uint8_t);
-    bool start_slave_rx();
-    void set_slave_ack(bool);
-
-    TWI::State master_state() const;
-    TWI::State slave_state() const;
+    virtual cycle_count_t next(cycle_count_t);
 
 protected:
 
-    virtual void packet(TWIPacket&);
-    virtual void packet_ended(TWIPacket&);
-    virtual void bus_acquired();
-    virtual void bus_released();
+    virtual void clock_level_changed(bool);
+    virtual void data_level_changed(bool);
 
 };
+
+
+//=======================================================================================
+
+class Host : public EndPoint, public CycleTimer {
+%TypeHeaderCode
+#include "ioctrl_common/sim_twi.h"
+%End
+
+public:
+
+    enum State /BaseType=IntEnum/ {
+        State_Disabled      /PyName=Disabled/,
+        State_Idle          /PyName=Idle/,
+        State_Start         /PyName=Start/,
+        State_AddressTx     /PyName=AddressTx/,
+        State_AddressAck    /PyName=AddressAck/,
+        State_DataTx        /PyName=DataTx/,
+        State_DataTxAck     /PyName=DataTxAck/,
+        State_DataRx        /PyName=DataRx/,
+        State_DataRxAck     /PyName=DataRxAck/,
+        State_Stop          /PyName=Stop/,
+        State_BusBusy       /PyName=BusBusy/,
+        State_ArbLost       /PyName=ArbLost/,
+    };
+
+    Host();
+
+    void init(CycleManager&);
+    State state() const;
+    void set_enabled(bool);
+    bool enabled() const;
+    void reset();
+    void set_bit_delay(cycle_count_t);
+    bool bus_busy() const;
+    bool active() const;
+    bool clock_hold() const;
+    bool clock_stretched() const;
+    unsigned char rw() const /PyInt/;
+    bool ack() const;
+    bool start_transfer();
+    bool set_address(uint8_t);
+    bool set_ack(bool);
+    bool start_data_tx(uint8_t);
+    void start_data_rx();
+    bool stop_transfer();
+    Signal& signal();
+
+    virtual cycle_count_t next(cycle_count_t);
+
+protected:
+
+    virtual void clock_level_changed(bool);
+    virtual void data_level_changed(bool);
+
+};
+
+}; //namespace TWI
