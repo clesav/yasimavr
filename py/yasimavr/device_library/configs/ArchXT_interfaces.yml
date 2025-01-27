@@ -438,9 +438,9 @@ TWI:
           offset: 0x09
           fields:
             ENABLE: { kind: BIT, pos: 0, one: enabled, zero: disabled }
-            SMEN: { kind: BIT, pos: 1, one: enabled, zero: disabled, supported: no }
-            PMEN: { kind: BIT, pos: 2, one: enabled, zero: disabled, supported: no }
-            PIEN: { kind: BIT, pos: 4, one: enabled, zero: disabled }
+            SMEN: { kind: BIT, pos: 1, one: enabled, zero: disabled }
+            PMEN: { kind: BIT, pos: 2, one: enabled, zero: disabled }
+            PIEN: { kind: BIT, pos: 5, one: enabled, zero: disabled }
             APIEN: { kind: BIT, pos: 6, one: enabled, zero: disabled }
             DIEN: { kind: BIT, pos: 7, one: enabled, zero: disabled }
 
@@ -451,7 +451,7 @@ TWI:
                 kind: ENUM
                 LSB: 0
                 MSB: 1
-                values: { 0:NOACT, 2:COMPTRANS, 3:RESPONSE }
+                values: { 0: NOACT, 2: COMPTRANS, 3: RESPONSE }
             ACKACT: { kind: BIT, pos: 2, one: nack, zero: ack }
 
         - name: SSTATUS
@@ -574,6 +574,10 @@ PORTMUX_mega0:
            TCB3:
               reg: TCBROUTEA/TCB3
               map: { 0x00: DFLT, 0x01: ALT1 }
+
+           TWI0:
+              reg: TWISPIROUTEA/TWI0
+              map: { 0x00: DFLT, 0x01: ALT1, 0x02: ALT2 }
 
 
 #========================================================================================
