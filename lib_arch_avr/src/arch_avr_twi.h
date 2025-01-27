@@ -1,7 +1,7 @@
 /*
  * arch_avr_twi.h
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -25,8 +25,8 @@
 #define __YASIMAVR_AVR_TWI_H__
 
 #include "arch_avr_globals.h"
+#include "core/sim_peripheral.h"
 #include "core/sim_interrupt.h"
-#include "ioctrl_common/sim_twi.h"
 
 YASIMAVR_BEGIN_NAMESPACE
 
@@ -62,39 +62,46 @@ struct ArchAVR_TWIConfig {
 /**
    \ingroup api_twi
    \brief Implementation of a TWI model for the AVR series
-
-   Features:
-    - Host/client mode
-    - data order, phase and polarity settings have no effect
-    - write collision flag not supported
-
-    \sa sim_twi.h
  */
-class AVR_ARCHAVR_PUBLIC_API ArchAVR_TWI : public Peripheral, public SignalHook {
+class AVR_ARCHAVR_PUBLIC_API ArchAVR_TWI : public Peripheral {
 
 public:
 
     ArchAVR_TWI(uint8_t num, const ArchAVR_TWIConfig& config);
+    virtual ~ArchAVR_TWI();
 
     virtual bool init(Device& device) override;
     virtual void reset() override;
     virtual bool ctlreq(ctlreq_id_t req, ctlreq_data_t *data) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
-    virtual void raised(const signal_data_t& sigdata, int hooktag) override;
 
 private:
 
+    class _Client;
+    friend class _Client;
+    class _Host;
+    friend class _Host;
+    class _PinDriver;
+    friend class _PinDriver;
+
     const ArchAVR_TWIConfig& m_config;
 
-    TWI m_twi;
+    _Client* m_client;
+    _Host* m_host;
+    _PinDriver* m_driver;
+    BoundFunctionSignalHook<ArchAVR_TWI> m_host_hook;
+    BoundFunctionSignalHook<ArchAVR_TWI> m_client_hook;
     bool m_gencall;
-    bool m_rx;
+    bool m_latched_ack;
 
     InterruptFlag m_intflag;
 
-    void set_intflag(uint8_t status);
-    void clear_intflag();
-    bool address_match(uint8_t address);
+    void host_signal_raised(const signal_data_t& sigdata, int hooktag);
+    void client_signal_raised(const signal_data_t& sigdata, int hooktag);
+    void execute_command(bool sta, bool sto);
+    void raise_flag_and_status(uint8_t status);
+    void clear_flag_and_status();
+    bool address_match(uint8_t addr_rw);
 
 };
 

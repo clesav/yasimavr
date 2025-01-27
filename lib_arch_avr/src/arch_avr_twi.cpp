@@ -1,7 +1,7 @@
 /*
  * arch_avr_twi.cpp
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -23,8 +23,11 @@
 
 #include "arch_avr_twi.h"
 #include "core/sim_device.h"
+#include <ioctrl_common/sim_twi.h>
 
 YASIMAVR_USING_NAMESPACE
+
+using namespace TWI;
 
 
 //=======================================================================================
@@ -54,7 +57,7 @@ YASIMAVR_USING_NAMESPACE
 #define TWI_STX_ADR_ACK_M_ARB_LOST 0xB0  // Arbitration lost in SLA+R/W as Master; own SLA+R has been received; ACK has been returned
 #define TWI_STX_DATA_ACK           0xB8  // Data byte in TWDR has been transmitted; ACK has been received
 #define TWI_STX_DATA_NACK          0xC0  // Data byte in TWDR has been transmitted; NOT ACK has been received
-#define TWI_STX_DATA_ACK_LAST_BYTE 0xC8  // Last data byte in TWDR has been transmitted (TWEA = �0�); ACK has been received
+#define TWI_STX_DATA_ACK_LAST_BYTE 0xC8  // Last data byte in TWDR has been transmitted (TWEA = 0); ACK has been received
 
 // TWI Slave Receiver status codes
 #define TWI_SRX_ADR_ACK            0x60  // Own SLA+W has been received ACK has been returned
@@ -68,9 +71,149 @@ YASIMAVR_USING_NAMESPACE
 #define TWI_SRX_STOP_RESTART       0xA0  // A STOP condition or repeated START condition has been received while still addressed as Slave
 
 // TWI Miscellaneous status codes
-#define TWI_NO_STATE               0xF8  // No relevant state information available; TWINT = �0�
+#define TWI_NO_STATE               0xF8  // No relevant state information available
 #define TWI_BUS_ERROR              0x00  // Bus error due to an illegal START or STOP condition
 
+
+//=======================================================================================
+
+class ArchAVR_TWI::_PinDriver : public PinDriver {
+
+public:
+
+    _PinDriver(ArchAVR_TWI& per);
+
+    void set_enabled(bool enable);
+    void set_host_mode(bool is_host);
+
+    void set_host_line_state(TWI::Line line, bool state);
+    void set_client_line_state(TWI::Line line, bool state);
+
+    virtual Pin::controls_t override_gpio(pin_index_t pin_index, const Pin::controls_t& gpio_controls) override;
+    virtual void digital_state_changed(pin_index_t pin_index, bool dig_state) override;
+
+private:
+
+    ArchAVR_TWI& m_peripheral;
+    bool m_enabled;
+    bool m_is_host;
+    bool m_line_states[2];
+
+};
+
+
+//=======================================================================================
+
+class ArchAVR_TWI::_Host : public Host {
+
+public:
+
+    _Host(ArchAVR_TWI& per) : m_peripheral(per) {}
+
+protected:
+
+    virtual void set_line_state(TWI::Line line, bool dig_state) override
+    {
+        m_peripheral.m_driver->set_host_line_state(line, dig_state);
+    }
+
+private:
+
+    ArchAVR_TWI& m_peripheral;
+
+};
+
+
+//=======================================================================================
+
+class ArchAVR_TWI::_Client : public Client {
+
+public:
+
+    _Client(ArchAVR_TWI& per) : m_peripheral(per) {}
+
+protected:
+
+    virtual void set_line_state(TWI::Line line, bool dig_state) override
+    {
+        m_peripheral.m_driver->set_client_line_state(line, dig_state);
+    }
+
+private:
+
+    ArchAVR_TWI& m_peripheral;
+
+};
+
+
+//=======================================================================================
+
+ArchAVR_TWI::_PinDriver::_PinDriver(ArchAVR_TWI& per)
+:PinDriver(per.id(), 2)
+,m_peripheral(per)
+,m_enabled(false)
+,m_is_host(false)
+,m_line_states{true, true}
+{}
+
+
+void ArchAVR_TWI::_PinDriver::set_enabled(bool enable)
+{
+    PinDriver::set_enabled(TWI::Line_Clock, enable);
+    PinDriver::set_enabled(TWI::Line_Data, enable);
+}
+
+
+void ArchAVR_TWI::_PinDriver::set_host_mode(bool is_host)
+{
+    m_is_host = is_host;
+    if (is_host) {
+        m_line_states[TWI::Line_Clock] = m_peripheral.m_host->get_clock_drive();
+        m_line_states[TWI::Line_Data] = m_peripheral.m_host->get_data_drive();
+    } else {
+        m_line_states[TWI::Line_Clock] = m_peripheral.m_client->get_clock_drive();
+        m_line_states[TWI::Line_Data] = m_peripheral.m_client->get_data_drive();
+    }
+
+    update_pin_state(TWI::Line_Clock);
+    update_pin_state(TWI::Line_Data);
+}
+
+
+void ArchAVR_TWI::_PinDriver::set_host_line_state(TWI::Line line, bool state)
+{
+    if (m_is_host) {
+        m_line_states[line] = state;
+        update_pin_state(line);
+    }
+}
+
+
+void ArchAVR_TWI::_PinDriver::set_client_line_state(TWI::Line line, bool state)
+{
+    if (!m_is_host) {
+        m_line_states[line] = state;
+        update_pin_state(line);
+    }
+}
+
+
+Pin::controls_t ArchAVR_TWI::_PinDriver::override_gpio(pin_index_t pin_index, const Pin::controls_t& gpio_controls)
+{
+    Pin::controls_t c = {
+        .dir = (unsigned char) (!m_line_states[pin_index]),
+        .drive = 0,
+        .pull_up = true,
+    };
+    return c;
+}
+
+
+void ArchAVR_TWI::_PinDriver::digital_state_changed(pin_index_t pin_index, bool dig_state)
+{
+    m_peripheral.m_host->line_state_changed((TWI::Line) pin_index, dig_state);
+    m_peripheral.m_client->line_state_changed((TWI::Line) pin_index, dig_state);
+}
 
 
 //=======================================================================================
@@ -78,10 +221,25 @@ YASIMAVR_USING_NAMESPACE
 ArchAVR_TWI::ArchAVR_TWI(uint8_t num, const ArchAVR_TWIConfig& config)
 :Peripheral(AVR_IOCTL_TWI(0x30 + num))
 ,m_config(config)
+,m_host_hook(*this, &ArchAVR_TWI::host_signal_raised)
+,m_client_hook(*this, &ArchAVR_TWI::client_signal_raised)
 ,m_gencall(false)
-,m_rx(false)
+,m_latched_ack(false)
 ,m_intflag(false)
-{}
+{
+    m_driver = new _PinDriver(*this);
+    m_host = new _Host(*this);
+    m_client = new _Client(*this);
+}
+
+
+ArchAVR_TWI::~ArchAVR_TWI()
+{
+    delete m_driver;
+    delete m_host;
+    delete m_client;
+}
+
 
 bool ArchAVR_TWI::init(Device& device)
 {
@@ -106,97 +264,70 @@ bool ArchAVR_TWI::init(Device& device)
                              regbit_t(m_config.reg_ctrl, m_config.bm_int_flag),
                              m_config.iv_twi);
 
-    m_twi.init(*device.cycle_manager(), logger());
-    m_twi.signal().connect(*this);
+    m_host->init(*device.cycle_manager());
+    m_client->init(*device.cycle_manager());
+
+    m_host->signal().connect(m_host_hook);
+    m_client->signal().connect(m_client_hook);
+
+    status &= device.pin_manager().register_driver(*m_driver);
 
     return status;
 }
 
+
 void ArchAVR_TWI::reset()
 {
-    m_twi.reset();
-    clear_intflag();
+    Peripheral::reset();
+    m_host->set_enabled(false);
+    m_client->set_enabled(false);
+    m_driver->set_enabled(false);
+    clear_flag_and_status();
+    m_gencall = false;
     write_ioreg(m_config.reg_data, 0xFF);
     write_ioreg(m_config.rb_addr, 0x7F);
 }
 
+
 bool ArchAVR_TWI::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
 {
     if (req == AVR_CTLREQ_GET_SIGNAL) {
-        data->data = &m_twi.signal();
+        data->data = (data->index == 0) ? &m_host->signal() : &m_client->signal();
         return true;
     }
-    else if (req == AVR_CTLREQ_TWI_ENDPOINT) {
-        data->data = &m_twi;
-        return true;
-    }
-
     return false;
 }
 
+
 void ArchAVR_TWI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
+    logger().dbg("Writing register 0x%02x -> [0x%02x]", data.value, addr);
+
     if (addr == m_config.reg_ctrl) {
         //TWEN
         bool enabled = m_config.bm_enable.extract(data.value);
-        //If enabled does not change, these are nop.
-        m_twi.set_master_enabled(enabled);
-        m_twi.set_slave_enabled(enabled);
+        m_host->set_enabled(enabled);
+        m_client->set_enabled(enabled);
+        m_driver->set_enabled(enabled);
 
         //TWIE
         m_intflag.update_from_ioreg();
 
         //TWINT is a write-one-to-clear and for the rest of processing, we need
         //to know if it's cleared.
-        bool intflag_clear;
+        bool intflag_cleared;
         if (m_config.bm_int_flag.extract(data.value)) {
-            clear_intflag();
-            intflag_clear = true;
+            clear_flag_and_status();
+            intflag_cleared = true;
         } else {
-            intflag_clear = !m_config.bm_int_flag.extract(data.old);
+            intflag_cleared = !m_config.bm_int_flag.extract(data.old);
         }
 
-        if (enabled && intflag_clear) {
-            //if TWSTO=1
-            if (m_config.bm_stop.extract(data.value)) {
-                m_twi.end_transfer();
-                m_twi.set_slave_enabled(false);
-                m_twi.set_slave_enabled(true);
-            }
-            //if TWSTA=1 and TWSTO=0
-            else if (m_config.bm_start.extract(data.value)) {
-                if (m_twi.start_transfer())
-                    set_intflag(TWI_START);
-            }
-            //if TWSTA=0 and TWSTO=0
-            else {
-                switch (m_twi.master_state()) {
-                    case TWI::State_Waiting: {
-                        //Clearing TWSTA when queueing for bus ownership resets
-                        //the arbitration logic
-                        m_twi.set_master_enabled(false);
-                        m_twi.set_master_enabled(true);
-                    } break;
-
-                    case TWI::State_Addr: {
-                        //send address+RW, they are stored in the Data register
-                        uint8_t sla = read_ioreg(m_config.reg_data);
-                        m_rx = sla & 1;
-                        m_twi.send_address(sla >> 1, m_rx);
-                    } break;
-
-                    case TWI::State_TX: {
-                        uint8_t tx_data = read_ioreg(m_config.reg_data);
-                        m_twi.start_master_tx(tx_data);
-                    } break;
-
-                    case TWI::State_RX: {
-                        m_twi.start_master_rx();
-                    } break;
-
-                    default: break;
-                }
-            }
+        if (enabled && intflag_cleared) {
+            m_latched_ack = m_config.bm_ack_enable.extract(data.value);
+            bool sta = m_config.bm_start.extract(data.value);
+            bool sto = m_config.bm_stop.extract(data.value);
+            execute_command(sta, sto);
         }
 
         clear_ioreg(m_config.reg_ctrl, m_config.bm_stop);
@@ -207,149 +338,218 @@ void ArchAVR_TWI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
         uint8_t ps_index = read_ioreg(m_config.rb_prescaler);
         unsigned long ps_factor = m_config.ps_factors[ps_index];
         uint8_t bitrate = read_ioreg(m_config.reg_bitrate);
-        m_twi.set_bit_delay(16 + 2 * bitrate * ps_factor);
+        m_host->set_bit_delay(16 + 2 * bitrate * ps_factor);
     }
 
     if (addr == m_config.reg_data) {
-        //The data register is writable only when either the master or the slave part
-        //is active and not busy.
-        //In any other case, we must restore the previous register content.
-        TWI::State ms = m_twi.master_state();
-        TWI::State ss = m_twi.slave_state();
-        if ((!(ms & TWI::StateFlag_Active) || (ms & TWI::StateFlag_Busy)) &&
-            (!(ss & TWI::StateFlag_Active) || (ss & TWI::StateFlag_Busy)))
+        //The data register is writable only when the interrupt flag is set
+        if (!test_ioreg(m_config.reg_ctrl, m_config.bm_int_flag))
             write_ioreg(m_config.reg_data, data.old);
     }
-
 }
 
-void ArchAVR_TWI::raised(const signal_data_t& sigdata, int)
+
+void ArchAVR_TWI::host_signal_raised(const signal_data_t& sigdata, int)
 {
-    uint8_t ctrl = read_ioreg(m_config.reg_ctrl);
-
-    bool start = m_config.bm_start.extract(ctrl);
-
     switch (sigdata.sigid) {
+        case TWI::Signal_AddressStandby:
+            raise_flag_and_status(TWI_START);
+            break;
 
-        case TWI::Signal_BusStateChange: {
-            if (sigdata.data.as_int() == TWI::Bus_Idle) {
-                if (start) {
-                    if (m_twi.start_transfer())
-                        set_intflag(TWI_START);
-                }
-
-                if (m_twi.slave_state() & TWI::StateFlag_Active)
-                    set_intflag(TWI_SRX_STOP_RESTART);
-
-            }
-        } break;
-
-        case TWI::Signal_Address: { //slave side only
-            //The data register stores the byte received (address + rw)
-            uint8_t addr_rw = sigdata.data.as_uint();
-            write_ioreg(m_config.reg_data, addr_rw);
-            //Test the address with the match logic and set the ACK/NACK response
-            if (test_ioreg(m_config.reg_ctrl, m_config.bm_ack_enable)) {
-                //Case of a general call (ADDR=0x00), only accepted if it's a Write and gencall
-                //is enabled
-                if (!(addr_rw >> 1)) {
-                    if (!(addr_rw & 1) && test_ioreg(m_config.rb_gencall_enable)) {
-                        m_twi.set_slave_ack(true);
-                        m_gencall = true;
-                        m_rx = true;
-                        set_intflag(TWI_SRX_GEN_ACK);
-                    }
-                }
-                //Other addresses, use the match logic
-                else if (address_match(addr_rw >> 1)) {
-                    m_twi.set_slave_ack(true);
-                    m_gencall = false;
-                    m_rx = !(addr_rw & 1);
-                    set_intflag(m_rx ? TWI_SRX_ADR_ACK : TWI_STX_ADR_ACK);
-                }
-                //Otherwise, reply with NACK
-                else {
-                    m_twi.set_slave_ack(false);
-                }
+        case TWI::Signal_DataStandby: {
+            uint8_t status;
+            if (sigdata.data.as_uint()) {
+                if (m_host->rw())
+                    status = m_host->ack() ? TWI_MRX_ADR_ACK : TWI_MRX_ADR_NACK;
+                else
+                    status = m_host->ack() ? TWI_MTX_ADR_ACK : TWI_MTX_ADR_NACK;
+                logger().dbg("Address sent, received %s", m_host->ack() ? "ACK" : "NACK");
             } else {
-                m_twi.set_slave_ack(false);
+                if (m_host->rw()) {
+                    status = m_host->ack() ? TWI_MRX_DATA_ACK : TWI_MRX_DATA_NACK;
+                } else {
+                    status = m_host->ack() ? TWI_MTX_DATA_ACK : TWI_MTX_DATA_NACK;
+                    logger().dbg("Host data sent, received %s", m_host->ack() ? "ACK" : "NACK");
+                }
+
             }
-
+            raise_flag_and_status(status);
         } break;
 
-        case TWI::Signal_AddrAck: { //Master side only
-
-            uint8_t status;
-            if (sigdata.data.as_int() == TWIPacket::Ack)
-                status = m_rx ? TWI_MRX_ADR_ACK : TWI_MTX_ADR_ACK;
-            else
-                status = m_rx ? TWI_MRX_ADR_NACK : TWI_MTX_ADR_NACK;
-
-            set_intflag(status);
-
-        } break;
-
-        case TWI::Signal_TxComplete: {
-
+        case TWI::Signal_DataReceived: {
+            write_ioreg(m_config.reg_data, (uint8_t) sigdata.data.as_uint());
             bool acken = test_ioreg(m_config.reg_ctrl, m_config.bm_ack_enable);
-            uint8_t status;
-            if (sigdata.index == TWI::Cpt_Master) //master side
-                status = (sigdata.data.as_uint() == TWIPacket::Ack) ? TWI_MTX_DATA_ACK : TWI_MTX_DATA_NACK;
-            else { //slave
-                if (sigdata.data.as_int() == TWIPacket::Nack)
-                    status = TWI_STX_DATA_NACK;
-                else if (acken)
-                    status = TWI_STX_DATA_ACK;
-                else
-                    status = TWI_STX_DATA_ACK_LAST_BYTE;
-            }
-
-            set_intflag(status);
-
+            m_host->set_ack(acken);
+            logger().dbg("Data received 0x%02x, replying with %s", sigdata.data.as_uint(), acken ? "ACK" : "NACK");
         } break;
 
-        case TWI::Signal_RxComplete: {
+        case TWI::Signal_ArbitrationLost:
+            logger().dbg("Arbitration lost");
+            m_driver->set_host_mode(false);
+            raise_flag_and_status(TWI_ARB_LOST);
+            break;
 
-            //Save the received byte in the data register
+        case TWI::Signal_Stop:
+            m_driver->set_host_mode(false);
+            break;
+
+        default: break;
+    }
+}
+
+
+void ArchAVR_TWI::client_signal_raised(const signal_data_t& sigdata, int)
+{
+    switch (sigdata.sigid) {
+        case TWI::Signal_AddressReceived: {
+            uint8_t addr_rw = sigdata.data.as_uint();
+            bool match = address_match(addr_rw);
+            m_client->set_ack(match);
+        } break;
+
+        case TWI::Signal_DataStandby: {
+            if (sigdata.data.as_uint()) {
+                //For the first byte we need to signal that we've matched the address
+                //The status also depends whether we arrived here after an arbitration loss
+                //and if it was a General Call address.
+                uint8_t status;
+                bool arblost = m_host->state() == Host::State_ArbLost;
+                if (m_client->rw())
+                    status = arblost ? TWI_STX_ADR_ACK_M_ARB_LOST : TWI_STX_ADR_ACK;
+                else if (m_gencall)
+                    status = arblost ? TWI_SRX_GEN_ACK_M_ARB_LOST : TWI_SRX_GEN_ACK;
+                else
+                    status = arblost ? TWI_SRX_ADR_ACK_M_ARB_LOST : TWI_SRX_ADR_ACK;
+                raise_flag_and_status(status);
+            }
+        } break;
+
+        case TWI::Signal_DataReceived: {
+            //Save the received data in the register and set the ACK bit reply
+            logger().dbg("Client data received: 0x%02x", sigdata.data.as_uint());
             write_ioreg(m_config.reg_data, sigdata.data.as_uint());
-            //Set the status and reply automatically with ACK or NACK depending on TWIEA
-            bool acken = test_ioreg(m_config.reg_ctrl, m_config.bm_ack_enable);
+            m_client->set_ack(m_latched_ack);
+        } break;
+
+        case TWI::Signal_DataAckSent: {
+            //On completion of transmitting the ACK after receiving data, set the status
+            logger().dbg("Client data ACK bit sent");
             uint8_t status;
-            if (sigdata.index == TWI::Cpt_Master) {
-                m_twi.set_master_ack(acken);
-                if (acken)
-                    status = TWI_MRX_DATA_ACK;
-                else
-                    status = TWI_MRX_DATA_NACK;
-            } else { //slave part
-                m_twi.set_slave_ack(acken);
-                if (m_gencall)
-                    status = acken ? TWI_SRX_GEN_DATA_ACK : TWI_SRX_GEN_DATA_NACK;
-                else
-                    status = acken ? TWI_SRX_ADR_DATA_ACK : TWI_SRX_ADR_DATA_NACK;
-            }
+            if (m_gencall)
+                status = m_latched_ack ? TWI_SRX_GEN_DATA_ACK : TWI_SRX_GEN_DATA_NACK;
+            else
+                status = m_latched_ack ? TWI_SRX_ADR_DATA_ACK : TWI_SRX_ADR_DATA_NACK;
+            raise_flag_and_status(status);
+        } break;
 
-            set_intflag(status);
+        case TWI::Signal_DataAckReceived: {
+            //On receiving a ACK bit after transmitting data, set the status
+            logger().dbg("Client data sent, received %s", sigdata.data.as_uint() ? "ACK" : "NACK");
+            uint8_t status;
+            if (!sigdata.data.as_uint())
+                status = TWI_STX_DATA_NACK;
+            else if (m_latched_ack)
+                status = TWI_STX_DATA_ACK;
+            else
+                status= TWI_STX_DATA_ACK_LAST_BYTE;
+            raise_flag_and_status(status);
+        } break;
 
+        case TWI::Signal_Start:
+        case TWI::Signal_Stop: {
+            if (sigdata.data.as_uint())
+                raise_flag_and_status(TWI_SRX_STOP_RESTART);
         } break;
     }
 }
 
-void ArchAVR_TWI::set_intflag(uint8_t status)
+
+void ArchAVR_TWI::execute_command(bool sta, bool sto)
 {
-    write_ioreg(m_config.rb_status, status >> 3);
+    //if TWSTO=1
+    if (sto) {
+        m_host->stop_transfer();
+        m_client->reset();
+        m_driver->set_host_mode(false);
+    }
+    //if TWSTA=1 and TWSTO=0
+    else if (sta) {
+        if (m_host->start_transfer())
+            m_driver->set_host_mode(true);
+    }
+    //if TWSTA=0 and TWSTO=0, in host mode and the interface is expecting user input
+    else if (m_host->active() && m_host->clock_hold()) {
+        switch (m_host->state()) {
+
+            case Host::State_AddressTx: {
+                uint8_t addr_rw = read_ioreg(m_config.reg_data);
+                logger().dbg("Setting address 0x%02x", addr_rw);
+                m_host->set_address(addr_rw);
+            } break;
+
+            case Host::State_DataTx: {
+                uint8_t data = read_ioreg(m_config.reg_data);
+                logger().dbg("Setting host TX data 0x%02x", data);
+                m_host->start_data_tx(data);
+            } break;
+
+            case Host::State_DataRx: {
+                logger().dbg("Starting host RX data");
+                m_host->start_data_rx();
+            } break;
+
+            default: break;
+
+        }
+    }
+    //if TWSTA=0 and TWSTO=0, in client mode and the interface is expecting user input
+    else if (m_client->active() && m_client->clock_hold()) {
+        switch (m_client->state()) {
+
+            case Client::State_DataTx: {
+                uint8_t data = read_ioreg(m_config.reg_data);
+                logger().dbg("Setting client TX data 0x%02x", data);
+                m_client->start_data_tx(data);
+            } break;
+
+            case Client::State_DataRx: {
+                logger().dbg("Starting client RX data");
+                m_client->start_data_rx();
+            } break;
+
+            default: break;
+
+        }
+    }
+}
+
+
+void ArchAVR_TWI::raise_flag_and_status(uint8_t status)
+{
+    if (read_ioreg(m_config.rb_status) == TWI_NO_STATE >> 3)
+        write_ioreg(m_config.rb_status, status >> 3);
     m_intflag.set_flag();
 }
 
-void ArchAVR_TWI::clear_intflag()
+
+void ArchAVR_TWI::clear_flag_and_status()
 {
     write_ioreg(m_config.rb_status, TWI_NO_STATE >> 3);
     m_intflag.clear_flag();
 }
 
-bool ArchAVR_TWI::address_match(uint8_t bus_address)
+
+bool ArchAVR_TWI::address_match(uint8_t addr_rw)
 {
-    uint8_t reg_address = read_ioreg(m_config.rb_addr);
-    uint8_t addrmask = read_ioreg(m_config.rb_addr_mask);
-    return (bus_address | addrmask) == (reg_address | addrmask);
+    if (!test_ioreg(m_config.reg_ctrl, m_config.bm_ack_enable))
+        return false;
+
+    //Check the general call
+    m_gencall = (addr_rw == 0x00) && test_ioreg(m_config.rb_gencall_enable);
+    if (m_gencall)
+        return true;
+
+    uint8_t dev_addr = read_ioreg(m_config.rb_addr);
+    uint8_t mask = read_ioreg(m_config.rb_addr_mask);
+    return (dev_addr | mask) == ((addr_rw >> 1) | mask);
 }
