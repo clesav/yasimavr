@@ -108,7 +108,8 @@ enum SignalId {
 
     /**
        C only : raised when a Start or Repeated Start condition is detected.
-       `data` is 1 if the client was active prior to the Start condition.
+       `data` is 1 if the client was active prior to the Start condition, or 0
+	   if it was idle.
      */
     Signal_Start,
 
@@ -170,7 +171,9 @@ enum SignalId {
 
     /**
        H : raised when the transmission of a Stop condition is complete.
-       C : raised when a Stop condition has been detected.
+       C : raised when a Stop condition has been detected. `data` is 1 if
+           the client was active on the bus until the stop condition and 0
+           if it was idle.
      */
     Signal_Stop,
 };
