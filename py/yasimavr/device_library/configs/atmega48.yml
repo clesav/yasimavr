@@ -1,6 +1,6 @@
 # YAML configuration file for atmega48 variant
 #
-# Copyright 2023-2024 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2023-2025 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -186,3 +186,8 @@ peripherals:
     TWI:
        file: mega48-88-168-328_interfaces.yml
        ctl_id: TWI0
+
+iomux:
+    TWI0:
+        #SCL, SDA
+        DFLT: [ PC5, PC4 ]
