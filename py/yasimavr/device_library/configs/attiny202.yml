@@ -228,8 +228,9 @@ peripherals:
         file: ArchXT_interfaces.yml
         base: 0x0810
         config:
-            iv_master: TWI0_TWIM
-            iv_slave: TWI0_TWIS
+            iv_host: TWI0_TWIM
+            iv_client: TWI0_TWIS
+            dual_ctrl: false
 
     PORTMUX:
         class: PORTMUX_tiny0
@@ -255,3 +256,6 @@ iomux:
 
     TCB0:
         DFLT: [ PA6 ]
+
+    TWI0:
+        DFLT: [ PA2, PA1 ]

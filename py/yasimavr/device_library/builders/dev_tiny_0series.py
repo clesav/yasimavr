@@ -1,6 +1,6 @@
 # dev_tiny_0series.py
 #
-# Copyright 2024 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2024-2025 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -65,6 +65,12 @@ class dev_tiny_0series(XT_BaseDevice):
             peripherals.append('PORTC')
 
         builder.build_peripherals(self, peripherals)
+
+
+    def arch_init(self):
+        self._builder_.add_pin_driver_mux_configs(self, 'TWI0')
+
+        return True
 
 
 def device_factory(model):

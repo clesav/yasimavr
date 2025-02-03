@@ -1,7 +1,7 @@
 /*
  * arch_avr_twi.sip
  *
- *  Copyright 2022 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022-2025 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -48,7 +48,7 @@ struct ArchAVR_TWIConfig {
 };
 
 
-class ArchAVR_TWI : public Peripheral, public SignalHook /NoDefaultCtors/ {
+class ArchAVR_TWI : public Peripheral /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_avr_twi.h"
 %End
@@ -62,6 +62,5 @@ public:
     virtual bool ctlreq(ctlreq_id_t, ctlreq_data_t*);
     virtual uint8_t ioreg_read_handler(reg_addr_t, uint8_t);
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
-    virtual void raised(const signal_data_t&, int);
 
 };
