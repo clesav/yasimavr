@@ -25,10 +25,6 @@
 #define __YASIMAVR_SPI_H__
 
 #include "../core/sim_types.h"
-#include "../core/sim_device.h"
-#include "../core/sim_signal.h"
-#include <deque>
-#include <vector>
 
 YASIMAVR_BEGIN_NAMESPACE
 
@@ -46,22 +42,13 @@ YASIMAVR_BEGIN_NAMESPACE
  */
 
 /**
-   Request to register a SPI client to a SPI interface
-    - data must be a pointer to a SPIClient object
+   Request to transfer a byte bypassing . A byte is directly
+   dropped into the RX buffer and a byte popped from the TX buffer of the SPI interface
+   with bypassing the actual line shifting. This is meant for debugging purposes.
+    - In argument, data is a 8-bits frame to be pushed to the RX buffer.
+    - data is returned set to a 8-bits frame popped from the TX buffer.
  */
-#define AVR_CTLREQ_SPI_ADD_CLIENT       (AVR_CTLREQ_BASE + 1)
-
-/**
-   Request to obtain a pointer to the SPI interface as a SPI client
-    - data is returned as a pointer to a SPIClient object
- */
-#define AVR_CTLREQ_SPI_CLIENT           (AVR_CTLREQ_BASE + 2)
-
-/**
-   Request to select/deselect the SPI interface when used as a client
-    - data must be an integer : select if > 0, deselect if == 0
- */
-#define AVR_CTLREQ_SPI_SELECT           (AVR_CTLREQ_BASE + 3)
+#define AVR_CTLREQ_SPI_TRANSFER         (AVR_CTLREQ_BASE + 1)
 
 /// @}
 /// @}
@@ -69,162 +56,107 @@ YASIMAVR_BEGIN_NAMESPACE
 
 //=======================================================================================
 
-class SPI;
+namespace SPI {
 
-/**
-   \ingroup api_spi
-   \brief Abstract interface for a SPI Client.
- */
-class AVR_CORE_PUBLIC_API SPIClient {
-
-public:
-
-    SPIClient();
-    SPIClient(const SPIClient& other);
-    virtual ~SPIClient();
-
-    /// Used by the SPI host to interrogate the selection state of the client.
-    virtual bool selected() const = 0;
-
-    /**
-       Called by the SPI host to start a transfer of one frame.
-       \param mosi_frame MOSI frame emitted by the host
-       \return the MISO frame simultaneously emitted by the client.
-     */
-    virtual uint8_t start_transfer(uint8_t mosi_frame) = 0;
-
-    /**
-       Called by the host at the end of a transfer.
-       \param ok indicates the success of the transfer, or false if it was aborted.
-     */
-    virtual void end_transfer(bool ok) = 0;
-
-    SPIClient& operator=(const SPIClient& other);
-
-private:
-
-    friend class SPI;
-
-    SPI* m_host;
-
+enum SerialMode {
+    Mode0 = 0,
+    Mode1,
+    Mode2,
+    Mode3,
 };
 
 
-/**
-   \ingroup api_spi
-   \brief Generic model defining an serial peripheral interface a.k.a. SPI.
+enum BitOrder {
+    MSBFirst,
+    LSBFirst
+};
 
-    The interface can act in either host or client mode.
 
-    The class is composed of two FIFOs, one for TX, the other for RX.
-    The transfer of a frame starts immediately after pushing it in the TX FIFO.
- */
-class AVR_CORE_PUBLIC_API SPI : public SPIClient, public CycleTimer {
+enum Line {
+    Clock = 0,
+    MISO,
+    MOSI,
+    Select,
+};
+
+
+class AVR_CORE_PUBLIC_API EndPoint {
 
 public:
 
-    /// Signal Ids raised by this object.
-    enum SignalId {
-        Signal_HostTfrStart,
-        Signal_HostTfrComplete,
-        Signal_ClientTfrStart,
-        Signal_ClientTfrComplete,
-    };
+    EndPoint();
+    virtual ~EndPoint() = default;
 
-    SPI();
+    void set_serial_mode(SerialMode mode);
+    SerialMode serial_mode() const;
 
-    void init(CycleManager& cycle_manager, Logger& logger);
+    void set_bit_order(BitOrder order);
+    BitOrder bit_order() const;
 
-    void reset();
+    void set_shift_data(uint8_t frame);
+    uint8_t shift_data() const;
 
-    void set_host_mode(bool mode);
-    bool is_host_mode() const;
+    bool complete_frame() const;
 
-    Signal& signal();
+protected:
 
-    void set_frame_delay(cycle_count_t delay);
+    void set_active(bool active);
+    bool active() const;
 
-    void add_client(SPIClient& client);
+    virtual void frame_completed();
+    virtual void write_data_output(bool level) = 0;
+    virtual bool read_data_input() = 0;
 
-    void remove_client(SPIClient& client);
-
-    void set_selected(bool selected);
-
-    void set_tx_buffer_limit(size_t limit);
-
-    void push_tx(uint8_t frame);
-
-    void cancel_tx();
-
-    void set_rx_buffer_limit(size_t limit);
-
-    //Indicates if a transfer is in progress (host or client mode)
-    bool tfr_in_progress() const;
-
-
-    size_t rx_available() const;
-
-    uint8_t pop_rx();
-
-    uint8_t peek_rx() const;
-
-    //Reimplementation of CycleTimer interface
-    virtual cycle_count_t next(cycle_count_t when) override;
-
-    //Reimplementation of SPIClient interface
-    virtual bool selected() const override;
-    virtual uint8_t start_transfer(uint8_t mosi_frame) override;
-    virtual void end_transfer(bool ok) override;
+    void set_shift_clock(bool state);
+    bool shift_clock() const;
 
 private:
 
-    CycleManager* m_cycle_manager;
-    Logger* m_logger;
-    cycle_count_t m_delay;
-    bool m_is_host;
-    bool m_tfr_in_progress;
-    bool m_selected;
-    std::vector<SPIClient*> m_clients;
-    SPIClient* m_selected_client;
+    SerialMode m_serial_mode;
+    BitOrder m_bit_order;
+    int m_step;
+    bool m_active;
+    uint8_t m_shifter;
+    bool m_sampler;
+    bool m_shift_clock;
 
-    uint8_t m_shift_reg;
-
-    std::deque<uint8_t> m_tx_buffer;
-    size_t m_tx_limit;
-
-    std::deque<uint8_t> m_rx_buffer;
-    size_t m_rx_limit;
-
-    Signal m_signal;
-
-    void start_transfer_as_host();
+    void update_sdo();
+    void shift_and_sample();
 
 };
 
-/// Getter for the signal raised during transfers
-inline Signal& SPI::signal()
+inline SerialMode EndPoint::serial_mode() const
 {
-    return m_signal;
+    return m_serial_mode;
 }
 
-inline bool SPI::is_host_mode() const
+inline BitOrder EndPoint::bit_order() const
 {
-    return m_is_host;
+    return m_bit_order;
 }
 
-/// Getter for the count of frames in the RX buffer
-inline size_t SPI::rx_available() const
+inline uint8_t EndPoint::shift_data() const
 {
-    size_t n = m_rx_buffer.size();
-    if (m_tfr_in_progress) --n;
-    return n;
+    return m_shifter;
 }
 
-/// Getter indicating if a transfer is in progress
-inline bool SPI::tfr_in_progress() const
+inline bool EndPoint::active() const
 {
-    return m_tfr_in_progress;
+    return m_active;
 }
+
+inline bool EndPoint::shift_clock() const
+{
+    return m_shift_clock;
+}
+
+inline bool EndPoint::complete_frame() const
+{
+    return !m_step;
+}
+
+
+}; //namespace SPI
 
 
 YASIMAVR_END_NAMESPACE

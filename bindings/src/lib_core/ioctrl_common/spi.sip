@@ -25,72 +25,72 @@
 
 #include "ioctrl_common/sim_spi.h"
 
-const ctlreq_id_t CTLREQ_SPI_ADD_CLIENT = AVR_CTLREQ_SPI_ADD_CLIENT;
-const ctlreq_id_t CTLREQ_SPI_CLIENT = AVR_CTLREQ_SPI_CLIENT;
-const ctlreq_id_t CTLREQ_SPI_SELECT = AVR_CTLREQ_SPI_SELECT;
+const ctlreq_id_t CTLREQ_SPI_TRANSFER = AVR_CTLREQ_SPI_TRANSFER;
 
 %End
 
-const ctlreq_id_t CTLREQ_SPI_ADD_CLIENT;
-const ctlreq_id_t CTLREQ_SPI_CLIENT;
-const ctlreq_id_t CTLREQ_SPI_SELECT;
+const ctlreq_id_t CTLREQ_SPI_TRANSFER;
 
 
 //=======================================================================================
 
-class SPIClient {
+namespace SPI {
+%TypeHeaderCode
+#include "ioctrl_common/sim_spi.h"
+%End
+
+enum SerialMode {
+	Mode0,
+	Mode1,
+	Mode2,
+	Mode3,
+};
+
+enum BitOrder {
+	MSBFirst,
+	LSBFirst
+};
+
+enum Line /BaseType=IntEnum/ {
+	Clock,
+	MISO,
+	MOSI,
+	Select,
+};
+
+
+class EndPoint {
 %TypeHeaderCode
 #include "ioctrl_common/sim_spi.h"
 %End
 
 public:
 
-    SPIClient();
-    SPIClient(const SPIClient&);
+    EndPoint();
 
-    virtual bool selected() const = 0;
-    virtual uint8_t start_transfer(uint8_t mosi_frame) = 0;
-    virtual void end_transfer(bool ok) = 0;
+    void set_serial_mode(SerialMode);
+    SerialMode serial_mode() const;
 
-};
+    void set_bit_order(BitOrder);
+    BitOrder bit_order() const;
 
+    void set_shift_data(uint8_t);
+    uint8_t shift_data() const;
 
-class SPI : public SPIClient, public CycleTimer /NoDefaultCtors/ {
-%TypeHeaderCode
-#include "ioctrl_common/sim_spi.h"
-%End
+    bool complete_frame() const;
 
-public:
+protected:
 
-    enum SignalId /BaseType=IntEnum/ {
-        Signal_HostTfrStart         /PyName=HostTfrStart/,
-        Signal_HostTfrComplete      /PyName=HostTfrComplete/,
-        Signal_ClientTfrStart       /PyName=ClientTfrStart/,
-        Signal_ClientTfrComplete    /PyName=ClientTfrComplete/,
-    };
+    void set_active(bool);
+    bool active() const;
 
-    SPI();
+    virtual void frame_completed();
+    virtual void write_data_output(bool) = 0;
+    virtual bool read_data_input() = 0;
 
-    void init(CycleManager&, Logger&);
-    void reset();
-    void set_host_mode(bool);
-    bool is_host_mode() const;
-    Signal& signal();
-    void set_frame_delay(cycle_count_t);
-    void add_client(SPIClient&);
-    void remove_client(SPIClient&);
-    void set_selected(bool);
-    void set_tx_buffer_limit(size_t);
-    void push_tx(uint8_t);
-    void cancel_tx();
-    void set_rx_buffer_limit(size_t);
-    bool tfr_in_progress() const;
-    size_t rx_available() const;
-    uint8_t pop_rx();
-    uint8_t peek_rx() const;
-    virtual cycle_count_t next(cycle_count_t);
-    virtual bool selected() const;
-    virtual uint8_t start_transfer(uint8_t);
-    virtual void end_transfer(bool);
+    void set_shift_clock(bool);
+    bool shift_clock() const;
 
 };
+
+}; //namespace SPI
