@@ -30,8 +30,8 @@ using namespace SPI;
 //=======================================================================================
 
 EndPoint::EndPoint()
-:m_serial_mode(SPI::Mode0)
-,m_bit_order(SPI::MSBFirst)
+:m_serial_mode(Mode0)
+,m_bit_order(MSBFirst)
 ,m_step(0)
 ,m_active(false)
 ,m_shifter(0)
@@ -79,7 +79,7 @@ void EndPoint::update_sdo()
 void EndPoint::shift_and_sample()
 {
     bool sampler = read_data_input();
-    if (m_bit_order == SPI::MSBFirst)
+    if (m_bit_order == MSBFirst)
         m_shifter = ((m_shifter << 1) & 0xFE) | (sampler ? 0x01 : 0);
     else
         m_shifter = ((m_shifter >> 1) & 0x7F) | (sampler ? 0x80 : 0);

@@ -25,7 +25,6 @@
 #define __YASIMAVR_AVR_SPI_H__
 
 #include "arch_avr_globals.h"
-#include "ioctrl_common/sim_spi.h"
 #include "core/sim_interrupt.h"
 
 YASIMAVR_BEGIN_NAMESPACE
@@ -44,11 +43,12 @@ struct ArchAVR_SPIConfig {
     regbit_t rb_int_enable;
     regbit_t rb_int_flag;
     regbit_t rb_mode;
-
-    pin_id_t pin_select;
-
+    regbit_t rb_cpol;
+    regbit_t rb_cpha;
+    regbit_t rb_dord;
     regbit_t rb_clock;
     regbit_t rb_clock2x;
+    regbit_t rb_wcol;
 
     int_vect_t iv_spi;
 
@@ -64,11 +64,12 @@ struct ArchAVR_SPIConfig {
 
     \sa sim_spi.h
  */
-class AVR_ARCHAVR_PUBLIC_API ArchAVR_SPI : public Peripheral, public SignalHook {
+class AVR_ARCHAVR_PUBLIC_API ArchAVR_SPI : public Peripheral {
 
 public:
 
     ArchAVR_SPI(uint8_t num, const ArchAVR_SPIConfig& config);
+    virtual ~ArchAVR_SPI();
 
     virtual bool init(Device& device) override;
     virtual void reset() override;
@@ -76,20 +77,23 @@ public:
     virtual uint8_t ioreg_read_handler(reg_addr_t addr, uint8_t value) override;
     virtual uint8_t ioreg_peek_handler(reg_addr_t addr, uint8_t value) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
-    virtual void raised(const signal_data_t& sigdata, int hooktag) override;
 
 private:
 
+    class _PinDriver;
+    class _Controller;
+
     const ArchAVR_SPIConfig& m_config;
 
-    SPI m_spi;
-
-    Pin* m_pin_select;
-    bool m_pin_selected;
+    _Controller* m_ctrl;
 
     InterruptFlag m_intflag;
+    bool m_intflag_accessed;
 
     void update_framerate();
+    void update_serial_config();
+    void frame_completed();
+    void host_selected();
 
 };
 
