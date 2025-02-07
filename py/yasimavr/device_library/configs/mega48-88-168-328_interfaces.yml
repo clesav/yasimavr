@@ -1,6 +1,6 @@
 # YAML configuration file for atmega48-88-168-328 variants
 #
-# Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -240,8 +240,12 @@ SPI:
         rb_int_enable: SPCR/SPIE
         rb_int_flag: SPSR/SPIF
         rb_mode: SPCR/MSTR
+        rb_cpol: SPCR/CPOL
+        rb_cpha: SPCR/CPHA
+        rb_dord: SPCR/DORD
         rb_clock: SPCR/SPR
         rb_clock2x: SPSR/SPI2X
+        rb_wcol: SPSR/WCOL
         iv_spi: SPI_STC
 
 #========================================================================================

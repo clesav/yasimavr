@@ -575,6 +575,10 @@ PORTMUX_mega0:
               reg: TCBROUTEA/TCB3
               map: { 0x00: DFLT, 0x01: ALT1 }
 
+           SPI0:
+              reg: TWISPIROUTEA/SPI0
+              map: { 0x00: DFLT, 0x01: ALT1, 0x02: ALT2, 0x03: NONE }
+
            TWI0:
               reg: TWISPIROUTEA/TWI0
               map: { 0x00: DFLT, 0x01: ALT1, 0x02: ALT2 }
