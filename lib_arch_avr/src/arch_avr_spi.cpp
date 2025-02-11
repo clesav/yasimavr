@@ -443,7 +443,7 @@ bool ArchAVR_SPI::init(Device& device)
                              m_config.rb_int_flag,
                              m_config.iv_spi);
 
-    m_ctrl->init(*device.cycle_manager(), device.logger());
+    m_ctrl->init(*device.cycle_manager(), logger());
 
     status &= device.pin_manager().register_driver(m_ctrl->pin_driver());
 
@@ -486,6 +486,10 @@ uint8_t ArchAVR_SPI::ioreg_read_handler(reg_addr_t addr, uint8_t value)
         }
     }
 
+    if ((addr == m_config.rb_wcol.addr && m_config.rb_wcol.extract(value)) ||
+        (addr == m_config.rb_int_flag.addr && m_config.rb_int_flag.extract(value)))
+        m_intflag_accessed = true;
+
     return value;
 }
 
@@ -509,6 +513,7 @@ void ArchAVR_SPI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
             m_ctrl->push_tx(data.value);
             m_intflag.clear_flag();
         }
+        m_intflag_accessed = false;
     }
 
     //Setting the controller mode depending on bits SPE and MSTR
@@ -527,10 +532,6 @@ void ArchAVR_SPI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
     //Writing to SPIE
     if (addr == m_config.rb_int_enable.addr)
         m_intflag.update_from_ioreg();
-
-    if ((addr == m_config.rb_wcol.addr && m_config.rb_wcol.extract(data.value)) ||
-        (addr == m_config.rb_int_flag.addr && m_config.rb_int_flag.extract(data.value)))
-        m_intflag_accessed = true;
 
     //Modification of the frame rate
     if (addr == m_config.rb_clock.addr || addr == m_config.rb_clock2x.addr)
@@ -564,14 +565,14 @@ void ArchAVR_SPI::update_serial_config()
     m_ctrl->set_serial_mode(m);
 
     //Configuring the bit order
-    m_ctrl->set_bit_order(test_ioreg(m_config.rb_dord) ? MSBFirst : LSBFirst);
+    m_ctrl->set_bit_order(test_ioreg(m_config.rb_dord) ? LSBFirst : MSBFirst);
 }
 
 
 void ArchAVR_SPI::frame_completed()
 {
     logger().dbg("Frame transfer completed.");
-    m_intflag.set_flag(m_config.rb_int_flag.mask);
+    m_intflag.set_flag();
 }
 
 
@@ -580,5 +581,5 @@ void ArchAVR_SPI::host_selected()
     logger().dbg("Host selected, switching to client mode.");
     clear_ioreg(m_config.rb_mode);
     m_ctrl->set_mode(Mode_Client);
-    m_intflag.set_flag(m_config.rb_int_flag.mask);
+    m_intflag.set_flag();
 }

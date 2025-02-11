@@ -219,10 +219,10 @@ SPI:
                 values: [ DIV4, DIV16, DIV64, DIV128 ]
             CPHA: { kind: BIT, pos: 2 }
             CPOL: { kind: BIT, pos: 3 }
-            MSTR: { kind: BIT, pos: 4, one: master, zero: slave }
+            MSTR: { kind: BIT, pos: 4, one: host, zero: client }
             DORD: { kind: BIT, pos: 5, one: "LSB first", zero: "MSB first" }
             SPE: { kind: BIT, pos: 6, one: enable, zero: disable }
-            SPIE: { kind: BIT, pos: 6, one: enable, zero: disable }
+            SPIE: { kind: BIT, pos: 7, one: enable, zero: disable }
 
         - name: SPSR
           address: 0x2D
