@@ -183,14 +183,16 @@ peripherals:
     SPI:
        file: mega48-88-168-328_interfaces.yml
        ctl_id: SPI0
-       config:
-           pin_select: PB2
 
     TWI:
        file: mega48-88-168-328_interfaces.yml
        ctl_id: TWI0
 
 iomux:
+    SPI0:
+        #CLK, MISO, MOSI, CS
+        DFLT: [ PB5, PB4, PB3, PB2 ]
+
     TWI0:
         #SCL, SDA
         DFLT: [ PC5, PC4 ]

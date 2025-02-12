@@ -220,7 +220,6 @@ peripherals:
         file: ArchXT_interfaces.yml
         base: 0x0820
         config:
-            pin_select: null
             iv_spi: SPI0
 
     TWI0:
@@ -256,6 +255,11 @@ iomux:
 
     TCB0:
         DFLT: [ PA6 ]
+
+    SPI0:
+        #SCK, MISO, MOSI, CS
+        DFLT: [ PA3, PA2, PA1, PA0 ]
+        ALT:  [ PA3, PA7, PA6, PA0 ]
 
     TWI0:
         DFLT: [ PA2, PA1 ]

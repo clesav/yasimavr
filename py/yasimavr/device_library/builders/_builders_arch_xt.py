@@ -316,19 +316,8 @@ def _get_usart_builder():
 #========================================================================================
 #SPI management configuration
 
-def _spi_convertor(cfg, attr, yml_val, per_desc):
-    if attr == 'pin_select':
-        if yml_val is None:
-            cfg.pin_select = 0
-        else:
-            cfg.pin_select = _corelib.str_to_id(yml_val)
-
-    else:
-        raise Exception('Converter not implemented for ' + attr)
-
-
 def _get_spi_builder():
-    cfg_builder = PeripheralConfigBuilder(_archlib.ArchXT_SPIConfig, _spi_convertor)
+    cfg_builder = PeripheralConfigBuilder(_archlib.ArchXT_SPIConfig)
     return IndexedPeripheralBuilder(_archlib.ArchXT_SPI, cfg_builder)
 
 

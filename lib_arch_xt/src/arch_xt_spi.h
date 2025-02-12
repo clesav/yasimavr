@@ -25,7 +25,6 @@
 #define __YASIMAVR_XT_SPI_H__
 
 #include "arch_xt_globals.h"
-#include "ioctrl_common/sim_spi.h"
 #include "core/sim_interrupt.h"
 
 YASIMAVR_BEGIN_NAMESPACE
@@ -41,32 +40,24 @@ struct ArchXT_SPIConfig {
 
     /// Base address for the peripheral I/O registers
     reg_addr_t reg_base;
-    /// Identifier of the pin used for Chip Select
-    pin_id_t pin_select;
     /// Interrupt vector index
     int_vect_t iv_spi;
 
 };
 
+
 /**
    \ingroup api_spi
    \brief Implementation of a Serial Peripheral Interface controller for the XT core series
 
-   Features:
-    - Host/client mode
-    - data order, phase and polarity settings have no effect
-    - write collision flag not supported
-    - buffer mode not supported
-    - multi-host mode not supported
-    - Slave Select has no effect in host mode (the SSD setting has no effect)
-
     for supported CTLREQs, see sim_spi.h
  */
-class AVR_ARCHXT_PUBLIC_API ArchXT_SPI : public Peripheral, public SignalHook {
+class AVR_ARCHXT_PUBLIC_API ArchXT_SPI : public Peripheral {
 
 public:
 
     ArchXT_SPI(int num, const ArchXT_SPIConfig& config);
+    virtual ~ArchXT_SPI();
 
     virtual bool init(Device& device) override;
     virtual void reset() override;
@@ -74,18 +65,22 @@ public:
     virtual uint8_t ioreg_read_handler(reg_addr_t addr, uint8_t value) override;
     virtual uint8_t ioreg_peek_handler(reg_addr_t addr, uint8_t value) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
-    virtual void raised(const signal_data_t& sigdata, int hooktag) override;
 
 private:
 
+    class _PinDriver;
+    class _Controller;
+    class _InterruptHandler;
+
+    friend class SPIController;
+
     const ArchXT_SPIConfig& m_config;
 
-    SPI m_spi;
+    _Controller* m_ctrl;
+    _InterruptHandler* m_intflag;
 
-    Pin* m_pin_select;
-    bool m_pin_selected;
-
-    InterruptFlag m_intflag;
+    void frame_completed();
+    void host_selected();
 
 };
 

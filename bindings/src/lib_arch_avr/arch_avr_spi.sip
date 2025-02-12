@@ -32,18 +32,19 @@ struct ArchAVR_SPIConfig {
     regbit_t rb_int_enable;
     regbit_t rb_int_flag;
     regbit_t rb_mode;
-
-    pin_id_t pin_select;
-
+    regbit_t rb_cpol;
+    regbit_t rb_cpha;
+    regbit_t rb_dord;
     regbit_t rb_clock;
     regbit_t rb_clock2x;
+    regbit_t rb_wcol;
 
     int_vect_t iv_spi;
 
 };
 
 
-class ArchAVR_SPI : public Peripheral, public SignalHook /NoDefaultCtors/ {
+class ArchAVR_SPI : public Peripheral /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_avr_spi.h"
 %End
@@ -58,6 +59,5 @@ public:
     virtual uint8_t ioreg_read_handler(reg_addr_t, uint8_t);
     virtual uint8_t ioreg_peek_handler(reg_addr_t, uint8_t);
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
-    virtual void raised(const signal_data_t&, int);
 
 };

@@ -25,322 +25,100 @@
 
 YASIMAVR_USING_NAMESPACE
 
+using namespace SPI;
 
 //=======================================================================================
 
-SPIClient::SPIClient()
-:m_host(nullptr)
+EndPoint::EndPoint()
+:m_serial_mode(Mode0)
+,m_bit_order(MSBFirst)
+,m_step(0)
+,m_active(false)
+,m_shifter(0)
+,m_sampler(0)
+,m_shift_clock(false)
 {}
 
-SPIClient::SPIClient(const SPIClient& other)
-:SPIClient()
+
+void EndPoint::set_serial_mode(SerialMode mode)
 {
-    if (other.m_host)
-        other.m_host->add_client(*this);
-}
-
-SPIClient::~SPIClient()
-{
-    if (m_host)
-        m_host->remove_client(*this);
-}
-
-SPIClient& SPIClient::operator=(const SPIClient& other)
-{
-    if (m_host)
-        m_host->remove_client(*this);
-
-    if (other.m_host)
-        other.m_host->add_client(*this);
-
-    return *this;
+    m_serial_mode = mode;
 }
 
 
-SPI::SPI()
-:m_cycle_manager(nullptr)
-,m_logger(nullptr)
-,m_delay(1)
-,m_is_host(false)
-,m_tfr_in_progress(false)
-,m_selected(false)
-,m_selected_client(nullptr)
-,m_shift_reg(0)
-,m_tx_limit(0)
-,m_rx_limit(0)
-{}
-
-/**
-   Initialise the interface.
-   \param cycle_manager Cycle manager used for time-related operations
-   \param logger Logger used for the interface
- */
-void SPI::init(CycleManager& cycle_manager, Logger& logger)
+void EndPoint::set_bit_order(BitOrder bitorder)
 {
-    m_cycle_manager = &cycle_manager;
-    m_logger = &logger;
-}
-
-/**
-   Reset the interface.
- */
-void SPI::reset()
-{
-    m_delay = 1;
-    m_is_host = false;
-    m_tfr_in_progress = false;
-    m_selected = false;
-    m_selected_client = nullptr;
-    m_shift_reg = 0;
-
-    m_tx_buffer.clear();
-
-    m_rx_buffer.clear();
-
-    m_cycle_manager->cancel(*this);
-}
-
-/**
-   Set the interface mode.
-   \param mode true=host, false=client
- */
-void SPI::set_host_mode(bool mode)
-{
-    m_is_host = mode;
-}
-
-/**
-   Add a client to the interface.
-   \param client Client to add
- */
-void SPI::add_client(SPIClient& client)
-{
-    m_clients.push_back(&client);
-    client.m_host = this;
-}
-
-void SPI::remove_client(SPIClient& client)
-{
-    for (auto it = m_clients.begin(); it != m_clients.end(); ++it) {
-        if (*it == &client) {
-            m_clients.erase(it);
-            client.m_host = nullptr;
-            return;
-        }
-    }
-}
-
-/// Set the interface as selected (client mode only)
-void SPI::set_selected(bool selected)
-{
-    m_selected = selected;
-}
-
-/**
-   Set the delay to emit or receive a frame.
-   \param delay Delay in cycles. The minimum valid value is 1.
- */
-void SPI::set_frame_delay(cycle_count_t delay)
-{
-    m_delay = delay;
-}
-
-/**
-   Set the TX buffer limit and trim the buffer if necessary.
-   \param limit New buffer limit. Zero means unlimited.
- */
-void SPI::set_tx_buffer_limit(size_t limit)
-{
-    m_tx_limit = limit;
-    while (limit > 0 && m_tx_buffer.size() > limit)
-        m_tx_buffer.pop_back();
-}
-
-/**
-   Set the RX buffer limit and trim the buffer if necessary.
-   \param limit New buffer limit. Zero means unlimited.
- */
-void SPI::set_rx_buffer_limit(size_t limit)
-{
-    m_rx_limit = limit;
-    while (limit > 0 && m_rx_buffer.size() > limit)
-        m_rx_buffer.pop_back();
-}
-
-/**
-   Push a 8-bits frame to be emitted by the interface.
-   In host mode, if no transfer is already ongoing, one will
-   start immediately. Otherwise the frame is added to the TX FIFO.
-   In client mode, the frame stays in the TX FIFO, waiting for
-   the host to start a transfer.
- */
-void SPI::push_tx(uint8_t frame)
-{
-    if (m_tx_limit > 0 && m_tx_buffer.size() == m_tx_limit)
-        return;
-
-    m_tx_buffer.push_back(frame);
-
-    if (m_is_host && !m_tfr_in_progress)
-        start_transfer_as_host();
-}
-
-/**
-   Cancel all pending and current transfers. (host mode only)
- */
-void SPI::cancel_tx()
-{
-    m_tx_buffer.clear();
-
-    if (m_is_host && m_tfr_in_progress) {
-        m_signal.raise(Signal_HostTfrComplete, 0);
-        m_tfr_in_progress = false;
-        m_rx_buffer.pop_back();
-        m_cycle_manager->cancel(*this);
-
-        if (m_selected_client) {
-            m_selected_client->end_transfer(false);
-            m_selected_client = nullptr;
-        }
-    }
-}
-
-/**
-   Pop a frame from the RX buffer, return 0 if there aren't any.
- */
-uint8_t SPI::pop_rx()
-{
-    if (m_rx_buffer.size()) {
-        uint8_t frame = m_rx_buffer.front();
-        m_rx_buffer.pop_front();
-        m_logger->dbg("RX pop: 0x%02x ('%c')", frame, frame);
-        return frame;
-    } else {
-        return 0;
-    }
-}
-
-/**
-   Peek the front frame from the RX buffer, return 0 if there aren't any.
- */
-uint8_t SPI::peek_rx() const
-{
-    return m_rx_buffer.size() ? m_rx_buffer.front() : 0;
+    m_bit_order = bitorder;
+    update_sdo();
 }
 
 
-void SPI::start_transfer_as_host()
+void EndPoint::set_shift_data(uint8_t frame)
 {
-    uint8_t mosi_frame = m_tx_buffer.front();
-    m_tx_buffer.pop_front();
+    m_shifter = frame;
+    update_sdo();
+}
 
-    //Find the selected client
-    m_selected_client = nullptr;
-    for (SPIClient* client : m_clients) {
-        if (client->selected()) {
-            m_selected_client = client;
-            break;
-        }
-    }
 
-    //Call the selected client callback, giving it the MOSI frame
-    //and it returns the MISO frame.
-    //If not client is selected, the MISO line is normally pulled up therefore
-    //the acquired frame is read as 0xFF.
-    uint8_t miso_frame;
-    if (m_selected_client)
-        miso_frame = m_selected_client->start_transfer(mosi_frame);
+void EndPoint::set_active(bool active)
+{
+    if (active && !m_active)
+        m_step = 0;
+
+    m_active = active;
+}
+
+
+void EndPoint::update_sdo()
+{
+    bool bit = (m_bit_order == MSBFirst) ? (m_shifter & 0x80) : (m_shifter & 0x01);
+    write_data_output(bit);
+}
+
+
+void EndPoint::shift_and_sample()
+{
+    bool sampler = read_data_input();
+    if (m_bit_order == MSBFirst)
+        m_shifter = ((m_shifter << 1) & 0xFE) | (sampler ? 0x01 : 0);
     else
-        miso_frame = 0xFF;
-
-    m_logger->dbg("Host tfr MOSI=0x%02x, MISO=0x%02x", mosi_frame, miso_frame);
-
-    m_signal.raise(Signal_HostTfrStart, (mosi_frame << 8) | miso_frame);
-
-    //Add the MISO frame to the RX buffer and trim it to the limit
-    m_rx_buffer.push_back(miso_frame);
-    while (m_rx_limit > 0 && m_rx_buffer.size() > m_rx_limit)
-        m_rx_buffer.pop_front();
-
-    //If this is the first transfer, we need to start the timer
-    if (!m_tfr_in_progress) {
-        m_tfr_in_progress = true;
-        m_cycle_manager->delay(*this, m_delay);
-    }
+        m_shifter = ((m_shifter >> 1) & 0x7F) | (sampler ? 0x80 : 0);
 }
 
-//Timer callback indicating the end of a frame transfer.
-cycle_count_t SPI::next(cycle_count_t when)
+
+void EndPoint::set_shift_clock(bool state)
 {
-    //Indicate to the selected client that the transfer has completed.
-    if (m_selected_client) {
-        m_selected_client->end_transfer(true);
-        m_selected_client = nullptr;
-    }
+    if (state == m_shift_clock) return;
+    m_shift_clock = state;
 
-    m_signal.raise(Signal_HostTfrComplete, 1);
+    if (!m_active) return;
 
-    //Is there another frame to send ? if so, restart a transfer and reschedule
-    //the timer
-    if (m_tx_buffer.size()) {
-        start_transfer_as_host();
-        return when + m_delay;
+    bool cpol = m_serial_mode & 0x02;
+    if (cpol)
+        state = !state;
+
+    bool cpha = m_serial_mode & 0x01;
+    if (cpha) {
+        if (state)
+            update_sdo();
+        else
+            shift_and_sample();
     } else {
-        m_tfr_in_progress = false;
-        return 0;
+        if (state) {
+            shift_and_sample();
+        } else {
+            if (m_step < 15)
+                update_sdo();
+        }
     }
-}
 
-//=======================================================================================
-/*
- * Implementation of the SPI client interface
- */
-
-bool SPI::selected() const
-{
-    return m_selected;
-}
-
-uint8_t SPI::start_transfer(uint8_t mosi_frame)
-{
-    if (m_is_host || !m_selected || m_tfr_in_progress)
-        return 0xFF;
-
-    m_tfr_in_progress = true;
-
-    //If we have a frame to send, pop it out of the TX buffer into the shift register
-    //Note that if there is no TX frame ready, the content of the shift register
-    //is the MOSI frame from the previous transfer
-    uint8_t miso_frame;
-    if (m_tx_buffer.size()) {
-        miso_frame = m_tx_buffer.front();
-        m_tx_buffer.pop_front();
+    if (m_step < 15) {
+        m_step++;
     } else {
-        miso_frame = m_shift_reg;
+        m_step = 0;
+        frame_completed();
     }
-
-    m_shift_reg = mosi_frame;
-
-    m_signal.raise(Signal_ClientTfrStart, (mosi_frame << 8) | miso_frame);
-
-    m_logger->dbg("Client tfr MOSI=0x%02x, MISO=0x%02x", mosi_frame, miso_frame);
-
-    return miso_frame;
 }
 
-void SPI::end_transfer(bool ok)
-{
-    if (!m_tfr_in_progress) return;
-    m_tfr_in_progress = false;
 
-    if (ok) {
-        //Push the MOSI frame into the RX buffer and remove old frames if the size limit
-        //is reached
-        m_rx_buffer.push_back(m_shift_reg);
-        while (m_rx_limit > 0 && m_rx_buffer.size() > m_rx_limit)
-            m_rx_buffer.pop_front();
-    }
-
-    //Inform the parent peripheral
-    m_signal.raise(Signal_ClientTfrComplete, ok ? 1 : 0);
-}
+void EndPoint::frame_completed() {}
