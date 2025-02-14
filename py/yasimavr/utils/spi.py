@@ -36,8 +36,8 @@ class SPISimpleClient(SPI.EndPoint):
 
     def __init__(self, mode=SPI.SerialMode.Mode0, bitorder=SPI.BitOrder.MSBFirst):
         '''Initialisation of a SimpleClient
-        \param mode SPI mode (one of SPI.SerialMode enum values)
-        \param bitorder Bit order mode (one of SPI.BitOrder enum values)
+        :param mode SPI mode (one of SPI.SerialMode enum values)
+        :param bitorder Bit order mode (one of SPI.BitOrder enum values)
         '''
 
         super().__init__()
@@ -144,10 +144,10 @@ class SPISimpleHost(SPI.EndPoint):
 
     def __init__(self, cycle_manager, bitdelay, mode=SPI.SerialMode.Mode0, bitorder=SPI.BitOrder.MSBFirst):
         '''Initialisation of a SimpleHost
-        \param cycle_manager CycleManager instance associated with the simulation loop
-        \param bitdelay duration of a bit in simulation cycles
-        \param mode SPI mode (one of SPI.SerialMode enum values)
-        \param bitorder Bit order mode (one of SPI.BitOrder enum values)
+        :param cycle_manager CycleManager instance associated with the simulation loop
+        :param bitdelay duration of a bit in simulation cycles
+        :param mode SPI mode (one of SPI.SerialMode enum values)
+        :param bitorder Bit order mode (one of SPI.BitOrder enum values)
         '''
         super().__init__()
         self._cycle_manager = cycle_manager

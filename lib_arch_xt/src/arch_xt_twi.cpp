@@ -55,22 +55,28 @@ class ArchXT_TWI::_PinDriver : public PinDriver {
 
 public:
 
-    explicit _PinDriver(ArchXT_TWI& per);
+    explicit _PinDriver(ArchXT_TWI& per, bool dual_enabled);
 
     void set_enabled(bool enabled);
     void set_dual_mode(bool dual);
 
-    void set_host_driver_state(TWI::Line line, bool dig_state);
-    void set_client_driver_state(TWI::Line line, bool dig_state);
+    void set_host_driver_state(Line line, bool dig_state);
+    void set_client_driver_state(Line line, bool dig_state);
 
     virtual Pin::controls_t override_gpio(pin_index_t pin_index, const Pin::controls_t& gpio_controls) override;
     virtual void digital_state_changed(pin_index_t pin_index, bool dig_state) override;
 
 private:
 
+    enum DualMode {
+        Dual_Disabled,
+        Dual_Off,
+        Dual_On,
+    };
+
     ArchXT_TWI& m_peripheral;
     bool m_enabled;
-    bool m_dual;
+    DualMode m_dual;
     bool m_line_states[4];
 
 };
@@ -84,7 +90,7 @@ public:
 
 protected:
 
-    virtual void set_line_state(TWI::Line line, bool dig_state) override
+    virtual void set_line_state(Line line, bool dig_state) override
     {
         m_peripheral.m_driver->set_host_driver_state(line, dig_state);
     }
@@ -104,7 +110,7 @@ public:
 
 protected:
 
-    virtual void set_line_state(TWI::Line line, bool dig_state) override
+    virtual void set_line_state(Line line, bool dig_state) override
     {
         m_peripheral.m_driver->set_client_driver_state(line, dig_state);
     }
@@ -118,11 +124,11 @@ private:
 
 //=======================================================================================
 
-ArchXT_TWI::_PinDriver::_PinDriver(ArchXT_TWI& per)
-:PinDriver(per.id(), 4)
+ArchXT_TWI::_PinDriver::_PinDriver(ArchXT_TWI& per, bool dual_enabled)
+:PinDriver(per.id(), dual_enabled ? 4 : 2)
 ,m_peripheral(per)
 ,m_enabled(false)
-,m_dual(false)
+,m_dual(dual_enabled ? Dual_Off : Dual_Disabled)
 ,m_line_states{true, true, true, true}
 {}
 
@@ -130,41 +136,45 @@ ArchXT_TWI::_PinDriver::_PinDriver(ArchXT_TWI& per)
 void ArchXT_TWI::_PinDriver::set_enabled(bool enabled)
 {
     m_enabled = enabled;
-    PinDriver::set_enabled(TWI::Line_Clock, enabled);
-    PinDriver::set_enabled(TWI::Line_Data, enabled);
-    PinDriver::set_enabled(TWI::Line_Clock + 2, enabled && m_dual);
-    PinDriver::set_enabled(TWI::Line_Data + 2, enabled && m_dual);
+    PinDriver::set_enabled(Line_Clock, enabled);
+    PinDriver::set_enabled(Line_Data, enabled);
+    if (m_dual != Dual_Disabled) {
+        bool dual = m_dual == Dual_On;
+        PinDriver::set_enabled(Line_Clock + 2, enabled && dual);
+        PinDriver::set_enabled(Line_Data + 2, enabled && dual);
+    }
 }
 
 
 void ArchXT_TWI::_PinDriver::set_dual_mode(bool dual)
 {
-    m_dual = dual;
-    update_pin_state(TWI::Line_Clock);
-    update_pin_state(TWI::Line_Data);
-    PinDriver::set_enabled(TWI::Line_Clock + 2, m_enabled && dual);
-    PinDriver::set_enabled(TWI::Line_Data + 2, m_enabled && dual);
+    if (m_dual == Dual_Disabled) return;
+    m_dual = dual ? Dual_On : Dual_Off;
+    update_pin_state(Line_Clock);
+    update_pin_state(Line_Data);
+    PinDriver::set_enabled(Line_Clock + 2, m_enabled && dual);
+    PinDriver::set_enabled(Line_Data + 2, m_enabled && dual);
 }
 
 
-void ArchXT_TWI::_PinDriver::set_host_driver_state(TWI::Line line, bool state)
+void ArchXT_TWI::_PinDriver::set_host_driver_state(Line line, bool state)
 {
     m_line_states[line] = state;
     update_pin_state(line);
 }
 
 
-void ArchXT_TWI::_PinDriver::set_client_driver_state(TWI::Line line, bool state)
+void ArchXT_TWI::_PinDriver::set_client_driver_state(Line line, bool state)
 {
     m_line_states[line + 2] = state;
-    update_pin_state(m_dual ? (line + 2) : line);
+    update_pin_state((m_dual == Dual_On) ? (line + 2) : line);
 }
 
 
 Pin::controls_t ArchXT_TWI::_PinDriver::override_gpio(pin_index_t pin_index, const Pin::controls_t& gpio_controls)
 {
     Pin::controls_t c = { .drive = 0, .pull_up = true };
-    if (m_dual)
+    if (m_dual == Dual_On)
         c.dir = !m_line_states[pin_index];
     else
         c.dir = !m_line_states[pin_index] || !m_line_states[pin_index + 2];
@@ -176,11 +186,11 @@ Pin::controls_t ArchXT_TWI::_PinDriver::override_gpio(pin_index_t pin_index, con
 void ArchXT_TWI::_PinDriver::digital_state_changed(pin_index_t pin_index, bool dig_state)
 {
     if (pin_index < 2) {
-        m_peripheral.m_host->line_state_changed((TWI::Line) pin_index, dig_state);
-        if (!m_dual)
-            m_peripheral.m_client->line_state_changed((TWI::Line) pin_index, dig_state);
+        m_peripheral.m_host->line_state_changed((Line) pin_index, dig_state);
+        if (m_dual != Dual_On)
+            m_peripheral.m_client->line_state_changed((Line) pin_index, dig_state);
     } else {
-        m_peripheral.m_client->line_state_changed((TWI::Line)(pin_index - 2), dig_state);
+        m_peripheral.m_client->line_state_changed((Line)(pin_index - 2), dig_state);
     }
 }
 
@@ -202,7 +212,7 @@ ArchXT_TWI::ArchXT_TWI(uint8_t num, const ArchXT_TWIConfig& config)
 {
     m_client = new _Client(*this);
     m_host = new _Host(*this);
-    m_driver = new _PinDriver(*this);
+    m_driver = new _PinDriver(*this, m_config.dual_ctrl);
 }
 
 
@@ -311,7 +321,7 @@ uint8_t ArchXT_TWI::ioreg_read_handler(reg_addr_t addr, uint8_t value)
             clear_host_status();
             //If the smart mode is enabled, send the acknowledgment bit.
             if (TEST_IOREG(MCTRLA, TWI_SMEN)) {
-                bool ack = (READ_IOREG(MCTRLB) & TWI_ACKACT_bm) == TWI_ACKACT_ACK_gc;
+                bool ack = !TEST_IOREG(MCTRLB, TWI_ACKACT);
                 m_host->set_ack(ack);
             }
         }
@@ -321,7 +331,7 @@ uint8_t ArchXT_TWI::ioreg_read_handler(reg_addr_t addr, uint8_t value)
         if (m_pending_client_rx_data) {
             clear_client_status();
             if (TEST_IOREG(SCTRLA, TWI_SMEN)) {
-                bool ack = (READ_IOREG(SCTRLB) & TWI_ACKACT_bm) == TWI_ACKACT_ACK_gc;
+                bool ack = !TEST_IOREG(MCTRLB, TWI_ACKACT);
                 m_client->set_ack(ack);
             }
         }
@@ -377,18 +387,18 @@ void ArchXT_TWI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
             //FLUSH is a strobe bit so we clear it
             CLEAR_IOREG(MCTRLB, TWI_FLUSH);
             //Flushing takes over commands so no further processing other than clearing it
-            WRITE_IOREG_F(MCTRLB, TWI_MCMD, 0);
+            WRITE_IOREG_GC(MCTRLB, TWI_MCMD, 0);
             return;
         }
 
         //Extract and clear MCMD, it's a strobe
-        m_host_cmd = EXTRACT_F(data.value, TWI_MCMD);
-        WRITE_IOREG_F(MCTRLB, TWI_MCMD, 0);
+        m_host_cmd = EXTRACT_GC(data.value, TWI_MCMD);
+        WRITE_IOREG_GC(MCTRLB, TWI_MCMD, 0);
 
         //Acknowledgment Action, if MCMD is not zero and the host part is in the relevant state
         if (TEST_IOREG(MCTRLA, TWI_ENABLE) && m_host_cmd) {
             clear_host_status();
-            bool ack = EXTRACT_B(data.value, TWI_ACKACT) == TWI_ACKACT_ACK_gc;
+            bool ack = !EXTRACT_B(data.value, TWI_ACKACT);
             if (!m_host->set_ack(ack))
                 execute_host_command();
         }
@@ -400,9 +410,9 @@ void ArchXT_TWI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
         WRITE_IOREG(MSTATUS, data.old & ~(data.value & wotc_flags));
 
         //If writing IDLE to BUSSTATE, it resets the host part
-        if (TEST_IOREG(MCTRLA, TWI_ENABLE) && EXTRACT_F(data.value, TWI_BUSSTATE) == TWI_BUSSTATE_IDLE_gc) {
+        if (TEST_IOREG(MCTRLA, TWI_ENABLE) && EXTRACT_GC(data.value, TWI_BUSSTATE) == TWI_BUSSTATE_IDLE_gc) {
             reset_host();
-            WRITE_IOREG_F(MSTATUS, TWI_BUSSTATE, TWI_BUSSTATE_IDLE_gc);
+            WRITE_IOREG_GC(MSTATUS, TWI_BUSSTATE, TWI_BUSSTATE_IDLE_gc);
         }
 
         m_intflag_host.update_from_ioreg();
@@ -418,7 +428,7 @@ void ArchXT_TWI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
             //Peripheral disabled, nothing to do
         }
 
-        else if (READ_IOREG_F(MSTATUS, TWI_BUSSTATE) == TWI_BUSSTATE_UNKNOWN_gc) {
+        else if (READ_IOREG_GC(MSTATUS, TWI_BUSSTATE) == TWI_BUSSTATE_UNKNOWN_gc) {
             //If the bus state is unknown we can't do anything, just set the bus error flag
             SET_IOREG(MSTATUS, TWI_BUSERR);
             m_intflag_host.set_flag(TWI_WIF_bm);
@@ -436,7 +446,7 @@ void ArchXT_TWI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
             //If it succeeds, the address will follow automatically.
             logger().dbg("Sending start condition");
             m_pending_host_address = true;
-            WRITE_IOREG_F(MSTATUS, TWI_BUSSTATE, TWI_BUSSTATE_OWNER_gc);
+            WRITE_IOREG_GC(MSTATUS, TWI_BUSSTATE, TWI_BUSSTATE_OWNER_gc);
             clear_host_status();
         }
     }
@@ -472,15 +482,15 @@ void ArchXT_TWI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 
     else if (reg_ofs == REG_OFS(SCTRLB)) {
         //Extract and clear SCMD, it's a strobe
-        uint8_t scmd = EXTRACT_F(data.value, TWI_SCMD);
-        WRITE_IOREG_F(SCTRLB, TWI_SCMD, 0);
+        uint8_t scmd = EXTRACT_GC(data.value, TWI_SCMD);
+        WRITE_IOREG_GC(SCTRLB, TWI_SCMD, 0);
 
         //Command execution, if the client is enabled and SCMD is not zero
         if (TEST_IOREG(SCTRLA, TWI_ENABLE) && scmd) {
             logger().dbg("Client command: %d", scmd);
             m_client_cmd = scmd;
             clear_client_status();
-            bool ack = EXTRACT_B(data.value, TWI_ACKACT) == TWI_ACKACT_ACK_gc;
+            bool ack = !EXTRACT_B(data.value, TWI_ACKACT);
             if (!m_client->set_ack(ack))
                 execute_client_command();
         }
@@ -517,18 +527,18 @@ void ArchXT_TWI::host_signal_raised(const signal_data_t& sigdata, int)
 {
     switch (sigdata.sigid) {
 
-        case TWI::Signal_BusStateChanged: {
+        case Signal_BusStateChanged: {
             //If an address had been written but the bus was busy,
             //we can now start a transaction
-            if (sigdata.data.as_int() == TWI::Bus_Idle && m_pending_host_address)
+            if (sigdata.data.as_int() == Bus_Idle && m_pending_host_address)
                 m_host->start_transfer();
 
             //Update the BUSSTATE field
             TWI_BUSSTATE_t s = BusEnumToRegField[sigdata.data.as_int()];
-            WRITE_IOREG_F(MSTATUS, TWI_BUSSTATE, s);
+            WRITE_IOREG_GC(MSTATUS, TWI_BUSSTATE, s);
         } break;
 
-        case TWI::Signal_AddressStandby: {
+        case Signal_AddressStandby: {
             if (m_pending_host_address) {
                 uint8_t addr_rw = READ_IOREG(MADDR);
                 logger().dbg("Sending address 0x%02x after queuing", addr_rw);
@@ -537,14 +547,14 @@ void ArchXT_TWI::host_signal_raised(const signal_data_t& sigdata, int)
             }
         } break;
 
-        case TWI::Signal_AddressSent: {
+        case Signal_AddressSent: {
             //Save the ACK bit received
             bool ack = sigdata.data.as_uint();
             WRITE_IOREG_B(MSTATUS, TWI_RXACK, ack ? 0 : 1);
             logger().dbg("Address sent, received %s", ack ? "ACK" : "NACK");
         } break;
 
-        case TWI::Signal_DataStandby: {
+        case Signal_DataStandby: {
             //If it's a Read Request
             if (m_host->rw()) {
                 //For the first byte, just continue with the byte transfer
@@ -560,14 +570,14 @@ void ArchXT_TWI::host_signal_raised(const signal_data_t& sigdata, int)
             }
         } break;
 
-        case TWI::Signal_DataAckReceived: {
+        case Signal_DataAckReceived: {
             //Update the status flags
             bool ack = sigdata.data.as_uint();
             logger().dbg("Host data sent, received %s", ack ? "ACK" : "NACK");
             WRITE_IOREG_B(MSTATUS, TWI_RXACK, ack ? 0 : 1);
         } break;
 
-        case TWI::Signal_DataReceived: {
+        case Signal_DataReceived: {
             //Save the received byte
             WRITE_IOREG(MDATA, sigdata.data.as_uint());
             m_pending_host_rx_data = true;
@@ -577,7 +587,7 @@ void ArchXT_TWI::host_signal_raised(const signal_data_t& sigdata, int)
             logger().dbg("Host received data 0x%02x", sigdata.data.as_uint());
         } break;
 
-        case TWI::Signal_ArbitrationLost: {
+        case Signal_ArbitrationLost: {
             SET_IOREG(MSTATUS, TWI_ARBLOST);
             m_intflag_host.set_flag(TWI_WIF_bm);
             m_pending_host_address = false;
@@ -591,7 +601,7 @@ void ArchXT_TWI::client_signal_raised(const signal_data_t& sigdata, int)
 {
     switch (sigdata.sigid) {
 
-        case TWI::Signal_AddressReceived: {
+        case Signal_AddressReceived: {
             //Test the address with the match logic. If it's a match,
             // store the raw address byte in the data register and update the status flags
             uint8_t addr_rw = sigdata.data.as_uint();
@@ -605,7 +615,7 @@ void ArchXT_TWI::client_signal_raised(const signal_data_t& sigdata, int)
             }
         } break;
 
-        case TWI::Signal_DataStandby: {
+        case Signal_DataStandby: {
             //If it's a Read Request
             if (m_client->rw()) {
                 //hold on until data input, set the status flags
@@ -617,7 +627,7 @@ void ArchXT_TWI::client_signal_raised(const signal_data_t& sigdata, int)
             }
         } break;
 
-        case TWI::Signal_DataAckReceived: {
+        case Signal_DataAckReceived: {
             //A byte has been sent and ACK/NACK received from the host,
             //Save the ACK bit in the status register
             bool ack = sigdata.data.as_uint();
@@ -626,7 +636,7 @@ void ArchXT_TWI::client_signal_raised(const signal_data_t& sigdata, int)
             logger().dbg("Client sent data, received %s", ack ? "ACK" : "NACK");
         } break;
 
-        case TWI::Signal_DataReceived: {
+        case Signal_DataReceived: {
             //A byte has been received.
             WRITE_IOREG(SDATA, sigdata.data.as_uint());
             m_pending_client_rx_data = true;
@@ -635,13 +645,13 @@ void ArchXT_TWI::client_signal_raised(const signal_data_t& sigdata, int)
             logger().dbg("Client received data 0x%02x", sigdata.data.as_uint());
         } break;
 
-        case TWI::Signal_BusCollision: {
+        case Signal_BusCollision: {
             SET_IOREG(SSTATUS, TWI_COLL);
             m_intflag_client.set_flag(TWI_DIF_bm);
             logger().dbg("Client bus collision detected");
         } break;
 
-        case TWI::Signal_Stop: {
+        case Signal_Stop: {
             logger().dbg("Client detected a STOP condition");
             //Raise the Stop condition interrupt
             if (TEST_IOREG(SCTRLA, TWI_PIEN)) {
@@ -659,7 +669,7 @@ void ArchXT_TWI::reset_host()
     m_host->set_enabled(true);
     m_pending_host_address = false;
     clear_host_status();
-    WRITE_IOREG_F(MSTATUS, TWI_BUSSTATE, TWI_BUSSTATE_UNKNOWN_gc);
+    WRITE_IOREG_GC(MSTATUS, TWI_BUSSTATE, TWI_BUSSTATE_UNKNOWN_gc);
 }
 
 

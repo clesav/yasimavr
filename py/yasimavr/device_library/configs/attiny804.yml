@@ -262,11 +262,11 @@ peripherals:
 iomux:
     TCA0:
         DLFT: [ PB0, PB1, PB2, PA3, PA4, PA5 ]
-        ALT:  [ PB3, PB4, PB5, PC3, "", "" ]
+        ALT:  [ PB3, "", "", "", "", "" ]
 
     TCB0:
         DFLT: [ PA5 ]
-        ALT:  [ PC0 ]
+        ALT:  [ "" ]
 
     SPI0:
         #SCK, MISO, MOSI, CS

@@ -1,7 +1,7 @@
 /*
  * arch_xt_io_utils.h
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -50,6 +50,9 @@
 #define EXTRACT_B(reg, bit) \
     (((reg) & bit ## _bm) >> bit ## _bp)
 
+#define EXTRACT_GC(reg, field) \
+    ((reg) & field ## _gm)
+
 #define READ_IOREG(reg) \
     read_ioreg(REG_ADDR(reg))
 
@@ -59,6 +62,9 @@
 #define READ_IOREG_B(reg, bit) \
     read_ioreg(regbit_t(REG_ADDR(reg), bit ## _bp, bit ## _bm))
 
+#define READ_IOREG_GC(reg, field) \
+    (READ_IOREG(reg) & field ## _gm)
+
 #define WRITE_IOREG(reg, value) \
     write_ioreg(REG_ADDR(reg), (value));
 
@@ -67,6 +73,9 @@
 
 #define WRITE_IOREG_B(reg, bit, value) \
     write_ioreg(REG_ADDR(reg), bit ## _bp, (value))
+
+#define WRITE_IOREG_GC(reg, field, gc_value) \
+    WRITE_IOREG_F(reg, field, (gc_value) >> field ## _gp)
 
 #define TEST_IOREG(reg, bit) \
     test_ioreg(REG_ADDR(reg), bit ## _bp)

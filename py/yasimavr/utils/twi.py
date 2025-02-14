@@ -108,15 +108,15 @@ class TWISimpleClient(TWI.Client):
         '''Test the received address for match.
         The default implementation returns True for the default address.
         It may be overriden to define different match requirements.
-        \param addr_rw : ADDR+RW byte as sent by the host
-        \return True to respond with ACK, False for NACK
+        :param addr_rw : ADDR+RW byte as sent by the host
+        :return True to respond with ACK, False for NACK
         '''
         return (addr_rw >> 1) == self._address
 
 
     def transfer_start(self, rw):
         '''Generic handler called once at the start of a packet transfer.
-        \param rw RW bit: 1 for Read (client->host), 0 for Write (host->client)
+        :param rw RW bit: 1 for Read (client->host), 0 for Write (host->client)
         '''
         pass
 

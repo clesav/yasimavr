@@ -186,10 +186,10 @@ peripherals:
        ctl_id: TWI0
 
 iomux:
-    SPI0:
+    SPI:
         #CLK, MISO, MOSI, CS
         DFLT: [ PB5, PB4, PB3, PB2 ]
 
-    TWI0:
+    TWI:
         #SCL, SDA
         DFLT: [ PC5, PC4 ]

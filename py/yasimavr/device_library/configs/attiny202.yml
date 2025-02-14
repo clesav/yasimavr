@@ -255,6 +255,7 @@ iomux:
 
     TCB0:
         DFLT: [ PA6 ]
+        ALT:  [ "" ]
 
     SPI0:
         #SCK, MISO, MOSI, CS

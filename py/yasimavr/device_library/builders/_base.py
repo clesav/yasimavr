@@ -431,7 +431,8 @@ class DeviceBuilder:
         except KeyError:
             raise Exception('Pin driver absent from IOMUX config: ' + drv_name)
 
-        drv_id = _corelib.str_to_id(drv_name)
+        drv_id_str = device._descriptor_.peripherals[drv_name].ctl_id
+        drv_id = _corelib.str_to_id(drv_id_str)
         for mux_id, mux_cfg in drv_mux_configs.items():
             mux_id = _corelib.str_to_id(mux_id)
             if mux_cfg:
