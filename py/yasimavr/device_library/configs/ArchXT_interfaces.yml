@@ -555,33 +555,33 @@ PORTMUX_mega0:
 
     config:
         mux_configs:
-           TCA0:
-              reg: TCAROUTEA/TCA0
-              map: { 0x00: PA, 0x01: PB, 0x02: PC, 0x03: PD, 0x04: PE, 0x05: PF }
+            TCA0:
+                reg: TCAROUTEA/TCA0
+                map: { 0x00: PA, 0x01: PB, 0x02: PC, 0x03: PD, 0x04: PE, 0x05: PF }
 
-           TCB0:
-              reg: TCBROUTEA/TCB0
-              map: { 0x00: DFLT, 0x01: ALT1 }
+            TCB0:
+                reg: TCBROUTEA/TCB0
+                map: { 0x00: DFLT, 0x01: ALT1 }
 
-           TCB1:
-              reg: TCBROUTEA/TCB1
-              map: { 0x00: DFLT, 0x01: ALT1 }
+            TCB1:
+                reg: TCBROUTEA/TCB1
+                map: { 0x00: DFLT, 0x01: ALT1 }
 
-           TCB2:
-              reg: TCBROUTEA/TCB2
-              map: { 0x00: DFLT, 0x01: ALT1 }
+            TCB2:
+                reg: TCBROUTEA/TCB2
+                map: { 0x00: DFLT, 0x01: ALT1 }
 
-           TCB3:
-              reg: TCBROUTEA/TCB3
-              map: { 0x00: DFLT, 0x01: ALT1 }
+            TCB3:
+                reg: TCBROUTEA/TCB3
+                map: { 0x00: DFLT, 0x01: ALT1 }
 
-           SPI0:
-              reg: TWISPIROUTEA/SPI0
-              map: { 0x00: DFLT, 0x01: ALT1, 0x02: ALT2, 0x03: NONE }
+            SPI0:
+                reg: TWISPIROUTEA/SPI0
+                map: { 0x00: DFLT, 0x01: ALT1, 0x02: ALT2, 0x03: NONE }
 
-           TWI0:
-              reg: TWISPIROUTEA/TWI0
-              map: { 0x00: DFLT, 0x01: ALT1, 0x02: ALT2 }
+            TWI0:
+                reg: TWISPIROUTEA/TWI0
+                map: { 0x00: DFLT, 0x01: ALT1, 0x02: ALT2 }
 
 
 #========================================================================================
@@ -614,40 +614,40 @@ PORTMUX_tiny0:
 
     config:
         mux_configs:
-           TCA00:
-              reg: CTRLC/TCA00
-              pin: 0
-              map: { 0x00: DLFT, 0x01: ALT }
+            TCA00:
+                reg: CTRLC/TCA00
+                pin: 0
+                map: { 0x00: DLFT, 0x01: ALT }
 
-           TCA01:
-              reg: CTRLC/TCA01
-              pin: 1
-              map: { 0x00: DLFT, 0x01: ALT }
+            TCA01:
+                reg: CTRLC/TCA01
+                pin: 1
+                map: { 0x00: DLFT, 0x01: ALT }
 
-           TCA02:
-              reg: CTRLC/TCA02
-              pin: 2
-              map: { 0x00: DLFT, 0x01: ALT }
+            TCA02:
+                reg: CTRLC/TCA02
+                pin: 2
+                map: { 0x00: DLFT, 0x01: ALT }
 
-           TCA03:
-              reg: CTRLC/TCA03
-              pin: 3
-              map: { 0x00: DLFT, 0x01: ALT }
+            TCA03:
+                reg: CTRLC/TCA03
+                pin: 3
+                map: { 0x00: DLFT, 0x01: ALT }
 
-           TCA04:
-              reg: CTRLC/TCA04
-              pin: 4
-              map: { 0x00: DLFT, 0x01: ALT }
+            TCA04:
+                reg: CTRLC/TCA04
+                pin: 4
+                map: { 0x00: DLFT, 0x01: ALT }
 
-           TCA05:
-              reg: CTRLC/TCA05
-              pin: 5
-              map: { 0x00: DLFT, 0x01: ALT }
+            TCA05:
+                reg: CTRLC/TCA05
+                pin: 5
+                map: { 0x00: DLFT, 0x01: ALT }
 
-           TCB0:
-              reg: CTRLD/TCB0
-              map: { 0x00: DFLT, 0x01: ALT }
+            TCB0:
+                reg: CTRLD/TCB0
+                map: { 0x00: DFLT, 0x01: ALT }
 
-           SPI0:
-              reg: CTRLB/SPI0
-              map: { 0x00: DFLT, 0x01: ALT }
+            SPI0:
+                reg: CTRLB/SPI0
+                map: { 0x00: DFLT, 0x01: ALT }

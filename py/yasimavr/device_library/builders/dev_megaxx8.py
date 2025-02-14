@@ -59,8 +59,8 @@ class dev_megaxx8(AVR_BaseDevice):
 
 
     def arch_init(self):
-        self._builder_.add_pin_driver_mux_configs(self, 'SPI0')
-        self._builder_.add_pin_driver_mux_configs(self, 'TWI0')
+        self._builder_.add_pin_driver_mux_configs(self, 'SPI')
+        self._builder_.add_pin_driver_mux_configs(self, 'TWI')
 
         return True
 
