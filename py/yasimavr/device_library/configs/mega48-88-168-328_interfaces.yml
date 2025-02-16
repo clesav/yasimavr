@@ -165,15 +165,12 @@ USART:
                 kind:  ENUM
                 LSB: 1
                 MSB: 2
-
             USBS: { kind: BIT, pos: 3, one: "1-bit", zero: "2-bits" }
-
             UPM:
                 kind:  ENUM
                 LSB: 4
                 MSB: 5
                 values: [ Disabled, "", Even, Odd ]
-
             UMSEL:
                 kind:  ENUM
                 LSB: 6
@@ -190,7 +187,8 @@ USART:
                 MSB: 11
 
     config:
-        reg_data : UDR
+        rbc_rx_data : [ UDR, UCSRB/RXB8 ]
+        rbc_tx_data : [ UDR, UCSRB/TXB8 ]
         rb_rx_enable: UCSRB/RXEN
         rb_tx_enable: UCSRB/TXEN
         rb_rxc_inten: UCSRB/RXCIE
@@ -200,11 +198,17 @@ USART:
         rb_txe_inten: UCSRB/UDRIE
         rb_txe_flag: UCSRA/UDRE
         rb_baud_2x: UCSRA/U2X
-        reg_baud: UBRR
-        baud_bitsize: 12
-        rxc_vector: USART_RX
-        txc_vector: USART_TX
-        txe_vector: USART_UDRE
+        rbc_baud: UBRR
+        rb_ferr: UCSRA/FE
+        rb_overrun: UCSRA/DOR
+        rb_perr: UCSRA/UPE
+        rbc_chsize: [ UCSRC/UCSZ, UCSRB/UCSZ2 ]
+        rb_clock_mode: UCSRC/UMSEL
+        rp_parity: UCSRC/UPM
+        rb_stopbits: UCSRC/USBS
+        iv_rxc: USART_RX
+        iv_txc: USART_TX
+        iv_txe: USART_UDRE
 
 #========================================================================================
 SPI:

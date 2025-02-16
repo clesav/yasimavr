@@ -26,7 +26,8 @@ struct ArchAVR_USARTConfig {
 #include "arch_avr_usart.h"
 %End
 
-    reg_addr_t reg_data;
+    regbit_compound_t rbc_rx_data;
+    regbit_compound_t rbc_tx_data;
 
     regbit_t rb_rx_enable;
     regbit_t rb_tx_enable;
@@ -38,17 +39,24 @@ struct ArchAVR_USARTConfig {
     regbit_t rb_txe_flag;
 
     regbit_t rb_baud_2x;
-    reg_addr_t reg_baud;
-    uint8_t baud_bitsize;
+    regbit_compound_t rbc_baud;
 
-    int_vect_t rxc_vector;
-    int_vect_t txc_vector;
-    int_vect_t txe_vector;
+    regbit_t rb_ferr;
+    regbit_t rb_overrun;
+    regbit_t rb_perr;
+    regbit_compound_t rbc_chsize;
+    regbit_t rb_clock_mode;
+    regbit_t rb_parity;
+    regbit_t rb_stopbits;
+
+    int_vect_t iv_rxc;
+    int_vect_t iv_txc;
+    int_vect_t iv_txe;
 
 };
 
 
-class ArchAVR_USART : public Peripheral, public SignalHook /NoDefaultCtors/ {
+class ArchAVR_USART : public Peripheral /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_avr_usart.h"
 %End
@@ -61,8 +69,6 @@ public:
     virtual void reset();
     virtual bool ctlreq(ctlreq_id_t, ctlreq_data_t*);
     virtual uint8_t ioreg_read_handler(reg_addr_t, uint8_t);
-    virtual uint8_t ioreg_peek_handler(reg_addr_t, uint8_t);
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
-    virtual void raised(const signal_data_t&, int);
 
 };
