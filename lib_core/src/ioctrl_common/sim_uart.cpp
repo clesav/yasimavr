@@ -350,6 +350,7 @@ void USART::fill_tx_shifter()
 
     m_logger->dbg("TX start: 0x%03x", data);
     m_signal.raise(Signal_TX_Start, data);
+    m_signal.raise(Signal_TX_Frame, m_tx_shifter);
 }
 
 
@@ -358,8 +359,8 @@ void USART::shift_tx()
     if (m_tx_shift_counter == 1) {
         //The current frame transmission is complete, raise the signals
         m_logger->dbg("TX complete");
+        m_signal.raise(Signal_TX_Data, m_tx_buffer.front());
         m_signal.raise(Signal_TX_Complete, 1);
-        m_signal.raise(Signal_TX_DataFrame, m_tx_buffer.front());
 
         //Move to the next frame to send, if any.
         //If not, release the DIR line (if used)
@@ -534,7 +535,7 @@ void USART::shift_rx()
         m_rx_shifter >>= 16 - framesize();
         uint16_t data = parse_frame(m_rx_shifter);
         m_rx_buffer.push_back(data);
-        m_logger->dbg("Frame RX (bitwise) Complete: 0x%03x", data);
+        m_logger->dbg("Frame RX (bitwise) Complete: 0x%04x", data);
         m_signal.raise(Signal_RX_Complete, 1);
     }
 }

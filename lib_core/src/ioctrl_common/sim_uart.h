@@ -70,8 +70,10 @@ enum SignalId {
     /// Raised at the end of a frame reception.
     /// sigdata contains 1 if the frame is received successfully or 0 if it was discarded.
     Signal_RX_Complete,
-    /// Raised on transmission of a frame. sigdata contains the frame transmitted.
-    Signal_TX_DataFrame,
+    /// Raised on transmission of a frame. sigdata contains the raw frame transmitted.
+    Signal_TX_Frame,
+    /// Raised on transmission of a frame. sigdata contains the data transmitted.
+    Signal_TX_Data,
     /// Raised when the RX buffer overruns.
     Signal_RX_Overflow,
     /// Raised when the TX buffer overruns.
@@ -148,7 +150,7 @@ public:
     void set_tx_buffer_limit(size_t limit);
     void push_tx(uint16_t frame);
     void cancel_tx_pending();
-    unsigned int tx_pending() const;
+    size_t tx_pending() const;
     void set_tx_dir_enabled(bool enabled);
     bool tx_in_progress() const;
 
@@ -250,7 +252,7 @@ inline size_t USART::rx_available() const
 }
 
 /// Getter for the no of frames waiting in the buffer to be emitted.
-inline unsigned int USART::tx_pending() const
+inline size_t USART::tx_pending() const
 {
     return m_tx_buffer.size() ? (m_tx_buffer.size() - 1) : 0;
 }

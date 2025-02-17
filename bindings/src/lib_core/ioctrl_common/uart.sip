@@ -25,69 +25,102 @@
 
 #include "ioctrl_common/sim_uart.h"
 
-const ctlreq_id_t CTLREQ_UART_ENDPOINT = AVR_CTLREQ_UART_ENDPOINT;
+const ctlreq_id_t CTLREQ_USART_BYTES = AVR_CTLREQ_USART_BYTES;
 
 %End
 
 
 //=======================================================================================
 
-const ctlreq_id_t CTLREQ_UART_ENDPOINT;
+const ctlreq_id_t CTLREQ_USART_BYTES;
 
 
-struct UARTEndPoint {
+namespace UART {
 %TypeHeaderCode
 #include "ioctrl_common/sim_uart.h"
 %End
 
-    Signal* tx_signal;
-    SignalHook* rx_hook;
-
+enum SignalId /BaseType=IntEnum/ {
+    Signal_TX_Start         /PyName=TX_Start/,
+    Signal_TX_Complete      /PyName=TX_Complete/,
+    Signal_RX_Start         /PyName=RX_Start/,
+    Signal_RX_Complete      /PyName=RX_Complete/,
+    Signal_TX_Frame         /PyName=TX_Frame/,
+    Signal_TX_Data          /PyName=TX_Data/,
+    Signal_RX_Overflow      /PyName=RX_Overflow/,
+    Signal_TX_Collision     /PyName=TX_Collision/,
 };
 
+enum ClockMode {
+    Clock_Async             /PyName=Async/,
+    Clock_Emitter           /PyName=Emitter/,
+    Clock_Receiver          /PyName=Receiver/,
+};
 
-class UART : public SignalHook /NoDefaultCtors/ {
+enum Line /BaseType=IntEnum/ {
+    Line_TXD                /PyName=TXD/,
+    Line_RXD                /PyName=RXD/,
+    Line_XCK                /PyName=XCK/,
+    Line_DIR                /PyName=DIR/,
+};
+
+enum Parity {
+    Parity_No               /PyName=No/,
+    Parity_Odd              /PyName=Odd/,
+    Parity_Even             /PyName=Even/,
+};
+
+class USART /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "ioctrl_common/sim_uart.h"
 %End
 
 public:
 
-    enum SignalId /BaseType=IntEnum/ {
-        Signal_DataFrame        /PyName=DataFrame/,
-        Signal_DataString       /PyName=DataString/,
-        Signal_DataBytes        /PyName=DataBytes/,
-        Signal_TX_Start         /PyName=TX_Start/,
-        Signal_TX_Complete      /PyName=TX_Complete/,
-        Signal_RX_Start         /PyName=RX_Start/,
-        Signal_RX_Complete      /PyName=RX_Complete/,
-    };
-
-    UART();
-    virtual ~UART();
+    USART();
 
     void init(CycleManager&, Logger&);
     void reset();
 
     Signal& signal();
-    void set_frame_delay(cycle_count_t);
+
+    void set_clock_mode(ClockMode);
+    void set_bit_delay(cycle_count_t);
+
+    void set_stopbits(unsigned short);
+    void set_databits(unsigned short);
+    void set_parity(Parity);
+
     void set_tx_buffer_limit(size_t);
-    void push_tx(uint8_t);
+    void push_tx(uint16_t);
     void cancel_tx_pending();
     size_t tx_pending() const;
-    bool has_tx_collision() const;
-    void clear_tx_collision();
+    void set_tx_dir_enabled(bool);
+    bool tx_in_progress() const;
 
     void set_rx_buffer_limit(size_t);
     void set_rx_enabled(bool);
-    uint8_t rx_available() const;
-    uint8_t pop_rx();
-    uint8_t peek_rx() const;
-    bool has_rx_overflow() const;
-    void clear_rx_overflow();
+    size_t rx_available() const;
+    void pop_rx();
+    uint16_t read_rx() const;
+    bool has_frame_error() const;
+    bool has_parity_error() const;
+    bool has_rx_overrun() const;
+    bool rx_in_progress() const;
+    void push_rx_frame(uint16_t);
 
     void set_paused(bool);
 
-    virtual void raised(const signal_data_t&, int);
+    uint16_t build_frame(uint16_t) const;
+    uint16_t parse_frame(uint16_t) const;
+
+    void line_state_changed(Line, bool);
+
+protected:
+
+    virtual void set_line_state(Line, bool) = 0;
+    virtual bool get_line_state(Line) const = 0;
+
+};
 
 };
