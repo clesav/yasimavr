@@ -35,7 +35,7 @@ struct ArchXT_USARTConfig {
 };
 
 
-class ArchXT_USART : public Peripheral, public SignalHook /NoDefaultCtors/ {
+class ArchXT_USART : public Peripheral /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_xt_usart.h"
 %End
@@ -51,6 +51,5 @@ public:
     virtual uint8_t ioreg_peek_handler(reg_addr_t, uint8_t);
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
     virtual void sleep(bool, SleepMode);
-    virtual void raised(const signal_data_t&, int);
 
 };
