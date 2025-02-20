@@ -190,8 +190,8 @@ peripherals:
 
 iomux:
     USART:
-        #TXD, RXD, XCK, XDIR
-        DFLT: [ PD1, PD0, PD4, "" ]
+        #TXD, RXD, XCK
+        DFLT: [ PD1, PD0, PD4 ]
 
     SPI:
         #CLK, MISO, MOSI, CS

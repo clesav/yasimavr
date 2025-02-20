@@ -80,11 +80,15 @@ class dev_mega_0series(XT_BaseDevice):
         self._builder_.add_pin_driver_mux_configs(self, 'TCB0')
         self._builder_.add_pin_driver_mux_configs(self, 'TCB1')
         self._builder_.add_pin_driver_mux_configs(self, 'TCB2')
+        self._builder_.add_pin_driver_mux_configs(self, 'USART0')
+        self._builder_.add_pin_driver_mux_configs(self, 'USART1')
+        self._builder_.add_pin_driver_mux_configs(self, 'USART2')
         self._builder_.add_pin_driver_mux_configs(self, 'SPI0')
         self._builder_.add_pin_driver_mux_configs(self, 'TWI0')
 
         if self._descriptor_.name in ('atmega809', 'atmega1609', 'atmega3209', 'atmega4809'):
             self._builder_.add_pin_driver_mux_configs(self, 'TCB3')
+            self._builder_.add_pin_driver_mux_configs(self, 'USART3')
 
         return True
 

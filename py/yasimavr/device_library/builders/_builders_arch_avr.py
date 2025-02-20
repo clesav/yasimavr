@@ -1,6 +1,6 @@
 # _builders_arch_avr.py
 #
-# Copyright 2022-2024 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2022-2025 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -351,16 +351,8 @@ def _get_vref_builder():
 #========================================================================================
 #USART configuration
 
-def _usart_convertor(cfg, attr, yml_val, per_desc):
-    if attr in ('rxc_vector', 'txc_vector', 'txe_vector'):
-        v = per_desc.device.interrupt_map.vectors.index(yml_val)
-        setattr(cfg, attr, v)
-    else:
-        raise Exception('Converter not implemented for ' + attr)
-
-
 def _get_usart_builder():
-    cfg_builder = PeripheralConfigBuilder(_archlib.ArchAVR_USARTConfig, _usart_convertor)
+    cfg_builder = PeripheralConfigBuilder(_archlib.ArchAVR_USARTConfig)
     return IndexedPeripheralBuilder(_archlib.ArchAVR_USART, cfg_builder)
 
 

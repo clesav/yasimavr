@@ -204,7 +204,7 @@ USART:
         rb_perr: UCSRA/UPE
         rbc_chsize: [ UCSRC/UCSZ, UCSRB/UCSZ2 ]
         rb_clock_mode: UCSRC/UMSEL
-        rp_parity: UCSRC/UPM
+        rb_parity: UCSRC/UPM
         rb_stopbits: UCSRC/USBS
         iv_rxc: USART_RX
         iv_txc: USART_TX
