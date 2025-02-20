@@ -190,8 +190,8 @@ bool ArchAVR_USART::init(Device& device)
 {
     bool status = Peripheral::init(device);
 
-    add_ioreg(m_config.rbc_rx_data, true);
     add_ioreg(m_config.rbc_tx_data);
+    add_ioreg(m_config.rbc_rx_data, true);
     add_ioreg(m_config.rb_rx_enable);
     add_ioreg(m_config.rb_tx_enable);
     add_ioreg(m_config.rb_rxc_inten);
@@ -223,7 +223,7 @@ bool ArchAVR_USART::init(Device& device)
                                  m_config.rb_txe_flag,
                                  m_config.iv_txe);
 
-    m_ctrl->init(*device.cycle_manager(), logger());
+    m_ctrl->init(*device.cycle_manager(), &logger());
     m_ctrl->set_tx_buffer_limit(2);
     m_ctrl->set_rx_buffer_limit(3);
     m_ctrl->signal().connect(m_ctrl_hook);
@@ -277,7 +277,7 @@ uint8_t ArchAVR_USART::ioreg_read_handler(reg_addr_t addr, uint8_t value)
 void ArchAVR_USART::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
     //Writing data to the DATA register trigger a emit.
-    if (addr == m_config.rbc_rx_data[0].addr && test_ioreg(m_config.rb_tx_enable)) {
+    if (addr == m_config.rbc_tx_data[0].addr && test_ioreg(m_config.rb_tx_enable)) {
         m_txe_intflag.clear_flag();
         m_ctrl->push_tx(read_ioreg(m_config.rbc_tx_data));
     }

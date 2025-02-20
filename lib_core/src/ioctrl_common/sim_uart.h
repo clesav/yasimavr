@@ -134,7 +134,7 @@ public:
     USART();
     virtual ~USART() = default;
 
-    void init(CycleManager& cycle_manager, Logger& logger);
+    void init(CycleManager& cycle_manager, Logger* logger = nullptr);
 
     void reset();
 

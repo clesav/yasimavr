@@ -79,7 +79,7 @@ public:
 
     USART();
 
-    void init(CycleManager&, Logger&);
+    void init(CycleManager&, Logger*=nullptr);
     void reset();
 
     Signal& signal();

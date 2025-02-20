@@ -57,10 +57,10 @@ USART::USART()
    \param cycle_manager Cycle manager used for time-related operations
    \param logger Logger used for the interface
  */
-void USART::init(CycleManager& cycle_manager, Logger& logger)
+void USART::init(CycleManager& cycle_manager, Logger* logger)
 {
     m_cycle_manager = &cycle_manager;
-    m_logger = &logger;
+    m_logger = logger;
 }
 
 /**
@@ -292,7 +292,7 @@ void USART::set_tx_buffer_limit(size_t limit)
  */
 void USART::push_tx(uint16_t frame)
 {
-    m_logger->dbg("TX push: 0x%03x", frame);
+    if (m_logger) m_logger->dbg("TX push: 0x%03x", frame);
 
     if (m_tx_limit > 0 && m_tx_buffer.size() == m_tx_limit) {
         m_tx_buffer.pop_back();
@@ -348,7 +348,7 @@ void USART::fill_tx_shifter()
         ++m_tx_shift_counter;
     }
 
-    m_logger->dbg("TX start: 0x%03x", data);
+    if (m_logger) m_logger->dbg("TX start: 0x%03x", data);
     m_signal.raise(Signal_TX_Start, data);
     m_signal.raise(Signal_TX_Frame, m_tx_shifter);
 }
@@ -358,7 +358,7 @@ void USART::shift_tx()
 {
     if (m_tx_shift_counter == 1) {
         //The current frame transmission is complete, raise the signals
-        m_logger->dbg("TX complete");
+    	if (m_logger) m_logger->dbg("TX complete");
         m_signal.raise(Signal_TX_Data, m_tx_buffer.front());
         m_signal.raise(Signal_TX_Complete, 1);
 
@@ -535,7 +535,7 @@ void USART::shift_rx()
         m_rx_shifter >>= 16 - framesize();
         uint16_t data = parse_frame(m_rx_shifter);
         m_rx_buffer.push_back(data);
-        m_logger->dbg("Frame RX (bitwise) Complete: 0x%04x", data);
+        if (m_logger) m_logger->dbg("Frame RX (bitwise) Complete: 0x%04x", data);
         m_signal.raise(Signal_RX_Complete, 1);
     }
 }
@@ -564,7 +564,7 @@ cycle_count_t USART::rx_timer_next(cycle_count_t when)
             uint16_t data = m_rx_pending.front();
             m_rx_pending.pop_front();
             m_rx_buffer.push_back(data);
-            m_logger->dbg("Frame RX (bytewise) Complete: 0x%03x", data);
+            if (m_logger) m_logger->dbg("Frame RX (bytewise) Complete: 0x%03x", data);
             m_signal.raise(Signal_RX_Complete, 1);
         } else {
             //If disabled or paused, discard the frame
