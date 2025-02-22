@@ -45,7 +45,7 @@ class UART_IO(io.RawIOBase):
             raise ValueError('Invalid mode')
 
         self._device = device
-        self._ctl_id = _corelib.IOCTL_UART(portnum)
+        self._ctl_id = _corelib.IOCTL_UART(str(portnum))
 
         #Create the signal hook and connect to the peripheral
         if 'r' in mode:
@@ -77,7 +77,8 @@ class UART_IO(io.RawIOBase):
         else:
             raise TypeError('Invalid data type')
 
-        reqdata = _corelib.vardata_t(b)
+        reqdata = _corelib.ctlreq_data_t()
+        reqdata.data = _corelib.vardata_t(b)
         ok, reqdata = self._device.ctlreq(self._ctl_id, _corelib.CTLREQ_USART_BYTES, reqdata)
         if not ok:
             raise IOError('Error sending data to the peripheral')
