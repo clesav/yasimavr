@@ -26,7 +26,6 @@
 
 #include "arch_avr_globals.h"
 #include "core/sim_interrupt.h"
-#include "ioctrl_common/sim_uart.h"
 
 YASIMAVR_BEGIN_NAMESPACE
 
@@ -39,7 +38,8 @@ YASIMAVR_BEGIN_NAMESPACE
  */
 struct ArchAVR_USARTConfig {
 
-    reg_addr_t reg_data;            ///< Data register address
+    regbit_compound_t rbc_rx_data;  ///< Data register address
+	regbit_compound_t rbc_tx_data;
 
     regbit_t rb_rx_enable;          ///< RX enable bit
     regbit_t rb_tx_enable;          ///< TX enable bit
@@ -51,12 +51,19 @@ struct ArchAVR_USARTConfig {
     regbit_t rb_txe_flag;           ///< TXE flag bit
 
     regbit_t rb_baud_2x;            ///< double bitrate bit
-    reg_addr_t reg_baud;            ///< bitrate register (1 or 2 bytes)
-    uint8_t baud_bitsize;           ///< size of the bitrate field (in bits)
+    regbit_compound_t rbc_baud;     ///< bitrate register (1 or 2 bytes)
 
-    int_vect_t rxc_vector;          ///< RXC interrupt vector
-    int_vect_t txc_vector;          ///< TXC interrupt vector
-    int_vect_t txe_vector;          ///< TXE (DRE) interrupt vector
+    regbit_t rb_ferr;
+    regbit_t rb_overrun;
+    regbit_t rb_perr;
+    regbit_compound_t rbc_chsize;
+    regbit_t rb_clock_mode;
+    regbit_t rb_parity;
+    regbit_t rb_stopbits;
+
+    int_vect_t iv_rxc;          ///< RXC interrupt vector
+    int_vect_t iv_txc;          ///< TXC interrupt vector
+    int_vect_t iv_txe;          ///< TXE (DRE) interrupt vector
 
 };
 
@@ -78,32 +85,39 @@ struct ArchAVR_USARTConfig {
      - AVR_CTLREQ_UART_ENDPOINT : returns in data.p the endpoint to use in order to transmit
         data in and out (see sim_uart.h)
  */
-class AVR_ARCHAVR_PUBLIC_API ArchAVR_USART : public Peripheral, public SignalHook {
+class AVR_ARCHAVR_PUBLIC_API ArchAVR_USART : public Peripheral {
 
 public:
 
     ArchAVR_USART(uint8_t num, const ArchAVR_USARTConfig& config);
+    virtual ~ArchAVR_USART();
 
     virtual bool init(Device& device) override;
     virtual void reset() override;
     virtual bool ctlreq(ctlreq_id_t req, ctlreq_data_t* data) override;
     virtual uint8_t ioreg_read_handler(reg_addr_t addr, uint8_t value) override;
-    virtual uint8_t ioreg_peek_handler(reg_addr_t addr, uint8_t value) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
-    virtual void raised(const signal_data_t& sigdata, int hooktag) override;
 
 private:
 
+    class _PinDriver;
+    friend class _PinDriver;
+    class _Controller;
+    friend class _Controller;
+
     const ArchAVR_USARTConfig& m_config;
 
-    UART m_uart;
-    UARTEndPoint m_endpoint;
+    _PinDriver* m_driver;
+    _Controller* m_ctrl;
+    BoundFunctionSignalHook<ArchAVR_USART> m_ctrl_hook;
 
     InterruptFlag m_rxc_intflag;
     InterruptFlag m_txc_intflag;
     InterruptFlag m_txe_intflag;
 
-    void update_framerate();
+    void update_bitrate();
+	void extract_rx_data();
+	void ctrl_signal_raised(const signal_data_t& sigdata, int);
 
 };
 

@@ -26,7 +26,6 @@
 
 #include "arch_xt_globals.h"
 #include "core/sim_interrupt.h"
-#include "ioctrl_common/sim_uart.h"
 
 YASIMAVR_BEGIN_NAMESPACE
 
@@ -54,27 +53,21 @@ struct ArchXT_USARTConfig {
    \ingroup api_uart
    \brief Implementation of a USART interface for XT core series
 
-   Features:
-    - 8-bits frames only, regardless of the frame size setting
-    - stop bits and parity settings have no effect
-    - synchronous, SPI MPCM modes are not supported
-    - one-wire / RS485 and IRCOM modes not supported
-    - RXC, RXS, TXC, UDRE interrupts are supported
-    - Start-of-Frame detection is supported
-    - Error flags are not supported
+   Limitations:
+    - MSPI, MPCM or IRCOM modes are not supported
     - Auto-baud not supported
 
    CTLREQs supported:
     - AVR_CTLREQ_GET_SIGNAL : returns in data.p the signal of the underlying
-      UART (see sim_uart.h)
-    - AVR_CTLREQ_UART_ENDPOINT : returns in data.p the endpoint to use in order to transmit
-      data in and out (see sim_uart.h)
+      USART object (see sim_uart.h)
+    - AVR_CTLREQ_USART_BYTES
  */
-class AVR_ARCHXT_PUBLIC_API ArchXT_USART : public Peripheral, public SignalHook {
+class AVR_ARCHXT_PUBLIC_API ArchXT_USART : public Peripheral {
 
 public:
 
-    ArchXT_USART(uint8_t num, const ArchXT_USARTConfig& config);
+    ArchXT_USART(unsigned char num, const ArchXT_USARTConfig& config);
+    virtual ~ArchXT_USART();
 
     virtual bool init(Device& device) override;
     virtual void reset() override;
@@ -83,20 +76,27 @@ public:
     virtual uint8_t ioreg_peek_handler(reg_addr_t addr, uint8_t value) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
     virtual void sleep(bool on, SleepMode mode) override;
-    virtual void raised(const signal_data_t& sigdata, int hooktag) override;
 
 private:
 
+    class _PinDriver;
+    friend class _PinDriver;
+    class _Controller;
+    friend class _Controller;
+
     const ArchXT_USARTConfig& m_config;
 
-    UART m_uart;
-    UARTEndPoint m_endpoint;
+    _PinDriver* m_driver;
+    _Controller* m_ctrl;
+    BoundFunctionSignalHook<ArchXT_USART> m_ctrl_hook;
 
     InterruptFlag m_rxc_intflag;
     InterruptFlag m_txc_intflag;
     InterruptFlag m_txe_intflag;
 
-    void update_framerate();
+    void update_bitrate();
+    void extract_rx_data();
+    void ctrl_signal_raised(const signal_data_t& sigdata, int);
 
 };
 

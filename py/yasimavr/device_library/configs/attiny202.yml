@@ -257,6 +257,11 @@ iomux:
         DFLT: [ PA6 ]
         ALT:  [ "" ]
 
+    USART0:
+        #TXD, RXD, XCK, XDIR
+        DFLT: [ PA6, PA7, PA3, PA0 ]
+        ALT:  [ PA1, PA2, PA3, PA0 ]
+
     SPI0:
         #SCK, MISO, MOSI, CS
         DFLT: [ PA3, PA2, PA1, PA0 ]

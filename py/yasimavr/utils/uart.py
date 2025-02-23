@@ -1,6 +1,6 @@
 # uart.py
 #
-# Copyright 2022 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2022-2025 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -21,7 +21,6 @@
 This module defines UartIO which is a reimplementation of io.RawIOBase
 that can connect to a AVR device USART peripheral to exchange data with
 it as if writing to/reading from a file.
-See the serial_echo.py example for how to use it.
 '''
 
 import collections
@@ -29,82 +28,140 @@ import io
 
 import yasimavr.lib.core as _corelib
 
-_UART_SignalId = _corelib.UART.SignalId
+UART = _corelib.UART
+
+__all__ = ['UART', 'UART_IO', 'RawUART']
 
 
-class UartIO(io.RawIOBase):
-
-    class _TxHook(_corelib.SignalHook):
-
-        def __init__(self):
-            super(UartIO._TxHook, self).__init__()
-            self.queue = collections.deque()
-
-        def raised(self, sigdata, _):
-            if sigdata.sigid == _UART_SignalId.DataFrame:
-                self.queue.append(sigdata.data.value())
+class UART_IO(io.RawIOBase):
+    '''Reimplementation of io.RawIOBase that can connect to a device USART peripheral to exchange data with
+    it as if writing to/reading from a file.
+    '''
 
     def __init__(self, device, portnum, mode='rw'):
-        super(UartIO, self).__init__()
+        super(UART_IO, self).__init__()
 
         if mode not in ('rw', 'r', 'w'):
             raise ValueError('Invalid mode')
 
-        portnum = str(portnum)
-        ok, reqdata = device.ctlreq(_corelib.IOCTL_UART(portnum), _corelib.CTLREQ_UART_ENDPOINT)
+        self._device = device
+        self._ctl_id = _corelib.IOCTL_UART(str(portnum))
 
-        if not ok:
-            raise ValueError('Endpoint of UART port ' + portnum + ' not found')
-
-        self._endpoint = reqdata.data.as_ptr(_corelib.UARTEndPoint)
-
-        #Create the signal hook and connect to the endpoint
+        #Create the signal hook and connect to the peripheral
         if 'r' in mode:
-            self._rx_hook = self._TxHook()
-            self._endpoint.tx_signal.connect(self._rx_hook)
+            self._rx_queue = collections.deque()
 
-        if 'w' in mode:
-            self._tx_signal = _corelib.Signal()
-            self._tx_signal.connect(self._endpoint.rx_hook)
+            ok, reqdata = device.ctlreq(self._ctl_id, _corelib.CTLREQ_GET_SIGNAL)
+            if not ok:
+                raise ValueError('UART port ' + str(portnum) + ' not found')
+
+            self._rx_hook = _corelib.CallableSignalHook(self._rx_hook_raised)
+            reqdata.data.value(_corelib.Signal).connect(self._rx_hook)
 
         self._mode = mode
+
+
+    def _rx_hook_raised(self, sigdata, _):
+        if sigdata.sigid == UART.SignalId.TX_Data:
+            self._rx_queue.append(sigdata.data.value())
 
 
     def write(self, data):
         if 'w' not in self._mode:
             raise IOError('Invalid mode')
-        elif isinstance(data, int) and (0 <= data <= 255):
-            self._tx_signal.raise_(_UART_SignalId.DataFrame, data)
-        elif isinstance(data, (bytes, bytearray)):
-            self._tx_signal.raise_(_UART_SignalId.DataBytes, bytes(data))
+
+        if isinstance(data, int) and (0 <= data <= 255):
+            b = bytes((data,))
+        elif isinstance(data, (list, bytes, bytearray)):
+            b = bytes(data)
         else:
             raise TypeError('Invalid data type')
+
+        reqdata = _corelib.ctlreq_data_t()
+        reqdata.data = _corelib.vardata_t(b)
+        ok, reqdata = self._device.ctlreq(self._ctl_id, _corelib.CTLREQ_USART_BYTES, reqdata)
+        if not ok:
+            raise IOError('Error sending data to the peripheral')
 
 
     def readinto(self, b):
         if 'r' not in self._mode:
             raise IOError('Invalid mode')
 
-        n = min(len(self._rx_hook.queue), len(b))
+        n = min(len(self._rx_queue), len(b))
         for i in range(n):
-            b[i] = self._rx_hook.queue.popleft()
+            b[i] = self._rx_queue.popleft()
         return n
 
 
     def readable(self):
         return 'r' in self._mode
 
+
     def writable(self):
         return 'w' in self._mode
 
+
     def available(self):
-        return len(self._rx_hook.queue)
+        return len(self._rx_queue) if 'r' in self._mode else 0
 
 
     def close(self):
-        if not self.closed:
-            self._endpoint.tx_signal.disconnect(self)
-            self._tx_signal.disconnect(self._endpoint.rx_hook)
-            self._rx_hook.queue.clear()
+        if not self.closed and 'r' in self._mode:
+            self._rx_hook = None
+            self._rx_queue.clear()
 
-        super(UartIO, self).close()
+        super(UART_IO, self).close()
+
+
+class RawUART(UART.USART):
+    '''Simple reimplementation of a USART base class to allow
+    the use of UART lines in simulation models.
+    #Being bitwise, it is compatible with bit banging interfaces and allow
+    to visualise the traffic on the data lines.
+    '''
+
+    def __init__(self, ):
+        super().__init__()
+
+        self._lineTXD = _corelib.Wire()
+        self._lineRXD = _corelib.Wire()
+        self._lineXCK = _corelib.Wire()
+
+        self._hook = _corelib.CallableSignalHook(self._wire_signal_raised)
+        self._lineTXD.signal().connect(self._hook, UART.Line.TXD)
+        self._lineRXD.signal().connect(self._hook, UART.Line.RXD)
+        self._lineXCK.signal().connect(self._hook, UART.Line.XCK)
+
+
+    def get_line_state(self, line):
+        if line == UART.Line.TXD:
+            return self._lineTXD.digital_state()
+        elif line == UART.Line.RXD:
+            return self._lineRXD.digital_state()
+        elif line == UART.Line.XCK:
+            return self._lineXCK.digital_state()
+        else:
+            return False
+
+
+    def set_line_state(self, line, state):
+        if line == UART.Line.TXD:
+            self._lineTXD.set_state('H' if state else 'L')
+
+
+    def _wire_signal_raised(self, sigdata, hooktag):
+        if sigdata.sigid == _corelib.Wire.SignalId.DigitalChange:
+            self.line_state_changed(UART.Line(hooktag), sigdata.data.value())
+
+
+    @property
+    def lineTXD(self): return self._lineTXD
+
+
+    @property
+    def lineRXD(self): return self._lineRXD
+
+
+    @property
+    def lineXCK(self): return self._lineXCK

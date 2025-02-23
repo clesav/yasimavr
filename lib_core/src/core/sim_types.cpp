@@ -1,7 +1,7 @@
 /*
  * sim_types.cpp
  *
- *  Copyright 2022-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022-2025 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -32,11 +32,10 @@ YASIMAVR_USING_NAMESPACE
 
 static int _bitcount(uint8_t mask)
 {
-    uint8_t m = mask;
     int n = 0;
-    while (m) {
-        if (m && 1) n++;
-        m >>= 1;
+    while (mask) {
+        if (mask & 1) n++;
+        mask >>= 1;
     }
     return n;
 }
@@ -170,7 +169,8 @@ uint64_t regbit_compound_t::compound(uint8_t regvalue, size_t index) const
 
 uint8_t regbit_compound_t::extract(uint64_t v, size_t index) const
 {
-    return m_regbits[index].extract((v >> m_offsets[index]) & 0xFF);
+    uint8_t rv = (v >> m_offsets[index]) & 0xFF;
+    return rv & (m_regbits[index].mask >> m_regbits[index].bit);
 }
 
 int regbit_compound_t::bitcount() const

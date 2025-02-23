@@ -352,6 +352,24 @@ iomux:
         DFLT: [ PC0 ]
         ALT1: [ "" ]
 
+    USART0:
+        #TXD, RXD, XCK, XDIR
+        DFLT: [ PA0, PA1, PA2, PA3 ]
+        ALT1: [ PA4, PA5, PA6, PA7 ]
+        NONE: [ "",  "",  "",  ""  ]
+
+    USART1:
+        #TXD, RXD, XCK, XDIR
+        DFLT: [ PC0, PC1, PC2, PC3 ]
+        ALT1: [ "",  "",  "",  ""  ]
+        NONE: [ "",  "",  "",  ""  ]
+
+    USART2:
+        #TXD, RXD, XCK, XDIR
+        DFLT: [ PF0, PF1, PF2, PF3 ]
+        ALT1: [ PF4, PF5, PF6, ""  ]
+        NONE: [ "",  "",  "",  ""  ]
+
     SPI0:
         #SCK, MISO, MOSI, CS
         DFLT: [ PA6, PA5, PA4, PA7 ]

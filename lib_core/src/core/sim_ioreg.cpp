@@ -136,8 +136,9 @@ void IO_Register::set_handler(IO_RegHandler& handler, uint8_t use_mask, uint8_t 
         m_handler = &handler;
     }
 
+    uint8_t new_use_mask = use_mask & ~m_use_mask;
     m_use_mask |= use_mask;
-    m_ro_mask |= ro_mask;
+    m_ro_mask = (m_ro_mask & ~new_use_mask) | (ro_mask & new_use_mask);
 }
 
 /**
