@@ -1,6 +1,6 @@
 # Makefile for yasimavr_arch_avr library
 #
-# Copyright 2023 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2023-2025 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -30,6 +30,7 @@ CPP_SRCS := \
 	src/arch_avr_timer.cpp \
 	src/arch_avr_twi.cpp \
 	src/arch_avr_usart.cpp \
+	src/arch_avr_usi.cpp \
 	src/arch_avr_wdt.cpp
 
 OBJS := \
@@ -44,6 +45,7 @@ OBJS := \
 	$(BUILD_DIR)/arch_avr_timer.o \
 	$(BUILD_DIR)/arch_avr_twi.o \
 	$(BUILD_DIR)/arch_avr_usart.o \
+	$(BUILD_DIR)/arch_avr_usi.o \
 	$(BUILD_DIR)/arch_avr_wdt.o
 
 CPP_DEPS := \
@@ -58,6 +60,7 @@ CPP_DEPS := \
 	$(BUILD_DIR)/arch_avr_timer.d \
 	$(BUILD_DIR)/arch_avr_twi.d \
 	$(BUILD_DIR)/arch_avr_usart.d \
+	$(BUILD_DIR)/arch_avr_usi.d \
 	$(BUILD_DIR)/arch_avr_wdt.d
 
 CPP_INCS := \
