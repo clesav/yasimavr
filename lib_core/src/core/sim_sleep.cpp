@@ -1,7 +1,7 @@
 /*
  * sim_sleep.cpp
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -77,18 +77,28 @@ bool SleepController::ctlreq(ctlreq_id_t req, ctlreq_data_t*)
     // 2 - check that the mode register is set to a configured sleep mode
     // 3 - send the sleep request to the device
     if (req == AVR_CTLREQ_SLEEP_CALL) {
-        if (test_ioreg(m_config.rb_enable)) {
-            uint8_t reg_mode_value = read_ioreg(m_config.rb_mode);
-            int index = find_reg_config<SleepConfig::mode_config_t>(m_config.modes, reg_mode_value);
-            if (index >= 0) {
-                SleepMode mode = m_config.modes[index].mode;
-                if (mode >= SleepMode::Idle) {
-                    m_mode_index = index;
-                    ctlreq_data_t d = { .data = (int) mode };
-                    device()->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_SLEEP, &d);
-                }
-            }
+        if (!test_ioreg(m_config.rb_enable)) {
+            logger().dbg("Sleep call but sleep mode not enabled");
+            return true;
         }
+
+        uint8_t reg_mode_value = read_ioreg(m_config.rb_mode);
+        int index = find_reg_config(m_config.modes, reg_mode_value);
+        if (index < 0) {
+            logger().err("Sleep call with invalid mode setting: 0x%02x", reg_mode_value);
+            device()->crash(CRASH_INVALID_CONFIG, "SLP: Invalid sleep mode value");
+            return true;
+        }
+
+        logger().dbg("Sleep call with mode 0x%02x", reg_mode_value);
+
+        SleepMode mode = m_config.modes[index].mode;
+        if (mode >= SleepMode::Idle) {
+            m_mode_index = index;
+            ctlreq_data_t d = { .data = (int) mode };
+            device()->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_SLEEP, &d);
+        }
+
         return true;
     }
 

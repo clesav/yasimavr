@@ -763,7 +763,7 @@ def convert_to_regbit(arg, per=None, dev=None):
     :param DeviceDescriptor dev: used to resolve reg paths
     """
 
-    if arg is None:
+    if arg is None or arg == '':
         return _corelib.regbit_t()
 
     if isinstance(arg, int):

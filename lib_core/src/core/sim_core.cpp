@@ -1,7 +1,7 @@
 /*
  * sim_core.cpp
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -154,6 +154,7 @@ int Core::exec_cycle()
         InterruptController::IRQ_t irq = m_intrctl->cpu_get_irq();
         //If the GIE flag is set or the vector is non-maskable
         if (m_sreg[SREG_I] || irq.nmi) {
+            m_device->logger().log(Logger::Level_Trace, "IRQ %hd ack'ed, jump to 0x%04x", irq.vector, irq.address);
             //Acknowledge the vector with the Interrupt Controller
             m_intrctl->cpu_ack_irq();
             //Push the current PC to the stack and jump to the vector table entry

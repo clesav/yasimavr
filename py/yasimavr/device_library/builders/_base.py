@@ -1,6 +1,6 @@
 # _base.py
 #
-# Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -160,13 +160,13 @@ class PeripheralConfigBuilder:
             return per_desc.reg_base
 
         elif attr.startswith('iv_'):
-            return per_desc.device.interrupt_map.vectors.index(yml_val)
+            return per_desc.device.interrupt_map.vectors.index(yml_val) if yml_val else _corelib.INTERRUPT_NONE
 
         elif attr.startswith('reg_'):
             if isinstance(yml_val, int):
-                return yml_val
+                return yml_val if yml_val >= 0 else _corelib.INVALID_REGISTER
             elif isinstance(yml_val, str):
-                return per_desc.reg_address(yml_val)
+                return per_desc.reg_address(yml_val) if yml_val else _corelib.INVALID_REGISTER
             else:
                 return None
 
