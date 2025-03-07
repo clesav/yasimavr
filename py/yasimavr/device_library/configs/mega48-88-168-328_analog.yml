@@ -1,6 +1,6 @@
 # YAML configuration file for atmega48-88-168-328 variants
 #
-# Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -113,53 +113,7 @@ ADC:
         rb_prescaler: ADCSRA/ADPS
         rb_trig_mux: ADCSRB/ADTS
         rb_left_adj: ADMUX/ADLAR
+        rb_bipolar: ""
         int_vector: ADC
         temp_cal_25C: 0.0
         temp_cal_coef: 1.0
-
-#========================================================================================
-ACP:
-    registers:
-        - name: ACSR
-          address: 0x30
-          fields:
-            ACIS:
-                kind: ENUM
-                LSB: 0
-                MSB: 1
-                values: { 0x00: BOTHEDGE, 0x02: NEGEDGE, 0x03: POSEDGE }
-                supported: no
-            ACIC: { kind: BIT, pos: 2, one: enabled, zero: disabled, supported: no }
-            ACIE: { kind: BIT, pos: 3, one: enabled, zero: disabled }
-            ACI: { kind: BIT, pos: 4 }
-            ACO: { kind: BIT, pos: 5, readonly: yes }
-            ACBG: { kind: BIT, pos: 6, one: BANDGAP, zero: AIN0 }
-            ACD: { kind: BIT, pos: 7, one: disabled, zero: enabled }
-
-    config:
-        mux_pins:
-            0x00: PC0
-            0x01: PC1
-            0x02: PC2
-            0x03: PC3
-            0x04: PC4
-            0x05: PC5
-            0x06: ADC6
-            0x07: ADC7
-        pos_pin: PD6
-        neg_pin: PD7
-        rb_disable: ACSR/ACD
-        rb_mux_enable: ADC/ADCSRB/ACME
-        rb_adc_enable: ADC/ADCSRA/ADEN
-        rb_mux: ADC/ADMUX/MUX
-        rb_bandgap_select: ACSR/ACBG
-        rb_int_mode: ACSR/ACIS
-        rb_output: ACSR/ACO
-        rb_int_enable: ACSR/ACIE
-        rb_int_flag: ACSR/ACI
-        iv_cmp: ANALOG_COMP
-
-#========================================================================================
-VREF:
-    config:
-        bandgap : 1.1

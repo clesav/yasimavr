@@ -114,18 +114,28 @@ EXTINT:
             PCINT23: { kind: BIT, pos: 7, one: enabled, zero: disabled }
 
     config:
-        extint_pins: [ PD2, PD3 ]
-        pcint_pins: [ PB0, PB1, PB2, PB3, PB4, PB5, PB6, PB7,
-                      PC0, PC1, PC2, PC3, PC4, PC5, PC6, "",
-                      PD0, PD1, PD2, PD3, PD4, PD5, PD6, PD7 ]
+        ext_ints:
+            - { vector: INT0, pin: PD2 }
+            - { vector: INT1, pin: PD3 }
+
+        pc_ints:
+            - vector: PCINT0
+              reg_mask: PCMSK0
+              pins: [ PB0, PB1, PB2, PB3, PB4, PB5, PB6, PB7 ]
+
+            - vector: PCINT1
+              reg_mask: PCMSK1
+              pins: [ PC0, PC1, PC2, PC3, PC4, PC5, PC6, "" ]
+
+            - vector: PCINT2
+              reg_mask: PCMSK2
+              pins: [ PD0, PD1, PD2, PD3, PD4, PD5, PD6, PD7 ]
+
         rb_extint_ctrl : EICRA/ISC0|ISC1
         rb_extint_mask : EIMSK/INT0|INT1
         rb_extint_flag : EIFR/INTF0|INTF1
         rb_pcint_ctrl : PCICR
         rb_pcint_flag : PCIFR
-        reg_pcint_mask : [ PCMSK0, PCMSK1, PCMSK2 ]
-        extint_vector : [ INT0, INT1 ]
-        pcint_vector : [ PCINT0, PCINT1, PCINT2 ]
 
 #========================================================================================
 USART:

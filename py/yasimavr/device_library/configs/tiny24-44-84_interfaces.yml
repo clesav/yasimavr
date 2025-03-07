@@ -1,0 +1,161 @@
+# YAML configuration file for attiny24-44-84 variants
+#
+# Copyright 2025 Clement Savergne <csavergne@yahoo.com>
+#
+# This file is part of yasim-avr.
+#
+# yasim-avr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# yasim-avr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
+
+---
+#========================================================================================
+PORT:
+    registers:
+        - name: MCUCR
+          address: 0x35
+          fields:
+            PUD: { kind: BIT, pos: 6 }
+
+        - name: PORT
+          offset: 0x02
+
+        - name: DDR
+          offset: 0x01
+
+        - name: PIN
+          offset: 0x00
+
+#========================================================================================
+EXTINT:
+    registers:
+        - name: MCUCR
+          address: 0x35
+          fields:
+            ISC0:
+                kind: ENUM
+                LSB: 0
+                MSB: 1
+                values: [ LOW, TOGGLE, FALLING, RISING ]
+
+        - name: GIMSK
+          address: 0x3D
+          fields:
+            INT0: { kind: BIT, pos: 6, one: enabled, zero: disabled }
+            PCIE0: { kind: BIT, pos: 4, one: enabled, zero: disabled }
+            PCIE1: { kind: BIT, pos: 5, one: enabled, zero: disabled }
+
+        - name: GIFR
+          address: 0x3A
+          fields:
+            INTF0: { kind: BIT, pos: 6 }
+            PCIF0: { kind: BIT, pos: 0, one: enabled, zero: disabled }
+            PCIF1: { kind: BIT, pos: 1, one: enabled, zero: disabled }
+
+        - name: PCMSK0
+          address: 0x12
+          fields:
+            PCINT0: { kind: BIT, pos: 0, one: enabled, zero: disabled }
+            PCINT1: { kind: BIT, pos: 1, one: enabled, zero: disabled }
+            PCINT2: { kind: BIT, pos: 2, one: enabled, zero: disabled }
+            PCINT3: { kind: BIT, pos: 3, one: enabled, zero: disabled }
+            PCINT4: { kind: BIT, pos: 4, one: enabled, zero: disabled }
+            PCINT5: { kind: BIT, pos: 5, one: enabled, zero: disabled }
+            PCINT6: { kind: BIT, pos: 6, one: enabled, zero: disabled }
+            PCINT7: { kind: BIT, pos: 7, one: enabled, zero: disabled }
+
+        - name: PCMSK1
+          address: 0x20
+          fields:
+            PCINT8: { kind: BIT, pos: 0, one: enabled, zero: disabled }
+            PCINT9: { kind: BIT, pos: 1, one: enabled, zero: disabled }
+            PCINT10: { kind: BIT, pos: 2, one: enabled, zero: disabled }
+            PCINT11: { kind: BIT, pos: 3, one: enabled, zero: disabled }
+
+    config:
+        ext_ints:
+            - { vector: INT0, pin: PB2 }
+
+        pc_ints:
+            - vector: PCINT0
+              reg_mask: PCMSK0
+              pins: [ PA0, PA1, PA2, PA3, PA4, PA5, PA6, PA7 ]
+
+            - vector: PCINT1
+              reg_mask: PCMSK1
+              pins: [ PB0, PB1, PB2, PB3, "", "", "", "" ]
+
+        rb_extint_ctrl: MCUCR/ISC0
+        rb_extint_mask: GIMSK/INT0
+        rb_extint_flag: GIFR/INTF0
+        rb_pcint_ctrl: GIMSK/PCIE0|PCIE1
+        rb_pcint_flag: GIFR/PCIF0|PCIF1
+
+#========================================================================================
+USI:
+    registers:
+        - name: USICR
+          address: 0x0D
+          fields:
+            USITC: { kind: BIT, pos: 0 }
+            USICLK: { kind: BIT, pos: 1 }
+            USICS:
+                kind: ENUM
+                LSB: 2
+                MSB: 3
+            USIWM:
+                kind: ENUM
+                LSB: 4
+                MSB: 5
+                values: [ DISABLED, THREE_WIRE, TWO_WIRE, TWO_WIRE_HOLD ]
+            USIOIE: { kind: BIT, pos: 6, one: enabled, zero: disabled }
+            USISIE: { kind: BIT, pos: 7, one: enabled, zero: disabled }
+
+        - name: USISR
+          address: 0x0E
+          fields:
+            USICNT:
+                kind: INT
+                LSB: 0
+                MSB: 3
+            USIDC: { kind: BIT, pos: 4 }
+            USIPF: { kind: BIT, pos: 5 }
+            USIOIF: { kind: BIT, pos: 6 }
+            USISIF: { kind: BIT, pos: 7 }
+
+        - name: USIDR
+          address: 0x0F
+          fields:
+            DATA:
+                kind: RAW
+
+        - name: USIBR
+          address: 0x10
+          fields:
+            DATA:
+                kind: RAW
+
+    config:
+        rb_wiremode: USICR/USIWM
+        rb_clk_sel: USICR/USICS
+        rb_clk_strobe: USICR/USICLK
+        rb_clk_toggle: USICR/USITC
+        reg_data: USIDR
+        reg_buffer: USIBR
+        rb_counter: USISR/USICNT
+        rb_ovf_flag: USISR/USIOIF
+        rb_ovf_inten: USICR/USIOIE
+        rb_start_flag: USISR/USISIF
+        rb_start_inten: USICR/USISIE
+        rb_stop_flag: USISR/USIPF
+        iv_ovf: USI_OVF
+        iv_start: USI_STR

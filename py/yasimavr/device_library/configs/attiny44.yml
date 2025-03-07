@@ -1,0 +1,196 @@
+# YAML configuration file for attiny84 variant
+#
+# Copyright 2025 Clement Savergne <csavergne@yahoo.com>
+#
+# This file is part of yasim-avr.
+#
+# yasim-avr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# yasim-avr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
+
+---
+name: attiny44
+
+architecture: AVR
+
+memory:
+    data:
+        REGEND: 0x01F
+        IOSTART: 0x020
+        IOEND:  0x05F
+        RAMSTART: 0x060
+        RAMEND: 0x15F
+    flash:
+        FLASHEND: 0x0FFF
+        page_size: 64
+    eeprom:
+        EEPROMEND: 0x0FF
+
+core:
+    extended_addressing: no
+    clear_GIE_on_int: yes
+
+fuses:
+    size: 3
+    factory_values: [ 0xFF, 0xDF, 0x62 ]
+    lock_byte: 0xFF
+
+device_signature: [ 0x1E, 0x92, 0x07 ]
+
+access:
+    lsb_first_on_write: yes
+    lsb_first_on_read: no
+
+pins: [ PA0, PA1, PA2, PA3, PA4, PA5, PA6, PA7,
+        PB0, PB1, PB2, PB3 ]
+
+interrupts:
+    vector_size: 2
+
+    vectors:
+        - RESET
+        - INT0
+        - PCINT0
+        - PCINT1
+        - WDT
+        - TIMER1_CAPT
+        - TIMER1_COMPA
+        - TIMER1_COMPB
+        - TIMER1_OVF
+        - TIMER0_COMPA
+        - TIMER0_COMPB
+        - TIMER0_OVF
+        - ANALOG_COMP
+        - ADC
+        - EE_READY
+        - USI_STR
+        - USI_OVF
+
+    sleep_mask:
+        Idle:         [ 0xFF, 0xFF, 0x01 ]
+        ADC:          [ 0x1F, 0x60, 0x00 ]
+        PowerDown:    [ 0x1F, 0x00, 0x00 ]
+        Standby:      [ 0x1F, 0x00, 0x00 ]
+
+peripherals:
+    CPU:
+        file: avr_controllers.yml
+        register_map:
+            GPIOR0: 0x13
+            GPIOR1: 0x14
+            GPIOR2: 0x15
+
+    CPUINT:
+        file: tiny24-44-84_controllers.yml
+        ctl_id: INTR
+
+    RSTCTRL:
+        file: avr_controllers.yml
+        ctl_id: RST
+
+    SLPCTRL:
+        file: tiny24-44-84_controllers.yml
+        ctl_id: SLP
+
+    FUSES:
+        file: tiny24-44-84_controllers.yml
+        ctl_id: FUSE
+
+    NVMCTRL:
+        file: tiny24-44-84_controllers.yml
+        ctl_id: NVM
+        config:
+            iv_spm_ready: ""
+            iv_ee_ready: EE_READY
+
+    MISC:
+        file: avr_controllers.yml
+
+    PORTA:
+        class: PORT
+        file: tiny24-44-84_interfaces.yml
+        base: 0x19
+        ctl_id: IOGA
+
+    PORTB:
+        class: PORT
+        file: tiny24-44-84_interfaces.yml
+        base: 0x16
+        ctl_id: IOGB
+
+    EXTINT:
+        file: tiny24-44-84_interfaces.yml
+        ctl_id: EINT
+
+    TC0:
+        file: avr_timers.yml
+        ctl_id: TC_0
+        register_map:
+            TCCRA: 0x30
+            TCCRB: 0x33
+            TCNT: 0x32
+            OCRA: 0x36
+            OCRB: 0x3C
+            TIMSK: 0x39
+            TIFR: 0x38
+
+    TC1:
+        file: tiny24-44-84_timers.yml
+        ctl_id: TC_1
+        register_map:
+            TCCRA: 0x2F
+            TCCRB: 0x2E
+            TCCRC: 0x22
+            TCNT: 0x2C
+            OCRA: 0x2A
+            OCRB: 0x28
+            ICR: 0x24
+            TIMSK: 0x0C
+            TIFR: 0x0B
+
+    WDT:
+        file: avr_timers.yml
+        register_map:
+            WDTCSR: 0x21
+
+    ADC:
+        file: tiny24-44-84_analog.yml
+        ctl_id: ADC0
+
+    ACP:
+        file: avr_analog.yml
+        ctl_id: ACP0
+        register_map:
+            ACSR: 0x30
+        config:
+            pos_pin: PA1
+            neg_pin: PA2
+            mux_pins:
+                0x00: PA0
+                0x01: PA1
+                0x02: PA2
+                0x03: PA3
+                0x04: PA4
+                0x05: PA5
+                0x06: PA6
+                0x07: PA7
+
+    VREF:
+        file: avr_analog.yml
+
+    USI:
+        file: tiny24-44-84_interfaces.yml
+
+iomux:
+    USI:
+        #SCK/SCL, DO, DI/SDA
+        DLFT: [ PA4, PA5, PA6 ]
