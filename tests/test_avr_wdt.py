@@ -1,6 +1,6 @@
 # test_avr_wdt.py
 #
-# Copyright 2024 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2024-2025 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -59,33 +59,33 @@ def test_avr_watchdog_interrupt(bench):
 def test_avr_watchdog_change_protection(bench):
     WDTCSR = bench.dev.WDT.WDTCSR
 
-    WDTCSR.WDP = '4K'
-    assert WDTCSR.WDP == '2K'
+    WDTCSR.WDP = 0x01
+    assert WDTCSR.WDP == 0x00
 
     with WDTCSR:
         WDTCSR.WDCE = 1
-        WDTCSR.WDP = '4K'
-    assert WDTCSR.WDP == '2K'
+        WDTCSR.WDP = 0x01
+    assert WDTCSR.WDP == 0x00
 
     with WDTCSR:
         WDTCSR.WDCE = 1
         WDTCSR.WDE = 1
-    WDTCSR.WDP = '4K'
-    assert WDTCSR.WDP == '4K'
+    WDTCSR.WDP = 0x01
+    assert WDTCSR.WDP == 0x01
 
     bench.sim_advance(2)
     with WDTCSR:
         WDTCSR.WDCE = 0
-        WDTCSR.WDP = '8K'
+        WDTCSR.WDP = 0x02
     assert WDTCSR.WDCE
-    assert WDTCSR.WDP == '8K'
+    assert WDTCSR.WDP == 0x02
 
     bench.sim_advance(3)
     with WDTCSR:
         WDTCSR.WDCE = 0
-        WDTCSR.WDP = '2K'
+        WDTCSR.WDP = 0x00
     assert not WDTCSR.WDCE
-    assert WDTCSR.WDP == '8K'
+    assert WDTCSR.WDP == 0x02
 
 
 def test_avr_watchdog_timeout(bench):
@@ -98,7 +98,7 @@ def test_avr_watchdog_timeout(bench):
 
     with WDTCSR:
         WDTCSR.WDE = 1
-        WDTCSR.WDP = '2K'
+        WDTCSR.WDP = 0x00
         WDTCSR.WDIE = 1
 
     bench.sim_advance(15001)
