@@ -1,7 +1,7 @@
 /*
  * arch_avr_extint.sip
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -27,68 +27,37 @@ struct ArchAVR_ExtIntConfig {
 #include "utils/buffer_utils.h"
 %End
 
-    //pin_id_t extint_pins[EXTINT_PIN_COUNT];
-    SIP_PYBUFFER extint_pins {
-        %GetCode
-            sipPy = sipConvertToArray(sipCpp->extint_pins, "I", EXTINT_PIN_COUNT, 0);
-        %End
-        %SetCode
-            sipErr = import_from_fixedlen_sequence(sipAPI_arch_avr, sipCpp->extint_pins, "I", EXTINT_PIN_COUNT, sipPy);
-        %End
+    struct ext_int_t {
+        int_vect_t vector;
+        pin_id_t pin;
     };
 
-    //pin_id_t pcint_pins[PCINT_PIN_COUNT];
-    SIP_PYBUFFER pcint_pins {
-        %GetCode
-            sipPy = sipConvertToArray(sipCpp->pcint_pins, "I", PCINT_PIN_COUNT, 0);
-        %End
-        %SetCode
-            sipErr = import_from_fixedlen_sequence(sipAPI_arch_avr, sipCpp->pcint_pins, "I", PCINT_PIN_COUNT, sipPy);
-        %End
+    struct pc_int_t {
+        int_vect_t vector;
+        reg_addr_t reg_mask;
+
+        SIP_PYBUFFER pins {
+            %GetCode
+                sipPy = sipConvertToArray(sipCpp->pins, "I", 8, 0);
+            %End
+            %SetCode
+                sipErr = import_from_fixedlen_sequence(sipAPI_arch_avr, sipCpp->pins, "I", 8, sipPy);
+            %End
+        };
     };
 
+    std::vector<ArchAVR_ExtIntConfig::ext_int_t> ext_ints;
+    std::vector<ArchAVR_ExtIntConfig::pc_int_t> pc_ints;
     regbit_t rb_extint_ctrl;
     regbit_t rb_extint_mask;
     regbit_t rb_extint_flag;
     regbit_t rb_pcint_ctrl;
     regbit_t rb_pcint_flag;
-
-    //reg_addr_t reg_pcint_mask[PCINT_BANK_COUNT];
-    SIP_PYBUFFER reg_pcint_mask {
-        %GetCode
-            sipPy = sipConvertToArray(sipCpp->reg_pcint_mask, "H", PCINT_BANK_COUNT, 0);
-        %End
-        %SetCode
-            sipErr = import_from_fixedlen_sequence(sipAPI_arch_avr, sipCpp->reg_pcint_mask, "H", PCINT_BANK_COUNT, sipPy);
-        %End
-    };
-
-    //int_vect_t extint_vector[EXTINT_PIN_COUNT];
-    SIP_PYBUFFER extint_vector {
-        %GetCode
-            sipPy = sipConvertToArray(sipCpp->extint_vector, "h", EXTINT_PIN_COUNT, 0);
-        %End
-        %SetCode
-            sipErr = import_from_fixedlen_sequence(sipAPI_arch_avr, sipCpp->extint_vector, "h", EXTINT_PIN_COUNT, sipPy);
-        %End
-    };
-
-    //int_vect_t pcint_vector[PCINT_BANK_COUNT];
-    SIP_PYBUFFER pcint_vector {
-        %GetCode
-            sipPy = sipConvertToArray(sipCpp->pcint_vector, "h", PCINT_BANK_COUNT, 0);
-        %End
-        %SetCode
-            sipErr = import_from_fixedlen_sequence(sipAPI_arch_avr, sipCpp->pcint_vector, "h", PCINT_BANK_COUNT, sipPy);
-        %End
-    };
-
 };
 
 
 class ArchAVR_ExtInt : public Peripheral,
-                       public InterruptHandler,
-                       public SignalHook
+                       public InterruptHandler
                        /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_avr_extint.h"
@@ -108,6 +77,5 @@ public:
     virtual bool ctlreq(ctlreq_id_t, ctlreq_data_t*);
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
     virtual void interrupt_ack_handler(int_vect_t);
-    virtual void raised(const signal_data_t&, int);
 
 };

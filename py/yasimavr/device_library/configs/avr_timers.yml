@@ -1,0 +1,195 @@
+# YAML configuration file for generic 'classic' AVR devices
+#
+# Copyright 2025 Clement Savergne <csavergne@yahoo.com>
+#
+# This file is part of yasim-avr.
+#
+# yasim-avr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# yasim-avr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
+
+---
+#========================================================================================
+TC0:
+    registers:
+        - name: TCCRA
+          fields:
+            WGM10:
+               kind: ENUM
+               LSB: 0
+               MSB: 1
+            COMB:
+                kind: ENUM
+                LSB: 4
+                MSB: 5
+            COMA:
+                kind: ENUM
+                LSB: 6
+                MSB: 7
+
+        - name: TCCRB
+          fields:
+            CS:
+                kind: ENUM
+                LSB: 0
+                MSB: 2
+                values: [ Disabled, NODIV, DIV8, DIV64, DIV256, DIV1024, T0_FALL, T0_RISE ]
+            WGM2: { kind: BIT, pos: 3 }
+            FOCB: { kind: BIT, pos: 6 }
+            FOCA: { kind: BIT, pos: 7 }
+
+        - name: TCNT
+          kind: INT
+
+        - name: OCRA
+          kind: INT
+
+        - name: OCRB
+          kind: INT
+
+        - name: TIMSK
+          fields:
+            TOIE: { kind: BIT, pos: 0 }
+            OCIEA: { kind: BIT, pos: 1 }
+            OCIEB: { kind: BIT, pos: 2 }
+
+        - name: TIFR
+          fields:
+            TOV: { kind: BIT, pos: 0 }
+            OCFA: { kind: BIT, pos: 1 }
+            OCFB: { kind: BIT, pos: 2 }
+
+    config:
+        is_16bits: no
+
+        clocks:
+            0b000: [ Stopped ]
+            0b001: [ Timer, 1 ]
+            0b010: [ Timer, 8 ]
+            0b011: [ Timer, 64 ]
+            0b100: [ Timer, 256 ]
+            0b101: [ Timer, 1024 ]
+            0b110: [ External ]
+            0b111: [ External ]
+
+        modes:
+            0b000: #Normal
+                com_variant: 0
+
+            0b001: #Phase correct PWM with TOP=MAX
+                ovf: SetOnBottom
+                ocr: UpdateOnTop
+                double_slope: yes
+                disable_foc: yes
+                com_variant: 3
+
+            0b010: #CTC
+                top: OnCompA
+                com_variant: 0
+
+            0b011: #Fast PWM with TOP=MAX
+                ocr: UpdateOnBottom
+                disable_foc: yes
+                com_variant: 1
+
+            0b101: #Phase correct PWM with TOP=OCRA
+                ovf: SetOnBottom
+                top: OnCompA
+                ocr: UpdateOnTop
+                double_slope: yes
+                disable_foc: yes
+                com_variant: 2
+
+            0b111: #Fast PWM with TOP=OCRA
+                ovf: SetOnTop
+                top: OnCompA
+                ocr: UpdateOnBottom
+                disable_foc: yes
+                com_variant: 4
+
+        oc_channels:
+            - reg_oc: OCRA
+              vector: [ TIMER0_COMPA, 1 ]
+              rb_mode: TCCRA/COMA
+              rb_force: TCCRB/FOCA
+
+            - reg_oc: OCRB
+              vector: [ TIMER0_COMPB, 2 ]
+              rb_mode: TCCRA/COMB
+              rb_force: TCCRB/FOCB
+
+        com_modes:
+            #Non-PWM modes
+            - 0b00: 0x0000         #OC disconnected
+              0b01: 0x0011         #OC Toggle on Compare Match
+              0b10: 0x0022         #OC Clear on Compare Match
+              0b11: 0x0033         #OC Set on Compare Match
+
+            #Fast PWM mode with WGM02=0
+            - 0b00: 0x0000         #OC disconnected
+              0b01: 0x0000         #OC disconnected
+              0b10: 0x0302         #Clear on Compare, Set on Bottom
+              0b11: 0x0203         #Set on Compare, Clear on Bottom
+
+            #Fast PWM mode with WGM02=1
+            - 0b00: 0x0000         #OC disconnected
+              0b01: 0x0004         #Toggle on Compare (OCA only)
+              0b10: 0x0302         #Clear on Compare, Set on Bottom
+              0b11: 0x0203         #Set on Compare, Clear on Bottom
+
+            #Phase Correct PWM mode with WGM02=0
+            - 0b00: 0x0000         #OC disconnected
+              0b01: 0x0000         #OC disconnected
+              0b10: 0x0032         #Clear on up-counting, Set on down-counting
+              0b11: 0x0023         #Clear on down-counting, Set on up-counting
+
+            #Phase Correct PWM mode with WGM02=1
+            - 0b00: 0x0000         #OC disconnected
+              0b01: 0x0004         #Toggle on Compare (OCA only)
+              0b10: 0x0032         #Clear on up-counting, Set on down-counting
+              0b11: 0x0023         #Clear on down-counting, Set on up-counting
+
+        rb_clock: TCCRB/CS
+        rbc_mode: [ TCCRA/WGM10, TCCRB/WGM2 ]
+        reg_cnt: TCNT
+        reg_int_enable: TIMSK
+        reg_int_flag: TIFR
+        vect_ovf: [ TIMER0_OVF, 0 ]
+
+#========================================================================================
+WDT:
+    registers:
+        - name: WDTCSR
+          fields:
+            WDP:
+                kind: ENUM
+                LSB: 0
+                MSB: 2
+            WDE: { kind: BIT, pos: 3 }
+            WDCE: { kind: BIT, pos: 4 }
+            WDP3: { kind: BIT, pos: 5 }
+            WDIE: { kind: BIT, pos: 6 }
+            WDIF: { kind: BIT, pos: 7 }
+
+    config:
+        clock_frequency: 128000
+        delays: [ 2048, 4096, 8192, 16384, 32768, 65536, 131072, 262144, 524288, 1048576 ]
+        reg_wdt: WDT/WDTCSR
+        rbc_delay: [ WDTCSR/WDP, WDTCSR/WDP3 ]
+        bm_chg_enable: WDTCSR/WDCE
+        bm_reset_enable: WDTCSR/WDE
+        bm_int_enable: WDTCSR/WDIE
+        bm_int_flag: WDTCSR/WDIF
+        rb_reset_flag: RSTCTRL/MCUSR/WDRF
+        iv_wdt: WDT
+
+#========================================================================================

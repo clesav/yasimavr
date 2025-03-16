@@ -1,0 +1,177 @@
+# YAML configuration file for attiny24-44-84 variants
+#
+# Copyright 2025 Clement Savergne <csavergne@yahoo.com>
+#
+# This file is part of yasim-avr.
+#
+# yasim-avr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# yasim-avr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
+
+---
+#========================================================================================
+ADC:
+    registers:
+        - name: ADMUX
+          address: 0x07
+          fields:
+            MUX:
+                kind: ENUM
+                LSB: 0
+                MSB: 5
+                values:
+                    - { 0x40: GND, 0x41: 1V1, 0x42: TEMP }
+            REFS:
+                kind: ENUM
+                LSB: 6
+                MSB: 7
+                values: [ AVCC, AREF, 1V1, "" ]
+
+        - name: ADCSRA
+          address: 0x06
+          fields:
+            ADPS:
+                kind: ENUM
+                LSB: 0
+                MSB: 2
+                values: [ DIV2, DIV2, DIV4, DIV8, DIV16, DIV32, DIV64, DIV128 ]
+            ADIE: { kind: BIT, pos: 3 }
+            ADIF: { kind: BIT, pos: 4 }
+            ADATE: { kind: BIT, pos: 5 }
+            ADSC: { kind: BIT, pos: 6 }
+            ADEN: { kind: BIT, pos: 7 }
+
+        - name: ADC
+          address: 0x04
+          size: 2
+          readonly: true
+
+        - name: ADCSRB
+          address: 0x03
+          fields:
+            ADTS:
+                kind: ENUM
+                LSB: 0
+                MSB: 2
+                values: [ Free, AC, ExtInt0, TC0_CMPA, TC0_OVF, TC1_CMPB, TC1_OVF, TC1_CAPT ]
+            ADLAR: { kind: BIT, pos: 4, one: left, zero: right }
+            ACME: { kind: BIT, pos: 6 }
+            BIN: { kind: BIT, pos: 7 }
+
+        - name: DIDR
+          address: 0x01
+          fields:
+            ADC0D: { kind: BIT, pos: 0 }
+            ADC1D: { kind: BIT, pos: 1 }
+            ADC2D: { kind: BIT, pos: 2 }
+            ADC3D: { kind: BIT, pos: 3 }
+            ADC4D: { kind: BIT, pos: 4 }
+            ADC5D: { kind: BIT, pos: 5 }
+            ADC6D: { kind: BIT, pos: 6 }
+            ADC7D: { kind: BIT, pos: 7 }
+
+    config:
+        channels:
+            0x00: [ SingleEnded, PC0 ]
+            0x01: [ SingleEnded, PC1 ]
+            0x02: [ SingleEnded, PC2 ]
+            0x03: [ SingleEnded, PC3 ]
+            0x04: [ SingleEnded, PC4 ]
+            0x05: [ SingleEnded, PC5 ]
+            0x06: [ SingleEnded, PC6 ]
+            0x07: [ SingleEnded, PC7 ]
+            0x08: [ Differential, PA0, PA1 ]
+            0x09: [ Differential, PA0, PA1, 20 ]
+            0x0A: [ Differential, PA0, PA3 ]
+            0x0B: [ Differential, PA0, PA3, 20 ]
+            0x0C: [ Differential, PA1, PA2 ]
+            0x0D: [ Differential, PA1, PA2, 20 ]
+            0x0E: [ Differential, PA1, PA3 ]
+            0x0F: [ Differential, PA1, PA3, 20 ]
+            0x10: [ Differential, PA2, PA3 ]
+            0x11: [ Differential, PA2, PA3, 20 ]
+            0x12: [ Differential, PA3, PA4 ]
+            0x13: [ Differential, PA3, PA4, 20 ]
+            0x14: [ Differential, PA3, PA5 ]
+            0x15: [ Differential, PA3, PA5, 20 ]
+            0x16: [ Differential, PA3, PA6 ]
+            0x17: [ Differential, PA3, PA6, 20 ]
+            0x18: [ Differential, PA3, PA7 ]
+            0x19: [ Differential, PA3, PA7, 20 ]
+            0x1A: [ Differential, PA4, PA5 ]
+            0x1B: [ Differential, PA4, PA5, 20 ]
+            0x1C: [ Differential, PA5, PA6 ]
+            0x1D: [ Differential, PA5, PA6, 20 ]
+            0x1E: [ Differential, PA6, PA7 ]
+            0x1F: [ Differential, PA6, PA7, 20 ]
+            0x20: Zero
+            0x21: IntRef
+            0x22: Temperature
+            0x23: [ Differential, PA0, PA0, 20 ]
+            0x24: [ Differential, PA3, PA3 ]
+            0x25: [ Differential, PA3, PA3, 20 ]
+            0x26: [ Differential, PA7, PA7 ]
+            0x27: [ Differential, PA7, PA7, 20 ]
+            0x28: [ Differential, PA1, PA0 ]
+            0x29: [ Differential, PA1, PA0, 20 ]
+            0x2A: [ Differential, PA3, PA0 ]
+            0x2B: [ Differential, PA3, PA0, 20 ]
+            0x2C: [ Differential, PA2, PA1 ]
+            0x2D: [ Differential, PA2, PA1, 20 ]
+            0x2E: [ Differential, PA3, PA1 ]
+            0x2F: [ Differential, PA3, PA1, 20 ]
+            0x30: [ Differential, PA3, PA2 ]
+            0x31: [ Differential, PA3, PA2, 20 ]
+            0x32: [ Differential, PA4, PA3 ]
+            0x33: [ Differential, PA4, PA3, 20 ]
+            0x34: [ Differential, PA5, PA3 ]
+            0x35: [ Differential, PA5, PA3, 20 ]
+            0x36: [ Differential, PA6, PA3 ]
+            0x37: [ Differential, PA6, PA3, 20 ]
+            0x38: [ Differential, PA7, PA3 ]
+            0x39: [ Differential, PA7, PA3, 20 ]
+            0x3A: [ Differential, PA5, PA4 ]
+            0x3B: [ Differential, PA5, PA4, 20 ]
+            0x3C: [ Differential, PA6, PA5 ]
+            0x3D: [ Differential, PA6, PA5, 20 ]
+            0x3E: [ Differential, PA7, PA6 ]
+            0x3F: [ Differential, PA7, PA6, 20 ]
+        references:
+            0: AVCC
+            1: AREF
+            2: Internal
+        clk_ps_factors: [ 2, 2, 4, 8, 16, 32, 128 ]
+        triggers:
+            0b000: FreeRunning
+            0b001: External
+            0b010: External
+            0b011: External
+            0b100: External
+            0b101: External
+            0b110: External
+        vref_channel: 0
+        reg_datal: ADCL
+        reg_datah: ADCH
+        rb_chan_mux: ADMUX/MUX
+        rb_ref_mux: ADMUX/REFS
+        rb_enable: ADCSRA/ADEN
+        rb_start: ADCSRA/ADSC
+        rb_auto_trig: ADCSRA/ADATE
+        rb_int_enable: ADCSRA/ADIE
+        rb_int_flag: ADCSRA/ADIF
+        rb_prescaler: ADCSRA/ADPS
+        rb_trig_mux: ADCSRB/ADTS
+        rb_left_adj: ADCSRB/ADLAR
+        rb_bipolar: ADCSRB/BIN
+        int_vector: ADC
+        temp_cal_25C: 0.0
+        temp_cal_coef: 1.0

@@ -38,7 +38,7 @@ def _get_intctrl_builder():
     def _get_intctrl_config(per_desc):
         return (len(per_desc.device.interrupt_map.vectors),
                 per_desc.device.interrupt_map.vector_size)
-    
+
     class builder (PeripheralBuilder):
         def _get_build_args(self, per_name, per_config):
             return per_config
@@ -146,16 +146,25 @@ def _get_port_builder():
 #External interrupts configuration
 
 def _extint_convertor(cfg, attr, yml_val, per_desc):
-    if attr == 'extint_pins':
-        cfg.extint_pins = [ _corelib.str_to_id(p) for p in yml_val ]
-    elif attr == 'pcint_pins':
-        cfg.pcint_pins= [ _corelib.str_to_id(p) for p in yml_val ]
-    elif attr == 'reg_pcint_mask':
-        cfg.reg_pcint_mask = [ per_desc.reg_address(r) for r in yml_val ]
-    elif attr == 'extint_vector':
-        cfg.extint_vector = [ per_desc.device.interrupt_map.vectors.index(v) for v in yml_val ]
-    elif attr == 'pcint_vector':
-        cfg.pcint_vector = [ per_desc.device.interrupt_map.vectors.index(v) for v in yml_val ]
+    if attr == 'ext_ints':
+        py_ext_ints = []
+        for yml_ext_int in yml_val:
+            ext_int_cfg = _archlib.ArchAVR_ExtIntConfig.ext_int_t()
+            ext_int_cfg.vector = per_desc.device.interrupt_map.vectors.index(yml_ext_int['vector'])
+            ext_int_cfg.pin = _corelib.str_to_id(yml_ext_int['pin'])
+            py_ext_ints.append(ext_int_cfg)
+        cfg.ext_ints = py_ext_ints
+
+    elif attr == 'pc_ints':
+        py_pc_ints = []
+        for yml_pc_int in yml_val:
+            pc_int_cfg = _archlib.ArchAVR_ExtIntConfig.pc_int_t()
+            pc_int_cfg.vector = per_desc.device.interrupt_map.vectors.index(yml_pc_int['vector'])
+            pc_int_cfg.reg_mask = per_desc.reg_address(yml_pc_int['reg_mask'])
+            pc_int_cfg.pins = [ _corelib.str_to_id(p) for p in yml_pc_int['pins'] ]
+            py_pc_ints.append(pc_int_cfg)
+        cfg.pc_ints = py_pc_ints
+
     else:
         raise Exception('Converter not implemented for ' + attr)
 
@@ -359,15 +368,8 @@ def _get_usart_builder():
 #========================================================================================
 #SPI configuration
 
-def _spi_convertor(cfg, attr, yml_val, per_desc):
-    if attr == 'pin_select':
-        cfg.pin_select = _corelib.str_to_id(yml_val)
-    else:
-        raise Exception('Converter not implemented for ' + attr)
-
-
 def _get_spi_builder():
-    cfg_builder = PeripheralConfigBuilder(_archlib.ArchAVR_SPIConfig, _spi_convertor)
+    cfg_builder = PeripheralConfigBuilder(_archlib.ArchAVR_SPIConfig)
     return IndexedPeripheralBuilder(_archlib.ArchAVR_SPI, cfg_builder)
 
 
@@ -384,6 +386,13 @@ def _twi_convertor(cfg, attr, yml_val, per_desc):
 def _get_twi_builder():
     cfg_builder = PeripheralConfigBuilder(_archlib.ArchAVR_TWIConfig, _twi_convertor)
     return IndexedPeripheralBuilder(_archlib.ArchAVR_TWI, cfg_builder)
+
+#========================================================================================
+#USI configuration
+
+def _get_usi_builder():
+    cfg_builder = PeripheralConfigBuilder(_archlib.ArchAVR_USIConfig)
+    return PeripheralBuilder(_archlib.ArchAVR_USI, cfg_builder)
 
 
 #========================================================================================
@@ -429,6 +438,7 @@ class AVR_DeviceBuilder(DeviceBuilder):
         'CPUINT': _get_intctrl_builder,
         'RSTCTRL': _get_rstctrl_builder,
         'SLPCTRL': _get_slpctrl_builder,
+        'FUSES': _get_fuses_builder,
         'FUSES_48': _get_fuses_builder,
         'FUSES_88_168': _get_fuses_builder,
         'FUSES_328': _get_fuses_builder,
@@ -445,6 +455,7 @@ class AVR_DeviceBuilder(DeviceBuilder):
         'USART': _get_usart_builder,
         'SPI': _get_spi_builder,
         'TWI': _get_twi_builder,
+        'USI': _get_usi_builder,
         'WDT': _get_wdt_builder,
     }
 
@@ -472,7 +483,7 @@ class AVR_DeviceBuilder(DeviceBuilder):
 
     def _get_peripheral_builder(self, per_class):
         if per_class not in self._per_builder_getters:
-            raise DeviceBuildError('Unknown peripheral class: ' + per_class)
+            raise DeviceBuildError('No builder found for peripheral class: ' + per_class)
         builder_getter = self._per_builder_getters[per_class]
         if builder_getter is not None:
             per_builder = builder_getter()

@@ -96,14 +96,18 @@ interrupts:
 
 peripherals:
     CPU:
-        file: mega48-88-168-328_controllers.yml
+        file: avr_controllers.yml
+        register_map:
+            GPIOR0: 0x1E
+            GPIOR1: 0x2A
+            GPIOR2: 0x2B
 
     CPUINT:
         file: mega48-88-168-328_controllers.yml
         ctl_id: INTR
 
     RSTCTRL:
-        file: mega48-88-168-328_controllers.yml
+        file: avr_controllers.yml
         ctl_id: RST
 
     SLPCTRL:
@@ -126,7 +130,7 @@ peripherals:
             iv_ee_ready: EE_READY
 
     MISC:
-        file: mega48-88-168-328_controllers.yml
+        file: avr_controllers.yml
 
     PORTB:
         class: PORT
@@ -151,30 +155,64 @@ peripherals:
         ctl_id: EINT
 
     TC0:
-        file: mega48-88-168-328_timers.yml
+        file: avr_timers.yml
         ctl_id: TC_0
+        register_map:
+            TCCRA: 0x24
+            TCCRB: 0x25
+            TCNT: 0x26
+            OCRA: 0x27
+            OCRB: 0x28
+            TIMSK: 0x4E
+            TIFR: 0x15
 
     TC1:
         file: mega48-88-168-328_timers.yml
         ctl_id: TC_1
+        register_map:
+            TCCRA: 0x60
+            TCCRB: 0x61
+            TCCRC: 0x62
+            TCNT: 0x64
+            OCRA: 0x68
+            OCRB: 0x6A
+            ICR: 0x66
+            TIMSK: 0x4F
+            TIFR: 0x16
 
     TC2:
         file: mega48-88-168-328_timers.yml
         ctl_id: TC_2
 
     WDT:
-        file: mega48-88-168-328_timers.yml
+        file: avr_timers.yml
+        register_map:
+            WDTCSR: 0x40
 
     ADC:
         file: mega48-88-168-328_analog.yml
         ctl_id: ADC0
 
     ACP:
-        file: mega48-88-168-328_analog.yml
+        file: avr_analog.yml
         ctl_id: ACP0
+        register_map:
+            ACSR: 0x30
+        config:
+            pos_pin: PD6
+            neg_pin: PD7
+            mux_pins:
+                0x00: PC0
+                0x01: PC1
+                0x02: PC2
+                0x03: PC3
+                0x04: PC4
+                0x05: PC5
+                0x06: ADC6
+                0x07: ADC7
 
     VREF:
-        file: mega48-88-168-328_analog.yml
+        file: avr_analog.yml
 
     USART:
         file: mega48-88-168-328_interfaces.yml

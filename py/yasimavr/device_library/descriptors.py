@@ -1,6 +1,6 @@
 # descriptors.py
 #
-# Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -143,6 +143,14 @@ class ExtendedBitMask(collections.namedtuple('ExtendedBitMask', ['bit', 'mask'])
             return _corelib.bitmask_t(self.bit, self.mask)
         else:
             raise ValueError('Bitmask range error')
+
+    def bitcount(self):
+        n = 0
+        m = self.mask
+        while m:
+            if m & 0x01: n += 1
+            m >>= 1
+        return n
 
     def __repr__(self):
         return 'ExtendedBitMask(%d, 0x%x)' % (self.bit, self.mask)
@@ -378,6 +386,33 @@ class PeripheralInstanceDescriptor:
 
 
     def _resolve_regbits(self, reg_name, fields):
+
+        def _field_name_to_bitmask(f):
+            i = f.find('[')
+            j = f.find(']', i)
+            if (i == -1) ^ (j == -1):
+                raise ValueError('Invalid format of bit range: ' + f)
+
+            if i == -1:
+                f_desc = reg_desc.fields[f]
+                return f_desc.bitmask()
+
+            f_desc = reg_desc.fields[f[:i]]
+            f_bm = f_desc.bitmask()
+            rf = f[i+1:j]
+            if ':' not in rf:
+                sbit = int(rf)
+                if sbit < 0 or sbit >= f_bm.bitcount():
+                    raise ValueError('Invalid bit range: ' + f)
+                return ExtendedBitMask(f_bm.bit + sbit, 1 << (f_bm.bit + sbit))
+
+            a, b = map(int, rf.split(':', 1))
+            if a < 0 or a >= f_bm.bitcount() or b <= 0 or b >= f_bm.bitcount() or a >= b:
+                raise ValueError('Invalid bit range: ' + f)
+            smask = (1 << b) - (1 << a)
+            return ExtendedBitMask(f_bm.bit + a, smask << f_bm.bit)
+
+
         try:
             reg_desc = self.class_descriptor.registers[reg_name]
         except KeyError:
@@ -391,8 +426,7 @@ class PeripheralInstanceDescriptor:
             bm_list = []
             for f in fields:
                 if isinstance(f, str):
-                    f_desc = reg_desc.fields[f]
-                    bm = f_desc.bitmask()
+                    bm = _field_name_to_bitmask(f)
                     bm_list.append(bm)
                 else:
                     bm_list.append(f)
@@ -763,7 +797,7 @@ def convert_to_regbit(arg, per=None, dev=None):
     :param DeviceDescriptor dev: used to resolve reg paths
     """
 
-    if arg is None:
+    if arg is None or arg == '':
         return _corelib.regbit_t()
 
     if isinstance(arg, int):

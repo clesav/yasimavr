@@ -1,7 +1,7 @@
 /*
  * arch_avr_extint.h
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -46,10 +46,21 @@ YASIMAVR_BEGIN_NAMESPACE
  */
 struct ArchAVR_ExtIntConfig {
 
+    struct ext_int_t {
+        int_vect_t vector = AVR_INTERRUPT_NONE;
+        pin_id_t pin;
+    };
+
+    struct pc_int_t {
+        int_vect_t vector = AVR_INTERRUPT_NONE;
+        reg_addr_t reg_mask;
+        pin_id_t pins[8];
+    };
+
     /// Array of pins for external interrupts
-    pin_id_t extint_pins[EXTINT_PIN_COUNT];
+    std::vector<ext_int_t> ext_ints;
     /// Array of pins for Pin Change interrupts
-    pin_id_t pcint_pins[PCINT_PIN_COUNT];
+    std::vector<pc_int_t> pc_ints;
     /// Regbit for external interrupt control
     regbit_t rb_extint_ctrl;
     /// Regbit for the external interrupt mask
@@ -60,12 +71,6 @@ struct ArchAVR_ExtIntConfig {
     regbit_t rb_pcint_ctrl;
     /// Regbit for Pin Change interrupt flags
     regbit_t rb_pcint_flag;
-    /// Array of Pin Change mask regbit for each pin
-    reg_addr_t reg_pcint_mask[PCINT_BANK_COUNT];
-    /// Array of External Interrupt vector indexes
-    int_vect_t extint_vector[EXTINT_PIN_COUNT];
-    /// Array of Pin Change interrupt vector indexes
-    int_vect_t pcint_vector[PCINT_BANK_COUNT];
 
 };
 
@@ -73,8 +78,7 @@ struct ArchAVR_ExtIntConfig {
    \brief Implementation of a model for a External Interrupts peripheral for AVR series
  */
 class AVR_ARCHAVR_PUBLIC_API ArchAVR_ExtInt : public Peripheral,
-                                             public InterruptHandler,
-                                             public SignalHook {
+                                             public InterruptHandler {
 
 public:
 
@@ -91,8 +95,6 @@ public:
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
     virtual void interrupt_ack_handler(int_vect_t vector) override;
 
-    virtual void raised(const signal_data_t& sigdata, int hooktag) override;
-
 private:
 
     const ArchAVR_ExtIntConfig& m_config;
@@ -100,7 +102,10 @@ private:
     Signal m_signal;
     //Backup copies of pin states to detect edges
     uint8_t m_extint_pin_value;
-    uint8_t m_pcint_pin_value[PCINT_BANK_COUNT];
+    std::vector<uint8_t> m_pcint_pin_value;
+    BoundFunctionSignalHook<ArchAVR_ExtInt> m_pin_hook;
+
+    void pin_signal_raised(const signal_data_t& sigdata, int hooktag);
 
     uint8_t get_extint_mode(uint8_t pin) const;
 

@@ -1,7 +1,7 @@
 /*
  * arch_avr_extint.cpp
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -45,6 +45,8 @@ ArchAVR_ExtInt::ArchAVR_ExtInt(const ArchAVR_ExtIntConfig& config)
 :Peripheral(AVR_IOCTL_EXTINT)
 ,m_config(config)
 ,m_extint_pin_value(0)
+,m_pcint_pin_value(config.pc_ints.size(), 0)
+,m_pin_hook(*this, &ArchAVR_ExtInt::pin_signal_raised)
 {}
 
 /*
@@ -60,48 +62,46 @@ bool ArchAVR_ExtInt::init(Device& device)
     add_ioreg(m_config.rb_extint_flag);
     add_ioreg(m_config.rb_pcint_ctrl);
     add_ioreg(m_config.rb_pcint_flag);
-    for (int i = 0; i < PCINT_BANK_COUNT; ++i)
-        add_ioreg(m_config.reg_pcint_mask[i]);
 
-    //Register all the EXTINT interrupts
-    for (int i = 0; i < EXTINT_PIN_COUNT; ++i) {
-        int_vect_t v = m_config.extint_vector[i];
-        if (v)
-            status &= register_interrupt(v, *this);
-    }
+    for (auto& pc_int : m_config.pc_ints)
+        add_ioreg(pc_int.reg_mask);
 
-    //Register all the Pin Change interrupts
-    for (int i = 0; i < PCINT_BANK_COUNT; ++i) {
-        int_vect_t v = m_config.pcint_vector[i];
-        if (v)
-            status &= register_interrupt(v, *this);
-    }
+    //Register all the EXTINT interrupts and connect to the pin signal
+    for (unsigned int i = 0; i < m_config.ext_ints.size(); ++i) {
+        auto& ext_int = m_config.ext_ints[i];
 
-    //Find the pins for EXTINT and connect the hook mapper to their signals
-    for (int i = 0; i < EXTINT_PIN_COUNT; ++i) {
-        pin_id_t pin_id = m_config.extint_pins[i];
-        Pin* pin = device.find_pin(pin_id);
+        status &= register_interrupt(ext_int.vector, *this);
+
+        Pin* pin = device.find_pin(ext_int.pin);
         if (pin)
-            pin->signal().connect(*this, i);
+            pin->signal().connect(m_pin_hook, i);
     }
 
-    //Find the pins for Pin Change and connect the hook mapper to their signals
-    for (int i = 0; i < PCINT_PIN_COUNT; ++i) {
-        pin_id_t pin_id = m_config.pcint_pins[i];
-        Pin* pin = device.find_pin(pin_id);
-        if (pin)
-            pin->signal().connect(*this, 0x100 | i);
+    //Register all the Pin Change registers, interrupts and pins
+    for (unsigned int i = 0; i < m_config.pc_ints.size(); ++i) {
+        auto& pc_int = m_config.pc_ints[i];
+
+        add_ioreg(pc_int.reg_mask);
+
+        status &= register_interrupt(pc_int.vector, *this);
+
+        for (int j = 0; j < 8; ++j) {
+            Pin* pin = device.find_pin(pc_int.pins[j]);
+            if (pin)
+                pin->signal().connect(m_pin_hook, 0x100 + i * 8 + j);
+        }
     }
 
     return status;
 }
 
+
 void ArchAVR_ExtInt::reset()
 {
     m_extint_pin_value = 0;
-    for (int i = 0; i < PCINT_BANK_COUNT; ++i)
-        m_pcint_pin_value[i] = 0;
+    std::fill(m_pcint_pin_value.begin(), m_pcint_pin_value.end(), 0);
 }
+
 
 bool ArchAVR_ExtInt::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
 {
@@ -112,33 +112,35 @@ bool ArchAVR_ExtInt::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
     return false;
 }
 
+
 void ArchAVR_ExtInt::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
     //If we're writing a 1 to a interrupt flag bit, it cancels the corresponding interrupt if it
     //has not been executed yet
     if (addr == m_config.rb_extint_flag.addr) {
         uint8_t value = m_config.rb_extint_flag.extract(data.value);
-        for (uint8_t i = 0; i < EXTINT_PIN_COUNT; ++i) {
+        for (unsigned int i = 0; i < m_config.ext_ints.size(); ++i) {
             //For an extint pin, we need to check if the trigger condition is still present
             //If it isn't we can cancel the interrupt.
             //The condition is (mode == LOW_LEVEL) and (last pin level is LOW) and (interrupt enabled)
             if (BITSET(value, i)) {
                 ExtIntMode pinmode = (ExtIntMode) get_extint_mode(i);
-                bool lvl = (m_extint_pin_value >> i) & 0x01;
+                bool lvl = BITSET(m_extint_pin_value, i);
                 bool enabled = test_ioreg(m_config.rb_extint_mask, i);
                 if (pinmode != ExtIntMode::Low || lvl || !enabled)
-                    cancel_interrupt(m_config.extint_pins[i]);
+                    cancel_interrupt(m_config.ext_ints[i].vector);
             }
         }
     }
     //For Pin Change interrupt flag, no particular condition to check for clearing
     else if (addr == m_config.rb_pcint_flag.addr) {
-        for (uint8_t i = 0; i < PCINT_BANK_COUNT; ++i) {
+        for (unsigned int i = 0; i < m_config.pc_ints.size(); ++i) {
             if (BITSET(data.value, i))
-                cancel_interrupt(m_config.extint_vector[i]);
+                cancel_interrupt(m_config.pc_ints[i].vector);
         }
     }
 }
+
 
 void ArchAVR_ExtInt::interrupt_ack_handler(int_vect_t vector)
 {
@@ -146,14 +148,14 @@ void ArchAVR_ExtInt::interrupt_ack_handler(int_vect_t vector)
     //we need to check if the trigger condition is still present
     //It is is, we must re-raise the interrupt. If not, we clear the flag.
     //The condition is (mode == LOW_LEVEL) and (last pin level is LOW) and (interrupt enabled)
-    for (uint8_t i = 0; i < EXTINT_PIN_COUNT; ++i) {
-        if (vector == m_config.extint_vector[i]) {
+    for (unsigned int i = 0; i < m_config.ext_ints.size(); ++i) {
+        if (vector == m_config.ext_ints[i].vector) {
             //For an extint pin,
             ExtIntMode pinmode = (ExtIntMode) get_extint_mode(i);
-            bool lvl = (m_extint_pin_value >> i) & 0x01;
+            bool lvl = BITSET(m_extint_pin_value, i);
             bool enabled = test_ioreg(m_config.rb_extint_mask, i);
             if (pinmode != ExtIntMode::Low || lvl || !enabled) {
-                clear_ioreg(m_config.rb_pcint_flag, i);
+                clear_ioreg(m_config.rb_extint_flag, i);
             } else {
                 raise_interrupt(vector);
             }
@@ -162,15 +164,16 @@ void ArchAVR_ExtInt::interrupt_ack_handler(int_vect_t vector)
     }
 
     //If the vector is a Pin Change interrupt, we clear the interrupt flag and return
-    for (uint8_t bank = 0; bank < PCINT_BANK_COUNT; ++bank) {
-        if (vector == m_config.pcint_vector[bank]) {
-            clear_ioreg(m_config.rb_pcint_flag, bank);
+    for (unsigned int i = 0; i < m_config.pc_ints.size(); ++i) {
+        if (vector == m_config.pc_ints[i].vector) {
+            clear_ioreg(m_config.rb_pcint_flag, i);
             return;
         }
     }
 }
 
-void ArchAVR_ExtInt::raised(const signal_data_t& sigdata, int hooktag)
+
+void ArchAVR_ExtInt::pin_signal_raised(const signal_data_t& sigdata, int hooktag)
 {
     if (sigdata.sigid != Pin::Signal_DigitalChange) return;
 
@@ -185,13 +188,13 @@ void ArchAVR_ExtInt::raised(const signal_data_t& sigdata, int hooktag)
         //Get the old level of this extint
         bool old_level = BITSET(m_pcint_pin_value[bank], bit);
         //Check if this pcint pin is masked or enabled
-        bool enabled = test_ioreg(m_config.reg_pcint_mask[bank], bit);
+        bool enabled = test_ioreg(m_config.pc_ints[bank].reg_mask, bit);
 
         //Raise the interrupt if it's enabled and the level has changed
         if (enabled && (pin_level ^ old_level)) {
             uint8_t v = (old_level ? 2 : 0) | (pin_level ? 1 : 0);
             set_ioreg(m_config.rb_pcint_flag, bank);
-            raise_interrupt(m_config.pcint_vector[bank]);
+            raise_interrupt(m_config.pc_ints[bank].vector);
             m_signal.raise(Signal_PinChange, v, pin_num);
         }
 
@@ -219,7 +222,7 @@ void ArchAVR_ExtInt::raised(const signal_data_t& sigdata, int hooktag)
         if (trigger && test_ioreg(m_config.rb_extint_mask, pin_num)) {
             uint8_t v = (old_level ? 2 : 0) | (pin_level ? 1 : 0);
             set_ioreg(m_config.rb_extint_flag, pin_num);
-            raise_interrupt(m_config.extint_vector[pin_num]);
+            raise_interrupt(m_config.ext_ints[pin_num].vector);
             m_signal.raise(Signal_ExtInt, v, pin_num);
         }
 
