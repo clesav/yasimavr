@@ -128,7 +128,7 @@ class TWISimpleClient(TWI.Client):
         pass
 
 
-    def transfer_stop(self, ok);
+    def transfer_stop(self, ok):
         '''Generic handler called once at the end of a transfer, i.e. when
         detecting a STOP or a RESTART condition (ok is True), or when the
         transfer is interrupted by a bus collision. (ok is False)
