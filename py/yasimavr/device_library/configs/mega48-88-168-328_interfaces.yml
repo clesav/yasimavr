@@ -266,13 +266,13 @@ SPI:
 TWI:
     registers:
         - name: TWBR
-          address: 0xB8
+          address: 0x98
           fields:
             TWBR:
                 kind: INT
 
         - name: TWCR
-          address: 0xBC
+          address: 0x9C
           fields:
             TWIE: { kind: BIT, pos: 0 , one: enabled, zero: disabled }
             TWEN: { kind: BIT, pos: 2, one: enabled, zero: disabled }
@@ -283,7 +283,7 @@ TWI:
             TWINT: { kind: BIT, pos: 7 }
 
         - name: TWSR
-          address: 0xB9
+          address: 0x99
           fields:
             TWPS:
                 kind: ENUM
@@ -296,13 +296,13 @@ TWI:
                 MSB: 7
 
         - name: TWDR
-          address: 0xBB
+          address: 0x9B
           fields:
             TWDR:
                 kind: RAW
 
         - name: TWAR
-          address: 0xBA
+          address: 0x9A
           fields:
             TWA:
                 kind: RAW
@@ -310,7 +310,7 @@ TWI:
             TWGCE: { kind: BIT, pos: 0 }
 
         - name: TWAMR
-          address: 0xBD
+          address: 0x9D
           fields:
             TWAM:
                 kind: RAW
