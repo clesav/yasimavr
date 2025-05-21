@@ -69,48 +69,58 @@ class DeviceConfigException(Exception):
     pass
 
 
-class MemorySegmentDescriptor(collections.namedtuple('MemorySegmentDescriptor', ['start', 'end'])):
-    """Named tuple class for a memory segment, representing a continuous addressable range
+class DataSegmentDescriptor(collections.namedtuple('DataSegmentDescriptor', ['start', 'end'])):
+    """Named tuple class for a memory segment in data space, representing a continuous addressable range
 
     :param int start: lowermost address of the range
     :param int end: uppermost address of the range
     """
 
 
-class MemorySpaceDescriptor:
-    """Descriptor class for a memory space, representing an addressing space for the device
-    e.g. data space, programe space, eeprom, etc.
-    A memory space is composed of one or more 'segments' representing a continuous addressable range.
+class MemorySpaceDescriptor(collections.namedtuple('MemorySpaceDescriptor', ['size', 'page_size'])):
+    """Named tuple class for a memory space
 
-    :param str name: name of the memory space given by the device descriptor
-    :param mem_config: YAML configuration section for the memory space
-
-    :var str name: name given to the memory space
-    :var dict[str,MemorySegmentDescriptor] segments: dictionary of segments composing the address space
-    :var int memend: uppermost address of the memory space
+    :param int size: size of the memory space in bytes
+    :param int page_size: size of the page for read/write operations (where relevant) in bytes
     """
 
-    def __init__(self, name, mem_config):
-        self.name = name
-        self.segments = {}
-        memend = 0
 
-        mem_config_lc = {k.lower(): v for k, v in mem_config.items()}
-        for segmarker in mem_config_lc:
-            if segmarker.endswith('end') and segmarker != 'memend':
-                segend = int(mem_config_lc[segmarker])
+class MemoryDescriptor:
+    """Descriptor class for the memories of a device, representing addressing spaces for the device
+    e.g. data space, programe space, eeprom, etc.
+    The data memory space is composed of one or more 'segments' representing a continuous addressable range.
 
-                segstartmarker = segmarker.replace('end', 'start')
-                segstart = int(mem_config_lc.get(segstartmarker, 0))
+    :param mem_config: YAML configuration section for the memory space
 
-                segname = segmarker.replace('end', '').lower()
-                self.segments[segname] = MemorySegmentDescriptor(segstart, segend)
+    :var dict[str,MemorySpaceDescriptor] spaces: dictionary of the memory spaces
+    :var dict[str,DataSegmentDescriptor] data_segments: dictionary of segments composing the data space
+    """
 
-                memend = max(memend, segend)
+    def __init__(self, mem_config):
+        self.spaces = {}
+        self.data_segments = {}
 
-        self.memend = int(mem_config.get('memend', memend))
+        for sp_name, sp_config in mem_config.items():
+            #space names are low case
+            sp_name = sp_name.lower()
 
-        self.page_size = int(mem_config.get('page_size', 1))
+            if sp_name == 'data':
+                sp_size = 0
+                for seg_name, seg_desc in sp_config.items():
+                    if seg_name == 'size':
+                        sp_size = max(sp_size, int(seg_desc))
+                    else:
+                        if not isinstance(seg_desc, list) or len(seg_desc) != 2:
+                            raise ValueError('invalid data segment description for ' + seg_name)
+                        self.data_segments[seg_name.lower()] = DataSegmentDescriptor(*seg_desc)
+                        sp_size = max(sp_size, seg_desc[1] + 1)
+
+                self.spaces['data'] = MemorySpaceDescriptor(sp_size, 1)
+
+            else:
+                sp_size = max(0, int(sp_config['size']))
+                sp_page_size = max(1, int(sp_config.get('page_size', 1)))
+                self.spaces[sp_name] = MemorySpaceDescriptor(sp_size, sp_page_size)
 
 
 class InterruptMapDescriptor:
@@ -506,7 +516,7 @@ class DeviceDescriptor:
 
     :var str name: name of the device model.
     :var str architecture: one of supported architectures, currently 'AVR' or 'XT'
-    :var dict[str,MemorySpaceDescriptor] mem_spaces: dictionary of the memory spaces
+    :var MemoryDescriptor mem: descriptor of the device memory
     :var dict[str,bool] core_attributes: dictionary of the attribute values to configure the device model
     :var dict[str,int] fuses: default values for the device fuses, usually taken from factory values
     :var dict[str,bool] access_config: dictionary of configuration values for Accessor objects
@@ -598,9 +608,7 @@ class DeviceDescriptor:
         if self.architecture not in Architectures:
             raise DeviceConfigException('Unsupported architecture: ' + self.architecture)
 
-        self.mem_spaces = {}
-        for name, f in dict(yml_cfg['memory']).items():
-            self.mem_spaces[name] = MemorySpaceDescriptor(name, f)
+        self.mem = MemoryDescriptor(yml_cfg['memory'])
 
         self.core_attributes = dict(yml_cfg['core'])
 

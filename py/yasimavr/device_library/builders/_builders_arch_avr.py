@@ -462,17 +462,17 @@ class AVR_DeviceBuilder(DeviceBuilder):
     def _build_core_config(self, dev_desc):
         cfg = _archlib.ArchAVR_CoreConfig()
         cfg.attributes = get_core_attributes(dev_desc)
-        cfg.iostart, cfg.ioend = dev_desc.mem_spaces['data'].segments['io']
-        cfg.ramstart, cfg.ramend = dev_desc.mem_spaces['data'].segments['ram']
-        cfg.dataend = dev_desc.mem_spaces['data'].memend
-        cfg.flashend = dev_desc.mem_spaces['flash'].memend
-        cfg.eepromend = dev_desc.mem_spaces['eeprom'].memend
+        cfg.iostart, cfg.ioend = dev_desc.mem.data_segments['io']
+        cfg.ramstart, cfg.ramend = dev_desc.mem.data_segments['ram']
+        cfg.dataend = dev_desc.mem.spaces['data'].size - 1
+        cfg.flashend = dev_desc.mem.spaces['flash'].size - 1
+        cfg.eepromend = dev_desc.mem.spaces['eeprom'].size - 1
         cfg.eind = dev_desc.reg_address('CPU/EIND', _corelib.INVALID_REGISTER)
         cfg.rampz = dev_desc.reg_address('CPU/RAMPZ', _corelib.INVALID_REGISTER)
         cfg.vector_size = dev_desc.interrupt_map.vector_size
         cfg.fusesize = dev_desc.fuses['size']
         cfg.fuses = bytes(dev_desc.fuses['factory_values'])
-        cfg.flash_page_size = dev_desc.mem_spaces['flash'].page_size
+        cfg.flash_page_size = dev_desc.mem.spaces['flash'].page_size
         return cfg
 
     def _build_device_config(self, dev_desc, core_cfg):
