@@ -1,7 +1,7 @@
 /*
  * arch_avr_device.cpp
  *
- *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -129,7 +129,7 @@ ArchAVR_Device::ArchAVR_Device(const ArchAVR_DeviceConfig& config)
 :Device(m_core_impl, config)
 ,m_core_impl(CORE_CONFIG)
 ,m_sections(CORE_CONFIG.flash_page_count(),
-            CORE_CONFIG.flash_page_size ? CORE_CONFIG.flash_page_size : (CORE_CONFIG.flashend + 1),
+            CORE_CONFIG.flash_page_size ? CORE_CONFIG.flash_page_size : CORE_CONFIG.flashsize,
             Section_Count)
 {
     m_core_impl.m_section_manager = &m_sections;

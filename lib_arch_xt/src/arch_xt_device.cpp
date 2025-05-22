@@ -1,7 +1,7 @@
 /*
  * arch_xt_device.cpp
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -182,7 +182,7 @@ void ArchXT_Core::dbg_write_data(mem_addr_t addr, const uint8_t* buf, mem_addr_t
 ArchXT_Device::ArchXT_Device(const ArchXT_DeviceConfig& config)
 :Device(m_core_impl, config)
 ,m_core_impl(reinterpret_cast<const ArchXT_CoreConfig&>(config.core))
-,m_sections((config.core.flashend + 1) / SECTION_PAGE_SIZE, SECTION_PAGE_SIZE, Section_Count)
+,m_sections(config.core.flashsize / SECTION_PAGE_SIZE, SECTION_PAGE_SIZE, Section_Count)
 {
     m_core_impl.m_section_manager = &m_sections;
 

@@ -1,7 +1,7 @@
 /*
  * config.sip
  *
- *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -37,7 +37,7 @@ struct CoreConfiguration {
     mem_addr_t          ramstart;
     mem_addr_t          ramend;
     mem_addr_t          dataend;
-    flash_addr_t        flashend;
+    flash_addr_t        flashsize;
     mem_addr_t          eepromend;
     reg_addr_t          rampz;
     reg_addr_t          eind;

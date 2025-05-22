@@ -1,7 +1,7 @@
 /*
  * sim_config.h
  *
- *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -49,7 +49,7 @@ struct CoreConfiguration {
     mem_addr_t              ramstart;       //first address of the SRAM in the data space
     mem_addr_t              ramend;         //last address of the SRAM in the data space
     mem_addr_t              dataend;        //last address of the data space
-    flash_addr_t            flashend;       //last address of the flash in the code space
+    flash_addr_t            flashsize;      //Size of the flash
     mem_addr_t              eepromend;      //last address of the EEPROM in the eeprom space
     //Registers for extended addressing (on >64Kb variants)
     reg_addr_t              rampz;

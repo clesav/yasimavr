@@ -43,7 +43,7 @@ Core::Core(const CoreConfiguration& config)
 :m_config(config)
 ,m_device(nullptr)
 ,m_ioregs(config.ioend - config.iostart + 1, nullptr)
-,m_flash(config.flashend + 1)
+,m_flash(config.flashsize)
 ,m_fuses(config.fusesize)
 ,m_pc(0)
 ,m_int_inhib_counter(0)
@@ -486,7 +486,7 @@ int16_t Core::cpu_read_flash(flash_addr_t pgm_addr)
     }
 
     //Direct mode, first do a range check
-    if (pgm_addr > m_config.flashend) {
+    if (pgm_addr >= m_config.flashsize) {
         m_device->logger().err("CPU reading an invalid flash address: 0x%04x", pgm_addr);
         m_device->crash(CRASH_FLASH_ADDR_OVERFLOW, "Invalid flash address");
         return -1;

@@ -24,7 +24,7 @@ architecture: XT
 
 memory:
     data:
-        io: [0x000, 0x0FF]
+        io: [0x000, 0x13FF]
         eeprom: [0x1400, 0x14FF]
         ram: [ 0x2800, 0x3FFF]
         flash: [0x4000, 0xFFFF]

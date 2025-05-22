@@ -404,7 +404,7 @@ class XT_DeviceBuilder(DeviceBuilder):
         cfg.eepromstart_ds, cfg.eepromend_ds = dev_desc.mem.data_segments['eeprom']
 
         cfg.dataend = dev_desc.mem.spaces['data'].size - 1
-        cfg.flashend = dev_desc.mem.spaces['flash'].size - 1
+        cfg.flashsize = dev_desc.mem.spaces['flash'].size
         cfg.eepromend = dev_desc.mem.spaces['eeprom'].size - 1
         cfg.userrowend = dev_desc.mem.spaces['userrow'].size - 1
 

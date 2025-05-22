@@ -1,7 +1,7 @@
 /*
  * arch_avr_device.h
  *
- *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -44,7 +44,7 @@ struct ArchAVR_CoreConfig : CoreConfiguration {
 
     constexpr flash_addr_t flash_page_count() const
     {
-        return flash_page_size ? ((flashend + 1) / flash_page_size) : 1;
+        return flash_page_size ? (flashsize / flash_page_size) : 1;
     }
 
 };
