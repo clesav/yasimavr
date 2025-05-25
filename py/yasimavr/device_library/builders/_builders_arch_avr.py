@@ -464,7 +464,7 @@ class AVR_DeviceBuilder(DeviceBuilder):
         cfg.attributes = get_core_attributes(dev_desc)
         cfg.iostart, cfg.ioend = dev_desc.mem.data_segments['io']
         cfg.ramstart, cfg.ramend = dev_desc.mem.data_segments['ram']
-        cfg.dataend = dev_desc.mem.spaces['data'].size - 1
+        cfg.datasize = dev_desc.mem.spaces['data'].size
         cfg.flashsize = dev_desc.mem.spaces['flash'].size
         cfg.eepromsize = dev_desc.mem.spaces['eeprom'].size
         cfg.eind = dev_desc.reg_address('CPU/EIND', _corelib.INVALID_REGISTER)

@@ -48,7 +48,7 @@ struct CoreConfiguration {
     mem_addr_t              ioend;          //last address of the IO register file in the data space
     mem_addr_t              ramstart;       //first address of the SRAM in the data space
     mem_addr_t              ramend;         //last address of the SRAM in the data space
-    mem_addr_t              dataend;        //last address of the data space
+    mem_addr_t              datasize;       //Size of the data space
     flash_addr_t            flashsize;      //Size of the flash
     //Registers for extended addressing (on >64Kb variants)
     reg_addr_t              rampz;

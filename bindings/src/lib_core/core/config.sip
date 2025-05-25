@@ -36,7 +36,7 @@ struct CoreConfiguration {
     mem_addr_t          ioend;
     mem_addr_t          ramstart;
     mem_addr_t          ramend;
-    mem_addr_t          dataend;
+    mem_addr_t          datasize;
     flash_addr_t        flashsize;
     reg_addr_t          rampz;
     reg_addr_t          eind;
