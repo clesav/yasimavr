@@ -1,7 +1,7 @@
 /*
  * arch_nega0_device.sip
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -26,6 +26,7 @@ struct ArchXT_CoreConfig : public CoreConfiguration {
 #include "arch_xt_device.h"
 %End
 
+    mem_addr_t              eepromsize;
     mem_addr_t              flashstart_ds;
     mem_addr_t              flashend_ds;
     mem_addr_t              eepromstart_ds;

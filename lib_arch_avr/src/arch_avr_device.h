@@ -40,6 +40,7 @@ YASIMAVR_BEGIN_NAMESPACE
 
 struct ArchAVR_CoreConfig : CoreConfiguration {
 
+    mem_addr_t              eepromsize;
     flash_addr_t            flash_page_size;
 
     constexpr flash_addr_t flash_page_count() const

@@ -33,7 +33,7 @@ YASIMAVR_USING_NAMESPACE
 
 ArchXT_Core::ArchXT_Core(const ArchXT_CoreConfig& config)
 :Core(config)
-,m_eeprom(config.eepromend ? (config.eepromend + 1) : 0)
+,m_eeprom(config.eepromsize)
 ,m_userrow(config.userrowend ? (config.userrowend + 1) : 0)
 {}
 

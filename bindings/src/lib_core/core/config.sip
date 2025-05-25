@@ -38,7 +38,6 @@ struct CoreConfiguration {
     mem_addr_t          ramend;
     mem_addr_t          dataend;
     flash_addr_t        flashsize;
-    mem_addr_t          eepromend;
     reg_addr_t          rampz;
     reg_addr_t          eind;
     mem_addr_t          fusesize;

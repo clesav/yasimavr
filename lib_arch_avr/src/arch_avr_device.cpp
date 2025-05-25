@@ -35,7 +35,7 @@ YASIMAVR_USING_NAMESPACE
 
 ArchAVR_Core::ArchAVR_Core(const ArchAVR_CoreConfig& config)
 :Core(config)
-,m_eeprom(config.eepromend ? (config.eepromend + 1) : 0)
+,m_eeprom(config.eepromsize)
 ,m_lockbit(1)
 {}
 

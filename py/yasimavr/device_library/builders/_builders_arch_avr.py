@@ -466,7 +466,7 @@ class AVR_DeviceBuilder(DeviceBuilder):
         cfg.ramstart, cfg.ramend = dev_desc.mem.data_segments['ram']
         cfg.dataend = dev_desc.mem.spaces['data'].size - 1
         cfg.flashsize = dev_desc.mem.spaces['flash'].size
-        cfg.eepromend = dev_desc.mem.spaces['eeprom'].size - 1
+        cfg.eepromsize = dev_desc.mem.spaces['eeprom'].size
         cfg.eind = dev_desc.reg_address('CPU/EIND', _corelib.INVALID_REGISTER)
         cfg.rampz = dev_desc.reg_address('CPU/RAMPZ', _corelib.INVALID_REGISTER)
         cfg.vector_size = dev_desc.interrupt_map.vector_size
