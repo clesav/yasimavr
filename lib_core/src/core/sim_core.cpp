@@ -589,15 +589,15 @@ flash_addr_t Core::cpu_pop_flash_addr()
    If the data space block defined by (address/len) intersects with the block,
    the offsets bufofs, blockofs, blocklen are computed and the function returns true
  */
-bool YASIMAVR_QUALIFIED_NAME(data_space_map)(mem_addr_t addr, mem_addr_t len,
-                                             mem_addr_t blockstart, mem_addr_t blockend,
-                                             mem_addr_t* bufofs, mem_addr_t* blockofs,
-                                             mem_addr_t* blocklen)
+bool Core::data_space_map(mem_addr_t data_addr, mem_addr_t len,
+                          mem_addr_t block_start, mem_addr_t block_end,
+                          mem_addr_t* buf_ofs, mem_addr_t* block_ofs,
+                          mem_addr_t* result_len)
 {
-    if (addr <= blockend && (addr + len) > blockstart) {
-        *bufofs = addr > blockstart ? 0 : (blockstart - addr);
-        *blockofs = addr > blockstart ? (addr - blockstart) : 0;
-        *blocklen = (addr + len) > blockend ? (blockend - addr + 1) : len;
+    if (data_addr <= block_end && (data_addr + len) > block_start) {
+        *buf_ofs = data_addr > block_start ? 0 : (block_start - data_addr);
+        *block_ofs = data_addr > block_start ? (data_addr - block_start) : 0;
+        *result_len = (data_addr + len) > block_end ? (block_end - data_addr + 1) : len;
         return true;
     } else {
         return false;

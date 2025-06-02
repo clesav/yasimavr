@@ -1,7 +1,7 @@
 /*
  * core.sip
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -91,9 +91,9 @@ public:
 
     void start_interrupt_inhibit(unsigned int);
 
-    void set_console_register(reg_addr_t addr);
+    void set_console_register(reg_addr_t);
 
-    void set_direct_LPM_enabled(bool enabled);
+    void set_direct_LPM_enabled(bool);
 
 protected:
 
@@ -103,14 +103,11 @@ protected:
     void cpu_write_gpreg(uint8_t, uint8_t);
     virtual uint8_t cpu_read_data(mem_addr_t) = 0;
     virtual void cpu_write_data(mem_addr_t, uint8_t) = 0;
-    int16_t cpu_read_flash(flash_addr_t pgm_addr);
+    int16_t cpu_read_flash(flash_addr_t);
 
     bool use_extended_addressing() const;
 
+    static bool data_space_map(mem_addr_t, mem_addr_t, mem_addr_t, mem_addr_t,
+                               mem_addr_t* /Out/, mem_addr_t* /Out/, mem_addr_t* /Out/);
+
 };
-
-
-bool data_space_map(mem_addr_t addr, mem_addr_t len,
-                    mem_addr_t blockstart, mem_addr_t blockend,
-                    mem_addr_t* bufofs /Out/, mem_addr_t* blockofs /Out/,
-                    mem_addr_t* blocklen /Out/);
