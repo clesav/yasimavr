@@ -31,7 +31,7 @@ struct ArchXT_CoreConfig : public CoreConfiguration {
     mem_addr_t              flashend_ds;
     mem_addr_t              eepromstart_ds;
     mem_addr_t              eepromend_ds;
-    mem_addr_t              userrowend;
+    mem_addr_t              userrowsize;
 
 };
 

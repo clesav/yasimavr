@@ -34,7 +34,7 @@ YASIMAVR_USING_NAMESPACE
 ArchXT_Core::ArchXT_Core(const ArchXT_CoreConfig& config)
 :Core(config)
 ,m_eeprom(config.eepromsize)
-,m_userrow(config.userrowend ? (config.userrowend + 1) : 0)
+,m_userrow(config.userrowsize)
 {}
 
 uint8_t ArchXT_Core::cpu_read_data(mem_addr_t data_addr)

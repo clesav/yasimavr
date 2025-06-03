@@ -406,7 +406,7 @@ class XT_DeviceBuilder(DeviceBuilder):
         cfg.datasize = dev_desc.mem.spaces['data'].size
         cfg.flashsize = dev_desc.mem.spaces['flash'].size
         cfg.eepromsize = dev_desc.mem.spaces['eeprom'].size
-        cfg.userrowend = dev_desc.mem.spaces['userrow'].size - 1
+        cfg.userrowsize = dev_desc.mem.spaces['userrow'].size
 
         cfg.eind = dev_desc.reg_address('CPU/EIND', _corelib.INVALID_REGISTER)
         cfg.rampz = dev_desc.reg_address('CPU/RAMPZ', _corelib.INVALID_REGISTER)

@@ -53,8 +53,8 @@ struct ArchXT_CoreConfig : CoreConfiguration {
     /// Last address of the EEPROM in the data space
     mem_addr_t              eepromend_ds;
 
-    /// Last address of the USERROW space
-    mem_addr_t              userrowend;
+    /// Size of the USERROW space
+    mem_addr_t              userrowsize;
 
 };
 
