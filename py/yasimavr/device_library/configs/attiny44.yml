@@ -24,16 +24,16 @@ architecture: AVR
 
 memory:
     data:
-        REGEND: 0x01F
-        IOSTART: 0x020
-        IOEND:  0x05F
-        RAMSTART: 0x060
-        RAMEND: 0x15F
+        regfile: [0x000, 0x01F]
+        io: [0x020, 0x05F]
+        ram: [0x060, 0x15F]
+    ram:
+        size: 256
     flash:
-        FLASHEND: 0x0FFF
+        size: 4096
         page_size: 64
     eeprom:
-        EEPROMEND: 0x0FF
+        size: 256
 
 core:
     extended_addressing: no
