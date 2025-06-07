@@ -24,20 +24,20 @@ architecture: XT
 
 memory:
     data:
-        IOEND: 0x13FF
-        EEPROMSTART: 0x1400
-        EEPROMEND: 0x14FF
-        RAMSTART: 0x3C00
-        RAMEND: 0x3FFF
-        FLASHSTART: 0x4000
-        FLASHEND: 0x5FFF
+        io: [0x000, 0x13FF]
+        eeprom: [0x1400, 0x14FF]
+        ram: [ 0x3C00, 0x3FFF]
+        flash: [0x4000, 0x5FFF]
+    ram:
+        size: 1024
     flash:
-        FLASHEND: 0x1FFF
+        size: 8192
         page_size: 64
     eeprom:
-        EEPROMEND: 0xFF
+        size: 256
+        page_size: 32
     userrow:
-        USERROWEND: 0x1F
+        size: 32
 
 core:
     extended_addressing: no
@@ -133,8 +133,6 @@ peripherals:
         base: 0x1000
         ctl_id: NVM
         config:
-           flash_page_size: 64
-           eeprom_page_size: 32
            iv_eeready: NVMCTRL_EE
 
     MISC:

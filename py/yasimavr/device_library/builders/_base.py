@@ -79,9 +79,10 @@ class PeripheralConfigBuilder:
     _SpecialAttributes = ['vector_count', 'vector_size', 'reg_base']
 
 
-    def __init__(self, cfg_class, converter=None):
+    def __init__(self, cfg_class, converter=None, finisher=None):
         self._cfg_class = cfg_class
         self._converter = converter
+        self._finisher = finisher
 
     def __call__(self, per_desc):
         cfg = self._cfg_class()
@@ -126,6 +127,8 @@ class PeripheralConfigBuilder:
                 else:
                     setattr(cfg_proxy, special_attr, conv_val)
 
+        if self._finisher is not None:
+            self._finisher(cfg_proxy, per_desc)
 
         s = cfg_proxy.untouched()
         if VERBOSE and s:

@@ -87,8 +87,12 @@ def _get_rstctrl_builder():
 #========================================================================================
 #NVM controller configuration
 
+def _nvmctrl_finisher(cfg, per_desc):
+    cfg.flash_page_size = per_desc.device.mem.spaces['flash'].page_size
+    cfg.eeprom_page_size = per_desc.device.mem.spaces['eeprom'].page_size
+
 def _get_nvmctrl_builder():
-    cfg_builder = PeripheralConfigBuilder(_archlib.ArchXT_NVMConfig)
+    cfg_builder = PeripheralConfigBuilder(_archlib.ArchXT_NVMConfig, finisher=_nvmctrl_finisher)
     return PeripheralBuilder(_archlib.ArchXT_NVM, cfg_builder)
 
 
@@ -413,8 +417,6 @@ class XT_DeviceBuilder(DeviceBuilder):
 
         cfg.fusesize = dev_desc.fuses['size']
         cfg.fuses = bytes(dev_desc.fuses['factory_values'])
-
-        cfg.flash_page_size = dev_desc.mem.spaces['flash'].page_size
 
         return cfg
 

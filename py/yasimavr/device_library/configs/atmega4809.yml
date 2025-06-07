@@ -141,8 +141,6 @@ peripherals:
         base: 0x1000
         ctl_id: NVM
         config:
-           flash_page_size: 128
-           eeprom_page_size: 64
            iv_eeready: NVMCTRL_EE
 
     MISC:
