@@ -1,7 +1,7 @@
 /*
  * sim_core.h
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -240,6 +240,11 @@ protected:
     void dbg_insert_breakpoint(breakpoint_t& bp);
     void dbg_remove_breakpoint(breakpoint_t& bp);
 
+    static bool data_space_map(mem_addr_t addr, mem_addr_t len,
+                               mem_addr_t blockstart, mem_addr_t blockend,
+                               mem_addr_t* bufofs, mem_addr_t* blockofs,
+                               mem_addr_t* result_len);
+
 private:
 
     //Status register variable
@@ -286,13 +291,6 @@ inline void Core::set_direct_LPM_enabled(bool enabled)
 {
     m_direct_LPM = enabled;
 }
-
-
-bool data_space_map(mem_addr_t addr, mem_addr_t len,
-                    mem_addr_t blockstart, mem_addr_t blockend,
-                    mem_addr_t* bufofs, mem_addr_t* blockofs,
-                    mem_addr_t* blocklen)
-                    AVR_CORE_PUBLIC_API;
 
 
 YASIMAVR_END_NAMESPACE

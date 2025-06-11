@@ -43,7 +43,7 @@ Core::Core(const CoreConfiguration& config)
 :m_config(config)
 ,m_device(nullptr)
 ,m_ioregs(config.ioend - config.iostart + 1, nullptr)
-,m_flash(config.flashend + 1)
+,m_flash(config.flashsize)
 ,m_fuses(config.fusesize)
 ,m_pc(0)
 ,m_int_inhib_counter(0)
@@ -486,7 +486,7 @@ int16_t Core::cpu_read_flash(flash_addr_t pgm_addr)
     }
 
     //Direct mode, first do a range check
-    if (pgm_addr > m_config.flashend) {
+    if (pgm_addr >= m_config.flashsize) {
         m_device->logger().err("CPU reading an invalid flash address: 0x%04x", pgm_addr);
         m_device->crash(CRASH_FLASH_ADDR_OVERFLOW, "Invalid flash address");
         return -1;
@@ -589,15 +589,15 @@ flash_addr_t Core::cpu_pop_flash_addr()
    If the data space block defined by (address/len) intersects with the block,
    the offsets bufofs, blockofs, blocklen are computed and the function returns true
  */
-bool YASIMAVR_QUALIFIED_NAME(data_space_map)(mem_addr_t addr, mem_addr_t len,
-                                             mem_addr_t blockstart, mem_addr_t blockend,
-                                             mem_addr_t* bufofs, mem_addr_t* blockofs,
-                                             mem_addr_t* blocklen)
+bool Core::data_space_map(mem_addr_t data_addr, mem_addr_t len,
+                          mem_addr_t block_start, mem_addr_t block_end,
+                          mem_addr_t* buf_ofs, mem_addr_t* block_ofs,
+                          mem_addr_t* result_len)
 {
-    if (addr <= blockend && (addr + len) > blockstart) {
-        *bufofs = addr > blockstart ? 0 : (blockstart - addr);
-        *blockofs = addr > blockstart ? (addr - blockstart) : 0;
-        *blocklen = (addr + len) > blockend ? (blockend - addr + 1) : len;
+    if (data_addr <= block_end && (data_addr + len) > block_start) {
+        *buf_ofs = data_addr > block_start ? 0 : (block_start - data_addr);
+        *block_ofs = data_addr > block_start ? (data_addr - block_start) : 0;
+        *result_len = (data_addr + len) > block_end ? (block_end - data_addr + 1) : len;
         return true;
     } else {
         return false;

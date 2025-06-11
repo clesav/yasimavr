@@ -1,7 +1,7 @@
 /*
  * sim_cpu.cpp
  *
- *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -243,7 +243,7 @@ static bool _is_instruction_32_bits(uint16_t opcode)
 cycle_count_t Core::run_instruction()
 {
 
-    if (m_pc > m_config.flashend) {
+    if (m_pc >= m_config.flashsize) {
         m_device->crash(CRASH_PC_OVERFLOW, "Program Counter out of bounds");
         return 0;
     }
@@ -1000,7 +1000,7 @@ cycle_count_t Core::run_instruction()
             TRACE_OP("rjmp .%+d [%04x]", o, new_pc + o);
             if (o == -2)
                 m_device->ctlreq(AVR_IOCTL_SLEEP, AVR_CTLREQ_SLEEP_PSEUDO);
-            new_pc = (new_pc + o) % (m_config.flashend + 1);
+            new_pc = (new_pc + o) % m_config.flashsize;
             cycle++;
             TRACE_JUMP;
         }   break;
@@ -1010,7 +1010,7 @@ cycle_count_t Core::run_instruction()
             cpu_push_flash_addr(new_pc >> 1);
             TRACE_OP("rcall .%+d [%04x] SP[%04x]", o, new_pc + o, read_sp());
             cycle += 3 + (use_extended_addressing() ? 1 : 0);
-            new_pc = (new_pc + o) % (m_config.flashend + 1);
+            new_pc = (new_pc + o) % m_config.flashsize;
             // 'rcall .1' is used as a cheap "push 16 bits of room on the stack"
             if (o != 0)
                 TRACE_CALL;

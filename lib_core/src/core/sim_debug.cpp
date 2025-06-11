@@ -31,13 +31,15 @@ YASIMAVR_USING_NAMESPACE
 
 //=======================================================================================
 
-#define ADJUST_ADDR_LEN(addr, len, end) \
-    if ((addr) > (end))                    \
-        (addr) = (end);                    \
-    if (!(end))                            \
-        (len) = 0;                         \
-    else if ((len) > ((end) + 1 - (addr))) \
-        (len) = ((end) + 1 - (addr));
+#define ADJUST_ADDR_LEN(addr, len, size) \
+    if (!(size)) {                       \
+        (len) = 0;                       \
+    } else {                             \
+        if ((addr) >= (size))            \
+            (addr) = (size) - 1;         \
+        if ((len) > ((size) - (addr)))   \
+            (len) = ((size) - (addr));   \
+    }
 
 
 //=======================================================================================
@@ -283,7 +285,7 @@ void DeviceDebugProbe::write_flash(flash_addr_t addr, const uint8_t* buf, flash_
 
     Core& core = m_device->core();
 
-    ADJUST_ADDR_LEN(addr, len, core.config().flashend);
+    ADJUST_ADDR_LEN(addr, len, core.config().flashsize);
 
     core.m_flash.write(buf, addr, len);
 }
@@ -294,7 +296,7 @@ flash_addr_t DeviceDebugProbe::read_flash(flash_addr_t addr, uint8_t* buf, flash
 
     Core& core = m_device->core();
 
-    ADJUST_ADDR_LEN(addr, len, core.config().flashend);
+    ADJUST_ADDR_LEN(addr, len, core.config().flashsize);
 
     core.m_flash.read(buf, addr, len);
 

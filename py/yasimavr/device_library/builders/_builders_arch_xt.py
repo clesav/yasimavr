@@ -87,8 +87,12 @@ def _get_rstctrl_builder():
 #========================================================================================
 #NVM controller configuration
 
+def _nvmctrl_finisher(cfg, per_desc):
+    cfg.flash_page_size = per_desc.device.mem.spaces['flash'].page_size
+    cfg.eeprom_page_size = per_desc.device.mem.spaces['eeprom'].page_size
+
 def _get_nvmctrl_builder():
-    cfg_builder = PeripheralConfigBuilder(_archlib.ArchXT_NVMConfig)
+    cfg_builder = PeripheralConfigBuilder(_archlib.ArchXT_NVMConfig, finisher=_nvmctrl_finisher)
     return PeripheralBuilder(_archlib.ArchXT_NVM, cfg_builder)
 
 
@@ -398,23 +402,21 @@ class XT_DeviceBuilder(DeviceBuilder):
 
         cfg.attributes = get_core_attributes(dev_desc)
 
-        cfg.iostart, cfg.ioend = dev_desc.mem_spaces['data'].segments['io']
-        cfg.ramstart, cfg.ramend = dev_desc.mem_spaces['data'].segments['ram']
-        cfg.flashstart_ds, cfg.flashend_ds = dev_desc.mem_spaces['data'].segments['flash']
-        cfg.eepromstart_ds, cfg.eepromend_ds = dev_desc.mem_spaces['data'].segments['eeprom']
+        cfg.iostart, cfg.ioend = dev_desc.mem.data_segments['io']
+        cfg.ramstart, cfg.ramend = dev_desc.mem.data_segments['ram']
+        cfg.flashstart_ds, cfg.flashend_ds = dev_desc.mem.data_segments['flash']
+        cfg.eepromstart_ds, cfg.eepromend_ds = dev_desc.mem.data_segments['eeprom']
 
-        cfg.dataend = dev_desc.mem_spaces['data'].memend
-        cfg.flashend = dev_desc.mem_spaces['flash'].memend
-        cfg.eepromend = dev_desc.mem_spaces['eeprom'].memend
-        cfg.userrowend = dev_desc.mem_spaces['userrow'].memend
+        cfg.datasize = dev_desc.mem.spaces['data'].size
+        cfg.flashsize = dev_desc.mem.spaces['flash'].size
+        cfg.eepromsize = dev_desc.mem.spaces['eeprom'].size
+        cfg.userrowsize = dev_desc.mem.spaces['userrow'].size
 
         cfg.eind = dev_desc.reg_address('CPU/EIND', _corelib.INVALID_REGISTER)
         cfg.rampz = dev_desc.reg_address('CPU/RAMPZ', _corelib.INVALID_REGISTER)
 
         cfg.fusesize = dev_desc.fuses['size']
         cfg.fuses = bytes(dev_desc.fuses['factory_values'])
-
-        cfg.flash_page_size = dev_desc.mem_spaces['flash'].page_size
 
         return cfg
 

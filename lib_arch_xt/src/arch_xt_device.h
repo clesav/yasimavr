@@ -1,7 +1,7 @@
 /*
  * arch_xt_device.h
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -40,6 +40,9 @@ YASIMAVR_BEGIN_NAMESPACE
  */
 struct ArchXT_CoreConfig : CoreConfiguration {
 
+    /// Size of the EEPROM
+    mem_addr_t              eepromsize;
+
     /// First address of the flash in the data space
     mem_addr_t              flashstart_ds;
     /// Last address of the flash in the data space
@@ -50,8 +53,8 @@ struct ArchXT_CoreConfig : CoreConfiguration {
     /// Last address of the EEPROM in the data space
     mem_addr_t              eepromend_ds;
 
-    /// Last address of the USERROW space
-    mem_addr_t              userrowend;
+    /// Size of the USERROW space
+    mem_addr_t              userrowsize;
 
 };
 

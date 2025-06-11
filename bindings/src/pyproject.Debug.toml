@@ -36,6 +36,7 @@ library-dirs = ["../../lib_core/Debug"]
 pep484-pyi = true
 protected-is-public = false
 extra-link-args = ["-Wl,-rpath=${ORIGIN}", "-static-libstdc++"]
+concatenate = 10
 
 
 [tool.sip.bindings.yasimavr-arch-avr]
@@ -51,6 +52,7 @@ library-dirs = ["../../lib_core/Debug",
 pep484-pyi = true
 protected-is-public = false
 extra-link-args = ["-Wl,-rpath=${ORIGIN}", "-static-libstdc++"]
+concatenate = 10
 
 
 [tool.sip.bindings.yasimavr-arch-xt]
@@ -66,6 +68,7 @@ library-dirs = ["../../lib_core/Debug",
 pep484-pyi = true
 protected-is-public = false
 extra-link-args = ["-Wl,-rpath=${ORIGIN}", "-static-libstdc++"]
+concatenate = 10
 
 
 [tool.sip.project]

@@ -1,7 +1,7 @@
 /*
  * arch_avr_nvm.cpp
  *
- *  Copyright 2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2024-2025 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -387,7 +387,7 @@ int ArchAVR_NVM::process_NVM_write(NVM_request_t& req)
     flash_addr_t spm_addr = req.addr & ~1UL;
 
     //Address range check
-    if (spm_addr >= device()->config().core.flashend) {
+    if (spm_addr >= device()->config().core.flashsize) {
         logger().err("CPU writing an invalid flash address: 0x%04x", spm_addr);
         device()->crash(CRASH_FLASH_ADDR_OVERFLOW, "Invalid flash address");
         return -1;

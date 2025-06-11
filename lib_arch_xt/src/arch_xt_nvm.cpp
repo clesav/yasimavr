@@ -1,7 +1,7 @@
 /*
  * arch_xt_nvm.cpp
  *
- *  Copyright 2022-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022-2025 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -154,22 +154,22 @@ void ArchXT_Fuses::configure_flash_sections()
     //Read the BOOTEND and APPEND fuse values as page numbers (of 256 bytes)
     flash_addr_t bootend = (*m_fuses)[offsetof(FUSE_t, BOOTEND)];
     flash_addr_t append = (*m_fuses)[offsetof(FUSE_t, APPEND)];
-    //Flash end as a page number
-    flash_addr_t flashend = (device()->core().config().flashend + 1) / ArchXT_Device::SECTION_PAGE_SIZE;
+    //Total page count for the flash memory
+    flash_addr_t page_count = device()->core().config().flashsize / ArchXT_Device::SECTION_PAGE_SIZE;
 
     //Log a warning if the fuse values are off limits.
-    if (bootend > flashend || append > flashend)
+    if (bootend >= page_count || append >= page_count)
         logger().wng("Invalid fuses values: BOOTEND=%d, APPEND=%d", bootend, append);
 
     //Go through the various combinations of bootend/append values to find the section boundaries
     flash_addr_t limit1, limit2;
-    if (!bootend || bootend > flashend) {
+    if (!bootend || bootend >= page_count) {
         //If BOOTEND is zero, the entire flash is boot
-        limit1 = limit2 = flashend;
+        limit1 = limit2 = page_count;
     } else {
         limit1 = bootend;
-        if (!append || append > flashend)
-            limit2 = flashend; //makes the AppData section empty
+        if (!append || append >= page_count)
+            limit2 = page_count; //makes the AppData section empty
         else if (append < bootend)
             limit2 = bootend; //makes the AppCode section empty
         else
