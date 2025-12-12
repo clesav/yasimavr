@@ -42,9 +42,7 @@ BUILD_DIR := Debug
 
 -include Makefile-defs.mk
 
-CPP_ARGS := -O0 -g3 -Wall -c -fPIC -fmessage-length=0 -fvisibility=hidden
 CPP_DEFS := -DYASIMAVR_AVR_DLL
-LNK_ARGS := -shared -static-libstdc++
 
 
 BUILD_ARTIFACT = $(BUILD_DIR)/$(ARTIFACT_PREFIX)$(ARTIFACT_NAME).$(ARTIFACT_EXT)
@@ -76,7 +74,7 @@ build-dirs:
 $(BUILD_ARTIFACT): $(OBJS) $(MAKEFILE)
 	@echo 'Building target: $@'
 	@echo 'Invoking: MinGW C++ Linker'
-	g++ $(LNK_ARGS) -L"../lib_core/Debug" -o "$(BUILD_ARTIFACT)" $(OBJS) -lyasimavr_core
+	g++ $(LNK_DBG_FLAGS) -L"../lib_core/Debug" -o "$(BUILD_ARTIFACT)" $(OBJS) -lyasimavr_core
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -84,7 +82,7 @@ $(BUILD_ARTIFACT): $(OBJS) $(MAKEFILE)
 $(BUILD_DIR)/%.o: src/%.cpp $(MAKEFILE)
 	@echo 'Building file: $<'
 	@echo 'Invoking: GCC C++ Compiler'
-	g++ $(CPP_ARGS) $(CPP_DEFS) $(CPP_INCS) -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" -o "$@" "$<"
+	g++ -c $(CPP_DBG_FLAGS) $(CPP_DEFS) $(CPP_INCS) -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 

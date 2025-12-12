@@ -63,7 +63,14 @@ CPP_DEPS := \
 	$(BUILD_DIR)/arch_xt_usart.d \
 	$(BUILD_DIR)/arch_xt_wdt.d
 
-CPP_INCS := \
-	-I"../lib_core/src"
+CPP_INCS := -I"../lib_core/src"
 
 ARTIFACT_NAME := yasimavr_arch_xt
+
+CPP_FLAGS := -Wall -fPIC -fmessage-length=0 -fvisibility=hidden
+CPP_REL_FLAGS := -O3 $(CPP_FLAGS)
+CPP_DBG_FLAGS := -O0 -g3 $(CPP_FLAGS)
+
+LNK_FLAGS := -shared -fPIC -static-libstdc++
+LNK_REL_FLAGS := -O3 $(LNK_FLAGS)
+LNK_DBG_FLAGS := -O0 -g3 $(LNK_FLAGS)

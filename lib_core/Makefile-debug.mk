@@ -42,9 +42,7 @@ BUILD_DIR := Debug
 
 -include Makefile-defs.mk
 
-CPP_ARGS := -O0 -g3 -Wall -c -fPIC -fmessage-length=0 -fvisibility=hidden
 CPP_DEFS := -DYASIMAVR_CORE_DLL
-LNK_ARGS := -shared -static-libstdc++
 
 
 BUILD_ARTIFACT = $(BUILD_DIR)/$(ARTIFACT_PREFIX)$(ARTIFACT_NAME).$(ARTIFACT_EXT)
@@ -82,7 +80,7 @@ build-version: build-dirs make_version_source.py $(MAKEFILE)
 $(BUILD_ARTIFACT): $(OBJS) $(MAKEFILE)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C++ Linker'
-	g++ $(LNK_ARGS) -o "$(BUILD_ARTIFACT)" $(OBJS) -lelf
+	g++ $(LNK_DBG_FLAGS) -o "$(BUILD_ARTIFACT)" $(OBJS) -lelf
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -90,7 +88,7 @@ $(BUILD_ARTIFACT): $(OBJS) $(MAKEFILE)
 $(BUILD_DIR)/core/%.o: src/core/%.cpp $(MAKEFILE)
 	@echo 'Building file: $<'
 	@echo 'Invoking: GCC C++ Compiler'
-	g++ $(CPP_ARGS) $(CPP_DEFS) $(CPP_INCS) -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" -o "$@" "$<"
+	g++ -c $(CPP_DBG_FLAGS) $(CPP_DEFS) $(CPP_INCS) -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 
@@ -98,7 +96,7 @@ $(BUILD_DIR)/core/%.o: src/core/%.cpp $(MAKEFILE)
 $(BUILD_DIR)/ioctrl_common/%.o: src/ioctrl_common/%.cpp $(MAKEFILE)
 	@echo 'Building file: $<'
 	@echo 'Invoking: GCC C++ Compiler'
-	g++ $(CPP_ARGS) $(CPP_DEFS) $(CPP_INCS) -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" -o "$@" "$<"
+	g++ -c $(CPP_DBG_FLAGS) $(CPP_DEFS) $(CPP_INCS) -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 
@@ -106,7 +104,7 @@ $(BUILD_DIR)/ioctrl_common/%.o: src/ioctrl_common/%.cpp $(MAKEFILE)
 $(BUILD_DIR)/sim/%.o: src/sim/%.cpp $(MAKEFILE)
 	@echo 'Building file: $<'
 	@echo 'Invoking: GCC C++ Compiler'
-	g++ $(CPP_ARGS) $(CPP_DEFS) $(CPP_INCS) -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" -o "$@" "$<"
+	g++ -c $(CPP_DBG_FLAGS) $(CPP_DEFS) $(CPP_INCS) -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 
