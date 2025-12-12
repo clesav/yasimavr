@@ -1,6 +1,6 @@
-# Makefile for yasimavr_core library
+# Makefile for yasimavr_arch_xt library
 #
-# Copyright 2023-2024 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2023-2025 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -38,12 +38,12 @@ else
 endif
 
 
-BUILD_DIR := Debug
+BUILD_DIR := Release
 
--include Makefile-defs
+-include Makefile-defs.mk
 
-CPP_ARGS := -O0 -g3 -Wall -c -fPIC -fmessage-length=0 -fvisibility=hidden
-CPP_DEFS := -DYASIMAVR_CORE_DLL
+CPP_ARGS := -O3 -Wall -c -fPIC -fmessage-length=0 -fvisibility=hidden
+CPP_DEFS := -DYASIMAVR_XT_DLL
 LNK_ARGS := -shared -static-libstdc++
 
 
@@ -67,43 +67,21 @@ endif
 all: build
 
 # Main-build Target
-build: build-dirs build-version $(BUILD_ARTIFACT)
+build: build-dirs $(BUILD_ARTIFACT)
 
 build-dirs:
 	-@$(MAKE_DIR) "$(BUILD_DIR)"
-	-@$(MAKE_DIR) "$(BUILD_DIR)/core"
-	-@$(MAKE_DIR) "$(BUILD_DIR)/ioctrl_common"
-	-@$(MAKE_DIR) "$(BUILD_DIR)/sim"
-
-build-version: build-dirs make_version_source.py $(MAKEFILE)
-	python make_version_source.py ../VERSION $(BUILD_DIR)/sim_version.h
 
 # Linker invocations
-$(BUILD_ARTIFACT): $(OBJS) $(MAKEFILE)
+$(BUILD_ARTIFACT): $(OBJS) Makefile-release
 	@echo 'Building target: $@'
-	@echo 'Invoking: GCC C++ Linker'
-	g++ $(LNK_ARGS) -o "$(BUILD_ARTIFACT)" $(OBJS) -lelf
+	@echo 'Invoking: MinGW C++ Linker'
+	g++ $(LNK_ARGS) -s -L"../lib_core/Release" -o "$(BUILD_ARTIFACT)" $(OBJS) -lyasimavr_core
 	@echo 'Finished building target: $@'
 	@echo ' '
 
-# Compiler invocation for the core directory
-$(BUILD_DIR)/core/%.o: src/core/%.cpp $(MAKEFILE)
-	@echo 'Building file: $<'
-	@echo 'Invoking: GCC C++ Compiler'
-	g++ $(CPP_ARGS) $(CPP_DEFS) $(CPP_INCS) -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" -o "$@" "$<"
-	@echo 'Finished building: $<'
-	@echo ' '
-
-# Compiler invocation for the ioctrl_common directory
-$(BUILD_DIR)/ioctrl_common/%.o: src/ioctrl_common/%.cpp $(MAKEFILE)
-	@echo 'Building file: $<'
-	@echo 'Invoking: GCC C++ Compiler'
-	g++ $(CPP_ARGS) $(CPP_DEFS) $(CPP_INCS) -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" -o "$@" "$<"
-	@echo 'Finished building: $<'
-	@echo ' '
-
-# Compiler invocation for the sim directory
-$(BUILD_DIR)/sim/%.o: src/sim/%.cpp $(MAKEFILE)
+# Compiler invocation
+$(BUILD_DIR)/%.o: src/%.cpp Makefile-release
 	@echo 'Building file: $<'
 	@echo 'Invoking: GCC C++ Compiler'
 	g++ $(CPP_ARGS) $(CPP_DEFS) $(CPP_INCS) -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" -o "$@" "$<"

@@ -1,6 +1,6 @@
 # Makefile for yasimavr_arch_avr library
 #
-# Copyright 2023 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2023-2025 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -40,7 +40,7 @@ endif
 
 BUILD_DIR := Debug
 
--include Makefile-defs
+-include Makefile-defs.mk
 
 CPP_ARGS := -O0 -g3 -Wall -c -fPIC -fmessage-length=0 -fvisibility=hidden
 CPP_DEFS := -DYASIMAVR_AVR_DLL

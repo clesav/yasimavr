@@ -1,6 +1,6 @@
 # Top-level Makefile for yasimavr_arch_xt library
 #
-# Copyright 2023 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2023-2025 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -20,13 +20,13 @@
 all: debug release
 
 release:
-	$(MAKE) -f Makefile-release all
+	$(MAKE) -f Makefile-release.mk all
 
 debug:
-	$(MAKE) -f Makefile-debug all
+	$(MAKE) -f Makefile-debug.mk all
 
 clean:
-	$(MAKE) -f Makefile-debug clean
-	$(MAKE) -f Makefile-release clean
+	$(MAKE) -f Makefile-debug.mk clean
+	$(MAKE) -f Makefile-release.mk clean
 
 .PHONY: all clean release debug

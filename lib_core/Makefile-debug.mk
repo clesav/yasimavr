@@ -1,6 +1,6 @@
 # Makefile for yasimavr_core library
 #
-# Copyright 2023-2024 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2023-2025 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -38,12 +38,12 @@ else
 endif
 
 
-BUILD_DIR := Release
+BUILD_DIR := Debug
 
--include Makefile-defs
+-include Makefile-defs.mk
 
-CPP_ARGS := -O3 -Wall -c -fPIC -fmessage-length=0 -fvisibility=hidden
-CPP_DEFS := -DYASIMAVR_CORE_DLL -DYASIMAVR_NO_TRACE
+CPP_ARGS := -O0 -g3 -Wall -c -fPIC -fmessage-length=0 -fvisibility=hidden
+CPP_DEFS := -DYASIMAVR_CORE_DLL
 LNK_ARGS := -shared -static-libstdc++
 
 
@@ -82,7 +82,7 @@ build-version: build-dirs make_version_source.py $(MAKEFILE)
 $(BUILD_ARTIFACT): $(OBJS) $(MAKEFILE)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C++ Linker'
-	g++ $(LNK_ARGS) -s -o "$(BUILD_ARTIFACT)" $(OBJS) -lelf
+	g++ $(LNK_ARGS) -o "$(BUILD_ARTIFACT)" $(OBJS) -lelf
 	@echo 'Finished building target: $@'
 	@echo ' '
 
