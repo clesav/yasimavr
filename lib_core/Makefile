@@ -17,6 +17,19 @@
 # You should have received a copy of the GNU General Public License
 # along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
 
+ifeq ($(OS),Windows_NT)
+	detected_OS := Windows
+else
+	detected_OS := $(shell uname)
+endif
+
+ifeq ($(OS),Windows_NT)
+	RM_DIR := rmdir /q /s
+else
+	RM_DIR := rm -r
+endif
+
+
 all: debug release
 
 release:
@@ -28,5 +41,6 @@ debug:
 clean:
 	$(MAKE) -f Makefile-debug.mk clean
 	$(MAKE) -f Makefile-release.mk clean
+	-$(RM_DIR) __pycache__
 
 .PHONY: all clean release debug

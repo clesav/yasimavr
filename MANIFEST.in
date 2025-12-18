@@ -10,7 +10,7 @@ recursive-include lib_arch_xt/src *.h
 global-exclude Makefile*
 
 #Files to build the bindings
-recursive-include bindings/src *.sip *.c *.h *.py *.toml
+recursive-include bindings/src *.sip *.c *.h *.py
 include bindings/project.py
 include bindings/pyproject.toml
 

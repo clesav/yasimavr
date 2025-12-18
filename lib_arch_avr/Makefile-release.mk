@@ -71,7 +71,7 @@ build-dirs:
 	-@$(MAKE_DIR) "$(BUILD_DIR)"
 
 # Linker invocations
-$(BUILD_ARTIFACT): $(OBJS) Makefile-release
+$(BUILD_ARTIFACT): $(OBJS) $(MAKEFILE)
 	@echo 'Building target: $@'
 	@echo 'Invoking: MinGW C++ Linker'
 	g++ $(LNK_REL_FLAGS) -L"../lib_core/Release" -o "$(BUILD_ARTIFACT)" $(OBJS) -lyasimavr_core
@@ -79,7 +79,7 @@ $(BUILD_ARTIFACT): $(OBJS) Makefile-release
 	@echo ' '
 
 # Compiler invocation
-$(BUILD_DIR)/%.o: src/%.cpp Makefile-release
+$(BUILD_DIR)/%.o: src/%.cpp $(MAKEFILE)
 	@echo 'Building file: $<'
 	@echo 'Invoking: GCC C++ Compiler'
 	g++ -c $(CPP_REL_FLAGS) $(CPP_DEFS) $(CPP_INCS) -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" -o "$@" "$<"

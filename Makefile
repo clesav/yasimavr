@@ -1,6 +1,6 @@
 # Top-level Makefile fo yasim-avr
 #
-# Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -138,7 +138,7 @@ lib-arch-xt-clean: FORCE
 
 
 py-bindings: libs
-	cd bindings && $(MAKE) all
+	cd bindings && $(MAKE) release
 	$(COPY_FILE) $(BINDINGS_REL_DIR_BKSL)*.* $(LIB_TARGET_DIR_BKSL)
 
 py-bindings-debug: libs-debug
