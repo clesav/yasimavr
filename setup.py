@@ -9,8 +9,6 @@ CLASSIFIERS = [
     'Natural Language :: English',
     'Operating System :: OS Independent',
     'Programming Language :: C++',
-    'Programming Language :: Python :: 3.7',
-    'Programming Language :: Python :: 3.8',
     'Programming Language :: Python :: 3.9',
     'Programming Language :: Python :: 3.10',
     'Programming Language :: Python :: 3.11',
@@ -47,13 +45,6 @@ from wheel.bdist_wheel import bdist_wheel
 
 from sipbuild.pyproject import PyProject
 import sipbuild.module as sip_module
-#Ensure the function 'module' is visible from the sipbuild.module package.
-#Resolves a discrepancy of import introduced with SIP 6.8.4.
-from sipbuild.version import SIP_VERSION
-if SIP_VERSION <= 0x060803:
-    from sipbuild.module.module import module
-    sip_module.module = module
-    del module
 
 #Necessary in virtual building environment, to import from bindings.project
 p = os.path.dirname(__file__)

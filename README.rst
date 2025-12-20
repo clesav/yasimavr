@@ -19,7 +19,7 @@ Installation
 Prerequisites:
 **************
 
-* Python (>=3.7) and PIP
+* Python (>=3.9) and PIP
 * For Linux distributions, libelf is required: (for example: ``sudo apt-get install libelf-dev``)
 
 Install:

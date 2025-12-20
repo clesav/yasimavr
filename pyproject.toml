@@ -1,6 +1,5 @@
 [build-system]
-requires = ["setuptools>=61.0",
+requires = ["setuptools>=75.4",
             "wheel",
-            "sip>=6,<6.8;python_version=='3.7'",
-            "sip>=6,<6.10;python_version>'3.7'"]
+            "sip>=6.8.4,<6.10"]
 build-backend = "setuptools.build_meta"
