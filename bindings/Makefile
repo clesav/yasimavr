@@ -1,6 +1,6 @@
 # Makefile for the python bindings of yasim-avr
 
-# Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
 
 # This file is part of yasim-avr.
 
@@ -52,7 +52,7 @@ else
 endif
 
 
-all: siplib bindings
+release: siplib bindings
 
 debug: siplib bindings-debug
 

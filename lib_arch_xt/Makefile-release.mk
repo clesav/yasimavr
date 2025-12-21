@@ -75,6 +75,8 @@ $(BUILD_ARTIFACT): $(OBJS) $(MAKEFILE)
 	@echo 'Building target: $@'
 	@echo 'Invoking: MinGW C++ Linker'
 	g++ $(LNK_REL_FLAGS) -L"../lib_core/Release" -o "$(BUILD_ARTIFACT)" $(OBJS) -lyasimavr_core
+	objdump -x -w $(BUILD_ARTIFACT) > $(BUILD_DIR)/$(ARTIFACT_PREFIX)$(ARTIFACT_NAME)_dump.txt
+	objdump -f -h -w -C -d -s -j .text $(BUILD_ARTIFACT) > $(BUILD_DIR)/$(ARTIFACT_PREFIX)$(ARTIFACT_NAME)_text.txt
 	@echo 'Finished building target: $@'
 	@echo ' '
 

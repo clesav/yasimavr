@@ -81,6 +81,8 @@ $(BUILD_ARTIFACT): $(OBJS) $(MAKEFILE)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C++ Linker'
 	g++ $(LNK_REL_FLAGS) -o "$(BUILD_ARTIFACT)" $(OBJS) -lelf
+	objdump -x -w $(BUILD_ARTIFACT) > $(BUILD_DIR)/$(ARTIFACT_PREFIX)$(ARTIFACT_NAME)_dump.txt
+	objdump -f -h -w -C -d -s -j .text $(BUILD_ARTIFACT) > $(BUILD_DIR)/$(ARTIFACT_PREFIX)$(ARTIFACT_NAME)_text.txt
 	@echo 'Finished building target: $@'
 	@echo ' '
 
