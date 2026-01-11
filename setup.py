@@ -392,7 +392,7 @@ setup(
     keywords = KEYWORDS,
     project_urls = PROJECT_URLS,
 
-    python_requires = ">=3.7",
+    python_requires = ">=3.9",
     platforms = "Any",
     install_requires = ["pyYAML", "pyvcd"],
 
