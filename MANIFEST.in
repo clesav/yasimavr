@@ -13,6 +13,7 @@ global-exclude Makefile*
 recursive-include bindings/src *.sip *.c *.h *.py
 include bindings/project.py
 include bindings/pyproject.toml
+global-exclude bindings/src/*.toml
 
 #Device configuration files, are part of the wheel
 recursive-include py/yasimavr/device_library *.yml
