@@ -29,12 +29,14 @@ ifeq ($(detected_OS),Windows)
 	RM_DIR := rmdir /q /s
 	COPY_FILE := copy /y
 	LIB_EXT := pyd
+	SET_VAR := set
 else
 	MAKE_DIR := mkdir -p
 	RM_FILE := rm
 	RM_DIR := rm -r
 	COPY_FILE := cp
 	LIB_EXT := so
+	SET_VAR := export
 endif
 
 
@@ -51,35 +53,58 @@ else
 	SRC_DIR_BKSL = $(SRC_DIR)
 endif
 
+.ONESHELL:
 
 release: siplib bindings
 
 debug: siplib bindings-debug
 
 siplib: FORCE
+	@echo 'Building siplib'
 	-@$(MAKE_DIR) siplib
-	cd src && python generate_siplib.py
-	cd siplib/sip && python -B setup.py build --build-lib "."
+	@cd src
+	python generate_siplib.py
+	@cd ..
+	@cd siplib/sip
+	python -B setup.py build --build-lib "."
+	@echo ' '
 
+bindings: CXXFLAGS=-O3 -fvisibility=hidden -fmessage-length=0
+bindings: LDFLAGS=-O3
 bindings: siplib
+	@echo 'Building release bindings'
+	@$(SET_VAR) CXXFLAGS="$(CXXFLAGS)"
+	@$(SET_VAR) CFLAGS="$(CFLAGS)"
+	@$(SET_VAR) LDFLAGS="$(LDFLAGS)"
 	-@$(MAKE_DIR) sipgen
 	-@$(MAKE_DIR) Release
 	$(COPY_FILE) $(SRC_DIR_BKSL)pyproject.Release.toml $(SIPGEN_DIR_BKSL)pyproject.toml
 	$(COPY_FILE) project.py sipgen
-	cd sipgen && python -m sipbuild.tools.build
+	@cd sipgen
+	python -m sipbuild.tools.build
+	@cd ..
 	$(COPY_FILE) $(SIPGEN_DIR_BKSL)*.$(LIB_EXT) Release
 	$(COPY_FILE) $(SIPGEN_DIR_BKSL)*.pyi Release
 	$(COPY_FILE) $(SIPLIB_DIR_BKSL)_sip*.$(LIB_EXT) Release
+	@echo ' '
 
+bindings-debug: CFLAGS=-O0 -fvisibility=hidden -fmessage-length=0
+bindings-debug: LDFLAGS=-O0
 bindings-debug: siplib
+	@echo 'Building debug bindings'
+	@$(SET_VAR) CXXFLAGS="$(CXXFLAGS)"
+	@$(SET_VAR) LDFLAGS="$(LDFLAGS)"
 	-@$(MAKE_DIR) sipgen
 	-@$(MAKE_DIR) Debug
 	$(COPY_FILE) $(SRC_DIR_BKSL)pyproject.Debug.toml $(SIPGEN_DIR_BKSL)pyproject.toml
 	$(COPY_FILE) project.py sipgen
-	cd sipgen && python -m sipbuild.tools.build --tracing --gdb --no-line-directive
+	@cd sipgen
+	python -m sipbuild.tools.build --tracing --gdb --no-line-directive
+	@cd ..
 	$(COPY_FILE) $(SIPGEN_DIR_BKSL)*.$(LIB_EXT) Debug
 	$(COPY_FILE) $(SIPGEN_DIR_BKSL)*.pyi Debug
 	$(COPY_FILE) $(SIPLIB_DIR_BKSL)_sip*.$(LIB_EXT) Debug
+	@echo ' '
 
 clean: FORCE
 	-$(RM_DIR) sipgen
