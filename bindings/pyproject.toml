@@ -1,6 +1,6 @@
 # Project configuration for the yasim-avr python bindings
 #
-# Copyright 2023 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2023-2026 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -36,6 +36,7 @@ library-dirs = ["yasimavr/lib"]
 pep484-pyi = true
 protected-is-public = false
 extra-link-args = ["-Wl,-rpath=${ORIGIN}", "-s"]
+concatenate = 10
 
 
 [tool.sip.bindings.yasimavr-arch-avr]
@@ -50,6 +51,7 @@ library-dirs = ["yasimavr/lib"]
 pep484-pyi = true
 protected-is-public = false
 extra-link-args = ["-Wl,-rpath=${ORIGIN}", "-s"]
+concatenate = 10
 
 
 [tool.sip.bindings.yasimavr-arch-xt]
@@ -64,6 +66,7 @@ library-dirs = ["yasimavr/lib"]
 pep484-pyi = true
 protected-is-public = false
 extra-link-args = ["-Wl,-rpath=${ORIGIN}", "-s"]
+concatenate = 10
 
 
 [tool.sip.project]
