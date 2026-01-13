@@ -94,7 +94,6 @@ GCC_SHLIB_LINKER_EXTRA_ARGS = [
     '-s',
     '-fPIC',
     '-fvisibility=hidden',
-    '-static-libstdc++',
 ]
 
 GCC_EXT_COMPILER_EXTRA_ARGS = [
@@ -102,7 +101,6 @@ GCC_EXT_COMPILER_EXTRA_ARGS = [
 ]
 
 GCC_EXT_LINKER_EXTRA_ARGS = [
-    '-static-libstdc++',
 ]
 
 
