@@ -1,6 +1,6 @@
 # Makefile for yasimavr_arch_xt library
 #
-# Copyright 2023-2025 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2023-2026 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -71,6 +71,6 @@ CPP_FLAGS := -Wall -fPIC -fmessage-length=0 -fvisibility=hidden
 CPP_REL_FLAGS := -O3 $(CPP_FLAGS)
 CPP_DBG_FLAGS := -O0 -g3 $(CPP_FLAGS)
 
-LNK_FLAGS := -shared -fPIC -static-libstdc++
+LNK_FLAGS := -shared -fPIC
 LNK_REL_FLAGS := -O3 $(LNK_FLAGS)
 LNK_DBG_FLAGS := -O0 -g3 $(LNK_FLAGS)

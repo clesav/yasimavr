@@ -1,6 +1,6 @@
 # Makefile for the python bindings of yasim-avr
 
-# Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
 # This file is part of yasim-avr.
 
@@ -74,7 +74,6 @@ bindings: LDFLAGS=-O3
 bindings: siplib
 	@echo 'Building release bindings'
 	@$(SET_VAR) CXXFLAGS="$(CXXFLAGS)"
-	@$(SET_VAR) CFLAGS="$(CFLAGS)"
 	@$(SET_VAR) LDFLAGS="$(LDFLAGS)"
 	-@$(MAKE_DIR) sipgen
 	-@$(MAKE_DIR) Release
@@ -88,7 +87,7 @@ bindings: siplib
 	$(COPY_FILE) $(SIPLIB_DIR_BKSL)_sip*.$(LIB_EXT) Release
 	@echo ' '
 
-bindings-debug: CFLAGS=-O0 -fvisibility=hidden -fmessage-length=0
+bindings-debug: CXXFLAGS=-O0 -fvisibility=hidden -fmessage-length=0
 bindings-debug: LDFLAGS=-O0
 bindings-debug: siplib
 	@echo 'Building debug bindings'
