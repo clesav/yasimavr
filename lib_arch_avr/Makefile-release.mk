@@ -1,6 +1,6 @@
 # Makefile for yasimavr_arch_avr library
 #
-# Copyright 2023 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2023-2025 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -40,11 +40,9 @@ endif
 
 BUILD_DIR := Release
 
--include Makefile-defs
+-include Makefile-defs.mk
 
-CPP_ARGS := -O3 -Wall -c -fPIC -fmessage-length=0 -fvisibility=hidden
 CPP_DEFS := -DYASIMAVR_AVR_DLL
-LNK_ARGS := -shared -static-libstdc++
 
 
 BUILD_ARTIFACT = $(BUILD_DIR)/$(ARTIFACT_PREFIX)$(ARTIFACT_NAME).$(ARTIFACT_EXT)
@@ -73,18 +71,20 @@ build-dirs:
 	-@$(MAKE_DIR) "$(BUILD_DIR)"
 
 # Linker invocations
-$(BUILD_ARTIFACT): $(OBJS) Makefile-release
+$(BUILD_ARTIFACT): $(OBJS) $(MAKEFILE)
 	@echo 'Building target: $@'
 	@echo 'Invoking: MinGW C++ Linker'
-	g++ $(LNK_ARGS) -s -L"../lib_core/Release" -o "$(BUILD_ARTIFACT)" $(OBJS) -lyasimavr_core
+	g++ $(LNK_REL_FLAGS) -L"../lib_core/Release" -o "$(BUILD_ARTIFACT)" $(OBJS) -lyasimavr_core
+	objdump -x -w $(BUILD_ARTIFACT) > $(BUILD_DIR)/$(ARTIFACT_PREFIX)$(ARTIFACT_NAME)_dump.txt
+	objdump -f -h -w -C -d -s -j .text $(BUILD_ARTIFACT) > $(BUILD_DIR)/$(ARTIFACT_PREFIX)$(ARTIFACT_NAME)_text.txt
 	@echo 'Finished building target: $@'
 	@echo ' '
 
 # Compiler invocation
-$(BUILD_DIR)/%.o: src/%.cpp Makefile-release
+$(BUILD_DIR)/%.o: src/%.cpp $(MAKEFILE)
 	@echo 'Building file: $<'
 	@echo 'Invoking: GCC C++ Compiler'
-	g++ $(CPP_ARGS) $(CPP_DEFS) $(CPP_INCS) -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" -o "$@" "$<"
+	g++ -c $(CPP_REL_FLAGS) $(CPP_DEFS) $(CPP_INCS) -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 

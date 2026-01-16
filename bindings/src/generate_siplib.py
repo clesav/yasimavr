@@ -25,6 +25,7 @@ import shutil
 import tarfile
 import glob
 
+import sipbuild
 from sipbuild import module as sip_module
 #Ensure the function 'module' is visible from the sipbuild.module package.
 #Resolves a discrepancy of import introduced with SIP 6.8.4.
@@ -41,16 +42,22 @@ sys.argv = [sys.argv[0],
             'yasimavr.lib._sip']
 module_main()
 
-#shutil.copyfile('siplib-makefile', '../siplib/Makefile')
-
-sip_abi_version = sip_module.abi_version.resolve_abi_version('')
-abi_major_version = sip_abi_version.split('.')[0]
-module_version = sip_module.abi_version.get_sip_module_version(abi_major_version)
+#Get the latest ABI version as a string "MAJOR.MINOR"
+if SIP_VERSION <= 0x060901:
+    sip_abi_version = sip_module.abi_version.resolve_abi_version('')
+elif SIP_VERSION <= 0x060E00:
+    abi_major_version = sip_module.get_latest_version()
+    abi_minor_version = sip_module.get_latest_version(abi_major_version)
+    sip_abi_version = f'{abi_major_version}.{abi_minor_version}'
+else: #SIP_VERSION >= 6.15
+    abi_major_version = sipbuild.py_versions.DEFAULT_ABI_MAJOR
+    abi_minor_version = sip_module.get_latest_version(abi_major_version)
+    sip_abi_version = f'{abi_major_version}.{abi_minor_version}'
 
 old_pwd = os.getcwd()
 os.chdir('../siplib')
 
-sdist_glob = glob.glob(f'yasimavr_lib*{sip_abi_version}.*.tar.gz')
+sdist_glob = glob.glob(f'yasimavr_lib*-{sip_abi_version}.*.tar.gz')
 if not len(sdist_glob):
     raise Exception()
 sdist_tarfn = sdist_glob[0]

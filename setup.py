@@ -5,17 +5,15 @@ AUTHOR = "C. Savergne"
 AUTHOR_EMAIL = "csavergne@yahoo.com"
 URL = "https://github.com/clesav/yasimavr"
 CLASSIFIERS = [
-    'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
     'Natural Language :: English',
     'Operating System :: OS Independent',
     'Programming Language :: C++',
-    'Programming Language :: Python :: 3.7',
-    'Programming Language :: Python :: 3.8',
     'Programming Language :: Python :: 3.9',
     'Programming Language :: Python :: 3.10',
     'Programming Language :: Python :: 3.11',
     'Programming Language :: Python :: 3.12',
     'Programming Language :: Python :: 3.13',
+    'Programming Language :: Python :: 3.14',
     'Topic :: Scientific/Engineering',
 ]
 KEYWORDS = 'avr simavr'
@@ -41,19 +39,12 @@ import dataclasses
 
 from setuptools import setup, Extension
 from setuptools.extension import Library
-from setuptools.command.build_ext import build_ext, libtype
-from distutils.sysconfig import get_config_var
-from wheel.bdist_wheel import bdist_wheel
+from setuptools.command.build_ext import build_ext
 
 from sipbuild.pyproject import PyProject
+import sipbuild
 import sipbuild.module as sip_module
-#Ensure the function 'module' is visible from the sipbuild.module package.
-#Resolves a discrepancy of import introduced with SIP 6.8.4.
 from sipbuild.version import SIP_VERSION
-if SIP_VERSION <= 0x060803:
-    from sipbuild.module.module import module
-    sip_module.module = module
-    del module
 
 #Necessary in virtual building environment, to import from bindings.project
 p = os.path.dirname(__file__)
@@ -103,7 +94,6 @@ GCC_SHLIB_LINKER_EXTRA_ARGS = [
     '-s',
     '-fPIC',
     '-fvisibility=hidden',
-    '-static-libstdc++',
 ]
 
 GCC_EXT_COMPILER_EXTRA_ARGS = [
@@ -111,8 +101,24 @@ GCC_EXT_COMPILER_EXTRA_ARGS = [
 ]
 
 GCC_EXT_LINKER_EXTRA_ARGS = [
-    '-static-libstdc++',
 ]
+
+
+def _copy_siplib_sources(sip_mod_fq_name, target_dir):
+    #Copy the siplib sources
+    if SIP_VERSION <= 0x060901: #6.8.4 <= SIP_VERSION <= 6.9.1
+        abi_major, _ = sip_module.resolve_abi_version(None).split('.')
+        siplib_sources = sip_module.copy_nonshared_sources(abi_major, target_dir)
+    elif SIP_VERSION <= 0x060E00: #6.10.0 <= SIP_VERSION <= 6.14.0
+        abi_major = sip_module.get_latest_version()
+        abi_minor = sip_module.get_latest_version(abi_major)
+        siplib_sources = sip_module.copy_nonshared_sources((abi_major, abi_minor), target_dir)
+    else: #SIP_VERSION >= 6.15.0
+        abi_major = sipbuild.py_versions.DEFAULT_ABI_MAJOR
+        abi_minor = sip_module.get_latest_version(abi_major)
+        siplib_sources = sip_module.copy_nonshared_sources((abi_major, abi_minor), sip_mod_fq_name, target_dir)
+
+    return siplib_sources
 
 
 #Reimplementation of bindings_builder and bindings_project
@@ -284,22 +290,34 @@ class yasimavr_build_ext(build_ext):
         shutil.rmtree(siplib_temp, ignore_errors=True)
         self.mkpath(siplib_temp)
 
+        sip_mod_fq_name = 'yasimavr.lib._sip'
+
         #Copy the siplib sources
-        sip_abi_major_version = sip_module.resolve_abi_version(None).split('.')[0]
-        siplib_sources = sip_module.copy_nonshared_sources(sip_abi_major_version, siplib_temp)
+        siplib_sources = _copy_siplib_sources(sip_mod_fq_name, siplib_temp)
 
         #Use the sipbuild facilities to create the customised header files
-        sip_module.module('yasimavr.lib._sip',
-                          abi_version=None,
-                          project=None,
-                          sdist=False,
-                          setup_cfg=True,
-                          sip_h=True,
-                          sip_rst=True,
-                          target_dir=siplib_temp)
+        if SIP_VERSION <= 0x060E00: #6.8.4 <= SIP_VERSION <= 6.14.0
+            sip_module.module(sip_mod_fq_name,
+                              abi_version=None,
+                              project=None,
+                              sdist=False,
+                              setup_cfg=True,
+                              sip_h=True,
+                              sip_rst=True,
+                              target_dir=siplib_temp)
+        else: #6.15.0 <= SIP_VERSION
+            sip_module.module(sip_mod_fq_name,
+                              abi_version=None,
+                              sip_module_configuration=None,
+                              project=None,
+                              sdist=False,
+                              setup_cfg=True,
+                              sip_h=True,
+                              sip_rst=True,
+                              target_dir=siplib_temp)
 
         #Add on-the-fly the siplib extension module to be built by setuptools
-        siplib_extension = Extension('yasimavr.lib._sip', sources = siplib_sources)
+        siplib_extension = Extension(sip_mod_fq_name, sources = siplib_sources)
         self.distribution.ext_modules.append(siplib_extension)
 
         #=====================================================================
@@ -372,7 +390,7 @@ setup(
     keywords = KEYWORDS,
     project_urls = PROJECT_URLS,
 
-    python_requires = ">=3.7",
+    python_requires = ">=3.9",
     platforms = "Any",
     install_requires = ["pyYAML", "pyvcd"],
 

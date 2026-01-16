@@ -1,6 +1,6 @@
 # Top-level Makefile for yasimavr_core library
 #
-# Copyright 2023 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2023-2025 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -17,16 +17,30 @@
 # You should have received a copy of the GNU General Public License
 # along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
 
+ifeq ($(OS),Windows_NT)
+	detected_OS := Windows
+else
+	detected_OS := $(shell uname)
+endif
+
+ifeq ($(OS),Windows_NT)
+	RM_DIR := rmdir /q /s
+else
+	RM_DIR := rm -r
+endif
+
+
 all: debug release
 
 release:
-	$(MAKE) -f Makefile-release all
+	$(MAKE) -f Makefile-release.mk all
 
 debug:
-	$(MAKE) -f Makefile-debug all
+	$(MAKE) -f Makefile-debug.mk all
 
 clean:
-	$(MAKE) -f Makefile-debug clean
-	$(MAKE) -f Makefile-release clean
+	$(MAKE) -f Makefile-debug.mk clean
+	$(MAKE) -f Makefile-release.mk clean
+	-$(RM_DIR) __pycache__
 
 .PHONY: all clean release debug

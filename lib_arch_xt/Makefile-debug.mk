@@ -1,6 +1,6 @@
-# Makefile for yasimavr_core library
+# Makefile for yasimavr_arch_xt library
 #
-# Copyright 2023-2024 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2023-2025 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -37,14 +37,11 @@ else
 	ARTIFACT_EXT := so
 endif
 
+BUILD_DIR := Debug
 
-BUILD_DIR := Release
+-include Makefile-defs.mk
 
--include Makefile-defs
-
-CPP_ARGS := -O3 -Wall -c -fPIC -fmessage-length=0 -fvisibility=hidden
-CPP_DEFS := -DYASIMAVR_CORE_DLL -DYASIMAVR_NO_TRACE
-LNK_ARGS := -shared -static-libstdc++
+CPP_DEFS := -DYASIMAVR_XT_DLL
 
 
 BUILD_ARTIFACT = $(BUILD_DIR)/$(ARTIFACT_PREFIX)$(ARTIFACT_NAME).$(ARTIFACT_EXT)
@@ -63,50 +60,32 @@ endif
 
 #Target definitions
 
+define make_dir =
+-@if not exist "$^" mkdir "$^"
+endef
+
 # All Target
 all: build
 
 # Main-build Target
-build: build-dirs build-version $(BUILD_ARTIFACT)
+build: build-dirs $(BUILD_ARTIFACT)
 
 build-dirs:
 	-@$(MAKE_DIR) "$(BUILD_DIR)"
-	-@$(MAKE_DIR) "$(BUILD_DIR)/core"
-	-@$(MAKE_DIR) "$(BUILD_DIR)/ioctrl_common"
-	-@$(MAKE_DIR) "$(BUILD_DIR)/sim"
-
-build-version: build-dirs make_version_source.py $(MAKEFILE)
-	python make_version_source.py ../VERSION $(BUILD_DIR)/sim_version.h
 
 # Linker invocations
 $(BUILD_ARTIFACT): $(OBJS) $(MAKEFILE)
 	@echo 'Building target: $@'
-	@echo 'Invoking: GCC C++ Linker'
-	g++ $(LNK_ARGS) -s -o "$(BUILD_ARTIFACT)" $(OBJS) -lelf
+	@echo 'Invoking: MinGW C++ Linker'
+	g++ $(LNK_DBG_FLAGS) -L"../lib_core/Debug" -o "$(BUILD_ARTIFACT)" $(OBJS) -lyasimavr_core
 	@echo 'Finished building target: $@'
 	@echo ' '
 
-# Compiler invocation for the core directory
-$(BUILD_DIR)/core/%.o: src/core/%.cpp $(MAKEFILE)
+# Compiler invocation
+$(BUILD_DIR)/%.o: src/%.cpp $(MAKEFILE)
 	@echo 'Building file: $<'
 	@echo 'Invoking: GCC C++ Compiler'
-	g++ $(CPP_ARGS) $(CPP_DEFS) $(CPP_INCS) -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" -o "$@" "$<"
-	@echo 'Finished building: $<'
-	@echo ' '
-
-# Compiler invocation for the ioctrl_common directory
-$(BUILD_DIR)/ioctrl_common/%.o: src/ioctrl_common/%.cpp $(MAKEFILE)
-	@echo 'Building file: $<'
-	@echo 'Invoking: GCC C++ Compiler'
-	g++ $(CPP_ARGS) $(CPP_DEFS) $(CPP_INCS) -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" -o "$@" "$<"
-	@echo 'Finished building: $<'
-	@echo ' '
-
-# Compiler invocation for the sim directory
-$(BUILD_DIR)/sim/%.o: src/sim/%.cpp $(MAKEFILE)
-	@echo 'Building file: $<'
-	@echo 'Invoking: GCC C++ Compiler'
-	g++ $(CPP_ARGS) $(CPP_DEFS) $(CPP_INCS) -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" -o "$@" "$<"
+	g++ -c $(CPP_DBG_FLAGS) $(CPP_DEFS) $(CPP_INCS) -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 
@@ -122,4 +101,4 @@ clean:
 	-$(RM_DIR) $(BUILD_DIR)
 	-@echo ' '
 
-.PHONY: all clean build build-dirs
+.PHONY: all clean build
