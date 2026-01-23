@@ -1,7 +1,7 @@
 /*
  * sim_types.h
  *
- *  Copyright 2022-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -28,6 +28,8 @@
 #include <stdint.h>
 #include <string>
 #include <vector>
+#include <span>
+
 
 YASIMAVR_BEGIN_NAMESPACE
 
@@ -42,6 +44,14 @@ typedef short            int_vect_t;
 
 const cycle_count_t INVALID_CYCLE = -1;
 
+
+//=======================================================================================
+
+typedef std::vector<uint8_t> bytes_t;
+typedef std::span<const uint8_t> bytes_view_t;
+
+
+//=======================================================================================
 
 /**
    \brief Representation of a I/O register address, with validity state.

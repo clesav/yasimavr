@@ -103,7 +103,7 @@ CPP_INCS := -I$(BUILD_DIR)
 
 ARTIFACT_NAME := yasimavr_core
 
-CPP_FLAGS := -Wall -fPIC -fmessage-length=0 -fvisibility=hidden
+CPP_FLAGS := -Wall -fPIC -fmessage-length=0 -fvisibility=hidden -std=c++20
 CPP_REL_FLAGS := -O3 $(CPP_FLAGS)
 CPP_DBG_FLAGS := -O0 -g3 $(CPP_FLAGS)
 
