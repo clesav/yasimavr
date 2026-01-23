@@ -1,7 +1,7 @@
 /*
  * arch_xt_usart.cpp
  *
- *  Copyright 2022-2025 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -290,9 +290,9 @@ bool ArchXT_USART::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
         return true;
     }
     else if (req == AVR_CTLREQ_USART_BYTES) {
-        const uint8_t* s = data->data.as_bytes();
-        for (size_t i = 0; i < data->data.size(); ++i)
-            m_ctrl->push_rx_frame(s[i]);
+        bytes_view_t v = data->data.as_bytes();
+        for (auto b : v)
+            m_ctrl->push_rx_frame(b);
         return true;
     }
 
