@@ -1,7 +1,7 @@
 /*
  * arch_xt_device.cpp
  *
- *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -140,13 +140,13 @@ void ArchXT_Core::dbg_read_data(mem_addr_t addr, uint8_t* buf, mem_addr_t len)
         std::memcpy(buf + bufofs, m_sram + blockofs, n);
 
     if (data_space_map(addr, len, cfg.flashstart_ds, cfg.flashend_ds, &bufofs, &blockofs, &n)) {
-        mem_block_t b = m_flash.block(blockofs, n);
-        std::memcpy(buf + bufofs, b.buf, b.size);
+        bytes_view_t view = m_flash.view(blockofs, n);
+        std::memcpy(buf + bufofs, view.data(), view.size());
     }
 
     if (data_space_map(addr, len, cfg.eepromstart_ds, cfg.eepromend_ds, &bufofs, &blockofs, &n)) {
-        mem_block_t b = m_eeprom.block(blockofs, n);
-        std::memcpy(buf + bufofs, b.buf, n);
+        bytes_view_t view = m_eeprom.view(blockofs, n);
+        std::memcpy(buf + bufofs, view.data(), view.size());
     }
 }
 
@@ -166,12 +166,12 @@ void ArchXT_Core::dbg_write_data(mem_addr_t addr, const uint8_t* buf, mem_addr_t
         std::memcpy(m_sram + blockofs, buf + bufofs, n);
 
     if (data_space_map(addr, len, cfg.flashstart_ds, cfg.flashend_ds, &bufofs, &blockofs, &n)) {
-        mem_block_t b = { .size = n, .buf = const_cast<uint8_t*>(buf) + bufofs };
+        bytes_view_t b = { buf + bufofs, n };
         m_flash.program(b, blockofs);
     }
 
     if (data_space_map(addr, len, cfg.eepromstart_ds, cfg.eepromend_ds, &bufofs, &blockofs, &n)) {
-        mem_block_t b = { .size = n, .buf = const_cast<uint8_t*>(buf) + bufofs };
+        bytes_view_t b = { buf + bufofs, n };
         m_eeprom.program(b, blockofs);
     }
 }

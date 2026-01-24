@@ -1,7 +1,7 @@
 /*
  * sim_config.h
  *
- *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -54,8 +54,7 @@ struct CoreConfiguration {
     reg_addr_t              rampz;
     reg_addr_t              eind;
 
-    mem_addr_t              fusesize;
-    std::vector<uint8_t>    fuses;          //Fuse bytes factory values
+    bytes_t                 fuses;          //Fuse bytes factory values
 
 };
 

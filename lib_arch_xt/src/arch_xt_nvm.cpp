@@ -1,7 +1,7 @@
 /*
  * arch_xt_nvm.cpp
  *
- *  Copyright 2022-2025 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -530,7 +530,7 @@ unsigned int ArchXT_NVM::execute_page_command(Command cmd)
             logger().dbg("Erased flash page %d", m_page);
         } else {
             logger().dbg("Erased eeprom/userrow page %d", m_page);
-            nvm->erase(m_bufset, page_size * m_page, page_size);
+            nvm->erase({ m_bufset, page_size }, page_size * m_page);
         }
 
         delay_usecs += m_config.page_erase_delay;
@@ -541,10 +541,12 @@ unsigned int ArchXT_NVM::execute_page_command(Command cmd)
     //it's to the eeprom/userrow with a byte granularity
     if (cmd == Cmd_PageWrite || cmd == Cmd_PageEraseWrite) {
         if (is_flash_op) {
-            nvm->spm_write(m_buffer, nullptr, page_size * m_page, page_size);
+            nvm->spm_write({ m_buffer, page_size }, bytes_view_t(), page_size * m_page);
             logger().dbg("Written flash page %d", m_page);
         } else {
-            nvm->spm_write(m_buffer, m_bufset, page_size * m_page, page_size);
+            nvm->spm_write({ m_buffer, page_size },
+                           { m_bufset, page_size },
+                           page_size * m_page);
             logger().dbg("Written eeprom/userrow page %d", m_page);
         }
 

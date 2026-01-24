@@ -1,7 +1,7 @@
 /*
  * arch_avr_nvm.cpp
  *
- *  Copyright 2024-2025 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2024-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -434,7 +434,9 @@ int ArchAVR_NVM::process_NVM_write(NVM_request_t& req)
         case SPM_PageWrite: {
             NonVolatileMemory* flash = get_nvm(ArchAVR_Core::NVM_Flash);
             flash_addr_t spm_page_start = spm_addr - page_offset;
-            flash->spm_write(m_spm_buffer, m_spm_bufset, spm_page_start, m_spm_page_size);
+            flash->spm_write({ m_spm_buffer, m_spm_page_size },
+                             { m_spm_bufset, m_spm_page_size },
+                             spm_page_start);
             clear_spm_buffer();
             delay = ((unsigned long long) device()->frequency() * m_config.spm_write_delay) / 1000000ULL;
             logger().dbg("SPM page write starting on [0x%04x;0x%04x] (%d cycles)", spm_page_start, spm_page_start + m_spm_page_size - 1, delay);

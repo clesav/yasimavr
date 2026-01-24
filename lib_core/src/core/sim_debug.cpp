@@ -1,7 +1,7 @@
 /*
  * sim_debug.cpp
  *
- *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -287,7 +287,7 @@ void DeviceDebugProbe::write_flash(flash_addr_t addr, const uint8_t* buf, flash_
 
     ADJUST_ADDR_LEN(addr, len, core.config().flashsize);
 
-    core.m_flash.write(buf, addr, len);
+    core.m_flash.write({ buf, len }, addr);
 }
 
 flash_addr_t DeviceDebugProbe::read_flash(flash_addr_t addr, uint8_t* buf, flash_addr_t len) const
@@ -298,7 +298,7 @@ flash_addr_t DeviceDebugProbe::read_flash(flash_addr_t addr, uint8_t* buf, flash
 
     ADJUST_ADDR_LEN(addr, len, core.config().flashsize);
 
-    core.m_flash.read(buf, addr, len);
+    core.m_flash.readinto(buf, addr, len);
 
     return len;
 }

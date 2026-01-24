@@ -1,7 +1,7 @@
 /*
  * sim_memory.h
  *
- *  Copyright 2022-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -31,15 +31,6 @@ YASIMAVR_BEGIN_NAMESPACE
 
 //=======================================================================================
 
-
-struct mem_block_t {
-
-    size_t size = 0;
-    unsigned char* buf = nullptr;
-
-};
-
-
 /**
    \brief Non-volatile memory model
 
@@ -59,26 +50,26 @@ public:
     size_t size() const;
 
     bool programmed(size_t pos) const;
-    size_t programmed(unsigned char* buf, size_t base, size_t len) const;
+    bytes_view_t programmed(size_t base, size_t len) const;
 
     unsigned char operator[](size_t pos) const;
 
-    mem_block_t block() const;
-    mem_block_t block(size_t base, size_t size) const;
+    bytes_view_t view() const;
+    bytes_view_t view(size_t base, size_t len) const;
 
-    bool program(const mem_block_t& mem_block, size_t base = 0);
+    bool program(const bytes_view_t& mem_block, size_t base = 0);
 
     void erase();
     void erase(size_t base, size_t size);
-    void erase(const unsigned char* buf, size_t base, size_t len);
+    void erase(const bytes_view_t& buf, size_t base);
 
     int read(size_t pos) const;
-    size_t read(unsigned char* buf, size_t base, size_t len) const;
+    size_t readinto(unsigned char* buf, size_t base, size_t len) const;
     void write(unsigned char v, size_t pos);
-    void write(const unsigned char* buf, size_t base, size_t len);
+    void write(const bytes_view_t& buf, size_t base);
 
     void spm_write(unsigned char v, size_t pos);
-    void spm_write(const unsigned char* buf, const unsigned char* bufset, size_t base, size_t len);
+    void spm_write(const bytes_view_t& buf, const bytes_view_t& bufset, size_t base);
 
     NonVolatileMemory& operator=(const NonVolatileMemory& other);
 
