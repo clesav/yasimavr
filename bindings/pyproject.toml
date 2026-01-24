@@ -30,11 +30,11 @@ name = "yasimavr"
 sip-file = "src/lib_core/yasimavr-core.sip"
 include-dirs = ["../lib_core/src",
                 "src"]
-sources = ["src/utils/buffer_utils.c"]
 libraries = ["yasimavr_core"]
 library-dirs = ["yasimavr/lib"]
 pep484-pyi = true
 protected-is-public = false
+extra-compile-args = ["-std=c++20"]
 extra-link-args = ["-Wl,-rpath=${ORIGIN}", "-s"]
 concatenate = 10
 
@@ -44,12 +44,12 @@ sip-file = "src/lib_arch_avr/yasimavr-arch-avr.sip"
 include-dirs = ["../lib_core/src",
                 "../lib_arch_avr/src",
                 "src"]
-sources = ["src/utils/buffer_utils.c"]
 libraries = ["yasimavr_core",
              "yasimavr_arch_avr"]
 library-dirs = ["yasimavr/lib"]
 pep484-pyi = true
 protected-is-public = false
+extra-compile-args = ["-std=c++20"]
 extra-link-args = ["-Wl,-rpath=${ORIGIN}", "-s"]
 concatenate = 10
 
@@ -59,12 +59,12 @@ sip-file = "src/lib_arch_xt/yasimavr-arch-xt.sip"
 include-dirs = ["../lib_core/src",
                 "../lib_arch_xt/src",
                 "src"]
-sources = ["src/utils/buffer_utils.c"]
 libraries = ["yasimavr_core",
              "yasimavr_arch_xt"]
 library-dirs = ["yasimavr/lib"]
 pep484-pyi = true
 protected-is-public = false
+extra-compile-args = ["-std=c++20"]
 extra-link-args = ["-Wl,-rpath=${ORIGIN}", "-s"]
 concatenate = 10
 
