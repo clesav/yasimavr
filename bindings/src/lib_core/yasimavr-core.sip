@@ -1,7 +1,7 @@
 /*
  * yasimavr-core.sip
  *
- *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -40,6 +40,7 @@ typedef unsigned char           uint8_t /PyInt/;
 YASIMAVR_USING_NAMESPACE
 %End
 
+%Include support/stdbytes.sip
 %Include support/stdvector.sip
 %Include support/stdstring.sip
 

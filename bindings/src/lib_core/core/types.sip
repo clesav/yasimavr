@@ -1,7 +1,7 @@
 /*
  * types.sip
  *
- *  Copyright 2022-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -232,6 +232,7 @@ class vardata_t {
 %End
 
 %TypeCode
+
 void fill_vardata_with_pyobj(vardata_t* d, PyObject* obj)
 {
     if (!obj || obj == Py_None) {
@@ -251,8 +252,7 @@ void fill_vardata_with_pyobj(vardata_t* d, PyObject* obj)
         *d = PyUnicode_AsUTF8(obj);
     }
     else if (PyBytes_Check(obj)) {
-        vardata_t v = vardata_t((uint8_t*) PyBytes_AsString(obj), PyBytes_GET_SIZE(obj));
-        *d = v;
+        *d = pybuffer_to_bytes(obj);
     }
     else {
         int iserr = 0;
@@ -326,6 +326,10 @@ public:
     double as_double() const;
     unsigned long long as_uint() const;
     long long as_int() const;
+    SIP_PYOBJECT as_bytes() const /TypeHint="memoryview"/;
+    %MethodCode
+        sipRes = bytesview_to_pyview(sipCpp->as_bytes());
+    %End
 
     //vardata_t& operator=(void* p);
     //vardata_t& operator=(const char* s);
@@ -360,7 +364,7 @@ public:
             sipRes = PyLong_FromLongLong(sipCpp->as_int());
             break;
         case vardata_t::Bytes:
-            sipRes = PyBytes_FromStringAndSize((const char*) sipCpp->as_bytes(), sipCpp->size());
+            sipRes = bytesview_to_pyview(sipCpp->as_bytes());
             break;
     }
     %End
