@@ -1,7 +1,7 @@
 /*
  * signal.sip
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -51,7 +51,7 @@ class Signal {
 %End
 
 %TypeCode
-extern void fill_vardata_with_pyobj(vardata_t* d, PyObject* obj);
+extern void fill_vardata_with_pyobj(vardata_t* d, PyObject* obj, PyObject** refObj);
 %End
 
 public:
@@ -68,7 +68,7 @@ public:
     %MethodCode
         signal_data_t sigdata;
         sigdata.sigid = a0;
-        fill_vardata_with_pyobj(&sigdata.data, a1);
+        fill_vardata_with_pyobj(&sigdata.data, a1, NULL);
         sigdata.index = a2;
         sipCpp->raise(sigdata);
     %End
@@ -82,7 +82,7 @@ class DataSignal : public Signal {
 %End
 
 %TypeCode
-extern void fill_vardata_with_pyobj(vardata_t* d, PyObject* obj);
+extern void fill_vardata_with_pyobj(vardata_t* d, PyObject* obj, PyObject** refObj);
 %End
 
 public:
@@ -92,7 +92,7 @@ public:
     void set_data(int, SIP_PYOBJECT = nullptr, long long = 0);
     %MethodCode
         vardata_t v;
-        fill_vardata_with_pyobj(&v, a1);
+        fill_vardata_with_pyobj(&v, a1, NULL);
         sipCpp->set_data(a0, v, a2);
     %End
 
@@ -106,7 +106,7 @@ public:
     %MethodCode
         signal_data_t sigdata;
         sigdata.sigid = a0;
-        fill_vardata_with_pyobj(&sigdata.data, a1);
+        fill_vardata_with_pyobj(&sigdata.data, a1, NULL);
         sigdata.index = a2;
         sipCpp->raise(sigdata);
     %End

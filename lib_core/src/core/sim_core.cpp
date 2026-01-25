@@ -1,7 +1,7 @@
 /*
  * sim_core.cpp
  *
- *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -44,7 +44,7 @@ Core::Core(const CoreConfiguration& config)
 ,m_device(nullptr)
 ,m_ioregs(config.ioend - config.iostart + 1, nullptr)
 ,m_flash(config.flashsize)
-,m_fuses(config.fusesize)
+,m_fuses(config.fuses.size())
 ,m_pc(0)
 ,m_int_inhib_counter(0)
 ,m_debug_probe(nullptr)
@@ -59,7 +59,7 @@ Core::Core(const CoreConfiguration& config)
 
     //Set the fuses to their default values
     std::vector<unsigned char> f = m_config.fuses;
-    m_fuses.program({ f.size(), f.data() });
+    m_fuses.program(m_config.fuses);
 
     //Create the I/O registers managed by the CPU
     m_ioregs[R_SPL] = new IO_Register(true);

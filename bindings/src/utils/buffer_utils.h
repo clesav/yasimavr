@@ -1,7 +1,7 @@
 /*
  * buffer_utils.h
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -24,43 +24,38 @@
 
 #include "Python.h"
 #include "sip.h"
-#include <stdint.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/*
- * Helper that imports an block of bytes from a Python object
- * supporting the buffer protocol (see Python docs for what that means)
- * into an C array.
- * buf is a pointer to a array pointer, that is allocated/freed on demand
- */
-Py_ssize_t import_from_pybuffer(const sipAPIDef* sipAPI,
-                                uint8_t **data,
-                                PyObject* exporter);
-
-/*
- * Helper that exports a block of bytes in memory to a Python buffer exporter
- * If len ==0 or data is NULL, an empty Python bytes object is returned
- * otherwise a SIP array object is created
- */
-PyObject* export_to_pybuffer(const sipAPIDef* sipAPI,
-                             const uint8_t *data,
-                             Py_ssize_t len);
 
 /*
  * Helper function for importing data from a fixed-length
  * Python object that supports the Sequence protocol
  */
-int import_from_fixedlen_sequence(const sipAPIDef* sipAPI,
+inline int import_from_fixedlen_sequence(const sipAPIDef* sipAPI,
                                   void *data,
                                   const char *format,
                                   Py_ssize_t len,
-                                  PyObject* obj);
+                                  PyObject* obj)
+{
+    if (!PySequence_Check(obj) || (PySequence_Size(obj) != len)) {
+        PyErr_Format(PyExc_TypeError, "obj must be a sequence of length %d", len);
+        return -1;
+    }
 
-#ifdef __cplusplus
+    PyObject* arr = sipAPI->api_convert_to_array(data, format, len, 0);
+    if (!arr)
+        return -1;
+
+    for (int i = 0; i < len; ++i) {
+        PyObject* item = PySequence_GetItem(obj, i);
+        if (item) {
+            PyObject_SetItem(arr, PyLong_FromLong(i), item);
+            Py_DECREF(item);
+        }
+        if (PyErr_Occurred()) break;
+    }
+
+    Py_DECREF(arr);
+
+    return PyErr_Occurred() ? -1 : 0;
 }
-#endif
 
 #endif //__PYBUFFER_SUPPORT_H__

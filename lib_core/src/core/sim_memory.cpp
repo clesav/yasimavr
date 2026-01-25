@@ -1,7 +1,7 @@
 /*
  * sim_memory.cpp
  *
- *  Copyright 2022-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -81,15 +81,13 @@ NonVolatileMemory::NonVolatileMemory(const NonVolatileMemory& other)
    \param len length of the area to be read, in bytes
    \return length of data actually read
  */
-size_t NonVolatileMemory::programmed(unsigned char* buf, size_t base, size_t len) const
+bytes_view_t NonVolatileMemory::programmed(size_t base, size_t len) const
 {
-    if (!m_size || !len) return 0;
+    if (!m_size || !len) return bytes_view_t();
 
     ADJUST_BASE_LEN(base, len, m_size);
 
-    memcpy(buf, m_tag + base, len);
-
-    return len;
+    return { m_tag + base, len };
 }
 
 
@@ -125,8 +123,9 @@ void NonVolatileMemory::erase(size_t base, size_t len)
    \param base first address to be erased
    \param len length of the area to be erased, in bytes
  */
-void NonVolatileMemory::erase(const unsigned char* buf, size_t base, size_t len)
+void NonVolatileMemory::erase(const bytes_view_t& buf, size_t base)
 {
+    size_t len = buf.size();
     if (!m_size || !len) return;
 
     ADJUST_BASE_LEN(base, len, m_size);
@@ -147,17 +146,17 @@ void NonVolatileMemory::erase(const unsigned char* buf, size_t base, size_t len)
    \param base first address where the memory block should be copied.
    \return true if the operation was completed.
  */
-bool NonVolatileMemory::program(const mem_block_t& mem_block, size_t base)
+bool NonVolatileMemory::program(const bytes_view_t& mem_block, size_t base)
 {
     if (!m_size) return false;
-    if (!mem_block.size) return true;
+    if (!mem_block.size()) return true;
 
-    size_t size = mem_block.size;
+    size_t size = mem_block.size();
 
     ADJUST_BASE_LEN(base, size, m_size);
 
     if (size) {
-        memcpy(m_memory + base, mem_block.buf, size);
+        memcpy(m_memory + base, mem_block.data(), size);
         memset(m_tag + base, 1, size);
     }
 
@@ -167,24 +166,18 @@ bool NonVolatileMemory::program(const mem_block_t& mem_block, size_t base)
 /**
    Return a mem_block_t struct representing the entire NVM.
  */
-mem_block_t NonVolatileMemory::block() const
+bytes_view_t NonVolatileMemory::view() const
 {
-    return block(0, m_size);
+    return view(0, m_size);
 }
 
 /**
    Return a mem_block_t struct representing a block of the NVM.
  */
-mem_block_t NonVolatileMemory::block(size_t base, size_t size) const
+bytes_view_t NonVolatileMemory::view(size_t base, size_t len) const
 {
-    mem_block_t b;
-
-    ADJUST_BASE_LEN(base, size, m_size);
-
-    b.size = size;
-    b.buf = size ? (m_memory + base) : nullptr;
-
-    return b;
+    ADJUST_BASE_LEN(base, len, m_size);
+    return { m_memory + base, len };
 }
 
 /**
@@ -207,7 +200,7 @@ int NonVolatileMemory::read(size_t pos) const
    \param len length of the area to be read, in bytes
    \return length of data actually read
  */
-size_t NonVolatileMemory::read(unsigned char* buf, size_t base, size_t len) const
+size_t NonVolatileMemory::readinto(unsigned char* buf, size_t base, size_t len) const
 {
     if (!m_size || !len) return 0;
 
@@ -237,13 +230,14 @@ void NonVolatileMemory::write(unsigned char v, size_t pos)
    \param base first address to be written
    \param len length of data to write
  */
-void NonVolatileMemory::write(const unsigned char* buf, size_t base, size_t len)
+void NonVolatileMemory::write(const bytes_view_t& buf, size_t base)
 {
+   size_t len = buf.size();
     if (!m_size || !len) return;
 
     ADJUST_BASE_LEN(base, len, m_size);
 
-    memcpy(m_memory + base, buf, len);
+    memcpy(m_memory + base, buf.data(), len);
     memset(m_tag + base, 1, len);
 }
 
@@ -271,18 +265,22 @@ void NonVolatileMemory::spm_write(unsigned char v, size_t pos)
    \note The writing of each byte is performed by a bitwise AND with the previous content of the byte.
    \note If buftag is set to nullptr, all bytes in 'buf' are copied.
  */
-void NonVolatileMemory::spm_write(const unsigned char* buf,
-                                  const unsigned char* bufset,
-                                  size_t base, size_t len)
+void NonVolatileMemory::spm_write(const bytes_view_t& buf, const bytes_view_t& bufset, size_t base)
 {
+    size_t len = buf.size();
     if (!m_size || !len) return;
 
     ADJUST_BASE_LEN(base, len, m_size);
 
-    for (size_t i = 0; i < len; ++i) {
-        if (!bufset || bufset[i]) {
-            m_memory[base + i] &= buf[i];
-            m_tag[base + i] = 1;
+    if (bufset.empty()) {
+        memcpy(m_memory + base, buf.data(), len);
+        memset(m_tag + base, 1, len);
+    } else {
+        for (size_t i = 0; i < len; ++i) {
+            if (bufset.empty() || bufset[i]) {
+                m_memory[base + i] &= buf[i];
+                m_tag[base + i] = 1;
+            }
         }
     }
 }

@@ -1,7 +1,7 @@
 /*
  * memory.sip
  *
- *  Copyright 2022-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -21,7 +21,7 @@
 
 //=======================================================================================
 
-class NonVolatileMemory /NoDefaultCtors/ {
+class NonVolatileMemory {
 %TypeHeaderCode
 #include "core/sim_memory.h"
 %End
@@ -37,97 +37,35 @@ public:
     size_t size() const;
 
     bool programmed(size_t) const;
-    SIP_PYOBJECT programmed(size_t, size_t) const /TypeHint="bytes"/;
-    %MethodCode
-        if (a1) {
-            unsigned char* buf = (unsigned char*) sipMalloc(a1);
-            size_t len_res = sipCpp->programmed(buf, a0, a1);
-            sipRes = export_to_pybuffer(sipAPI_core, buf, len_res);
-            sipFree(buf);
-        } else {
-            sipRes = PyBytes_FromString("");
-        }
-    %End
+    bytes_view_t programmed(size_t, size_t) const;
 
     unsigned char operator[](size_t) const /PyInt/;
 
-    SIP_PYOBJECT block() const /TypeHint="bytes"/;
-    %MethodCode
-        mem_block_t b = sipCpp->block();
-        sipRes = export_to_pybuffer(sipAPI_core, b.buf, b.size);
-    %End
+    bytes_view_t view() const;
+    bytes_view_t view(size_t, size_t) const;
 
-    SIP_PYOBJECT block(size_t, size_t) const /TypeHint="bytes"/;
-    %MethodCode
-        mem_block_t b = sipCpp->block(a0, a1);
-        sipRes = export_to_pybuffer(sipAPI_core, b.buf, b.size);
-    %End
-
-    bool program(SIP_PYBUFFER, size_t = 0);
-    %MethodCode
-        unsigned char* buf;
-        size_t len = import_from_pybuffer(sipAPI_core, &buf, a0);
-        if (len) {
-            sipCpp->program({len, buf}, a1);
-            sipFree(buf);
-        }
-    %End
+    bool program(const bytes_view_t&, size_t = 0);
 
     void erase();
     void erase(size_t, size_t);
-    void erase(SIP_PYBUFFER, size_t);
-    %MethodCode
-        unsigned char* buf;
-        size_t len = import_from_pybuffer(sipAPI_core, &buf, a0);
-        if (len) {
-            sipCpp->erase(buf, a1, len);
-            sipFree(buf);
-        }
-    %End
+    void erase(const bytes_view_t&, size_t);
 
     int read(size_t) const;
     SIP_PYOBJECT read(size_t, size_t) const /TypeHint="bytes"/;
     %MethodCode
         if (a1) {
-            unsigned char* buf = (unsigned char*) sipMalloc(a1);
-            size_t len_res = sipCpp->read(buf, a0, a1);
-            sipRes = export_to_pybuffer(sipAPI_core, buf, len_res);
-            sipFree(buf);
+            bytes_view_t b = sipCpp->view(a0, a1);
+            sipRes = PyBytes_FromStringAndSize((char*) b.data(), b.size());
         } else {
             sipRes = PyBytes_FromString("");
         }
     %End
 
     void write(unsigned char /PyInt/, size_t);
-    void write(SIP_PYBUFFER, size_t);
-    %MethodCode
-        unsigned char* buf;
-        size_t len = import_from_pybuffer(sipAPI_core, &buf, a0);
-        if (len) {
-            sipCpp->write(buf, a1, len);
-            sipFree(buf);
-        }
-    %End
+    void write(const bytes_view_t&, size_t);
 
     void spm_write(unsigned char /PyInt/, size_t);
-    void spm_write(SIP_PYBUFFER, SIP_PYBUFFER, size_t);
-    %MethodCode
-        unsigned char* buf;
-        size_t len = import_from_pybuffer(sipAPI_core, &buf, a0);
-
-        unsigned char* bufset = nullptr;
-        if (a1) {
-            size_t lenset = import_from_pybuffer(sipAPI_core, &bufset, a1);
-            if (lenset < len) len = lenset;
-        }
-
-        sipCpp->spm_write(buf, bufset, a2, len);
-
-        if (buf)
-            sipFree(buf);
-        if (bufset)
-            sipFree(bufset);
-    %End
+    void spm_write(const bytes_view_t&, const bytes_view_t&, size_t);
 
 };
 

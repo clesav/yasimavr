@@ -1,7 +1,7 @@
 /*
  * types.sip
  *
- *  Copyright 2022-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -232,8 +232,12 @@ class vardata_t {
 %End
 
 %TypeCode
-void fill_vardata_with_pyobj(vardata_t* d, PyObject* obj)
+
+void fill_vardata_with_pyobj(vardata_t* d, PyObject* obj, PyObject** refObj)
 {
+    if (refObj != NULL)
+        *refObj = NULL;
+
     if (!obj || obj == Py_None) {
         *d = vardata_t();
     }
@@ -250,9 +254,15 @@ void fill_vardata_with_pyobj(vardata_t* d, PyObject* obj)
     else if (PyUnicode_Check(obj)) {
         *d = PyUnicode_AsUTF8(obj);
     }
-    else if (PyBytes_Check(obj)) {
-        vardata_t v = vardata_t((uint8_t*) PyBytes_AsString(obj), PyBytes_GET_SIZE(obj));
-        *d = v;
+    else if (PyObject_CheckBuffer(obj)) {
+        if (refObj == NULL) {
+            PyErr_SetString(PyExc_Exception, "Bytes type for vardata_t not supported here.");
+        } else {
+            PyObject* py_view = PyMemoryView_GetContiguous(obj, PyBUF_READ, 'C');
+            Py_buffer* py_buf = PyMemoryView_GET_BUFFER(py_view);
+            *d = bytes_view_t({ (uint8_t*) py_buf->buf, (size_t) py_buf->len });
+            *refObj = py_view;
+        }
     }
     else {
         int iserr = 0;
@@ -309,7 +319,10 @@ public:
     vardata_t(SIP_PYOBJECT);
     %MethodCode
         sipCpp = new vardata_t();
-        fill_vardata_with_pyobj(sipCpp, a0);
+        PyObject* refObj;
+        fill_vardata_with_pyobj(sipCpp, a0, &refObj);
+        if (refObj)
+            sipSetUserObject(sipSelf, refObj);
     %End
 
     vardata_t::Type type() const;
@@ -326,6 +339,10 @@ public:
     double as_double() const;
     unsigned long long as_uint() const;
     long long as_int() const;
+    SIP_PYOBJECT as_bytes() const /TypeHint="memoryview"/;
+    %MethodCode
+        sipRes = bytesview_to_pyview(sipCpp->as_bytes());
+    %End
 
     //vardata_t& operator=(void* p);
     //vardata_t& operator=(const char* s);
@@ -334,7 +351,12 @@ public:
     //vardata_t& operator=(long long i);
     void set(SIP_PYOBJECT);
     %MethodCode
-        fill_vardata_with_pyobj(sipCpp, a0);
+        PyObject* oldRefObj = sipGetUserObject((const sipSimpleWrapper*) sipSelf);
+        Py_XDECREF(oldRefObj);
+        PyObject* refObj;
+        fill_vardata_with_pyobj(sipCpp, a0, &refObj);
+        if (refObj)
+            sipSetUserObject((sipSimpleWrapper*) sipSelf, refObj);
     %End
 
     SIP_PYOBJECT value(SIP_PYTYPE = SIP_NULLPTR) const;
@@ -360,7 +382,7 @@ public:
             sipRes = PyLong_FromLongLong(sipCpp->as_int());
             break;
         case vardata_t::Bytes:
-            sipRes = PyBytes_FromStringAndSize((const char*) sipCpp->as_bytes(), sipCpp->size());
+            sipRes = bytesview_to_pyview(sipCpp->as_bytes());
             break;
     }
     %End
@@ -368,15 +390,19 @@ public:
     bool __eq__(SIP_PYOBJECT) const;
     %MethodCode
         vardata_t v;
-        fill_vardata_with_pyobj(&v, a0);
+        PyObject* refObj;
+        fill_vardata_with_pyobj(&v, a0, &refObj);
         sipRes = (*sipCpp == v);
+        Py_XDECREF(refObj);
     %End
 
     bool __ne__(SIP_PYOBJECT) const;
     %MethodCode
         vardata_t v;
-        fill_vardata_with_pyobj(&v, a0);
+        PyObject* refObj;
+        fill_vardata_with_pyobj(&v, a0, &refObj);
         sipRes = (*sipCpp != v);
+        Py_XDECREF(refObj);
     %End
 
 };

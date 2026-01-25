@@ -1,7 +1,7 @@
 /*
  * sim_firmware.cpp
  *
- *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -22,11 +22,10 @@
 //=======================================================================================
 
 #include "sim_firmware.h"
-#include "sim_device.h"
+#include "sim_logger.h"
 #include "libelf.h"
 #include "gelf.h"
-#include <stdio.h>
-#include <cstring>
+#include <string.h>
 
 YASIMAVR_USING_NAMESPACE
 
@@ -44,26 +43,6 @@ Firmware::Firmware()
 ,m_datasize(0)
 ,m_bsssize(0)
 {}
-
-
-Firmware::Firmware(const Firmware& other)
-:Firmware()
-{
-    *this = other;
-}
-
-
-/**
-   Destroy a firmware
- */
-Firmware::~Firmware()
-{
-    for (auto it = m_blocks.begin(); it != m_blocks.end(); ++it) {
-        for (Block& b : it->second)
-            if (b.size)
-                free(b.buf);
-    }
-}
 
 
 static Elf32_Phdr* elf_find_phdr(Elf32_Phdr* phdr_table, size_t phdr_count, GElf_Shdr* shdr)
@@ -205,27 +184,19 @@ Firmware* Firmware::read_elf(const std::string& filename)
 
         Elf_Data* scn_data = elf_getdata(scn, nullptr);
 
-        //Load Memory Address calculation
+        //Load Memory Address calculation and corresponding firmware area and base address
         Elf64_Addr lma = phdr->p_paddr + shdr.sh_offset - phdr->p_offset;
-
-        //Create the memory block
-        Block b = { 0, nullptr, 0 };
-        if (scn_data->d_size) {
-            b.size = scn_data->d_size;
-            b.buf = (unsigned char*) malloc(scn_data->d_size);
-            memcpy(b.buf, scn_data->d_buf, scn_data->d_size);
-        }
-
-        //Add the firmware chunk to the corresponding memory area (Flash, etc...)
         int area = addr_to_area(lma);
-        if (area >= 0) {
-            b.base = elf_addr_to_area_addr(lma);
-            firmware->m_blocks[(Area) area].push_back(b);
-            global_logger().dbg("FW : Read section '%s' (%zu bytes @ 0x%06zx)", name, b.size, lma);
-        } else {
-            if (b.buf) free(b.buf);
+        size_t base = elf_addr_to_area_addr(lma);
+        if (area < 0) {
             global_logger().err("FW : Firmware section unsupported: '%s'", name);
+            continue;
         }
+
+        //Create the block
+        block_t& b= firmware->m_blocks[(Area) area].emplace_back(base, scn_data->d_size);
+        if (scn_data->d_size)
+            memcpy(b.bytes.data(), scn_data->d_buf, scn_data->d_size);
     }
 
     elf_end(elf);
@@ -243,14 +214,12 @@ Firmware* Firmware::read_elf(const std::string& filename)
    \param block binary data block to be added
    \note A deep copy of the binary data is made
  */
-void Firmware::add_block(Area area, const Block& block)
+void Firmware::add_block(Area area, const block_view_t& block)
 {
     //Make a deep copy of the memory block
-    Block b = { block.size, nullptr, block.base };
-    if (block.size) {
-        b.buf = (unsigned char*) malloc(block.size);
-        memcpy(b.buf, block.buf, block.size);
-    }
+    block_t& b = m_blocks[(Area) area].emplace_back(block.base, block.bytes.size());
+    std::copy(block.bytes.begin(), block.bytes.end(), b.bytes.begin());
+
     //Add the copy to the area map
     m_blocks[area].push_back(b);
 }
@@ -291,8 +260,8 @@ size_t Firmware::memory_size(Area area) const
         return 0;
 
     size_t s = 0;
-    for (const Block& block : it->second)
-        s += block.size;
+    for (auto& block : it->second)
+        s += block.bytes.size();
 
     return s;
 }
@@ -303,13 +272,19 @@ size_t Firmware::memory_size(Area area) const
    \param area NVM area to check
    \return the binary data blocks loaded for this area, may be empty.
  */
-std::vector<Firmware::Block> Firmware::blocks(Area area) const
+std::vector<Firmware::block_view_t> Firmware::blocks(Area area) const
 {
     auto it = m_blocks.find(area);
     if (it == m_blocks.end())
-        return std::vector<Block>();
-    else
-        return it->second;
+        return std::vector<block_view_t>();
+
+    auto& area_blocks = it->second;
+    std::vector<block_view_t> bvs = std::vector<block_view_t>(area_blocks.size());
+    auto itv = bvs.begin();
+    for (auto itb = area_blocks.begin(); itb != area_blocks.end(); ++itb)
+        *itv++ = { itb->bytes, itb->base };
+
+    return bvs;
 }
 
 
@@ -323,8 +298,12 @@ bool Firmware::load_memory(Area area, NonVolatileMemory& memory) const
 {
     bool status = true;
 
-    for (Block& fb : blocks(area))
-        status &= memory.program(fb, fb.base);
+    auto it = m_blocks.find(area);
+    if (it == m_blocks.end()) return true;
+
+    auto& area_blocks = it->second;
+    for (auto& b : area_blocks)
+        status &= memory.program(b.bytes, b.base);
 
     return status;
 }
@@ -333,30 +312,4 @@ bool Firmware::load_memory(Area area, NonVolatileMemory& memory) const
 void Firmware::add_symbol(const Symbol& s)
 {
     m_symbols.push_back(s);
-}
-
-
-Firmware& Firmware::operator=(const Firmware& other)
-{
-    for (auto it = m_blocks.begin(); it != m_blocks.end(); ++it) {
-        for (Block& b : it->second)
-            if (b.size)
-                free(b.buf);
-    }
-    m_blocks.clear();
-
-    frequency = other.frequency;
-    vcc = other.vcc;
-    aref = other.aref;
-    console_register = other.console_register;
-    m_datasize = other.m_datasize;
-    m_bsssize = other.m_bsssize;
-    m_symbols = other.m_symbols;
-
-    for (auto it = other.m_blocks.begin(); it != other.m_blocks.end(); ++it) {
-        for (const Block& b : it->second)
-            add_block(it->first, b);
-    }
-
-    return *this;
 }

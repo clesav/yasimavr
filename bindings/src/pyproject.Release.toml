@@ -1,6 +1,6 @@
 # Project configuration for the yasim-avr python bindings
 #
-# Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -30,11 +30,11 @@ name = "yasimavr"
 sip-file = "../src/lib_core/yasimavr-core.sip"
 include-dirs = ["../../lib_core/src",
                 "../src"]
-sources = ["../src/utils/buffer_utils.c"]
 libraries = ["yasimavr_core"]
 library-dirs = ["../../lib_core/Release"]
 pep484-pyi = true
 protected-is-public = false
+extra-compile-args = ["-std=c++20"]
 extra-link-args = ["-Wl,-rpath=${ORIGIN}"]
 
 
@@ -43,13 +43,13 @@ sip-file = "../src/lib_arch_avr/yasimavr-arch-avr.sip"
 include-dirs = ["../../lib_core/src",
                 "../../lib_arch_avr/src",
                 "../src"]
-sources = ["../src/utils/buffer_utils.c"]
 libraries = ["yasimavr_core",
              "yasimavr_arch_avr"]
 library-dirs = ["../../lib_core/Release",
                 "../../lib_arch_avr/Release"]
 pep484-pyi = true
 protected-is-public = false
+extra-compile-args = ["-std=c++20"]
 extra-link-args = ["-Wl,-rpath=${ORIGIN}"]
 
 
@@ -58,13 +58,13 @@ sip-file = "../src/lib_arch_xt/yasimavr-arch-xt.sip"
 include-dirs = ["../../lib_core/src",
                 "../../lib_arch_xt/src",
                 "../src"]
-sources = ["../src/utils/buffer_utils.c"]
 libraries = ["yasimavr_core",
              "yasimavr_arch_xt"]
 library-dirs = ["../../lib_core/Release",
                 "../../lib_arch_xt/Release"]
 pep484-pyi = true
 protected-is-public = false
+extra-compile-args = ["-std=c++20"]
 extra-link-args = ["-Wl,-rpath=${ORIGIN}"]
 
 

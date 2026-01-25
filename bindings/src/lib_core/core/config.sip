@@ -1,7 +1,7 @@
 /*
  * config.sip
  *
- *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -40,8 +40,7 @@ struct CoreConfiguration {
     flash_addr_t        flashsize;
     reg_addr_t          rampz;
     reg_addr_t          eind;
-    mem_addr_t          fusesize;
-    UnsignedInt8Vector  fuses;
+    bytes_t             fuses;
 
 };
 

@@ -1,7 +1,7 @@
 /*
  * debug.sip
  *
- *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -68,10 +68,8 @@ public:
 
     void write_flash(flash_addr_t, SIP_PYBUFFER) const;
     %MethodCode
-        Py_buffer pybuf;
-        PyObject_GetBuffer(a1, &pybuf, PyBUF_SIMPLE);
-        sipCpp->write_flash(a0, (const uint8_t*)(pybuf.buf), pybuf.len);
-        PyBuffer_Release(&pybuf);
+        bytes_t b = pybuffer_to_bytes(a1);
+        sipCpp->write_flash(a0, b.data(), b.size());
     %End
 
     SIP_PYBUFFER read_flash(flash_addr_t, flash_addr_t) const;
@@ -79,10 +77,8 @@ public:
         if (a1) {
             uint8_t* buf = (uint8_t*) sipMalloc(a1);
             flash_addr_t rlen = sipCpp->read_flash(a0, buf, a1);
-            PyObject* pybuf = export_to_pybuffer(sipAPI_core, buf, rlen);
-            sipRes = PyBytes_FromObject(pybuf);
+            sipRes = bytes_to_pybytes({ buf, rlen });
             sipFree(buf);
-            Py_DECREF(pybuf);
         } else {
             sipRes = PyBytes_FromString("");
         }
@@ -90,10 +86,8 @@ public:
 
     void write_data(mem_addr_t, SIP_PYBUFFER) const;
     %MethodCode
-        Py_buffer pybuf;
-        PyObject_GetBuffer(a1, &pybuf, PyBUF_SIMPLE);
-        sipCpp->write_data(a0, (const uint8_t*)(pybuf.buf), pybuf.len);
-        PyBuffer_Release(&pybuf);
+        bytes_t b = pybuffer_to_bytes(a1);
+        sipCpp->write_data(a0, b.data(), b.size());
     %End
 
     SIP_PYBUFFER read_data(mem_addr_t, mem_addr_t) const;
@@ -101,10 +95,8 @@ public:
         if (a1) {
             uint8_t* buf = (uint8_t*) sipMalloc(a1);
             sipCpp->read_data(a0, buf, a1);
-            PyObject* pybuf = export_to_pybuffer(sipAPI_core, buf, a1);
-            sipRes = PyBytes_FromObject(pybuf);
+            sipRes = bytes_to_pybytes({ buf, a1 });
             sipFree(buf);
-            Py_DECREF(pybuf);
         } else {
             sipRes = PyBytes_FromString("");
         }

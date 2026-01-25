@@ -1,7 +1,7 @@
 /*
  * sim_types.h
  *
- *  Copyright 2022-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -28,6 +28,8 @@
 #include <stdint.h>
 #include <string>
 #include <vector>
+#include <span>
+
 
 YASIMAVR_BEGIN_NAMESPACE
 
@@ -42,6 +44,14 @@ typedef short            int_vect_t;
 
 const cycle_count_t INVALID_CYCLE = -1;
 
+
+//=======================================================================================
+
+typedef std::vector<uint8_t> bytes_t;
+typedef std::span<const uint8_t> bytes_view_t;
+
+
+//=======================================================================================
 
 /**
    \brief Representation of a I/O register address, with validity state.
@@ -315,7 +325,7 @@ public:
     vardata_t(long long i);
     vardata_t(void* p);
     vardata_t(const char* s);
-    vardata_t(uint8_t* b_, size_t sz);
+    vardata_t(const bytes_view_t& b);
     vardata_t(const vardata_t& v);
 
     inline Type type() const
@@ -329,12 +339,12 @@ public:
     unsigned long long as_uint() const;
     long long as_int() const;
 
-    const uint8_t* as_bytes() const;
-    size_t size() const;
+    bytes_view_t as_bytes() const;
 
     vardata_t& operator=(void* p);
     vardata_t& operator=(const char* s);
     vardata_t& operator=(double d);
+    vardata_t& operator=(const bytes_view_t& b);
     inline vardata_t& operator=(unsigned char u) {*this = (unsigned long long) u; return *this; }
     inline vardata_t& operator=(unsigned short u) {*this = (unsigned long long) u; return *this; }
     inline vardata_t& operator=(unsigned int u) {*this = (unsigned long long) u; return *this; }
@@ -360,9 +370,8 @@ private:
         unsigned long long u;
         long long i;
         const char* s;
+        bytes_view_t b;
     };
-
-    size_t m_size = 0;
 
 };
 

@@ -1,7 +1,7 @@
 /*
  * stdvector.sip
  *
- *  Copyright 2022-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -177,43 +177,6 @@ template<_TYPE_>
         *sipCppPtr = v;
         return sipGetState(sipTransferObj);
     }
-%End
-};
-
-
-//=======================================================================================
-
-%MappedType UnsignedInt8Vector
-    /TypeHintIn="Vector[unsigned int]",
-     TypeHintOut="List[unsigned int]"/
-{
-%TypeHeaderCode
-#include <vector>
-typedef std::vector<uint8_t> UnsignedInt8Vector;
-#include "utils/buffer_utils.h"
-%End
-
-%ConvertFromTypeCode
-    PyObject* py = export_to_pybuffer(sipAPI_core, sipCpp->data(), sipCpp->size());
-    return py;
-%End
-
-%ConvertToTypeCode
-    if (!sipIsErr) {
-        return PyObject_CheckBuffer(sipPy);
-    }
-
-    uint8_t* buf = nullptr;
-    size_t size = import_from_pybuffer(sipAPI_core, &buf, sipPy);
-
-    std::vector<uint8_t>* v = new std::vector<uint8_t>(size);
-    if (size) {
-        memcpy(v->data(), buf, size);
-        sipFree(buf);
-    }
-
-    *sipCppPtr = v;
-    return sipGetState(sipTransferObj);
 %End
 };
 

@@ -1,7 +1,7 @@
 /*
  * sim_firmware.h
  *
- *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -26,9 +26,7 @@
 
 #include "sim_types.h"
 #include "sim_memory.h"
-#include <string>
 #include <map>
-#include <vector>
 
 YASIMAVR_BEGIN_NAMESPACE
 
@@ -56,8 +54,9 @@ class AVR_CORE_PUBLIC_API Firmware {
 
 public:
 
-    struct Block : mem_block_t {
-        size_t      base = 0;
+    struct block_view_t {
+        bytes_view_t bytes;
+        size_t base = 0;
     };
 
     enum Area {
@@ -87,12 +86,11 @@ public:
     reg_addr_t console_register;
 
     Firmware();
-    Firmware(const Firmware& other);
-    ~Firmware();
+    Firmware(const Firmware& other) = default;
 
     static Firmware* read_elf(const std::string& filename);
 
-    void add_block(Area area, const Block& block);
+    void add_block(Area area, const block_view_t& block);
 
     bool has_memory(Area area) const;
 
@@ -100,7 +98,7 @@ public:
 
     size_t memory_size(Area area) const;
 
-    std::vector<Block> blocks(Area area) const;
+    std::vector<block_view_t> blocks(Area area) const;
 
     bool load_memory(Area area, NonVolatileMemory& memory) const;
 
@@ -110,11 +108,18 @@ public:
     void add_symbol(const Symbol& s);
     const std::vector<Symbol>& symbols() const;
 
-    Firmware& operator=(const Firmware& other);
+    Firmware& operator=(const Firmware& other) = default;
 
 private:
 
-    std::map<Area, std::vector<Block>> m_blocks;
+    struct block_t {
+        bytes_t     bytes;
+        size_t      base;
+
+        constexpr block_t(size_t b, size_t n) : bytes(n), base(b) {}
+    };
+
+    std::map<Area, std::vector<block_t>> m_blocks;
     mem_addr_t m_datasize;
     mem_addr_t m_bsssize;
     std::vector<Symbol> m_symbols;

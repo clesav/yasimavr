@@ -1,6 +1,6 @@
 # test_core_firmware.py
 #
-# Copyright 2023 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2023-2026 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -47,8 +47,8 @@ def test_flash(firmware):
     assert len(blocks) >= 2 #we should have at least .text, .data
 
     #Read the .data block and check the content
-    stdata_block = [ b for b in blocks if len(b.buf) == 6][0]
-    stdata = bytes(stdata_block.buf)
+    stdata_block = [ b for b in blocks if len(b.bytes) == 6][0]
+    stdata = bytes(stdata_block.bytes)
     #The string is "Char" +2 null chars (1 for string termination +1 for word alignement)
     assert stdata == b'Char\0\0'
 
@@ -59,7 +59,7 @@ def test_eeprom(firmware):
 
     b = blocks[0]
     assert b.base == 0
-    assert bytes(b.buf) == b'EEPROM\0'
+    assert bytes(b.bytes) == b'EEPROM\0'
 
 
 def test_fuses(firmware):
@@ -68,7 +68,7 @@ def test_fuses(firmware):
 
     b = blocks[0]
     assert b.base == 0
-    assert bytes(b.buf) == bytes([0xAA, 0xD9, 0xFF])
+    assert bytes(b.bytes) == bytes([0xAA, 0xD9, 0xFF])
 
 
 def test_memory_load(firmware):
@@ -76,7 +76,7 @@ def test_memory_load(firmware):
     firmware.load_memory(Area.Flash, nvm)
 
     blocks = firmware.blocks(Area.Flash)
-    data_block = [ b for b in blocks if len(b.buf) == 6][0]
+    data_block = [ b for b in blocks if len(b.bytes) == 6][0]
 
-    m = nvm.block(data_block.base, len(data_block.buf))
-    assert bytes(m) == bytes(data_block.buf)
+    m = nvm.view(data_block.base, len(data_block.bytes))
+    assert bytes(m) == bytes(data_block.bytes)

@@ -1,7 +1,7 @@
 /*
  * sim_cpu.cpp
  *
- *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -1101,7 +1101,7 @@ void Core::dbg_insert_breakpoint(breakpoint_t& bp)
     uint32_t curr_opcode = get_flash16le(bp.addr);
     bp.instr_len = _is_instruction_32_bits(curr_opcode) ? 4 : 2;
     //Backup the program instruction
-    m_flash.read(bp.instr, bp.addr, bp.instr_len);
+    m_flash.readinto(bp.instr, bp.addr, bp.instr_len);
     //Replace the program instruction by a break
     m_flash.write(AVR_BREAK_OPCODE & 0xFF, bp.addr);
     m_flash.write(AVR_BREAK_OPCODE >> 8, bp.addr + 1);
@@ -1117,5 +1117,5 @@ void Core::dbg_insert_breakpoint(breakpoint_t& bp)
 void Core::dbg_remove_breakpoint(breakpoint_t& bp)
 {
     //Restore the original instruction in flash
-    m_flash.write(bp.instr, bp.addr, bp.instr_len);
+    m_flash.write({ bp.instr, bp.instr_len }, bp.addr);
 }

@@ -88,6 +88,7 @@ GCC_SHLIB_COMPILER_EXTRA_ARGS = [
     '-fPIC',
     '-fmessage-length=0',
     '-fvisibility=hidden',
+    '-std=c++20',
 ]
 
 GCC_SHLIB_LINKER_EXTRA_ARGS = [
