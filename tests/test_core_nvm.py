@@ -1,6 +1,6 @@
 # test_core_nvm.py
 #
-# Copyright 2023 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2023-2026 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -92,10 +92,10 @@ def test_nvm_tag_based_erase(nvm):
 
 def test_nvm_block(nvm):
     nvm.program(data)
-    b = nvm.block()
+    b = nvm.view()
 
     assert len(b) == 1024
     assert b[:4] == data
 
-    b = nvm.block(2, 2)
+    b = nvm.view(2, 2)
     assert b == data[2:4]

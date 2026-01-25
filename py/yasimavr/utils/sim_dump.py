@@ -1,6 +1,6 @@
 # sim_dump.py
 #
-# Copyright 2022-2024 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2022-2026 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -92,7 +92,7 @@ class _Dumper:
         for line_pos in range(0, nvm_size, 16):
             line_size = min(16, nvm_size - line_pos)
             is_last_line = (line_pos + line_size >= nvm_size)
-            line_values = nvm.block(line_pos, line_size)
+            line_values = nvm.view(line_pos, line_size)
             line_programmed = nvm.programmed(line_pos, line_size)
             is_line_to_print = any(line_programmed) or is_last_line
 

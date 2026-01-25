@@ -105,7 +105,7 @@ def test_avr_usart_rx(bench):
 def test_avr_usart_tx_io(bench):
     '''This test checks the transmission of a byte using the IO framework
     '''
-    
+
     io_uart = UART_IO(bench.dev_model, 0)
 
     USART = bench.dev.USART
