@@ -280,19 +280,6 @@ inline const regbit_t& regbit_compound_t::operator[](size_t index) const
     return m_regbits[index];
 }
 
-//=======================================================================================
-
-typedef unsigned long sim_id_t;
-typedef sim_id_t ctl_id_t;
-
-std::string id_to_str(sim_id_t id) AVR_CORE_PUBLIC_API;
-sim_id_t str_to_id(const char* s) AVR_CORE_PUBLIC_API;
-sim_id_t str_to_id(const std::string& s) AVR_CORE_PUBLIC_API;
-
-constexpr sim_id_t chr_to_id(char a, char b, char c, char d)
-{
-    return (d << 24) | (c << 16) | (b << 8) | a;
-}
 
 //=======================================================================================
 
@@ -376,6 +363,72 @@ private:
 };
 
 
+//=======================================================================================
+
+/**
+   \brief Representation of a ID internally represented as a 64-bits integer but can
+   be initialised with a string.
+ */
+class AVR_CORE_PUBLIC_API sim_id_t {
+
+public:
+
+    constexpr sim_id_t() : m_id(0) {}
+    constexpr sim_id_t(uint64_t id) : m_id(id) {}
+    constexpr sim_id_t(const char* s) : m_id(strtoid(s)) {}
+    constexpr sim_id_t(const std::string& s) : m_id(strtoid(s.c_str())) {}
+    constexpr sim_id_t(const sim_id_t&) = default;
+
+    constexpr sim_id_t& operator=(uint64_t id) { m_id = id; return *this; }
+    constexpr sim_id_t& operator=(const char* s) { m_id = strtoid(s); return *this; }
+    constexpr sim_id_t& operator=(const std::string& s) { m_id = strtoid(s.c_str()); return *this; }
+    constexpr sim_id_t& operator=(const sim_id_t&) = default;
+
+    inline operator vardata_t() const { return vardata_t(m_id); }
+
+    std::string str() const;
+
+    constexpr bool operator==(const sim_id_t& other) const { return m_id == other.m_id; }
+
+    constexpr operator bool() const { return !!m_id; }
+
+    constexpr sim_id_t operator+(char c) const { return sim_id_t((m_id << 8) | c); }
+    constexpr sim_id_t& operator+=(char c) { m_id = (m_id << 8) | c; return *this; }
+
+private:
+
+    friend struct std::hash<sim_id_t>;
+
+    uint64_t m_id;
+
+    static constexpr uint64_t strtoid(const char* s)
+    {
+        uint64_t id = 0;
+        int n = 0;
+        while (n++ < 8 && *s)
+            id = (id << 8) | *s++;
+        return id;
+    }
+
+};
+
+typedef sim_id_t ctl_id_t;
+
+
 YASIMAVR_END_NAMESPACE
+
+/**
+   \brief Instantiation of the hash template for the sim_id_t class so that it can
+   be used as a key in mapping containers such as std::map.
+ */
+template<>
+struct std::hash<YASIMAVR_QUALIFIED_NAME(sim_id_t)>
+{
+    constexpr std::size_t operator()(const YASIMAVR_QUALIFIED_NAME(sim_id_t)& sid) const noexcept
+    {
+        return sid.m_id;
+    }
+};
+
 
 #endif //__YASIMAVR_TYPES_H__
