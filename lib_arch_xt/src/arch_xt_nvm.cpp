@@ -34,7 +34,7 @@ YASIMAVR_USING_NAMESPACE
 //=======================================================================================
 
 ArchXT_USERROW::ArchXT_USERROW(reg_addr_t base)
-:Peripheral(chr_to_id('U', 'R', 'O', 'W'))
+:Peripheral("USERROW")
 ,m_reg_base(base)
 ,m_userrow(nullptr)
 {}
@@ -106,7 +106,7 @@ const uint8_t SECTION_ACCESS_FLAGS[SECTION_COUNT][SECTION_COUNT] = {
    \param base base address in the data space for the fuse bytes
  */
 ArchXT_Fuses::ArchXT_Fuses(reg_addr_t base)
-:Peripheral(chr_to_id('F', 'U', 'S', 'E'))
+:Peripheral("FUSES")
 ,m_reg_base(base)
 ,m_fuses(nullptr)
 ,m_section_manager(nullptr)

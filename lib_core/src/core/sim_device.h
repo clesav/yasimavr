@@ -1,7 +1,7 @@
 /*
  * sim_device.h
  *
- *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -158,14 +158,12 @@ public:
 
     void add_ioreg_handler(reg_addr_t addr, IO_RegHandler& handler, uint8_t ro_mask=0x00);
     void add_ioreg_handler(const regbit_t& rb, IO_RegHandler& handler, bool readonly=false);
-    Peripheral* find_peripheral(const char* name);
     Peripheral* find_peripheral(ctl_id_t id);
     bool ctlreq(ctl_id_t id, ctlreq_id_t req, ctlreq_data_t* reqdata = nullptr);
 
     //Helpers for the peripheral timers
     CycleManager* cycle_manager();
 
-    Pin* find_pin(const char* name);
     Pin* find_pin(pin_id_t id);
     PinManager& pin_manager();
 

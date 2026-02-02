@@ -1,7 +1,7 @@
 /*
  * sim_peripheral.h
  *
- *  Copyright 2022-2025 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -54,43 +54,44 @@ enum class SleepMode;
 */
 
 /** CTLID for the core: "CORE" */
-#define AVR_IOCTL_CORE              chr_to_id('C', 'O', 'R', 'E')
+constexpr sim_id_t AVR_IOCTL_CORE     = "CORE";
 /** CTLID for the watchdog timer: "WTDG" */
-#define AVR_IOCTL_WDT               chr_to_id('W', 'D', 'T', '\0')
-/** CTLID for the interrupt controller: "INTR" */
-#define AVR_IOCTL_INTR              chr_to_id('I', 'N', 'T', 'R')
+constexpr sim_id_t AVR_IOCTL_WDT      = "WTDG";
+/** CTLID for the interrupt controller: "INTCTRL" */
+constexpr sim_id_t AVR_IOCTL_INTR     = "INTCTRL";
 /** CTLID for the sleep controller: "SLP" */
-#define AVR_IOCTL_SLEEP             chr_to_id('S', 'L', 'P', '\0')
-/** CTLID for the clock controller: "CLK" */
-#define AVR_IOCTL_CLOCK             chr_to_id('C', 'L', 'K', '\0')
+constexpr sim_id_t AVR_IOCTL_SLEEP    = "SLPCTRL";
+/** CTLID for the clock controller: "CLKCTRL" */
+constexpr sim_id_t AVR_IOCTL_CLOCK    = "CLKCTRL";
 /** CTLID for the I/O port controller: "IOGx" x='A','B',... */
-#define AVR_IOCTL_PORT(n)           chr_to_id('I', 'O', 'G', (n))
+constexpr sim_id_t AVR_IOCTL_PORT(char c) { return sim_id_t("IOPORT") + c; }
 /** CTLID for the port mux controller */
-#define AVR_IOCTL_PORTMUX           chr_to_id('I', 'O', 'M', 'X')
+constexpr sim_id_t AVR_IOCTL_PORTMUX  = "PORTMUX";
 /** CTLID for the analog-to-digital converter: "ADCn", n=0,1,... */
-#define AVR_IOCTL_ADC(n)            chr_to_id('A', 'D', 'C', (n))
+constexpr sim_id_t AVR_IOCTL_ADC(char c) { return sim_id_t("ADC") + c; }
 /** CTLID for the analog comparator: "ACPn", n=0,1,... */
-#define AVR_IOCTL_ACP(n)            chr_to_id('A', 'C', 'P', (n))
+//#define AVR_IOCTL_ACP(n)            chr_to_id('A', 'C', 'P', (n))
+constexpr sim_id_t AVR_IOCTL_ACP(char c) { return sim_id_t("ACP") + c; }
 /** CTLID for the timer/counter: "TCtn", t='A','B'; n=0,1,... */
-#define AVR_IOCTL_TIMER(t, n)       chr_to_id('T', 'C', (t), (n))
+constexpr sim_id_t AVR_IOCTL_TIMER(char t, char c) { return (sim_id_t("TC") + t) + c; }
 /** CTLID for the EEPROM controller: "EPRM" */
-#define AVR_IOCTL_EEPROM            chr_to_id('E', 'P', 'R', 'M')
+constexpr sim_id_t AVR_IOCTL_EEPROM   = "EEPROM";
 /** CTLID for the NVM controller: "NVM" */
-#define AVR_IOCTL_NVM               chr_to_id('N', 'V', 'M', '\0')
+constexpr sim_id_t AVR_IOCTL_NVM      = "NVMCTRL";
 /** CTLID for the voltage reference controller: "VREF" */
-#define AVR_IOCTL_VREF              chr_to_id('V', 'R', 'E', 'F')
+constexpr sim_id_t AVR_IOCTL_VREF     = "VREF";
 /** CTLID for the external interrupt controller: "EINT" */
-#define AVR_IOCTL_EXTINT            chr_to_id('E', 'I', 'N', 'T')
-/** CTLID for the reset controller: "RST" */
-#define AVR_IOCTL_RST               chr_to_id('R', 'S', 'T', '\0')
+constexpr sim_id_t AVR_IOCTL_EXTINT   = "EXTINT";
+/** CTLID for the reset controller: "RSTCTRL" */
+constexpr sim_id_t AVR_IOCTL_RST      = "RSTCTRL";
 /** CTLID for the real-time counter: "RTC" */
-#define AVR_IOCTL_RTC               chr_to_id('R', 'T', 'C', '\0')
+constexpr sim_id_t AVR_IOCTL_RTC      = "RTC";
 /** CTLID for the USART interface: "UAXn" */
-#define AVR_IOCTL_UART(n)           chr_to_id('U', 'A', 'X', (n))
+constexpr sim_id_t AVR_IOCTL_UART(char c) { return sim_id_t("USART") + c; }
 /** CTLID for the SPI interface: "SPIn" */
-#define AVR_IOCTL_SPI(n)            chr_to_id('S', 'P', 'I', (n))
+constexpr sim_id_t AVR_IOCTL_SPI(char c) { return sim_id_t("SPI") + c; }
 /** CTLID for the TWI interface: "TWIn" */
-#define AVR_IOCTL_TWI(n)            chr_to_id('T', 'W', 'I', (n))
+constexpr sim_id_t AVR_IOCTL_TWI(char c) { return sim_id_t("TWI") + c; }
 
 ///@}
 
@@ -469,7 +470,7 @@ inline void Peripheral::write_ioreg(reg_addr_t reg, uint8_t bit, uint8_t value)
 
 inline Signal* Peripheral::get_signal(const char* name) const
 {
-    return get_signal(str_to_id(name));
+    return get_signal(sim_id_t(name));
 }
 
 

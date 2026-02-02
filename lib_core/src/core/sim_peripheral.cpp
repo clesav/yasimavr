@@ -1,7 +1,7 @@
 /*
  * sim_peripheral.cpp
  *
- *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -40,6 +40,7 @@ Peripheral::Peripheral(ctl_id_t id)
 {
 }
 
+
 Peripheral::~Peripheral()
 {
     if (m_device)
@@ -51,7 +52,7 @@ Peripheral::~Peripheral()
 */
 std::string Peripheral::name() const
 {
-    return id_to_str(m_id);
+    return m_id.str();
 }
 
 /**

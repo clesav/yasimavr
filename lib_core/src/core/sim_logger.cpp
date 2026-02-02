@@ -1,7 +1,7 @@
 /*
  * sim_logger.cpp
  *
- *  Copyright 2022 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -52,7 +52,7 @@ void LogWriter::write(cycle_count_t cycle,
             slvl = "---"; break;
     }
 
-    std::string sid = id > 0 ? id_to_str(id) : "";
+    std::string sid = id.str();
 
     fprintf(f, "[%08lld] %s %s : ", cycle, slvl, sid.c_str());
     vfprintf(f, format, args);
@@ -152,7 +152,7 @@ void Logger::write(int lvl, ctl_id_t id, const char* fmt, std::va_list args)
 //=======================================================================================
 
 static LogHandler s_global_handler;
-static Logger s_global_logger = Logger(0, s_global_handler);
+static Logger s_global_logger = Logger(sim_id_t(), s_global_handler);
 
 Logger& YASIMAVR_QUALIFIED_NAME(global_logger)()
 {

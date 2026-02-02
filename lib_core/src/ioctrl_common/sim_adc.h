@@ -1,7 +1,7 @@
 /*
  * sim_adc.h
  *
- *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -97,17 +97,12 @@ public:
     struct channel_config_t : base_reg_config_t {
         /// Channel type
         Channel type;
-        union {
-            struct {
-                /// Pin ID used for single-ended channels or as positive input for differential channels
-                pin_id_t pin_p;
-                /// Pin ID used as negative input for differential channels, unused for other channel types
-                pin_id_t pin_n;
-            };
-            /// Used for Channel_AcompRef, index of the ACP peripheral to get the reference value from
-            char per_num;
-        };
-
+        /// Pin ID used for single-ended channels or as positive input for differential channels
+        pin_id_t pin_p;
+        /// Pin ID used as negative input for differential channels, unused for other channel types
+        pin_id_t pin_n;
+        /// Used for Channel_AcompRef, index of the ACP peripheral to get the reference value from
+        char per_num;
         /// Measurement gain applied to the voltage value. Must be non-zero.
         unsigned int gain;
     };

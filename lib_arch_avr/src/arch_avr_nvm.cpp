@@ -614,7 +614,7 @@ const uint8_t DEFAULT_SECTION_FLAGS[SECTION_COUNT][SECTION_COUNT] = {
 
 
 ArchAVR_Fuses::ArchAVR_Fuses(const ArchAVR_FusesConfig& config)
-:Peripheral(chr_to_id('F', 'U', 'S', 'E'))
+:Peripheral("FUSES")
 ,m_config(config)
 ,m_fuses(nullptr)
 ,m_lockbit(nullptr)

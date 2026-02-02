@@ -1,7 +1,7 @@
 /*
  * arch_avr_misc.cpp
  *
- *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -93,7 +93,7 @@ void ArchAVR_IntCtrl::raised(const signal_data_t& sigdata, int)
 //=======================================================================================
 
 ArchAVR_MiscRegCtrl::ArchAVR_MiscRegCtrl(const ArchAVR_MiscConfig& config)
-:Peripheral(chr_to_id('M', 'I', 'S', 'C'))
+:Peripheral("MISC")
 ,m_config(config)
 {}
 
