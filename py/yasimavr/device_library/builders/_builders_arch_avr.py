@@ -1,6 +1,6 @@
 # _builders_arch_avr.py
 #
-# Copyright 2022-2025 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2022-2026 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -151,7 +151,7 @@ def _extint_convertor(cfg, attr, yml_val, per_desc):
         for yml_ext_int in yml_val:
             ext_int_cfg = _archlib.ArchAVR_ExtIntConfig.ext_int_t()
             ext_int_cfg.vector = per_desc.device.interrupt_map.vectors.index(yml_ext_int['vector'])
-            ext_int_cfg.pin = _corelib.str_to_id(yml_ext_int['pin'])
+            ext_int_cfg.pin = yml_ext_int['pin']
             py_ext_ints.append(ext_int_cfg)
         cfg.ext_ints = py_ext_ints
 
@@ -161,7 +161,7 @@ def _extint_convertor(cfg, attr, yml_val, per_desc):
             pc_int_cfg = _archlib.ArchAVR_ExtIntConfig.pc_int_t()
             pc_int_cfg.vector = per_desc.device.interrupt_map.vectors.index(yml_pc_int['vector'])
             pc_int_cfg.reg_mask = per_desc.reg_address(yml_pc_int['reg_mask'])
-            pc_int_cfg.pins = [ _corelib.str_to_id(p) for p in yml_pc_int['pins'] ]
+            pc_int_cfg.pins = yml_pc_int['pins']
             py_pc_ints.append(pc_int_cfg)
         cfg.pc_ints = py_pc_ints
 
@@ -269,8 +269,8 @@ def _adc_convertor(cfg, attr, yml_val, per_desc):
             chan_cfg.reg_value = reg_value
             if isinstance(item, list):
                 chan_cfg.type = _corelib.ADC.Channel[item[0]]
-                chan_cfg.pin_p = _corelib.str_to_id(item[1])
-                chan_cfg.pin_n = _corelib.str_to_id(item[2]) if len(item) > 2 else 0
+                chan_cfg.pin_p = item[1]
+                chan_cfg.pin_n = item[2] if len(item) > 2 else 0
                 chan_cfg.gain = int(item[3]) if len(item) > 3 else 1
             else:
                 chan_cfg.type = _corelib.ADC.Channel[item]
@@ -326,16 +326,16 @@ def _acp_convertor(cfg, attr, yml_val, per_desc):
         for reg_value, item in yml_val.items():
             mux_cfg = _archlib.ArchAVR_ACPConfig.mux_config_t()
             mux_cfg.reg_value = reg_value
-            mux_cfg.pin = _corelib.str_to_id(item)
+            mux_cfg.pin = item
             py_pins.append(mux_cfg)
 
         cfg.mux_pins = py_pins
 
     elif attr == 'pos_pin':
-        cfg.pos_pin = _corelib.str_to_id(yml_val)
+        cfg.pos_pin = yml_val
 
     elif attr == 'neg_pin':
-        cfg.neg_pin = _corelib.str_to_id(yml_val)
+        cfg.neg_pin = yml_val
 
     else:
         raise Exception('Converter not implemented for ' + attr)

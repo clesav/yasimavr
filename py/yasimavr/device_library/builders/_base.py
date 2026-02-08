@@ -1,6 +1,6 @@
 # _base.py
 #
-# Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -434,13 +434,10 @@ class DeviceBuilder:
         except KeyError:
             raise Exception('Pin driver absent from IOMUX config: ' + drv_name)
 
-        drv_id_str = device._descriptor_.peripherals[drv_name].ctl_id
-        drv_id = _corelib.str_to_id(drv_id_str)
+        drv_id = device._descriptor_.peripherals[drv_name].ctl_id
         for mux_id, mux_cfg in drv_mux_configs.items():
-            mux_id = _corelib.str_to_id(mux_id)
             if mux_cfg:
-                pin_ids = [_corelib.str_to_id(pin_name) for pin_name in mux_cfg]
-                result = device.pin_manager().add_mux_config(drv_id, pin_ids, mux_id)
+                result = device.pin_manager().add_mux_config(drv_id, mux_cfg, mux_id)
                 if not result:
                     raise Exception('Attaching pin driver failed: ' + drv_name)
 

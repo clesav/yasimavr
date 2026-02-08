@@ -1,6 +1,6 @@
 # _builders_arch_xt.py
 #
-# Copyright 2022-2025 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2022-2026 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -121,7 +121,7 @@ def _portmux_convertor(cfg, attr, yml_val, per_desc):
         for drv_id, yml_mux_cfg in yml_val.items():
             mux_cfg = _archlib.ArchXT_PortMuxConfig.mux_config_t()
             mux_cfg.reg = convert_to_regbit(yml_mux_cfg['reg'], per=per_desc)
-            mux_cfg.drv_id = _corelib.str_to_id(drv_id)
+            mux_cfg.drv_id = drv_id
             mux_cfg.pin_index = yml_mux_cfg.get('pin', -1)
             mux_configs.append(mux_cfg)
 
@@ -129,7 +129,7 @@ def _portmux_convertor(cfg, attr, yml_val, per_desc):
             for reg_value, mux_id in yml_mux_cfg['map'].items():
                 mux_map_entry = _archlib.ArchXT_PortMuxConfig.mux_map_entry_t()
                 mux_map_entry.reg_value = reg_value
-                mux_map_entry.mux_id = _corelib.str_to_id(mux_id)
+                mux_map_entry.mux_id = mux_id
                 mux_map.append(mux_map_entry)
             mux_cfg.mux_map = mux_map
 
@@ -243,9 +243,9 @@ def _adc_convertor(cfg, attr, yml_val, per_desc):
             if isinstance(item, list):
                 chan_type = item[0]
                 if len(item) >= 2:
-                    chan_cfg.pin_p = _corelib.str_to_id(item[1])
+                    chan_cfg.pin_p = item[1]
                 if len(item) >= 3:
-                    chan_cfg.pin_n = _corelib.str_to_id(item[2])
+                    chan_cfg.pin_n = item[2]
             else:
                 chan_type = item
 
@@ -291,7 +291,7 @@ def _acp_convertor(cfg, attr, yml_val, per_desc):
             if isinstance(item, list):
                 chan_type = item[0]
                 if len(item) >= 2:
-                    chan_cfg.pin = _corelib.str_to_id(item[1])
+                    chan_cfg.pin = item[1]
             else:
                 chan_type = item
 
