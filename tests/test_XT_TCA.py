@@ -1,6 +1,6 @@
 # test_XT_TCA.py
 #
-# Copyright 2024-2025 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2024-2026 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -67,7 +67,7 @@ class _BenchTCA(BenchXT):
 
         self.sig_eva = corelib.Signal()
         self.sig_evb = corelib.Signal()
-        ok, reqdata = self.dev_model.ctlreq(corelib.str_to_id('TCA0'), archlib.CTLREQ_TCA_GET_EVENT_HOOK)
+        ok, reqdata = self.dev_model.ctlreq('TCA0', archlib.CTLREQ_TCA_GET_EVENT_HOOK)
         if ok:
             self.event_hook = reqdata.data.value(corelib.SignalHook)
             self.sig_eva.connect(self.event_hook, TMR_CLASS.EventHookTag.EventA)

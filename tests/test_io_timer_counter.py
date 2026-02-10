@@ -1,6 +1,6 @@
 # test_io_timer_counter.py
 #
-# Copyright 2024 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2024-2026 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -77,7 +77,7 @@ def bench():
 @pytest.fixture
 def bch_1tmr(bench):
     tmr = PT()
-    bench.log_tmr = corelib.Logger(corelib.str_to_id('TMR'), bench.logger)
+    bench.log_tmr = corelib.Logger('TMR', bench.logger)
     bench.log_tmr.set_level(corelib.Logger.Level.Debug)
 
     tmr.init(bench.cycler, bench.log_tmr)
@@ -90,12 +90,12 @@ def bch_1tmr(bench):
 @pytest.fixture
 def bch_2tmr(bench):
     tmr_a = PT()
-    bench.log_ta = corelib.Logger(corelib.str_to_id('TMRA'), bench.logger)
+    bench.log_ta = corelib.Logger('TMRA', bench.logger)
     bench.log_ta.set_level(corelib.Logger.Level.Debug)
     tmr_a.init(bench.cycler, bench.log_ta)
 
     tmr_b = PT()
-    bench.log_tb = corelib.Logger(corelib.str_to_id('TMRB'), bench.logger)
+    bench.log_tb = corelib.Logger('TMRB', bench.logger)
     bench.log_tb.set_level(corelib.Logger.Level.Debug)
     tmr_b.init(bench.cycler, bench.log_tb)
 
@@ -162,7 +162,7 @@ class _BaseBenchCounter(_BaseBench):
         super().__init__()
 
         self.ctr = TC(100, 2)
-        self.log_ctr = corelib.Logger(corelib.str_to_id('CTR'), self.logger)
+        self.log_ctr = corelib.Logger('CTR', self.logger)
         self.log_ctr.set_level(corelib.Logger.Level.Debug)
         self.ctr.init(self.cycler, self.log_ctr)
         self.ctr.prescaler().set_prescaler(1, 1)
