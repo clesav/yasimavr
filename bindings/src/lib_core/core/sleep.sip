@@ -1,7 +1,7 @@
 /*
  * sleep.sip
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -47,10 +47,10 @@ struct SleepConfig {
 
         SIP_PYBUFFER int_mask {
             %GetCode
-                sipPy = sipConvertToArray(sipCpp->int_mask, "B", 16, 0);
+                sipPy = convert_from_fixed_array(sipCpp->int_mask, "B", 16);
             %End
             %SetCode
-                sipErr = import_from_fixedlen_sequence(sipAPI_core, sipCpp->int_mask, "B", 16, sipPy);
+                sipErr = convert_to_fixed_array(sipCpp->int_mask, "B", 16, sipPy);
             %End
         };
 

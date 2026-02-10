@@ -55,28 +55,27 @@ enum class SleepMode;
 
 /** CTLID for the core: "CORE" */
 constexpr sim_id_t AVR_IOCTL_CORE     = "CORE";
-/** CTLID for the watchdog timer: "WTDG" */
-constexpr sim_id_t AVR_IOCTL_WDT      = "WTDG";
-/** CTLID for the interrupt controller: "INTCTRL" */
-constexpr sim_id_t AVR_IOCTL_INTR     = "INTCTRL";
-/** CTLID for the sleep controller: "SLP" */
+/** CTLID for the watchdog timer: "WDT" */
+constexpr sim_id_t AVR_IOCTL_WDT      = "WDT";
+/** CTLID for the interrupt controller: "CPUINT" */
+constexpr sim_id_t AVR_IOCTL_INTR     = "CPUINT";
+/** CTLID for the sleep controller: "SLPCTRL" */
 constexpr sim_id_t AVR_IOCTL_SLEEP    = "SLPCTRL";
 /** CTLID for the clock controller: "CLKCTRL" */
 constexpr sim_id_t AVR_IOCTL_CLOCK    = "CLKCTRL";
-/** CTLID for the I/O port controller: "IOGx" x='A','B',... */
-constexpr sim_id_t AVR_IOCTL_PORT(char c) { return sim_id_t("IOPORT") + c; }
+/** CTLID for the I/O port controller: "PORTx" x='A','B',... */
+constexpr sim_id_t AVR_IOCTL_PORT(char c) { return sim_id_t("PORT") + c; }
 /** CTLID for the port mux controller */
 constexpr sim_id_t AVR_IOCTL_PORTMUX  = "PORTMUX";
 /** CTLID for the analog-to-digital converter: "ADCn", n=0,1,... */
 constexpr sim_id_t AVR_IOCTL_ADC(char c) { return sim_id_t("ADC") + c; }
 /** CTLID for the analog comparator: "ACPn", n=0,1,... */
-//#define AVR_IOCTL_ACP(n)            chr_to_id('A', 'C', 'P', (n))
 constexpr sim_id_t AVR_IOCTL_ACP(char c) { return sim_id_t("ACP") + c; }
 /** CTLID for the timer/counter: "TCtn", t='A','B'; n=0,1,... */
 constexpr sim_id_t AVR_IOCTL_TIMER(char t, char c) { return (sim_id_t("TC") + t) + c; }
-/** CTLID for the EEPROM controller: "EPRM" */
+/** CTLID for the EEPROM controller: "EEPROM" */
 constexpr sim_id_t AVR_IOCTL_EEPROM   = "EEPROM";
-/** CTLID for the NVM controller: "NVM" */
+/** CTLID for the NVM controller: "NVMCTRL" */
 constexpr sim_id_t AVR_IOCTL_NVM      = "NVMCTRL";
 /** CTLID for the voltage reference controller: "VREF" */
 constexpr sim_id_t AVR_IOCTL_VREF     = "VREF";
@@ -86,7 +85,7 @@ constexpr sim_id_t AVR_IOCTL_EXTINT   = "EXTINT";
 constexpr sim_id_t AVR_IOCTL_RST      = "RSTCTRL";
 /** CTLID for the real-time counter: "RTC" */
 constexpr sim_id_t AVR_IOCTL_RTC      = "RTC";
-/** CTLID for the USART interface: "UAXn" */
+/** CTLID for the USART interface: "USARTn" */
 constexpr sim_id_t AVR_IOCTL_UART(char c) { return sim_id_t("USART") + c; }
 /** CTLID for the SPI interface: "SPIn" */
 constexpr sim_id_t AVR_IOCTL_SPI(char c) { return sim_id_t("SPI") + c; }

@@ -1,7 +1,7 @@
 /*
  * arch_xt_timer_a.sip
  *
- *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -59,10 +59,10 @@ struct ArchXT_TimerAConfig {
     //int_vect_t vect_cmp[AVR_TCA_CMP_CHANNEL_COUNT];
     SIP_PYBUFFER ivs_cmp {
         %GetCode
-            sipPy = sipConvertToArray(sipCpp->ivs_cmp, "h", sipCpp->CompareChannelCount, 0);
+            sipPy = convert_from_fixed_array(sipCpp->ivs_cmp, "h", sipCpp->CompareChannelCount);
         %End
         %SetCode
-            sipErr = import_from_fixedlen_sequence(sipAPI_arch_xt, sipCpp->ivs_cmp, "h", sipCpp->CompareChannelCount, sipPy);
+            sipErr = convert_to_fixed_array(sipCpp->ivs_cmp, "h", sipCpp->CompareChannelCount, sipPy);
         %End
     };
 

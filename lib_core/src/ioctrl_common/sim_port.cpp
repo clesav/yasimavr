@@ -1,7 +1,7 @@
 /*
  * sim_port.cpp
  *
- *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -49,11 +49,11 @@ bool Port::init(Device& device)
 
     //Construct the pin mask by looking up for pins names
     //Pcx where c is the port letter and x is 0 to 7
-    char pinname[4];
+    pin_id_t pin_id;
     m_pinmask = 0;
     for (int i = 0; i < 8; ++i) {
-        std::sprintf(pinname, "P%c%d", m_name, i);
-        Pin *pin = device.find_pin(pinname);
+        pin_id = pin_id_t("P") + m_name + (char)('0' + i);
+        Pin *pin = device.find_pin(pin_id);
         if (pin) {
             pin->signal().connect(m_pin_signal_hook, i);
             m_pinmask |= (1 << i);
