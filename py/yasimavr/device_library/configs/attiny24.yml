@@ -91,23 +91,18 @@ peripherals:
 
     CPUINT:
         file: tiny24-44-84_controllers.yml
-        ctl_id: INTR
 
     RSTCTRL:
         file: avr_controllers.yml
-        ctl_id: RST
 
     SLPCTRL:
         file: tiny24-44-84_controllers.yml
-        ctl_id: SLP
 
     FUSES:
         file: tiny24-44-84_controllers.yml
-        ctl_id: FUSE
 
     NVMCTRL:
         file: tiny24-44-84_controllers.yml
-        ctl_id: NVM
         config:
             iv_spm_ready: ""
             iv_ee_ready: EE_READY
@@ -119,17 +114,14 @@ peripherals:
         class: PORT
         file: tiny24-44-84_interfaces.yml
         base: 0x19
-        ctl_id: IOGA
 
     PORTB:
         class: PORT
         file: tiny24-44-84_interfaces.yml
         base: 0x16
-        ctl_id: IOGB
 
     EXTINT:
         file: tiny24-44-84_interfaces.yml
-        ctl_id: EINT
 
     TC0:
         file: avr_timers.yml
