@@ -1,7 +1,7 @@
 /*
  * pin.sip
  *
- *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -21,7 +21,8 @@
 
 //=======================================================================================
 
-typedef sim_id_t pin_id_t;
+typedef sim_id_t pin_id_t /NoTypeName/;
+
 
 class Pin : public Wire /NoDefaultCtors/ {
 %TypeHeaderCode
@@ -85,10 +86,6 @@ public:
 
 //=======================================================================================
 
-typedef UnsignedLongVector pin_id_vector_t /NoTypeName/;
-
-
-
 class PinManager /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "core/sim_pin.h"
@@ -99,14 +96,14 @@ public:
     typedef sim_id_t mux_id_t;
     static const mux_id_t default_mux_id;
 
-    PinManager(const pin_id_vector_t&);
+    PinManager(const std::vector<sim_id_t>&);
 
     bool register_driver(PinDriver&);
-    bool add_mux_config(ctl_id_t, const pin_id_vector_t&, mux_id_t = PinManager::default_mux_id);
+    bool add_mux_config(ctl_id_t, const std::vector<sim_id_t>&, mux_id_t = PinManager::default_mux_id);
     void set_current_mux(ctl_id_t, mux_id_t);
     void set_current_mux(ctl_id_t, PinDriver::pin_index_t, mux_id_t);
     mux_id_t current_mux(ctl_id_t, PinDriver::pin_index_t) const;
-    pin_id_vector_t current_mux_pins(ctl_id_t) const;
+    std::vector<sim_id_t> current_mux_pins(ctl_id_t) const;
     Pin* pin(pin_id_t) const;
 
 };

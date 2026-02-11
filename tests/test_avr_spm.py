@@ -1,6 +1,6 @@
 # test_avr_nvm.py
 #
-# Copyright 2024 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2024-2026 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -64,7 +64,7 @@ def dummy_spm_bench():
 @pytest.fixture
 def bench():
     b = bench_m328()
-    b.dev_model.find_peripheral('NVM').logger().set_level(corelib.Logger.Level.Debug)
+    b.dev_model.find_peripheral('NVMCTRL').logger().set_level(corelib.Logger.Level.Debug)
     return b
 
 

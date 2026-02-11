@@ -1,6 +1,6 @@
 # accessors.py
 #
-# Copyright 2022-2024 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2022-2026 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -474,8 +474,7 @@ class PeripheralAccessor:
     def signal(self):
         """Getter for the peripheral signal (or None if not used)
         """
-        ctl_id = _corelib.str_to_id(self._per.ctl_id)
-        ok, d = self._probeIO.probe.device().ctlreq(ctl_id, _corelib.CTLREQ_GET_SIGNAL)
+        ok, d = self._probeIO.probe.device().ctlreq(self._per.ctl_id, _corelib.CTLREQ_GET_SIGNAL)
         if ok:
             return d.data.as_ptr(_corelib.Signal)
         else:

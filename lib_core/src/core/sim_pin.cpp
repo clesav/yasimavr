@@ -1,7 +1,7 @@
 /*
  * sim_pin.cpp
  *
- *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -269,7 +269,7 @@ struct PinManager::drv_entry_t {
         if (current_mux[pin_index])
             return mux_configs.at(current_mux[pin_index])[pin_index];
         else
-            return 0;
+            return pin_id_t();
     }
 
     inline PinDriver::pin_index_t pin_count() const
@@ -359,8 +359,8 @@ bool PinManager::add_mux_config(ctl_id_t drv_id, const std::vector<pin_id_t>& pi
 PinManager::mux_id_t PinManager::current_mux(ctl_id_t drv_id, PinDriver::pin_index_t pin_index) const
 {
     auto it = m_drivers.find(drv_id);
-    if (it == m_drivers.end()) return 0;
-    if (pin_index >= it->second->pin_count()) return 0;
+    if (it == m_drivers.end()) return mux_id_t();
+    if (pin_index >= it->second->pin_count()) return mux_id_t();
     return it->second->current_mux[pin_index];
 }
 
@@ -375,7 +375,7 @@ std::vector<pin_id_t> PinManager::current_mux_pins(ctl_id_t drv_id) const
     if (it == m_drivers.end()) return std::vector<pin_id_t>();
     drv_entry_t* drv_entry = it->second;
 
-    std::vector<pin_id_t> pin_ids = std::vector<pin_id_t>(drv_entry->pin_count(), 0);
+    std::vector<pin_id_t> pin_ids = std::vector<pin_id_t>(drv_entry->pin_count(), "");
     for (PinDriver::pin_index_t pin_index = 0; pin_index < drv_entry->pin_count(); ++pin_index)
         pin_ids[pin_index] = drv_entry->pin_id(pin_index);
 
@@ -536,7 +536,7 @@ void PinManager::notify_digital_state(pin_id_t pin_id, bool state)
 void PinManager::unregister_driver(PinDriver& drv)
 {
     drv_entry_t* drv_entry = m_drivers.at(drv.m_id);
-    set_current_mux(drv.m_id, 0);
+    set_current_mux(drv.m_id, mux_id_t());
     m_drivers.erase(drv.m_id);
     delete drv_entry;
 

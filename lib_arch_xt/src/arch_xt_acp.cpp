@@ -1,7 +1,7 @@
 /*
  * arch_xt_acp.cpp
  *
- *  Copyright 2022-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -109,7 +109,7 @@ bool ArchXT_ACP::register_channels(DataSignalMux& mux, const std::vector<channel
                 if (pin) {
                     mux.add_mux(pin->signal(), Pin::Signal_VoltageChange);
                 } else {
-                    logger().err("Pin %s not found.", id_to_str(channel.pin).c_str());
+                    logger().err("Pin %s not found.", channel.pin.str().c_str());
                     return false;
                 }
             } break;

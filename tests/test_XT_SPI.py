@@ -1,6 +1,6 @@
 # test_XT_SPI.py
 #
-# Copyright 2025 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2025-2026 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -34,6 +34,7 @@ from yasimavr.utils.spi import SPISimpleClient
 @pytest.fixture
 def bench():
     dev_model = load_device('atmega4809')
+    dev_model.logger().set_level(corelib.Logger.Level.Debug)
     b = BenchXT(dev_model, TESTFW_M4809)
     b.pin_clk = b.dev.pins['PA6']
     b.pin_miso = b.dev.pins['PA5']

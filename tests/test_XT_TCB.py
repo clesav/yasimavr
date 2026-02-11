@@ -1,6 +1,6 @@
 # test_XT_TCB.py
 #
-# Copyright 2024-2025 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2024-2026 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -68,7 +68,7 @@ class _BenchTCB(BenchXT):
         self.sig_capt = corelib.Signal()
         self.sig_count = corelib.Signal()
 
-        ok, reqdata = self.dev_model.ctlreq(corelib.str_to_id('TCB0'), archlib.CTLREQ_TCB_GET_EVENT_HOOK)
+        ok, reqdata = self.dev_model.ctlreq('TCB0', archlib.CTLREQ_TCB_GET_EVENT_HOOK)
         if ok:
             hook_capt = reqdata.data.value(corelib.SignalHook)
             self.sig_capt.connect(hook_capt, TMR_CLASS.CaptureHookTag.Event)

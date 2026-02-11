@@ -1,7 +1,7 @@
 /*
  * arch_avr_extint.sip
  *
- *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -38,10 +38,10 @@ struct ArchAVR_ExtIntConfig {
 
         SIP_PYBUFFER pins {
             %GetCode
-                sipPy = sipConvertToArray(sipCpp->pins, "I", 8, 0);
+                sipPy = convert_from_fixed_array<sim_id_t>(sipType_sim_id_t, sipCpp->pins, 8);
             %End
             %SetCode
-                sipErr = import_from_fixedlen_sequence(sipAPI_arch_avr, sipCpp->pins, "I", 8, sipPy);
+                sipErr = convert_to_fixed_array<sim_id_t>(sipType_sim_id_t, sipCpp->pins, 8, sipPy);
             %End
         };
     };

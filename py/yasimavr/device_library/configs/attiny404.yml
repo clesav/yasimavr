@@ -1,6 +1,6 @@
 # YAML configuration file for attiny404 variant
 #
-# Copyright 2024-2025 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2024-2026 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -99,27 +99,22 @@ peripherals:
     CPUINT:
         file: ArchXT_controllers.yml
         base: 0x0110
-        ctl_id: INTR
 
     SLPCTRL:
         file: ArchXT_controllers.yml
         base: 0x0050
-        ctl_id: SLP
 
     RSTCTRL:
         file: ArchXT_controllers.yml
         base: 0x0040
-        ctl_id: RST
 
     CLKCTRL:
         file: ArchXT_controllers.yml
         base: 0x0060
-        ctl_id: CLK
 
     NVMCTRL:
         file: ArchXT_controllers.yml
         base: 0x1000
-        ctl_id: NVM
         config:
            iv_eeready: NVMCTRL_EE
 
@@ -130,7 +125,6 @@ peripherals:
         class: PORT
         file: ArchXT_interfaces.yml
         base: 0x0400
-        ctl_id: IOGA
         config:
             reg_base_port: 0x0400
             reg_base_vport: 0x0000
@@ -140,7 +134,6 @@ peripherals:
         class: PORT
         file: ArchXT_interfaces.yml
         base: 0x0420
-        ctl_id: IOGB
         config:
             reg_base_port: 0x0420
             reg_base_vport: 0x0004
@@ -219,7 +212,6 @@ peripherals:
         class: USART
         file: ArchXT_interfaces.yml
         base: 0x0800
-        ctl_id: UAX0
         config:
             iv_rxc: USART0_RXC
             iv_txc: USART0_TXC
@@ -245,18 +237,15 @@ peripherals:
         class: PORTMUX_tiny0
         file: ArchXT_interfaces.yml
         base: 0x0200
-        ctl_id: IOMX
 
     FUSES:
         file: ArchXT_controllers.yml
         base: 0x1280
-        ctl_id: FUSE
 
     USERROW:
         class: USERROW_32
         file: ArchXT_controllers.yml
         base: 0x1300
-        ctl_id: UROW
 
 iomux:
     TCA0:

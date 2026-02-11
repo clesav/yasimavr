@@ -202,36 +202,6 @@ regbit_compound_t& regbit_compound_t::operator=(const regbit_compound_t& other)
 
 //=======================================================================================
 
-std::string YASIMAVR_QUALIFIED_NAME(id_to_str)(sim_id_t id)
-{
-    char buf[5];
-    buf[0] = id & 0xFF;
-    buf[1] = (id >> 8) & 0xFF;
-    buf[2] = (id >> 16) & 0xFF;
-    buf[3] = (id >> 24) & 0xFF;
-    buf[4] = 0;
-    return std::string(buf);
-}
-
-sim_id_t YASIMAVR_QUALIFIED_NAME(str_to_id)(const char* s)
-{
-    //Here we use the fact that strncpy pads the destination buffer
-    //with null chars if the source string is shorter than 4.
-    //That gives us a unique 32-bits ID even for a short name.
-    char sid[5];
-    strncpy(sid, s, 4);
-    return sid[0] | (sid[1] << 8) | (sid[2] << 16) | (sid[3] << 24);
-
-}
-
-sim_id_t YASIMAVR_QUALIFIED_NAME(str_to_id)(const std::string& s)
-{
-    return str_to_id(s.c_str());
-}
-
-
-//=======================================================================================
-
 vardata_t::vardata_t() : m_type(Invalid) {}
 vardata_t::vardata_t(void* p_) : m_type(Pointer), p(p_) {}
 vardata_t::vardata_t(const char* s_) : m_type(String), s(s_) {}
@@ -376,4 +346,26 @@ bool vardata_t::operator==(const vardata_t& v) const
 bool vardata_t::operator!=(const vardata_t& v) const
 {
     return !(*this == v);
+}
+
+//=======================================================================================
+
+std::string sim_id_t::str() const
+{
+    //Count the characters i.e. number of non-zero bytes
+    int n = 0;
+    uint64_t id = m_id;
+    while ((id & 0xFF) && n++ < 8) id >>= 8;
+
+    //copy the characters in reverse order to the char array
+    char buf[9];
+    id = m_id;
+    for (int i = n - 1; i >= 0; --i) {
+        buf[i] = id & 0xFF;
+        id >>= 8;
+    }
+    
+    //Set the null-ending bytes and convert to std::string
+    buf[n] = 0;
+    return std::string(buf);
 }

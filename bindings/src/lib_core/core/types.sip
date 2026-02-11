@@ -215,17 +215,6 @@ public:
 };
 
 
-typedef unsigned long sim_id_t;
-typedef sim_id_t ctl_id_t;
-
-const char* id_to_str(sim_id_t);
-%MethodCode
-    sipRes = id_to_str(a0).c_str();
-%End
-
-sim_id_t str_to_id(const char*);
-
-
 class vardata_t {
 %TypeHeaderCode
 #include "core/sim_types.h"
@@ -406,3 +395,71 @@ public:
     %End
 
 };
+
+
+//=======================================================================================
+
+class sim_id_t {
+%TypeHeaderCode
+#include "core/sim_types.h"
+%End
+
+public:
+
+    sim_id_t();
+    sim_id_t(uint64_t);
+    sim_id_t(const char*);
+    sim_id_t(const sim_id_t&);
+
+    std::string str() const;
+
+    const char* __repr__() const;
+    %MethodCode
+        if (*sipCpp)
+            return PyUnicode_FromFormat("[%s]", sipCpp->str().c_str());
+        else
+            return PyUnicode_FromString("INVALID_ID");
+    %End
+
+    bool __eq__(const sim_id_t&) const;
+    sim_id_t __add__(char c) const;
+    sim_id_t __iadd__(char c);
+
+//Ensures a seamless conversion from a Python integer or a string
+%ConvertToTypeCode
+    //Type check : we can convert from either a wrapped sim_id_t, a string or an integer
+    if (sipIsErr == NULL)
+        return PyObject_TypeCheck(sipPy, sipTypeAsPyTypeObject(sipType_sim_id_t)) ||
+               PyLong_Check(sipPy) ||
+               PyUnicode_Check(sipPy);
+
+    //Conversion from Python integer
+    if (PyLong_Check(sipPy)) {
+        *sipCppPtr = new sim_id_t(PyLong_AsUnsignedLongLong(sipPy));
+    }
+
+    //Conversion from a string, that is encoded to ASCII first
+    else if (PyUnicode_Check(sipPy)) {
+        PyObject* py_ascii = PyUnicode_AsASCIIString(sipPy);
+        if (!py_ascii) {
+            *sipIsErr = 1;
+        } else {
+            char* s = PyBytes_AsString(py_ascii);
+            *sipCppPtr = new sim_id_t(s);
+            Py_DECREF(py_ascii);
+        }
+    }
+
+    else {
+        //Wrapped sim_id_t, make a C++ copy of it
+        sim_id_t* wrappedObj = (sim_id_t*) sipGetAddress((sipSimpleWrapper*) sipPy);
+        *sipCppPtr = new sim_id_t(*wrappedObj);
+    }
+
+    return sipGetState(sipTransferObj);
+%End
+
+};
+
+typedef sim_id_t ctl_id_t;
+

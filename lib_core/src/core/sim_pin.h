@@ -1,7 +1,7 @@
 /*
  * sim_pin.h
  *
- *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -219,7 +219,7 @@ class AVR_CORE_PUBLIC_API PinManager {
 public:
 
     typedef sim_id_t mux_id_t;
-    static const mux_id_t default_mux_id = chr_to_id('D', 'F', 'L', 'T');
+    static constexpr mux_id_t default_mux_id = "DEFAULT";
 
     explicit PinManager(const std::vector<pin_id_t>& pin_ids);
     ~PinManager();

@@ -1,6 +1,6 @@
 # descriptors.py
 #
-# Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -367,7 +367,7 @@ class PeripheralInstanceDescriptor:
     def __init__(self, name, loader, f, device):
         self.name = name
         self.per_class = f.get('class', name)
-        self.ctl_id = f.get('ctl_id', name[:4])
+        self.ctl_id = f.get('ctl_id', name[:8])
         self.reg_base = f.get('base', None)
         self.class_descriptor = loader.load_peripheral(self.per_class, f['file'])
         self.device = device

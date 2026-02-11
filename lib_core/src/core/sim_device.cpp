@@ -1,7 +1,7 @@
 /*
  * sim_device.cpp
  *
- *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -35,7 +35,7 @@ static std::vector<pin_id_t> convert_pin_ids(const std::vector<std::string> pin_
 {
     std::vector<pin_id_t> pin_ids = std::vector<pin_id_t>(pin_names.size());
     for (unsigned int i = 0; i < pin_names.size(); ++i)
-        pin_ids[i] = str_to_id(pin_names[i]);
+        pin_ids[i] = pin_names[i];
     return pin_ids;
 }
 
@@ -51,7 +51,7 @@ Device::Device(Core& core, const DeviceConfiguration& config)
 ,m_frequency(0)
 ,m_sleep_mode(SleepMode::Active)
 ,m_debugger(nullptr)
-,m_logger(chr_to_id('D', 'E', 'V', 0), m_log_handler)
+,m_logger("DEV", m_log_handler)
 ,m_pin_manager(convert_pin_ids(config.pins))
 ,m_cycle_manager(nullptr)
 ,m_reset_flags(0)
@@ -126,11 +126,11 @@ bool Device::init(CycleManager& cycle_manager)
     }
 
     for (auto per : m_peripherals) {
-        const char* per_name = id_to_str(per->id()).c_str();
-        m_logger.dbg("Initialisation of peripheral '%s'", per_name);
+        std::string per_name = per->id().str();
+        m_logger.dbg("Initialisation of peripheral '%s'", per_name.c_str());
         if (!per->init(*this)) {
             m_logger.err("Initialisation of peripheral '%s' of %s failed.",
-                         per_name,
+                         per_name.c_str(),
                          m_config.name);
             return false;
         }
@@ -326,14 +326,10 @@ bool Device::ctlreq(ctl_id_t id, ctlreq_id_t req, ctlreq_data_t* reqdata)
             }
         }
 
-        m_logger.wng("Sending request but peripheral %s not found", id_to_str(id).c_str());
+        std::string per_name = id.str();
+        m_logger.wng("Sending request but peripheral %s not found", per_name.c_str());
         return false;
     }
-}
-
-Peripheral* Device::find_peripheral(const char* name)
-{
-    return find_peripheral(str_to_id(name));
 }
 
 /**
@@ -446,7 +442,8 @@ bool Device::core_ctlreq(ctlreq_id_t req, ctlreq_data_t* reqdata)
 
     else if (req == AVR_CTLREQ_CORE_SHORTING) {
         pin_id_t pin_id = reqdata->data.as_uint();
-        m_logger.err("Pin %s shorted", id_to_str(pin_id).c_str());
+        std::string pin_name = pin_id.str();
+        m_logger.err("Pin %s shorted", pin_name.c_str());
         if (m_options & Option_ResetOnPinShorting) {
             m_reset_flags |= Reset_PowerOn;
             m_state = State_Reset;
@@ -505,15 +502,6 @@ bool Device::core_ctlreq(ctlreq_id_t req, ctlreq_data_t* reqdata)
 
 //=======================================================================================
 //Management of device pins
-
-/**
-   Find a device pin with the given name
-   \return the pin if found, or nullptr
- */
-Pin* Device::find_pin(const char* name)
-{
-    return find_pin(str_to_id(name));
-}
 
 /**
    Find a device pin with the given identifier

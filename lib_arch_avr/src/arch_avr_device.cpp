@@ -1,7 +1,7 @@
 /*
  * arch_avr_device.cpp
  *
- *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -211,7 +211,7 @@ flash_addr_t ArchAVR_Device::reset_vector()
 
     //Ask the Fuse Controller for the value of BOOTRST
     //Don't use Device::ctlreq because it logs a warning if no fuse peripheral is attached which is useless log noise here.
-    Peripheral* fuse_per = find_peripheral(chr_to_id('F', 'U', 'S', 'E'));
+    Peripheral* fuse_per = find_peripheral("FUSES");
     if (fuse_per) {
         ctlreq_data_t reqdata = { .index = ArchAVR_Fuses::Fuse_BootRst };
         bool ok = fuse_per->ctlreq(AVR_CTLREQ_FUSE_VALUE, &reqdata);

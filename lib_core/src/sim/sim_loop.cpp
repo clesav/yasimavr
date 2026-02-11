@@ -1,7 +1,7 @@
 /*
  * sim_loop.cpp
  *
- *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -48,7 +48,7 @@ static long long get_timestamp_usecs(time_point origin)
 AbstractSimLoop::AbstractSimLoop(Device& device)
 :m_device(device)
 ,m_state(State_Running)
-,m_logger(chr_to_id('S', 'M', 'L', 'P'))
+,m_logger("SIMLOOP")
 {
     m_logger.set_parent(&m_device.logger());
     m_device.init(m_cycle_manager);

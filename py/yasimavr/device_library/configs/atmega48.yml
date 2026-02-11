@@ -1,6 +1,6 @@
 # YAML configuration file for atmega48 variant
 #
-# Copyright 2023-2025 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2023-2026 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -104,24 +104,19 @@ peripherals:
 
     CPUINT:
         file: mega48-88-168-328_controllers.yml
-        ctl_id: INTR
 
     RSTCTRL:
         file: avr_controllers.yml
-        ctl_id: RST
 
     SLPCTRL:
         file: mega48-88-168-328_controllers.yml
-        ctl_id: SLP
 
     FUSES:
         class: FUSES_48
         file: mega48-88-168-328_controllers.yml
-        ctl_id: FUSE
 
     NVMCTRL:
         file: mega48-88-168-328_controllers.yml
-        ctl_id: NVM
         config:
             iv_spm_ready: SPM_READY
             iv_ee_ready: EE_READY
@@ -133,23 +128,19 @@ peripherals:
         class: PORT
         file: mega48-88-168-328_interfaces.yml
         base: 0x03
-        ctl_id: IOGB
 
     PORTC:
         class: PORT
         file: mega48-88-168-328_interfaces.yml
         base: 0x06
-        ctl_id: IOGC
 
     PORTD:
         class: PORT
         file: mega48-88-168-328_interfaces.yml
         base: 0x09
-        ctl_id: IOGD
 
     EXTINT:
         file: mega48-88-168-328_interfaces.yml
-        ctl_id: EINT
 
     TC0:
         file: avr_timers.yml
@@ -204,7 +195,7 @@ peripherals:
 
     USART:
         file: mega48-88-168-328_interfaces.yml
-        ctl_id: UAX0
+        ctl_id: USART0
 
     SPI:
        file: mega48-88-168-328_interfaces.yml

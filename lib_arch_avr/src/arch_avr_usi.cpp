@@ -1,7 +1,7 @@
 /*
  * arch_avr_usi.cpp
  *
- *  Copyright 2025 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2025-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -153,7 +153,7 @@ void ArchAVR_USI::_PinDriver::digital_state_changed(pin_index_t pin_index, bool 
 //=======================================================================================
 
 ArchAVR_USI::ArchAVR_USI(const ArchAVR_USIConfig& config)
-:Peripheral(chr_to_id('U', 'S', 'I', '\0'))
+:Peripheral("USI")
 ,m_config(config)
 ,m_clk_mode(Clock_Strobe)
 ,m_wire_mode(Wire_Disabled)

@@ -1,7 +1,7 @@
 /*
  * device.sip
  *
- *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -139,7 +139,7 @@ public:
             d = new ctlreq_data_t();
             transferObj = Py_None;
         }
-        bool status = sipCpp->ctlreq(a0, a1, d);
+        bool status = sipCpp->ctlreq(*a0, a1, d);
         sipRes = sipBuildResult(0, "(bD)", status, d, sipType_ctlreq_data_t, transferObj);
     %End
 
