@@ -29,6 +29,7 @@
 #include <string>
 #include <vector>
 #include <span>
+#include <climits>
 
 
 YASIMAVR_BEGIN_NAMESPACE
@@ -287,76 +288,122 @@ class AVR_CORE_PUBLIC_API vardata_t {
 
 public:
 
+    typedef std::exception bad_type;
+
     enum Type {
         Invalid,
         Pointer,
         Double,
         Uinteger,
         Integer,
-        String,
         Bytes
     };
 
-    vardata_t();
+    constexpr vardata_t() : t(Invalid), i(0) {}
 
-    vardata_t(double d);
-    inline vardata_t(unsigned char u) : vardata_t((unsigned long long) u) {}
-    inline vardata_t(unsigned short u) : vardata_t((unsigned long long) u) {}
-    inline vardata_t(unsigned int u) : vardata_t((unsigned long long) u) {}
-    inline vardata_t(unsigned long u) : vardata_t((unsigned long long) u) {}
-    vardata_t(unsigned long long u);
-    inline vardata_t(signed char i) : vardata_t((long long) i) {}
-    inline vardata_t(short i) : vardata_t((long long) i) {}
-    inline vardata_t(int i) : vardata_t((long long) i) {}
-    inline vardata_t(long i) : vardata_t((long long) i) {}
-    vardata_t(long long i);
-    vardata_t(void* p);
-    vardata_t(const char* s);
-    vardata_t(const bytes_view_t& b);
-    vardata_t(const vardata_t& v);
+    template<typename T>
+    constexpr vardata_t(T* p_) : t(Pointer), p(const_cast<std::remove_cv_t<T>*>(p_)) {}
 
-    inline Type type() const
+    constexpr vardata_t(double d_) : t(Double), d(d_) {}
+
+    constexpr vardata_t(unsigned char u_) : vardata_t((unsigned long long) u_) {}
+    constexpr vardata_t(unsigned short u_) : vardata_t((unsigned long long) u_) {}
+    constexpr vardata_t(unsigned int u_) : vardata_t((unsigned long long) u_) {}
+    constexpr vardata_t(unsigned long u_) : vardata_t((unsigned long long) u_) {}
+    constexpr vardata_t(unsigned long long u_) : t(Uinteger), u(u_) {}
+
+    constexpr vardata_t(signed char i_) : vardata_t((long long) i_) {}
+    constexpr vardata_t(short i_) : vardata_t((long long) i_) {}
+    constexpr vardata_t(int i_) : vardata_t((long long) i_) {}
+    constexpr vardata_t(long i_) : vardata_t((long long) i_) {}
+    constexpr vardata_t(long long i_) : t(Integer), i(i_) {}
+
+    constexpr vardata_t(const bytes_view_t& b_) : t(Bytes), b(b_) {}
+
+    constexpr vardata_t(const vardata_t&) = default;
+    constexpr vardata_t(vardata_t&&) = default;
+
+    constexpr Type type() const { return t; }
+
+    template<typename T>
+    constexpr T* as_ptr() const
     {
-        return m_type;
+        if (t != Pointer)
+            throw bad_type();
+        return reinterpret_cast<T*>(p);
     }
 
-    void* as_ptr() const;
-    const char* as_str() const;
-    double as_double() const;
-    unsigned long long as_uint() const;
-    long long as_int() const;
+    constexpr double as_double() const
+    {
+        if (t == Double)
+            return d;
+        else if (t == Uinteger)
+            return u;
+        else if (t == Integer)
+            return i;
+        else
+            throw bad_type();
+    }
 
-    bytes_view_t as_bytes() const;
+    constexpr unsigned long long as_uint() const
+    {
+        if (t == Uinteger)
+            return u;
+        else if (t == Integer && i >= 0)
+            return i;
+        throw bad_type();
+    }
 
-    vardata_t& operator=(void* p);
-    vardata_t& operator=(const char* s);
-    vardata_t& operator=(double d);
-    vardata_t& operator=(const bytes_view_t& b);
-    inline vardata_t& operator=(unsigned char u) {*this = (unsigned long long) u; return *this; }
-    inline vardata_t& operator=(unsigned short u) {*this = (unsigned long long) u; return *this; }
-    inline vardata_t& operator=(unsigned int u) {*this = (unsigned long long) u; return *this; }
-    inline vardata_t& operator=(unsigned long u) {*this = (unsigned long long) u; return *this; }
-    vardata_t& operator=(unsigned long long u);
-    inline vardata_t& operator=(signed char i) {*this = (long long) i; return *this; }
-    inline vardata_t& operator=(short i) {*this = (long long) i; return *this; }
-    inline vardata_t& operator=(int i) {*this = (long long) i; return *this; }
-    inline vardata_t& operator=(long i) {*this = (long long) i; return *this; }
-    vardata_t& operator=(long long i);
-    vardata_t& operator=(const vardata_t& v);
+    constexpr long long as_int() const
+    {
+        if (t == Integer)
+            return i;
+        else if (t == Uinteger && u <= LLONG_MAX)
+            return u;
+        throw bad_type();
+    }
 
-    bool operator==(const vardata_t& v) const;
-    bool operator!=(const vardata_t& v) const;
+    constexpr bytes_view_t as_bytes() const
+    {
+        if (t != Bytes)
+            throw bad_type();
+        return b;
+    }
+
+    template<typename T>
+    constexpr vardata_t& operator=(T* p_) { return (*this = vardata_t(p_)); }
+
+    constexpr vardata_t& operator=(double d_) { return (*this = vardata_t(d_)); }
+
+    constexpr vardata_t& operator=(unsigned char u_) { return (*this = (unsigned long long) u_); }
+    constexpr vardata_t& operator=(unsigned short u_) { return (*this = (unsigned long long) u_); }
+    constexpr vardata_t& operator=(unsigned int u_) { return (*this = (unsigned long long) u_); }
+    constexpr vardata_t& operator=(unsigned long u_) { return (*this = (unsigned long long) u_); }
+    constexpr vardata_t& operator=(unsigned long long u_) { return (*this = vardata_t(u_)); }
+
+    constexpr vardata_t& operator=(signed char i_) { return (*this = (long long) i_); }
+    constexpr vardata_t& operator=(short i_) { return (*this = (long long) i_); }
+    constexpr vardata_t& operator=(int i_) { return (*this = (long long) i_); }
+    constexpr vardata_t& operator=(long i_) { return (*this = (long long) i_); }
+    constexpr vardata_t& operator=(long long i_) { return (*this = vardata_t(i_)); }
+
+    constexpr vardata_t& operator=(const bytes_view_t& b_) { return (*this = vardata_t(b_)); }
+
+    constexpr vardata_t& operator=(const vardata_t&) = default;
+    constexpr vardata_t& operator=(vardata_t&&) = default;
+
+    bool operator==(const vardata_t& other) const;
+    inline bool operator!=(const vardata_t& other) const { return !(*this == other); }
 
 private:
 
-    Type m_type;
+    Type t;
 
     union {
         void* p;
         double d;
-        unsigned long long u;
         long long i;
-        const char* s;
+        unsigned long long u;
         bytes_view_t b;
     };
 
@@ -384,7 +431,7 @@ public:
     constexpr sim_id_t& operator=(const std::string& s) { m_id = strtoid(s.c_str()); return *this; }
     constexpr sim_id_t& operator=(const sim_id_t&) = default;
 
-    inline operator vardata_t() const { return vardata_t(m_id); }
+    constexpr operator vardata_t() const { return vardata_t(m_id); }
 
     std::string str() const;
 

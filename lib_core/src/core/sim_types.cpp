@@ -202,151 +202,26 @@ regbit_compound_t& regbit_compound_t::operator=(const regbit_compound_t& other)
 
 //=======================================================================================
 
-vardata_t::vardata_t() : m_type(Invalid) {}
-vardata_t::vardata_t(void* p_) : m_type(Pointer), p(p_) {}
-vardata_t::vardata_t(const char* s_) : m_type(String), s(s_) {}
-vardata_t::vardata_t(double d_) : m_type(Double), d(d_) {}
-vardata_t::vardata_t(unsigned long long u_) : m_type(Uinteger), u(u_) {}
-vardata_t::vardata_t(long long i_) : m_type(Integer), i(i_) {}
-vardata_t::vardata_t(const bytes_view_t& b_) : m_type(Bytes), b(b_) {}
-vardata_t::vardata_t(const vardata_t& v) { *this = v; }
-
-void* vardata_t::as_ptr() const
-{
-    return (m_type == Pointer) ? p : nullptr;
-}
-
-const char* vardata_t::as_str() const
-{
-    return (m_type == String) ? s : "";
-}
-
-double vardata_t::as_double() const
-{
-    if (m_type == Double)
-        return d;
-    else if (m_type == Uinteger)
-        return u;
-    else if (m_type == Integer)
-        return i;
-    else
-        return 0.0;
-}
-
-unsigned long long vardata_t::as_uint() const
-{
-    if (m_type == Uinteger)
-        return u;
-    else if (m_type == Integer && i >= 0)
-        return i;
-    else
-        return 0;
-}
-
-long long vardata_t::as_int() const
-{
-    if (m_type == Integer)
-        return i;
-    else if (m_type == Uinteger && u <= LLONG_MAX)
-        return u;
-    else
-        return 0;
-}
-
-bytes_view_t vardata_t::as_bytes() const
-{
-    return (m_type == Bytes) ? b : bytes_view_t();
-}
-
-vardata_t& vardata_t::operator=(void* p_)
-{
-    m_type = Pointer;
-    p = p_;
-    return *this;
-}
-
-vardata_t& vardata_t::operator=(const char* s_)
-{
-    m_type = String;
-    s = s_;
-    return *this;
-}
-
-vardata_t& vardata_t::operator=(double d_)
-{
-    m_type = Double;
-    d = d_;
-    return *this;
-}
-
-vardata_t& vardata_t::operator=(const bytes_view_t& b_)
-{
-    m_type = Bytes;
-    b = b_;
-    return *this;
-}
-
-vardata_t& vardata_t::operator=(unsigned long long u_)
-{
-    m_type = Uinteger;
-    u = u_;
-    return *this;
-}
-
-vardata_t& vardata_t::operator=(long long i_)
-{
-    m_type = Integer;
-    i = i_;
-    return *this;
-}
-
-vardata_t& vardata_t::operator=(const vardata_t& v)
-{
-    m_type = v.m_type;
-    switch (m_type) {
-    case Pointer:
-        p = v.p; break;
-    case String:
-        s = v.s; break;
-    case Double:
-        d = v.d; break;
-    case Uinteger:
-        u = v.u; break;
-    case Integer:
-        i = v.i; break;
-    case Bytes:
-        b = v.b; break;
-    default: break;
-    }
-    return *this;
-}
-
 bool vardata_t::operator==(const vardata_t& v) const
 {
-    switch (m_type) {
+    switch (t) {
         case Invalid:
-            return v.m_type == Invalid;
+            return v.t == Invalid;
         case Pointer:
-            return v.m_type == Pointer && p == v.p;
-        case String:
-            return v.m_type == String && !strcmp(s, v.s);
+            return v.t == Pointer && p == v.p;
         case Double:
-            return v.m_type == Double && d == v.d;
+            return (v.t == Double || v.t == Uinteger || v.t == Integer) && d == v.as_double();
         case Uinteger:
-            return (v.m_type == Uinteger || v.m_type == Integer) && u == v.as_uint();
+            return (v.t == Uinteger || v.t == Integer) && u == v.as_uint();
         case Integer:
-            return (v.m_type == Uinteger || v.m_type == Integer) && i == v.as_int();
+            return (v.t == Uinteger || v.t == Integer) && i == v.as_int();
         case Bytes:
-            return v.m_type == Bytes && std::equal(b.begin(), b.end(), v.b.begin());
+            return v.t == Bytes && std::equal(b.begin(), b.end(), v.b.begin());
         default:
             return false;
     }
 }
 
-bool vardata_t::operator!=(const vardata_t& v) const
-{
-    return !(*this == v);
-}
 
 //=======================================================================================
 
@@ -364,7 +239,7 @@ std::string sim_id_t::str() const
         buf[i] = id & 0xFF;
         id >>= 8;
     }
-    
+
     //Set the null-ending bytes and convert to std::string
     buf[n] = 0;
     return std::string(buf);

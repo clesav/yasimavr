@@ -1,7 +1,7 @@
 /*
  * arch_xt_timer_a.cpp
  *
- *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -308,7 +308,7 @@ bool ArchXT_TimerA::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
         return true;
     }
     else if (req == AVR_CTLREQ_TCA_REGISTER_TCB) {
-        PrescaledTimer* t = reinterpret_cast<PrescaledTimer*>(data->data.as_ptr());
+        PrescaledTimer* t = data->data.as_ptr<PrescaledTimer>();
         if (data->index)
             m_timer.register_chained_timer(*t);
         else

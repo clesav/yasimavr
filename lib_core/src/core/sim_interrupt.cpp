@@ -1,7 +1,7 @@
 /*
  * sim_interrupt.cpp
  *
- *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -72,7 +72,7 @@ bool InterruptController::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
         }
         else {
 
-            InterruptHandler* t = reinterpret_cast<InterruptHandler*>(data->data.as_ptr());
+            InterruptHandler* t = data->data.as_ptr<InterruptHandler>();
             if (t) {
                 m_interrupts[vector].used = true;
                 m_interrupts[vector].handler = t;

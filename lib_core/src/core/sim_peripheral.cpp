@@ -206,7 +206,7 @@ Signal* Peripheral::get_signal(ctl_id_t ctl_id) const
         ctlreq_data_t d;
         bool status = m_device->ctlreq(ctl_id, AVR_CTLREQ_GET_SIGNAL, &d);
         if (status)
-            return reinterpret_cast<Signal*>(d.data.as_ptr());
+            return d.data.as_ptr<Signal>();
     }
     return nullptr;
 }

@@ -48,7 +48,7 @@ bool ArchXT_USERROW::init(Device& device)
     ctlreq_data_t req = { .index = ArchXT_Core::NVM_USERROW };
     if (!device.ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_NVM, &req))
         return false;
-    m_userrow = reinterpret_cast<NonVolatileMemory*>(req.data.as_ptr());
+    m_userrow = req.data.as_ptr<NonVolatileMemory>();
 
     //Allocate a register for each byte of the userrow block
     //And initialise it with the value contained in the userrow block
@@ -121,7 +121,7 @@ bool ArchXT_Fuses::init(Device& device)
     ctlreq_data_t req = { .index = ArchXT_Core::NVM_Fuses };
     if (!device.ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_NVM, &req))
         return false;
-    m_fuses = reinterpret_cast<NonVolatileMemory*>(req.data.as_ptr());
+    m_fuses = req.data.as_ptr<NonVolatileMemory>();
 
     //Allocate a register in read-only access for each fuse
     for (unsigned int i = 0; i < sizeof(FUSE_t); ++i)
@@ -130,7 +130,7 @@ bool ArchXT_Fuses::init(Device& device)
     //Obtain the pointer to the flash section manager
     if (!device.ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_SECTIONS, &req))
         return false;
-    m_section_manager = reinterpret_cast<MemorySectionManager*>(req.data.as_ptr());
+    m_section_manager = req.data.as_ptr<MemorySectionManager>();
 
     return status;
 }
@@ -272,7 +272,7 @@ bool ArchXT_NVM::init(Device& device)
     ctlreq_data_t req;
     if (!device.ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_SECTIONS, &req))
         return false;
-    m_section_manager = reinterpret_cast<MemorySectionManager*>(req.data.as_ptr());
+    m_section_manager = req.data.as_ptr<MemorySectionManager>();
 
     return status;
 }
@@ -295,7 +295,7 @@ bool ArchXT_NVM::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
     //NVM request from the core when writing to a data space
     //location mapped to one of the NVM blocks
     if (req == AVR_CTLREQ_NVM_REQUEST) {
-        NVM_request_t* nvm_req = reinterpret_cast<NVM_request_t*>(data->data.as_ptr());
+        NVM_request_t* nvm_req = data->data.as_ptr<NVM_request_t>();
 
         //Only process write requests
         if (!nvm_req->kind) {
@@ -371,7 +371,7 @@ NonVolatileMemory* ArchXT_NVM::get_memory(int nvm_index)
     ctlreq_data_t req = { .index = nvm_index };
     if (!device()->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_NVM, &req))
         return nullptr;
-    return reinterpret_cast<NonVolatileMemory*>(req.data.as_ptr());
+    return req.data.as_ptr<NonVolatileMemory>();
 }
 
 
@@ -591,7 +591,7 @@ void ArchXT_NVM::raised(const signal_data_t& sigdata, int)
     //If there is a pending bootlock and the CPU is leaving the boot section
     if (m_pending_bootlock &&
         sigdata.sigid == MemorySectionManager::Signal_Leave &&
-        sigdata.data == ArchXT_Device::Section_Boot) {
+        sigdata.data.as_int() == ArchXT_Device::Section_Boot) {
 
         //Clear all access rights to the boot section
         m_section_manager->set_access_flags(ArchXT_Device::Section_AppCode, ArchXT_Device::Section_Boot, 0x00);
