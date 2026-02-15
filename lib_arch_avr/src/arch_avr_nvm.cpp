@@ -293,7 +293,7 @@ int ArchAVR_NVM::process_NVM_read(NVM_request_t& req)
         if (m_section_manager->address_access_flags(req.addr) & ArchAVR_Device::Access_RWW) {
             //If trying to read the RWW section, halt the core and return -1 so that the
             //same instruction can be processed again when the core is de-halted.
-            ctlreq_data_t d = { .index = 1 };
+            ctlreq_data_t d = { .data = 1 };
             device()->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_HALT, &d);
             m_halt = true;
             return -1;
@@ -493,7 +493,7 @@ void ArchAVR_NVM::spm_timer_next()
     if (m_halt) {
         logger().dbg("Dehalting the CPU");
         //De-halt the core
-        ctlreq_data_t d = { .index = 0 };
+        ctlreq_data_t d = { .data = 0 };
         device()->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_HALT, &d);
         m_halt = false;
     }

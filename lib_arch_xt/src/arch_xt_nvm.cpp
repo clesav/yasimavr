@@ -494,7 +494,7 @@ void ArchXT_NVM::execute_command(Command cmd)
     //to simulate the operation completion delay
     if (delay) {
         if (m_state == State_Halting) {
-            ctlreq_data_t d = { .index = 1 };
+            ctlreq_data_t d = { .data = 1 };
             device()->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_HALT, &d);
         }
 
@@ -578,7 +578,7 @@ void ArchXT_NVM::timer_next()
     m_ee_intflag.set_flag();
     //If the CPU was halted, allow it to resume
     if (m_state == State_Halting) {
-        ctlreq_data_t d = { .index = 0 };
+        ctlreq_data_t d = { .data = 0 };
         device()->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_HALT, &d);
     }
     //Update the state

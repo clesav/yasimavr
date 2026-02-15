@@ -77,7 +77,7 @@ def _send_SPM_request(dev_model, addr, data):
     nvm_req.data = data
     nvm_req.result = 0
     ctlreq = corelib.ctlreq_data_t()
-    ctlreq.data.set(nvm_req)
+    ctlreq.data = corelib.vardata_t(nvm_req)
     dev_model.ctlreq(corelib.IOCTL_NVM, corelib.CTLREQ_NVM_REQUEST, ctlreq)
     return nvm_req
 
