@@ -215,6 +215,8 @@ public:
 };
 
 
+//=======================================================================================
+
 class vardata_t {
 %TypeHeaderCode
 #include "core/sim_types.h"
@@ -240,9 +242,6 @@ void fill_vardata_with_pyobj(vardata_t* d, PyObject* obj, PyObject** refObj)
         else
             *d = PyLong_AsLongLong(obj);
     }
-    else if (PyUnicode_Check(obj)) {
-        *d = PyUnicode_AsUTF8(obj);
-    }
     else if (PyObject_CheckBuffer(obj)) {
         if (refObj == NULL) {
             PyErr_SetString(PyExc_Exception, "Bytes type for vardata_t not supported here.");
@@ -254,12 +253,24 @@ void fill_vardata_with_pyobj(vardata_t* d, PyObject* obj, PyObject** refObj)
         }
     }
     else {
-        int iserr = 0;
         const sipTypeDef *sipType = sipTypeFromPyTypeObject((PyTypeObject*)(obj->ob_type));
         if (sipType)
-            *d = sipConvertToType(obj, sipType, Py_None, 0, SIP_NULLPTR, &iserr);
+            *d = sipGetAddress((sipSimpleWrapper*) obj);
         else
             *d = obj;
+    }
+}
+
+vardata_t pyobject_as_vardata(PyObject* obj, PyObject** refObj)
+{
+    if (PyObject_TypeCheck(obj, sipTypeAsPyTypeObject(sipType_vardata_t))) {
+        if (refObj != NULL)
+            *refObj = NULL;
+        return *(vardata_t*) sipGetAddress((sipSimpleWrapper*) obj);
+    } else {
+        vardata_t v;
+        fill_vardata_with_pyobj(&v, obj, refObj);
+        return v;
     }
 }
 
@@ -268,7 +279,7 @@ PyObject* vardata_as_pyobject(const vardata_t* v, PyObject* pytype)
     if (v->type() != vardata_t::Pointer)
         return nullptr;
 
-    void* p = v->as_ptr();
+    void* p = v->as_ptr<void>();
     PyObject* res;
     if (p == SIP_NULLPTR) {
         Py_INCREF(Py_None);
@@ -299,12 +310,10 @@ public:
         Double,
         Uinteger,
         Integer,
-        String,
-        Bytes
+        Bytes,
     };
 
     vardata_t();
-    vardata_t(const vardata_t&);
     vardata_t(SIP_PYOBJECT);
     %MethodCode
         sipCpp = new vardata_t();
@@ -316,7 +325,6 @@ public:
 
     vardata_t::Type type() const;
 
-    //void* as_ptr() const;
     SIP_PYOBJECT as_ptr(SIP_PYTYPE = SIP_NULLPTR) const;
     %MethodCode
         sipRes = vardata_as_pyobject(sipCpp, a0);
@@ -324,28 +332,12 @@ public:
             PyErr_SetString(PyExc_ValueError, "Invalid type");
     %End
 
-    const char* as_str() const;
     double as_double() const;
     unsigned long long as_uint() const;
     long long as_int() const;
     SIP_PYOBJECT as_bytes() const /TypeHint="memoryview"/;
     %MethodCode
         sipRes = bytesview_to_pyview(sipCpp->as_bytes());
-    %End
-
-    //vardata_t& operator=(void* p);
-    //vardata_t& operator=(const char* s);
-    //vardata_t& operator=(double d);
-    //vardata_t& operator=(unsigned long long u);
-    //vardata_t& operator=(long long i);
-    void set(SIP_PYOBJECT);
-    %MethodCode
-        PyObject* oldRefObj = sipGetUserObject((const sipSimpleWrapper*) sipSelf);
-        Py_XDECREF(oldRefObj);
-        PyObject* refObj;
-        fill_vardata_with_pyobj(sipCpp, a0, &refObj);
-        if (refObj)
-            sipSetUserObject((sipSimpleWrapper*) sipSelf, refObj);
     %End
 
     SIP_PYOBJECT value(SIP_PYTYPE = SIP_NULLPTR) const;
@@ -357,9 +349,6 @@ public:
             break;
         case vardata_t::Pointer:
             sipRes = vardata_as_pyobject(sipCpp, a0);
-            break;
-        case vardata_t::String:
-            sipRes = PyUnicode_FromString(sipCpp->as_str());
             break;
         case vardata_t::Double:
             sipRes = PyFloat_FromDouble(sipCpp->as_double());
@@ -378,18 +367,16 @@ public:
 
     bool __eq__(SIP_PYOBJECT) const;
     %MethodCode
-        vardata_t v;
         PyObject* refObj;
-        fill_vardata_with_pyobj(&v, a0, &refObj);
+        vardata_t v = pyobject_as_vardata(a0, &refObj);
         sipRes = (*sipCpp == v);
         Py_XDECREF(refObj);
     %End
 
     bool __ne__(SIP_PYOBJECT) const;
     %MethodCode
-        vardata_t v;
         PyObject* refObj;
-        fill_vardata_with_pyobj(&v, a0, &refObj);
+        vardata_t v = pyobject_as_vardata(a0, &refObj);
         sipRes = (*sipCpp != v);
         Py_XDECREF(refObj);
     %End

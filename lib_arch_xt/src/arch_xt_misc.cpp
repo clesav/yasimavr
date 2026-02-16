@@ -118,7 +118,7 @@ bool ArchXT_IntCtrl::init(Device& device)
     ctlreq_data_t req;
     if (!device.ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_SECTIONS, &req))
         return false;
-    m_sections = reinterpret_cast<MemorySectionManager*>(req.data.as_ptr());
+    m_sections = req.data.as_ptr<MemorySectionManager>();
 
     return status;
 }
@@ -401,7 +401,7 @@ void ArchXT_MiscRegCtrl::reset()
 bool ArchXT_MiscRegCtrl::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
 {
     if (req == AVR_CTLREQ_WRITE_SIGROW) {
-        memcpy(m_sigrow, data->data.as_ptr(), SIGROW_MEM_SIZE);
+        memcpy(m_sigrow, data->data.as_ptr<void>(), SIGROW_MEM_SIZE);
         return true;
     }
     return false;

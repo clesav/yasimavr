@@ -53,7 +53,7 @@ bool ArchAVR_IntCtrl::init(Device& device)
     ctlreq_data_t req;
     if (!device.ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_SECTIONS, &req))
         return false;
-    m_sections = reinterpret_cast<MemorySectionManager*>(req.data.as_ptr());
+    m_sections = req.data.as_ptr<MemorySectionManager>();
 
     if (m_sections)
         m_sections->signal().connect(*this);

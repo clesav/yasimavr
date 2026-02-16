@@ -132,7 +132,7 @@ bool ArchAVR_NVM::init(Device& device)
     ctlreq_data_t req;
     if (!device.ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_SECTIONS, &req))
         return false;
-    m_section_manager = reinterpret_cast<MemorySectionManager*>(req.data.as_ptr());
+    m_section_manager = req.data.as_ptr<MemorySectionManager>();
 
     return status;
 }
@@ -162,7 +162,7 @@ bool ArchAVR_NVM::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
 {
     //Read/Write request from the core when executing a LPM or SPM instruction
     if (req == AVR_CTLREQ_NVM_REQUEST) {
-        NVM_request_t* nvm_req = reinterpret_cast<NVM_request_t*>(data->data.as_ptr());
+        NVM_request_t* nvm_req = data->data.as_ptr<NVM_request_t>();
         if (nvm_req->kind)
             nvm_req->result = process_NVM_read(*nvm_req);
         else
@@ -265,7 +265,7 @@ NonVolatileMemory* ArchAVR_NVM::get_nvm(int nvm_index)
     ctlreq_data_t req = { .index = nvm_index };
     if (!device()->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_NVM, &req))
         return nullptr;
-    return reinterpret_cast<NonVolatileMemory*>(req.data.as_ptr());
+    return req.data.as_ptr<NonVolatileMemory>();
 }
 
 
@@ -293,7 +293,7 @@ int ArchAVR_NVM::process_NVM_read(NVM_request_t& req)
         if (m_section_manager->address_access_flags(req.addr) & ArchAVR_Device::Access_RWW) {
             //If trying to read the RWW section, halt the core and return -1 so that the
             //same instruction can be processed again when the core is de-halted.
-            ctlreq_data_t d = { .index = 1 };
+            ctlreq_data_t d = { .data = 1 };
             device()->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_HALT, &d);
             m_halt = true;
             return -1;
@@ -493,7 +493,7 @@ void ArchAVR_NVM::spm_timer_next()
     if (m_halt) {
         logger().dbg("Dehalting the CPU");
         //De-halt the core
-        ctlreq_data_t d = { .index = 0 };
+        ctlreq_data_t d = { .data = 0 };
         device()->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_HALT, &d);
         m_halt = false;
     }
@@ -630,18 +630,18 @@ bool ArchAVR_Fuses::init(Device& device)
     ctlreq_data_t req = { .index = ArchAVR_Core::NVM_Fuses };
     if (!device.ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_NVM, &req))
         return false;
-    m_fuses = reinterpret_cast<NonVolatileMemory*>(req.data.as_ptr());
+    m_fuses = req.data.as_ptr<NonVolatileMemory>();
 
     //Obtain the pointer to the lockbit NVM
     req.index = ArchAVR_Core::NVM_Lockbit;
     if (!device.ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_NVM, &req))
         return false;
-    m_lockbit = reinterpret_cast<NonVolatileMemory*>(req.data.as_ptr());
+    m_lockbit = req.data.as_ptr<NonVolatileMemory>();
 
     //Obtain the pointer to the flash section manager
     if (!device.ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_SECTIONS, &req))
         return false;
-    m_sections = reinterpret_cast<MemorySectionManager*>(req.data.as_ptr());
+    m_sections = req.data.as_ptr<MemorySectionManager>();
 
     return status;
 }
