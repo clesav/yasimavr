@@ -78,130 +78,278 @@ const reg_addr_t INVALID_REGISTER;
 
 #define BITSET(v, b) (((v) >> (b)) & 0x01)
 
-struct regbit_t;
 
-
+//=======================================================================================
 /**
    \brief Bit mask structure for bitwise operations on 8-bits registers
  */
-struct AVR_CORE_PUBLIC_API bitmask_t {
+struct bitmask_t {
 
-    uint8_t bit;
     uint8_t mask;
 
-    explicit bitmask_t(uint8_t b, uint8_t m);
-    explicit bitmask_t(uint8_t b);
-    explicit bitmask_t(const regbit_t& rb);
-    bitmask_t();
-    bitmask_t(const bitmask_t& bm);
+    constexpr bitmask_t(uint8_t m = 0) : mask(m) {}
 
-    bitmask_t& operator=(const bitmask_t& bm);
-    bitmask_t& operator=(const regbit_t& rb);
-
-    /**
-       Extracts the field value from the register value
-     */
-    inline uint8_t extract(uint8_t value) const
+    constexpr uint8_t replace(uint8_t reg, uint8_t value) const
     {
-        return (value & mask) >> bit;
+        return (reg & ~mask) | (value & mask);
     }
 
     /**
-       Performs a bitwise OR between the register value and the field value
+       Performs a bitwise OR between the reg value and the bitmask
      */
-    inline uint8_t set_to(uint8_t reg, uint8_t value = 0xFF) const
+    constexpr uint8_t set_from(uint8_t reg) const
     {
-        return reg | ((mask & value) << bit);
+        return reg | mask;
     }
 
     /**
-       Performs a bitwise NEG-AND between the register value and the field value
+       Performs a bitwise NEG-AND between the reg value and the bitmask
      */
-    inline uint8_t clear_from(uint8_t reg, uint8_t value = 0xFF) const
+    constexpr uint8_t clear_from(uint8_t reg) const
     {
-        return reg & ~((mask & value) << bit);
+        return reg & ~mask;
     }
 
-    /**
-       Replace the field value within the register value
-     */
-    inline uint8_t replace(uint8_t reg, uint8_t value) const
+    constexpr bitmask_t operator|(const bitmask_t& bm) const { return bitmask_t(mask | bm.mask); }
+    constexpr bitmask_t operator&(const bitmask_t& bm) const { return bitmask_t(mask & bm.mask); }
+    constexpr bitmask_t operator^(const bitmask_t& bm) const { return bitmask_t(mask ^ bm.mask); }
+    constexpr bitmask_t operator~() const { return bitmask_t(~mask); }
+    inline bitmask_t& operator|=(const bitmask_t& bm) { mask |= bm.mask; return *this; }
+    inline bitmask_t& operator&=(const bitmask_t& bm) { mask &= bm.mask; return *this; }
+    inline bitmask_t& operator^=(const bitmask_t& bm) { mask ^= bm.mask; return *this; }
+
+    constexpr uint8_t operator&(uint8_t v) const { return mask & v; }
+
+    constexpr unsigned int bitcount() const
     {
-        return (reg & ~mask) | ((value << bit) & mask);
+        unsigned int n = 0;
+        uint8_t m = mask;
+        while (m) {
+            if (m & 1) n++;
+            m >>= 1;
+        }
+        return n;
     }
 
-    /**
-       Returns the number of bits in the field
-     */
-    int bitcount() const;
+};
+
+constexpr uint8_t operator|(uint8_t v, const bitmask_t& m) { return v | m.mask; }
+constexpr uint8_t operator&(uint8_t v, const bitmask_t& m) { return v & m.mask; }
+constexpr uint8_t operator^(uint8_t v, const bitmask_t& m) { return v ^ m.mask; }
+inline uint8_t& operator|=(uint8_t& v, const bitmask_t& m) { v |= m.mask; return v; }
+inline uint8_t& operator&=(uint8_t& v, const bitmask_t& m) { v &= m.mask; return v; }
+inline uint8_t& operator^=(uint8_t& v, const bitmask_t& m) { v ^= m.mask; return v; }
+
+//=======================================================================================
+
+struct regmask_t {
+
+    reg_addr_t addr;
+    bitmask_t mask;
+
+    constexpr regmask_t operator|(const regmask_t& other) const
+    {
+        return (addr == other.addr) ? regmask_t{ addr, mask | other.mask } : regmask_t();
+    }
+
+    constexpr bool operator==(reg_addr_t a) const
+    {
+        return a == addr;
+    }
+
+    constexpr bool operator!=(reg_addr_t a) const
+    {
+        return a != addr;
+    }
+
+};
+
+constexpr bool operator==(reg_addr_t a, const regmask_t& rm)
+{
+    return rm == a;
+}
+
+constexpr bool operator!=(reg_addr_t a, const regmask_t& rm)
+{
+    return rm != a;
+}
+
+
+//=======================================================================================
+
+namespace _type_detail {
+
+class _spec_base_t {
+
+public:
+
+    constexpr _spec_base_t()
+    :m_lsb(0)
+    {}
+
+    constexpr _spec_base_t(uint8_t msb_, uint8_t lsb_)
+    :m_lsb(msb_ < lsb_ ? msb_ : lsb_)
+    {
+        uint8_t msb = lsb_ > msb_ ? lsb_ : msb_;
+        m_mask = bitmask_t((uint8_t)((1 << (msb - m_lsb + 1)) - 1) << m_lsb);
+    }
+
+    constexpr bool valid() const
+    {
+        return !!m_mask.mask;
+    }
+
+    constexpr uint8_t shift_and_mask(uint8_t value) const
+    {
+        return m_mask & (value << m_lsb);
+    }
+
+    constexpr uint8_t extract(uint8_t reg) const
+    {
+        return (m_mask & reg) >> m_lsb;
+    }
+
+    constexpr uint8_t set_from(uint8_t reg) const
+    {
+        return m_mask.set_from(reg);
+    }
+
+    constexpr uint8_t clear_from(uint8_t reg) const
+    {
+        return m_mask.clear_from(reg);
+    }
+
+    constexpr uint8_t replace(uint8_t reg, uint8_t value) const
+    {
+        return m_mask.replace(reg, value << m_lsb);
+    }
+
+    constexpr unsigned int bitcount() const
+    {
+        return m_mask.bitcount();
+    }
+
+    constexpr uint8_t lsb() const
+    {
+        return m_lsb;
+    }
+
+    constexpr uint8_t msb() const
+    {
+        return m_lsb + bitcount() - 1;
+    }
+
+    constexpr operator bitmask_t() const
+    {
+        return m_mask;
+    }
+
+    constexpr uint8_t operator&(uint8_t v) const
+    {
+        return m_mask & v;
+    }
+
+protected:
+
+    bitmask_t m_mask;
+    uint8_t m_lsb;
+
+};
+} //namespace _type_detail
+
+
+//=======================================================================================
+
+class bitspec_t : public _type_detail::_spec_base_t {
+
+public:
+
+    constexpr bitspec_t()
+    :_spec_base_t()
+    {}
+
+    constexpr bitspec_t(uint8_t msb_, uint8_t lsb_)
+    :_spec_base_t(msb_, lsb_)
+    {}
+
+    constexpr explicit bitspec_t(uint8_t bit)
+    :_spec_base_t(bit, bit)
+    {}
+
+    constexpr bitspec_t(const _spec_base_t& spec)
+    :_spec_base_t(spec)
+    {}
+
+    constexpr bitspec_t bit(uint8_t n) const
+    {
+        if (n < bitcount())
+            return bitspec_t(m_lsb + n);
+        else
+            return bitspec_t();
+    }
+
+    constexpr bitmask_t operator|(const bitspec_t& other) const
+    {
+        return m_mask | other.m_mask;
+    }
 
 };
 
 
-/**
-   \brief Representation of a register field or bit position
+//=======================================================================================
 
-   Defined by the I/O register address, a bit position and a mask.
- */
-struct AVR_CORE_PUBLIC_API regbit_t {
+class regbit_t : public _type_detail::_spec_base_t {
+
+public:
 
     reg_addr_t addr;
-    uint8_t bit;
-    uint8_t mask;
 
-    explicit regbit_t(reg_addr_t a, uint8_t b, uint8_t m);
-    explicit regbit_t(reg_addr_t a, uint8_t b);
-    explicit regbit_t(reg_addr_t a, const bitmask_t& bm);
-    explicit regbit_t(reg_addr_t a);
-    regbit_t();
-    regbit_t(const regbit_t& rb);
+    constexpr regbit_t()
+    :_spec_base_t()
+    {}
 
-    regbit_t& operator=(const regbit_t& rb);
+    constexpr explicit regbit_t(reg_addr_t a)
+    :_spec_base_t(7, 0)
+    ,addr(a)
+    {}
 
-    /**
-       Returns the validity of the register address
-     */
-    inline bool valid() const
+    constexpr regbit_t(reg_addr_t a, uint8_t bit)
+    :_spec_base_t(bit, bit)
+    ,addr(a)
+    {}
+
+    constexpr regbit_t(reg_addr_t a, uint8_t msb_, uint8_t lsb_)
+    :_spec_base_t(msb_, lsb_)
+    ,addr(a)
+    {}
+
+    constexpr regbit_t(reg_addr_t a, const bitspec_t& f)
+    :_spec_base_t(f)
+    ,addr(a)
+    {}
+
+    constexpr regbit_t bit(uint8_t n) const
     {
-        return addr.valid();
+        if (n < bitcount())
+            return regbit_t(addr, m_lsb + n);
+        else
+            return regbit_t();
     }
 
-    /**
-       Extracts the field value from the register value
-     */
-    inline uint8_t extract(uint8_t value) const
+    constexpr operator regmask_t() const
     {
-        return (value & mask) >> bit;
+        return { addr, m_mask };
     }
 
-    /**
-       Performs a bitwise OR between the register value and the field value
-     */
-    inline uint8_t set_to(uint8_t reg, uint8_t value = 0xFF) const
+    constexpr bool operator==(reg_addr_t a) const
     {
-        return reg | (mask & (value << bit));
+        return a == addr;
     }
 
-    /**
-       Performs a bitwise NEG-AND between the register value and the field value
-     */
-    inline uint8_t clear_from(uint8_t reg, uint8_t value = 0xFF) const
+    constexpr bool operator!=(reg_addr_t a) const
     {
-        return reg & ~(mask & (value << bit));
+        return a != addr;
     }
-
-    /**
-       Replace the field value within the register value
-     */
-    inline uint8_t replace(uint8_t reg, uint8_t value) const
-    {
-        return (reg & ~mask) | ((value << bit) & mask);
-    }
-
-    /**
-       Returns the number of bits in the field
-     */
-    int bitcount() const;
 
 };
 
@@ -216,70 +364,59 @@ class AVR_CORE_PUBLIC_API regbit_compound_t {
 
 public:
 
-    regbit_compound_t() = default;
-    explicit regbit_compound_t(const regbit_t& rb);
-    explicit regbit_compound_t(const std::vector<regbit_t>& v);
-    regbit_compound_t(const regbit_compound_t& other);
+    constexpr regbit_compound_t() = default;
 
-    ///Adds a regbit piece to the end
-    void add(const regbit_t& rb);
+    constexpr explicit regbit_compound_t(const regbit_t& rb)
+    :m_regbits({rb})
+    {}
+
+    constexpr explicit regbit_compound_t(const std::vector<regbit_t>& v)
+    :m_regbits(v)
+    {}
+
+    constexpr regbit_compound_t(const regbit_compound_t&) = default;
 
     ///Returns a iterator to the beginning of the regbit pieces
-    std::vector<regbit_t>::const_iterator begin() const;
+    constexpr std::vector<regbit_t>::const_iterator begin() const
+    {
+        return m_regbits.begin();
+    }
 
     ///Returns a iterator to the end of the regbit pieces
-    std::vector<regbit_t>::const_iterator end() const;
+    constexpr std::vector<regbit_t>::const_iterator end() const
+    {
+        return m_regbits.end();
+    }
 
     ///Returns the number of pieces
-    size_t size() const;
+    constexpr size_t size() const
+    {
+        return m_regbits.size();
+    }
 
     ///Returns a reference to the specified regbit
-    const regbit_t& operator[](size_t index) const;
+    constexpr const regbit_t& operator[](size_t index) const
+    {
+        return m_regbits[index];
+    }
 
     ///Returns true if the addr matches any of the regbit pieces
     bool addr_match(reg_addr_t addr) const;
 
-    ///Returns a compound value that can be OR's together with
-    uint64_t compound(uint8_t regvalue, size_t index) const;
-
-    ///Extracts a compound value for a specified regbit piece
-    uint8_t extract(uint64_t v, size_t index) const;
-
     ///Returns the number of bits in the field
-    int bitcount() const;
+    unsigned int bitcount() const;
 
     ///Assigns the regbit pieces
     regbit_compound_t& operator=(const std::vector<regbit_t>& v);
 
     ///Assigns the compound
-    regbit_compound_t& operator=(const regbit_compound_t& other);
+    regbit_compound_t& operator=(const regbit_compound_t&) = default;
 
 private:
 
     std::vector<regbit_t> m_regbits;
-    std::vector<int> m_offsets;
 
 };
-
-inline std::vector<regbit_t>::const_iterator regbit_compound_t::begin() const
-{
-    return m_regbits.begin();
-}
-
-inline std::vector<regbit_t>::const_iterator regbit_compound_t::end() const
-{
-    return m_regbits.end();
-}
-
-inline size_t regbit_compound_t::size() const
-{
-    return m_regbits.size();
-}
-
-inline const regbit_t& regbit_compound_t::operator[](size_t index) const
-{
-    return m_regbits[index];
-}
 
 
 //=======================================================================================
