@@ -1,7 +1,7 @@
 /*
  * sim_core.h
  *
- *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -129,7 +129,7 @@ public:
 
     //Peripheral access to the I/O registers
     uint8_t ioctl_read_ioreg(reg_addr_t addr);
-    void ioctl_write_ioreg(const regbit_t& rb, uint8_t value);
+    void ioctl_write_ioreg(reg_addr_t addr, bitmask_t bm, uint8_t value);
 
     void start_interrupt_inhibit(unsigned int count);
 

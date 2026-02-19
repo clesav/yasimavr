@@ -1,7 +1,7 @@
 /*
  * sim_interrupt.h
  *
- *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -267,14 +267,14 @@ public:
     explicit InterruptFlag(bool clear_on_ack = false);
     InterruptFlag(const InterruptFlag& other);
 
-    bool init(Device& device, const regbit_t& rb_enable, const regbit_t& rb_flag, int_vect_t vector);
+    bool init(Device& device, const regmask_t& rb_enable, const regmask_t& rb_flag, int_vect_t vector);
 
     void set_clear_on_ack(bool clear_on_ack);
 
     int update_from_ioreg();
 
-    bool set_flag(uint8_t mask = 0xFF);
-    bool clear_flag(uint8_t mask = 0xFF);
+    bool set_flag(bitmask_t mask = 0xFF);
+    bool clear_flag(bitmask_t mask = 0xFF);
 
     bool raised() const;
 
@@ -284,8 +284,8 @@ public:
 private:
 
     bool m_clr_on_ack;
-    regbit_t m_rb_enable;
-    regbit_t m_rb_flag;
+    regmask_t m_rm_enable;
+    regmask_t m_rm_flag;
     int_vect_t m_vector;
 
     IO_Register* m_flag_reg;
