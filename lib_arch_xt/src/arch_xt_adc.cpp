@@ -1,7 +1,7 @@
 /*
  * arch_xt_adc.cpp
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -134,7 +134,7 @@ uint8_t ArchXT_ADC::ioreg_read_handler(reg_addr_t addr, uint8_t value)
 {
     //The STCONV bit is dynamic, reading 1 if a conversion is in progress
     if (addr == REG_ADDR(COMMAND))
-        value = DEF_BITMASK_B(ADC_STCONV).replace(value, (m_state > ADC_Idle ? 1 : 0));
+        value = DEF_BITSPEC_B(ADC_STCONV).replace(value, (m_state > ADC_Idle ? 1 : 0));
 
     return value;
 }

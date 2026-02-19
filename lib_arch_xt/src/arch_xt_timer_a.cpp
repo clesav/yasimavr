@@ -534,8 +534,8 @@ void ArchXT_TimerA::write_ioreg_single(reg_addr_t reg_ofs, const ioreg_write_t& 
         if (TEST_IOREG(CTRLA, TCA_SINGLE_ENABLE)) {
             //If the timer is enabled, the CMPxOV bits are read-only so we restore the old values
             for (int i = 0; i < CFG::CompareChannelCount; ++i) {
-                bitmask_t ov_bm = bitmask_t(index_to_CMPxOV_bit(false, i));
-                write_ioreg(REG_ADDR(CTRLC), ov_bm, ov_bm.extract(data.old));
+                bitspec_t ov_bs = bitspec_t(index_to_CMPxOV_bit(false, i));
+                write_ioreg(REG_ADDR(CTRLC), ov_bs, data.old & ov_bs);
             }
         } else {
             //If the timer is disabled, the CMPxOV bits control the compare outputs.
@@ -634,8 +634,8 @@ void ArchXT_TimerA::write_ioreg_split(reg_addr_t reg_ofs, const ioreg_write_t& d
         if (TEST_IOREG(CTRLA, TCA_SPLIT_ENABLE)) {
             //If the timer is enabled, the CMPxOV bits are read-only so we restore the old values
             for (int i = 0; i < CFG::CompareChannelCount * 2; ++i) {
-                bitmask_t ov_bm = bitmask_t(index_to_CMPxOV_bit(true, i));
-                write_ioreg(REG_ADDR(CTRLC), ov_bm, ov_bm.extract(data.old));
+                bitspec_t ov_bs = bitspec_t(index_to_CMPxOV_bit(true, i));
+                write_ioreg(REG_ADDR(CTRLC), ov_bs, data.old & ov_bs);
             }
         } else {
             //If the timer is disabled, the CMPxOV bits control the compare outputs.

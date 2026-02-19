@@ -1,7 +1,7 @@
 /*
  * arch_xt_port.cpp
  *
- *  Copyright 2022-2025 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -177,8 +177,7 @@ void ArchXT_Port::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
         case PORT_REG_OFS(PIN7CTRL): {
             uint8_t bitnum = addr - PORT_REG_OFS(PIN0CTRL);
             if ((pin_mask() >> bitnum) & 0x01) {
-                bitmask_t rb_isc = DEF_BITMASK_F(PORT_ISC);
-                uint8_t isc = rb_isc.extract(data.value);
+                uint8_t isc = data.value & DEF_BITSPEC_F(PORT_ISC);
 
                 if (isc == PORT_ISC_LEVEL_gc && !test_ioreg(PORT_REG_OFS(IN), bitnum))
                     raise_interrupt(m_config.iv_port);
@@ -248,8 +247,7 @@ void ArchXT_Port::pin_state_changed(uint8_t num, Wire::StateEnum state)
 
     //Read the Input Sense Config field of the pin control register
     uint8_t pin_cfg = read_ioreg(m_config.reg_base_port + 0x10 + num);
-    bitmask_t rb_isc = DEF_BITMASK_F(PORT_ISC);
-    uint8_t isc = rb_isc.extract(pin_cfg);
+    uint8_t isc = pin_cfg & DEF_BITSPEC_F(PORT_ISC);
 
     //If ISC is Input Disabled, we can ignore the change
     if (isc == PORT_ISC_INPUT_DISABLE_gc) return;

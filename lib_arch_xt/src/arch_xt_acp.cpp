@@ -165,7 +165,7 @@ void ArchXT_ACP::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 
     else if (reg_ofs == REG_OFS(MUXCTRLA)) {
         //Update the selection for the positive input
-        uint8_t pos_ch_regval = DEF_BITMASK_F(AC_MUXPOS).extract(data.value);
+        uint8_t pos_ch_regval = DEF_BITSPEC_F(AC_MUXPOS).extract(data.value);
         int pos_ch_ix = find_reg_config<channel_config_t>(m_config.pos_channels, pos_ch_regval);
         if (pos_ch_ix == -1) {
             device()->crash(CRASH_BAD_CTL_IO, "ACP: Invalid positive channel configuration");
@@ -174,7 +174,7 @@ void ArchXT_ACP::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
         m_pos_mux.set_selection(pos_ch_ix);
 
         //Update the selection for the negative input
-        uint8_t neg_ch_regval = DEF_BITMASK_F(AC_MUXNEG).extract(data.value);
+        uint8_t neg_ch_regval = DEF_BITSPEC_F(AC_MUXNEG).extract(data.value);
         int neg_ch_ix = find_reg_config<channel_config_t>(m_config.neg_channels, neg_ch_regval);
         if (neg_ch_ix == -1) {
             device()->crash(CRASH_BAD_CTL_IO, "ACP: Invalid negative channel configuration");
