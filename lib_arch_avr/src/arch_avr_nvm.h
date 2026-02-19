@@ -1,7 +1,7 @@
 /*
  * arch_avr_nvm.h
  *
- *  Copyright 2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2024-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -41,10 +41,10 @@ YASIMAVR_BEGIN_NAMESPACE
 struct ArchAVR_NVMConfig {
 
     reg_addr_t        reg_spm_ctrl;
-    bitmask_t         bm_spm_cmd;
-    bitmask_t         bm_spm_enable;
-    bitmask_t         bm_spm_inten;
-    bitmask_t         bm_spm_rww_busy;
+    bitspec_t         bs_spm_cmd;
+    bitspec_t         bs_spm_enable;
+    bitspec_t         bs_spm_inten;
+    bitspec_t         bs_spm_rww_busy;
 
     regbit_compound_t rbc_ee_addr;
     reg_addr_t        reg_ee_data;
@@ -187,9 +187,9 @@ struct ArchAVR_FusesConfig {
     /// Regbit for the boot reset fuse bit
     regbit_t                         rb_bootrst;
     /// Regbit for the boot part of the lockbits
-    bitmask_t                        bm_bootlockbit;
+    bitspec_t                        bs_bootlockbit;
     /// Regbit for the application part of the lockbits
-    bitmask_t                        bm_applockbit;
+    bitspec_t                        bs_applockbit;
 
     /// Start of NRWW (No Read-While-Write) section, in number of section pages
     flash_addr_t                     nrww_start;
@@ -227,7 +227,7 @@ private:
     MemorySectionManager* m_sections;
 
     void configure_sections();
-    uint8_t read_fuse(const regbit_t& rb) const;
+    uint8_t read_fuse(const regmask_t& rm) const;
 
 };
 

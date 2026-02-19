@@ -1,7 +1,7 @@
 /*
  * arch_avr_twi.h
  *
- *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -40,13 +40,13 @@ struct ArchAVR_TWIConfig {
 
     std::vector<unsigned long> ps_factors;
 
-    reg_addr_t  reg_ctrl;
-    bitmask_t   bm_enable;
-    bitmask_t   bm_start;
-    bitmask_t   bm_stop;
-    bitmask_t   bm_int_enable;
-    bitmask_t   bm_int_flag;
-    bitmask_t   bm_ack_enable;
+    reg_addr_t    reg_ctrl;
+    bitspec_t     bs_enable;
+    bitspec_t     bs_start;
+    bitspec_t     bs_stop;
+    bitspec_t     bs_int_enable;
+    bitspec_t     bs_int_flag;
+    bitspec_t     bs_ack_enable;
 
     reg_addr_t  reg_bitrate;
     regbit_t    rb_status;

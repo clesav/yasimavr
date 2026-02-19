@@ -1,7 +1,7 @@
 /*
  * arch_avr_usart.h
  *
- *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -39,7 +39,7 @@ YASIMAVR_BEGIN_NAMESPACE
 struct ArchAVR_USARTConfig {
 
     regbit_compound_t rbc_rx_data;  ///< Data register address
-	regbit_compound_t rbc_tx_data;
+    regbit_compound_t rbc_tx_data;
 
     regbit_t rb_rx_enable;          ///< RX enable bit
     regbit_t rb_tx_enable;          ///< TX enable bit
@@ -116,8 +116,8 @@ private:
     InterruptFlag m_txe_intflag;
 
     void update_bitrate();
-	void extract_rx_data();
-	void ctrl_signal_raised(const signal_data_t& sigdata, int);
+    void extract_rx_data();
+    void ctrl_signal_raised(const signal_data_t& sigdata, int);
 
 };
 

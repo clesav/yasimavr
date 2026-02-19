@@ -1,7 +1,7 @@
 /*
  * arch_avr_wdt.cpp
  *
- *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -61,7 +61,7 @@ void ArchAVR_WDT::reset()
     ctlreq_data_t reqdata;
     if (device()->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_RESET_FLAG, &reqdata)) {
         if (reqdata.data.as_uint() & Device::Reset_WDT)
-            set_ioreg(m_config.reg_wdt, m_config.bm_reset_enable);
+            set_ioreg(m_config.reg_wdt, m_config.bs_reset_enable);
     }
 
     reschedule_timer();
@@ -84,19 +84,19 @@ bool ArchAVR_WDT::ctlreq(ctlreq_id_t req, ctlreq_data_t*)
 
 void ArchAVR_WDT::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
-    bool chg_enable = m_config.bm_chg_enable.extract(data.value);
-    bool rst_enable = m_config.bm_reset_enable.extract(data.value);
+    bool chg_enable = m_config.bs_chg_enable.extract(data.value);
+    bool rst_enable = m_config.bs_reset_enable.extract(data.value);
 
     //Forces WDE to be set if WDRF is set
     if (!rst_enable && test_ioreg(m_config.rb_reset_flag)) {
         rst_enable = true;
-        set_ioreg(m_config.reg_wdt, m_config.bm_reset_enable);
+        set_ioreg(m_config.reg_wdt, m_config.bs_reset_enable);
     }
 
     if (m_lock_timer.scheduled()) {
         //If the register is unlocked, force WDCE to be set
         if (!chg_enable) {
-            set_ioreg(m_config.reg_wdt, m_config.bm_chg_enable);
+            set_ioreg(m_config.reg_wdt, m_config.bs_chg_enable);
             chg_enable = true;
         }
     } else {
@@ -106,14 +106,14 @@ void ArchAVR_WDT::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
         if (chg_enable && rst_enable)
             device()->cycle_manager()->delay(m_lock_timer, 4);
         //Restore the bit values for WDE and WDP
-        write_ioreg(m_config.reg_wdt, m_config.bm_reset_enable, m_config.bm_reset_enable.extract(data.old));
+        write_ioreg(m_config.reg_wdt, m_config.bs_reset_enable, m_config.bs_reset_enable.extract(data.old));
         for (auto& rb : m_config.rbc_delay)
             write_ioreg(rb, rb.extract(data.old));
     }
 
     //If WDIF is written to 1 by the CPU, we clear it
-    if (m_config.bm_int_flag.extract(data.value))
-        clear_ioreg(m_config.reg_wdt, m_config.bm_int_flag);
+    if (m_config.bs_int_flag.extract(data.value))
+        clear_ioreg(m_config.reg_wdt, m_config.bs_int_flag);
 
     reschedule_timer();
 }
@@ -137,7 +137,7 @@ cycle_count_t ArchAVR_WDT::calculate_timeout_delay()
 
 void ArchAVR_WDT::reschedule_timer()
 {
-    if (test_ioreg(m_config.reg_wdt, m_config.bm_reset_enable) || test_ioreg(m_config.reg_wdt, m_config.bm_int_enable)) {
+    if (test_ioreg(m_config.reg_wdt, m_config.bs_reset_enable) || test_ioreg(m_config.reg_wdt, m_config.bs_int_enable)) {
         cycle_count_t timeout_cycle = calculate_timeout_delay() + m_timer_start_cycle;
         if (timeout_cycle <= device()->cycle())
             timeout_cycle = device()->cycle() + 1;
@@ -157,9 +157,9 @@ cycle_count_t ArchAVR_WDT::wdt_timeout(cycle_count_t when)
 
     //If the interrupt is enabled but not raised yet, raise it.
     //If WDE is also set, restart the timer
-    if (test_ioreg(m_config.reg_wdt, m_config.bm_int_enable) && !test_ioreg(m_config.reg_wdt, m_config.bm_int_flag)) {
+    if (test_ioreg(m_config.reg_wdt, m_config.bs_int_enable) && !test_ioreg(m_config.reg_wdt, m_config.bs_int_flag)) {
         logger().dbg("Raising interrupt");
-        set_ioreg(m_config.reg_wdt, m_config.bm_int_flag);
+        set_ioreg(m_config.reg_wdt, m_config.bs_int_flag);
         raise_interrupt(m_config.iv_wdt);
 
         //Reschedule the timer for the next interrupt/reset
@@ -186,13 +186,13 @@ cycle_count_t ArchAVR_WDT::wdt_timeout(cycle_count_t when)
 void ArchAVR_WDT::interrupt_ack_handler(int_vect_t vector)
 {
     //Datasheet: "Executing the corresponding interrupt vector will clear WDIE and WDIF"
-    clear_ioreg(m_config.reg_wdt, m_config.bm_int_flag);
-    clear_ioreg(m_config.reg_wdt, m_config.bm_int_enable);
+    clear_ioreg(m_config.reg_wdt, m_config.bs_int_flag);
+    clear_ioreg(m_config.reg_wdt, m_config.bs_int_enable);
     reschedule_timer();
 }
 
 
 void ArchAVR_WDT::lock_timeout()
 {
-    clear_ioreg(m_config.reg_wdt, m_config.bm_chg_enable);
+    clear_ioreg(m_config.reg_wdt, m_config.bs_chg_enable);
 }

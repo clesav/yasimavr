@@ -263,7 +263,7 @@ bool ArchAVR_USART::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
 
 uint8_t ArchAVR_USART::ioreg_read_handler(reg_addr_t addr, uint8_t value)
 {
-    if (addr == m_config.rbc_rx_data[0].addr) {
+    if (addr == m_config.rbc_rx_data[0]) {
         m_ctrl->pop_rx();
         extract_rx_data();
         if (!m_ctrl->rx_available())
@@ -277,12 +277,12 @@ uint8_t ArchAVR_USART::ioreg_read_handler(reg_addr_t addr, uint8_t value)
 void ArchAVR_USART::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
     //Writing data to the DATA register trigger a emit.
-    if (addr == m_config.rbc_tx_data[0].addr && test_ioreg(m_config.rb_tx_enable)) {
+    if (addr == m_config.rbc_tx_data[0] && test_ioreg(m_config.rb_tx_enable)) {
         m_txe_intflag.clear_flag();
         m_ctrl->push_tx(read_ioreg(m_config.rbc_tx_data));
     }
 
-    if (addr == m_config.rb_tx_enable.addr) {
+    if (addr == m_config.rb_tx_enable) {
         if (m_config.rb_tx_enable.extract(data.posedge())) {
             m_driver->set_line_enabled(Line_TXD, true);
         }
@@ -297,7 +297,7 @@ void ArchAVR_USART::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& da
     }
 
     //Writing to RXE
-    if (addr == m_config.rb_rx_enable.addr) {
+    if (addr == m_config.rb_rx_enable) {
         bool enabled = m_config.rb_rx_enable.extract(data.value);
         m_driver->set_line_enabled(Line_RXD, enabled);
         m_ctrl->set_rx_enabled(enabled);
@@ -306,19 +306,19 @@ void ArchAVR_USART::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& da
     }
 
     //Writing to TXCIE
-    if (addr == m_config.rb_txc_inten.addr)
+    if (addr == m_config.rb_txc_inten)
         m_txc_intflag.update_from_ioreg();
 
     //Writing 1 to TXC clears the bit and cancels the interrupt
-    if (addr == m_config.rb_txc_flag.addr && m_config.rb_txc_flag.extract(data.value))
+    if (addr == m_config.rb_txc_flag && m_config.rb_txc_flag.extract(data.value))
         m_txc_intflag.clear_flag();
 
     //Writing to TXEIE (a.k.a. UDREIE)
-    if (addr == m_config.rb_txe_inten.addr)
+    if (addr == m_config.rb_txe_inten)
         m_txe_intflag.update_from_ioreg();
 
     //Writing to RXCIE
-    if (addr == m_config.rb_rxc_inten.addr)
+    if (addr == m_config.rb_rxc_inten)
         m_rxc_intflag.update_from_ioreg();
 
     if (m_config.rbc_chsize.addr_match(addr)) {
@@ -327,12 +327,12 @@ void ArchAVR_USART::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& da
         m_ctrl->set_databits(chsize);
     }
 
-    if (addr == m_config.rb_stopbits.addr) {
+    if (addr == m_config.rb_stopbits) {
         uint8_t sb = m_config.rb_stopbits.extract(data.value);
         m_ctrl->set_stopbits(sb ? 2 : 1);
     }
 
-    if (addr == m_config.rb_parity.addr) {
+    if (addr == m_config.rb_parity) {
         uint8_t p = m_config.rb_parity.extract(data.value);
         if (p == 2)
             m_ctrl->set_parity(Parity_Even);
@@ -343,7 +343,7 @@ void ArchAVR_USART::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& da
     }
 
     //Modification of the frame rate
-    if (m_config.rbc_baud.addr_match(addr) || addr == m_config.rb_baud_2x.addr)
+    if (m_config.rbc_baud.addr_match(addr) || addr == m_config.rb_baud_2x)
         update_bitrate();
 }
 

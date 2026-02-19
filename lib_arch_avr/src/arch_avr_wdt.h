@@ -1,7 +1,7 @@
 /*
  * arch_avr_wdt.h
  *
- *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -43,16 +43,16 @@ struct ArchAVR_WDTConfig {
     std::vector<unsigned long> delays;
     /// WDT configuration register address
     reg_addr_t reg_wdt;
-    /// Bitmask for the delay select
+    /// Regbit the delay select
     regbit_compound_t rbc_delay;
-    /// Bitmask for the Change Enable bit
-    bitmask_t bm_chg_enable;
-    /// Bitmask for the Reset Enable bit
-    bitmask_t bm_reset_enable;
-    /// Bitmask for the Interrupt Enable bit
-    bitmask_t bm_int_enable;
-    /// Bitmask for the Interrupt Flag bit
-    bitmask_t bm_int_flag;
+    /// Bitspec for the Change Enable bit
+    bitspec_t bs_chg_enable;
+    /// Bitspec for the Reset Enable bit
+    bitspec_t bs_reset_enable;
+    /// Bitspec for the Interrupt Enable bit
+    bitspec_t bs_int_enable;
+    /// Bitspec for the Interrupt Flag bit
+    bitspec_t bs_int_flag;
     /// Regbit for the reset flag
     regbit_t rb_reset_flag;
     /// Interrupt vector index

@@ -1,7 +1,7 @@
 /*
  * arch_avr_spi.h
  *
- *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -486,8 +486,8 @@ uint8_t ArchAVR_SPI::ioreg_read_handler(reg_addr_t addr, uint8_t value)
         }
     }
 
-    if ((addr == m_config.rb_wcol.addr && m_config.rb_wcol.extract(value)) ||
-        (addr == m_config.rb_int_flag.addr && m_config.rb_int_flag.extract(value)))
+    if ((addr == m_config.rb_wcol && m_config.rb_wcol.extract(value)) ||
+        (addr == m_config.rb_int_flag && m_config.rb_int_flag.extract(value)))
         m_intflag_accessed = true;
 
     return value;
@@ -517,7 +517,7 @@ void ArchAVR_SPI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
     }
 
     //Setting the controller mode depending on bits SPE and MSTR
-    if (addr == m_config.rb_enable.addr || addr == m_config.rb_mode.addr) {
+    if (addr == m_config.rb_enable || addr == m_config.rb_mode) {
         ControllerMode m;
         if (!read_ioreg(m_config.rb_enable))
             m = ControllerMode::Mode_Disabled;
@@ -530,15 +530,15 @@ void ArchAVR_SPI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
     }
 
     //Writing to SPIE
-    if (addr == m_config.rb_int_enable.addr)
+    if (addr == m_config.rb_int_enable)
         m_intflag.update_from_ioreg();
 
     //Modification of the frame rate
-    if (addr == m_config.rb_clock.addr || addr == m_config.rb_clock2x.addr)
+    if (addr == m_config.rb_clock || addr == m_config.rb_clock2x)
         update_framerate();
 
     //Writing to the serial mode bits
-    if (addr == m_config.rb_cpol.addr || addr == m_config.rb_cpha.addr || addr == m_config.rb_dord.addr) {
+    if (addr == m_config.rb_cpol || addr == m_config.rb_cpha || addr == m_config.rb_dord) {
         update_serial_config();
     }
 }
