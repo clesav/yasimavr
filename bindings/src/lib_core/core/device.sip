@@ -123,7 +123,7 @@ public:
 
     void attach_peripheral(Peripheral& /Transfer/);
     void add_ioreg_handler(reg_addr_t, IO_RegHandler&, uint8_t = 0x00);
-    void add_ioreg_handler(const regbit_t&, IO_RegHandler&, bool = false);
+    void add_ioreg_handler(const regmask_t&, IO_RegHandler&, bool = false);
     Peripheral* find_peripheral(const char*);
     Peripheral* find_peripheral(ctl_id_t);
 

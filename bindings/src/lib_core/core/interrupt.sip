@@ -1,7 +1,7 @@
 /*
  * interrupt.sip
  *
- *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -101,7 +101,7 @@ public:
 
     InterruptFlag(bool = false);
 
-    bool init(Device&, const regbit_t&, const regbit_t&, int_vect_t);
+    bool init(Device&, const regmask_t&, const regmask_t&, int_vect_t);
     int update_from_ioreg();
     void set_clear_on_ack(bool);
     bool set_flag(uint8_t = 0xFF);

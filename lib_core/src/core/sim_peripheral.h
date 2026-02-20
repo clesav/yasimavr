@@ -316,7 +316,7 @@ protected:
 
     Logger& logger();
 
-    void add_ioreg(const regmask_t& rb, bool readonly = false);
+    void add_ioreg(const regmask_t& rm, bool readonly = false);
     void add_ioreg(const regbit_compound_t& rbc, bool readonly = false);
     void add_ioreg(reg_addr_t addr, bool readonly = false);
     void add_ioreg(reg_addr_t addr, bitmask_t mask, bool readonly = false);

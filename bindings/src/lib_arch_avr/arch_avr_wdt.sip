@@ -1,7 +1,7 @@
 /*
  * arch_avr_wdt.sip
  *
- *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -29,15 +29,15 @@ struct ArchAVR_WDTConfig {
     unsigned long clock_frequency;
     UnsignedLongVector delays;
 
-    reg_addr_t reg_wdt;
+    reg_addr_t        reg_wdt;
     regbit_compound_t rbc_delay;
-    bitmask_t bm_chg_enable;
-    bitmask_t bm_reset_enable;
-    bitmask_t bm_int_enable;
-    bitmask_t bm_int_flag;
-    regbit_t rb_reset_flag;
+    bitspec_t         bs_chg_enable;
+    bitspec_t         bs_reset_enable;
+    bitspec_t         bs_int_enable;
+    bitspec_t         bs_int_flag;
+    regbit_t          rb_reset_flag;
 
-    int_vect_t iv_wdt;
+    int_vect_t        iv_wdt;
 
 };
 
