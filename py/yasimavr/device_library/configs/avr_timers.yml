@@ -1,6 +1,6 @@
 # YAML configuration file for generic 'classic' AVR devices
 #
-# Copyright 2025 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2025-2026 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -185,10 +185,10 @@ WDT:
         delays: [ 2048, 4096, 8192, 16384, 32768, 65536, 131072, 262144, 524288, 1048576 ]
         reg_wdt: WDT/WDTCSR
         rbc_delay: [ WDTCSR/WDP, WDTCSR/WDP3 ]
-        bm_chg_enable: WDTCSR/WDCE
-        bm_reset_enable: WDTCSR/WDE
-        bm_int_enable: WDTCSR/WDIE
-        bm_int_flag: WDTCSR/WDIF
+        bs_chg_enable: WDTCSR/WDCE
+        bs_reset_enable: WDTCSR/WDE
+        bs_int_enable: WDTCSR/WDIE
+        bs_int_flag: WDTCSR/WDIF
         rb_reset_flag: RSTCTRL/MCUSR/WDRF
         iv_wdt: WDT
 

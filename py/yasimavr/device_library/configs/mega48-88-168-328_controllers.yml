@@ -1,6 +1,6 @@
 # YAML configuration file for atmega48-88-168-328 variants
 #
-# Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -79,8 +79,8 @@ FUSES_88_168:
         #0:Fuse Low Byte , 1:Fuse High Byte , 2:Fuse Ext Byte
         rb_bootsz: 0x02/1-2
         rb_bootrst: 0x02/0
-        bm_bootlockbit: 4-5
-        bm_applockbit: 2-3
+        bs_bootlockbit: 4-5
+        bs_applockbit: 2-3
 
 #========================================================================================
 FUSES_328:
@@ -88,8 +88,8 @@ FUSES_328:
         #0:Fuse Low Byte , 1:Fuse High Byte , 2:Fuse Ext Byte
         rb_bootsz: 0x01/1-2
         rb_bootrst: 0x01/0
-        bm_bootlockbit: 4-5
-        bm_applockbit: 2-3
+        bs_bootlockbit: 4-5
+        bs_applockbit: 2-3
 
 #========================================================================================
 NVMCTRL:
@@ -131,10 +131,10 @@ NVMCTRL:
 
     config:
         reg_spm_ctrl: SPMCSR
-        bm_spm_cmd: SPMCSR/PGERS|PGWRT|BLBSET|RWWSRE|SIGRD
-        bm_spm_enable: SPMCSR/SPMEN
-        bm_spm_inten: SPMCSR/SPMIE
-        bm_spm_rww_busy: SPMCSR/RWWSB
+        bs_spm_cmd: SPMCSR/PGERS|PGWRT|BLBSET|RWWSRE|SIGRD
+        bs_spm_enable: SPMCSR/SPMEN
+        bs_spm_inten: SPMCSR/SPMIE
+        bs_spm_rww_busy: SPMCSR/RWWSB
         rbc_ee_addr: [ EEAR/EEAR ]
         reg_ee_data: EEDR
         rb_ee_read: EECR/EERE
