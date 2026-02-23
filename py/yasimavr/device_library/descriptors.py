@@ -762,16 +762,15 @@ def _parse_regpath(path_elements, per, dev):
         raise ValueError('Invalid regpath format')
 
 
-#This utility function "consolidate" multiple bitspecs over a
+#This utility function "consolidates" multiple bitspecs over a
 #(possibly multi-byte) register, and merging them in order to
-#have only one bitspecs per byte maximum.
+#have only one bitspec per byte maximum.
 def _reduce_bitspecs(bitspecs, reg_size):
-    #quick return for the most common case
+    #most common cases
     if len(bitspecs) == 1 and reg_size == 1:
-        return bitspecs
-
+        return [(0, bitspecs[0].as_bitspec())]
     if not len(bitspecs):
-        return [ExtendedBitSpec()] * reg_size
+        return [(i, ExtendedBitSpec()) for i in range(reg_size)]
 
     sorted_bitspecs = sorted(bitspecs, key=(lambda x: x.lsb))
     reduced_bitspecs = [None] * reg_size
@@ -786,20 +785,52 @@ def _reduce_bitspecs(bitspecs, reg_size):
             lsb = max(0, bs.lsb - num_byte * 8)
             msb = min(7, bs.msb - num_byte * 8)
 
-            if reduced_bitspecs[num_byte] is None:
+            r_bs = reduced_bitspecs[num_byte]
+            if r_bs is None:
                 reduced_bitspecs[num_byte] = ExtendedBitSpec(lsb, msb)
-                continue
+            else:
+                if lsb != r_bs.msb + 1:
+                    raise ValueError("Bitspec combination must be contiguous")
+                r_bs.msb = msb
 
-            s = reduced_bitspecs[num_byte]
-            if lsb != s.msb + 1:
-                raise ValueError("Bitspec combination must be contiguous")
+    #Filter out the bytes unused
+    result = [(i, bs.as_bitspec()) for i, bs in enumerate(reduced_bitspecs) if bs is not None]
 
-            s.msb = msb
-
-    return reduced_bitspecs
+    return result
 
 
-def convert_to_regbit(arg, per=None, dev=None):
+#Same as _reduce_bitspecs but with bitmasks
+def _reduce_bitmasks(bitspecs, reg_size):
+    #most common cases
+    if len(bitspecs) == 1 and reg_size == 1:
+        return [(0, bitspecs[0].as_bitspec())]
+
+    sorted_bitspecs = sorted(bitspecs, key=(lambda x: x.lsb))
+    reduced_bitmasks = [None] * reg_size
+    for bs in sorted_bitspecs:
+        low_byte = bs.lsb // 8
+        high_byte = bs.msb // 8
+
+        if low_byte >= reg_size or high_byte >= reg_size:
+            raise ValueError()
+
+        for num_byte in range(low_byte, high_byte + 1):
+            lsb = max(0, bs.lsb - num_byte * 8)
+            msb = min(7, bs.msb - num_byte * 8)
+
+            r_bm = reduced_bitmasks[num_byte]
+            if r_bm is None:
+                reduced_bitmasks[num_byte] = _corelib.bitmask_t(_corelib.bitspec_t(lsb, msb))
+            else:
+                reduced_bitmasks[num_byte] = r_bm | _corelib.bitspec_t(lsb, msb)
+
+    #Filter out the bytes unused
+    result = [(i, bm) for i, bm in enumerate(reduced_bitmasks) if bm is not None]
+
+    return result
+
+
+def convert_to_regbit(arg, per=None, dev=None, merge_bits=False):
     """Utility method that resolves a reg path and returns a regbit_t object.
     If the register could not be resolved, or if the result spans several bytes,
     a ValueError exception is raised.
@@ -830,12 +861,16 @@ def convert_to_regbit(arg, per=None, dev=None):
 
     reg_addr, reg_size, extbitspecs = _parse_regpath(elements, per, dev)
 
-    if reg_size != 1:
+    if len(extbitspecs) > 1 and not merge_bits:
+        raise ValueError('Multiple fields returned')
+
+    bitspecs = _reduce_bitspecs(extbitspecs, reg_size)
+
+    if len(bitspecs) != 1:
         raise ValueError('Register is multi-byte, was expecting one byte')
 
-    extbitspecs = _reduce_bitspecs(extbitspecs, 1)
-
-    return _corelib.regbit_t(reg_addr, extbitspecs[0].as_bitspec())
+    ofs, bs = bitspecs[0]
+    return _corelib.regbit_t(reg_addr + ofs, bs)
 
 
 def convert_to_regbit_compound(arg, per=None, dev=None):
@@ -864,8 +899,8 @@ def convert_to_regbit_compound(arg, per=None, dev=None):
     regbit_list = []
     for regpath in regpath_list:
         reg_addr, reg_size, extbitspecs = _parse_regpath(_split_reg_path(regpath), per, dev)
-        extbitspecs = _reduce_bitspecs(extbitspecs, reg_size)
-        rbs = [_corelib.regbit_t(reg_addr + i, bs.as_bitspec()) for i, bs in enumerate(extbitspecs)]
+        bitspecs = _reduce_bitspecs(extbitspecs, reg_size)
+        rbs = [_corelib.regbit_t(reg_addr + ofs, bs) for ofs, bs in bitspecs]
         regbit_list.extend(rbs)
 
     return _corelib.regbit_compound_t(regbit_list)
@@ -894,14 +929,13 @@ def convert_to_regmask(arg, per=None, dev=None):
 
     reg_addr, reg_size, extbitspecs = _parse_regpath(elements, per, dev)
 
-    if reg_size != 1:
+    bitmasks = _reduce_bitmasks(extbitspecs, reg_size)
+
+    if len(bitmasks) != 1:
         raise ValueError('Register is multi-byte, was expecting one byte')
 
-    bm = _corelib.bitmask_t()
-    for bs in extbitspecs:
-        bm |= _corelib.bitmask_t(bs.as_bitspec())
-    
-    return _corelib.regmask_t(reg_addr, bm)
+    ofs, bm = bitmasks[0]
+    return _corelib.regmask_t(reg_addr + ofs, bm)
 
 
 def convert_to_bitspec(arg, per=None, dev=None):
