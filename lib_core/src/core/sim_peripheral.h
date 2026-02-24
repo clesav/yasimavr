@@ -316,10 +316,14 @@ protected:
 
     Logger& logger();
 
-    void add_ioreg(const regmask_t& rm, bool readonly = false);
-    void add_ioreg(const regbit_compound_t& rbc, bool readonly = false);
-    void add_ioreg(reg_addr_t addr, bool readonly = false);
-    void add_ioreg(reg_addr_t addr, bitmask_t mask, bool readonly = false);
+    void add_ioreg(const regmask_t& rm);
+    void add_ioreg(const regbit_compound_t& rbc);
+    void add_ioreg(reg_addr_t addr);
+    void add_ioreg(reg_addr_t addr, bitmask_t mask);
+    void add_ioreg_ro(const regmask_t& rm);
+    void add_ioreg_ro(const regbit_compound_t& rbc);
+    void add_ioreg_ro(reg_addr_t addr, bitmask_t mask);
+    void add_ioreg_ro(reg_addr_t addr);
 
     uint8_t read_ioreg(const regbit_t& rb) const;
     uint64_t read_ioreg(const regbit_compound_t& rbc) const;
@@ -377,14 +381,24 @@ inline Logger& Peripheral::logger()
     return m_logger;
 }
 
-inline void Peripheral::add_ioreg(const regmask_t& rm, bool readonly)
+inline void Peripheral::add_ioreg(const regmask_t& rm)
 {
-    add_ioreg(rm.addr, rm.mask, readonly);
+    add_ioreg(rm.addr, rm.mask);
 }
 
-inline void Peripheral::add_ioreg(reg_addr_t addr, bool readonly)
+inline void Peripheral::add_ioreg(reg_addr_t addr)
 {
-    add_ioreg(addr, bitmask_t(0xFF), readonly);
+    add_ioreg(addr, bitmask_t(0xFF));
+}
+
+inline void Peripheral::add_ioreg_ro(const regmask_t& rm)
+{
+    add_ioreg_ro(rm.addr, rm.mask);
+}
+
+inline void Peripheral::add_ioreg_ro(reg_addr_t addr)
+{
+    add_ioreg_ro(addr, bitmask_t(0xFF));
 }
 
 inline uint8_t Peripheral::read_ioreg(const regbit_t& rb) const

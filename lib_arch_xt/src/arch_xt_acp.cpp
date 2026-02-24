@@ -75,7 +75,7 @@ bool ArchXT_ACP::init(Device& device)
     add_ioreg(REG_ADDR(MUXCTRLA), AC_INVERT_bm | AC_MUXPOS_gm | AC_MUXNEG_gm);
     add_ioreg(REG_ADDR(DACREF), AC_DATA_gm);
     add_ioreg(REG_ADDR(INTCTRL), AC_CMP_bm);
-    add_ioreg(REG_ADDR(STATUS), AC_STATE_bm, true);
+    add_ioreg_ro(REG_ADDR(STATUS), AC_STATE_bm);
     add_ioreg(REG_ADDR(STATUS), AC_CMP_bm);
 
     status &= m_intflag.init(device,

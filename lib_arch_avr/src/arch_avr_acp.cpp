@@ -59,7 +59,7 @@ bool ArchAVR_ACP::init(Device& device)
     add_ioreg(m_config.rb_adc_enable);
     add_ioreg(m_config.rb_bandgap_select);
     add_ioreg(m_config.rb_int_mode);
-    add_ioreg(m_config.rb_output, true);
+    add_ioreg_ro(m_config.rb_output);
     add_ioreg(m_config.rb_int_enable);
     add_ioreg(m_config.rb_int_flag);
 

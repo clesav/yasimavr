@@ -97,7 +97,7 @@ bool ArchXT_RTC::init(Device& device)
     bool status = Peripheral::init(device);
 
     add_ioreg(REG_ADDR(CTRLA), RTC_RUNSTDBY_bm | RTC_PRESCALER_gm | RTC_CORREN_bm | RTC_RTCEN_bm);
-    add_ioreg(REG_ADDR(STATUS), RTC_CMPBUSY_bm | RTC_PERBUSY_bm | RTC_CNTBUSY_bm | RTC_CTRLABUSY_bm, true);
+    add_ioreg_ro(REG_ADDR(STATUS), RTC_CMPBUSY_bm | RTC_PERBUSY_bm | RTC_CNTBUSY_bm | RTC_CTRLABUSY_bm);
     add_ioreg(REG_ADDR(INTCTRL), RTC_CMP_bm | RTC_OVF_bm);
     add_ioreg(REG_ADDR(INTFLAGS), RTC_CMP_bm | RTC_OVF_bm);
     add_ioreg(REG_ADDR(TEMP));
@@ -111,7 +111,7 @@ bool ArchXT_RTC::init(Device& device)
     add_ioreg(REG_ADDR(CMPL));
     add_ioreg(REG_ADDR(CMPH));
     add_ioreg(REG_ADDR(PITCTRLA), RTC_PERIOD_gm | RTC_PITEN_bm);
-    add_ioreg(REG_ADDR(PITSTATUS), RTC_CTRLBUSY_bm, true);
+    add_ioreg_ro(REG_ADDR(PITSTATUS), RTC_CTRLBUSY_bm);
     add_ioreg(REG_ADDR(PITINTCTRL), RTC_PI_bm);
     add_ioreg(REG_ADDR(PITINTFLAGS), RTC_PI_bm);
     //PITDBGCTRL not supported

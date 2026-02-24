@@ -113,7 +113,7 @@ bool ArchAVR_NVM::init(Device& device)
     add_ioreg(m_config.reg_spm_ctrl, m_config.bs_spm_cmd);
     add_ioreg(m_config.reg_spm_ctrl, m_config.bs_spm_enable);
     add_ioreg(m_config.reg_spm_ctrl, m_config.bs_spm_inten);
-    add_ioreg(m_config.reg_spm_ctrl, m_config.bs_spm_rww_busy, true);
+    add_ioreg_ro(m_config.reg_spm_ctrl, m_config.bs_spm_rww_busy);
 
     //Allocate the EEPROM registers
     add_ioreg(m_config.rbc_ee_addr);

@@ -429,14 +429,14 @@ bool ArchAVR_SPI::init(Device& device)
     add_ioreg(m_config.reg_data);
     add_ioreg(m_config.rb_enable);
     add_ioreg(m_config.rb_int_enable);
-    add_ioreg(m_config.rb_int_flag, true);
+    add_ioreg_ro(m_config.rb_int_flag);
     add_ioreg(m_config.rb_mode);
     add_ioreg(m_config.rb_cpol);
     add_ioreg(m_config.rb_cpha);
     add_ioreg(m_config.rb_dord);
     add_ioreg(m_config.rb_clock);
     add_ioreg(m_config.rb_clock2x);
-    add_ioreg(m_config.rb_wcol, true);
+    add_ioreg_ro(m_config.rb_wcol);
 
     status &= m_intflag.init(device,
                              m_config.rb_int_enable,

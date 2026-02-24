@@ -235,14 +235,14 @@ bool ArchXT_TWI::init(Device& device)
     add_ioreg(REG_ADDR(MCTRLA), TWI_ENABLE_bm | TWI_SMEN_bm | TWI_WIEN_bm | TWI_RIEN_bm);
     add_ioreg(REG_ADDR(MCTRLB), TWI_MCMD_gm | TWI_ACKACT_bm | TWI_FLUSH_bm);
     add_ioreg(REG_ADDR(MSTATUS), TWI_BUSSTATE_gm | TWI_BUSERR_bm | TWI_ARBLOST_bm | TWI_CLKHOLD_bm | TWI_WIF_bm | TWI_RIF_bm);
-    add_ioreg(REG_ADDR(MSTATUS), TWI_RXACK_bm, true);
+    add_ioreg_ro(REG_ADDR(MSTATUS), TWI_RXACK_bm);
     add_ioreg(REG_ADDR(MBAUD));
     add_ioreg(REG_ADDR(MADDR));
     add_ioreg(REG_ADDR(MDATA));
     add_ioreg(REG_ADDR(SCTRLA), TWI_ENABLE_bm | TWI_SMEN_bm | TWI_PMEN_bm | TWI_PIEN_bm | TWI_APIEN_bm | TWI_DIEN_bm);
     add_ioreg(REG_ADDR(SCTRLB), TWI_SCMD_gm | TWI_ACKACT_bm);
     add_ioreg(REG_ADDR(SSTATUS), TWI_BUSERR_bm | TWI_COLL_bm | TWI_APIF_bm | TWI_DIF_bm);
-    add_ioreg(REG_ADDR(SSTATUS), TWI_AP_bm | TWI_DIR_bm | TWI_RXACK_bm | TWI_CLKHOLD_bm, true);
+    add_ioreg_ro(REG_ADDR(SSTATUS), TWI_AP_bm | TWI_DIR_bm | TWI_RXACK_bm | TWI_CLKHOLD_bm);
     add_ioreg(REG_ADDR(SADDR));
     add_ioreg(REG_ADDR(SDATA));
     add_ioreg(REG_ADDR(SADDRMASK));

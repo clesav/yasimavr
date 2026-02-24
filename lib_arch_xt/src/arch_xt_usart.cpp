@@ -226,11 +226,11 @@ bool ArchXT_USART::init(Device& device)
 {
     bool status = Peripheral::init(device);
 
-    add_ioreg(REG_ADDR(RXDATAL), USART_DATA_gm, true);
-    add_ioreg(REG_ADDR(RXDATAH), USART_DATA8_bm | USART_PERR_bm | USART_FERR_bm | USART_BUFOVF_bm | USART_RXCIF_bm, true);
+    add_ioreg_ro(REG_ADDR(RXDATAL), USART_DATA_gm);
+    add_ioreg_ro(REG_ADDR(RXDATAH), USART_DATA8_bm | USART_PERR_bm | USART_FERR_bm | USART_BUFOVF_bm | USART_RXCIF_bm);
     add_ioreg(REG_ADDR(TXDATAL), USART_DATA_gm);
     add_ioreg(REG_ADDR(TXDATAH), USART_DATA8_bm);
-    add_ioreg(REG_ADDR(STATUS), USART_RXCIF_bm | USART_DREIF_bm, true); // R/O part
+    add_ioreg_ro(REG_ADDR(STATUS), USART_RXCIF_bm | USART_DREIF_bm); // R/O part
     add_ioreg(REG_ADDR(STATUS), USART_TXCIF_bm | USART_RXSIF_bm); // R/W part
     add_ioreg(REG_ADDR(CTRLA), USART_RXCIE_bm | USART_TXCIE_bm | USART_DREIE_bm | USART_RXSIE_bm | USART_LBME_bm | USART_RS485_gm);
     add_ioreg(REG_ADDR(CTRLB), USART_RXEN_bm | USART_TXEN_bm | USART_SFDEN_bm | USART_ODME_bm | USART_RXMODE_gm);

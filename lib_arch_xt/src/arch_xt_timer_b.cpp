@@ -116,7 +116,7 @@ bool ArchXT_TimerB::init(Device& device)
     add_ioreg(REG_ADDR(CTRLA), TCB_RUNSTDBY_bm | TCB_CASCADE_bm | TCB_CLKSEL_gm | TCB_ENABLE_bm);
     add_ioreg(REG_ADDR(CTRLB), TCB_ASYNC_bm | TCB_CCMPINIT_bm | TCB_CCMPEN_bm | TCB_CNTMODE_gm);
     add_ioreg(REG_ADDR(EVCTRL), TCB_FILTER_bm | TCB_EDGE_bm | TCB_CAPTEI_bm);
-    add_ioreg(REG_ADDR(STATUS), TCB_RUN_bm, true);
+    add_ioreg_ro(REG_ADDR(STATUS), TCB_RUN_bm);
     //DBGCTRL not supported
     add_ioreg(REG_ADDR(TEMP));
     add_ioreg(REG_ADDR(CNTL));

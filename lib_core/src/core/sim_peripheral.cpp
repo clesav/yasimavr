@@ -128,16 +128,29 @@ void Peripheral::sleep(bool on, SleepMode mode)
 {}
 
 
-void Peripheral::add_ioreg(const regbit_compound_t& rbc, bool readonly)
+void Peripheral::add_ioreg(const regbit_compound_t& rbc)
 {
     for (auto& rb : rbc)
-        add_ioreg(rb, readonly);
+        add_ioreg(rb);
 }
 
 
-void Peripheral::add_ioreg(reg_addr_t addr, bitmask_t bm, bool readonly)
+void Peripheral::add_ioreg(reg_addr_t addr, bitmask_t bm)
 {
-    m_device->add_ioreg_handler({ addr, bm }, *this, readonly);
+    m_device->add_ioreg_handler({ addr, bm }, *this, false);
+}
+
+
+void Peripheral::add_ioreg_ro(const regbit_compound_t& rbc)
+{
+    for (auto& rb : rbc)
+        add_ioreg_ro(rb);
+}
+
+
+void Peripheral::add_ioreg_ro(reg_addr_t addr, bitmask_t bm)
+{
+    m_device->add_ioreg_handler({ addr, bm }, *this, true);
 }
 
 

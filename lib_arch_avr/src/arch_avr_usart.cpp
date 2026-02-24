@@ -191,20 +191,20 @@ bool ArchAVR_USART::init(Device& device)
     bool status = Peripheral::init(device);
 
     add_ioreg(m_config.rbc_tx_data);
-    add_ioreg(m_config.rbc_rx_data, true);
+    add_ioreg_ro(m_config.rbc_rx_data);
     add_ioreg(m_config.rb_rx_enable);
     add_ioreg(m_config.rb_tx_enable);
     add_ioreg(m_config.rb_rxc_inten);
-    add_ioreg(m_config.rb_rxc_flag, true);
+    add_ioreg_ro(m_config.rb_rxc_flag);
     add_ioreg(m_config.rb_txc_inten);
     add_ioreg(m_config.rb_txc_flag);
     add_ioreg(m_config.rb_txe_inten);
-    add_ioreg(m_config.rb_txe_flag, true);
+    add_ioreg_ro(m_config.rb_txe_flag);
     add_ioreg(m_config.rb_baud_2x);
     add_ioreg(m_config.rbc_baud);
-    add_ioreg(m_config.rb_ferr, true);
-    add_ioreg(m_config.rb_overrun, true);
-    add_ioreg(m_config.rb_perr, true);
+    add_ioreg_ro(m_config.rb_ferr);
+    add_ioreg_ro(m_config.rb_overrun);
+    add_ioreg_ro(m_config.rb_perr);
     add_ioreg(m_config.rbc_chsize);
     add_ioreg(m_config.rb_clock_mode);
     add_ioreg(m_config.rb_parity);

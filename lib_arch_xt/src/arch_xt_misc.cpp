@@ -110,7 +110,7 @@ bool ArchXT_IntCtrl::init(Device& device)
     bool status = InterruptController::init(device);
 
     add_ioreg(INT_REG_ADDR(CTRLA), CPUINT_IVSEL_bm | CPUINT_CVT_bm | CPUINT_LVL0RR_bm);
-    add_ioreg(INT_REG_ADDR(STATUS), CPUINT_NMIEX_bm | CPUINT_LVL1EX_bm | CPUINT_LVL0EX_bm, true);
+    add_ioreg_ro(INT_REG_ADDR(STATUS), CPUINT_NMIEX_bm | CPUINT_LVL1EX_bm | CPUINT_LVL0EX_bm);
     add_ioreg(INT_REG_ADDR(LVL0PRI));
     add_ioreg(INT_REG_ADDR(LVL1VEC));
 
@@ -367,25 +367,25 @@ bool ArchXT_MiscRegCtrl::init(Device& device)
     for (unsigned int i = 0; i < m_config.gpior_count; ++i)
         add_ioreg(m_config.reg_base_gpior + i);
 
-    add_ioreg(m_config.reg_revid, 0xFF, true);
+    add_ioreg_ro(m_config.reg_revid, 0xFF);
 
-    add_ioreg(SIGROW_REG_ADDR(DEVICEID0), 0xFF, true);
-    add_ioreg(SIGROW_REG_ADDR(DEVICEID1), 0xFF, true);
-    add_ioreg(SIGROW_REG_ADDR(DEVICEID2), 0xFF, true);
+    add_ioreg_ro(SIGROW_REG_ADDR(DEVICEID0), 0xFF);
+    add_ioreg_ro(SIGROW_REG_ADDR(DEVICEID1), 0xFF);
+    add_ioreg_ro(SIGROW_REG_ADDR(DEVICEID2), 0xFF);
 
     for (int i = 0; i < 10; ++i)
-        add_ioreg(SIGROW_REG_ADDR(SERNUM0) + i, 0xFF, true);
+        add_ioreg_ro(SIGROW_REG_ADDR(SERNUM0) + i, 0xFF);
 
-    add_ioreg(SIGROW_REG_ADDR(OSCCAL16M0), 0x7F, true);
-    add_ioreg(SIGROW_REG_ADDR(OSCCAL20M1), 0x0F, true);
-    add_ioreg(SIGROW_REG_ADDR(OSCCAL16M0), 0x7F, true);
-    add_ioreg(SIGROW_REG_ADDR(OSCCAL20M1), 0x0F, true);
-    add_ioreg(SIGROW_REG_ADDR(TEMPSENSE0), 0xFF, true);
-    add_ioreg(SIGROW_REG_ADDR(TEMPSENSE1), 0xFF, true);
-    add_ioreg(SIGROW_REG_ADDR(OSC16ERR3V), 0xFF, true);
-    add_ioreg(SIGROW_REG_ADDR(OSC16ERR5V), 0xFF, true);
-    add_ioreg(SIGROW_REG_ADDR(OSC20ERR3V), 0xFF, true);
-    add_ioreg(SIGROW_REG_ADDR(OSC20ERR5V), 0xFF, true);
+    add_ioreg_ro(SIGROW_REG_ADDR(OSCCAL16M0), 0x7F);
+    add_ioreg_ro(SIGROW_REG_ADDR(OSCCAL20M1), 0x0F);
+    add_ioreg_ro(SIGROW_REG_ADDR(OSCCAL16M0), 0x7F);
+    add_ioreg_ro(SIGROW_REG_ADDR(OSCCAL20M1), 0x0F);
+    add_ioreg_ro(SIGROW_REG_ADDR(TEMPSENSE0), 0xFF);
+    add_ioreg_ro(SIGROW_REG_ADDR(TEMPSENSE1), 0xFF);
+    add_ioreg_ro(SIGROW_REG_ADDR(OSC16ERR3V), 0xFF);
+    add_ioreg_ro(SIGROW_REG_ADDR(OSC16ERR5V), 0xFF);
+    add_ioreg_ro(SIGROW_REG_ADDR(OSC20ERR3V), 0xFF);
+    add_ioreg_ro(SIGROW_REG_ADDR(OSC20ERR5V), 0xFF);
 
     return status;
 }
