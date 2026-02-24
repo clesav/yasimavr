@@ -205,7 +205,7 @@ protected:
     void add_ioreg_ro(const regmask_t&);
     void add_ioreg_ro(const regbit_compound_t&);
     void add_ioreg_ro(reg_addr_t);
-    void add_ioreg_ropytest(reg_addr_t, bitmask_t);
+    void add_ioreg_ro(reg_addr_t, bitmask_t);
 
     uint8_t read_ioreg(const regbit_t&) const;
     uint64_t read_ioreg(const regbit_compound_t&) const;

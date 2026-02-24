@@ -181,7 +181,7 @@ bool ArchAVR_USI::init(Device& device)
     add_ioreg(m_config.rb_clk_strobe);
     add_ioreg(m_config.rb_clk_toggle);
     add_ioreg(m_config.reg_data);
-    add_ioreg(m_config.reg_buffer, true);
+    add_ioreg_ro(m_config.reg_buffer);
     add_ioreg(m_config.rb_counter);
     add_ioreg(m_config.rb_ovf_flag);
     add_ioreg(m_config.rb_ovf_inten);

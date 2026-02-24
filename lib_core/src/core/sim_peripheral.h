@@ -322,8 +322,8 @@ protected:
     void add_ioreg(reg_addr_t addr, bitmask_t mask);
     void add_ioreg_ro(const regmask_t& rm);
     void add_ioreg_ro(const regbit_compound_t& rbc);
-    void add_ioreg_ro(reg_addr_t addr, bitmask_t mask);
     void add_ioreg_ro(reg_addr_t addr);
+    void add_ioreg_ro(reg_addr_t addr, bitmask_t mask);
 
     uint8_t read_ioreg(const regbit_t& rb) const;
     uint64_t read_ioreg(const regbit_compound_t& rbc) const;

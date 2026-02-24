@@ -719,7 +719,13 @@ def _parse_regpath(path_elements, per, dev):
         if not per:
             raise ValueError('Peripheral unspecified')
 
-        return per._resolve_fields(path_elements[0], [])
+        reg_addr, reg_size, bitspec_list = per._resolve_fields(path_elements[0], [])
+
+        #Special case when the register has no field defined, most likely a raw register
+        if not bitspec_list:
+            bitspec_list = [ExtendedBitSpec(0, 7)]
+
+        return reg_addr, reg_size, bitspec_list
 
     elif len(path_elements) == 2: #formats [A, F], [R, F] or [P, R]
         reg_or_per = path_elements[0]
@@ -770,7 +776,7 @@ def _reduce_bitspecs(bitspecs, reg_size):
     if len(bitspecs) == 1 and reg_size == 1:
         return [(0, bitspecs[0].as_bitspec())]
     if not len(bitspecs):
-        return [(i, ExtendedBitSpec()) for i in range(reg_size)]
+        return [(i, _corelib.bitspec_t()) for i in range(reg_size)]
 
     sorted_bitspecs = sorted(bitspecs, key=(lambda x: x.lsb))
     reduced_bitspecs = [None] * reg_size
@@ -916,10 +922,10 @@ def convert_to_regmask(arg, per=None, dev=None):
     """
 
     if arg is None or arg == '':
-        return _corelib.reg_mask_t()
+        return _corelib.regmask_t()
 
     if isinstance(arg, int):
-        rm =_corelib.reg_mask_t(arg, 0xFF)
+        rm =_corelib.regmask_t(arg, 0xFF)
         return rm
 
     if isinstance(arg, (list, tuple)):
@@ -938,7 +944,7 @@ def convert_to_regmask(arg, per=None, dev=None):
     return _corelib.regmask_t(reg_addr + ofs, bm)
 
 
-def convert_to_bitspec(arg, per=None, dev=None):
+def convert_to_bitspec(arg, per=None, dev=None, merge_bits=False):
     """Utility method that resolves a reg path and returns a bitspec_t object.
     The arguments are the same as convert_to_regbit()
 
@@ -960,5 +966,5 @@ def convert_to_bitspec(arg, per=None, dev=None):
         if len(flist) == 1 and isinstance(flist[0], ExtendedBitSpec):
             return flist[0].as_bitspec()
 
-    rb = convert_to_regbit(arg, per, dev)
+    rb = convert_to_regbit(arg, per, dev, merge_bits)
     return _corelib.bitspec_t(rb)

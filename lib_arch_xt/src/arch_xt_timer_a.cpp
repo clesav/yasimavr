@@ -534,8 +534,8 @@ void ArchXT_TimerA::write_ioreg_single(reg_addr_t reg_ofs, const ioreg_write_t& 
         if (TEST_IOREG(CTRLA, TCA_SINGLE_ENABLE)) {
             //If the timer is enabled, the CMPxOV bits are read-only so we restore the old values
             for (int i = 0; i < CFG::CompareChannelCount; ++i) {
-                bitspec_t ov_bs = bitspec_t(index_to_CMPxOV_bit(false, i));
-                write_ioreg(REG_ADDR(CTRLC), ov_bs, data.old & ov_bs);
+                bitspec_t ov_bit = bitspec_t(index_to_CMPxOV_bit(false, i));
+                write_ioreg(REG_ADDR(CTRLC), ov_bit, data.old & ov_bit);
             }
         } else {
             //If the timer is disabled, the CMPxOV bits control the compare outputs.
@@ -614,8 +614,8 @@ void ArchXT_TimerA::write_ioreg_single(reg_addr_t reg_ofs, const ioreg_write_t& 
         if (high_byte) {
             m_cmp[index].buffer = READ_IOREG(TEMP) | (data.value << 8);
             m_cmp[index].flag = true;
-            set_ioreg(REG_ADDR(CTRLFSET), TCA_SINGLE_CMP0BV_bp + index);
-            set_ioreg(REG_ADDR(CTRLFSET), TCA_SINGLE_CMP0BV_bp + index);
+            set_ioreg(REG_ADDR(CTRLFSET), bitspec_t(TCA_SINGLE_CMP0BV_bp + index));
+            set_ioreg(REG_ADDR(CTRLFSET), bitspec_t(TCA_SINGLE_CMP0BV_bp + index));
             update_ALUPD_status();
         } else {
             WRITE_IOREG(TEMP, data.value);
@@ -634,8 +634,8 @@ void ArchXT_TimerA::write_ioreg_split(reg_addr_t reg_ofs, const ioreg_write_t& d
         if (TEST_IOREG(CTRLA, TCA_SPLIT_ENABLE)) {
             //If the timer is enabled, the CMPxOV bits are read-only so we restore the old values
             for (int i = 0; i < CFG::CompareChannelCount * 2; ++i) {
-                bitspec_t ov_bs = bitspec_t(index_to_CMPxOV_bit(true, i));
-                write_ioreg(REG_ADDR(CTRLC), ov_bs, data.old & ov_bs);
+                bitspec_t ov_bit = bitspec_t(index_to_CMPxOV_bit(true, i));
+                write_ioreg(REG_ADDR(CTRLC), ov_bit, data.old & ov_bit);
             }
         } else {
             //If the timer is disabled, the CMPxOV bits control the compare outputs.
@@ -721,8 +721,8 @@ void ArchXT_TimerA::update_buffered_registers()
         if (m_cmp[i].flag) {
             m_cmp[i].value = m_cmp[i].buffer;
             m_cmp[i].flag = false;
-            clear_ioreg(REG_ADDR(CTRLFSET), TCA_SINGLE_CMP0BV_bp + i);
-            clear_ioreg(REG_ADDR(CTRLFCLR), TCA_SINGLE_CMP0BV_bp + i);
+            clear_ioreg(REG_ADDR(CTRLFSET), bitspec_t(TCA_SINGLE_CMP0BV_bp + i));
+            clear_ioreg(REG_ADDR(CTRLFCLR), bitspec_t(TCA_SINGLE_CMP0BV_bp + i));
             if (!i)
                 reconfig = true;
         }
@@ -906,8 +906,8 @@ void ArchXT_TimerA::set_compare_output(unsigned int index, int change)
     unsigned char new_value;
 
     if (TEST_IOREG(CTRLA, TCA_SINGLE_ENABLE) && (m_split_mode || index < CFG::CompareChannelCount)) {
-        uint8_t ov_bit = index_to_CMPxOV_bit(m_split_mode, index);
-        uint8_t en_bit = index_to_CMPxEN_bit(m_split_mode, index);
+        bitspec_t ov_bit = bitspec_t(index_to_CMPxOV_bit(m_split_mode, index));
+        bitspec_t en_bit = bitspec_t(index_to_CMPxEN_bit(m_split_mode, index));
 
         unsigned char old_value = test_ioreg(REG_ADDR(CTRLC), ov_bit);
         switch(change) {
