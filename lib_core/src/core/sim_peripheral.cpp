@@ -157,9 +157,10 @@ void Peripheral::add_ioreg_ro(reg_addr_t addr, bitmask_t bm)
 uint64_t Peripheral::read_ioreg(const regbit_compound_t& rbc) const
 {
     uint64_t value = 0;
+    int offset = 0;
     for (auto& rb : rbc) {
-        value |= read_ioreg(rb);
-        value <<= rb.bitcount();
+        value |= ((uint64_t) read_ioreg(rb)) << offset;
+        offset += rb.bitcount();
     }
     return value;
 }
