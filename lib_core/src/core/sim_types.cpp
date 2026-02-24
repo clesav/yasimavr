@@ -22,136 +22,11 @@
 //=======================================================================================
 
 #include "sim_types.h"
-#include <cstring>
-#include <climits>
 
 YASIMAVR_USING_NAMESPACE
 
 
 //=======================================================================================
-
-static int _bitcount(uint8_t mask)
-{
-    int n = 0;
-    while (mask) {
-        if (mask & 1) n++;
-        mask >>= 1;
-    }
-    return n;
-}
-
-
-//=======================================================================================
-
-bitmask_t::bitmask_t(uint8_t b, uint8_t m)
-:bit(b)
-,mask(m)
-{}
-
-bitmask_t::bitmask_t(uint8_t b)
-:bitmask_t(b, 1 << b)
-{}
-
-bitmask_t::bitmask_t()
-:bitmask_t(0, 0)
-{}
-
-bitmask_t::bitmask_t(const bitmask_t& bm)
-:bitmask_t(bm.bit, bm.mask)
-{}
-
-bitmask_t::bitmask_t(const regbit_t& rb)
-:bitmask_t(rb.bit, rb.mask)
-{}
-
-bitmask_t& bitmask_t::operator=(const bitmask_t& bm)
-{
-    bit = bm.bit;
-    mask = bm.mask;
-    return *this;
-}
-
-bitmask_t& bitmask_t::operator=(const regbit_t& rb)
-{
-    bit = rb.bit;
-    mask = rb.mask;
-    return *this;
-}
-
-int bitmask_t::bitcount() const
-{
-    return _bitcount(mask);
-}
-
-
-//=======================================================================================
-
-regbit_t::regbit_t(reg_addr_t a, uint8_t b, uint8_t m)
-:addr(a)
-,bit(b)
-,mask(m)
-{}
-
-regbit_t::regbit_t(reg_addr_t a, uint8_t b)
-:regbit_t(a, b, 1 << b)
-{}
-
-regbit_t::regbit_t(reg_addr_t a)
-:regbit_t(a, 0, 0xFF)
-{}
-
-regbit_t::regbit_t()
-:regbit_t(INVALID_REGISTER, 0, 0)
-{}
-
-regbit_t::regbit_t(reg_addr_t a, const bitmask_t& bm)
-:regbit_t(a, bm.bit, bm.mask)
-{}
-
-regbit_t::regbit_t(const regbit_t& rb)
-:regbit_t(rb.addr, rb.bit, rb.mask)
-{}
-
-regbit_t& regbit_t::operator=(const regbit_t& rb)
-{
-    addr = rb.addr;
-    bit = rb.bit;
-    mask = rb.mask;
-    return *this;
-}
-
-int regbit_t::bitcount() const
-{
-    return _bitcount(mask);
-}
-
-
-//=======================================================================================
-
-regbit_compound_t::regbit_compound_t(const regbit_t& rb)
-{
-    add(rb);
-}
-
-regbit_compound_t::regbit_compound_t(const std::vector<regbit_t>& v)
-{
-    *this = v;
-}
-
-regbit_compound_t::regbit_compound_t(const regbit_compound_t& other)
-{
-    *this = other;
-}
-
-void regbit_compound_t::add(const regbit_t& rb)
-{
-    if (m_regbits.size())
-        m_offsets.push_back(m_offsets.back() + m_regbits.back().bitcount());
-    else
-        m_offsets.push_back(0);
-
-    m_regbits.push_back(rb);
-}
 
 bool regbit_compound_t::addr_match(reg_addr_t addr) const
 {
@@ -161,41 +36,19 @@ bool regbit_compound_t::addr_match(reg_addr_t addr) const
     return false;
 }
 
-uint64_t regbit_compound_t::compound(uint8_t regvalue, size_t index) const
-{
-    uint64_t v = m_regbits[index].extract(regvalue);
-    return v << m_offsets[index];
-}
 
-uint8_t regbit_compound_t::extract(uint64_t v, size_t index) const
+unsigned int regbit_compound_t::bitcount() const
 {
-    uint8_t rv = (v >> m_offsets[index]) & 0xFF;
-    return rv & (m_regbits[index].mask >> m_regbits[index].bit);
-}
-
-int regbit_compound_t::bitcount() const
-{
-    int n = 0;
+    unsigned int n = 0;
     for (auto& rb : m_regbits)
         n += rb.bitcount();
     return n;
 }
 
+
 regbit_compound_t& regbit_compound_t::operator=(const std::vector<regbit_t>& v)
 {
-    m_regbits.clear();
-    m_offsets.clear();
-
-    for (auto& rb : v)
-        add(rb);
-
-    return *this;
-}
-
-regbit_compound_t& regbit_compound_t::operator=(const regbit_compound_t& other)
-{
-    m_regbits = other.m_regbits;
-    m_offsets = other.m_offsets;
+    m_regbits = v;
     return *this;
 }
 

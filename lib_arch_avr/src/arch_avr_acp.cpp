@@ -1,7 +1,7 @@
 /*
  * arch_avr_acp.cpp
  *
- *  Copyright 2022 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -59,7 +59,7 @@ bool ArchAVR_ACP::init(Device& device)
     add_ioreg(m_config.rb_adc_enable);
     add_ioreg(m_config.rb_bandgap_select);
     add_ioreg(m_config.rb_int_mode);
-    add_ioreg(m_config.rb_output, true);
+    add_ioreg_ro(m_config.rb_output);
     add_ioreg(m_config.rb_int_enable);
     add_ioreg(m_config.rb_int_flag);
 
@@ -134,28 +134,28 @@ bool ArchAVR_ACP::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
 
 void ArchAVR_ACP::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
-    if (addr == m_config.rb_disable.addr) {
+    if (addr == m_config.rb_disable) {
         clear_ioreg(m_config.rb_output);
     }
 
-    if (addr == m_config.rb_mux_enable.addr ||
-        addr == m_config.rb_adc_enable.addr ||
-        addr == m_config.rb_mux.addr) {
+    if (addr == m_config.rb_mux_enable ||
+        addr == m_config.rb_adc_enable ||
+        addr == m_config.rb_mux) {
 
         change_neg_channel();
         update_state();
     }
 
-    if (addr == m_config.rb_bandgap_select.addr) {
+    if (addr == m_config.rb_bandgap_select) {
         change_pos_channel();
         update_state();
     }
 
-    if (addr == m_config.rb_int_enable.addr)
+    if (addr == m_config.rb_int_enable)
         m_intflag.update_from_ioreg();
 
     //Writing 1 to ACI clears the flag and cancels the interrupt
-    if (addr == m_config.rb_int_flag.addr && m_config.rb_int_flag.extract(data.value))
+    if (addr == m_config.rb_int_flag && m_config.rb_int_flag.extract(data.value))
         m_intflag.clear_flag();
 
 }

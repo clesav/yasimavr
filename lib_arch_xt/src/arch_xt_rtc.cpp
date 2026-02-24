@@ -1,7 +1,7 @@
 /*
  * arch_xt_rtc.cpp
  *
- *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -97,7 +97,7 @@ bool ArchXT_RTC::init(Device& device)
     bool status = Peripheral::init(device);
 
     add_ioreg(REG_ADDR(CTRLA), RTC_RUNSTDBY_bm | RTC_PRESCALER_gm | RTC_CORREN_bm | RTC_RTCEN_bm);
-    add_ioreg(REG_ADDR(STATUS), RTC_CMPBUSY_bm | RTC_PERBUSY_bm | RTC_CNTBUSY_bm | RTC_CTRLABUSY_bm, true);
+    add_ioreg_ro(REG_ADDR(STATUS), RTC_CMPBUSY_bm | RTC_PERBUSY_bm | RTC_CNTBUSY_bm | RTC_CTRLABUSY_bm);
     add_ioreg(REG_ADDR(INTCTRL), RTC_CMP_bm | RTC_OVF_bm);
     add_ioreg(REG_ADDR(INTFLAGS), RTC_CMP_bm | RTC_OVF_bm);
     add_ioreg(REG_ADDR(TEMP));
@@ -111,14 +111,14 @@ bool ArchXT_RTC::init(Device& device)
     add_ioreg(REG_ADDR(CMPL));
     add_ioreg(REG_ADDR(CMPH));
     add_ioreg(REG_ADDR(PITCTRLA), RTC_PERIOD_gm | RTC_PITEN_bm);
-    add_ioreg(REG_ADDR(PITSTATUS), RTC_CTRLBUSY_bm, true);
+    add_ioreg_ro(REG_ADDR(PITSTATUS), RTC_CTRLBUSY_bm);
     add_ioreg(REG_ADDR(PITINTCTRL), RTC_PI_bm);
     add_ioreg(REG_ADDR(PITINTFLAGS), RTC_PI_bm);
     //PITDBGCTRL not supported
 
     status &= m_rtc_intflag.init(device,
-                                 regbit_t(REG_ADDR(INTCTRL), 0, RTC_CMP_bm | RTC_OVF_bm),
-                                 regbit_t(REG_ADDR(INTFLAGS), 0, RTC_CMP_bm | RTC_OVF_bm),
+                                 { REG_ADDR(INTCTRL), RTC_CMP_bm | RTC_OVF_bm },
+                                 { REG_ADDR(INTFLAGS), RTC_CMP_bm | RTC_OVF_bm },
                                  m_config.iv_rtc);
     status &= m_pit_intflag.init(device,
                                  DEF_REGBIT_B(PITINTCTRL, RTC_PI),
@@ -267,9 +267,9 @@ void ArchXT_RTC::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
     //it clears the corresponding bits.
     //If all bits are clear, cancel the interrupt
     else if (reg_ofs == REG_OFS(INTFLAGS)) {
-        bitmask_t bm = bitmask_t(0, RTC_CMP_bm | RTC_OVF_bm);
+        bitmask_t bm = RTC_CMP_bm | RTC_OVF_bm;
         write_ioreg(addr, bm.clear_from(data.value));
-        m_rtc_intflag.clear_flag(bm.extract(data.value));
+        m_rtc_intflag.clear_flag(bm & data.value);
     }
 
     else if (reg_ofs == REG_OFS(PITINTCTRL)) {
@@ -279,7 +279,7 @@ void ArchXT_RTC::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
     //If we're writing a 1 to the PIT interrupt flag bit, it clears the bit
     //and cancel the interrupt
     else if (reg_ofs == REG_OFS(PITINTFLAGS)) {
-        bitmask_t bm = bitmask_t(0, RTC_PI_bm);
+        bitmask_t bm = RTC_PI_bm;
         write_ioreg(addr, bm.clear_from(data.value));
         m_pit_intflag.clear_flag();
     }

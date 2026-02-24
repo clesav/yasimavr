@@ -1,7 +1,7 @@
 /*
  * peripheral.sip
  *
- *  Copyright 2022-2025 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -198,38 +198,40 @@ protected:
 
     Logger& logger();
 
-    void add_ioreg(const regbit_t&, bool = false);
-    void add_ioreg(const regbit_compound_t&, bool = false);
-    void add_ioreg(reg_addr_t, uint8_t = 0xFF, bool = false);
-
-    uint8_t read_ioreg(reg_addr_t) const;
-    void write_ioreg(const regbit_t&, uint8_t);
+    void add_ioreg(const regmask_t&);
+    void add_ioreg(const regbit_compound_t&);
+    void add_ioreg(reg_addr_t);
+    void add_ioreg(reg_addr_t, bitmask_t);
+    void add_ioreg_ro(const regmask_t&);
+    void add_ioreg_ro(const regbit_compound_t&);
+    void add_ioreg_ro(reg_addr_t);
+    void add_ioreg_ro(reg_addr_t, bitmask_t);
 
     uint8_t read_ioreg(const regbit_t&) const;
     uint64_t read_ioreg(const regbit_compound_t&) const;
-    uint8_t read_ioreg(reg_addr_t, const bitmask_t&) const;
+    uint8_t read_ioreg(reg_addr_t) const;
+    uint8_t read_ioreg(reg_addr_t, const bitspec_t&) const;
 
-    bool test_ioreg(reg_addr_t, uint8_t) const;
-    bool test_ioreg(reg_addr_t, const bitmask_t&) const;
-    bool test_ioreg(const regbit_t&, uint8_t = 0) const;
+    bool test_ioreg(const regbit_t&) const;
+    bool test_ioreg(const regbit_compound_t&) const;
+    bool test_ioreg(reg_addr_t, const bitspec_t&) const;
+    bool test_ioreg(reg_addr_t, bitmask_t = bitmask_t(0xFF)) const;
 
+    void write_ioreg(reg_addr_t, bitmask_t, uint8_t);
+    void write_ioreg(const regbit_t&, uint8_t);
     void write_ioreg(const regbit_compound_t&, uint64_t);
     void write_ioreg(reg_addr_t, uint8_t);
-    void write_ioreg(reg_addr_t, uint8_t, uint8_t);
-    void write_ioreg(reg_addr_t, const bitmask_t&, uint8_t);
+    void write_ioreg(reg_addr_t, const bitspec_t&, uint8_t);
 
+    void set_ioreg(reg_addr_t, bitmask_t = bitmask_t(0xFF));
     void set_ioreg(const regbit_t&);
     void set_ioreg(const regbit_compound_t&);
-    void set_ioreg(reg_addr_t, uint8_t);
-    void set_ioreg(reg_addr_t, const bitmask_t&);
-    void set_ioreg(const regbit_t&, uint8_t);
+    void set_ioreg(reg_addr_t, const bitspec_t&);
 
+    void clear_ioreg(reg_addr_t, bitmask_t = bitmask_t(0xFF));
     void clear_ioreg(const regbit_t&);
     void clear_ioreg(const regbit_compound_t&);
-    void clear_ioreg(reg_addr_t);
-    void clear_ioreg(reg_addr_t, uint8_t);
-    void clear_ioreg(reg_addr_t, const bitmask_t&);
-    void clear_ioreg(const regbit_t&, uint8_t);
+    void clear_ioreg(reg_addr_t, const bitspec_t&);
 
     bool register_interrupt(int_vect_t, InterruptHandler&) const;
 
@@ -247,7 +249,7 @@ class DummyController : public Peripheral /NoDefaultCtors/ {
 public:
 
     struct dummy_register_t {
-        regbit_t reg;
+        regmask_t reg;
         uint8_t reset;
     };
 

@@ -18,7 +18,8 @@
 # along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
 
 import yasimavr.lib.core as _corelib
-from ..descriptors import convert_to_regbit, convert_to_regbit_compound, convert_to_bitmask
+from ..descriptors import (convert_to_regbit, convert_to_regbit_compound,
+                           convert_to_bitspec, convert_to_regmask)
 import inspect
 
 global VERBOSE
@@ -173,14 +174,14 @@ class PeripheralConfigBuilder:
             else:
                 return None
 
-        elif attr.startswith('rb_') or isinstance(default_val, _corelib.regbit_t):
-            return convert_to_regbit(yml_val, per_desc)
+        elif isinstance(default_val, _corelib.regbit_t):
+            return convert_to_regbit(yml_val, per_desc, merge_bits=True)
 
-        elif attr.startswith('rbc_') or isinstance(default_val, _corelib.regbit_compound_t):
+        elif isinstance(default_val, _corelib.regbit_compound_t):
             return convert_to_regbit_compound(yml_val, per_desc)
 
-        elif attr.startswith('bm_') or isinstance(default_val, _corelib.bitmask_t):
-            return convert_to_bitmask(yml_val, per_desc)
+        elif isinstance(default_val, _corelib.bitspec_t):
+            return convert_to_bitspec(yml_val, per_desc, merge_bits=True)
 
         elif attr == 'dev_id':
             v = per_desc.device.device_signature
@@ -220,7 +221,7 @@ def dummy_config_builder(per_descriptor):
             reg_name = yml_item
             reg_reset = 0
 
-        reg_cfg.reg = convert_to_regbit(reg_name, per_descriptor)
+        reg_cfg.reg = convert_to_regmask(reg_name, per_descriptor)
         reg_cfg.reset = reg_reset
 
         py_regs.append(reg_cfg)

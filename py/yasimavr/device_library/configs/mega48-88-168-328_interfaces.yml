@@ -1,6 +1,6 @@
 # YAML configuration file for atmega48-88-168-328 variants
 #
-# Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -319,12 +319,12 @@ TWI:
     config:
         ps_factors: [ 1, 4, 16, 64 ]
         reg_ctrl: TWCR
-        bm_enable: TWCR/TWEN
-        bm_start: TWCR/TWSTA
-        bm_stop: TWCR/TWSTO
-        bm_int_enable: TWCR/TWIE
-        bm_int_flag: TWCR/TWINT
-        bm_ack_enable: TWCR/TWEA
+        bs_enable: TWCR/TWEN
+        bs_start: TWCR/TWSTA
+        bs_stop: TWCR/TWSTO
+        bs_int_enable: TWCR/TWIE
+        bs_int_flag: TWCR/TWINT
+        bs_ack_enable: TWCR/TWEA
         reg_bitrate: TWBR
         rb_status: TWSR/TWS
         rb_prescaler: TWSR/TWPS

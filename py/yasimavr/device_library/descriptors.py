@@ -146,24 +146,37 @@ class InterruptMapDescriptor:
         self.sleep_mask =dict(int_config.get('sleep_mask', {}))
 
 
-class ExtendedBitMask(collections.namedtuple('ExtendedBitMask', ['bit', 'mask'])):
-
-    def as_bitmask(self):
-        if self.bit < 8 and self.mask < 0x100:
-            return _corelib.bitmask_t(self.bit, self.mask)
+class ExtendedBitSpec:
+    
+    def __init__(self, *args):
+        if len(args) == 0:
+            self.lsb = self.msb = None
+        elif len(args) == 1:
+            self.lsb = self.msb = args[0]
+        elif len(args) == 2:
+            self.lsb = min(args)
+            self.msb = max(args)
         else:
-            raise ValueError('Bitmask range error')
+            raise ValueError()
 
     def bitcount(self):
-        n = 0
-        m = self.mask
-        while m:
-            if m & 0x01: n += 1
-            m >>= 1
-        return n
+        if self.lsb is None:
+            return 0
+        else:
+            return self.msb - self.lsb + 1
+
+    def as_bitspec(self):
+        if self.lsb is None:
+            return _corelib.bitspec_t()
+        if self.lsb >= 8 or self.msb >= 8:
+            raise ValueError('Bitspec range error')
+        return _corelib.bitspec_t(self.lsb, self.msb)
 
     def __repr__(self):
-        return 'ExtendedBitMask(%d, 0x%x)' % (self.bit, self.mask)
+        if self.lsb is None:
+            return 'ExtendedBitSpec(INVALID)'
+        else:
+            return 'ExtendedBitSpec(%d, %d)' % (self.lsb, self.msb)
 
 
 class RegisterFieldDescriptor:
@@ -229,15 +242,9 @@ class RegisterFieldDescriptor:
         self.alias = str(field_config.get('alias', ''))
 
         if self.kind == 'BIT':
-            mask = 1 << self.pos
-            self._bitmask = ExtendedBitMask(self.pos, mask)
+            self.bitspec = ExtendedBitSpec(self.pos, self.pos)
         else:
-            mask = ((1 << (self.MSB - self.LSB + 1)) - 1) << self.LSB
-            self._bitmask = ExtendedBitMask(self.LSB, mask)
-
-
-    def bitmask(self):
-        return self._bitmask
+            self.bitspec = ExtendedBitSpec(self.LSB, self.MSB)
 
 
 class RegisterDescriptor:
@@ -326,29 +333,6 @@ class PeripheralClassDescriptor:
         self.config = per_config.get('config', {})
 
 
-#This utility function "consolidate" multiple bitmasks over a
-#(possibly multi-byte) register, and merging them in order to
-#have only one bitmask per byte maximum.
-def _reduce_bitmasks(bms, reg_size):
-    mask = 0
-    for bm in bms:
-        mask |= bm.mask
-
-    if not mask:
-        return [(i, _corelib.bitmask_t(0, 0xFF)) for i in range(reg_size)]
-
-    min_bit_shift = min(bm.bit for bm in bms)
-
-    cons_bms = []
-    for i in range(reg_size):
-        m = (mask >> (i * 8)) & 0xFF
-        if m:
-            bit_shift = 0 if len(cons_bms) else (min_bit_shift - i * 8)
-            cons_bms.append((i, _corelib.bitmask_t(bit_shift, m)))
-
-    return cons_bms
-
-
 class PeripheralInstanceDescriptor:
     """Descriptor class for the instantiation of a peripheral class.
 
@@ -395,9 +379,9 @@ class PeripheralInstanceDescriptor:
         raise DeviceConfigException('Register address cannot be resolved for ' + reg_desc.name)
 
 
-    def _resolve_regbits(self, reg_name, fields):
+    def _resolve_fields(self, reg_name, fields):
 
-        def _field_name_to_bitmask(f):
+        def _field_name_to_spec(f):
             i = f.find('[')
             j = f.find(']', i)
             if (i == -1) ^ (j == -1):
@@ -405,22 +389,21 @@ class PeripheralInstanceDescriptor:
 
             if i == -1:
                 f_desc = reg_desc.fields[f]
-                return f_desc.bitmask()
+                return f_desc.bitspec
 
             f_desc = reg_desc.fields[f[:i]]
-            f_bm = f_desc.bitmask()
+            f_bs = f_desc.bitspec
             rf = f[i+1:j]
             if ':' not in rf:
                 sbit = int(rf)
-                if sbit < 0 or sbit >= f_bm.bitcount():
+                if sbit < 0 or sbit >= f_bs.bitcount():
                     raise ValueError('Invalid bit range: ' + f)
-                return ExtendedBitMask(f_bm.bit + sbit, 1 << (f_bm.bit + sbit))
+                return ExtendedBitSpec(f_bs.lsb + sbit)
 
             a, b = map(int, rf.split(':', 1))
-            if a < 0 or a >= f_bm.bitcount() or b <= 0 or b >= f_bm.bitcount() or a >= b:
+            if a < 0 or a >= f_bs.bitcount() or b <= 0 or b >= f_bs.bitcount() or a >= b:
                 raise ValueError('Invalid bit range: ' + f)
-            smask = (1 << b) - (1 << a)
-            return ExtendedBitMask(f_bm.bit + a, smask << f_bm.bit)
+            return ExtendedBitSpec(f_bs.lsb + a, f_bs.lsb + b)
 
 
         try:
@@ -431,26 +414,19 @@ class PeripheralInstanceDescriptor:
         reg_addr = self._resolve_reg_address(reg_desc)
         reg_size = reg_desc.size
 
-        #Resolve the remaining fields (given by their names) into shift/masks
+        #Resolve the remaining fields (given by their names) into specs
         if fields:
-            bm_list = []
+            bitspec_list = []
             for f in fields:
                 if isinstance(f, str):
-                    bm = _field_name_to_bitmask(f)
-                    bm_list.append(bm)
+                    bitspec = _field_name_to_spec(f)
+                    bitspec_list.append(bitspec)
                 else:
-                    bm_list.append(f)
+                    bitspec_list.append(f)
         else:
-            bm_list = [f_desc.bitmask() for f_desc in reg_desc.fields.values()]
+            bitspec_list = [f_desc.bitspec for f_desc in reg_desc.fields.values()]
 
-        #consolidate the bitmasks
-        cons_bm_list = _reduce_bitmasks(bm_list, reg_size)
-
-        #convert the consolidated bitmasks into regbits, with the address
-        #incremented for each byte
-        rb_list = [_corelib.regbit_t(reg_addr + i, bm) for i, bm in cons_bm_list]
-
-        return rb_list
+        return reg_addr, reg_size, bitspec_list
 
 
     def reg_address(self, reg_path, default=None):
@@ -665,13 +641,13 @@ class DeviceDescriptor:
                 return default
 
 
-    def _resolve_regbits(self, per_name, reg_name, fields):
+    def _resolve_fields(self, per_name, reg_name, fields):
         try:
             per_desc = self.peripherals[per_name]
         except KeyError:
             raise ValueError('Unknown peripheral: ' + per_name) from None
 
-        return per_desc._resolve_regbits(reg_name, fields)
+        return per_desc._resolve_fields(reg_name, fields)
 
 
 #========================================================================================
@@ -691,7 +667,7 @@ def _split_reg_path(reg_path):
 def _partial_parse_fields(s):
     #If the field is an integer, it's a bit position
     if isinstance(s, int):
-        return [ExtendedBitMask(s, 1 << s)]
+        return [ExtendedBitSpec(s)]
 
     bm_list = []
     for f in s.split('|'):
@@ -701,7 +677,7 @@ def _partial_parse_fields(s):
         except ValueError:
             pass
         else:
-            bm_list.append(ExtendedBitMask(pos, 1 << pos))
+            bm_list.append(ExtendedBitSpec(pos))
             continue
 
         #Try a bit range
@@ -709,9 +685,8 @@ def _partial_parse_fields(s):
         if range_match is not None:
             lsb = int(range_match.group('lsb'))
             msb = int(range_match.group('msb'))
-            if lsb > msb: raise ValueError()
-            mask = ((1 << (msb - lsb + 1)) - 1) << lsb
-            bm_list.append(ExtendedBitMask(lsb, mask))
+            if lsb > msb: raise ValueError('Wrong LSB/MSB')
+            bm_list.append(ExtendedBitSpec(lsb, msb))
             continue
 
         #Append as an unparsed string
@@ -739,12 +714,18 @@ def _parse_regpath(path_elements, per, dev):
     if len(path_elements) == 1: #format [R]
         parsed_num_addr = _parse_num(path_elements[0])
         if parsed_num_addr is not None:
-            return [_corelib.regbit_t(parsed_num_addr)]
+            return parsed_num_addr, 1, [ExtendedBitSpec(0, 7)]
 
         if not per:
             raise ValueError('Peripheral unspecified')
 
-        return per._resolve_regbits(path_elements[0], [])
+        reg_addr, reg_size, bitspec_list = per._resolve_fields(path_elements[0], [])
+
+        #Special case when the register has no field defined, most likely a raw register
+        if not bitspec_list:
+            bitspec_list = [ExtendedBitSpec(0, 7)]
+
+        return reg_addr, reg_size, bitspec_list
 
     elif len(path_elements) == 2: #formats [A, F], [R, F] or [P, R]
         reg_or_per = path_elements[0]
@@ -755,22 +736,22 @@ def _parse_regpath(path_elements, per, dev):
             #Parse the fields
             parsed_fields = _partial_parse_fields(path_elements[1])
             #The format is valid only if all the fields have been already parsed (i.e. they're all numerical)
-            if not all(isinstance(f, ExtendedBitMask) for f in parsed_fields):
+            if not all(isinstance(f, ExtendedBitSpec) for f in parsed_fields):
                 raise Exception('All fields must be numeric with a numeric address')
 
-            return [_corelib.regbit_t(parsed_num_addr, f.as_bitmask()) for f in parsed_fields]
+            return parsed_num_addr, 1, parsed_fields
 
         #Try to resolve it as a [R, F] format if a peripheral context is specified
         if per:
             parsed_fields = _partial_parse_fields(path_elements[1])
             try:
-                return per._resolve_regbits(reg_or_per, parsed_fields)
+                return per._resolve_fields(reg_or_per, parsed_fields)
             except ValueError: pass
 
         #If [R, F] failed, try to resolve it as [P, R] format in a device context
         if dev:
             try:
-                return dev._resolve_regbits(reg_or_per, path_elements[1], [])
+                return dev._resolve_fields(reg_or_per, path_elements[1], [])
             except ValueError: pass
 
         raise ValueError('Regpath could not be resolved')
@@ -781,13 +762,81 @@ def _parse_regpath(path_elements, per, dev):
 
         per_name, reg_name, combined_fields = path_elements
         parsed_fields = _partial_parse_fields(combined_fields)
-        return dev._resolve_regbits(per_name, reg_name, parsed_fields)
+        return dev._resolve_fields(per_name, reg_name, parsed_fields)
 
     else:
         raise ValueError('Invalid regpath format')
 
 
-def convert_to_regbit(arg, per=None, dev=None):
+#This utility function "consolidates" multiple bitspecs over a
+#(possibly multi-byte) register, and merging them in order to
+#have only one bitspec per byte maximum.
+def _reduce_bitspecs(bitspecs, reg_size):
+    #most common cases
+    if len(bitspecs) == 1 and reg_size == 1:
+        return [(0, bitspecs[0].as_bitspec())]
+    if not len(bitspecs):
+        return [(i, _corelib.bitspec_t()) for i in range(reg_size)]
+
+    sorted_bitspecs = sorted(bitspecs, key=(lambda x: x.lsb))
+    reduced_bitspecs = [None] * reg_size
+    for bs in sorted_bitspecs:
+        low_byte = bs.lsb // 8
+        high_byte = bs.msb // 8
+
+        if low_byte >= reg_size or high_byte >= reg_size:
+            raise ValueError()
+
+        for num_byte in range(low_byte, high_byte + 1):
+            lsb = max(0, bs.lsb - num_byte * 8)
+            msb = min(7, bs.msb - num_byte * 8)
+
+            r_bs = reduced_bitspecs[num_byte]
+            if r_bs is None:
+                reduced_bitspecs[num_byte] = ExtendedBitSpec(lsb, msb)
+            else:
+                if lsb != r_bs.msb + 1:
+                    raise ValueError("Bitspec combination must be contiguous")
+                r_bs.msb = msb
+
+    #Filter out the bytes unused
+    result = [(i, bs.as_bitspec()) for i, bs in enumerate(reduced_bitspecs) if bs is not None]
+
+    return result
+
+
+#Same as _reduce_bitspecs but with bitmasks
+def _reduce_bitmasks(bitspecs, reg_size):
+    #most common cases
+    if len(bitspecs) == 1 and reg_size == 1:
+        return [(0, bitspecs[0].as_bitspec())]
+
+    sorted_bitspecs = sorted(bitspecs, key=(lambda x: x.lsb))
+    reduced_bitmasks = [None] * reg_size
+    for bs in sorted_bitspecs:
+        low_byte = bs.lsb // 8
+        high_byte = bs.msb // 8
+
+        if low_byte >= reg_size or high_byte >= reg_size:
+            raise ValueError()
+
+        for num_byte in range(low_byte, high_byte + 1):
+            lsb = max(0, bs.lsb - num_byte * 8)
+            msb = min(7, bs.msb - num_byte * 8)
+
+            r_bm = reduced_bitmasks[num_byte]
+            if r_bm is None:
+                reduced_bitmasks[num_byte] = _corelib.bitmask_t(_corelib.bitspec_t(lsb, msb))
+            else:
+                reduced_bitmasks[num_byte] = r_bm | _corelib.bitspec_t(lsb, msb)
+
+    #Filter out the bytes unused
+    result = [(i, bm) for i, bm in enumerate(reduced_bitmasks) if bm is not None]
+
+    return result
+
+
+def convert_to_regbit(arg, per=None, dev=None, merge_bits=False):
     """Utility method that resolves a reg path and returns a regbit_t object.
     If the register could not be resolved, or if the result spans several bytes,
     a ValueError exception is raised.
@@ -816,12 +865,18 @@ def convert_to_regbit(arg, per=None, dev=None):
     else:
         elements = _split_reg_path(arg)
 
-    regbit_list = _parse_regpath(elements, per, dev)
+    reg_addr, reg_size, extbitspecs = _parse_regpath(elements, per, dev)
 
-    if len(regbit_list) != 1:
-        raise ValueError('Was expecting one regbit')
+    if len(extbitspecs) > 1 and not merge_bits:
+        raise ValueError('Multiple fields returned')
 
-    return regbit_list[0]
+    bitspecs = _reduce_bitspecs(extbitspecs, reg_size)
+
+    if len(bitspecs) != 1:
+        raise ValueError('Register is multi-byte, was expecting one byte')
+
+    ofs, bs = bitspecs[0]
+    return _corelib.regbit_t(reg_addr + ofs, bs)
 
 
 def convert_to_regbit_compound(arg, per=None, dev=None):
@@ -849,29 +904,55 @@ def convert_to_regbit_compound(arg, per=None, dev=None):
 
     regbit_list = []
     for regpath in regpath_list:
-        l = _parse_regpath(_split_reg_path(regpath), per, dev)
-        regbit_list.extend(l)
+        reg_addr, reg_size, extbitspecs = _parse_regpath(_split_reg_path(regpath), per, dev)
+        bitspecs = _reduce_bitspecs(extbitspecs, reg_size)
+        rbs = [_corelib.regbit_t(reg_addr + ofs, bs) for ofs, bs in bitspecs]
+        regbit_list.extend(rbs)
 
     return _corelib.regbit_compound_t(regbit_list)
 
 
-def convert_to_bitmask(arg, per=None, dev=None):
-    """Utility method that resolves a reg path and returns a bitmask_t object.
-    If the register could not be resolved, a ValueError exception is raised.
+def convert_to_regmask(arg, per=None, dev=None):
+    """Utility method that resolves a reg path and returns a regmask_t object.
+    The arguments are the same as convert_to_regbit()
+    The difference is that multiple fields of a unique register are allowed
+    and are combined into one single regmask_t object.
 
-    If ``arg`` is a list, it is interpreted as a list of reg path to merge.
+    :sa convert_to_regbit
+    """
 
-    One of ``per`` or ``dev`` arguments should be specified to resolve reg path with names.
-    ``per`` is required to resolve relative reg paths.
-    If ``per`` is given, ``dev`` doesn't need to be.
+    if arg is None or arg == '':
+        return _corelib.regmask_t()
 
-    :param str|list arg: reg path to a register or field
-    :param PeripheralInstanceDescriptor per: used to resolve reg paths
-    :param DeviceDescriptor dev: used to resolve reg paths
+    if isinstance(arg, int):
+        rm =_corelib.regmask_t(arg, 0xFF)
+        return rm
+
+    if isinstance(arg, (list, tuple)):
+        elements = arg
+    else:
+        elements = _split_reg_path(arg)
+
+    reg_addr, reg_size, extbitspecs = _parse_regpath(elements, per, dev)
+
+    bitmasks = _reduce_bitmasks(extbitspecs, reg_size)
+
+    if len(bitmasks) != 1:
+        raise ValueError('Register is multi-byte, was expecting one byte')
+
+    ofs, bm = bitmasks[0]
+    return _corelib.regmask_t(reg_addr + ofs, bm)
+
+
+def convert_to_bitspec(arg, per=None, dev=None, merge_bits=False):
+    """Utility method that resolves a reg path and returns a bitspec_t object.
+    The arguments are the same as convert_to_regbit()
+
+    :sa convert_to_regbit
     """
 
     if not arg:
-        return _corelib.bitmask_t()
+        return _corelib.bitspec_t()
     elif isinstance(arg, (list, tuple)):
         regpath_list = arg
     else:
@@ -882,8 +963,8 @@ def convert_to_bitmask(arg, per=None, dev=None):
     except ValueError:
         pass
     else:
-        if len(flist) == 1 and isinstance(flist[0], ExtendedBitMask):
-            return flist[0].as_bitmask()
+        if len(flist) == 1 and isinstance(flist[0], ExtendedBitSpec):
+            return flist[0].as_bitspec()
 
-    rb = convert_to_regbit(arg, per, dev)
-    return _corelib.bitmask_t(rb)
+    rb = convert_to_regbit(arg, per, dev, merge_bits)
+    return _corelib.bitspec_t(rb)

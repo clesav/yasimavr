@@ -275,16 +275,16 @@ InterruptFlag::InterruptFlag(const InterruptFlag& other)
    \return true if allocations and registrations are successful, false otherwise
 */
 bool InterruptFlag::init(Device& device,
-                         const regbit_t& rb_enable,
-                         const regbit_t& rb_flag,
+                         const regmask_t& rm_enable,
+                         const regmask_t& rm_flag,
                          int_vect_t vector)
 {
     //Obtain a pointer to the two registers flag and enable
-    m_rb_enable = rb_enable;
-    m_enable_reg = device.core().get_ioreg(m_rb_enable.addr);
+    m_rm_enable = rm_enable;
+    m_enable_reg = device.core().get_ioreg(m_rm_enable.addr);
 
-    m_rb_flag = rb_flag;
-    m_flag_reg = device.core().get_ioreg(m_rb_flag.addr);
+    m_rm_flag = rm_flag;
+    m_flag_reg = device.core().get_ioreg(m_rm_flag.addr);
 
     //Register this as the handler of the interrupt vector with the Interrupt Controller
     m_vector = vector;
@@ -346,9 +346,10 @@ void InterruptFlag::set_clear_on_ack(bool clear_on_ack)
    \return true if the interrupt is raised as a result of the flag bit changes,
    false if the interrupt is unchanged.
 */
-bool InterruptFlag::set_flag(uint8_t mask)
+bool InterruptFlag::set_flag(bitmask_t mask)
 {
-    uint8_t new_flag_reg = m_rb_flag.set_to(m_flag_reg->value(), mask);
+    bitmask_t set_mask = m_rm_flag.mask & mask;
+    uint8_t new_flag_reg = set_mask.set_from(m_flag_reg->value());
     m_flag_reg->set(new_flag_reg);
 
     if (!raised() && flag_raised()) {
@@ -364,9 +365,10 @@ bool InterruptFlag::set_flag(uint8_t mask)
    \return true if the interrupt is canceled as a result of the flag bit changes,
    false if the interrupt is unchanged.
 */
-bool InterruptFlag::clear_flag(uint8_t mask)
+bool InterruptFlag::clear_flag(bitmask_t mask)
 {
-    uint8_t new_flag_reg = m_rb_flag.clear_from(m_flag_reg->value(), mask);
+    bitmask_t clear_mask = m_rm_flag.mask & mask;
+    uint8_t new_flag_reg = clear_mask.clear_from(m_flag_reg->value());
     m_flag_reg->set(new_flag_reg);
 
     if (raised() && !flag_raised()) {
@@ -381,8 +383,8 @@ bool InterruptFlag::clear_flag(uint8_t mask)
 //according to the flag&enable bits
 bool InterruptFlag::flag_raised() const
 {
-    uint8_t en_mask = m_rb_enable.extract(m_enable_reg->value());
-    uint8_t fl_mask = m_rb_flag.extract(m_flag_reg->value());
+    uint8_t en_mask = m_enable_reg->value() & m_rm_enable.mask;
+    uint8_t fl_mask = m_flag_reg->value() & m_rm_flag.mask;
     return !!(en_mask & fl_mask);
 }
 
@@ -391,7 +393,7 @@ void InterruptFlag::interrupt_ack_handler(int_vect_t vector)
     //If the clear-on-ack is enabled, clear the flag field and
     //cancel the interrupt
     if (m_clr_on_ack) {
-        m_flag_reg->set(m_rb_flag.clear_from(m_flag_reg->value()));
+        m_flag_reg->set(m_rm_flag.mask.clear_from(m_flag_reg->value()));
         cancel_interrupt(m_vector);
     }
 }

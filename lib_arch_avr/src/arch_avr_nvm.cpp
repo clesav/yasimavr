@@ -110,10 +110,10 @@ bool ArchAVR_NVM::init(Device& device)
     clear_spm_buffer();
 
     //Allocate the SPM registers
-    add_ioreg(regbit_t(m_config.reg_spm_ctrl, m_config.bm_spm_cmd));
-    add_ioreg(regbit_t(m_config.reg_spm_ctrl, m_config.bm_spm_enable));
-    add_ioreg(regbit_t(m_config.reg_spm_ctrl, m_config.bm_spm_inten));
-    add_ioreg(regbit_t(m_config.reg_spm_ctrl, m_config.bm_spm_rww_busy), true);
+    add_ioreg(m_config.reg_spm_ctrl, m_config.bs_spm_cmd);
+    add_ioreg(m_config.reg_spm_ctrl, m_config.bs_spm_enable);
+    add_ioreg(m_config.reg_spm_ctrl, m_config.bs_spm_inten);
+    add_ioreg_ro(m_config.reg_spm_ctrl, m_config.bs_spm_rww_busy);
 
     //Allocate the EEPROM registers
     add_ioreg(m_config.rbc_ee_addr);
@@ -181,8 +181,8 @@ void ArchAVR_NVM::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
         if (m_spm_state == State_Idle && m_ee_state != State_Write) {
             //If the enable bit is set, read the command and wait for a SPM instruction (that will arrive
             //in the form of a write request. Start the timer to act as a 4 cycle timeout.
-            bool enable = m_config.bm_spm_enable.extract(data.value);
-            uint8_t cmd = m_config.bm_spm_cmd.extract(data.value);
+            bool enable = m_config.bs_spm_enable.extract(data.value);
+            uint8_t cmd = m_config.bs_spm_cmd.extract(data.value);
             if (enable) {
                 m_spm_state = State_Pending;
                 m_spm_command = cmd;
@@ -191,17 +191,17 @@ void ArchAVR_NVM::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
                     device()->core().set_direct_LPM_enabled(false);
 
             } else {
-                clear_ioreg(m_config.reg_spm_ctrl, m_config.bm_spm_cmd);
+                clear_ioreg(m_config.reg_spm_ctrl, m_config.bs_spm_cmd);
             }
         } else {
             write_ioreg(m_config.reg_spm_ctrl, data.old);
         }
 
-        if (m_config.bm_spm_inten.extract(data.value) && m_spm_state == State_Idle)
+        if (m_config.bs_spm_inten.extract(data.value) && m_spm_state == State_Idle)
             raise_interrupt(m_config.iv_spm_ready);
     }
 
-    if (addr == m_config.rb_ee_wren.addr) {
+    if (addr == m_config.rb_ee_wren) {
         //On a positive edge on EEPROM write enable, start the 4 cycle window, if the EEPROM is idle
         //and EEPE is zero.
         if (m_config.rb_ee_wren.extract(data.posedge()) && !test_ioreg(m_config.rb_ee_write) && m_ee_state == State_Idle) {
@@ -213,7 +213,7 @@ void ArchAVR_NVM::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
         }
     }
 
-    if (addr == m_config.rb_ee_write.addr) {
+    if (addr == m_config.rb_ee_write) {
         //If we have a strobe on EEPE, start the Write operation, if the write is enabled
         //and no flash write in progress.
         if (m_config.rb_ee_write.extract(data.posedge()) && m_ee_state == State_Pending && m_spm_state == State_Idle) {
@@ -226,7 +226,7 @@ void ArchAVR_NVM::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
         }
     }
 
-    if (addr == m_config.rb_ee_read.addr) {
+    if (addr == m_config.rb_ee_read) {
         //A 1 write starts a read if the EEPROM if idle
         if (m_config.rb_ee_read.extract(data.posedge()) && m_ee_state <= State_Pending) {
             //Start the EEPROM read operation
@@ -238,12 +238,12 @@ void ArchAVR_NVM::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
         }
     }
 
-    if (addr == m_config.rb_ee_inten.addr) {
+    if (addr == m_config.rb_ee_inten) {
         if (m_config.rb_ee_inten.extract(data.value) && !test_ioreg(m_config.rb_ee_write))
             raise_interrupt(m_config.iv_ee_ready);
     }
 
-    if (addr == m_config.rb_ee_mode.addr) {
+    if (addr == m_config.rb_ee_mode) {
         //During a EEPROM write, the EEPMx bits are read-only so ensure they are not changed
         if (m_ee_state == State_Write)
             write_ioreg(m_config.rb_ee_mode, data.old);
@@ -457,7 +457,7 @@ int ArchAVR_NVM::process_NVM_write(NVM_request_t& req)
         //if writing elsewhere, halt the CPU
         if (m_section_manager->address_access_flags(spm_addr) & ArchAVR_Device::Access_RWW) {
             device()->core().set_direct_LPM_enabled(false);
-            set_ioreg(m_config.reg_spm_ctrl, m_config.bm_spm_rww_busy);
+            set_ioreg(m_config.reg_spm_ctrl, m_config.bs_spm_rww_busy);
         } else {
             logger().dbg("SPM page op out of RWW section : halting the CPU");
             ctlreq_data_t d = { .data = 1 };
@@ -466,8 +466,8 @@ int ArchAVR_NVM::process_NVM_write(NVM_request_t& req)
         }
     } else {
         m_spm_state = State_Idle;
-        clear_ioreg(m_config.reg_spm_ctrl, m_config.bm_spm_cmd);
-        clear_ioreg(m_config.reg_spm_ctrl, m_config.bm_spm_enable);
+        clear_ioreg(m_config.reg_spm_ctrl, m_config.bs_spm_cmd);
+        clear_ioreg(m_config.reg_spm_ctrl, m_config.bs_spm_enable);
     }
 
     return 1;
@@ -478,15 +478,15 @@ void ArchAVR_NVM::spm_timer_next()
 {
     if (m_spm_state > State_Pending) {
         logger().dbg("SPM page operation complete");
-        if (test_ioreg(m_config.reg_spm_ctrl, m_config.bm_spm_inten))
+        if (test_ioreg(m_config.reg_spm_ctrl, m_config.bs_spm_inten))
             raise_interrupt(m_config.iv_spm_ready);
     }
 
     m_spm_state = State_Idle;
 
-    clear_ioreg(m_config.reg_spm_ctrl, m_config.bm_spm_cmd);
-    clear_ioreg(m_config.reg_spm_ctrl, m_config.bm_spm_enable);
-    clear_ioreg(m_config.reg_spm_ctrl, m_config.bm_spm_rww_busy);
+    clear_ioreg(m_config.reg_spm_ctrl, m_config.bs_spm_cmd);
+    clear_ioreg(m_config.reg_spm_ctrl, m_config.bs_spm_enable);
+    clear_ioreg(m_config.reg_spm_ctrl, m_config.bs_spm_rww_busy);
 
     device()->core().set_direct_LPM_enabled(true);
 
@@ -576,7 +576,7 @@ void ArchAVR_NVM::interrupt_ack_handler(int_vect_t vector)
 {
     if (vector == m_config.iv_spm_ready) {
         //If the SPM is idle and the interrupt is still enabled, re-raise it
-        if (m_spm_state <= State_Pending && test_ioreg(m_config.reg_spm_ctrl, m_config.bm_spm_inten))
+        if (m_spm_state <= State_Pending && test_ioreg(m_config.reg_spm_ctrl, m_config.bs_spm_inten))
             raise_interrupt(vector);
     }
 
@@ -676,7 +676,7 @@ void ArchAVR_Fuses::reset()
         m_sections->set_section_limits({ m_config.nrww_start, boot_start });
 
         uint8_t boot_rst = read_fuse(m_config.rb_bootrst);
-        uint8_t boot_lockbit = m_config.bm_bootlockbit.extract((*m_lockbit)[0]);
+        uint8_t boot_lockbit = m_config.bs_bootlockbit.extract((*m_lockbit)[0]);
 
         //if the boot lock bit 0 is cleared, the boot loader cannot write in the boot section
         if (!(boot_lockbit & LOCK_FLAG_SPM))
@@ -691,7 +691,7 @@ void ArchAVR_Fuses::reset()
                 section_flags[SECTION_BOOT][SECTION_BOOT] |= ArchAVR_Device::Access_IntDisabled;
         }
 
-        uint8_t app_lockbit = m_config.bm_applockbit.extract((*m_lockbit)[0]);
+        uint8_t app_lockbit = m_config.bs_applockbit.extract((*m_lockbit)[0]);
 
         //if the app lock bit 0 is cleared, the boot loader cannot write in the app sections
         if (!(app_lockbit & LOCK_FLAG_SPM)) {
@@ -739,7 +739,7 @@ bool ArchAVR_Fuses::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
 }
 
 
-uint8_t ArchAVR_Fuses::read_fuse(const regbit_t& rb) const
+uint8_t ArchAVR_Fuses::read_fuse(const regmask_t& rm) const
 {
-    return rb.extract((*m_fuses)[rb.addr]);
+    return rm.mask & (*m_fuses)[rm.addr];
 }

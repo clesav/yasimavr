@@ -226,13 +226,13 @@ bool ArchXT_USART::init(Device& device)
 {
     bool status = Peripheral::init(device);
 
-    add_ioreg(REG_ADDR(RXDATAL), USART_DATA_gm, true);
-    add_ioreg(REG_ADDR(RXDATAH), USART_DATA8_bm | USART_PERR_bm | USART_FERR_bm | USART_BUFOVF_bm | USART_RXCIF_bm, true);
+    add_ioreg_ro(REG_ADDR(RXDATAL), USART_DATA_gm);
+    add_ioreg_ro(REG_ADDR(RXDATAH), USART_DATA8_bm | USART_PERR_bm | USART_FERR_bm | USART_BUFOVF_bm | USART_RXCIF_bm);
     add_ioreg(REG_ADDR(TXDATAL), USART_DATA_gm);
     add_ioreg(REG_ADDR(TXDATAH), USART_DATA8_bm);
-    add_ioreg(REG_ADDR(STATUS), USART_RXCIF_bm | USART_DREIF_bm, true); // R/O part
+    add_ioreg_ro(REG_ADDR(STATUS), USART_RXCIF_bm | USART_DREIF_bm); // R/O part
     add_ioreg(REG_ADDR(STATUS), USART_TXCIF_bm | USART_RXSIF_bm); // R/W part
-    add_ioreg(REG_ADDR(CTRLA), USART_RXCIE_bm | USART_TXCIE_bm | USART_DREIE_bm, USART_RXSIE_bm | USART_LBME_bm | USART_RS485_gm);
+    add_ioreg(REG_ADDR(CTRLA), USART_RXCIE_bm | USART_TXCIE_bm | USART_DREIE_bm | USART_RXSIE_bm | USART_LBME_bm | USART_RS485_gm);
     add_ioreg(REG_ADDR(CTRLB), USART_RXEN_bm | USART_TXEN_bm | USART_SFDEN_bm | USART_ODME_bm | USART_RXMODE_gm);
     add_ioreg(REG_ADDR(CTRLC), USART_CMODE_gm | USART_PMODE_gm | USART_SBMODE_bm | USART_CHSIZE_gm);
     add_ioreg(REG_ADDR(BAUDL));
@@ -244,8 +244,8 @@ bool ArchXT_USART::init(Device& device)
     //RXPLCTRL not implemented
 
     status &= m_rxc_intflag.init(device,
-                                 regbit_t(REG_ADDR(CTRLA), 0, USART_RXCIE_bm | USART_RXSIE_bm),
-                                 regbit_t(REG_ADDR(STATUS), 0, USART_RXCIF_bm | USART_RXSIF_bm),
+                                 { REG_ADDR(CTRLA), USART_RXCIE_bm | USART_RXSIE_bm },
+                                 { REG_ADDR(STATUS), USART_RXCIF_bm | USART_RXSIF_bm },
                                  m_config.iv_rxc);
     status &= m_txc_intflag.init(device,
                                  DEF_REGBIT_B(CTRLA, USART_TXCIE),
@@ -292,7 +292,7 @@ bool ArchXT_USART::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
     else if (req == AVR_CTLREQ_USART_BYTES) {
         bytes_view_t v = data->data.as_bytes();
         for (auto b : v)
-            m_ctrl->push_rx_frame(b);
+            m_ctrl->push_rx_frame((unsigned short) b);
         return true;
     }
 
@@ -305,7 +305,7 @@ uint8_t ArchXT_USART::ioreg_read_handler(reg_addr_t addr, uint8_t value)
     reg_addr_t reg_ofs = addr - m_config.reg_base;
 
     if (reg_ofs == REG_OFS(RXDATAL)) {
-        if (READ_IOREG_GC(CTRLC, USART_CHSIZE) != USART_CHSIZE_9BITL_gc) {
+        if (READ_IOREG_F_GC(CTRLC, USART_CHSIZE) != USART_CHSIZE_9BITL_gc) {
             //Pop the value being read and shift the RX FIFO for the next read
             m_ctrl->pop_rx();
             extract_rx_data();
@@ -314,7 +314,7 @@ uint8_t ArchXT_USART::ioreg_read_handler(reg_addr_t addr, uint8_t value)
     }
 
     else if (reg_ofs == REG_OFS(RXDATAH)) {
-        if (READ_IOREG_GC(CTRLC, USART_CHSIZE) == USART_CHSIZE_9BITL_gc) {
+        if (READ_IOREG_F_GC(CTRLC, USART_CHSIZE) == USART_CHSIZE_9BITL_gc) {
             //Pop the value being read and shift the RX FIFO for the next read
             m_ctrl->pop_rx();
             extract_rx_data();
@@ -339,7 +339,7 @@ void ArchXT_USART::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& dat
 
     //Writing to TXDATA emits the value, if TX is enabled
     if (reg_ofs == REG_OFS(TXDATAL)) {
-        if (TEST_IOREG(CTRLB, USART_TXEN) && READ_IOREG_GC(CTRLC, USART_CHSIZE) != USART_CHSIZE_9BITL_gc) {
+        if (TEST_IOREG(CTRLB, USART_TXEN) && READ_IOREG_F_GC(CTRLC, USART_CHSIZE) != USART_CHSIZE_9BITL_gc) {
             uint16_t frame = (READ_IOREG_B(TXDATAH, USART_DATA8) << 8) | data.value;
             m_ctrl->push_tx(frame);
             if (m_ctrl->tx_pending())
@@ -350,7 +350,7 @@ void ArchXT_USART::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& dat
     }
 
     else if (reg_ofs == REG_OFS(TXDATAH)) {
-        if (TEST_IOREG(CTRLB, USART_TXEN) && READ_IOREG_GC(CTRLC, USART_CHSIZE) == USART_CHSIZE_9BITL_gc) {
+        if (TEST_IOREG(CTRLB, USART_TXEN) && READ_IOREG_F_GC(CTRLC, USART_CHSIZE) == USART_CHSIZE_9BITL_gc) {
             uint16_t frame = (EXTRACT_B(data.value, USART_DATA8) << 8) | READ_IOREG(TXDATAL);
             m_ctrl->push_tx(frame);
             if (m_ctrl->tx_pending())
@@ -510,9 +510,9 @@ void ArchXT_USART::update_bitrate()
     if (brr < 64) brr = 64;
 
     uint16_t s;
-    if (READ_IOREG_GC(CTRLC, USART_CMODE) == USART_CMODE_SYNCHRONOUS_gc)
+    if (READ_IOREG_F_GC(CTRLC, USART_CMODE) == USART_CMODE_SYNCHRONOUS_gc)
         s = 2;
-    else if (READ_IOREG_GC(CTRLB, USART_RXMODE) == USART_RXMODE_CLK2X_gc)
+    else if (READ_IOREG_F_GC(CTRLB, USART_RXMODE) == USART_RXMODE_CLK2X_gc)
         s = 8;
     else
         s = 16;

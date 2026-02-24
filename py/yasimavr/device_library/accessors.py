@@ -98,9 +98,10 @@ class _FieldAccessor:
         """Write a raw integer value for the field to the I/O register.
         """
 
-        bm = self._field.bitmask()
+        bitspec = self._field.bitspec
         rv_in = self._reg.read()
-        rv_out = (rv_in & ~bm.mask) | ((raw_value << bm.bit) & bm.mask)
+        mask = int('1' * (bitspec.msb - bitspec.lsb + 1) + '0' * bitspec.lsb, 2)
+        rv_out = (rv_in & ~mask) | (raw_value << bitspec.lsb)
         self._reg.write(rv_out)
 
     def read_raw(self):
@@ -108,8 +109,9 @@ class _FieldAccessor:
         """
 
         rv = self._reg.read()
-        bm = self._field.bitmask()
-        return (rv & bm.mask) >> bm.bit
+        bitspec = self._field.bitspec
+        mask = int('1' * (bitspec.msb - bitspec.lsb + 1) + '0' * bitspec.lsb, 2)
+        return (rv & mask) >> bitspec.lsb
 
     def __str__(self):
         return '%s.%s [%s]' % (self._reg.name, self._field.name, str(self.read()))

@@ -1,7 +1,7 @@
 /*
  * arch_xt_timer_b.cpp
  *
- *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -116,7 +116,7 @@ bool ArchXT_TimerB::init(Device& device)
     add_ioreg(REG_ADDR(CTRLA), TCB_RUNSTDBY_bm | TCB_CASCADE_bm | TCB_CLKSEL_gm | TCB_ENABLE_bm);
     add_ioreg(REG_ADDR(CTRLB), TCB_ASYNC_bm | TCB_CCMPINIT_bm | TCB_CCMPEN_bm | TCB_CNTMODE_gm);
     add_ioreg(REG_ADDR(EVCTRL), TCB_FILTER_bm | TCB_EDGE_bm | TCB_CAPTEI_bm);
-    add_ioreg(REG_ADDR(STATUS), TCB_RUN_bm, true);
+    add_ioreg_ro(REG_ADDR(STATUS), TCB_RUN_bm);
     //DBGCTRL not supported
     add_ioreg(REG_ADDR(TEMP));
     add_ioreg(REG_ADDR(CNTL));
@@ -132,8 +132,8 @@ bool ArchXT_TimerB::init(Device& device)
     add_ioreg(REG_ADDR(INTFLAGS), iv_flags);
 
     status &= m_intflag.init(device,
-                             regbit_t(REG_ADDR(INTCTRL), 0, iv_flags),
-                             regbit_t(REG_ADDR(INTFLAGS), 0, iv_flags),
+                             { REG_ADDR(INTCTRL), iv_flags },
+                             { REG_ADDR(INTFLAGS), iv_flags },
                              m_config.iv_capt);
 
     m_counter.init(*device.cycle_manager(), logger());

@@ -110,7 +110,7 @@ bool ArchXT_IntCtrl::init(Device& device)
     bool status = InterruptController::init(device);
 
     add_ioreg(INT_REG_ADDR(CTRLA), CPUINT_IVSEL_bm | CPUINT_CVT_bm | CPUINT_LVL0RR_bm);
-    add_ioreg(INT_REG_ADDR(STATUS), CPUINT_NMIEX_bm | CPUINT_LVL1EX_bm | CPUINT_LVL0EX_bm, true);
+    add_ioreg_ro(INT_REG_ADDR(STATUS), CPUINT_NMIEX_bm | CPUINT_LVL1EX_bm | CPUINT_LVL0EX_bm);
     add_ioreg(INT_REG_ADDR(LVL0PRI));
     add_ioreg(INT_REG_ADDR(LVL1VEC));
 
@@ -146,10 +146,10 @@ void ArchXT_IntCtrl::cpu_ack_irq(int_vect_t vector)
             priority = IntrPriorityLevel0;
 
         //Set the bit corresponding to the priority in the STATUS register
-        set_ioreg(INT_REG_ADDR(STATUS), priority);
+        set_ioreg(INT_REG_ADDR(STATUS), bitspec_t(priority));
 
         //In Round-Robin Scheduling, LVL0PRI us updated with the latest acknowledged LVL0 interrupt.
-        if (priority == IntrPriorityLevel0 && test_ioreg(INT_REG_ADDR(CTRLA), CPUINT_LVL0RR_bp))
+        if (priority == IntrPriorityLevel0 && test_ioreg(INT_REG_ADDR(CTRLA), CPUINT_LVL0RR_bm))
             write_ioreg(INT_REG_ADDR(LVL0PRI), (uint8_t) vector);
     }
 
@@ -173,7 +173,7 @@ InterruptController::IRQ_t ArchXT_IntCtrl::get_next_irq() const
     //Get the vector position in the table, depending on the CVT bit and the priority
     unsigned int pos;
     //Normal vector table case, the offset is the vector index
-    if (!test_ioreg(INT_REG_ADDR(CTRLA), CPUINT_CVT_bp))
+    if (!test_ioreg(INT_REG_ADDR(CTRLA), CPUINT_CVT_bm))
         pos = vect_info.vector;
     //Compact Vector Table cases
     else if (vect_info.priority == IntrPriorityLevel0)
@@ -247,11 +247,11 @@ void ArchXT_IntCtrl::cpu_reti()
     //The priority level flag must be cleared
     uint8_t status_ex = read_ioreg(INT_REG_ADDR(STATUS));
     if (BITSET(status_ex, IntrPriorityNMI))
-        clear_ioreg(INT_REG_ADDR(STATUS), IntrPriorityNMI);
+        clear_ioreg(INT_REG_ADDR(STATUS), bitspec_t(IntrPriorityNMI));
     else if (BITSET(status_ex, IntrPriorityLevel1))
-        clear_ioreg(INT_REG_ADDR(STATUS), IntrPriorityLevel1);
+        clear_ioreg(INT_REG_ADDR(STATUS), bitspec_t(IntrPriorityLevel1));
     else
-        clear_ioreg(INT_REG_ADDR(STATUS), IntrPriorityLevel0);
+        clear_ioreg(INT_REG_ADDR(STATUS), bitspec_t(IntrPriorityLevel0));
 
     InterruptController::cpu_reti();
 }
@@ -262,7 +262,7 @@ flash_addr_t ArchXT_IntCtrl::get_table_base() const
     //If IVSEL is cleared, the interrupt vector table is placed at the start of the
     //application code section, if it exists (which we check by testing its size).
     //Otherwise, the table is at the start of the boot section.
-    bool ivsel = test_ioreg(INT_REG_ADDR(CTRLA), CPUINT_IVSEL_bp);
+    bool ivsel = test_ioreg(INT_REG_ADDR(CTRLA), CPUINT_IVSEL_bm);
     unsigned int s;
     if (!ivsel && m_sections->section_size(ArchXT_Device::Section_AppCode))
         s = ArchXT_Device::Section_AppCode;
@@ -367,25 +367,25 @@ bool ArchXT_MiscRegCtrl::init(Device& device)
     for (unsigned int i = 0; i < m_config.gpior_count; ++i)
         add_ioreg(m_config.reg_base_gpior + i);
 
-    add_ioreg(m_config.reg_revid, 0xFF, true);
+    add_ioreg_ro(m_config.reg_revid, 0xFF);
 
-    add_ioreg(SIGROW_REG_ADDR(DEVICEID0), 0xFF, true);
-    add_ioreg(SIGROW_REG_ADDR(DEVICEID1), 0xFF, true);
-    add_ioreg(SIGROW_REG_ADDR(DEVICEID2), 0xFF, true);
+    add_ioreg_ro(SIGROW_REG_ADDR(DEVICEID0), 0xFF);
+    add_ioreg_ro(SIGROW_REG_ADDR(DEVICEID1), 0xFF);
+    add_ioreg_ro(SIGROW_REG_ADDR(DEVICEID2), 0xFF);
 
     for (int i = 0; i < 10; ++i)
-        add_ioreg(SIGROW_REG_ADDR(SERNUM0) + i, 0xFF, true);
+        add_ioreg_ro(SIGROW_REG_ADDR(SERNUM0) + i, 0xFF);
 
-    add_ioreg(SIGROW_REG_ADDR(OSCCAL16M0), 0x7F, true);
-    add_ioreg(SIGROW_REG_ADDR(OSCCAL20M1), 0x0F, true);
-    add_ioreg(SIGROW_REG_ADDR(OSCCAL16M0), 0x7F, true);
-    add_ioreg(SIGROW_REG_ADDR(OSCCAL20M1), 0x0F, true);
-    add_ioreg(SIGROW_REG_ADDR(TEMPSENSE0), 0xFF, true);
-    add_ioreg(SIGROW_REG_ADDR(TEMPSENSE1), 0xFF, true);
-    add_ioreg(SIGROW_REG_ADDR(OSC16ERR3V), 0xFF, true);
-    add_ioreg(SIGROW_REG_ADDR(OSC16ERR5V), 0xFF, true);
-    add_ioreg(SIGROW_REG_ADDR(OSC20ERR3V), 0xFF, true);
-    add_ioreg(SIGROW_REG_ADDR(OSC20ERR5V), 0xFF, true);
+    add_ioreg_ro(SIGROW_REG_ADDR(OSCCAL16M0), 0x7F);
+    add_ioreg_ro(SIGROW_REG_ADDR(OSCCAL20M1), 0x0F);
+    add_ioreg_ro(SIGROW_REG_ADDR(OSCCAL16M0), 0x7F);
+    add_ioreg_ro(SIGROW_REG_ADDR(OSCCAL20M1), 0x0F);
+    add_ioreg_ro(SIGROW_REG_ADDR(TEMPSENSE0), 0xFF);
+    add_ioreg_ro(SIGROW_REG_ADDR(TEMPSENSE1), 0xFF);
+    add_ioreg_ro(SIGROW_REG_ADDR(OSC16ERR3V), 0xFF);
+    add_ioreg_ro(SIGROW_REG_ADDR(OSC16ERR5V), 0xFF);
+    add_ioreg_ro(SIGROW_REG_ADDR(OSC20ERR3V), 0xFF);
+    add_ioreg_ro(SIGROW_REG_ADDR(OSC20ERR5V), 0xFF);
 
     return status;
 }

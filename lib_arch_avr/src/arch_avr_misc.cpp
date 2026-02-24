@@ -165,16 +165,16 @@ void ArchAVR_ResetCtrl::reset()
 
 void ArchAVR_ResetCtrl::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
-    if (addr == m_config.rb_PORF.addr)
+    if (addr == m_config.rb_PORF)
         check_flag_write(m_config.rb_PORF, data.value, Device::Reset_PowerOn);
 
-    if (addr == m_config.rb_BORF.addr)
+    if (addr == m_config.rb_BORF)
         check_flag_write(m_config.rb_BORF, data.value, Device::Reset_BOD);
 
-    if (addr == m_config.rb_WDRF.addr)
+    if (addr == m_config.rb_WDRF)
         check_flag_write(m_config.rb_WDRF, data.value, Device::Reset_WDT);
 
-    if (addr == m_config.rb_EXTRF.addr)
+    if (addr == m_config.rb_EXTRF)
         check_flag_write(m_config.rb_EXTRF, data.value, Device::Reset_Ext);
 }
 

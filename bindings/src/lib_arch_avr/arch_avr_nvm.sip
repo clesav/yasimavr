@@ -1,7 +1,7 @@
 /*
  * arch_avr_nvm.sip
  *
- *  Copyright 2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2024-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -27,10 +27,10 @@ struct ArchAVR_NVMConfig {
 %End
 
     reg_addr_t        reg_spm_ctrl;
-    bitmask_t         bm_spm_cmd;
-    bitmask_t         bm_spm_enable;
-    bitmask_t         bm_spm_inten;
-    bitmask_t         bm_spm_rww_busy;
+    bitspec_t         bs_spm_cmd;
+    bitspec_t         bs_spm_enable;
+    bitspec_t         bs_spm_inten;
+    bitspec_t         bs_spm_rww_busy;
 
     regbit_compound_t rbc_ee_addr;
     reg_addr_t        reg_ee_data;
@@ -92,10 +92,10 @@ struct ArchAVR_FusesConfig {
         unsigned long boot_size;
     };
 
-    regbit_t rb_bootsz;
-    regbit_t rb_bootrst;
-    bitmask_t bm_bootlockbit;
-    bitmask_t bm_applockbit;
+    regbit_t     rb_bootsz;
+    regbit_t     rb_bootrst;
+    bitspec_t    bs_bootlockbit;
+    bitspec_t    bs_applockbit;
 
     flash_addr_t nrww_start;
 

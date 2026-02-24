@@ -1,7 +1,7 @@
 /*
  * arch_avr_port.cpp
  *
- *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -45,9 +45,10 @@ bool ArchAVR_Port::init(Device& device)
 {
     bool status = Port::init(device);
 
-    add_ioreg(m_config.reg_port, pin_mask());
-    add_ioreg(m_config.reg_pin, pin_mask());
-    add_ioreg(m_config.reg_dir, pin_mask());
+    bitmask_t bm = bitmask_t(pin_mask());
+    add_ioreg(m_config.reg_port, bm);
+    add_ioreg(m_config.reg_pin, bm);
+    add_ioreg(m_config.reg_dir, bm);
 
     return status;
 }
@@ -109,6 +110,6 @@ void ArchAVR_Port::pin_state_changed(uint8_t num, Wire::StateEnum state)
     //The SHORTED case is taken care of by Port
     if (state != Pin::State_Shorted) {
         bool new_value = pin(num)->digital_state();
-        write_ioreg(m_config.reg_pin, num, new_value);
+        write_ioreg(regbit_t(m_config.reg_pin, num), new_value);
     }
 }

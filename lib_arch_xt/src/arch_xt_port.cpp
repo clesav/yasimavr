@@ -1,7 +1,7 @@
 /*
  * arch_xt_port.cpp
  *
- *  Copyright 2022-2025 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -177,10 +177,9 @@ void ArchXT_Port::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
         case PORT_REG_OFS(PIN7CTRL): {
             uint8_t bitnum = addr - PORT_REG_OFS(PIN0CTRL);
             if ((pin_mask() >> bitnum) & 0x01) {
-                bitmask_t rb_isc = DEF_BITMASK_F(PORT_ISC);
-                uint8_t isc = rb_isc.extract(data.value);
+                uint8_t isc = data.value & DEF_BITSPEC_F(PORT_ISC);
 
-                if (isc == PORT_ISC_LEVEL_gc && !test_ioreg(PORT_REG_OFS(IN), bitnum))
+                if (isc == PORT_ISC_LEVEL_gc && !test_ioreg(PORT_REG_OFS(IN), bitspec_t(bitnum)))
                     raise_interrupt(m_config.iv_port);
                 else
                     cancel_interrupt(m_config.iv_port);
@@ -242,20 +241,20 @@ void ArchXT_Port::pin_state_changed(uint8_t num, Wire::StateEnum state)
     if (state == Pin::State_Shorted) return;
 
     //Extract the current and new pin boolean state and if there's no change, we return
-    bool curr_value = test_ioreg(PORT_REG_ADDR(IN), num);
+    bitspec_t pin_bs = bitspec_t(num);
+    bool curr_value = test_ioreg(PORT_REG_ADDR(IN), pin_bs);
     bool new_value = pin(num)->digital_state();
     if (new_value == curr_value) return;
 
     //Read the Input Sense Config field of the pin control register
     uint8_t pin_cfg = read_ioreg(m_config.reg_base_port + 0x10 + num);
-    bitmask_t rb_isc = DEF_BITMASK_F(PORT_ISC);
-    uint8_t isc = rb_isc.extract(pin_cfg);
+    uint8_t isc = pin_cfg & DEF_BITSPEC_F(PORT_ISC);
 
     //If ISC is Input Disabled, we can ignore the change
     if (isc == PORT_ISC_INPUT_DISABLE_gc) return;
 
     //Save the new pin state in the IN register, invert it if required
-    write_ioreg(PORT_REG_ADDR(IN), num, new_value);
+    write_ioreg(PORT_REG_ADDR(IN), pin_bs, new_value);
 
     //Check if we need to raise the interrupt
     bool raise_int = (isc == PORT_ISC_RISING_gc && new_value) ||
@@ -263,8 +262,8 @@ void ArchXT_Port::pin_state_changed(uint8_t num, Wire::StateEnum state)
                      (isc == PORT_ISC_LEVEL_gc && !new_value) ||
                      (isc == PORT_ISC_BOTHEDGES_gc);
 
-    if (raise_int && !test_ioreg(PORT_REG_ADDR(INTFLAGS), num)) {
-        set_ioreg(PORT_REG_ADDR(INTFLAGS), num);
+    if (raise_int && !test_ioreg(PORT_REG_ADDR(INTFLAGS), pin_bs)) {
+        set_ioreg(PORT_REG_ADDR(INTFLAGS), pin_bs);
         raise_interrupt(m_config.iv_port);
     }
 }

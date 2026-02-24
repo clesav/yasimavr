@@ -127,46 +127,65 @@ void Peripheral::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& value
 void Peripheral::sleep(bool on, SleepMode mode)
 {}
 
-void Peripheral::add_ioreg(const regbit_t& rb, bool readonly)
-{
-    m_device->add_ioreg_handler(rb, *this, readonly);
-}
 
-void Peripheral::add_ioreg(const regbit_compound_t& rbc, bool readonly)
+void Peripheral::add_ioreg(const regbit_compound_t& rbc)
 {
     for (auto& rb : rbc)
-        m_device->add_ioreg_handler(rb, *this, readonly);
+        add_ioreg(rb);
 }
 
-void Peripheral::add_ioreg(reg_addr_t addr, uint8_t mask, bool readonly)
+
+void Peripheral::add_ioreg(reg_addr_t addr, bitmask_t bm)
 {
-    regbit_t rb = regbit_t(addr, 0, mask);
-    m_device->add_ioreg_handler(rb, *this, readonly);
+    m_device->add_ioreg_handler({ addr, bm }, *this, false);
 }
+
+
+void Peripheral::add_ioreg_ro(const regbit_compound_t& rbc)
+{
+    for (auto& rb : rbc)
+        add_ioreg_ro(rb);
+}
+
+
+void Peripheral::add_ioreg_ro(reg_addr_t addr, bitmask_t bm)
+{
+    m_device->add_ioreg_handler({ addr, bm }, *this, true);
+}
+
+
+uint64_t Peripheral::read_ioreg(const regbit_compound_t& rbc) const
+{
+    uint64_t value = 0;
+    int offset = 0;
+    for (auto& rb : rbc) {
+        value |= ((uint64_t) read_ioreg(rb)) << offset;
+        offset += rb.bitcount();
+    }
+    return value;
+}
+
 
 uint8_t Peripheral::read_ioreg(reg_addr_t addr) const
 {
     return m_device->core().ioctl_read_ioreg(addr);
 }
 
-void Peripheral::write_ioreg(const regbit_t& rb, uint8_t value)
+
+void Peripheral::write_ioreg(reg_addr_t addr, bitmask_t bm, uint8_t value)
 {
-    m_device->core().ioctl_write_ioreg(rb, value);
+    m_device->core().ioctl_write_ioreg(addr, bm, value);
 }
 
-uint64_t Peripheral::read_ioreg(const regbit_compound_t& rbc) const
-{
-    uint64_t v = 0;
-    for (size_t i = 0; i < rbc.size(); ++i)
-        v |= rbc.compound(read_ioreg(rbc[i].addr), i);
-    return v;
-}
 
 void Peripheral::write_ioreg(const regbit_compound_t& rbc, uint64_t value)
 {
-    for (size_t i = 0; i < rbc.size(); ++i)
-        write_ioreg(rbc[i], rbc.extract(value, i));
+    for (auto& rb : rbc) {
+        write_ioreg(rb, value);
+        value >>= rb.bitcount();
+    }
 }
+
 
 void Peripheral::set_ioreg(const regbit_compound_t& rbc)
 {
@@ -174,10 +193,11 @@ void Peripheral::set_ioreg(const regbit_compound_t& rbc)
         set_ioreg(rb);
 }
 
+
 void Peripheral::clear_ioreg(const regbit_compound_t& rbc)
 {
     for (auto& rb : rbc)
-        set_ioreg(rb);
+        clear_ioreg(rb);
 }
 
 /**
@@ -219,6 +239,7 @@ DummyController::DummyController(ctl_id_t id, const std::vector<dummy_register_t
 ,m_registers(regs)
 {}
 
+
 bool DummyController::init(Device& device)
 {
     bool status = Peripheral::init(device);
@@ -227,8 +248,9 @@ bool DummyController::init(Device& device)
     return status;
 }
 
+
 void DummyController::reset()
 {
     for (dummy_register_t r : m_registers)
-        write_ioreg(r.reg, r.reset);
+        write_ioreg(r.reg.addr, r.reg.mask, r.reset);
 }

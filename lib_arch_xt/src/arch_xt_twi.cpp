@@ -1,7 +1,7 @@
 /*
  * arch_xt_twi.cpp
  *
- *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -235,28 +235,28 @@ bool ArchXT_TWI::init(Device& device)
     add_ioreg(REG_ADDR(MCTRLA), TWI_ENABLE_bm | TWI_SMEN_bm | TWI_WIEN_bm | TWI_RIEN_bm);
     add_ioreg(REG_ADDR(MCTRLB), TWI_MCMD_gm | TWI_ACKACT_bm | TWI_FLUSH_bm);
     add_ioreg(REG_ADDR(MSTATUS), TWI_BUSSTATE_gm | TWI_BUSERR_bm | TWI_ARBLOST_bm | TWI_CLKHOLD_bm | TWI_WIF_bm | TWI_RIF_bm);
-    add_ioreg(REG_ADDR(MSTATUS), TWI_RXACK_bm, true);
+    add_ioreg_ro(REG_ADDR(MSTATUS), TWI_RXACK_bm);
     add_ioreg(REG_ADDR(MBAUD));
     add_ioreg(REG_ADDR(MADDR));
     add_ioreg(REG_ADDR(MDATA));
     add_ioreg(REG_ADDR(SCTRLA), TWI_ENABLE_bm | TWI_SMEN_bm | TWI_PMEN_bm | TWI_PIEN_bm | TWI_APIEN_bm | TWI_DIEN_bm);
     add_ioreg(REG_ADDR(SCTRLB), TWI_SCMD_gm | TWI_ACKACT_bm);
     add_ioreg(REG_ADDR(SSTATUS), TWI_BUSERR_bm | TWI_COLL_bm | TWI_APIF_bm | TWI_DIF_bm);
-    add_ioreg(REG_ADDR(SSTATUS), TWI_AP_bm | TWI_DIR_bm | TWI_RXACK_bm | TWI_CLKHOLD_bm, true);
+    add_ioreg_ro(REG_ADDR(SSTATUS), TWI_AP_bm | TWI_DIR_bm | TWI_RXACK_bm | TWI_CLKHOLD_bm);
     add_ioreg(REG_ADDR(SADDR));
     add_ioreg(REG_ADDR(SDATA));
     add_ioreg(REG_ADDR(SADDRMASK));
 
     status &= m_intflag_host.init(
         device,
-        regbit_t(REG_ADDR(MCTRLA), 0, TWI_WIEN_bm | TWI_RIEN_bm),
-        regbit_t(REG_ADDR(MSTATUS), 0, TWI_WIF_bm | TWI_RIF_bm),
+        { REG_ADDR(MCTRLA), TWI_WIEN_bm | TWI_RIEN_bm },
+        { REG_ADDR(MSTATUS), TWI_WIF_bm | TWI_RIF_bm },
         m_config.iv_host);
 
     status &= m_intflag_client.init(
         device,
-        regbit_t(REG_ADDR(SCTRLA), 0, TWI_APIEN_bm | TWI_DIEN_bm),
-        regbit_t(REG_ADDR(SSTATUS), 0, TWI_APIF_bm | TWI_DIF_bm),
+        { REG_ADDR(SCTRLA), TWI_APIEN_bm | TWI_DIEN_bm },
+        { REG_ADDR(SSTATUS), TWI_APIF_bm | TWI_DIF_bm },
         m_config.iv_client);
 
     m_host->init(*device.cycle_manager());
@@ -387,13 +387,13 @@ void ArchXT_TWI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
             //FLUSH is a strobe bit so we clear it
             CLEAR_IOREG(MCTRLB, TWI_FLUSH);
             //Flushing takes over commands so no further processing other than clearing it
-            WRITE_IOREG_GC(MCTRLB, TWI_MCMD, 0);
+            WRITE_IOREG_F_GC(MCTRLB, TWI_MCMD, 0);
             return;
         }
 
         //Extract and clear MCMD, it's a strobe
         m_host_cmd = EXTRACT_GC(data.value, TWI_MCMD);
-        WRITE_IOREG_GC(MCTRLB, TWI_MCMD, 0);
+        WRITE_IOREG_F_GC(MCTRLB, TWI_MCMD, 0);
 
         //Acknowledgment Action, if MCMD is not zero and the host part is in the relevant state
         if (TEST_IOREG(MCTRLA, TWI_ENABLE) && m_host_cmd) {
@@ -412,7 +412,7 @@ void ArchXT_TWI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
         //If writing IDLE to BUSSTATE, it resets the host part
         if (TEST_IOREG(MCTRLA, TWI_ENABLE) && EXTRACT_GC(data.value, TWI_BUSSTATE) == TWI_BUSSTATE_IDLE_gc) {
             reset_host();
-            WRITE_IOREG_GC(MSTATUS, TWI_BUSSTATE, TWI_BUSSTATE_IDLE_gc);
+            WRITE_IOREG_F_GC(MSTATUS, TWI_BUSSTATE, TWI_BUSSTATE_IDLE_gc);
         }
 
         m_intflag_host.update_from_ioreg();
@@ -428,7 +428,7 @@ void ArchXT_TWI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
             //Peripheral disabled, nothing to do
         }
 
-        else if (READ_IOREG_GC(MSTATUS, TWI_BUSSTATE) == TWI_BUSSTATE_UNKNOWN_gc) {
+        else if (READ_IOREG_F_GC(MSTATUS, TWI_BUSSTATE) == TWI_BUSSTATE_UNKNOWN_gc) {
             //If the bus state is unknown we can't do anything, just set the bus error flag
             SET_IOREG(MSTATUS, TWI_BUSERR);
             m_intflag_host.set_flag(TWI_WIF_bm);
@@ -446,7 +446,7 @@ void ArchXT_TWI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
             //If it succeeds, the address will follow automatically.
             logger().dbg("Sending start condition");
             m_pending_host_address = true;
-            WRITE_IOREG_GC(MSTATUS, TWI_BUSSTATE, TWI_BUSSTATE_OWNER_gc);
+            WRITE_IOREG_F_GC(MSTATUS, TWI_BUSSTATE, TWI_BUSSTATE_OWNER_gc);
             clear_host_status();
         }
     }
@@ -483,7 +483,7 @@ void ArchXT_TWI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
     else if (reg_ofs == REG_OFS(SCTRLB)) {
         //Extract and clear SCMD, it's a strobe
         uint8_t scmd = EXTRACT_GC(data.value, TWI_SCMD);
-        WRITE_IOREG_GC(SCTRLB, TWI_SCMD, 0);
+        WRITE_IOREG_F_GC(SCTRLB, TWI_SCMD, 0);
 
         //Command execution, if the client is enabled and SCMD is not zero
         if (TEST_IOREG(SCTRLA, TWI_ENABLE) && scmd) {
@@ -535,7 +535,7 @@ void ArchXT_TWI::host_signal_raised(const signal_data_t& sigdata, int)
 
             //Update the BUSSTATE field
             TWI_BUSSTATE_t s = BusEnumToRegField[sigdata.data.as_int()];
-            WRITE_IOREG_GC(MSTATUS, TWI_BUSSTATE, s);
+            WRITE_IOREG_F_GC(MSTATUS, TWI_BUSSTATE, s);
         } break;
 
         case Signal_AddressStandby: {
@@ -669,13 +669,13 @@ void ArchXT_TWI::reset_host()
     m_host->set_enabled(true);
     m_pending_host_address = false;
     clear_host_status();
-    WRITE_IOREG_GC(MSTATUS, TWI_BUSSTATE, TWI_BUSSTATE_UNKNOWN_gc);
+    WRITE_IOREG_F_GC(MSTATUS, TWI_BUSSTATE, TWI_BUSSTATE_UNKNOWN_gc);
 }
 
 
 void ArchXT_TWI::clear_host_status()
 {
-    bitmask_t bm = bitmask_t(0, TWI_RIF_bm | TWI_WIF_bm | TWI_BUSERR_bm | TWI_ARBLOST_bm | TWI_CLKHOLD_bm);
+    bitmask_t bm = TWI_RIF_bm | TWI_WIF_bm | TWI_BUSERR_bm | TWI_ARBLOST_bm | TWI_CLKHOLD_bm;
     clear_ioreg(REG_ADDR(MSTATUS), bm);
     m_intflag_host.update_from_ioreg();
     m_pending_host_rx_data = false;
@@ -684,7 +684,7 @@ void ArchXT_TWI::clear_host_status()
 
 void ArchXT_TWI::clear_client_status()
 {
-    bitmask_t bm = bitmask_t(0, TWI_BUSERR_bm | TWI_COLL_bm | TWI_CLKHOLD_bm);
+    bitmask_t bm = TWI_BUSERR_bm | TWI_COLL_bm | TWI_CLKHOLD_bm;
     clear_ioreg(REG_ADDR(SSTATUS), bm);
     m_intflag_client.clear_flag();
     m_pending_client_rx_data = false;

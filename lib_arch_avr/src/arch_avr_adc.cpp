@@ -1,7 +1,7 @@
 /*
  * arch_avr_adc.cpp
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -113,7 +113,7 @@ bool ArchAVR_ADC::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
 uint8_t ArchAVR_ADC::ioreg_read_handler(reg_addr_t addr, uint8_t value)
 {
     //The ADSC bit is dynamic, reading 1 if a conversion is in progress
-    if (addr == m_config.rb_start.addr)
+    if (addr == m_config.rb_start)
         value = m_config.rb_start.replace(value, (m_state > ADC_Idle ? 1 : 0));
 
     return value;
@@ -121,7 +121,7 @@ uint8_t ArchAVR_ADC::ioreg_read_handler(reg_addr_t addr, uint8_t value)
 
 void ArchAVR_ADC::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
-    if (addr == m_config.rb_enable.addr) {
+    if (addr == m_config.rb_enable) {
         //Positive edge on the enable bit (ADEN).
         //We reset the state and the prescaler and reconnect the trigger
         if (m_config.rb_enable.extract(data.posedge())) {
@@ -138,13 +138,13 @@ void ArchAVR_ADC::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
         }
     }
 
-    if (addr == m_config.rb_start.addr) {
+    if (addr == m_config.rb_start) {
         //Writing a '1' to ADSC when it's idle starts a conversion cycle
         if (m_config.rb_start.extract(data.value) && m_state == ADC_Idle)
             start_conversion_cycle();
     }
 
-    if (addr == m_config.rb_auto_trig.addr || addr == m_config.rb_trig_mux.addr) {
+    if (addr == m_config.rb_auto_trig || addr == m_config.rb_trig_mux) {
         if (test_ioreg(m_config.rb_auto_trig)) {
             uint8_t trig_reg_value = read_ioreg(m_config.rb_trig_mux);
             auto trig_cfg = find_reg_config_p<CFG::trigger_config_t>(m_config.triggers, trig_reg_value);
@@ -154,14 +154,14 @@ void ArchAVR_ADC::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
         }
     }
 
-    if (addr == m_config.rb_left_adj.addr)
+    if (addr == m_config.rb_left_adj)
         write_digital_value();
 
-    if (addr == m_config.rb_int_enable.addr)
+    if (addr == m_config.rb_int_enable)
         m_intflag.update_from_ioreg();
 
     //Writing 1 to ADIF clears the flag and cancels the interrupt
-    if (addr == m_config.rb_int_flag.addr && m_config.rb_int_flag.extract(data.value))
+    if (addr == m_config.rb_int_flag && m_config.rb_int_flag.extract(data.value))
         m_intflag.clear_flag();
 
 }

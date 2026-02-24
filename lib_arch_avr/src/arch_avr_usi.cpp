@@ -181,7 +181,7 @@ bool ArchAVR_USI::init(Device& device)
     add_ioreg(m_config.rb_clk_strobe);
     add_ioreg(m_config.rb_clk_toggle);
     add_ioreg(m_config.reg_data);
-    add_ioreg(m_config.reg_buffer, true);
+    add_ioreg_ro(m_config.reg_buffer);
     add_ioreg(m_config.rb_counter);
     add_ioreg(m_config.rb_ovf_flag);
     add_ioreg(m_config.rb_ovf_inten);
@@ -220,12 +220,12 @@ void ArchAVR_USI::reset()
 
 void ArchAVR_USI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
-    if (addr == m_config.rb_wiremode.addr) {
+    if (addr == m_config.rb_wiremode) {
         uint8_t wm = m_config.rb_wiremode.extract(data.value);
         set_wire_mode(wm, false);
     }
 
-    if (addr == m_config.rb_clk_sel.addr) {
+    if (addr == m_config.rb_clk_sel) {
         uint8_t cs = m_config.rb_clk_sel.extract(data.value);
         bool old_latched = output_latched();
         m_clk_mode = cs;
@@ -236,7 +236,7 @@ void ArchAVR_USI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
             update_data_output();
     }
 
-    if (addr == m_config.rb_ovf_flag.addr) {
+    if (addr == m_config.rb_ovf_flag) {
         //Writing one to the bit clears the flag
         if (m_config.rb_ovf_flag.extract(data.value)) {
             m_ovf_intflag.clear_flag();
@@ -248,10 +248,10 @@ void ArchAVR_USI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
         }
     }
 
-    if (addr == m_config.rb_ovf_inten.addr)
+    if (addr == m_config.rb_ovf_inten)
         m_ovf_intflag.update_from_ioreg();
 
-    if (addr == m_config.rb_start_flag.addr) {
+    if (addr == m_config.rb_start_flag) {
         //Writing one to the bit clears the flag
         if (m_config.rb_start_flag.extract(data.value)) {
             m_start_intflag.clear_flag();
@@ -264,15 +264,15 @@ void ArchAVR_USI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
         }
     }
 
-    if (addr == m_config.rb_start_inten.addr)
+    if (addr == m_config.rb_start_inten)
         m_start_intflag.update_from_ioreg();
 
-    if (addr == m_config.rb_stop_flag.addr) {
+    if (addr == m_config.rb_stop_flag) {
         if (m_config.rb_stop_flag.extract(data.value))
             clear_ioreg(m_config.rb_stop_flag);
     }
 
-    if (addr == m_config.rb_clk_strobe.addr) {
+    if (addr == m_config.rb_clk_strobe) {
         if (m_clk_mode == Clock_Strobe && m_config.rb_clk_strobe.extract(data.value)) {
             shift_data();
             update_data_output();
@@ -281,7 +281,7 @@ void ArchAVR_USI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
         }
     }
 
-    if (addr == m_config.rb_clk_toggle.addr && m_config.rb_clk_toggle.extract(data.value)) {
+    if (addr == m_config.rb_clk_toggle && m_config.rb_clk_toggle.extract(data.value)) {
         //Toggle the clock line
         bool b = m_driver->line_state(Pin_Clock);
         m_driver->set_line_state(Pin_Clock, !b);

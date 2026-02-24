@@ -1,7 +1,7 @@
 /*
  * core.sip
  *
- *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -87,7 +87,7 @@ public:
     int exec_cycle();
     IO_Register* get_ioreg(reg_addr_t);
     uint8_t ioctl_read_ioreg(reg_addr_t);
-    void ioctl_write_ioreg(const regbit_t&, uint8_t);
+    void ioctl_write_ioreg(reg_addr_t, bitmask_t, uint8_t);
 
     void start_interrupt_inhibit(unsigned int);
 

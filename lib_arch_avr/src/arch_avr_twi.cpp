@@ -1,7 +1,7 @@
 /*
  * arch_avr_twi.cpp
  *
- *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -245,14 +245,14 @@ bool ArchAVR_TWI::init(Device& device)
 {
     bool status = Peripheral::init(device);
 
-    add_ioreg(regbit_t(m_config.reg_ctrl, m_config.bm_enable));
-    add_ioreg(regbit_t(m_config.reg_ctrl, m_config.bm_start));
-    add_ioreg(regbit_t(m_config.reg_ctrl, m_config.bm_stop));
-    add_ioreg(regbit_t(m_config.reg_ctrl, m_config.bm_int_enable));
-    add_ioreg(regbit_t(m_config.reg_ctrl, m_config.bm_int_flag));
-    add_ioreg(regbit_t(m_config.reg_ctrl, m_config.bm_ack_enable));
+    add_ioreg(regbit_t(m_config.reg_ctrl, m_config.bs_enable));
+    add_ioreg(regbit_t(m_config.reg_ctrl, m_config.bs_start));
+    add_ioreg(regbit_t(m_config.reg_ctrl, m_config.bs_stop));
+    add_ioreg(regbit_t(m_config.reg_ctrl, m_config.bs_int_enable));
+    add_ioreg(regbit_t(m_config.reg_ctrl, m_config.bs_int_flag));
+    add_ioreg(regbit_t(m_config.reg_ctrl, m_config.bs_ack_enable));
     add_ioreg(m_config.reg_bitrate);
-    add_ioreg(m_config.rb_status, true);
+    add_ioreg_ro(m_config.rb_status);
     add_ioreg(m_config.rb_prescaler);
     add_ioreg(m_config.reg_data);
     add_ioreg(m_config.rb_addr);
@@ -260,8 +260,8 @@ bool ArchAVR_TWI::init(Device& device)
     add_ioreg(m_config.rb_addr_mask);
 
     status &= m_intflag.init(device,
-                             regbit_t(m_config.reg_ctrl, m_config.bm_int_enable),
-                             regbit_t(m_config.reg_ctrl, m_config.bm_int_flag),
+                             regbit_t(m_config.reg_ctrl, m_config.bs_int_enable),
+                             regbit_t(m_config.reg_ctrl, m_config.bs_int_flag),
                              m_config.iv_twi);
 
     m_host->init(*device.cycle_manager());
@@ -305,7 +305,7 @@ void ArchAVR_TWI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
 
     if (addr == m_config.reg_ctrl) {
         //TWEN
-        bool enabled = m_config.bm_enable.extract(data.value);
+        bool enabled = m_config.bs_enable.extract(data.value);
         m_host->set_enabled(enabled);
         m_client->set_enabled(enabled);
         m_driver->set_enabled(enabled);
@@ -316,25 +316,25 @@ void ArchAVR_TWI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
         //TWINT is a write-one-to-clear and for the rest of processing, we need
         //to know if it's cleared.
         bool intflag_cleared;
-        if (m_config.bm_int_flag.extract(data.value)) {
+        if (m_config.bs_int_flag.extract(data.value)) {
             clear_flag_and_status();
             intflag_cleared = true;
         } else {
-            intflag_cleared = !m_config.bm_int_flag.extract(data.old);
+            intflag_cleared = !m_config.bs_int_flag.extract(data.old);
         }
 
         if (enabled && intflag_cleared) {
-            m_latched_ack = m_config.bm_ack_enable.extract(data.value);
-            bool sta = m_config.bm_start.extract(data.value);
-            bool sto = m_config.bm_stop.extract(data.value);
+            m_latched_ack = m_config.bs_ack_enable.extract(data.value);
+            bool sta = m_config.bs_start.extract(data.value);
+            bool sto = m_config.bs_stop.extract(data.value);
             execute_command(sta, sto);
         }
 
-        clear_ioreg(m_config.reg_ctrl, m_config.bm_stop);
+        clear_ioreg(m_config.reg_ctrl, m_config.bs_stop);
     }
 
     //TWBR and TWPS
-    if (addr == m_config.rb_prescaler.addr || addr == m_config.reg_bitrate) {
+    if (addr == m_config.rb_prescaler || addr == m_config.reg_bitrate) {
         uint8_t ps_index = read_ioreg(m_config.rb_prescaler);
         unsigned long ps_factor = m_config.ps_factors[ps_index];
         uint8_t bitrate = read_ioreg(m_config.reg_bitrate);
@@ -343,7 +343,7 @@ void ArchAVR_TWI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
 
     if (addr == m_config.reg_data) {
         //The data register is writable only when the interrupt flag is set
-        if (!test_ioreg(m_config.reg_ctrl, m_config.bm_int_flag))
+        if (!test_ioreg(m_config.reg_ctrl, m_config.bs_int_flag))
             write_ioreg(m_config.reg_data, data.old);
     }
 }
@@ -378,7 +378,7 @@ void ArchAVR_TWI::host_signal_raised(const signal_data_t& sigdata, int)
 
         case TWI::Signal_DataReceived: {
             write_ioreg(m_config.reg_data, (uint8_t) sigdata.data.as_uint());
-            bool acken = test_ioreg(m_config.reg_ctrl, m_config.bm_ack_enable);
+            bool acken = test_ioreg(m_config.reg_ctrl, m_config.bs_ack_enable);
             m_host->set_ack(acken);
             logger().dbg("Data received 0x%02x, replying with %s", sigdata.data.as_uint(), acken ? "ACK" : "NACK");
         } break;
@@ -541,7 +541,7 @@ void ArchAVR_TWI::clear_flag_and_status()
 
 bool ArchAVR_TWI::address_match(uint8_t addr_rw)
 {
-    if (!test_ioreg(m_config.reg_ctrl, m_config.bm_ack_enable))
+    if (!test_ioreg(m_config.reg_ctrl, m_config.bs_ack_enable))
         return false;
 
     //Check the general call

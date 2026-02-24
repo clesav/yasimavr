@@ -1,7 +1,7 @@
 /*
  * arch_xt_io_utils.h
  *
- *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -17,11 +17,6 @@
 
     You should have received a copy of the GNU General Public License
     along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
-
-
-    A significant part of this file is copied from avr-libc, distributed as
-    part of the avr-gcc toolchain.
-    The licence for these files is as follow:
  */
 
 //=======================================================================================
@@ -32,17 +27,17 @@
 
 #include <stddef.h>
 
-#define DEF_BITMASK_F(field) \
-    bitmask_t(field ## _gp, field ## _gm)
+#define DEF_BITSPEC_F(field) \
+    bitspec_t(field ## _gp + bitmask_t(field ## _gm).bitcount() - 1, field ## _gp)
 
-#define DEF_BITMASK_B(bit) \
-    bitmask_t(bit ## _bp, bit ## _bm)
+#define DEF_BITSPEC_B(bit) \
+    bitspec_t(bit ## _bp)
 
 #define DEF_REGBIT_F(addr, field) \
-    regbit_t(REG_ADDR(addr), field ## _gp, field ## _gm)
+    regbit_t(REG_ADDR(addr), DEF_BITSPEC_F(field))
 
 #define DEF_REGBIT_B(addr, bit) \
-    regbit_t(REG_ADDR(addr), bit ## _bp, bit ## _bm)
+    regbit_t(REG_ADDR(addr), DEF_BITSPEC_B(bit))
 
 #define EXTRACT_F(reg, field) \
     (((reg) & field ## _gm) >> field ## _gp)
@@ -57,34 +52,40 @@
     read_ioreg(REG_ADDR(reg))
 
 #define READ_IOREG_F(reg, field) \
-    read_ioreg(regbit_t(REG_ADDR(reg), field ## _gp, field ## _gm))
+    read_ioreg(REG_ADDR(reg), DEF_BITSPEC_F(field))
 
 #define READ_IOREG_B(reg, bit) \
-    read_ioreg(regbit_t(REG_ADDR(reg), bit ## _bp, bit ## _bm))
+    read_ioreg(REG_ADDR(reg), DEF_BITSPEC_B(bit))
 
-#define READ_IOREG_GC(reg, field) \
+#define READ_IOREG_F_GC(reg, field) \
     (READ_IOREG(reg) & field ## _gm)
+
+#define READ_IOREG_B_GC(reg, field) \
+    (READ_IOREG(reg) & field ## _bm)
 
 #define WRITE_IOREG(reg, value) \
     write_ioreg(REG_ADDR(reg), (value));
 
 #define WRITE_IOREG_F(reg, field, value) \
-    write_ioreg(regbit_t(REG_ADDR(reg), field ## _gp, field ## _gm), (value))
+    write_ioreg(DEF_REGBIT_F(reg, field), (value))
 
 #define WRITE_IOREG_B(reg, bit, value) \
-    write_ioreg(REG_ADDR(reg), bit ## _bp, (value))
+    write_ioreg(REG_ADDR(reg), DEF_BITSPEC_B(bit), (value))
 
-#define WRITE_IOREG_GC(reg, field, gc_value) \
+#define WRITE_IOREG_F_GC(reg, field, gc_value) \
     WRITE_IOREG_F(reg, field, (gc_value) >> field ## _gp)
 
+#define WRITE_IOREG_B_GC(reg, field, gc_value) \
+    WRITE_IOREG_B(reg, field, (gc_value) >> field ## _bp)
+
 #define TEST_IOREG(reg, bit) \
-    test_ioreg(REG_ADDR(reg), bit ## _bp)
+    test_ioreg(REG_ADDR(reg), DEF_BITSPEC_B(bit))
 
 #define SET_IOREG(reg, bit) \
-    set_ioreg(REG_ADDR(reg), bit ## _bp)
+    set_ioreg(REG_ADDR(reg), DEF_BITSPEC_B(bit))
 
 #define CLEAR_IOREG(reg, bit) \
-    clear_ioreg(REG_ADDR(reg), bit ## _bp)
+    clear_ioreg(REG_ADDR(reg), DEF_BITSPEC_B(bit))
 
 
 #endif //__YASIMAVR_XT_IO_UTILS_H__

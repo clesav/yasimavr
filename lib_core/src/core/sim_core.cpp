@@ -380,7 +380,7 @@ void Core::cpu_write_ioreg(reg_addr_t reg_addr, uint8_t value)
 
    \return content of the register
  */
-uint8_t Core::ioctl_read_ioreg(const reg_addr_t reg_addr)
+uint8_t Core::ioctl_read_ioreg(reg_addr_t reg_addr)
 {
     if (!reg_addr.valid()) {
         m_device->logger().err("CTL reading an invalid I/O address");
@@ -419,36 +419,36 @@ uint8_t Core::ioctl_read_ioreg(const reg_addr_t reg_addr)
    \param rb regbit of the register/field to access (in IO address space)
    \param value value to write
  */
-void Core::ioctl_write_ioreg(const regbit_t& rb, uint8_t value)
+void Core::ioctl_write_ioreg(reg_addr_t addr, bitmask_t mask, uint8_t value)
 {
-    if (!rb.valid()) {
+    if (!addr.valid()) {
         m_device->logger().err("CTL writing to an invalid I/O address");
         m_device->crash(CRASH_BAD_CTL_IO, "Invalid CTL register write");
         return;
     }
 
-    unsigned short addr = (unsigned short) rb.addr;
+    unsigned short addr_ = (unsigned short) addr;
 
-    if (addr == R_SREG) {
+    if (addr_ == R_SREG) {
         uint8_t v = read_sreg();
-        v = (v & ~rb.mask) | ((value << rb.bit) & rb.mask);
+        v = mask.replace(v, value);
         write_sreg(v);
         return;
     }
 
-    if (addr >= m_ioregs.size()) {
-        m_device->logger().err("CTL writing to an off-range I/O address: %04x", addr);
+    if (addr_ >= m_ioregs.size()) {
+        m_device->logger().err("CTL writing to an off-range I/O address: %04x", addr_);
         m_device->crash(CRASH_BAD_CTL_IO, "Invalid CTL register write");
         return;
     }
 
-    IO_Register* ioreg = m_ioregs[addr];
+    IO_Register* ioreg = m_ioregs[addr_];
     if (ioreg) {
         uint8_t v = ioreg->value();
-        v = (v & ~rb.mask) | ((value << rb.bit) & rb.mask);
+        v = mask.replace(v, value);
         ioreg->ioctl_write(addr, v);
     } else {
-        m_device->logger().err("CTL writing to an unregistered I/O address: %04x", addr);
+        m_device->logger().err("CTL writing to an unregistered I/O address: %04x", addr_);
         m_device->crash(CRASH_BAD_CTL_IO, "Invalid CTL register write");
     }
 }

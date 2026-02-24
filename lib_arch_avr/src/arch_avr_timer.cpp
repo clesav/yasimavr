@@ -1,7 +1,7 @@
 /*
  * arch_avr_timer.cpp
  *
- *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -124,7 +124,7 @@ bool ArchAVR_Timer::init(Device& device)
 {
     bool status = Peripheral::init(device);
 
-    add_ioreg(m_config.rb_clock.addr);
+    add_ioreg(m_config.rb_clock);
     add_ioreg(m_config.rbc_mode);
     add_ioreg(m_config.reg_cnt);
     if (m_config.is_16bits)
@@ -163,8 +163,8 @@ bool ArchAVR_Timer::init(Device& device)
         int_bitmask |= (1 << v.bit);
     }
 
-    add_ioreg(m_config.reg_int_enable, int_bitmask);
-    add_ioreg(m_config.reg_int_flag, int_bitmask);
+    add_ioreg(m_config.reg_int_enable, bitmask_t(int_bitmask));
+    add_ioreg(m_config.reg_int_flag, bitmask_t(int_bitmask));
 
     m_counter.init(*device.cycle_manager(), logger());
     m_counter.signal().connect(*this);
@@ -314,20 +314,20 @@ void ArchAVR_Timer::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& da
                 m_temp = data.value;
                 break;
             }
-            else if (addr == oc->config.rb_force.addr && oc->config.rb_force.extract(data.value)) {
+            else if (addr == oc->config.rb_force && oc->config.rb_force.extract(data.value)) {
                 if (!m_mode.disable_foc)
                     change_OC_state(i, TimerCounter::Event_Compare);
                 clear_ioreg(oc->config.rb_force);
                 break;
             }
-            else if (addr == oc->config.rb_mode.addr) {
+            else if (addr == oc->config.rb_mode) {
                 do_com_reconfig = true;
                 break;
             }
         }
 
         //Check if writing to the clock source bitfield
-        if (addr == m_config.rb_clock.addr) {
+        if (addr == m_config.rb_clock) {
             uint8_t reg_val = m_config.rb_clock.extract(data.value);
             auto cfg = find_reg_config_p<CFG::clock_config_t>(m_config.clocks, reg_val);
             if (cfg) {

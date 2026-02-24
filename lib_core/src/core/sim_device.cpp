@@ -367,19 +367,19 @@ void Device::add_ioreg_handler(reg_addr_t addr, IO_RegHandler& handler, uint8_t 
 
 /**
    Adds a handler to a part of a I/O register.
-   \param rb address/mask of the bits I/O register, in I/O address space
+   \param rm address/mask of the bits I/O register, in I/O address space
    \param handler handler to add
    \param readonly
 
    \note The register is allocated if it does not exist yet.
    All bits of the regbit mask are marked as used and also marked as read-only if 'readonly' is true
  */
-void Device::add_ioreg_handler(const regbit_t& rb, IO_RegHandler& handler, bool readonly)
+void Device::add_ioreg_handler(const regmask_t& rm, IO_RegHandler& handler, bool readonly)
 {
-    if (rb.addr != R_SREG && rb.valid()) {
-        m_logger.dbg("Registering handler for I/O 0x%04X", rb.addr);
-        IO_Register* reg = m_core.get_ioreg(rb.addr);
-        reg->set_handler(handler, rb.mask, readonly ? rb.mask : 0x00);
+    if (rm.addr != R_SREG && rm.addr.valid()) {
+        m_logger.dbg("Registering handler for I/O 0x%04X", rm.addr);
+        IO_Register* reg = m_core.get_ioreg(rm.addr);
+        reg->set_handler(handler, rm.mask.mask, readonly ? rm.mask.mask : 0x00);
     }
 }
 

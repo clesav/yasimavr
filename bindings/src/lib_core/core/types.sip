@@ -21,6 +21,12 @@
 
 //=======================================================================================
 
+%UnitCode
+#define _PYTYPE_CHECK(obj, _TYPE_) \
+    PyObject_TypeCheck(obj, sipTypeAsPyTypeObject(sipType_ ## _TYPE_))
+%End
+
+
 typedef long long         cycle_count_t;
 typedef unsigned long     mem_addr_t;
 typedef unsigned long     flash_addr_t;
@@ -117,70 +123,227 @@ public:
 const reg_addr_t INVALID_REGISTER;
 
 
+//=======================================================================================
+
 struct bitmask_t {
 %TypeHeaderCode
 #include "core/sim_types.h"
 %End
 
-    uint8_t bit;
     uint8_t mask;
 
-    bitmask_t(uint8_t, uint8_t);
-    bitmask_t(uint8_t);
-    bitmask_t();
-    bitmask_t(const bitmask_t&);
-    bitmask_t(const regbit_t&);
+    bitmask_t(uint8_t = 0);
 
-    uint8_t extract(uint8_t) const;
-    int bitcount() const;
+    uint8_t replace(uint8_t, uint8_t) const;
+    uint8_t set_from(uint8_t) const;
+    uint8_t clear_from(uint8_t) const;
+    bitmask_t __or__(const bitmask_t&) const;
+    bitmask_t __and__(const bitmask_t&) const;
+    bitmask_t __xor__(const bitmask_t&) const;
+    bitmask_t __invert__() const;
+    void __ior__(const bitmask_t&);
+    void __iand__(const bitmask_t&);
+    void __ixor__(const bitmask_t&);
+    uint8_t __and__(uint8_t) const;
+    unsigned int bitcount() const;
 
-    const char* __repr__() const;
-    %MethodCode
-        return PyUnicode_FromFormat("Bitmask(%d, %02x)", sipCpp->bit, sipCpp->mask);
-    %End
+//Ensures a seamless conversion from a bitmask_t, bitspec_t or regbit_t object
+%ConvertToTypeCode
+    if (sipIsErr == 0)
+        return _PYTYPE_CHECK(sipPy, bitmask_t) ||
+               _PYTYPE_CHECK(sipPy, bitspec_t) ||
+               _PYTYPE_CHECK(sipPy, regbit_t);
+
+    if (_PYTYPE_CHECK(sipPy, bitmask_t)) {
+        bitmask_t* wrappedCpp = (bitmask_t*) sipGetAddress((sipSimpleWrapper*) sipPy);
+        *sipCppPtr = new bitmask_t(*wrappedCpp);
+    }
+    else if (_PYTYPE_CHECK(sipPy, bitspec_t)) {
+        bitspec_t* wrappedCpp = (bitspec_t*) sipGetAddress((sipSimpleWrapper*) sipPy);
+        *sipCppPtr = new bitmask_t((bitmask_t)(*wrappedCpp));
+    }
+    else if (_PYTYPE_CHECK(sipPy, regbit_t)) {
+        regbit_t* wrappedCpp = (regbit_t*) sipGetAddress((sipSimpleWrapper*) sipPy);
+        *sipCppPtr = new bitmask_t((bitmask_t)(*wrappedCpp));
+    }
+
+    return sipGetState(sipTransferObj);
+%End
 
 };
 
 
-struct regbit_t {
+//=======================================================================================
+
+struct regmask_t {
+%TypeHeaderCode
+#include "core/sim_types.h"
+%End
+
+    reg_addr_t addr;
+    bitmask_t mask;
+
+    regmask_t();
+    %MethodCode
+        sipCpp = new regmask_t();
+    %End
+
+    regmask_t(reg_addr_t, bitmask_t);
+    %MethodCode
+        sipCpp = new regmask_t({ *a0, *a1 });
+    %End
+
+    regmask_t __or__(const regmask_t&) const;
+    bool __eq__(reg_addr_t) const;
+    bool __ne__(reg_addr_t) const;
+
+//Ensures a seamless conversion from a regbit_t or regmask_t object
+%ConvertToTypeCode
+    if (sipIsErr == 0)
+        return _PYTYPE_CHECK(sipPy, regmask_t) ||
+               _PYTYPE_CHECK(sipPy, regbit_t);
+
+    if (_PYTYPE_CHECK(sipPy, regmask_t)) {
+        regmask_t* wrappedCpp = (regmask_t*) sipGetAddress((sipSimpleWrapper*) sipPy);
+        *sipCppPtr = new regmask_t(*wrappedCpp);
+    }
+    else if (_PYTYPE_CHECK(sipPy, regbit_t)) {
+        regbit_t* wrappedCpp = (regbit_t*) sipGetAddress((sipSimpleWrapper*) sipPy);
+        *sipCppPtr = new regmask_t(*wrappedCpp);
+    }
+
+    return sipGetState(sipTransferObj);
+%End
+
+};
+
+
+//=======================================================================================
+
+class bitspec_t {
 %TypeHeaderCode
 #include "core/sim_types.h"
 %End
 
 public:
 
-    reg_addr_t addr;
-    uint8_t bit;
-    uint8_t mask;
-
-    regbit_t(reg_addr_t, uint8_t, uint8_t);
-    regbit_t(reg_addr_t, uint8_t);
-    regbit_t(reg_addr_t, const bitmask_t&);
-    regbit_t(reg_addr_t);
-    regbit_t();
-    regbit_t(const regbit_t&);
+    bitspec_t();
+    bitspec_t(uint8_t, uint8_t);
+    bitspec_t(uint8_t);
 
     bool valid() const;
+    uint8_t shift_and_mask(uint8_t) const;
     uint8_t extract(uint8_t) const;
-    uint8_t set_to(uint8_t, uint8_t = 0xFF) const;
-    uint8_t clear_from(uint8_t, uint8_t = 0xFF) const;
+    uint8_t set_from(uint8_t) const;
+    uint8_t clear_from(uint8_t) const;
     uint8_t replace(uint8_t, uint8_t) const;
-    int bitcount() const;
+    unsigned int bitcount() const;
+    bitspec_t bit(uint8_t) const;
+    uint8_t lsb() const;
+    uint8_t msb() const;
+    uint8_t __and__(uint8_t) const;
+    bitmask_t __or__(const bitspec_t&) const;
 
     const char* __repr__() const;
     %MethodCode
-        if (sipCpp->valid())
-            return PyUnicode_FromFormat("Regbit(%04x, %d, %02x)", (short)(sipCpp->addr), sipCpp->bit, sipCpp->mask);
+        if (!sipCpp->valid())
+            return PyUnicode_FromString("bitspec_t()");
+
+        uint8_t lsb = sipCpp->lsb();
+        uint8_t msb = sipCpp->msb();
+        if (msb == lsb)
+            return PyUnicode_FromFormat("bitspec_t(%u)", lsb);
         else
-            return PyUnicode_FromString("Regbit(INVALID)");
+            return PyUnicode_FromFormat("bitspec_t(%u-%u)", lsb, msb);
+    %End
+
+//Ensures a seamless conversion from a regbit_t or bitspec_t object
+%ConvertToTypeCode
+    if (sipIsErr == 0)
+        return _PYTYPE_CHECK(sipPy, bitspec_t) ||
+               _PYTYPE_CHECK(sipPy, regbit_t);
+
+    if (_PYTYPE_CHECK(sipPy, bitspec_t)) {
+        bitspec_t* wrappedCpp = (bitspec_t*) sipGetAddress((sipSimpleWrapper*) sipPy);
+        *sipCppPtr = new bitspec_t(*wrappedCpp);
+    }
+    else if (_PYTYPE_CHECK(sipPy, regbit_t)) {
+        regbit_t* wrappedCpp = (regbit_t*) sipGetAddress((sipSimpleWrapper*) sipPy);
+        *sipCppPtr = new bitspec_t(*wrappedCpp);
+    }
+
+    return sipGetState(sipTransferObj);
+%End
+
+};
+
+
+//=======================================================================================
+
+class regbit_t {
+%TypeHeaderCode
+#include "core/sim_types.h"
+%End
+
+%TypeCode
+void regbit_to_str(char* buf, const regbit_t& rb)
+{
+    if (!rb.valid()) {
+        sprintf(buf, "regbit_t()");
+    } else {
+        uint8_t lsb = rb.lsb();
+        uint8_t msb = rb.msb();
+        if (msb == lsb)
+            sprintf(buf, "regbit_t(0x%04x:%hhu)", (short)(rb.addr), lsb);
+        else
+            sprintf(buf, "regbit_t(0x%04x:%hhu-%hhu)", (short)(rb.addr), lsb, msb);
+    }
+}
+%End
+
+public:
+
+    reg_addr_t addr;
+
+    regbit_t();
+    regbit_t(reg_addr_t);
+    regbit_t(reg_addr_t, uint8_t, uint8_t);
+    regbit_t(reg_addr_t, uint8_t);
+    regbit_t(reg_addr_t, const bitspec_t&);
+
+    bool valid() const;
+    uint8_t shift_and_mask(uint8_t) const;
+    uint8_t extract(uint8_t) const;
+    uint8_t set_from(uint8_t) const;
+    uint8_t clear_from(uint8_t) const;
+    uint8_t replace(uint8_t, uint8_t) const;
+    unsigned int bitcount() const;
+    uint8_t lsb() const;
+    uint8_t msb() const;
+    regbit_t bit(uint8_t) const;
+    bool __eq__(reg_addr_t) const;
+    bool __ne__(reg_addr_t) const;
+    uint8_t __and__(uint8_t) const;
+
+    const char* __repr__() const;
+    %MethodCode
+        char buf[50];
+        regbit_to_str(buf, *sipCpp);
+        return PyUnicode_FromString(buf);
     %End
 
 };
 
 
+//=======================================================================================
+
 class regbit_compound_t {
 %TypeHeaderCode
 #include "core/sim_types.h"
+%End
+
+%TypeCode
+extern void regbit_to_str(char* buf, const regbit_t& rb);
 %End
 
 public:
@@ -188,9 +351,6 @@ public:
     regbit_compound_t();
     regbit_compound_t(const regbit_t&);
     regbit_compound_t(const std::vector<regbit_t>&);
-    regbit_compound_t(const regbit_compound_t&);
-
-    void add(const regbit_t&);
 
     regbit_t __getitem__(int) const;
     %MethodCode
@@ -207,10 +367,26 @@ public:
     %End
 
     bool addr_match(reg_addr_t) const;
-    uint64_t compound(uint8_t, size_t) const;
-    uint8_t extract(uint64_t, size_t) const;
 
-    int bitcount() const;
+    unsigned int bitcount() const;
+
+    const char* __repr__() const;
+    %MethodCode
+        std::string s = "regbit_compound_t(";
+        bool use_sep = false;
+        for (const regbit_t& rb : *sipCpp) {
+            if (use_sep)
+                s += ",";
+            use_sep = true;
+
+            char buf_rbs[50];
+            regbit_to_str(buf_rbs, rb);
+            s += buf_rbs;
+        }
+        s += ")";
+
+        return PyUnicode_FromString(s.c_str());
+    %End
 
 };
 
