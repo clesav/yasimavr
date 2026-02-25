@@ -61,11 +61,11 @@ class AVR_CORE_PUBLIC_API reg_addr_t {
 
 public:
 
-    constexpr inline reg_addr_t(short addr = -1) : m_addr(addr >= 0 ? addr : -1) {}
+    constexpr reg_addr_t(short addr = -1) : m_addr(addr) {}
 
-    constexpr inline bool valid() const { return m_addr >= 0; }
+    constexpr bool valid() const { return m_addr >= 0; }
 
-    constexpr inline operator short() const { return m_addr; }
+    constexpr operator short() const { return m_addr; }
 
 private:
 
@@ -73,7 +73,7 @@ private:
 
 };
 
-const reg_addr_t INVALID_REGISTER;
+constexpr reg_addr_t INVALID_REGISTER;
 
 
 #define BITSET(v, b) (((v) >> (b)) & 0x01)
