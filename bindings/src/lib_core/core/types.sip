@@ -95,28 +95,25 @@ public:
         sipRes = sipCpp->valid() ? ((short)(*sipCpp) >= (short)(*a0)) : !a0->valid();
     %End
 
-    //Ensures a seamless conversion from a Python integer
-    %ConvertToTypeCode
-        //Type check : we can convert from either a wrapped reg_addr_t or a Python integer
-        if (sipIsErr == 0)
-            return PyObject_TypeCheck(sipPy, sipTypeAsPyTypeObject(sipType_reg_addr_t)) ||
-                   PyLong_Check(sipPy);
+//Ensures a seamless conversion from a Python integer
+%ConvertToTypeCode
+    //Type check : we can convert from either a wrapped reg_addr_t or a Python integer
+    if (sipIsErr == 0)
+        return PyObject_TypeCheck(sipPy, sipTypeAsPyTypeObject(sipType_reg_addr_t)) ||
+               PyLong_Check(sipPy);
 
-        //Conversion from Python integer to unwrapped reg_addr_t
-        if (PyLong_Check(sipPy)) {
-            *sipCppPtr = new reg_addr_t(PyLong_AsLong(sipPy));
-            return sipGetState(sipTransferObj);
-        }
+    //Conversion from Python integer to unwrapped reg_addr_t
+    if (PyLong_Check(sipPy)) {
+        *sipCppPtr = new reg_addr_t(PyLong_AsLong(sipPy));
+    } else {
+        //sipPy is a wrapped reg_addr_t, make a C++ copy of it
+        reg_addr_t* wrappedCpp = (reg_addr_t*) sipGetAddress((sipSimpleWrapper*) sipPy);
+        *sipCppPtr = new reg_addr_t(*wrappedCpp);
+    }
 
-        //Unwrapping of a reg_addr_t
-        *sipCppPtr = reinterpret_cast<reg_addr_t*>(sipConvertToType(sipPy,
-                                                                    sipType_reg_addr_t,
-                                                                    sipTransferObj,
-                                                                    SIP_NO_CONVERTORS,
-                                                                    0,
-                                                                    sipIsErr));
-        return 0;
-    %End
+    return sipGetState(sipTransferObj);
+%End
+
 };
 
 
