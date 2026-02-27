@@ -558,7 +558,7 @@ class AVR_CORE_PUBLIC_API sim_id_t {
 public:
 
     constexpr sim_id_t() : m_id(0) {}
-    constexpr sim_id_t(uint64_t id) : m_id(id) {}
+    constexpr explicit sim_id_t(uint64_t id) : m_id(id) {}
     constexpr sim_id_t(const char* s) : m_id(strtoid(s)) {}
     constexpr sim_id_t(const std::string& s) : m_id(strtoid(s.c_str())) {}
     constexpr sim_id_t(const sim_id_t&) = default;
@@ -597,6 +597,8 @@ private:
 };
 
 typedef sim_id_t ctl_id_t;
+
+std::ostream& operator<<(std::ostream& o, const sim_id_t& id);
 
 
 YASIMAVR_END_NAMESPACE

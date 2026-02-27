@@ -433,7 +433,7 @@ bool Device::core_ctlreq(ctlreq_id_t req, ctlreq_data_t* reqdata)
     }
 
     else if (req == AVR_CTLREQ_CORE_SHORTING) {
-        pin_id_t pin_id = reqdata->data.as_uint();
+        pin_id_t pin_id = pin_id_t(reqdata->data.as_uint());
         std::string pin_name = pin_id.str();
         m_logger.err("Pin %s shorted", pin_name.c_str());
         if (m_options & Option_ResetOnPinShorting) {
