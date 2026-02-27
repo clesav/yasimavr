@@ -1,6 +1,6 @@
 # YAML configuration file for AVR XT core architecture
 #
-# Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -182,7 +182,7 @@ ACP_mega0:
                 LSB: 4
                 MSB: 5
                 values: { 0x00: BOTHEDGE, 0x02: NEGEDGE, 0x03: POSEDGE }
-            OUTEN: { kind: BIT, pos: 0, supported: no }
+            OUTEN: { kind: BIT, pos: 6, supported: no }
             RUNSTDBY: { kind: BIT, pos: 7, one: enabled, zero: disabled }
 
         - name: MUXCTRL
@@ -233,7 +233,7 @@ ACP_tiny0:
                 LSB: 4
                 MSB: 5
                 values: { 0x00: BOTHEDGE, 0x02: NEGEDGE, 0x03: POSEDGE }
-            OUTEN: { kind: BIT, pos: 0, supported: no }
+            OUTEN: { kind: BIT, pos: 6, supported: no }
             RUNSTDBY: { kind: BIT, pos: 7, one: enabled, zero: disabled }
 
         - name: MUXCTRL
