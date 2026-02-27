@@ -1,7 +1,7 @@
 /*
  * sim_cycle_timer.cpp
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -56,6 +56,7 @@ CycleTimer::~CycleTimer()
 
 
 CycleTimer::CycleTimer(const CycleTimer& other)
+:CycleTimer()
 {
     *this = other;
 }
