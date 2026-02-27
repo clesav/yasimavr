@@ -1,6 +1,6 @@
 # Top-level Makefile fo yasim-avr
 #
-# Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -98,7 +98,8 @@ clean: lib-core-clean \
 	
 
 dist-clean: FORCE
-	-cd $(LIB_TARGET_DIR) && $(RM_FILE) *.pyd *.pyi *.dll *.so
+	-cd $(LIB_TARGET_DIR) && $(RM_FILE) *.pyd *.pyi *.so
+	-cd $(LIB_TARGET_DIR) && $(RM_FILE) yasimavr*.dll
 
 
 lib-core: FORCE
