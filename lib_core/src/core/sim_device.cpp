@@ -57,18 +57,10 @@ Device::Device(Core& core, const DeviceConfiguration& config)
 ,m_reset_flags(0)
 {}
 
-/**
-   Destroy the device model and all the attached peripheral.
- */
-Device::~Device()
-{
-    m_state = State_Destroying;
-    erase_peripherals();
-}
-
 
 void Device::erase_peripherals()
 {
+    m_state = State_Destroying;
     //Destroys all the peripherals, last attached first destroyed.
     for (auto per_it = m_peripherals.rbegin(); per_it != m_peripherals.rend(); ++per_it) {
         Peripheral* per = *per_it;
