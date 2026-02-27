@@ -40,7 +40,7 @@ inline int convert_to_fixed_array(void *data, const char *format, size_t len, Py
     if (!arr)
         return -1;
 
-    for (int i = 0; i < len; ++i) {
+    for (unsigned int i = 0; i < len; ++i) {
         PyObject* item = PySequence_GetItem(obj, i);
         if (item) {
             PyObject_SetItem(arr, PyLong_FromLong(i), item);
@@ -64,7 +64,7 @@ int convert_to_fixed_array(sipTypeDef* type_def, ItemType* data, size_t len, PyO
     }
 
     int iserr = 0;
-    for (int i = 0; i < len; ++i) {
+    for (unsigned int i = 0; i < len; ++i) {
         PyObject* item = PySequence_GetItem(obj, i);
         if (!item) {
             iserr = -1;
