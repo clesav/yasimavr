@@ -2,7 +2,7 @@ import os
 import threading
 from yasimavr.device_library import load_device
 from yasimavr.lib import core as corelib
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt6 import QtCore, QtGui, QtWidgets
 
 
 class LED(QtWidgets.QWidget):
@@ -60,7 +60,7 @@ class LED(QtWidgets.QWidget):
         #Draw a filled circle of 40 pixel diameter in the center of the widget area
         #The filling color is gray if the led is OFF and red if ON.
         painter = QtGui.QPainter(self)
-        painter.setBrush(QtCore.Qt.red if self.state else QtCore.Qt.gray)
+        painter.setBrush(QtGui.QColorConstants.Red if self.state else QtGui.QColorConstants.LightGray)
         painter.drawEllipse(self.geometry().center(), 40, 40)
         #The rest of the painting is left to Qt
         super().paintEvent(event)
@@ -104,7 +104,7 @@ def main():
         simloop.loop_continue()
 
     #Enter the main GUI event loop of Qt
-    qt_app.exec_()
+    qt_app.exec()
 
     #On leaving the application, stop the simloop
     #The thread will terminate.
