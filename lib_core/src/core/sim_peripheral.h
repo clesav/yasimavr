@@ -354,7 +354,6 @@ protected:
     bool register_interrupt(int_vect_t vector, InterruptHandler& handler) const;
 
     Signal* get_signal(ctl_id_t ctl_id) const;
-    Signal* get_signal(const char* name) const;
 
 private:
 
@@ -474,11 +473,6 @@ inline void Peripheral::clear_ioreg(const regbit_t& rb)
 inline void Peripheral::clear_ioreg(reg_addr_t addr, const bitspec_t& bs)
 {
     write_ioreg(addr, bs, 0x00);
-}
-
-inline Signal* Peripheral::get_signal(const char* name) const
-{
-    return get_signal(sim_id_t(name));
 }
 
 
