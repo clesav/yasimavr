@@ -109,7 +109,7 @@ enum SignalId {
     /**
        C only : raised when a Start or Repeated Start condition is detected.
        `data` is 1 if the client was active prior to the Start condition, or 0
-	   if it was idle.
+       if it was idle.
      */
     Signal_Start,
 

@@ -57,11 +57,11 @@ def _decode_hexa_int(hs):
 
 
 _NVM_MAP = {
-	0x810000: 'EEPROM',
-	0x820000: 'Fuses',
-	0x830000: 'Lockbit',
-	0x840000: 'DeviceSignature',
-	0x850000: 'USERROW'
+    0x810000: 'EEPROM',
+    0x820000: 'Fuses',
+    0x830000: 'Lockbit',
+    0x840000: 'DeviceSignature',
+    0x850000: 'USERROW'
 }
 
 

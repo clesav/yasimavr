@@ -1,5 +1,5 @@
 /*
- * arch_nega0_device.sip
+ * arch_xt_device.sip
  *
  *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
 
