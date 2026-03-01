@@ -57,18 +57,10 @@ Device::Device(Core& core, const DeviceConfiguration& config)
 ,m_reset_flags(0)
 {}
 
-/**
-   Destroy the device model and all the attached peripheral.
- */
-Device::~Device()
-{
-    m_state = State_Destroying;
-    erase_peripherals();
-}
-
 
 void Device::erase_peripherals()
 {
+    m_state = State_Destroying;
     //Destroys all the peripherals, last attached first destroyed.
     for (auto per_it = m_peripherals.rbegin(); per_it != m_peripherals.rend(); ++per_it) {
         Peripheral* per = *per_it;
@@ -441,7 +433,7 @@ bool Device::core_ctlreq(ctlreq_id_t req, ctlreq_data_t* reqdata)
     }
 
     else if (req == AVR_CTLREQ_CORE_SHORTING) {
-        pin_id_t pin_id = reqdata->data.as_uint();
+        pin_id_t pin_id = pin_id_t(reqdata->data.as_uint());
         std::string pin_name = pin_id.str();
         m_logger.err("Pin %s shorted", pin_name.c_str());
         if (m_options & Option_ResetOnPinShorting) {

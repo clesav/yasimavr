@@ -133,7 +133,7 @@ public:
     };
 
     Device(Core& core, const DeviceConfiguration& config);
-    virtual ~Device();
+    virtual ~Device() = default;
 
     Core& core() const;
 

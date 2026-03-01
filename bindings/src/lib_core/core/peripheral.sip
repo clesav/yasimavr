@@ -190,7 +190,7 @@ public:
     virtual uint8_t ioreg_read_handler(reg_addr_t, uint8_t);
     virtual uint8_t ioreg_peek_handler(reg_addr_t, uint8_t);
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
-    virtual void sleep(bool on, SleepMode mode);
+    virtual void sleep(bool, SleepMode);
 
 protected:
 
@@ -236,7 +236,6 @@ protected:
     bool register_interrupt(int_vect_t, InterruptHandler&) const;
 
     Signal* get_signal(ctl_id_t) const;
-    Signal* get_signal(const char*) const;
 
 };
 

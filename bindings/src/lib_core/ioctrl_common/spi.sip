@@ -40,22 +40,22 @@ namespace SPI {
 %End
 
 enum SerialMode {
-	Mode0,
-	Mode1,
-	Mode2,
-	Mode3,
+    Mode0,
+    Mode1,
+    Mode2,
+    Mode3,
 };
 
 enum BitOrder {
-	MSBFirst,
-	LSBFirst
+    MSBFirst,
+    LSBFirst
 };
 
 enum Line /BaseType=IntEnum/ {
-	Clock,
-	MISO,
-	MOSI,
-	Select,
+    Clock,
+    MISO,
+    MOSI,
+    Select,
 };
 
 

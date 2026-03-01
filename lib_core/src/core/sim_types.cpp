@@ -97,3 +97,10 @@ std::string sim_id_t::str() const
     buf[n] = 0;
     return std::string(buf);
 }
+
+
+std::ostream& operator<<(std::ostream& o, const sim_id_t& id)
+{
+    o << id.str();
+    return o;
+}

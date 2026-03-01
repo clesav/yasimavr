@@ -13,7 +13,7 @@ import os
 import threading
 from yasimavr.device_library import load_device
 from yasimavr.lib import core as corelib
-from PyQt5 import QtWidgets, Qt
+from PyQt6 import QtWidgets, QtCore
 
 global simloop
 simloop = None
@@ -24,7 +24,7 @@ class Number(QtWidgets.QLCDNumber):
     #because the notification is raised in a thread different to the main
     #Qt application thread. The Qt signal/slot system takes care of the
     #synchronisation
-    sig_pin_changed = Qt.pyqtSignal(list)
+    sig_pin_changed = QtCore.pyqtSignal(list)
 
     def __init__(self, parent, device, port_name):
         '''
@@ -151,7 +151,7 @@ def main():
         simloop.loop_continue()
 
     #Enter the main GUI event loop of Qt
-    qt_app.exec_()
+    qt_app.exec()
 
     #On leaving the application, stop the simloop
     #The thread will terminate.
