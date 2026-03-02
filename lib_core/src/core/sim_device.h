@@ -156,8 +156,7 @@ public:
 
     void attach_peripheral(Peripheral& ctl);
 
-    void add_ioreg_handler(reg_addr_t addr, IO_RegHandler& handler, uint8_t ro_mask=0x00);
-    void add_ioreg_handler(const regmask_t& rm, IO_RegHandler& handler, bool readonly=false);
+    void add_ioreg_handler(reg_addr_t addr, IORegHandler& handler, bitmask_t bits, IORegister::BitMode bitmode);
     Peripheral* find_peripheral(ctl_id_t id);
     bool ctlreq(ctl_id_t id, ctlreq_id_t req, ctlreq_data_t* reqdata = nullptr);
 

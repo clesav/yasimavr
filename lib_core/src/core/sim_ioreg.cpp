@@ -1,7 +1,7 @@
 /*
  * sim_ioreg.cpp
  *
- *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -37,11 +37,11 @@ enum REG_Flags {
  * Dispatcher is a class for the few registers that are shared between several
  * peripherals. It is allocated automatically by the IOREG instances
  */
-class IO_RegDispatcher : public IO_RegHandler {
+class IORegDispatcher : public IORegHandler {
 
 public:
 
-    void add_handler(IO_RegHandler& handler)
+    void add_handler(IORegHandler& handler)
     {
         for (auto h : m_handlers)
             if (h == &handler) return;
@@ -72,7 +72,7 @@ public:
 
 private:
 
-    std::vector<IO_RegHandler*> m_handlers;
+    std::vector<IORegHandler*> m_handlers;
 
 };
 
@@ -84,48 +84,49 @@ private:
    \param core_reg set to true if the register is handled by the core. The effect
    is to bypass read-only/use masks checks
 */
-IO_Register::IO_Register(bool core_reg)
+IORegister::IORegister(bool core_reg)
 :m_value(0)
 ,m_handler(nullptr)
 ,m_flags(core_reg ? Reg_Flag_Core : 0)
 ,m_use_mask(0)
 ,m_ro_mask(0)
+,m_strobe_mask(0)
 {}
 
-IO_Register::IO_Register(const IO_Register& other)
+
+IORegister::IORegister(const IORegister& other)
 :m_value(other.m_value)
 ,m_flags(other.m_flags)
 ,m_use_mask(other.m_use_mask)
 ,m_ro_mask(other.m_ro_mask)
+,m_strobe_mask(other.m_strobe_mask)
 {
     if (m_flags & Reg_Flag_Dispatcher)
-        m_handler = new IO_RegDispatcher(*static_cast<IO_RegDispatcher*>(other.m_handler));
+        m_handler = new IORegDispatcher(*static_cast<IORegDispatcher*>(other.m_handler));
     else
         m_handler = other.m_handler;
 }
 
-IO_Register::~IO_Register()
+
+IORegister::~IORegister()
 {
     if (m_flags & Reg_Flag_Dispatcher)
-        delete static_cast<IO_RegDispatcher*>(m_handler);
+        delete static_cast<IORegDispatcher*>(m_handler);
 }
 
 /**
    Add a handler to this register.
    \param handler handler to add
-   \param use_mask bitmask indicating the used bits ('1's)
-   \param ro_mask bitmask indicating the read-only bits ('1's)
-   \note the bitmasks are OR'd with any pre-defined mask.
  */
-void IO_Register::set_handler(IO_RegHandler& handler, uint8_t use_mask, uint8_t ro_mask)
+void IORegister::add_handler(IORegHandler& handler)
 {
     if (m_flags & Reg_Flag_Dispatcher) {
-        IO_RegDispatcher* dispatcher = static_cast<IO_RegDispatcher*>(m_handler);
+        IORegDispatcher* dispatcher = static_cast<IORegDispatcher*>(m_handler);
         dispatcher->add_handler(handler);
     }
     else if (m_handler) {
         if (&handler != m_handler) {
-            IO_RegDispatcher* dispatcher = new IO_RegDispatcher();
+            IORegDispatcher* dispatcher = new IORegDispatcher();
             dispatcher->add_handler(*m_handler);
             dispatcher->add_handler(handler);
             m_handler = dispatcher;
@@ -135,17 +136,24 @@ void IO_Register::set_handler(IO_RegHandler& handler, uint8_t use_mask, uint8_t 
     else {
         m_handler = &handler;
     }
+}
 
-    uint8_t new_use_mask = use_mask & ~m_use_mask;
-    m_use_mask |= use_mask;
-    m_ro_mask = (m_ro_mask & ~new_use_mask) | (ro_mask & new_use_mask);
+
+void IORegister::add_bits(bitmask_t mask, BitMode mode)
+{
+    mask &= ~m_use_mask;
+    m_use_mask |= mask;
+    if (mode == RO)
+        m_ro_mask |= mask;
+    else if (mode == Strobe)
+        m_strobe_mask |= mask;
 }
 
 /**
    CPU read access to the register.
    The handlers' read callbacks are called then the register value is returned.
  */
-uint8_t IO_Register::cpu_read(reg_addr_t addr)
+uint8_t IORegister::cpu_read(reg_addr_t addr)
 {
     if (m_handler)
         m_value = m_handler->ioreg_read_handler(addr, m_value);
@@ -161,30 +169,31 @@ uint8_t IO_Register::cpu_read(reg_addr_t addr)
    \note that if the register has no handler, all 8 bits are read-only except if
    core_reg was true at construction
  */
-bool IO_Register::cpu_write(reg_addr_t addr, uint8_t value)
+void IORegister::cpu_write(reg_addr_t addr, uint8_t value)
 {
     if (m_handler) {
-        //Are we trying to write any read-only or unused bit with a '1' ?
-        //bool ro_violation = value & (m_ro_mask | ~m_use_mask);
-        //Protect the read-only and unused bits from overwriting
-        value = (value & m_use_mask & ~m_ro_mask) | (m_value & m_ro_mask);
-        //Precalculate the rising and falling
+        //Ensure the unused bits are zero
+        value &= m_use_mask;
+        //Protect the read-only from overwriting
+        value = (value & ~m_ro_mask) | (m_value & m_ro_mask);
+        //Precalculate the value structure given to the handlers
         ioreg_write_t w = { value, m_value };
+        //Clear the strobe bits that are being written to 1
+        value = (value & ~m_strobe_mask) | (~value & m_value & m_strobe_mask);
+        //Store the resulting value
         m_value = value;
+        //Call the handlers
         m_handler->ioreg_write_handler(addr, w);
-        return false; //return ro_violation;
-    } else if (m_flags & Reg_Flag_Core) {
+    }
+    else if (m_flags & Reg_Flag_Core) {
         m_value = value;
-        return false;
-    } else {
-        return value > 0;
     }
 }
 
 /**
    I/O peripheral interface for read/write operation on this register
  */
-uint8_t IO_Register::ioctl_read(reg_addr_t addr)
+uint8_t IORegister::ioctl_read(reg_addr_t addr)
 {
     return m_value;
 }
@@ -192,7 +201,7 @@ uint8_t IO_Register::ioctl_read(reg_addr_t addr)
 /**
    I/O peripheral interface for read/write operation on this register
  */
-void IO_Register::ioctl_write(reg_addr_t addr, uint8_t value)
+void IORegister::ioctl_write(reg_addr_t addr, uint8_t value)
 {
     m_value = value;
 }
@@ -200,7 +209,7 @@ void IO_Register::ioctl_write(reg_addr_t addr, uint8_t value)
 /**
    I/O peripheral interface for peek operation (for debug purpose) on this register
  */
-uint8_t IO_Register::dbg_peek(reg_addr_t addr)
+uint8_t IORegister::dbg_peek(reg_addr_t addr)
 {
     if (m_handler)
         m_value = m_handler->ioreg_peek_handler(addr, m_value);

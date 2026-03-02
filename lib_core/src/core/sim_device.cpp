@@ -342,36 +342,19 @@ Peripheral* Device::find_peripheral(ctl_id_t id)
    Adds a handler to a I/O register.
    \param addr address of the I/O register, in I/O address space
    \param handler handler to add
-   \param ro_mask optional read-only bit mask. By default = 0x00 (all bits are R/W)
+   \param bits masks for adding bits to use in the register
+   \param bitmode mode for the bits added
 
    \note The register is allocated if it does not exist yet.
-   All bits of the register are marked as used and bits marked as '1' in ro_mask are
-   marked as read-only. This is OR'ed with any pre-defined read-only mask.
  */
-void Device::add_ioreg_handler(reg_addr_t addr, IO_RegHandler& handler, uint8_t ro_mask)
+void Device::add_ioreg_handler(reg_addr_t addr, IORegHandler& handler,
+                               bitmask_t bits, IORegister::BitMode bitmode)
 {
-    if (addr != R_SREG && addr >= 0) {
+    if (addr != R_SREG && addr.valid()) {
         m_logger.dbg("Registering handler for I/O 0x%04X", addr);
-        IO_Register* reg = m_core.get_ioreg(addr);
-        reg->set_handler(handler, 0xFF, ro_mask);
-    }
-}
-
-/**
-   Adds a handler to a part of a I/O register.
-   \param rm address/mask of the bits I/O register, in I/O address space
-   \param handler handler to add
-   \param readonly
-
-   \note The register is allocated if it does not exist yet.
-   All bits of the regbit mask are marked as used and also marked as read-only if 'readonly' is true
- */
-void Device::add_ioreg_handler(const regmask_t& rm, IO_RegHandler& handler, bool readonly)
-{
-    if (rm.addr != R_SREG && rm.addr.valid()) {
-        m_logger.dbg("Registering handler for I/O 0x%04X", rm.addr);
-        IO_Register* reg = m_core.get_ioreg(rm.addr);
-        reg->set_handler(handler, rm.mask.mask, readonly ? rm.mask.mask : 0x00);
+        IORegister* reg = m_core.get_ioreg(addr);
+        reg->add_bits(bits, bitmode);
+        reg->add_handler(handler);
     }
 }
 
