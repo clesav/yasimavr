@@ -28,8 +28,7 @@ YASIMAVR_USING_NAMESPACE
 
 //=======================================================================================
 enum REG_Flags {
-    Reg_Flag_Core = 0x01,
-    Reg_Flag_Dispatcher = 0x02,
+    Reg_Flag_Dispatcher = 0x01,
 };
 
 //=======================================================================================
@@ -84,27 +83,15 @@ private:
    \param core_reg set to true if the register is handled by the core. The effect
    is to bypass read-only/use masks checks
 */
-IORegister::IORegister(bool core_reg)
+IORegister::IORegister(bitmask_t initial_mask, BitMode initial_mode)
 :m_value(0)
 ,m_handler(nullptr)
-,m_flags(core_reg ? Reg_Flag_Core : 0)
+,m_flags(0)
 ,m_use_mask(0)
 ,m_ro_mask(0)
 ,m_strobe_mask(0)
-{}
-
-
-IORegister::IORegister(const IORegister& other)
-:m_value(other.m_value)
-,m_flags(other.m_flags)
-,m_use_mask(other.m_use_mask)
-,m_ro_mask(other.m_ro_mask)
-,m_strobe_mask(other.m_strobe_mask)
 {
-    if (m_flags & Reg_Flag_Dispatcher)
-        m_handler = new IORegDispatcher(*static_cast<IORegDispatcher*>(other.m_handler));
-    else
-        m_handler = other.m_handler;
+    add_bits(initial_mask, initial_mode);
 }
 
 
@@ -166,28 +153,23 @@ uint8_t IORegister::cpu_read(reg_addr_t addr)
    The handlers' write callbacks are called.
    \return true if the read-only rule has been violated, i.e. attempting to write
    a read-only or unused bit with '1'.(temporary removed)
-   \note that if the register has no handler, all 8 bits are read-only except if
-   core_reg was true at construction
  */
 void IORegister::cpu_write(reg_addr_t addr, uint8_t value)
 {
-    if (m_handler) {
-        //Ensure the unused bits are zero
-        value &= m_use_mask;
-        //Protect the read-only from overwriting
-        value = (value & ~m_ro_mask) | (m_value & m_ro_mask);
-        //Precalculate the value structure given to the handlers
-        ioreg_write_t w = { value, m_value };
-        //Clear the strobe bits that are being written to 1
-        value = (value & ~m_strobe_mask) | (~value & m_value & m_strobe_mask);
-        //Store the resulting value
-        m_value = value;
-        //Call the handlers
+    //Ensure the unused bits are zero
+    value &= m_use_mask;
+    //Protect the read-only from overwriting
+    value = (value & ~m_ro_mask) | (m_value & m_ro_mask);
+    //Precalculate the value structure given to the handlers
+    ioreg_write_t w = { value, m_value };
+    //Clear the strobe bits that are being written to 1
+    value = (value & ~m_strobe_mask) | (~value & m_value & m_strobe_mask);
+    //Store the resulting value
+    m_value = value;
+
+    //Call the handler
+    if (m_handler)
         m_handler->ioreg_write_handler(addr, w);
-    }
-    else if (m_flags & Reg_Flag_Core) {
-        m_value = value;
-    }
 }
 
 /**

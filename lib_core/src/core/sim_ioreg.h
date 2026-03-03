@@ -123,8 +123,7 @@ public:
         Strobe,
     };
 
-    explicit IORegister(bool core_reg=false);
-    IORegister(const IORegister& other);
+    explicit IORegister(bitmask_t initial_mask = bitmask_t(), BitMode initial_mode = RW);
     ~IORegister();
 
     uint8_t value() const;
@@ -142,6 +141,7 @@ public:
 
     uint8_t dbg_peek(reg_addr_t addr);
 
+    IORegister(const IORegister&) = delete;
     IORegister& operator=(const IORegister&) = delete;
 
 private:

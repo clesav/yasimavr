@@ -172,7 +172,7 @@ struct base_reg_config_t {
 };
 
 
-class Peripheral : public IO_RegHandler /NoDefaultCtors/ {
+class Peripheral : public IORegHandler /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "core/sim_peripheral.h"
 %End
@@ -198,14 +198,10 @@ protected:
 
     Logger& logger();
 
-    void add_ioreg(const regmask_t&);
-    void add_ioreg(const regbit_compound_t&);
-    void add_ioreg(reg_addr_t);
-    void add_ioreg(reg_addr_t, bitmask_t);
-    void add_ioreg_ro(const regmask_t&);
-    void add_ioreg_ro(const regbit_compound_t&);
-    void add_ioreg_ro(reg_addr_t);
-    void add_ioreg_ro(reg_addr_t, bitmask_t);
+    void add_ioreg(const regmask_t&, IORegister::BitMode = IORegister::RW);
+    void add_ioreg(const regbit_compound_t&, IORegister::BitMode = IORegister::RW);
+    void add_ioreg(reg_addr_t, IORegister::BitMode = IORegister::RW);
+    void add_ioreg(reg_addr_t, bitmask_t, IORegister::BitMode = IORegister::RW);
 
     uint8_t read_ioreg(const regbit_t&) const;
     uint64_t read_ioreg(const regbit_compound_t&) const;

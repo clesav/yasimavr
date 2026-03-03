@@ -85,7 +85,7 @@ public:
     bool init(Device&);
     void reset();
     int exec_cycle();
-    IO_Register* get_ioreg(reg_addr_t);
+    IORegister* get_ioreg(reg_addr_t);
     uint8_t ioctl_read_ioreg(reg_addr_t);
     void ioctl_write_ioreg(reg_addr_t, bitmask_t, uint8_t);
 

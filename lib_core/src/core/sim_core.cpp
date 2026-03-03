@@ -62,16 +62,16 @@ Core::Core(const CoreConfiguration& config)
     m_fuses.program(m_config.fuses);
 
     //Create the I/O registers managed by the CPU
-    m_ioregs[R_SPL] = new IORegister(true);
-    m_ioregs[R_SPH] = new IORegister(true);
+    m_ioregs[R_SPL] = new IORegister(0xFF);
+    m_ioregs[R_SPH] = new IORegister(0xFF);
 
     //If extended addressing is used (flash > 64kb), allocate the
     //registers RAMPZ and EIND
     if (use_extended_addressing()) {
         if (m_config.rampz.valid())
-            m_ioregs[m_config.rampz] = new IORegister(true);
+            m_ioregs[m_config.rampz] = new IORegister(0xFF);
         if (m_config.eind.valid())
-            m_ioregs[m_config.eind] = new IORegister(true);
+            m_ioregs[m_config.eind] = new IORegister(0xFF);
     }
 }
 

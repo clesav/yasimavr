@@ -122,9 +122,7 @@ public:
     cycle_count_t exec_cycle();
 
     void attach_peripheral(Peripheral& /Transfer/);
-    void add_ioreg_handler(reg_addr_t, IO_RegHandler&, uint8_t = 0x00);
-    void add_ioreg_handler(const regmask_t&, IO_RegHandler&, bool = false);
-    Peripheral* find_peripheral(const char*);
+    void add_ioreg_handler(reg_addr_t, IORegHandler&, bitmask_t, IORegister::BitMode);
     Peripheral* find_peripheral(ctl_id_t);
 
     SIP_PYTUPLE ctlreq(ctl_id_t, ctlreq_id_t, ctlreq_data_t* = NULL) /TypeHint="Tuple[bool, ctlreq_data_t]"/
@@ -145,7 +143,6 @@ public:
 
     CycleManager* cycle_manager();
 
-    Pin* find_pin(const char*);
     Pin* find_pin(pin_id_t);
     PinManager& pin_manager();
 
