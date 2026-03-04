@@ -1,7 +1,7 @@
 /*
  * arch_xt_spi.cpp
  *
- *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -453,8 +453,8 @@ private:
 
     int_vect_t m_vector;
     bool m_buf_enabled;
-    IO_Register* m_reg_enable;
-    IO_Register* m_reg_flag;
+    IORegister* m_reg_enable;
+    IORegister* m_reg_flag;
     uint8_t m_reg_cleared_flags;
 
     bool flag_raised() const;

@@ -74,7 +74,7 @@ bool ArchXT_ADC::init(Device& device)
     add_ioreg(REG_ADDR(COMMAND), ADC_STCONV_bm);
     add_ioreg(REG_ADDR(EVCTRL), ADC_STARTEI_bm);
     add_ioreg(REG_ADDR(INTCTRL), ADC_WCMP_bm | ADC_RESRDY_bm);
-    add_ioreg(REG_ADDR(INTFLAGS), ADC_WCMP_bm | ADC_RESRDY_bm);
+    add_ioreg(REG_ADDR(INTFLAGS), ADC_WCMP_bm | ADC_RESRDY_bm, IORegister::Strobe);
     //DBGCTRL not implemented
     add_ioreg(REG_ADDR(TEMP));
     add_ioreg(REG_ADDR(RESL));
@@ -167,17 +167,9 @@ void ArchXT_ADC::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
             start_conversion_cycle();
     }
 
-    else if (reg_ofs == REG_OFS(INTCTRL)) {
+    else if (reg_ofs == REG_OFS(INTCTRL) || reg_ofs == REG_OFS(INTFLAGS)) {
         m_res_intflag.update_from_ioreg();
         m_cmp_intflag.update_from_ioreg();
-    }
-
-    else if (reg_ofs == REG_OFS(INTFLAGS)) {
-        if (data.value && ADC_RESRDY_bm)
-            m_res_intflag.clear_flag();
-
-        if (data.value && ADC_WCMP_bm)
-            m_cmp_intflag.clear_flag();
     }
 }
 

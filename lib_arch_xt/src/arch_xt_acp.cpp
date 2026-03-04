@@ -75,8 +75,8 @@ bool ArchXT_ACP::init(Device& device)
     add_ioreg(REG_ADDR(MUXCTRLA), AC_INVERT_bm | AC_MUXPOS_gm | AC_MUXNEG_gm);
     add_ioreg(REG_ADDR(DACREF), AC_DATA_gm);
     add_ioreg(REG_ADDR(INTCTRL), AC_CMP_bm);
-    add_ioreg_ro(REG_ADDR(STATUS), AC_STATE_bm);
-    add_ioreg(REG_ADDR(STATUS), AC_CMP_bm);
+    add_ioreg(REG_ADDR(STATUS), AC_STATE_bm, IORegister::RO);
+    add_ioreg(REG_ADDR(STATUS), AC_CMP_bm, IORegister::Strobe);
 
     status &= m_intflag.init(device,
                              DEF_REGBIT_B(INTCTRL, AC_CMP),
@@ -188,14 +188,8 @@ void ArchXT_ACP::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
         update_output();
     }
 
-    else if (reg_ofs == REG_OFS(INTCTRL)) {
+    else if (reg_ofs == REG_OFS(INTCTRL) || reg_ofs == REG_OFS(STATUS)) {
         m_intflag.update_from_ioreg();
-    }
-
-    else if (reg_ofs == REG_OFS(STATUS)) {
-        //If we're writing a 1 to the interrupt flag bit, it clears the bit and cancels the interrupt
-        if (data.value & AC_CMP_bm)
-            m_intflag.clear_flag();
     }
 }
 

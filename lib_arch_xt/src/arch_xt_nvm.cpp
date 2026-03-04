@@ -125,7 +125,7 @@ bool ArchXT_Fuses::init(Device& device)
 
     //Allocate a register in read-only access for each fuse
     for (unsigned int i = 0; i < sizeof(FUSE_t); ++i)
-        add_ioreg_ro(m_reg_base + i, 0xFF);
+        add_ioreg(m_reg_base + i, 0xFF, IORegister::RO);
 
     //Obtain the pointer to the flash section manager
     if (!device.ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_SECTIONS, &req))
@@ -258,9 +258,9 @@ bool ArchXT_NVM::init(Device& device)
     //Allocate the registers
     add_ioreg(REG_ADDR(CTRLA), NVMCTRL_CMD_gm);
     add_ioreg(REG_ADDR(CTRLB), NVMCTRL_BOOTLOCK_bm | NVMCTRL_APCWP_bm);
-    add_ioreg_ro(REG_ADDR(STATUS), NVMCTRL_WRERROR_bm | NVMCTRL_EEBUSY_bm | NVMCTRL_FBUSY_bm);
+    add_ioreg(REG_ADDR(STATUS), NVMCTRL_WRERROR_bm | NVMCTRL_EEBUSY_bm | NVMCTRL_FBUSY_bm, IORegister::RO);
     add_ioreg(REG_ADDR(INTCTRL), NVMCTRL_EEREADY_bm);
-    add_ioreg(REG_ADDR(INTFLAGS), NVMCTRL_EEREADY_bm);
+    add_ioreg(REG_ADDR(INTFLAGS), NVMCTRL_EEREADY_bm, IORegister::Strobe);
     //DATA and ADDR not implemented
 
     status &= m_ee_intflag.init(device,
@@ -356,12 +356,8 @@ void ArchXT_NVM::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
             SET_IOREG(CTRLB, NVMCTRL_BOOTLOCK);
     }
 
-    else if (reg_ofs == REG_OFS(INTCTRL)) {
+    else if (reg_ofs == REG_OFS(INTCTRL) || reg_ofs == REG_OFS(INTFLAGS)) {
         m_ee_intflag.update_from_ioreg();
-    }
-
-    else if (reg_ofs == REG_OFS(INTFLAGS)) {
-        m_ee_intflag.clear_flag(data.value);
     }
 }
 

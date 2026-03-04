@@ -97,9 +97,9 @@ bool ArchXT_RTC::init(Device& device)
     bool status = Peripheral::init(device);
 
     add_ioreg(REG_ADDR(CTRLA), RTC_RUNSTDBY_bm | RTC_PRESCALER_gm | RTC_CORREN_bm | RTC_RTCEN_bm);
-    add_ioreg_ro(REG_ADDR(STATUS), RTC_CMPBUSY_bm | RTC_PERBUSY_bm | RTC_CNTBUSY_bm | RTC_CTRLABUSY_bm);
+    add_ioreg(REG_ADDR(STATUS), RTC_CMPBUSY_bm | RTC_PERBUSY_bm | RTC_CNTBUSY_bm | RTC_CTRLABUSY_bm, IORegister::RO);
     add_ioreg(REG_ADDR(INTCTRL), RTC_CMP_bm | RTC_OVF_bm);
-    add_ioreg(REG_ADDR(INTFLAGS), RTC_CMP_bm | RTC_OVF_bm);
+    add_ioreg(REG_ADDR(INTFLAGS), RTC_CMP_bm | RTC_OVF_bm, IORegister::Strobe);
     add_ioreg(REG_ADDR(TEMP));
     //DBGCTRL not supported
     add_ioreg(REG_ADDR(CALIB));
@@ -111,9 +111,9 @@ bool ArchXT_RTC::init(Device& device)
     add_ioreg(REG_ADDR(CMPL));
     add_ioreg(REG_ADDR(CMPH));
     add_ioreg(REG_ADDR(PITCTRLA), RTC_PERIOD_gm | RTC_PITEN_bm);
-    add_ioreg_ro(REG_ADDR(PITSTATUS), RTC_CTRLBUSY_bm);
+    add_ioreg(REG_ADDR(PITSTATUS), RTC_CTRLBUSY_bm, IORegister::RO);
     add_ioreg(REG_ADDR(PITINTCTRL), RTC_PI_bm);
-    add_ioreg(REG_ADDR(PITINTFLAGS), RTC_PI_bm);
+    add_ioreg(REG_ADDR(PITINTFLAGS), RTC_PI_bm, IORegister::Strobe);
     //PITDBGCTRL not supported
 
     status &= m_rtc_intflag.init(device,
@@ -259,29 +259,12 @@ void ArchXT_RTC::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
         m_rtc_counter.reschedule();
     }
 
-    else if (reg_ofs == REG_OFS(INTCTRL)) {
+    else if (reg_ofs == REG_OFS(INTCTRL) || reg_ofs == REG_OFS(INTFLAGS)) {
         m_rtc_intflag.update_from_ioreg();
     }
 
-    //If we're writing a 1 to one of the RTC interrupt flag bits,
-    //it clears the corresponding bits.
-    //If all bits are clear, cancel the interrupt
-    else if (reg_ofs == REG_OFS(INTFLAGS)) {
-        bitmask_t bm = RTC_CMP_bm | RTC_OVF_bm;
-        write_ioreg(addr, bm.clear_from(data.value));
-        m_rtc_intflag.clear_flag(bm & data.value);
-    }
-
-    else if (reg_ofs == REG_OFS(PITINTCTRL)) {
+    else if (reg_ofs == REG_OFS(PITINTCTRL) || reg_ofs == REG_OFS(PITINTFLAGS)) {
         m_pit_intflag.update_from_ioreg();
-    }
-
-    //If we're writing a 1 to the PIT interrupt flag bit, it clears the bit
-    //and cancel the interrupt
-    else if (reg_ofs == REG_OFS(PITINTFLAGS)) {
-        bitmask_t bm = RTC_PI_bm;
-        write_ioreg(addr, bm.clear_from(data.value));
-        m_pit_intflag.clear_flag();
     }
 
     if (do_reconfigure)
