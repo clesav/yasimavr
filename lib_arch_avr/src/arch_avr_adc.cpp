@@ -60,7 +60,7 @@ bool ArchAVR_ADC::init(Device& device)
     add_ioreg(m_config.rb_start);
     add_ioreg(m_config.rb_auto_trig);
     add_ioreg(m_config.rb_int_enable);
-    add_ioreg(m_config.rb_int_flag);
+    add_ioreg(m_config.rb_int_flag, IORegister::Strobe);
     add_ioreg(m_config.rb_prescaler);
     add_ioreg(m_config.rb_trig_mux);
     add_ioreg(m_config.rb_bipolar);
@@ -157,12 +157,8 @@ void ArchAVR_ADC::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
     if (addr == m_config.rb_left_adj)
         write_digital_value();
 
-    if (addr == m_config.rb_int_enable)
+    if (addr == m_config.rb_int_enable || addr == m_config.rb_int_flag)
         m_intflag.update_from_ioreg();
-
-    //Writing 1 to ADIF clears the flag and cancels the interrupt
-    if (addr == m_config.rb_int_flag && m_config.rb_int_flag.extract(data.value))
-        m_intflag.clear_flag();
 
 }
 

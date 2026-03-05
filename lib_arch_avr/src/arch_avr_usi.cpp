@@ -178,16 +178,16 @@ bool ArchAVR_USI::init(Device& device)
 
     add_ioreg(m_config.rb_wiremode);
     add_ioreg(m_config.rb_clk_sel);
-    add_ioreg(m_config.rb_clk_strobe);
-    add_ioreg(m_config.rb_clk_toggle);
+    add_ioreg(m_config.rb_clk_strobe, IORegister::Strobe);
+    add_ioreg(m_config.rb_clk_toggle, IORegister::Strobe);
     add_ioreg(m_config.reg_data);
-    add_ioreg_ro(m_config.reg_buffer);
+    add_ioreg(m_config.reg_buffer, IORegister::RO);
     add_ioreg(m_config.rb_counter);
-    add_ioreg(m_config.rb_ovf_flag);
+    add_ioreg(m_config.rb_ovf_flag, IORegister::Strobe);
     add_ioreg(m_config.rb_ovf_inten);
-    add_ioreg(m_config.rb_start_flag);
+    add_ioreg(m_config.rb_start_flag, IORegister::Strobe);
     add_ioreg(m_config.rb_start_inten);
-    add_ioreg(m_config.rb_stop_flag);
+    add_ioreg(m_config.rb_stop_flag, IORegister::Strobe);
 
     status &= m_ovf_intflag.init(device,
                                  m_config.rb_ovf_inten,
@@ -239,8 +239,6 @@ void ArchAVR_USI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
     if (addr == m_config.rb_ovf_flag) {
         //Writing one to the bit clears the flag
         if (m_config.rb_ovf_flag.extract(data.value)) {
-            m_ovf_intflag.clear_flag();
-
             //In TWI (Hold) mode, clearing the overflow flag releases the clock hold,
             //provided the Start Condition flag is cleared as well.
             if (m_wire_mode == Wire_TwoWireHold && !test_ioreg(m_config.rb_start_flag))
@@ -254,7 +252,6 @@ void ArchAVR_USI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
     if (addr == m_config.rb_start_flag) {
         //Writing one to the bit clears the flag
         if (m_config.rb_start_flag.extract(data.value)) {
-            m_start_intflag.clear_flag();
             m_start_detected = false;
 
             //In the TwoWire (hold) mode the clock hold is only released if the overflow flag is cleared
@@ -267,17 +264,11 @@ void ArchAVR_USI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
     if (addr == m_config.rb_start_inten)
         m_start_intflag.update_from_ioreg();
 
-    if (addr == m_config.rb_stop_flag) {
-        if (m_config.rb_stop_flag.extract(data.value))
-            clear_ioreg(m_config.rb_stop_flag);
-    }
-
     if (addr == m_config.rb_clk_strobe) {
         if (m_clk_mode == Clock_Strobe && m_config.rb_clk_strobe.extract(data.value)) {
             shift_data();
             update_data_output();
             inc_counter();
-            clear_ioreg(m_config.rb_clk_strobe);
         }
     }
 
@@ -289,8 +280,6 @@ void ArchAVR_USI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
         //If external clock is selected, and USICLK is set, clock the counter
         if ((m_clk_mode & 0x02) && test_ioreg(m_config.rb_clk_strobe))
             inc_counter();
-
-        clear_ioreg(m_config.rb_clk_toggle);
     }
 
     if (addr == m_config.reg_data) {

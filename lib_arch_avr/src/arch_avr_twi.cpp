@@ -252,7 +252,7 @@ bool ArchAVR_TWI::init(Device& device)
     add_ioreg(regbit_t(m_config.reg_ctrl, m_config.bs_int_flag));
     add_ioreg(regbit_t(m_config.reg_ctrl, m_config.bs_ack_enable));
     add_ioreg(m_config.reg_bitrate);
-    add_ioreg_ro(m_config.rb_status);
+    add_ioreg(m_config.rb_status, IORegister::RO);
     add_ioreg(m_config.rb_prescaler);
     add_ioreg(m_config.reg_data);
     add_ioreg(m_config.rb_addr);

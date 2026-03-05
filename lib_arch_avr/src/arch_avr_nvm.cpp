@@ -113,12 +113,12 @@ bool ArchAVR_NVM::init(Device& device)
     add_ioreg(m_config.reg_spm_ctrl, m_config.bs_spm_cmd);
     add_ioreg(m_config.reg_spm_ctrl, m_config.bs_spm_enable);
     add_ioreg(m_config.reg_spm_ctrl, m_config.bs_spm_inten);
-    add_ioreg_ro(m_config.reg_spm_ctrl, m_config.bs_spm_rww_busy);
+    add_ioreg(m_config.reg_spm_ctrl, m_config.bs_spm_rww_busy, IORegister::RO);
 
     //Allocate the EEPROM registers
     add_ioreg(m_config.rbc_ee_addr);
     add_ioreg(m_config.reg_ee_data);
-    add_ioreg(m_config.rb_ee_read);
+    add_ioreg(m_config.rb_ee_read, IORegister::Strobe);
     add_ioreg(m_config.rb_ee_write);
     add_ioreg(m_config.rb_ee_wren);
     add_ioreg(m_config.rb_ee_inten);
@@ -231,8 +231,6 @@ void ArchAVR_NVM::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
         if (m_config.rb_ee_read.extract(data.posedge()) && m_ee_state <= State_Pending) {
             //Start the EEPROM read operation
             start_eeprom_command(EE_ModeRead);
-            //EERE is a strobe bit so clear it
-            clear_ioreg(m_config.rb_ee_read);
             //Cancel the Write Enable window
             clear_ioreg(m_config.rb_ee_wren);
         }
