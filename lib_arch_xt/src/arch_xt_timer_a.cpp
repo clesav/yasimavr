@@ -183,7 +183,7 @@ bool ArchXT_TimerA::init(Device& device)
                                  TCA_SPLIT_HUNF_bm);
     add_ioreg(REG_ADDR(INTFLAGS), TCA_SINGLE_OVF_bm |
                                   TCA_SINGLE_CMP0_bm | TCA_SINGLE_CMP1_bm | TCA_SINGLE_CMP2_bm |
-                                  TCA_SPLIT_HUNF_bm);
+                                  TCA_SPLIT_HUNF_bm, IORegister::Strobe);
     //DBGCTRL not implemented
     add_ioreg(REG_ADDR(TEMP));
     add_ioreg(REG_ADDR(CNTL));
@@ -496,20 +496,6 @@ void ArchXT_TimerA::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& da
         m_hunf_intflag.update_from_ioreg();
         for (auto& cmp : m_cmp_intflags)
             cmp.update_from_ioreg();
-    }
-
-    //If we're writing a 1 to the interrupt flag bit, it clears the bit and cancels the interrupt
-    else if (reg_ofs == REG_OFS(INTFLAGS)) {
-        if (data.value & TCA_SINGLE_OVF_bm)
-            m_ovf_intflag.clear_flag();
-
-        if (data.value & TCA_SPLIT_HUNF_bm)
-            m_hunf_intflag.clear_flag();
-
-        for (int i = 0; i < CFG::CompareChannelCount; ++i) {
-            if (data.value & (TCA_SINGLE_CMP0_bm << i))
-                m_cmp_intflags[i].clear_flag();
-        }
     }
 
     //All other registers are treated differently according to the single/split mode

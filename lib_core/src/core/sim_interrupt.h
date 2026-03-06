@@ -288,8 +288,8 @@ private:
     regmask_t m_rm_flag;
     int_vect_t m_vector;
 
-    IO_Register* m_flag_reg;
-    IO_Register* m_enable_reg;
+    IORegister* m_flag_reg;
+    IORegister* m_enable_reg;
 
     bool flag_raised() const;
 

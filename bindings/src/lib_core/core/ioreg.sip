@@ -1,7 +1,7 @@
 /*
  * ioreg.sip
  *
- *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -36,7 +36,7 @@ struct ioreg_write_t {
 };
 
 
-class IO_RegHandler {
+class IORegHandler {
 %TypeHeaderCode
 #include "core/sim_ioreg.h"
 %End
@@ -50,31 +50,35 @@ public:
 };
 
 
-class IO_Register {
+class IORegister /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "core/sim_ioreg.h"
 %End
 
 public:
 
-    IO_Register(bool=false);
-    IO_Register(const IO_Register&);
+    enum BitMode {
+        RW,
+        RO,
+        Strobe,
+    };
+
+    IORegister(bitmask_t = bitmask_t(), BitMode BitMode = IORegister::RW);
 
     uint8_t value() const;
     void set(uint8_t);
 
-    void set_handler(IO_RegHandler&, uint8_t, uint8_t);
+    void add_bits(bitmask_t, BitMode);
+
+    void add_handler(IORegHandler&);
 
     uint8_t cpu_read(reg_addr_t);
-    bool cpu_write(reg_addr_t, uint8_t);
+    void cpu_write(reg_addr_t, uint8_t);
 
     uint8_t ioctl_read(reg_addr_t);
     void ioctl_write(reg_addr_t, uint8_t);
 
     uint8_t dbg_peek(reg_addr_t);
 
-private:
-
-    IO_Register& operator=(const IO_Register&);
-
 };
+

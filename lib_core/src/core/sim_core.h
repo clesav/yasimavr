@@ -34,7 +34,7 @@
 
 YASIMAVR_BEGIN_NAMESPACE
 
-class IO_Register;
+class IORegister;
 class Device;
 class Firmware;
 class InterruptController;
@@ -125,7 +125,7 @@ public:
 
     int exec_cycle();
 
-    IO_Register* get_ioreg(reg_addr_t addr);
+    IORegister* get_ioreg(reg_addr_t addr);
 
     //Peripheral access to the I/O registers
     uint8_t ioctl_read_ioreg(reg_addr_t addr);
@@ -150,7 +150,7 @@ protected:
     ///Array of the 32 general registers
     uint8_t m_regs[32];
     ///Array of the I/O registers
-    std::vector<IO_Register*> m_ioregs;
+    std::vector<IORegister*> m_ioregs;
     ///Pointer to the array representing the device RAM memory.
     uint8_t* m_sram;
     ///Non-volatile memory model for the flash.

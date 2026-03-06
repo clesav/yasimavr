@@ -226,12 +226,12 @@ bool ArchXT_USART::init(Device& device)
 {
     bool status = Peripheral::init(device);
 
-    add_ioreg_ro(REG_ADDR(RXDATAL), USART_DATA_gm);
-    add_ioreg_ro(REG_ADDR(RXDATAH), USART_DATA8_bm | USART_PERR_bm | USART_FERR_bm | USART_BUFOVF_bm | USART_RXCIF_bm);
+    add_ioreg(REG_ADDR(RXDATAL), USART_DATA_gm, IORegister::RO);
+    add_ioreg(REG_ADDR(RXDATAH), USART_DATA8_bm | USART_PERR_bm | USART_FERR_bm | USART_BUFOVF_bm | USART_RXCIF_bm, IORegister::RO);
     add_ioreg(REG_ADDR(TXDATAL), USART_DATA_gm);
     add_ioreg(REG_ADDR(TXDATAH), USART_DATA8_bm);
-    add_ioreg_ro(REG_ADDR(STATUS), USART_RXCIF_bm | USART_DREIF_bm); // R/O part
-    add_ioreg(REG_ADDR(STATUS), USART_TXCIF_bm | USART_RXSIF_bm); // R/W part
+    add_ioreg(REG_ADDR(STATUS), USART_TXCIF_bm | USART_RXSIF_bm, IORegister::Strobe); // strobe part
+    add_ioreg(REG_ADDR(STATUS), USART_RXCIF_bm | USART_DREIF_bm, IORegister::RO); // R/O part
     add_ioreg(REG_ADDR(CTRLA), USART_RXCIE_bm | USART_TXCIE_bm | USART_DREIE_bm | USART_RXSIE_bm | USART_LBME_bm | USART_RS485_gm);
     add_ioreg(REG_ADDR(CTRLB), USART_RXEN_bm | USART_TXEN_bm | USART_SFDEN_bm | USART_ODME_bm | USART_RXMODE_gm);
     add_ioreg(REG_ADDR(CTRLC), USART_CMODE_gm | USART_PMODE_gm | USART_SBMODE_bm | USART_CHSIZE_gm);
@@ -361,12 +361,8 @@ void ArchXT_USART::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& dat
     }
 
     else if (reg_ofs == REG_OFS(STATUS)) {
-        //Writing one to RXSIF clears the bit and cancels the interrupt
-        if (data.value & USART_RXSIF_bm)
-            m_rxc_intflag.clear_flag(USART_RXSIF_bm);
-        //Writing one to TXCIF clears the bit and cancels the interrupt
-        if (data.value & USART_TXCIF_bm)
-            m_txc_intflag.clear_flag();
+        m_txc_intflag.update_from_ioreg();
+        m_rxc_intflag.update_from_ioreg();
     }
 
     else if (reg_ofs == REG_OFS(CTRLA)) {

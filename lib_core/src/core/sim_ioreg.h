@@ -1,7 +1,7 @@
 /*
  * sim_ioreg.h
  *
- *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -66,11 +66,11 @@ struct ioreg_write_t {
    The handler is notified when the register is accessed by the CPU
    It is meant to be implemented by I/O peripherals
  */
-class AVR_CORE_PUBLIC_API IO_RegHandler {
+class AVR_CORE_PUBLIC_API IORegHandler {
 
 public:
 
-    virtual ~IO_RegHandler() = default;
+    virtual ~IORegHandler() = default;
 
     /**
        Callback for a CPU I/O read access. On-the-fly modifications of the
@@ -113,52 +113,61 @@ public:
    Each bit of the register can be marked as used/unused or read-only. this is taken
    into account on write access for error checks.
  */
-class AVR_CORE_PUBLIC_API IO_Register {
+class AVR_CORE_PUBLIC_API IORegister {
 
 public:
 
-    explicit IO_Register(bool core_reg=false);
-    IO_Register(const IO_Register& other);
-    ~IO_Register();
+    enum BitMode {
+        RW,
+        RO,
+        Strobe,
+    };
+
+    explicit IORegister(bitmask_t initial_mask = bitmask_t(), BitMode initial_mode = RW);
+    ~IORegister();
 
     uint8_t value() const;
     void set(uint8_t value);
 
-    void set_handler(IO_RegHandler& handler, uint8_t use_mask, uint8_t ro_mask);
+    void add_bits(bitmask_t mask, BitMode mode);
+
+    void add_handler(IORegHandler& handler);
 
     uint8_t cpu_read(reg_addr_t addr);
-    bool cpu_write(reg_addr_t addr, uint8_t value);
+    void cpu_write(reg_addr_t addr, uint8_t value);
 
     uint8_t ioctl_read(reg_addr_t addr);
     void ioctl_write(reg_addr_t addr, uint8_t value);
 
     uint8_t dbg_peek(reg_addr_t addr);
 
-    IO_Register& operator=(const IO_Register&) = delete;
+    IORegister(const IORegister&) = delete;
+    IORegister& operator=(const IORegister&) = delete;
 
 private:
 
     //Contains the current 8-bits value of this register
     uint8_t m_value;
     //Pointer to the register handler, which is called notified when the register is accessed by the CPU
-    IO_RegHandler *m_handler;
+    IORegHandler *m_handler;
     //Flag set
     uint8_t m_flags;
-    //8-bits mask indicating which bits of the register are used
-    uint8_t m_use_mask;
-    //8-bits mask indicating which bits of the register are read-only for the CPU
-    uint8_t m_ro_mask;
+    //Mask indicating which bits of the register are used
+    bitmask_t m_use_mask;
+    //Mask indicating which bits of the register are read-only or strobe for the CPU
+    bitmask_t m_ro_mask;
+    bitmask_t m_strobe_mask;
 
 };
 
 ///Simple inline interface to access the value
-inline uint8_t IO_Register::value() const
+inline uint8_t IORegister::value() const
 {
     return m_value;
 }
 
 ///Simple inline interface to access the value
-inline void IO_Register::set(uint8_t value)
+inline void IORegister::set(uint8_t value)
 {
     m_value = value;
 }

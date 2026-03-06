@@ -62,16 +62,16 @@ Core::Core(const CoreConfiguration& config)
     m_fuses.program(m_config.fuses);
 
     //Create the I/O registers managed by the CPU
-    m_ioregs[R_SPL] = new IO_Register(true);
-    m_ioregs[R_SPH] = new IO_Register(true);
+    m_ioregs[R_SPL] = new IORegister(0xFF);
+    m_ioregs[R_SPH] = new IORegister(0xFF);
 
     //If extended addressing is used (flash > 64kb), allocate the
     //registers RAMPZ and EIND
     if (use_extended_addressing()) {
         if (m_config.rampz.valid())
-            m_ioregs[m_config.rampz] = new IO_Register(true);
+            m_ioregs[m_config.rampz] = new IORegister(0xFF);
         if (m_config.eind.valid())
-            m_ioregs[m_config.eind] = new IO_Register(true);
+            m_ioregs[m_config.eind] = new IORegister(0xFF);
     }
 }
 
@@ -245,14 +245,14 @@ void Core::cpu_write_gpreg(uint8_t reg, uint8_t value)
 
    \return IO_Register object
  */
-IO_Register* Core::get_ioreg(reg_addr_t addr)
+IORegister* Core::get_ioreg(reg_addr_t addr)
 {
     if (!addr.valid())
         return nullptr;
 
-    IO_Register* reg = m_ioregs[(short) addr];
+    IORegister* reg = m_ioregs[(short) addr];
     if (!reg)
-        reg = m_ioregs[(short) addr] = new IO_Register();
+        reg = m_ioregs[(short) addr] = new IORegister();
 
     return reg;
 }
@@ -290,7 +290,7 @@ uint8_t Core::cpu_read_ioreg(reg_addr_t reg_addr)
         return 0;
     }
 
-    IO_Register* ioreg = m_ioregs[addr];
+    IORegister* ioreg = m_ioregs[addr];
     if (ioreg) {
         return ioreg->cpu_read(addr);
     } else {
@@ -349,14 +349,9 @@ void Core::cpu_write_ioreg(reg_addr_t reg_addr, uint8_t value)
         return;
     }
 
-    IO_Register* ioreg = m_ioregs[addr];
+    IORegister* ioreg = m_ioregs[addr];
     if (ioreg) {
-        if (ioreg->cpu_write(addr, value)) {
-            if (!m_device->test_option(Device::Option_IgnoreBadCpuIO)) {
-                m_device->logger().wng("CPU writing to a read-only register: %04x", addr);
-                m_device->crash(CRASH_BAD_CPU_IO, "Register read-only violation");
-            }
-        }
+        ioreg->cpu_write(addr, value);
     } else {
         if (!m_device->test_option(Device::Option_IgnoreBadCpuIO)) {
             m_device->logger().wng("CPU writing to an unregistered I/O address: %04x", addr);
@@ -399,7 +394,7 @@ uint8_t Core::ioctl_read_ioreg(reg_addr_t reg_addr)
         return 0;
     }
 
-    IO_Register* ioreg = m_ioregs[addr];
+    IORegister* ioreg = m_ioregs[addr];
     if (ioreg) {
         return ioreg->ioctl_read(addr);
     } else {
@@ -442,7 +437,7 @@ void Core::ioctl_write_ioreg(reg_addr_t addr, bitmask_t mask, uint8_t value)
         return;
     }
 
-    IO_Register* ioreg = m_ioregs[addr_];
+    IORegister* ioreg = m_ioregs[addr_];
     if (ioreg) {
         uint8_t v = ioreg->value();
         v = mask.replace(v, value);

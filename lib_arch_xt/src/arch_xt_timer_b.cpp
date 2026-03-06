@@ -116,7 +116,7 @@ bool ArchXT_TimerB::init(Device& device)
     add_ioreg(REG_ADDR(CTRLA), TCB_RUNSTDBY_bm | TCB_CASCADE_bm | TCB_CLKSEL_gm | TCB_ENABLE_bm);
     add_ioreg(REG_ADDR(CTRLB), TCB_ASYNC_bm | TCB_CCMPINIT_bm | TCB_CCMPEN_bm | TCB_CNTMODE_gm);
     add_ioreg(REG_ADDR(EVCTRL), TCB_FILTER_bm | TCB_EDGE_bm | TCB_CAPTEI_bm);
-    add_ioreg_ro(REG_ADDR(STATUS), TCB_RUN_bm);
+    add_ioreg(REG_ADDR(STATUS), TCB_RUN_bm, IORegister::RO);
     //DBGCTRL not supported
     add_ioreg(REG_ADDR(TEMP));
     add_ioreg(REG_ADDR(CNTL));
@@ -129,7 +129,7 @@ bool ArchXT_TimerB::init(Device& device)
         iv_flags |= TCB_OVF_bm;
 
     add_ioreg(REG_ADDR(INTCTRL), iv_flags);
-    add_ioreg(REG_ADDR(INTFLAGS), iv_flags);
+    add_ioreg(REG_ADDR(INTFLAGS), iv_flags, IORegister::Strobe);
 
     status &= m_intflag.init(device,
                              { REG_ADDR(INTCTRL), iv_flags },
@@ -295,16 +295,8 @@ void ArchXT_TimerB::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& da
         m_counter.reschedule();
     }
 
-    else if (reg_ofs == REG_OFS(INTCTRL)) {
+    else if (reg_ofs == REG_OFS(INTCTRL) || reg_ofs == REG_OFS(INTFLAGS)) {
         m_intflag.update_from_ioreg();
-    }
-
-    //If we're writing a 1 to the interrupt flag bit, it clears the bit and cancels the interrupt
-    else if (reg_ofs == REG_OFS(INTFLAGS)) {
-        if (data.value & TCB_CAPT_bm)
-            m_intflag.clear_flag(TCB_CAPT_bm);
-        if ((data.value & TCB_OVF_bm) && (m_config.options & CFG::OverflowFlag))
-            m_intflag.clear_flag(TCB_OVF_bm);
     }
 }
 

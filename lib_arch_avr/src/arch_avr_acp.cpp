@@ -59,9 +59,9 @@ bool ArchAVR_ACP::init(Device& device)
     add_ioreg(m_config.rb_adc_enable);
     add_ioreg(m_config.rb_bandgap_select);
     add_ioreg(m_config.rb_int_mode);
-    add_ioreg_ro(m_config.rb_output);
+    add_ioreg(m_config.rb_output, IORegister::RO);
     add_ioreg(m_config.rb_int_enable);
-    add_ioreg(m_config.rb_int_flag);
+    add_ioreg(m_config.rb_int_flag, IORegister::Strobe);
 
     status &= m_intflag.init(device,
                              m_config.rb_int_enable,
@@ -151,13 +151,8 @@ void ArchAVR_ACP::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
         update_state();
     }
 
-    if (addr == m_config.rb_int_enable)
+    if (addr == m_config.rb_int_enable || addr == m_config.rb_int_flag)
         m_intflag.update_from_ioreg();
-
-    //Writing 1 to ACI clears the flag and cancels the interrupt
-    if (addr == m_config.rb_int_flag && m_config.rb_int_flag.extract(data.value))
-        m_intflag.clear_flag();
-
 }
 
 

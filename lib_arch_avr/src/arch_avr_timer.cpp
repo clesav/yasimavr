@@ -164,7 +164,7 @@ bool ArchAVR_Timer::init(Device& device)
     }
 
     add_ioreg(m_config.reg_int_enable, bitmask_t(int_bitmask));
-    add_ioreg(m_config.reg_int_flag, bitmask_t(int_bitmask));
+    add_ioreg(m_config.reg_int_flag, bitmask_t(int_bitmask), IORegister::Strobe);
 
     m_counter.init(*device.cycle_manager(), logger());
     m_counter.signal().connect(*this);
@@ -358,22 +358,15 @@ void ArchAVR_Timer::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& da
             do_com_reconfig = true;
         }
 
-        //If we're writing a 1 to a interrupt flag bit, it cancels the corresponding interrupt if it
-        //has not been executed yet
-        if (addr == m_config.reg_int_flag) {
-            //Check the flag for OVF
-            if (m_config.vect_ovf.num && BITSET(data.value, m_config.vect_ovf.bit))
-                m_intflag_ovf.clear_flag();
+        //Interrupt flag updates
+        if (addr == m_config.reg_int_enable || addr == m_config.reg_int_flag) {
+            m_intflag_ovf.update_from_ioreg();
 
-            //Check the flag for ICR
-            if (m_config.vect_icr.num && BITSET(data.value, m_config.vect_icr.bit))
-                m_intflag_icr.clear_flag();
+            if (m_config.reg_icr.valid())
+                m_intflag_icr.update_from_ioreg();
 
-            //Check the flag for each OC
-            for (auto oc : m_oc_channels) {
-                if (oc->config.vector.num && BITSET(data.value, oc->config.vector.bit))
-                    oc->intflag.clear_flag();
-            }
+            for (auto oc : m_oc_channels)
+                oc->intflag.update_from_ioreg();
         }
     }
 

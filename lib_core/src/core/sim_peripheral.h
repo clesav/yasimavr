@@ -283,7 +283,7 @@ const T* find_reg_config_p(const std::vector<T>& v, uint64_t reg_value)
    \ingroup core_peripheral
    \brief Abstract class defining a framework for MCU peripherals.
  */
-class AVR_CORE_PUBLIC_API Peripheral: public IO_RegHandler {
+class AVR_CORE_PUBLIC_API Peripheral: public IORegHandler {
 
 public:
 
@@ -316,14 +316,10 @@ protected:
 
     Logger& logger();
 
-    void add_ioreg(const regmask_t& rm);
-    void add_ioreg(const regbit_compound_t& rbc);
-    void add_ioreg(reg_addr_t addr);
-    void add_ioreg(reg_addr_t addr, bitmask_t mask);
-    void add_ioreg_ro(const regmask_t& rm);
-    void add_ioreg_ro(const regbit_compound_t& rbc);
-    void add_ioreg_ro(reg_addr_t addr);
-    void add_ioreg_ro(reg_addr_t addr, bitmask_t mask);
+    void add_ioreg(const regmask_t& rm, IORegister::BitMode bitmode = IORegister::RW);
+    void add_ioreg(const regbit_compound_t& rbc, IORegister::BitMode bitmode = IORegister::RW);
+    void add_ioreg(reg_addr_t addr, IORegister::BitMode bitmode = IORegister::RW);
+    void add_ioreg(reg_addr_t addr, bitmask_t mask, IORegister::BitMode bitmode = IORegister::RW);
 
     uint8_t read_ioreg(const regbit_t& rb) const;
     uint64_t read_ioreg(const regbit_compound_t& rbc) const;
@@ -380,24 +376,14 @@ inline Logger& Peripheral::logger()
     return m_logger;
 }
 
-inline void Peripheral::add_ioreg(const regmask_t& rm)
+inline void Peripheral::add_ioreg(const regmask_t& rm, IORegister::BitMode bitmode)
 {
-    add_ioreg(rm.addr, rm.mask);
+    add_ioreg(rm.addr, rm.mask, bitmode);
 }
 
-inline void Peripheral::add_ioreg(reg_addr_t addr)
+inline void Peripheral::add_ioreg(reg_addr_t addr, IORegister::BitMode bitmode)
 {
-    add_ioreg(addr, bitmask_t(0xFF));
-}
-
-inline void Peripheral::add_ioreg_ro(const regmask_t& rm)
-{
-    add_ioreg_ro(rm.addr, rm.mask);
-}
-
-inline void Peripheral::add_ioreg_ro(reg_addr_t addr)
-{
-    add_ioreg_ro(addr, bitmask_t(0xFF));
+    add_ioreg(addr, bitmask_t(0xFF), bitmode);
 }
 
 inline uint8_t Peripheral::read_ioreg(const regbit_t& rb) const

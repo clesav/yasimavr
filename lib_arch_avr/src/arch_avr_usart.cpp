@@ -191,20 +191,20 @@ bool ArchAVR_USART::init(Device& device)
     bool status = Peripheral::init(device);
 
     add_ioreg(m_config.rbc_tx_data);
-    add_ioreg_ro(m_config.rbc_rx_data);
+    add_ioreg(m_config.rbc_rx_data, IORegister::RO);
     add_ioreg(m_config.rb_rx_enable);
     add_ioreg(m_config.rb_tx_enable);
     add_ioreg(m_config.rb_rxc_inten);
-    add_ioreg_ro(m_config.rb_rxc_flag);
+    add_ioreg(m_config.rb_rxc_flag, IORegister::RO);
     add_ioreg(m_config.rb_txc_inten);
-    add_ioreg(m_config.rb_txc_flag);
+    add_ioreg(m_config.rb_txc_flag, IORegister::Strobe);
     add_ioreg(m_config.rb_txe_inten);
-    add_ioreg_ro(m_config.rb_txe_flag);
+    add_ioreg(m_config.rb_txe_flag, IORegister::RO);
     add_ioreg(m_config.rb_baud_2x);
     add_ioreg(m_config.rbc_baud);
-    add_ioreg_ro(m_config.rb_ferr);
-    add_ioreg_ro(m_config.rb_overrun);
-    add_ioreg_ro(m_config.rb_perr);
+    add_ioreg(m_config.rb_ferr, IORegister::RO);
+    add_ioreg(m_config.rb_overrun, IORegister::RO);
+    add_ioreg(m_config.rb_perr, IORegister::RO);
     add_ioreg(m_config.rbc_chsize);
     add_ioreg(m_config.rb_clock_mode);
     add_ioreg(m_config.rb_parity);
@@ -308,10 +308,6 @@ void ArchAVR_USART::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& da
     //Writing to TXCIE
     if (addr == m_config.rb_txc_inten)
         m_txc_intflag.update_from_ioreg();
-
-    //Writing 1 to TXC clears the bit and cancels the interrupt
-    if (addr == m_config.rb_txc_flag && m_config.rb_txc_flag.extract(data.value))
-        m_txc_intflag.clear_flag();
 
     //Writing to TXEIE (a.k.a. UDREIE)
     if (addr == m_config.rb_txe_inten)

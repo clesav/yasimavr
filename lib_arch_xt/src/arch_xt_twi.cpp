@@ -233,16 +233,19 @@ bool ArchXT_TWI::init(Device& device)
         add_ioreg(REG_ADDR(DUALCTRL), TWI_ENABLE_bm | TWI_FMPEN_bm | TWI_SDAHOLD_gm);
     //DBGCTRL not supported
     add_ioreg(REG_ADDR(MCTRLA), TWI_ENABLE_bm | TWI_SMEN_bm | TWI_WIEN_bm | TWI_RIEN_bm);
-    add_ioreg(REG_ADDR(MCTRLB), TWI_MCMD_gm | TWI_ACKACT_bm | TWI_FLUSH_bm);
-    add_ioreg(REG_ADDR(MSTATUS), TWI_BUSSTATE_gm | TWI_BUSERR_bm | TWI_ARBLOST_bm | TWI_CLKHOLD_bm | TWI_WIF_bm | TWI_RIF_bm);
-    add_ioreg_ro(REG_ADDR(MSTATUS), TWI_RXACK_bm);
+    add_ioreg(REG_ADDR(MCTRLB), TWI_ACKACT_bm);
+    add_ioreg(REG_ADDR(MCTRLB), TWI_MCMD_gm | TWI_FLUSH_bm, IORegister::Strobe);
+    add_ioreg(REG_ADDR(MSTATUS), TWI_BUSSTATE_gm);
+    add_ioreg(REG_ADDR(MSTATUS), TWI_BUSERR_bm | TWI_ARBLOST_bm | TWI_CLKHOLD_bm | TWI_WIF_bm | TWI_RIF_bm, IORegister::Strobe);
+    add_ioreg(REG_ADDR(MSTATUS), TWI_RXACK_bm, IORegister::RO);
     add_ioreg(REG_ADDR(MBAUD));
     add_ioreg(REG_ADDR(MADDR));
     add_ioreg(REG_ADDR(MDATA));
     add_ioreg(REG_ADDR(SCTRLA), TWI_ENABLE_bm | TWI_SMEN_bm | TWI_PMEN_bm | TWI_PIEN_bm | TWI_APIEN_bm | TWI_DIEN_bm);
-    add_ioreg(REG_ADDR(SCTRLB), TWI_SCMD_gm | TWI_ACKACT_bm);
-    add_ioreg(REG_ADDR(SSTATUS), TWI_BUSERR_bm | TWI_COLL_bm | TWI_APIF_bm | TWI_DIF_bm);
-    add_ioreg_ro(REG_ADDR(SSTATUS), TWI_AP_bm | TWI_DIR_bm | TWI_RXACK_bm | TWI_CLKHOLD_bm);
+    add_ioreg(REG_ADDR(SCTRLB), TWI_ACKACT_bm);
+    add_ioreg(REG_ADDR(SCTRLB), TWI_SCMD_gm, IORegister::Strobe);
+    add_ioreg(REG_ADDR(SSTATUS), TWI_BUSERR_bm | TWI_COLL_bm | TWI_APIF_bm | TWI_DIF_bm, IORegister::Strobe);
+    add_ioreg(REG_ADDR(SSTATUS), TWI_AP_bm | TWI_DIR_bm | TWI_RXACK_bm | TWI_CLKHOLD_bm, IORegister::RO);
     add_ioreg(REG_ADDR(SADDR));
     add_ioreg(REG_ADDR(SDATA));
     add_ioreg(REG_ADDR(SADDRMASK));
@@ -384,16 +387,12 @@ void ArchXT_TWI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
             logger().dbg("Flush");
             if (TEST_IOREG(MCTRLA, TWI_ENABLE))
                 reset_host();
-            //FLUSH is a strobe bit so we clear it
-            CLEAR_IOREG(MCTRLB, TWI_FLUSH);
-            //Flushing takes over commands so no further processing other than clearing it
-            WRITE_IOREG_F_GC(MCTRLB, TWI_MCMD, 0);
+            //Flushing takes over commands so no further processing
             return;
         }
 
-        //Extract and clear MCMD, it's a strobe
+        //Extract MCMD
         m_host_cmd = EXTRACT_GC(data.value, TWI_MCMD);
-        WRITE_IOREG_F_GC(MCTRLB, TWI_MCMD, 0);
 
         //Acknowledgment Action, if MCMD is not zero and the host part is in the relevant state
         if (TEST_IOREG(MCTRLA, TWI_ENABLE) && m_host_cmd) {
@@ -405,14 +404,13 @@ void ArchXT_TWI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
     }
 
     else if (reg_ofs == REG_OFS(MSTATUS)) {
-        //Clears the write-one-to-clear status flags
-        const uint8_t wotc_flags = TWI_RIF_bm | TWI_WIF_bm | TWI_CLKHOLD_bm | TWI_ARBLOST_bm | TWI_BUSERR_bm;
-        WRITE_IOREG(MSTATUS, data.old & ~(data.value & wotc_flags));
-
-        //If writing IDLE to BUSSTATE, it resets the host part
+        //If writing IDLE to BUSSTATE when the interface is enabled, it resets the host part
         if (TEST_IOREG(MCTRLA, TWI_ENABLE) && EXTRACT_GC(data.value, TWI_BUSSTATE) == TWI_BUSSTATE_IDLE_gc) {
             reset_host();
             WRITE_IOREG_F_GC(MSTATUS, TWI_BUSSTATE, TWI_BUSSTATE_IDLE_gc);
+        } else {
+            //in all other cases, the bus state is read-only
+            WRITE_IOREG_F_GC(MSTATUS, TWI_BUSSTATE, EXTRACT_GC(data.old, TWI_BUSSTATE));
         }
 
         m_intflag_host.update_from_ioreg();
@@ -481,9 +479,8 @@ void ArchXT_TWI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
     }
 
     else if (reg_ofs == REG_OFS(SCTRLB)) {
-        //Extract and clear SCMD, it's a strobe
+        //Extract SCMD
         uint8_t scmd = EXTRACT_GC(data.value, TWI_SCMD);
-        WRITE_IOREG_F_GC(SCTRLB, TWI_SCMD, 0);
 
         //Command execution, if the client is enabled and SCMD is not zero
         if (TEST_IOREG(SCTRLA, TWI_ENABLE) && scmd) {
@@ -497,9 +494,6 @@ void ArchXT_TWI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
     }
 
     else if (reg_ofs == REG_OFS(SSTATUS)) {
-        //Clears the write-one-to-clear status flags
-        const uint8_t wotc_flags = TWI_DIF_bm | TWI_APIF_bm | TWI_COLL_bm | TWI_BUSERR_bm;
-        WRITE_IOREG(SSTATUS, data.old & ~(data.value & wotc_flags));
         m_intflag_client.update_from_ioreg();
     }
 
