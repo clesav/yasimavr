@@ -185,7 +185,7 @@ ACP_mega0:
             OUTEN: { kind: BIT, pos: 6, supported: no }
             RUNSTDBY: { kind: BIT, pos: 7, one: enabled, zero: disabled }
 
-        - name: MUXCTRL
+        - name: MUXCTRLA
           offset: 0x02
           fields:
             MUXNEG:
@@ -236,7 +236,7 @@ ACP_tiny0:
             OUTEN: { kind: BIT, pos: 6, supported: no }
             RUNSTDBY: { kind: BIT, pos: 7, one: enabled, zero: disabled }
 
-        - name: MUXCTRL
+        - name: MUXCTRLA
           offset: 0x02
           fields:
             MUXNEG:
