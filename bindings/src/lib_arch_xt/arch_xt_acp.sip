@@ -1,7 +1,7 @@
 /*
  * arch_xt_acp.sip
  *
- *  Copyright 2022 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -18,7 +18,6 @@
     You should have received a copy of the GNU General Public License
     along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 
 //=======================================================================================
 %ModuleCode
@@ -49,7 +48,7 @@ struct ArchXT_ACPConfig {
 };
 
 
-class ArchXT_ACP : public ACP, public Peripheral, public SignalHook /NoDefaultCtors/ {
+class ArchXT_ACP : public Peripheral, public SignalHook /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_xt_acp.h"
 %End

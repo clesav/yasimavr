@@ -1,7 +1,7 @@
 /*
  * arch_avr_adc.sip
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -69,7 +69,7 @@ struct ArchAVR_ADCConfig {
 };
 
 
-class ArchAVR_ADC : public ADC, public Peripheral, public SignalHook /NoDefaultCtors/ {
+class ArchAVR_ADC : public Peripheral, public SignalHook /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_avr_adc.h"
 %End

@@ -23,8 +23,12 @@
 
 #include "arch_avr_acp.h"
 #include "core/sim_device.h"
+#include "ioctrl_common/sim_acp.h"
+#include "ioctrl_common/sim_vref.h"
 
 YASIMAVR_USING_NAMESPACE
+
+using namespace ACP;
 
 
 //=======================================================================================

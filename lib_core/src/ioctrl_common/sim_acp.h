@@ -1,7 +1,7 @@
 /*
  * sim_acp.h
  *
- *  Copyright 2022-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -37,38 +37,36 @@ YASIMAVR_BEGIN_NAMESPACE
    Definition of enumerations, configuration structures and signal Ids used for ACP models,
    common to all architectures.
  */
-class AVR_CORE_PUBLIC_API ACP {
+namespace ACP {
 
-public:
-
-    /**
-       Enum definition for the ACP channel configuration
-     */
-    enum Channel {
-        /// External pin analog input
-        Channel_Pin,
-        /// Internal DAC voltage
-        Channel_AcompRef,
-        /// Internal reference voltage
-        Channel_IntRef
-    };
-
-    struct channel_config_t : base_reg_config_t {
-        /// Channel type
-        Channel type;
-        /// Pin ID used for external pin analog inputs
-        pin_id_t pin;
-    };
-
-    enum SignalId {
-        /// Raised when the output state of the comparator has change. The data is the new state.
-        Signal_Output,
-        /// Raised when the internal DAC value (if the peripheral has one) has changed. The data
-        /// is the DAC voltage value
-        Signal_DAC
-    };
-
+/**
+   Enum definition for the ACP channel configuration
+ */
+enum Channel {
+    /// External pin analog input
+    Channel_Pin,
+    /// Internal DAC voltage
+    Channel_AcompRef,
+    /// Internal reference voltage
+    Channel_IntRef
 };
+
+struct channel_config_t : base_reg_config_t {
+    /// Channel type
+    Channel type;
+    /// Pin ID used for external pin analog inputs
+    pin_id_t pin;
+};
+
+enum SignalId {
+    /// Raised when the output state of the comparator has change. The data is the new state.
+    Signal_Output,
+    /// Raised when the internal DAC value (if the peripheral has one) has changed. The data
+    /// is the DAC voltage value
+    Signal_DAC
+};
+
+}; //namespace ACP
 
 
 YASIMAVR_END_NAMESPACE

@@ -1,5 +1,5 @@
 [build-system]
 requires = ["setuptools>=75.4",
             "wheel",
-            "sip>=6.8.4,<7"]
+            "sip>=6.8.4,<=6.15.1"]
 build-backend = "setuptools.build_meta"

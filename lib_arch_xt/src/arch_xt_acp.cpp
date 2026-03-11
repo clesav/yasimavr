@@ -29,6 +29,9 @@
 
 YASIMAVR_USING_NAMESPACE
 
+using namespace ACP;
+
+
 //=======================================================================================
 
 #define REG_ADDR(reg) \
