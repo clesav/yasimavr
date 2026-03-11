@@ -1,7 +1,7 @@
 /*
  * adc.sip
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -36,38 +36,36 @@ const ctlreq_id_t CTLREQ_ADC_TRIGGER;
 
 //=======================================================================================
 
-class ADC /Abstract/ {
+namespace ADC {
 %TypeHeaderCode
 #include "ioctrl_common/sim_adc.h"
 %End
 
-public:
-
-    enum Channel {
-        Channel_SingleEnded     /PyName=SingleEnded/,
-        Channel_Differential    /PyName=Differential/,
-        Channel_Zero            /PyName=Zero/,
-        Channel_IntRef          /PyName=IntRef/,
-        Channel_Temperature     /PyName=Temperature/,
-        Channel_AcompRef        /PyName=AcompRef/,
-    };
+enum Channel {
+    Channel_SingleEnded     /PyName=SingleEnded/,
+    Channel_Differential    /PyName=Differential/,
+    Channel_Zero            /PyName=Zero/,
+    Channel_IntRef          /PyName=IntRef/,
+    Channel_Temperature     /PyName=Temperature/,
+    Channel_AcompRef        /PyName=AcompRef/,
+};
 
 
-    struct channel_config_t : base_reg_config_t {
+struct channel_config_t : base_reg_config_t {
 
-        ADC::Channel type;
-        pin_id_t pin_p;
-        pin_id_t pin_n;
-        char per_num;
-        unsigned int gain;
-
-    };
-
-
-    enum SignalId /BaseType=IntEnum/ {
-        Signal_ConversionStarted    /PyName=ConversionStarted/,
-        Signal_AboutToSample        /PyName=AboutToSample/,
-        Signal_ConversionComplete   /PyName=ConversionComplete/,
-    };
+    ADC::Channel type;
+    pin_id_t pin_p;
+    pin_id_t pin_n;
+    char per_num;
+    unsigned int gain;
 
 };
+
+
+enum SignalId /BaseType=IntEnum/ {
+    Signal_ConversionStarted    /PyName=ConversionStarted/,
+    Signal_AboutToSample        /PyName=AboutToSample/,
+    Signal_ConversionComplete   /PyName=ConversionComplete/,
+};
+
+}; //namespace ADC0

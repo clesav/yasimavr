@@ -1,7 +1,7 @@
 /*
  * arch_xt_adc.h
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -86,8 +86,7 @@ struct ArchXT_ADCConfig {
     - AVR_CTLREQ_ADC_TRIGGER : Allows other peripherals to trigger a conversion.
     The trigger only works when the ADC is enabled and idle, and the bit STARTEI is set.
  */
-class AVR_ARCHXT_PUBLIC_API ArchXT_ADC : public ADC,
-                                         public Peripheral,
+class AVR_ARCHXT_PUBLIC_API ArchXT_ADC : public Peripheral,
                                          public SignalHook {
 
 public:

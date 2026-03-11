@@ -1,7 +1,7 @@
 /*
  * arch_avr_acp.sip
  *
- *  Copyright 2022 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -50,7 +50,7 @@ struct ArchAVR_ACPConfig {
 };
 
 
-class ArchAVR_ACP : public ACP, public Peripheral, public SignalHook /NoDefaultCtors/ {
+class ArchAVR_ACP : public Peripheral, public SignalHook /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_avr_acp.h"
 %End

@@ -1,7 +1,7 @@
 /*
  * arch_avr_adc.h
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -117,8 +117,7 @@ struct ArchAVR_ADCConfig {
     The trigger only works when the ADC is enabled and idle, auto-trigger is enabled and
     an external trigger source is selected.
  */
-class AVR_ARCHAVR_PUBLIC_API ArchAVR_ADC : public ADC,
-                                           public Peripheral,
+class AVR_ARCHAVR_PUBLIC_API ArchAVR_ADC : public Peripheral,
                                            public SignalHook {
 
 public:

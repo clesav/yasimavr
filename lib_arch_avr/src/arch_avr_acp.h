@@ -1,7 +1,7 @@
 /*
  * arch_avr_acp.h
  *
- *  Copyright 2022 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -25,9 +25,7 @@
 #define __YASIMAVR_AVR_ACOMP_H__
 
 #include "arch_avr_globals.h"
-#include "ioctrl_common/sim_acp.h"
-#include "ioctrl_common/sim_adc.h"
-#include "ioctrl_common/sim_vref.h"
+#include "core/sim_pin.h"
 #include "core/sim_interrupt.h"
 
 YASIMAVR_BEGIN_NAMESPACE
@@ -84,8 +82,7 @@ struct ArchAVR_ACPConfig {
    CTLREQs supported:
     - AVR_CTLREQ_GET_SIGNAL : returns a pointer to the instance signal
  */
-class AVR_ARCHAVR_PUBLIC_API ArchAVR_ACP : public ACP,
-                                           public Peripheral,
+class AVR_ARCHAVR_PUBLIC_API ArchAVR_ACP : public Peripheral,
                                            public SignalHook {
 
 public:

@@ -1,7 +1,7 @@
 /*
  * arch_xt_acp.h
  *
- *  Copyright 2022-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -76,8 +76,7 @@ struct ArchXT_ACPConfig {
     - AVR_CTLREQ_GET_SIGNAL : returns a pointer to the instance signal
     - AVR_CTLREQ_ACP_GET_DAC : returns the output value of the internal DAC.
  */
-class AVR_ARCHXT_PUBLIC_API ArchXT_ACP : public ACP,
-                                         public Peripheral,
+class AVR_ARCHXT_PUBLIC_API ArchXT_ACP : public Peripheral,
                                          public SignalHook {
 
 public:
@@ -105,7 +104,7 @@ private:
     //Hysteresis value
     double m_hysteresis;
 
-    bool register_channels(DataSignalMux& mux, const std::vector<channel_config_t>& channels);
+    bool register_channels(DataSignalMux& mux, const std::vector<ACP::channel_config_t>& channels);
     void update_DAC();
     void update_hysteresis();
     void update_output();

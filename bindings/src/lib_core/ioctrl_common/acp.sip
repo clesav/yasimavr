@@ -1,7 +1,7 @@
 /*
  * acp.sip
  *
- *  Copyright 2022-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -19,30 +19,27 @@
     along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 //=======================================================================================
 
-class ACP /Abstract/ {
+namespace ACP {
 %TypeHeaderCode
 #include "ioctrl_common/sim_acp.h"
 %End
 
-public:
-
-    enum Channel {
-        Channel_Pin         /PyName=Pin/,
-        Channel_AcompRef    /PyName=AcompRef/,
-        Channel_IntRef      /PyName=IntRef/,
-    };
-
-     struct channel_config_t : base_reg_config_t {
-        ACP::Channel type;
-        pin_id_t pin;
-    };
-
-    enum SignalId /BaseType=IntEnum/ {
-        Signal_Output       /PyName=Output/,
-        Signal_DAC          /PyName=DAC/,
-    };
-
+enum Channel {
+    Channel_Pin         /PyName=Pin/,
+    Channel_AcompRef    /PyName=AcompRef/,
+    Channel_IntRef      /PyName=IntRef/,
 };
+
+ struct channel_config_t : base_reg_config_t {
+    ACP::Channel type;
+    pin_id_t pin;
+};
+
+enum SignalId /BaseType=IntEnum/ {
+    Signal_Output       /PyName=Output/,
+    Signal_DAC          /PyName=DAC/,
+};
+
+}; //namespace ACP
