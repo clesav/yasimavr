@@ -1,7 +1,7 @@
 /*
  * arch_xt_nvm.sip
  *
- *  Copyright 2022-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -30,8 +30,6 @@ public:
 
     ArchXT_USERROW(reg_addr_t);
 
-    virtual bool init(Device&);
-    virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
 };
 
 
@@ -43,9 +41,6 @@ class ArchXT_Fuses : public Peripheral /NoDefaultCtors/ {
 public:
 
     ArchXT_Fuses(reg_addr_t);
-
-    virtual bool init(Device&);
-    virtual void reset();
 
 };
 
@@ -82,10 +77,6 @@ public:
 
     ArchXT_NVM(const ArchXT_NVMConfig& /KeepReference/);
 
-    virtual bool init(Device&);
-    virtual void reset();
-    virtual bool ctlreq(ctlreq_id_t, ctlreq_data_t*);
-    virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
     virtual void raised(const signal_data_t&, int);
 
 };

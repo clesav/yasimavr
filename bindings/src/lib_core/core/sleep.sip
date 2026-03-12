@@ -71,8 +71,6 @@ public:
 
     SleepController(const SleepConfig&);
 
-    virtual bool init(Device&);
-    virtual bool ctlreq(ctlreq_id_t, ctlreq_data_t*);
     virtual void raised(const signal_data_t&, int);
 
 };

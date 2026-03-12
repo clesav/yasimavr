@@ -1,7 +1,7 @@
 /*
  * arch_avr_misc.sip
  *
- *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -42,13 +42,6 @@ public:
 
     ArchAVR_IntCtrl(unsigned int, unsigned int);
 
-    virtual bool init(Device&);
-    virtual void raised(const signal_data_t&, int);
-
-protected:
-
-    virtual InterruptController::IRQ_t get_next_irq() const /Factory/;
-
 };
 
 
@@ -70,8 +63,6 @@ class ArchAVR_MiscRegCtrl : public Peripheral /NoDefaultCtors/ {
 public:
 
     ArchAVR_MiscRegCtrl(const ArchAVR_MiscConfig& /KeepReference/);
-
-    virtual bool init(Device&);
 
 };
 
@@ -97,9 +88,5 @@ class ArchAVR_ResetCtrl : public Peripheral /NoDefaultCtors/ {
 public:
 
     ArchAVR_ResetCtrl(const ArchAVR_ResetCtrlConfig& /KeepReference/);
-
-    virtual bool init(Device&);
-    virtual void reset();
-    virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
 
 };

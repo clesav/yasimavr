@@ -1,7 +1,7 @@
 /*
  * arch_xt_misc.sip
  *
- *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -66,10 +66,6 @@ public:
 
     ArchXT_VREF(const ArchXT_VREFConfig& /KeepReference/);
 
-    virtual bool init(Device&);
-    virtual void reset();
-    virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
-
 };
 
 
@@ -94,15 +90,6 @@ public:
 
     ArchXT_IntCtrl(const ArchXT_IntCtrlConfig& /KeepReference/);
 
-    virtual bool init(Device&);
-    virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
-    virtual void cpu_reti();
-
-protected:
-
-    virtual void cpu_ack_irq(int_vect_t);
-    virtual InterruptController::IRQ_t get_next_irq() const /Factory/;
-
 };
 
 
@@ -114,10 +101,6 @@ class ArchXT_ResetCtrl : public Peripheral /NoDefaultCtors/ {
 public:
 
     ArchXT_ResetCtrl(reg_addr_t);
-
-    virtual bool init(Device&);
-    virtual void reset();
-    virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
 
 };
 
@@ -144,12 +127,6 @@ class ArchXT_MiscRegCtrl : public Peripheral /NoDefaultCtors/ {
 public:
 
     ArchXT_MiscRegCtrl(const ArchXT_MiscConfig& /KeepReference/);
-
-    virtual bool init(Device&);
-    virtual void reset();
-    virtual bool ctlreq(ctlreq_id_t, ctlreq_data_t*);
-    virtual uint8_t ioreg_read_handler(reg_addr_t, uint8_t);
-    virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
 
 };
 
@@ -183,9 +160,5 @@ class ArchXT_PortMuxCtrl : public Peripheral /NoDefaultCtors/ {
 public:
 
     ArchXT_PortMuxCtrl(const ArchXT_PortMuxConfig& /KeepReference/);
-
-    virtual bool init(Device&);
-    virtual void reset();
-    virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
 
 };

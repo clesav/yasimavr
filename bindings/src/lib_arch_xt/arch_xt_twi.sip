@@ -1,7 +1,7 @@
 /*
  * arch_xt_twi.sip
  *
- *  Copyright 2022-2025 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -42,12 +42,5 @@ class ArchXT_TWI : public Peripheral /NoDefaultCtors/ {
 public:
 
     ArchXT_TWI(uint8_t, const ArchXT_TWIConfig& /KeepReference/);
-
-    virtual bool init(Device&);
-    virtual void reset();
-    virtual bool ctlreq(ctlreq_id_t, ctlreq_data_t*);
-    virtual uint8_t ioreg_read_handler(reg_addr_t, uint8_t);
-    virtual uint8_t ioreg_peek_handler(reg_addr_t, uint8_t);
-    virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
 
 };

@@ -1,7 +1,7 @@
 /*
  * arch_avr_device.sip
  *
- *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -56,11 +56,6 @@ public:
     };
 
     ArchAVR_Core(const ArchAVR_CoreConfig& /KeepReference/);
-
-protected:
-
-    virtual uint8_t cpu_read_data(mem_addr_t);
-    virtual void cpu_write_data(mem_addr_t, uint8_t);
 
 };
 

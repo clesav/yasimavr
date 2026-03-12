@@ -1,7 +1,7 @@
 /*
  * wdt.sip
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -29,9 +29,6 @@ class WatchdogTimer : public Peripheral /NoDefaultCtors/ {
 public:
 
     WatchdogTimer();
-
-    void reset();
-    bool ctlreq(ctlreq_id_t, ctlreq_data_t*);
 
 protected:
 

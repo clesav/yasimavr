@@ -1,7 +1,7 @@
 /*
  * arch_avr_usart.sip
  *
- *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -64,11 +64,5 @@ class ArchAVR_USART : public Peripheral /NoDefaultCtors/ {
 public:
 
     ArchAVR_USART(uint8_t, const ArchAVR_USARTConfig& /KeepReference/);
-
-    virtual bool init(Device&);
-    virtual void reset();
-    virtual bool ctlreq(ctlreq_id_t, ctlreq_data_t*);
-    virtual uint8_t ioreg_read_handler(reg_addr_t, uint8_t);
-    virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
 
 };

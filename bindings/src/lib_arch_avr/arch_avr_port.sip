@@ -1,7 +1,7 @@
 /*
  * arch_avr_port.sip
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -41,9 +41,5 @@ class ArchAVR_Port : public Port /NoDefaultCtors/ {
 public:
 
     ArchAVR_Port(const ArchAVR_PortConfig& /KeepReference/);
-
-    virtual bool init(Device&);
-    virtual void reset();
-    virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
 
 };

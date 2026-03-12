@@ -68,4 +68,4 @@ enum SignalId /BaseType=IntEnum/ {
     Signal_ConversionComplete   /PyName=ConversionComplete/,
 };
 
-}; //namespace ADC0
+}; //namespace ADC

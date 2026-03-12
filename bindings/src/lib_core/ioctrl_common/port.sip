@@ -1,7 +1,7 @@
 /*
  * port.sip
  *
- *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -29,9 +29,5 @@ class Port : public Peripheral /NoDefaultCtors/ {
 public:
 
     Port(char name);
-
-    virtual bool init(Device&);
-    virtual void reset();
-    virtual bool ctlreq(ctlreq_id_t, ctlreq_data_t*);
 
 };
