@@ -72,13 +72,5 @@ public:
 
     void add_handler(IORegHandler&);
 
-    uint8_t cpu_read(reg_addr_t);
-    void cpu_write(reg_addr_t, uint8_t);
-
-    uint8_t ioctl_read(reg_addr_t);
-    void ioctl_write(reg_addr_t, uint8_t);
-
-    uint8_t dbg_peek(reg_addr_t);
-
 };
 

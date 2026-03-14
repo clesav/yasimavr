@@ -1,7 +1,7 @@
 /*
  * arch_avr_usi.sip
  *
- *  Copyright 2025 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2025-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -53,9 +53,5 @@ class ArchAVR_USI : public Peripheral /NoDefaultCtors/ {
 public:
 
     ArchAVR_USI(const ArchAVR_USIConfig& /KeepReference/);
-
-    virtual bool init(Device&);
-    virtual void reset();
-    virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
 
 };

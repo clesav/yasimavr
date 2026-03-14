@@ -1,7 +1,7 @@
 /*
  * arch_xt_wdt.sip
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -42,9 +42,6 @@ class ArchXT_WDT : public WatchdogTimer /NoDefaultCtors/ {
 public:
 
     ArchXT_WDT(const ArchXT_WDTConfig& /KeepReference/);
-
-    virtual bool init(Device&);
-    virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
 
 protected:
 

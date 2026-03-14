@@ -37,7 +37,7 @@ const ctlreq_id_t CTLREQ_VREF_GET;
 const ctlreq_id_t CTLREQ_VREF_SET;
 
 
-class VREF : public Peripheral /Abstract/ {
+class VREF : public Peripheral /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "ioctrl_common/sim_vref.h"
 %End
@@ -57,11 +57,9 @@ public:
         Signal_VCCChange            /PyName=VCCChange/,
     };
 
-    VREF(unsigned int ref_count);
+    VREF(unsigned int);
 
     bool active() const;
-
-    virtual bool ctlreq(ctlreq_id_t, ctlreq_data_t*);
 
 protected:
 

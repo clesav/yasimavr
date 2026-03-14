@@ -250,7 +250,4 @@ public:
 
     DummyController(ctl_id_t, const std::vector<DummyController::dummy_register_t>&);
 
-    virtual bool init(Device&);
-    virtual void reset();
-
 };

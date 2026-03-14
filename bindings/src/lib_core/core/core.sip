@@ -82,32 +82,4 @@ public:
 
     Core(const CoreConfiguration&);
 
-    bool init(Device&);
-    void reset();
-    int exec_cycle();
-    IORegister* get_ioreg(reg_addr_t);
-    uint8_t ioctl_read_ioreg(reg_addr_t);
-    void ioctl_write_ioreg(reg_addr_t, bitmask_t, uint8_t);
-
-    void start_interrupt_inhibit(unsigned int);
-
-    void set_console_register(reg_addr_t);
-
-    void set_direct_LPM_enabled(bool);
-
-protected:
-
-    uint8_t cpu_read_ioreg(reg_addr_t);
-    void cpu_write_ioreg(reg_addr_t, uint8_t);
-    uint8_t cpu_read_gpreg(uint8_t);
-    void cpu_write_gpreg(uint8_t, uint8_t);
-    virtual uint8_t cpu_read_data(mem_addr_t) = 0;
-    virtual void cpu_write_data(mem_addr_t, uint8_t) = 0;
-    int16_t cpu_read_flash(flash_addr_t);
-
-    bool use_extended_addressing() const;
-
-    static bool data_space_map(mem_addr_t, mem_addr_t, mem_addr_t, mem_addr_t,
-                               mem_addr_t* /Out/, mem_addr_t* /Out/, mem_addr_t* /Out/);
-
 };

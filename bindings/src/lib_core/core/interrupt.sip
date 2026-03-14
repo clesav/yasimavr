@@ -68,10 +68,6 @@ public:
 
     InterruptController(unsigned int);
 
-    virtual void reset();
-    virtual bool ctlreq(ctlreq_id_t, ctlreq_data_t*);
-    virtual void sleep(bool, SleepMode);
-
 };
 
 
@@ -107,6 +103,5 @@ public:
     bool set_flag(uint8_t = 0xFF);
     bool clear_flag(uint8_t = 0xFF);
     bool raised() const;
-    virtual void interrupt_ack_handler(int_vect_t);
 
 };

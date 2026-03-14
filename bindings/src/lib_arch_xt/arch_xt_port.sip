@@ -1,7 +1,7 @@
 /*
  * arch_xt_port.sip
  *
- *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -41,10 +41,5 @@ class ArchXT_Port : public Port /NoDefaultCtors/ {
 public:
 
     ArchXT_Port(char, const ArchXT_PortConfig& /KeepReference/);
-
-    virtual bool init(Device&);
-    virtual void reset();
-    virtual uint8_t ioreg_read_handler(reg_addr_t, uint8_t);
-    virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
 
 };

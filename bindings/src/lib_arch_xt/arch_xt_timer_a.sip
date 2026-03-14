@@ -89,13 +89,6 @@ public:
 
     ArchXT_TimerA(const ArchXT_TimerAConfig& /KeepReference/);
 
-    virtual bool init(Device&);
-    virtual void reset();
-    virtual bool ctlreq(ctlreq_id_t, ctlreq_data_t*);
-    virtual uint8_t ioreg_read_handler(reg_addr_t, uint8_t);
-    virtual uint8_t ioreg_peek_handler(reg_addr_t, uint8_t);
-    virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&);
-    virtual void sleep(bool, SleepMode);
     virtual void raised(const signal_data_t&, int);
 
 };

@@ -95,7 +95,8 @@ clean: lib-core-clean \
 	-$(RM_DIR) build
 	-$(RM_DIR) dist
 	-$(RM_DIR) yasimavr.egg-info
-	
+	-$(RM_DIR) .pytest_cache
+
 
 dist-clean: FORCE
 	-cd $(LIB_TARGET_DIR) && $(RM_FILE) *.pyd *.pyi *.so
