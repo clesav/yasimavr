@@ -116,7 +116,7 @@ public:
     explicit InterruptController(unsigned int vector_count);
 
     //===== Override of IO_CTL virtual methods =====
-    virtual void reset() override;
+    virtual void reset(int flags) override;
     virtual bool ctlreq(ctlreq_id_t req, ctlreq_data_t* data) override;
     virtual void sleep(bool on, SleepMode mode) override;
 

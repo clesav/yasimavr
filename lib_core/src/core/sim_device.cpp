@@ -163,7 +163,7 @@ void Device::reset(int reset_flag)
     m_core.reset();
 
     for (auto per : m_peripherals)
-        per->reset();
+        per->reset(m_reset_flags);
 
     m_core.m_pc = reset_vector();
 

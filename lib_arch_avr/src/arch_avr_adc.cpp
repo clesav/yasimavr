@@ -79,7 +79,7 @@ bool ArchAVR_ADC::init(Device& device)
     return status;
 }
 
-void ArchAVR_ADC::reset()
+void ArchAVR_ADC::reset(int)
 {
     m_state = ADC_Disabled;
     m_first = true;

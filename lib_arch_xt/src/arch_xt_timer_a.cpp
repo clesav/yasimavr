@@ -243,7 +243,7 @@ bool ArchXT_TimerA::init(Device& device)
 }
 
 
-void ArchXT_TimerA::reset()
+void ArchXT_TimerA::reset(int)
 {
     m_timer.reset();
 
@@ -1228,7 +1228,7 @@ bool ArchXT_TimerA::execute_command(int cmd, bool cmden)
             return true;
 
         case TCA_SINGLE_CMD_RESET_gc:
-            reset();
+            reset(0);
 
             //Explicit reset of the control registers
             WRITE_IOREG(CTRLA, 0);

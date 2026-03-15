@@ -267,10 +267,8 @@ bool ArchXT_USART::init(Device& device)
 }
 
 
-void ArchXT_USART::reset()
+void ArchXT_USART::reset(int)
 {
-    Peripheral::reset();
-
     m_driver->set_gen_enabled(false);
     m_driver->set_open_drain_enabled(false);
     m_driver->set_loopback_enabled(false);

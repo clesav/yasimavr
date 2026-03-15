@@ -54,7 +54,7 @@ bool ArchXT_VREF::init(Device& device)
     return status;
 }
 
-void ArchXT_VREF::reset()
+void ArchXT_VREF::reset(int)
 {
     //Set each reference channel to the reset value
     for (unsigned int index = 0; index < m_config.channels.size(); ++index)
@@ -297,7 +297,7 @@ bool ArchXT_ResetCtrl::init(Device& device)
     return status;
 }
 
-void ArchXT_ResetCtrl::reset()
+void ArchXT_ResetCtrl::reset(int)
 {
     //Request the value of the reset flags from the device and set the bits of the
     //register RSTFR accordingly
@@ -390,7 +390,7 @@ bool ArchXT_MiscRegCtrl::init(Device& device)
     return status;
 }
 
-void ArchXT_MiscRegCtrl::reset()
+void ArchXT_MiscRegCtrl::reset(int)
 {
     write_ioreg(m_config.reg_revid, MCU_REVID);
     write_ioreg(SIGROW_REG_ADDR(DEVICEID0), m_config.dev_id & 0xFF);
@@ -451,7 +451,7 @@ bool ArchXT_PortMuxCtrl::init(Device& device)
 }
 
 
-void ArchXT_PortMuxCtrl::reset()
+void ArchXT_PortMuxCtrl::reset(int)
 {
     for (auto& mux_cfg : m_config.mux_configs)
         activate_mux(mux_cfg, 0x00);

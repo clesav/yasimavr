@@ -274,7 +274,7 @@ bool ArchXT_TWI::init(Device& device)
 }
 
 
-void ArchXT_TWI::reset()
+void ArchXT_TWI::reset(int)
 {
     m_host->set_enabled(false);
     m_host->set_bit_delay(BaseBaud);

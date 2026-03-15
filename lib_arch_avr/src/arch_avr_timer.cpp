@@ -173,7 +173,7 @@ bool ArchAVR_Timer::init(Device& device)
 }
 
 
-void ArchAVR_Timer::reset()
+void ArchAVR_Timer::reset(int)
 {
     m_temp = 0;
     m_mode = m_config.modes[0];

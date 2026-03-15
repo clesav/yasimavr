@@ -234,7 +234,7 @@ bool ArchAVR_USART::init(Device& device)
 }
 
 
-void ArchAVR_USART::reset()
+void ArchAVR_USART::reset(int)
 {
     m_driver->reset();
     m_ctrl->reset();

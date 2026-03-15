@@ -1,7 +1,7 @@
 /*
  * arch_avr_spi.h
  *
- *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -72,7 +72,7 @@ public:
     virtual ~ArchAVR_SPI();
 
     virtual bool init(Device& device) override;
-    virtual void reset() override;
+    virtual void reset(int flags) override;
     virtual bool ctlreq(ctlreq_id_t req, ctlreq_data_t* data) override;
     virtual uint8_t ioreg_read_handler(reg_addr_t addr, uint8_t value) override;
     virtual uint8_t ioreg_peek_handler(reg_addr_t addr, uint8_t value) override;

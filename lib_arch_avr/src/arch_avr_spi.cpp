@@ -451,7 +451,7 @@ bool ArchAVR_SPI::init(Device& device)
 }
 
 
-void ArchAVR_SPI::reset()
+void ArchAVR_SPI::reset(int)
 {
     m_ctrl->reset();
     update_framerate();

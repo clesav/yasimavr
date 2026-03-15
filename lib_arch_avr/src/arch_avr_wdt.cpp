@@ -50,7 +50,7 @@ bool ArchAVR_WDT::init(Device& device)
 }
 
 
-void ArchAVR_WDT::reset()
+void ArchAVR_WDT::reset(int flags)
 {
     device()->cycle_manager()->cancel(m_lock_timer);
 

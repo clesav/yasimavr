@@ -130,7 +130,7 @@ bool ArchXT_ACP::register_channels(DataSignalMux& mux, const std::vector<channel
     return true;
 }
 
-void ArchXT_ACP::reset()
+void ArchXT_ACP::reset(int)
 {
     m_sleeping = false;
     m_intflag.update_from_ioreg();

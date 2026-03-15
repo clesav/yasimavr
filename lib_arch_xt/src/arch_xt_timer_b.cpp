@@ -145,9 +145,8 @@ bool ArchXT_TimerB::init(Device& device)
 }
 
 
-void ArchXT_TimerB::reset()
+void ArchXT_TimerB::reset(int)
 {
-    Peripheral::reset();
     m_clk_mode = TIMER_CLOCK_DISABLED;
     m_cnt_mode = TCB_CNTMODE_INT_gc;
     set_counter_state(State_Run);

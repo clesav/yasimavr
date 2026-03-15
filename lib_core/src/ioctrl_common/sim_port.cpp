@@ -65,7 +65,7 @@ bool Port::init(Device& device)
 }
 
 
-void Port::reset()
+void Port::reset(int)
 {
     //On reset, we set the internal state of all the pins to floating
     uint8_t pinmask = m_pinmask;

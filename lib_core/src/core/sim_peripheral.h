@@ -295,7 +295,7 @@ public:
 
     virtual bool init(Device& device);
 
-    virtual void reset();
+    virtual void reset(int flags);
 
     virtual bool ctlreq(ctlreq_id_t req, ctlreq_data_t* data);
 
@@ -481,7 +481,7 @@ public:
     DummyController(ctl_id_t id, const std::vector<dummy_register_t>& regs);
 
     virtual bool init(Device& device) override;
-    virtual void reset() override;
+    virtual void reset(int flags) override;
 
 private:
 

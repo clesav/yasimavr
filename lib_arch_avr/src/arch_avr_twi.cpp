@@ -276,9 +276,8 @@ bool ArchAVR_TWI::init(Device& device)
 }
 
 
-void ArchAVR_TWI::reset()
+void ArchAVR_TWI::reset(int)
 {
-    Peripheral::reset();
     m_host->set_enabled(false);
     m_client->set_enabled(false);
     m_driver->set_enabled(false);

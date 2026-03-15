@@ -138,10 +138,8 @@ bool ArchAVR_NVM::init(Device& device)
 }
 
 
-void ArchAVR_NVM::reset()
+void ArchAVR_NVM::reset(int)
 {
-    Peripheral::reset();
-
     m_spm_state = State_Idle;
     clear_spm_buffer();
     m_halt = false;
@@ -645,14 +643,10 @@ bool ArchAVR_Fuses::init(Device& device)
 }
 
 
-void ArchAVR_Fuses::reset()
+void ArchAVR_Fuses::reset(int flags)
 {
-    Peripheral::reset();
-
     //If it's not a reset on power on, nothing else to do
-    ctlreq_data_t req;
-    device()->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_RESET_FLAG, &req);
-    if (!(req.data.as_uint() & ArchAVR_Device::Reset_PowerOn))
+    if (!(flags & ArchAVR_Device::Reset_PowerOn))
         return;
 
     //Load the default access flags

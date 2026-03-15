@@ -71,7 +71,7 @@ public:
     virtual ~ArchAVR_TWI();
 
     virtual bool init(Device& device) override;
-    virtual void reset() override;
+    virtual void reset(int flags) override;
     virtual bool ctlreq(ctlreq_id_t req, ctlreq_data_t *data) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
 

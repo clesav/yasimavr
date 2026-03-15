@@ -131,7 +131,7 @@ bool ArchXT_RTC::init(Device& device)
     return status;
 }
 
-void ArchXT_RTC::reset()
+void ArchXT_RTC::reset(int)
 {
     m_clk_mode = RTC_Disabled;
     write_ioreg(REG_ADDR(PERL), 0xFF);

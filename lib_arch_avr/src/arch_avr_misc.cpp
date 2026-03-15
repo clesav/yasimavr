@@ -130,15 +130,8 @@ bool ArchAVR_ResetCtrl::init(Device& device)
 }
 
 
-void ArchAVR_ResetCtrl::reset()
+void ArchAVR_ResetCtrl::reset(int flags)
 {
-    Peripheral::reset();
-
-    //Request the value of the reset flags from the device and set the flags accordingly
-    ctlreq_data_t reqdata;
-    device()->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_RESET_FLAG, &reqdata);
-    int flags = reqdata.data.as_int();
-
     if (flags & Device::Reset_PowerOn) {
 
         //On a Power On reset, all the other reset flag bits must be cleared
