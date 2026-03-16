@@ -185,7 +185,7 @@ public:
     std::string name() const /Factory/;
 
     virtual bool init(Device&);
-    virtual void reset();
+    virtual void reset(int);
     virtual bool ctlreq(ctlreq_id_t, ctlreq_data_t*);
     virtual uint8_t ioreg_read_handler(reg_addr_t, uint8_t);
     virtual uint8_t ioreg_peek_handler(reg_addr_t, uint8_t);

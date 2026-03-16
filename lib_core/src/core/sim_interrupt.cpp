@@ -41,7 +41,7 @@ InterruptController::InterruptController(unsigned int vector_count)
     m_interrupts[0].used = true; //The reset vector is always available
 }
 
-void InterruptController::reset()
+void InterruptController::reset(int)
 {
     //Reset the state of all vectors
     for (unsigned int i = 0; i < m_interrupts.size(); ++i) {

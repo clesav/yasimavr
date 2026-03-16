@@ -114,7 +114,7 @@ bool ArchAVR_ACP::init(Device& device)
 }
 
 
-void ArchAVR_ACP::reset()
+void ArchAVR_ACP::reset(int)
 {
     m_intflag.update_from_ioreg();
     change_pos_channel();

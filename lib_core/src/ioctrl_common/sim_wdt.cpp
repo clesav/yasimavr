@@ -1,7 +1,7 @@
 /*
  * sim_wdt.cpp
  *
- *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -92,7 +92,7 @@ WatchdogTimer::~WatchdogTimer()
 /*
  * On a reset, cancel the two timers
  */
-void WatchdogTimer::reset()
+void WatchdogTimer::reset(int)
 {
     m_win_start = 0;
     m_win_end = 0;

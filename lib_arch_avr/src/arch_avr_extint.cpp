@@ -96,7 +96,7 @@ bool ArchAVR_ExtInt::init(Device& device)
 }
 
 
-void ArchAVR_ExtInt::reset()
+void ArchAVR_ExtInt::reset(int)
 {
     m_extint_pin_value = 0;
     std::fill(m_pcint_pin_value.begin(), m_pcint_pin_value.end(), 0);

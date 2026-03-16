@@ -1,7 +1,7 @@
 /*
  * arch_xt_misc.h
  *
- *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -72,7 +72,7 @@ public:
     explicit ArchXT_VREF(const ArchXT_VREFConfig& config);
 
     virtual bool init(Device&) override;
-    virtual void reset() override;
+    virtual void reset(int flags) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
 
 private:
@@ -148,7 +148,7 @@ public:
     ArchXT_ResetCtrl(reg_addr_t base);
 
     virtual bool init(Device& device) override;
-    virtual void reset() override;
+    virtual void reset(int flags) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
 
 private:
@@ -206,7 +206,7 @@ public:
     virtual ~ArchXT_MiscRegCtrl();
 
     virtual bool init(Device& device) override;
-    virtual void reset() override;
+    virtual void reset(int flags) override;
     virtual bool ctlreq(ctlreq_id_t req, ctlreq_data_t* data) override;
     virtual uint8_t ioreg_read_handler(reg_addr_t addr, uint8_t value) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
@@ -252,7 +252,7 @@ public:
     ArchXT_PortMuxCtrl(const ArchXT_PortMuxConfig& config);
 
     virtual bool init(Device& device) override;
-    virtual void reset() override;
+    virtual void reset(int flags) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
 
 private:

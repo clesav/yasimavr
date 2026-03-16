@@ -102,7 +102,7 @@ bool ArchXT_ADC::init(Device& device)
     return status;
 }
 
-void ArchXT_ADC::reset()
+void ArchXT_ADC::reset(int)
 {
     m_state = ADC_Disabled;
     m_result = 0;

@@ -1,7 +1,7 @@
 /*
  * sim_wdt.h
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -47,7 +47,7 @@ public:
     WatchdogTimer();
     virtual ~WatchdogTimer();
 
-    virtual void reset() override;
+    virtual void reset(int flags) override;
     /// Override to handle the core request AVR_CTLREQ_WATCHDOG_RESET
     virtual bool ctlreq(ctlreq_id_t req, ctlreq_data_t* data) override;
 

@@ -208,7 +208,7 @@ bool ArchAVR_USI::init(Device& device)
 }
 
 
-void ArchAVR_USI::reset()
+void ArchAVR_USI::reset(int)
 {
     m_clk_mode = Clock_Strobe;
     set_wire_mode(Wire_Disabled, true);

@@ -56,10 +56,9 @@ bool ArchAVR_Port::init(Device& device)
 /*
  * Reset of a GPIO port. The reset of the pins is done by the device
  */
-void ArchAVR_Port::reset()
+void ArchAVR_Port::reset(int flags)
 {
-    Port::reset();
-
+    Port::reset(flags);
     m_portr_value = 0;
     m_ddr_value = 0;
 }

@@ -87,9 +87,9 @@ bool ArchXT_Port::init(Device& device)
     return status;
 }
 
-void ArchXT_Port::reset()
+void ArchXT_Port::reset(int flags)
 {
-    Port::reset();
+    Port::reset(flags);
     m_port_value = 0;
     m_dir_value = 0;
 }

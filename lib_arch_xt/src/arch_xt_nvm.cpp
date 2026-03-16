@@ -136,7 +136,7 @@ bool ArchXT_Fuses::init(Device& device)
 }
 
 
-void ArchXT_Fuses::reset()
+void ArchXT_Fuses::reset(int)
 {
     for (unsigned int i = 0; i < sizeof(FUSE_t); ++i)
         write_ioreg(m_reg_base + i, (*m_fuses)[i]);
@@ -278,7 +278,7 @@ bool ArchXT_NVM::init(Device& device)
 }
 
 
-void ArchXT_NVM::reset()
+void ArchXT_NVM::reset(int)
 {
     //Erase the page buffer
     clear_buffer();

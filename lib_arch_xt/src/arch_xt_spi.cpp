@@ -617,9 +617,8 @@ bool ArchXT_SPI::init(Device& device)
 }
 
 
-void ArchXT_SPI::reset()
+void ArchXT_SPI::reset(int)
 {
-    Peripheral::reset();
     m_ctrl->reset();
 
     SET_IOREG(INTFLAGS, SPI_DREIF);

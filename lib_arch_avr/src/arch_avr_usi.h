@@ -1,7 +1,7 @@
 /*
  * arch_avr_usi.h
  *
- *  Copyright 2025 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2025-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -71,7 +71,7 @@ public:
     virtual ~ArchAVR_USI();
 
     virtual bool init(Device& device) override;
-    virtual void reset() override;
+    virtual void reset(int flags) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
 
 private:

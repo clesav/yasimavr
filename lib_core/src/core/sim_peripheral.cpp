@@ -71,7 +71,7 @@ bool Peripheral::init(Device& device)
    Virtual method called when the device is reset. Note that resetting I/O registers is only
    necessary here if their reset value is not zero.
 */
-void Peripheral::reset()
+void Peripheral::reset(int)
 {}
 
 /**
@@ -236,7 +236,7 @@ bool DummyController::init(Device& device)
 }
 
 
-void DummyController::reset()
+void DummyController::reset(int)
 {
     for (dummy_register_t r : m_registers)
         write_ioreg(r.reg.addr, r.reg.mask, r.reset);
