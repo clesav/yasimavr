@@ -116,7 +116,6 @@ bool ArchAVR_ACP::init(Device& device)
 
 void ArchAVR_ACP::reset(int)
 {
-    m_intflag.update_from_ioreg();
     change_pos_channel();
     change_neg_channel();
     m_out_signal.raise(Signal_Output, (unsigned char) 0);
@@ -154,9 +153,6 @@ void ArchAVR_ACP::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
         change_pos_channel();
         update_state();
     }
-
-    if (addr == m_config.rb_int_enable || addr == m_config.rb_int_flag)
-        m_intflag.update_from_ioreg();
 }
 
 

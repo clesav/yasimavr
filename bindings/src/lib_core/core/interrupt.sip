@@ -88,7 +88,28 @@ public:
 };
 
 
-class InterruptFlag : public InterruptHandler /NoDefaultCtors/ {
+class AbstractInterruptFlag : public InterruptHandler /NoDefaultCtors/ {
+%TypeHeaderCode
+#include "core/sim_interrupt.h"
+%End
+
+public:
+
+    AbstractInterruptFlag(bool = false);
+
+    bool init(Device&, int_vect_t);
+    int update();
+    bool raised() const;
+
+protected:
+
+    bool clear_on_ack() const;
+    virtual bool flag_raised() const = 0;
+
+};
+
+
+class InterruptFlag : public AbstractInterruptFlag, public IORegHandler /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "core/sim_interrupt.h"
 %End
@@ -98,10 +119,15 @@ public:
     InterruptFlag(bool = false);
 
     bool init(Device&, const regmask_t&, const regmask_t&, int_vect_t);
-    int update_from_ioreg();
-    void set_clear_on_ack(bool);
-    bool set_flag(uint8_t = 0xFF);
-    bool clear_flag(uint8_t = 0xFF);
-    bool raised() const;
+    bool set_flag(bitmask_t = bitmask_t(0xFF));
+    bool clear_flag(bitmask_t = bitmask_t(0xFF));
+
+private:
+
+    virtual bool flag_raised() const final;
+    virtual void interrupt_ack_handler(int_vect_t) final;
+    virtual uint8_t ioreg_read_handler(reg_addr_t, uint8_t) final;
+    virtual uint8_t ioreg_peek_handler(reg_addr_t, uint8_t) final;
+    virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&) final;
 
 };

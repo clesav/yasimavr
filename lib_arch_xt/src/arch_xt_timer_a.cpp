@@ -134,9 +134,6 @@ ArchXT_TimerA::ArchXT_TimerA(const ArchXT_TimerAConfig& config)
 ,m_timer_block(false)
 ,m_event_hook(*this, &ArchXT_TimerA::event_raised)
 {
-    for (int i = 0; i < CFG::CompareChannelCount; ++i)
-        m_cmp_intflags[i].set_clear_on_ack(false);
-
     m_pin_driver = new _PinDriver(id());
 }
 
@@ -257,7 +254,6 @@ void ArchXT_TimerA::reset(int)
     //Reset all Output Compare buffered registers, interrupts, signal and pin driver values
     for (int i = 0; i < CFG::CompareChannelCount; ++i) {
         m_cmp[i] = { 0x0000, 0x0000, false };
-        m_cmp_intflags[i].update_from_ioreg();
         m_signal.raise(Signal_CompareOutput, vardata_t(), i);
         m_signal.raise(Signal_CompareOutput, vardata_t(), i + CFG::CompareChannelCount);
         m_pin_driver->set_enabled(i, false);
@@ -489,13 +485,6 @@ void ArchXT_TimerA::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& da
         //Update the direction (single mode only)
         if (!m_split_mode)
             set_direction(v & TCA_SINGLE_DIR_bm, true);
-    }
-
-    else if (reg_ofs == REG_OFS(INTCTRL)) {
-        m_ovf_intflag.update_from_ioreg();
-        m_hunf_intflag.update_from_ioreg();
-        for (auto& cmp : m_cmp_intflags)
-            cmp.update_from_ioreg();
     }
 
     //All other registers are treated differently according to the single/split mode

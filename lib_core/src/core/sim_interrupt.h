@@ -32,6 +32,7 @@ YASIMAVR_BEGIN_NAMESPACE
 
 class InterruptHandler;
 
+
 //=======================================================================================
 /*
  * CTLREQ definitions
@@ -247,7 +248,56 @@ private:
 
 //=======================================================================================
 /**
-   \brief Generic helper to manage an Interrupt Flag/Enable in a I/O register.
+   \brief Abstract interrupt flag.
+
+   Abstract class that manages a interrupt flag corresponding to a interrupt vector
+   How the flag is raised or cleared is left to concrete sub-classes by overriding
+   flag_raised().
+*/
+class AVR_CORE_PUBLIC_API AbstractInterruptFlag : public InterruptHandler {
+
+public:
+
+    explicit AbstractInterruptFlag(bool clear_on_ack = false);
+
+    bool init(Device& device, int_vect_t vector);
+
+    int update();
+
+    bool raised() const;
+
+    //Override to cancel the interrupt on ACK if clear_on_ack is true
+    virtual void interrupt_ack_handler(int_vect_t vector) override;
+
+protected:
+
+    bool clear_on_ack() const;
+
+    virtual bool flag_raised() const = 0;
+
+private:
+
+    bool m_clr_on_ack;
+    int_vect_t m_vector;
+
+};
+
+/// Returns the raised state of the interrupt flag
+inline bool AbstractInterruptFlag::raised() const
+{
+    return interrupt_raised(m_vector);
+}
+
+/// Returns the raised state of the interrupt flag
+inline bool AbstractInterruptFlag::clear_on_ack() const
+{
+    return m_clr_on_ack;
+}
+
+
+//=======================================================================================
+/**
+   \brief Generic helper to manage a typical Interrupt Flag/Enable in a I/O register.
 
    The flag is made of one or several bits of a I/O register, along with corresponding
    enable bit(s).
@@ -260,46 +310,34 @@ private:
    If disabled, the flag will be unchanged by a CPU ACK'ed. The effect is to
    keep the interrupt raised until the flag is cleared directly in the register.
 */
-class AVR_CORE_PUBLIC_API InterruptFlag : public InterruptHandler {
+class AVR_CORE_PUBLIC_API InterruptFlag : public AbstractInterruptFlag, public IORegHandler {
 
 public:
 
     explicit InterruptFlag(bool clear_on_ack = false);
-    InterruptFlag(const InterruptFlag& other);
 
-    bool init(Device& device, const regmask_t& rb_enable, const regmask_t& rb_flag, int_vect_t vector);
-
-    void set_clear_on_ack(bool clear_on_ack);
-
-    int update_from_ioreg();
+    bool init(Device& device, const regmask_t& rm_enable, const regmask_t& rm_flag, int_vect_t vector);
 
     bool set_flag(bitmask_t mask = 0xFF);
     bool clear_flag(bitmask_t mask = 0xFF);
 
-    bool raised() const;
-
-    //Override to clear the flag on ACK if enabled
-    virtual void interrupt_ack_handler(int_vect_t vector) override;
-
 private:
 
-    bool m_clr_on_ack;
     regmask_t m_rm_enable;
     regmask_t m_rm_flag;
-    int_vect_t m_vector;
 
     IORegister* m_flag_reg;
     IORegister* m_enable_reg;
 
-    bool flag_raised() const;
+    virtual bool flag_raised() const override final;
+    //Override to clear the flag on ACK if clear_on_ack is true
+    virtual void interrupt_ack_handler(int_vect_t vector) override final;
+
+    virtual uint8_t ioreg_read_handler(reg_addr_t addr, uint8_t value) override final;
+    virtual uint8_t ioreg_peek_handler(reg_addr_t addr, uint8_t value) override final;
+    virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override final;
 
 };
-
-/// Returns the raised state of the interrupt flag
-inline bool InterruptFlag::raised() const
-{
-    return interrupt_raised(m_vector);
-}
 
 
 YASIMAVR_END_NAMESPACE

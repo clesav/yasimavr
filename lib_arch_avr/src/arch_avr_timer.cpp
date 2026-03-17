@@ -80,7 +80,6 @@ struct ArchAVR_Timer::OutputCompareChannel {
         reg = 0;
         active = false;
         state = false;
-        intflag.update_from_ioreg();
     }
 
 };
@@ -179,12 +178,9 @@ void ArchAVR_Timer::reset(int)
     m_mode = m_config.modes[0];
     m_counter.reset();
     m_counter.prescaler().set_prescaler(m_clk_ps_max, 1);
-    m_intflag_ovf.update_from_ioreg();
 
-    if (m_config.reg_icr.valid()) {
+    if (m_config.reg_icr.valid())
         m_icr = 0;
-        m_intflag_icr.update_from_ioreg();
-    }
 
     for (size_t i = 0; i < m_oc_channels.size(); ++i) {
         m_oc_channels[i]->reset();
@@ -356,17 +352,6 @@ void ArchAVR_Timer::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& da
                 logger().dbg("Unsupported mode setting: 0x%02x", reg_val);
             }
             do_com_reconfig = true;
-        }
-
-        //Interrupt flag updates
-        if (addr == m_config.reg_int_enable || addr == m_config.reg_int_flag) {
-            m_intflag_ovf.update_from_ioreg();
-
-            if (m_config.reg_icr.valid())
-                m_intflag_icr.update_from_ioreg();
-
-            for (auto oc : m_oc_channels)
-                oc->intflag.update_from_ioreg();
         }
     }
 

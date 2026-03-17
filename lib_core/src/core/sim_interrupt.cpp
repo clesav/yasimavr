@@ -250,18 +250,10 @@ void InterruptHandler::interrupt_ack_handler(int_vect_t vector)
    \param clear_on_ack if true, the flag will be cleared when the interrupt is ACK'ed
    by the CPU. If false, (default) the flag can only be cleared by writing to the register.
 */
-InterruptFlag::InterruptFlag(bool clear_on_ack)
+AbstractInterruptFlag::AbstractInterruptFlag(bool clear_on_ack)
 :m_clr_on_ack(clear_on_ack)
 ,m_vector(AVR_INTERRUPT_NONE)
-,m_flag_reg(nullptr)
-,m_enable_reg(nullptr)
 {}
-
-
-InterruptFlag::InterruptFlag(const InterruptFlag& other)
-:InterruptFlag(other.m_clr_on_ack)
-{}
-
 
 /**
    Initialise an Interrupt Flag. Allocates the registers for the flag and the enable
@@ -274,18 +266,8 @@ InterruptFlag::InterruptFlag(const InterruptFlag& other)
    \param vector interrupt vector index
    \return true if allocations and registrations are successful, false otherwise
 */
-bool InterruptFlag::init(Device& device,
-                         const regmask_t& rm_enable,
-                         const regmask_t& rm_flag,
-                         int_vect_t vector)
+bool AbstractInterruptFlag::init(Device& device, int_vect_t vector)
 {
-    //Obtain a pointer to the two registers flag and enable
-    m_rm_enable = rm_enable;
-    m_enable_reg = device.core().get_ioreg(m_rm_enable.addr);
-
-    m_rm_flag = rm_flag;
-    m_flag_reg = device.core().get_ioreg(m_rm_flag.addr);
-
     //Register this as the handler of the interrupt vector with the Interrupt Controller
     m_vector = vector;
     bool vector_ok;
@@ -301,7 +283,7 @@ bool InterruptFlag::init(Device& device,
         vector_ok = false;
     }
 
-    return m_flag_reg && m_enable_reg && vector_ok;
+    return vector_ok;
 }
 
 /**
@@ -312,7 +294,7 @@ bool InterruptFlag::init(Device& device,
    \return +1 if the interrupt has been raised as a result of the update,
            -1 if it has been cleared, 0 if unchanged.
 */
-int InterruptFlag::update_from_ioreg()
+int AbstractInterruptFlag::update()
 {
     if (raised()) {
         if (!flag_raised()) {
@@ -331,14 +313,59 @@ int InterruptFlag::update_from_ioreg()
     }
 }
 
+void AbstractInterruptFlag::interrupt_ack_handler(int_vect_t vector)
+{
+    //If the clear-on-ack is enabled, cancel the interrupt
+    if (m_clr_on_ack)
+        cancel_interrupt(m_vector);
+}
+
+
+//========================================================================================
+
 /**
-   Set the clear_on_ack mode.
+   Construct an Interrupt Flag.
+
    \param clear_on_ack if true, the flag will be cleared when the interrupt is ACK'ed
    by the CPU. If false, (default) the flag can only be cleared by writing to the register.
 */
-void InterruptFlag::set_clear_on_ack(bool clear_on_ack)
+InterruptFlag::InterruptFlag(bool clear_on_ack)
+:AbstractInterruptFlag(clear_on_ack)
+,m_flag_reg(nullptr)
+,m_enable_reg(nullptr)
+{}
+
+/**
+   Initialise an Interrupt Flag. Allocates the registers for the flag and the enable
+   register fields and register with the interrupt controller for a particular vector.
+   \note If the vector is < 0, then no interrupt is registered. (can be used for future
+   or unsupported features)
+   \note Registering with the reset vector (vector 0) is an error.
+   \param rb_enable register location for the flag enable bits
+   \param rb_flag register location for the flag state bits
+   \param vector interrupt vector index
+   \return true if allocations and registrations are successful, false otherwise
+*/
+bool InterruptFlag::init(Device& device,
+                         const regmask_t& rm_enable,
+                         const regmask_t& rm_flag,
+                         int_vect_t vector)
 {
-    m_clr_on_ack = clear_on_ack;
+    bool ok = AbstractInterruptFlag::init(device, vector);
+
+    //Obtain a pointer to the two registers flag and enable and register this as handler
+    //for the two registers
+    m_rm_enable = rm_enable;
+    m_enable_reg = device.core().get_ioreg(m_rm_enable.addr);
+    if (m_enable_reg)
+        m_enable_reg->add_handler(*this);
+
+    m_rm_flag = rm_flag;
+    m_flag_reg = device.core().get_ioreg(m_rm_flag.addr);
+    if (m_flag_reg)
+        m_flag_reg->add_handler(*this);
+
+    return m_flag_reg && m_enable_reg && ok;
 }
 
 /**
@@ -351,13 +378,7 @@ bool InterruptFlag::set_flag(bitmask_t mask)
     bitmask_t set_mask = m_rm_flag.mask & mask;
     uint8_t new_flag_reg = set_mask.set_from(m_flag_reg->value());
     m_flag_reg->set(new_flag_reg);
-
-    if (!raised() && flag_raised()) {
-        raise_interrupt(m_vector);
-        return true;
-    } else {
-        return false;
-    }
+    return update() != 0;
 }
 
 /**
@@ -370,17 +391,10 @@ bool InterruptFlag::clear_flag(bitmask_t mask)
     bitmask_t clear_mask = m_rm_flag.mask & mask;
     uint8_t new_flag_reg = clear_mask.clear_from(m_flag_reg->value());
     m_flag_reg->set(new_flag_reg);
-
-    if (raised() && !flag_raised()) {
-        cancel_interrupt(m_vector);
-        return true;
-    } else {
-        return false;
-    }
+    return update() != 0;
 }
 
-//Private function computing the status raised/canceled of the interrupt
-//according to the flag&enable bits
+
 bool InterruptFlag::flag_raised() const
 {
     uint8_t en_mask = m_enable_reg->value() & m_rm_enable.mask;
@@ -388,12 +402,29 @@ bool InterruptFlag::flag_raised() const
     return !!(en_mask & fl_mask);
 }
 
+
 void InterruptFlag::interrupt_ack_handler(int_vect_t vector)
 {
-    //If the clear-on-ack is enabled, clear the flag field and
-    //cancel the interrupt
-    if (m_clr_on_ack) {
+    AbstractInterruptFlag::interrupt_ack_handler(vector);
+    //If the clear-on-ack is enabled, clear the flag field
+    if (clear_on_ack())
         m_flag_reg->set(m_rm_flag.mask.clear_from(m_flag_reg->value()));
-        cancel_interrupt(m_vector);
-    }
+}
+
+
+uint8_t InterruptFlag::ioreg_read_handler(reg_addr_t, uint8_t value)
+{
+    return value;
+}
+
+
+uint8_t InterruptFlag::ioreg_peek_handler(reg_addr_t, uint8_t value)
+{
+    return value;
+}
+
+
+void InterruptFlag::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
+{
+    update();
 }

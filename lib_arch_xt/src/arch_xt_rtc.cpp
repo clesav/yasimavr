@@ -259,14 +259,6 @@ void ArchXT_RTC::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
         m_rtc_counter.reschedule();
     }
 
-    else if (reg_ofs == REG_OFS(INTCTRL) || reg_ofs == REG_OFS(INTFLAGS)) {
-        m_rtc_intflag.update_from_ioreg();
-    }
-
-    else if (reg_ofs == REG_OFS(PITINTCTRL) || reg_ofs == REG_OFS(PITINTFLAGS)) {
-        m_pit_intflag.update_from_ioreg();
-    }
-
     if (do_reconfigure)
         configure_timers();
 }

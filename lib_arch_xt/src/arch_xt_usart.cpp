@@ -358,16 +358,7 @@ void ArchXT_USART::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& dat
         }
     }
 
-    else if (reg_ofs == REG_OFS(STATUS)) {
-        m_txc_intflag.update_from_ioreg();
-        m_rxc_intflag.update_from_ioreg();
-    }
-
     else if (reg_ofs == REG_OFS(CTRLA)) {
-        m_txc_intflag.update_from_ioreg();
-        m_txe_intflag.update_from_ioreg();
-        m_rxc_intflag.update_from_ioreg();
-
         m_driver->set_loopback_enabled(data.value & USART_LBME_bm);
 
         //Determine if the DIR line is used, it's RS485[0].
@@ -524,7 +515,7 @@ void ArchXT_USART::extract_rx_data()
     WRITE_IOREG_B(RXDATAH, USART_FERR, m_ctrl->has_frame_error());
     WRITE_IOREG_B(RXDATAH, USART_RXCIF, m_ctrl->rx_available());
     WRITE_IOREG_B(STATUS, USART_RXCIF, m_ctrl->rx_available());
-    m_rxc_intflag.update_from_ioreg();
+    m_rxc_intflag.update();
 }
 
 /*

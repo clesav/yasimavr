@@ -529,10 +529,6 @@ void ArchAVR_SPI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
         m_ctrl->set_mode(m);
     }
 
-    //Writing to SPIE
-    if (addr == m_config.rb_int_enable)
-        m_intflag.update_from_ioreg();
-
     //Modification of the frame rate
     if (addr == m_config.rb_clock || addr == m_config.rb_clock2x)
         update_framerate();

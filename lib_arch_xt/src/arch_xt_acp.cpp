@@ -133,7 +133,6 @@ bool ArchXT_ACP::register_channels(DataSignalMux& mux, const std::vector<channel
 void ArchXT_ACP::reset(int)
 {
     m_sleeping = false;
-    m_intflag.update_from_ioreg();
     m_pos_mux.set_selection(0);
     m_neg_mux.set_selection(0);
     update_DAC();
@@ -189,10 +188,6 @@ void ArchXT_ACP::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
     else if (reg_ofs == REG_OFS(DACREF)) {
         update_DAC();
         update_output();
-    }
-
-    else if (reg_ofs == REG_OFS(INTCTRL) || reg_ofs == REG_OFS(STATUS)) {
-        m_intflag.update_from_ioreg();
     }
 }
 

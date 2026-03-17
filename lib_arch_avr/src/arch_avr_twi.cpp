@@ -309,9 +309,6 @@ void ArchAVR_TWI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
         m_client->set_enabled(enabled);
         m_driver->set_enabled(enabled);
 
-        //TWIE
-        m_intflag.update_from_ioreg();
-
         //TWINT is a write-one-to-clear and for the rest of processing, we need
         //to know if it's cleared.
         bool intflag_cleared;
