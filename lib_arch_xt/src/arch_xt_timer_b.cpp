@@ -155,7 +155,6 @@ void ArchXT_TimerB::reset(int)
     m_counter.set_top(0);
     m_counter.set_comp_value(0, 0);
     m_event_state = 0;
-    m_intflag.update_from_ioreg();
     update_output(Output_Reset);
 }
 
@@ -292,10 +291,6 @@ void ArchXT_TimerB::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& da
         m_counter.set_comp_value(0, m_ccmp);
         update_counter_top();
         m_counter.reschedule();
-    }
-
-    else if (reg_ofs == REG_OFS(INTCTRL) || reg_ofs == REG_OFS(INTFLAGS)) {
-        m_intflag.update_from_ioreg();
     }
 }
 

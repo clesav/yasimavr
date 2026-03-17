@@ -426,14 +426,14 @@ uint8_t ArchXT_SPI::_Controller::mock_transfer(uint8_t rx_frame)
 
 //=======================================================================================
 
-#define NORM_ENABLE_MASK (SPI_IE_bm)
-#define BUF_ENABLE_MASK  (SPI_RXCIE_bm | SPI_TXCIE_bm | SPI_DREIE_bm | SPI_SSIE_bm)
-#define NORM_FLAG_MASK   (SPI_IF_bm | SPI_WRCOL_bm)
-#define BUF_FLAG_MASK    (SPI_RXCIF_bm | SPI_TXCIF_bm | SPI_DREIF_bm | SPI_SSIF_bm | SPI_BUFOVF_bm)
-#define NORM_INTR_MASK   (SPI_IF_bm)
-#define BUF_INTR_MASK    (SPI_RXCIF_bm | SPI_TXCIF_bm | SPI_DREIF_bm | SPI_SSIF_bm)
+#define NORM_ENABLE_MASK bitmask_t(SPI_IE_bm)
+#define BUF_ENABLE_MASK  bitmask_t(SPI_RXCIE_bm | SPI_TXCIE_bm | SPI_DREIE_bm | SPI_SSIE_bm)
+#define NORM_FLAG_MASK   bitmask_t(SPI_IF_bm | SPI_WRCOL_bm)
+#define BUF_FLAG_MASK    bitmask_t(SPI_RXCIF_bm | SPI_TXCIF_bm | SPI_DREIF_bm | SPI_SSIF_bm | SPI_BUFOVF_bm)
+#define NORM_INTR_MASK   bitmask_t(SPI_IF_bm)
+#define BUF_INTR_MASK    bitmask_t(SPI_RXCIF_bm | SPI_TXCIF_bm | SPI_DREIF_bm | SPI_SSIF_bm)
 
-class ArchXT_SPI::_InterruptHandler : public InterruptHandler {
+class ArchXT_SPI::_InterruptHandler : public AbstractInterruptFlag {
 
 public:
 
@@ -446,25 +446,22 @@ public:
     void set_flag(uint8_t mask);
     void clear_flag(uint8_t mask);
     void clear_flag_from_ioreg(uint8_t mask);
-    void update_from_ioreg();
     void update_from_data_access();
 
 private:
 
-    int_vect_t m_vector;
     bool m_buf_enabled;
     IORegister* m_reg_enable;
     IORegister* m_reg_flag;
     uint8_t m_reg_cleared_flags;
 
-    bool flag_raised() const;
+    virtual bool flag_raised() const override;
 
 };
 
 
 ArchXT_SPI::_InterruptHandler::_InterruptHandler()
-:InterruptHandler()
-,m_vector(AVR_INTERRUPT_NONE)
+:AbstractInterruptFlag(false)
 ,m_buf_enabled(false)
 ,m_reg_enable(nullptr)
 ,m_reg_flag(nullptr)
@@ -477,13 +474,9 @@ bool ArchXT_SPI::_InterruptHandler::init(Device& device, const reg_addr_t& reg_e
     m_reg_enable = device.core().get_ioreg(reg_enable);
     m_reg_flag = device.core().get_ioreg(reg_flag);
 
-    m_vector = vector;
-    if (m_vector > 0) {
-        ctlreq_data_t d = { this, m_vector };
-        return device.ctlreq(AVR_IOCTL_INTR, AVR_CTLREQ_INTR_REGISTER, &d);
-    } else {
-        return m_vector < 0;
-    }
+    bool status = AbstractInterruptFlag::init(device, vector);
+
+    return status && m_reg_enable && m_reg_flag;
 }
 
 
@@ -497,45 +490,37 @@ void ArchXT_SPI::_InterruptHandler::set_buffer_enabled(bool enabled)
 {
     m_buf_enabled = enabled;
 
-    uint8_t enable_mask = m_buf_enabled ? BUF_ENABLE_MASK : NORM_ENABLE_MASK;
+    bitmask_t enable_mask = m_buf_enabled ? BUF_ENABLE_MASK : NORM_ENABLE_MASK;
     m_reg_enable->set(m_reg_enable->value() & enable_mask);
 
-    uint8_t flag_mask = m_buf_enabled ? BUF_FLAG_MASK : NORM_FLAG_MASK;
+    bitmask_t flag_mask = m_buf_enabled ? BUF_FLAG_MASK : NORM_FLAG_MASK;
     m_reg_flag->set(m_reg_flag->value() & flag_mask);
 
-    update_from_ioreg();
+    update();
 }
 
 
 void ArchXT_SPI::_InterruptHandler::set_flag(uint8_t mask)
 {
-    uint8_t flag_mask = m_buf_enabled ? BUF_FLAG_MASK : NORM_FLAG_MASK;
+    bitmask_t flag_mask = m_buf_enabled ? BUF_FLAG_MASK : NORM_FLAG_MASK;
     mask &= flag_mask;
     m_reg_flag->set(m_reg_flag->value() | mask);
-
-    if (flag_raised())
-        raise_interrupt(m_vector);
+    update();
 }
 
-/**
-   Clear the interrupt flag bits by AND'ing them with the mask argument.
-   \return true if the interrupt is canceled as a result of the flag bit changes,
-   false if the interrupt is unchanged.
-*/
+
 void ArchXT_SPI::_InterruptHandler::clear_flag(uint8_t mask)
 {
-    uint8_t flag_mask = m_buf_enabled ? BUF_FLAG_MASK : NORM_FLAG_MASK;
+    bitmask_t flag_mask = m_buf_enabled ? BUF_FLAG_MASK : NORM_FLAG_MASK;
     mask &= flag_mask;
     m_reg_flag->set(m_reg_flag->value() & ~mask);
-
-    if (!flag_raised())
-        cancel_interrupt(m_vector);
+    update();
 }
 
 
 void ArchXT_SPI::_InterruptHandler::clear_flag_from_ioreg(uint8_t mask)
 {
-    uint8_t flag_mask = m_buf_enabled ? BUF_FLAG_MASK : NORM_FLAG_MASK;
+    bitmask_t flag_mask = m_buf_enabled ? BUF_FLAG_MASK : NORM_FLAG_MASK;
     m_reg_cleared_flags |= (mask & flag_mask);
 }
 
@@ -554,18 +539,6 @@ bool ArchXT_SPI::_InterruptHandler::flag_raised() const
         e = m_reg_enable->value() & NORM_ENABLE_MASK;
         f = m_reg_flag->value() & NORM_INTR_MASK;
         return e && f;
-    }
-}
-
-
-void ArchXT_SPI::_InterruptHandler::update_from_ioreg()
-{
-    if (interrupt_raised(m_vector)) {
-        if (!flag_raised())
-            cancel_interrupt(m_vector);
-    } else {
-        if (flag_raised())
-            raise_interrupt(m_vector);
     }
 }
 
@@ -623,7 +596,6 @@ void ArchXT_SPI::reset(int)
 
     SET_IOREG(INTFLAGS, SPI_DREIF);
     m_intflag->reset();
-    m_intflag->update_from_ioreg();
 }
 
 
@@ -703,7 +675,7 @@ void ArchXT_SPI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 
     //Writing to DATA emits the value, if TX is enabled
     else if (reg_ofs == REG_OFS(INTCTRL)) {
-        m_intflag->update_from_ioreg();
+        m_intflag->update();
     }
 
     else if (reg_ofs == REG_OFS(INTFLAGS)) {

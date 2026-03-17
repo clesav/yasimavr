@@ -355,10 +355,6 @@ void ArchXT_NVM::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
         if (EXTRACT_B(data.negedge(), NVMCTRL_BOOTLOCK))
             SET_IOREG(CTRLB, NVMCTRL_BOOTLOCK);
     }
-
-    else if (reg_ofs == REG_OFS(INTCTRL) || reg_ofs == REG_OFS(INTFLAGS)) {
-        m_ee_intflag.update_from_ioreg();
-    }
 }
 
 

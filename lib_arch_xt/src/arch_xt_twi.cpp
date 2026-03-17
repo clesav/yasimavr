@@ -376,9 +376,6 @@ void ArchXT_TWI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
         }
 
         m_driver->set_enabled(m_host->enabled() || m_client->enabled());
-
-        //Update of the WIEN or RIEN bits
-        m_intflag_host.update_from_ioreg();
     }
 
     else if (reg_ofs == REG_OFS(MCTRLB)) {
@@ -412,8 +409,6 @@ void ArchXT_TWI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
             //in all other cases, the bus state is read-only
             WRITE_IOREG_F_GC(MSTATUS, TWI_BUSSTATE, EXTRACT_GC(data.old, TWI_BUSSTATE));
         }
-
-        m_intflag_host.update_from_ioreg();
     }
 
     else if (reg_ofs == REG_OFS(MBAUD)) {
@@ -473,9 +468,6 @@ void ArchXT_TWI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
         }
 
         m_driver->set_enabled(m_host->enabled() || m_client->enabled());
-
-        //Update of the PIEN, APIEN or DIEN bits
-        m_intflag_client.update_from_ioreg();
     }
 
     else if (reg_ofs == REG_OFS(SCTRLB)) {
@@ -491,10 +483,6 @@ void ArchXT_TWI::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
             if (!m_client->set_ack(ack))
                 execute_client_command();
         }
-    }
-
-    else if (reg_ofs == REG_OFS(SSTATUS)) {
-        m_intflag_client.update_from_ioreg();
     }
 
     else if (reg_ofs == REG_OFS(SDATA)) {
@@ -671,7 +659,7 @@ void ArchXT_TWI::clear_host_status()
 {
     bitmask_t bm = TWI_RIF_bm | TWI_WIF_bm | TWI_BUSERR_bm | TWI_ARBLOST_bm | TWI_CLKHOLD_bm;
     clear_ioreg(REG_ADDR(MSTATUS), bm);
-    m_intflag_host.update_from_ioreg();
+    m_intflag_host.update();
     m_pending_host_rx_data = false;
 }
 

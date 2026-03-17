@@ -168,11 +168,6 @@ void ArchXT_ADC::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
         if ((data.value & ADC_STCONV_bm) && m_state == ADC_Idle)
             start_conversion_cycle();
     }
-
-    else if (reg_ofs == REG_OFS(INTCTRL) || reg_ofs == REG_OFS(INTFLAGS)) {
-        m_res_intflag.update_from_ioreg();
-        m_cmp_intflag.update_from_ioreg();
-    }
 }
 
 

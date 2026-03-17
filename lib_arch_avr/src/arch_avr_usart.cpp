@@ -305,18 +305,6 @@ void ArchAVR_USART::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& da
             m_rxc_intflag.clear_flag();
     }
 
-    //Writing to TXCIE
-    if (addr == m_config.rb_txc_inten)
-        m_txc_intflag.update_from_ioreg();
-
-    //Writing to TXEIE (a.k.a. UDREIE)
-    if (addr == m_config.rb_txe_inten)
-        m_txe_intflag.update_from_ioreg();
-
-    //Writing to RXCIE
-    if (addr == m_config.rb_rxc_inten)
-        m_rxc_intflag.update_from_ioreg();
-
     if (m_config.rbc_chsize.addr_match(addr)) {
         uint8_t reg_chsize = read_ioreg(m_config.rbc_chsize);
         unsigned short chsize = (reg_chsize < 4) ? (reg_chsize + 5) : 9;

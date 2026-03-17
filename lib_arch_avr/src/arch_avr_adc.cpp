@@ -159,9 +159,6 @@ void ArchAVR_ADC::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
     if (addr == m_config.rb_left_adj)
         write_digital_value();
 
-    if (addr == m_config.rb_int_enable || addr == m_config.rb_int_flag)
-        m_intflag.update_from_ioreg();
-
 }
 
 
