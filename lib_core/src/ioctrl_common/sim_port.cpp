@@ -68,7 +68,7 @@ bool Port::init(Device& device)
 void Port::reset(int)
 {
     //On reset, we set the internal state of all the pins to floating
-    uint8_t pinmask = m_pinmask;
+    uint8_t pinmask = m_pinmask.mask;
     Pin::controls_t default_ctrl = Pin::controls_t();
     for (int i = 0; i < 8; ++i) {
         if (pinmask & 1)
@@ -99,7 +99,7 @@ bool Port::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
  */
 void Port::set_pin_internal_state(uint8_t num, const Pin::controls_t& controls)
 {
-    if (num < 8 && ((m_pinmask >> num) & 1)) {
+    if (m_pinmask.bit(num)) {
         std::ostringstream s;
         s << "Dir ";
         if (controls.dir) {

@@ -52,14 +52,14 @@ struct ArchXT_PortConfig {
  *
  * The Slewrate limit is unsupported.
  */
-class AVR_ARCHXT_PUBLIC_API ArchXT_Port : public Port, public InterruptHandler {
+class AVR_ARCHXT_PUBLIC_API ArchXT_Port : public Port {
 
 public:
 
     ArchXT_Port(char name, const ArchXT_PortConfig& config);
+    virtual ~ArchXT_Port();
 
     virtual bool init(Device& device) override;
-    virtual void reset(int flags) override;
     virtual uint8_t ioreg_read_handler(reg_addr_t addr, uint8_t value) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
 
@@ -69,11 +69,13 @@ protected:
 
 private:
 
+    class _InterruptHandler;
+
     const ArchXT_PortConfig& m_config;
-    uint8_t m_port_value;
-    uint8_t m_dir_value;
+    _InterruptHandler* m_int_handler;
 
     void update_pin_states();
+    void update_input(uint8_t num);
 
 };
 

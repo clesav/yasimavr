@@ -54,6 +54,11 @@ def test_xt_port_output(bench):
     assert pinA0.state() == PinState.High
     porta.OUTTGL = 0x01
     assert pinA0.state() == PinState.Low
+    #IN register test (should have the same effect as toggle
+    porta.IN = 0x01
+    assert pinA0.state() == PinState.High
+    porta.IN = 0x01
+    assert pinA0.state() == PinState.Low
 
     porta.DIR = 0x00
     porta.OUT = 0x00
@@ -99,6 +104,7 @@ def test_xt_port_irq(bench):
     bench.sim_advance(100)
     assert bench.dev.MISC.GPIOR0 == 6
     assert bench.dev.MISC.GPIOR1 == 0x01
+    assert porta.INTFLAGS == 0x00
 
     bench.dev.MISC.GPIOR0 = 0
     pinA0.set_external_state('L')
@@ -115,3 +121,25 @@ def test_xt_port_irq(bench):
     bench.sim_advance(100)
     assert bench.dev.MISC.GPIOR0 == 6
     assert bench.dev.MISC.GPIOR1 == 0x02
+    assert porta.INTFLAGS == 0x00
+
+
+def test_xt_port_irq_level(bench):
+    porta = bench.dev.PORTA
+    pinA0 = bench.dev.pins['PA0']
+
+    pinA0.set_external_state('H')
+    porta.PIN0CTRL.ISC = 'LEVEL'
+    assert porta.INTFLAGS == 0x00
+
+    pinA0.set_external_state('L')
+    bench.sim_advance(100)
+    assert bench.dev.MISC.GPIOR0 == 6
+    assert bench.dev.MISC.GPIOR1 == 0x01
+
+    porta.INTFLAGS == 0x01
+    assert porta.INTFLAGS == 0x01
+
+    pinA0.set_external_state('H')
+    porta.INTFLAGS = 0x01
+    assert porta.INTFLAGS == 0x00

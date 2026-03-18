@@ -143,6 +143,7 @@ struct bitmask_t {
     void __ixor__(const bitmask_t&);
     uint8_t __and__(uint8_t) const;
     unsigned int bitcount() const;
+    bool bit(unsigned int) const;
 
 //Ensures a seamless conversion from a bitmask_t, bitspec_t or regbit_t object
 %ConvertToTypeCode
