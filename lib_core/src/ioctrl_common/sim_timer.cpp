@@ -1,7 +1,7 @@
 /*
  * sim_timer.cpp
  *
- *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -343,49 +343,6 @@ cycle_count_t PrescaledTimer::ticks_to_event(cycle_count_t counter, cycle_count_
 
 //=======================================================================================
 
-/*
- * Implementation of a SignalHook for external clocking. It just forwards to the main class.
- */
-class TimerCounter::TimerHook : public SignalHook {
-
-public:
-
-    TimerHook(TimerCounter& timer) : m_timer(timer) {}
-
-    virtual void raised(const signal_data_t& sigdata, int) override
-    {
-        m_timer.timer_raised(sigdata);
-    }
-
-private:
-
-    TimerCounter& m_timer;
-
-};
-
-
-/*
- * Implementation of a SignalHook for external clocking. It just forwards to the main class.
- */
-class TimerCounter::ExtTickHook : public SignalHook {
-
-public:
-
-    ExtTickHook(TimerCounter& timer) : m_timer(timer) {}
-
-    virtual void raised(const signal_data_t&, int) override
-    {
-        if (m_timer.m_source == Tick_External)
-            m_timer.add_tick();
-    }
-
-private:
-
-    TimerCounter& m_timer;
-
-};
-
-
 /**
    Constructor
    \param wrap Wrapping value for the counter. For example, a 16-bits counter wrap is 0x10000.
@@ -400,19 +357,11 @@ TimerCounter::TimerCounter(long wrap, size_t comp_count)
 ,m_countdown(false)
 ,m_cmp(comp_count)
 ,m_next_event_type(0)
+,m_timer_hook(*this, &TimerCounter::timer_raised)
+,m_ext_hook(*this, &TimerCounter::extclock_raised)
 ,m_logger(nullptr)
 {
-    m_timer_hook = new TimerHook(*this);
-    m_ext_hook = new ExtTickHook(*this);
-
-    m_timer.signal().connect(*m_timer_hook);
-}
-
-
-TimerCounter::~TimerCounter()
-{
-    delete m_timer_hook;
-    delete m_ext_hook;
+    m_timer.signal().connect(m_timer_hook);
 }
 
 
@@ -612,7 +561,7 @@ long TimerCounter::delay_to_event()
    Callback from the internal prescaled timer
    Process the timer ticks, by updating the counter
  */
-void TimerCounter::timer_raised(const signal_data_t& sigdata)
+void TimerCounter::timer_raised(const signal_data_t& sigdata, int)
 {
     if (m_logger)
         m_logger->dbg("Updating counters");
@@ -624,7 +573,7 @@ void TimerCounter::timer_raised(const signal_data_t& sigdata)
 /*
  * Callback for a single external clock tick.
  */
-void TimerCounter::extclock_raised()
+void TimerCounter::extclock_raised(const signal_data_t&, int)
 {
     if (m_source == Tick_External)
         tick();
