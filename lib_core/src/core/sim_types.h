@@ -131,6 +131,11 @@ struct bitmask_t {
         return n;
     }
 
+    constexpr bool bit(unsigned int i) const
+    {
+        return (mask >> i) & 1;
+    }
+
 };
 
 constexpr uint8_t operator|(uint8_t v, const bitmask_t& m) { return v | m.mask; }

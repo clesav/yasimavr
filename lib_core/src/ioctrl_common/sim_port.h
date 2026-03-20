@@ -61,7 +61,7 @@ public:
 
 protected:
 
-    uint8_t pin_mask() const;
+    bitmask_t pin_mask() const;
     Pin* pin(uint8_t num) const;
     void set_pin_internal_state(uint8_t num, const Pin::controls_t& controls);
 
@@ -70,7 +70,7 @@ protected:
 private:
 
     const char m_name;
-    uint8_t m_pinmask;
+    bitmask_t m_pinmask;
     BoundFunctionSignalHook<Port> m_pin_signal_hook;
     Signal m_signal;
     Pin* m_pins[8];
@@ -81,7 +81,7 @@ private:
 };
 
 /// Returns the pin mask, containing a '1' for each existing pin
-inline uint8_t Port::pin_mask() const
+inline bitmask_t Port::pin_mask() const
 {
     return m_pinmask;
 }
