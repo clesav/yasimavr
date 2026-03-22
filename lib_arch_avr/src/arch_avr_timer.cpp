@@ -32,28 +32,6 @@ typedef ArchAVR_TimerConfig CFG;
 
 
 /*
- * Implementation of a SignalHook for event capture. It just forwards to the main class.
- */
-class ArchAVR_Timer::CaptureHook : public SignalHook {
-
-public:
-
-    CaptureHook(ArchAVR_Timer& timer) : m_timer(timer) {}
-    virtual ~CaptureHook() {}
-
-    virtual void raised(const signal_data_t&, int) override
-    {
-        m_timer.capt_raised();
-    }
-
-private:
-
-    ArchAVR_Timer& m_timer;
-
-};
-
-
-/*
  * Implementation of the structure that hold configuration and data for each
  * OutputCompare module
  */
@@ -91,8 +69,10 @@ ArchAVR_Timer::ArchAVR_Timer(int num, const CFG& config)
 ,m_icr(0)
 ,m_temp(0)
 ,m_counter((m_config.is_16bits ? 0x10000 : 0x100), m_config.oc_channels.size())
+,m_cnt_hook(*this, &ArchAVR_Timer::cnt_raised)
 ,m_intflag_ovf(true)
 ,m_intflag_icr(true)
+,m_capt_hook(*this, &ArchAVR_Timer::capt_raised)
 {
     //Calculate the prescaler max value by looking for the highest division factor
     m_clk_ps_max = 0;
@@ -100,8 +80,6 @@ ArchAVR_Timer::ArchAVR_Timer(int num, const CFG& config)
         if (clkcfg.div > m_clk_ps_max)
             m_clk_ps_max = clkcfg.div;
     }
-
-    m_capt_hook = new CaptureHook(*this);
 
     for (auto& oc_cfg : m_config.oc_channels) {
         OutputCompareChannel* oc = new OutputCompareChannel(oc_cfg);
@@ -112,8 +90,6 @@ ArchAVR_Timer::ArchAVR_Timer(int num, const CFG& config)
 
 ArchAVR_Timer::~ArchAVR_Timer()
 {
-    delete m_capt_hook;
-
     for (auto oc : m_oc_channels)
         delete oc;
 }
@@ -166,7 +142,7 @@ bool ArchAVR_Timer::init(Device& device)
     add_ioreg(m_config.reg_int_flag, bitmask_t(int_bitmask), IORegister::Strobe);
 
     m_counter.init(*device.cycle_manager(), logger());
-    m_counter.signal().connect(*this);
+    m_counter.signal().connect(m_cnt_hook);
 
     return status;
 }
@@ -435,7 +411,7 @@ bool ArchAVR_Timer::output_active(CFG::COM_config_t& mode, size_t output_index)
 }
 
 
-void ArchAVR_Timer::raised(const signal_data_t& sigdata, int)
+void ArchAVR_Timer::cnt_raised(const signal_data_t& sigdata, int)
 {
     if (sigdata.sigid == TimerCounter::Signal_Event) {
         int event_flags = sigdata.data.as_int();
@@ -557,7 +533,7 @@ void ArchAVR_Timer::change_OC_state(size_t index, int event_flags)
 }
 
 
-void ArchAVR_Timer::capt_raised()
+void ArchAVR_Timer::capt_raised(const signal_data_t&, int)
 {
     //If no ICR is registered, the Input Capture function is unavailable
     if (!m_config.reg_icr.valid()) return;

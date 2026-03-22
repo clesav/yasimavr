@@ -174,7 +174,7 @@ struct ArchAVR_TimerConfig {
 };
 
 
-class ArchAVR_Timer : public Peripheral, public SignalHook /NoDefaultCtors/ {
+class ArchAVR_Timer : public Peripheral /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_avr_timer.h"
 %End
@@ -189,7 +189,5 @@ public:
     };
 
     ArchAVR_Timer(int, const ArchAVR_TimerConfig& /KeepReference/);
-
-    virtual void raised(const signal_data_t&, int);
 
 };

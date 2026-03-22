@@ -228,7 +228,7 @@ struct ArchAVR_TimerConfig {
    Unsupported features:
         - Asynchronous operations
  */
-class AVR_ARCHAVR_PUBLIC_API ArchAVR_Timer : public Peripheral, public SignalHook {
+class AVR_ARCHAVR_PUBLIC_API ArchAVR_Timer : public Peripheral {
 
 public:
 
@@ -260,12 +260,7 @@ public:
     virtual uint8_t ioreg_peek_handler(reg_addr_t addr, uint8_t value) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
 
-    virtual void raised(const signal_data_t& sigdata, int hooktag) override;
-
 private:
-
-    class CaptureHook;
-    friend class CaptureHook;
 
     struct OutputCompareChannel;
     friend struct OutputCompareChannel;
@@ -284,14 +279,16 @@ private:
     std::vector<OutputCompareChannel*> m_oc_channels;
     //Timer counter engine
     TimerCounter m_counter;
+    BoundFunctionSignalHook<ArchAVR_Timer> m_cnt_hook;
     //Interrupt and signal management
     InterruptFlag m_intflag_ovf;
     InterruptFlag m_intflag_icr;
     DataSignal m_signal;
-    CaptureHook* m_capt_hook;
+    BoundFunctionSignalHook<ArchAVR_Timer> m_capt_hook;
 
+    void cnt_raised(const signal_data_t& sigdata, int hooktag);
     void update_top();
-    void capt_raised();
+    void capt_raised(const signal_data_t& sigdata, int hooktag);
     ArchAVR_TimerConfig::COM_config_t get_COM_config(uint8_t regval);
     void change_OC_state(size_t index, int event_flags);
     bool output_active(ArchAVR_TimerConfig::COM_config_t& mode, size_t output_index);
