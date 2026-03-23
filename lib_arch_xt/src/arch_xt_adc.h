@@ -86,8 +86,7 @@ struct ArchXT_ADCConfig {
     - AVR_CTLREQ_ADC_TRIGGER : Allows other peripherals to trigger a conversion.
     The trigger only works when the ADC is enabled and idle, and the bit STARTEI is set.
  */
-class AVR_ARCHXT_PUBLIC_API ArchXT_ADC : public Peripheral,
-                                         public SignalHook {
+class AVR_ARCHXT_PUBLIC_API ArchXT_ADC : public Peripheral {
 
 public:
 
@@ -99,7 +98,6 @@ public:
     virtual uint8_t ioreg_read_handler(reg_addr_t addr, uint8_t value) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
     virtual void sleep(bool on, SleepMode mode) override;
-    virtual void raised(const signal_data_t& sigdata, int hooktag) override;
 
 private:
 
@@ -115,6 +113,7 @@ private:
     State m_state;
     bool m_first;
     PrescaledTimer m_timer;
+    BoundFunctionSignalHook<ArchXT_ADC> m_timer_hook;
     double m_temperature;
     uint8_t m_latched_ch_mux;
     uint8_t m_latched_ref_mux;
@@ -128,6 +127,7 @@ private:
 
     void start_conversion_cycle();
     void read_analog_value();
+    void timer_raised(const signal_data_t& sigdata, int hooktag);
 
 };
 

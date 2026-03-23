@@ -48,7 +48,7 @@ struct ArchXT_ADCConfig {
 };
 
 
-class ArchXT_ADC : public Peripheral, public SignalHook /NoDefaultCtors/ {
+class ArchXT_ADC : public Peripheral /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_xt_adc.h"
 %End
@@ -56,7 +56,5 @@ class ArchXT_ADC : public Peripheral, public SignalHook /NoDefaultCtors/ {
 public:
 
     ArchXT_ADC(int, const ArchXT_ADCConfig& /KeepReference/);
-
-    virtual void raised(const signal_data_t&, int);
 
 };

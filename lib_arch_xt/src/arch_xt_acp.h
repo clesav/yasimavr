@@ -76,8 +76,7 @@ struct ArchXT_ACPConfig {
     - AVR_CTLREQ_GET_SIGNAL : returns a pointer to the instance signal
     - AVR_CTLREQ_ACP_GET_DAC : returns the output value of the internal DAC.
  */
-class AVR_ARCHXT_PUBLIC_API ArchXT_ACP : public Peripheral,
-                                         public SignalHook {
+class AVR_ARCHXT_PUBLIC_API ArchXT_ACP : public Peripheral {
 
 public:
 
@@ -88,7 +87,6 @@ public:
     virtual bool ctlreq(ctlreq_id_t req, ctlreq_data_t* data) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
     virtual void sleep(bool on, SleepMode mode) override;
-    virtual void raised(const signal_data_t& sigdata, int hooktag) override;
 
 private:
 
@@ -99,12 +97,14 @@ private:
     DataSignal* m_vref_signal;
     DataSignalMux m_pos_mux;
     DataSignalMux m_neg_mux;
+    BoundFunctionSignalHook<ArchXT_ACP> m_hook;
     //Boolean indicating if the peripheral is disabled by the current sleep mode
     bool m_sleeping;
     //Hysteresis value
     double m_hysteresis;
 
     bool register_channels(DataSignalMux& mux, const std::vector<ACP::channel_config_t>& channels);
+    void input_raised(const signal_data_t& sigdata, int hooktag);
     void update_DAC();
     void update_hysteresis();
     void update_output();

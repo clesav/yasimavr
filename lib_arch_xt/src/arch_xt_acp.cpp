@@ -63,6 +63,7 @@ ArchXT_ACP::ArchXT_ACP(int num, const cfg_t& config)
 ,m_config(config)
 ,m_intflag(false)
 ,m_vref_signal(nullptr)
+,m_hook(*this, &ArchXT_ACP::input_raised)
 ,m_sleeping(false)
 ,m_hysteresis(0.0)
 {
@@ -88,7 +89,7 @@ bool ArchXT_ACP::init(Device& device)
 
     m_vref_signal = dynamic_cast<DataSignal*>(get_signal(AVR_IOCTL_VREF));
     if (m_vref_signal) {
-        m_vref_signal->connect(*this, HookTag_VREF);
+        m_vref_signal->connect(m_hook, HookTag_VREF);
     } else {
         logger().err("No VREF peripheral found.");
         status = false;
@@ -97,8 +98,8 @@ bool ArchXT_ACP::init(Device& device)
     status &= register_channels(m_pos_mux, m_config.pos_channels);
     status &= register_channels(m_neg_mux, m_config.neg_channels);
 
-    m_pos_mux.signal().connect(*this, HookTag_PosMux);
-    m_neg_mux.signal().connect(*this, HookTag_NegMux);
+    m_pos_mux.signal().connect(m_hook, HookTag_PosMux);
+    m_neg_mux.signal().connect(m_hook, HookTag_NegMux);
 
     return status;
 }
@@ -289,7 +290,7 @@ void ArchXT_ACP::update_output()
 /*
 * Callback from the pin signal hook.
 */
-void ArchXT_ACP::raised(const signal_data_t& sigdata, int hooktag)
+void ArchXT_ACP::input_raised(const signal_data_t& sigdata, int hooktag)
 {
     if (hooktag == HookTag_VREF) {
         if (sigdata.sigid == VREF::Signal_IntRefChange && sigdata.index == m_config.vref_channel) {
