@@ -82,8 +82,7 @@ struct ArchAVR_ACPConfig {
    CTLREQs supported:
     - AVR_CTLREQ_GET_SIGNAL : returns a pointer to the instance signal
  */
-class AVR_ARCHAVR_PUBLIC_API ArchAVR_ACP : public Peripheral,
-                                           public SignalHook {
+class AVR_ARCHAVR_PUBLIC_API ArchAVR_ACP : public Peripheral {
 
 public:
 
@@ -93,7 +92,6 @@ public:
     virtual void reset(int flags) override;
     virtual bool ctlreq(ctlreq_id_t req, ctlreq_data_t* data) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
-    virtual void raised(const signal_data_t& sigdata, int hooktag) override;
 
 private:
 
@@ -101,12 +99,14 @@ private:
     InterruptFlag m_intflag;
     DataSignalMux m_pos_mux;
     DataSignalMux m_neg_mux;
+    BoundFunctionSignalHook<ArchAVR_ACP> m_input_hook;
     Signal m_out_signal;
     double m_pos_value;
     double m_neg_value;
 
     void change_pos_channel();
     void change_neg_channel();
+    void input_raised(const signal_data_t& sigdata, int hooktag);
     void update_state();
 
 };

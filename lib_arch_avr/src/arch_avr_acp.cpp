@@ -49,6 +49,7 @@ ArchAVR_ACP::ArchAVR_ACP(int num, const ArchAVR_ACPConfig& config)
 :Peripheral(AVR_IOCTL_ACP(0x30 + num))
 ,m_config(config)
 ,m_intflag(true)
+,m_input_hook(*this, &ArchAVR_ACP::input_raised)
 ,m_pos_value(0.0)
 ,m_neg_value(0.0)
 {}
@@ -107,8 +108,8 @@ bool ArchAVR_ACP::init(Device& device)
         m_neg_mux.add_mux(pin->signal(), Pin::Signal_VoltageChange);
     }
 
-    m_pos_mux.signal().connect(*this, HookTag_Pos);
-    m_neg_mux.signal().connect(*this, HookTag_Neg);
+    m_pos_mux.signal().connect(m_input_hook, HookTag_Pos);
+    m_neg_mux.signal().connect(m_input_hook, HookTag_Neg);
 
     return status;
 }
@@ -202,7 +203,7 @@ void ArchAVR_ACP::update_state()
 /*
  * Hook callback, the hooktag determines if it's for the positive or the negative side
  */
-void ArchAVR_ACP::raised(const signal_data_t& sigdata, int hooktag)
+void ArchAVR_ACP::input_raised(const signal_data_t& sigdata, int hooktag)
 {
     if (hooktag == HookTag_Pos)
         m_pos_value = sigdata.data.as_double();
