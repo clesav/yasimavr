@@ -128,6 +128,7 @@ ArchXT_TimerA::ArchXT_TimerA(const ArchXT_TimerAConfig& config)
 ,m_sgl_counter(0x10000, 3)
 ,m_lo_counter(0x100, 3)
 ,m_hi_counter(0x100, 3)
+,m_counter_hook(*this, &ArchXT_TimerA::counter_raised)
 ,m_wgmode(TCA_SINGLE_WGMODE_NORMAL_gc)
 ,m_EIA_state(false)
 ,m_EIB_state(false)
@@ -224,15 +225,15 @@ bool ArchXT_TimerA::init(Device& device)
 
     m_sgl_counter.init(*device.cycle_manager(), logger());
     m_timer.register_chained_timer(m_sgl_counter.prescaler());
-    m_sgl_counter.signal().connect(*this, Tag_Single);
+    m_sgl_counter.signal().connect(m_counter_hook, Tag_Single);
 
     m_lo_counter.init(*device.cycle_manager(), logger());
     m_timer.register_chained_timer(m_lo_counter.prescaler());
-    m_lo_counter.signal().connect(*this, Tag_SplitLow);
+    m_lo_counter.signal().connect(m_counter_hook, Tag_SplitLow);
 
     m_hi_counter.init(*device.cycle_manager(), logger());
     m_timer.register_chained_timer(m_hi_counter.prescaler());
-    m_hi_counter.signal().connect(*this, Tag_SplitHigh);
+    m_hi_counter.signal().connect(m_counter_hook, Tag_SplitHigh);
 
     device.pin_manager().register_driver(*m_pin_driver);
 
@@ -929,7 +930,7 @@ void ArchXT_TimerA::update_compare_outputs(int change)
 }
 
 
-void ArchXT_TimerA::raised(const signal_data_t& sigdata, int hooktag)
+void ArchXT_TimerA::counter_raised(const signal_data_t& sigdata, int hooktag)
 {
     if (hooktag == Tag_Single)
         process_counter_single(sigdata);

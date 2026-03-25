@@ -117,8 +117,7 @@ struct ArchAVR_ADCConfig {
     The trigger only works when the ADC is enabled and idle, auto-trigger is enabled and
     an external trigger source is selected.
  */
-class AVR_ARCHAVR_PUBLIC_API ArchAVR_ADC : public Peripheral,
-                                           public SignalHook {
+class AVR_ARCHAVR_PUBLIC_API ArchAVR_ADC : public Peripheral {
 
 public:
 
@@ -130,7 +129,6 @@ public:
     virtual uint8_t ioreg_read_handler(reg_addr_t addr, uint8_t value) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
     virtual void sleep(bool on, SleepMode mode) override;
-    virtual void raised(const signal_data_t& sigdata, int hooktag) override;
 
 private:
 
@@ -154,6 +152,7 @@ private:
 
     //Timer to simulate the conversion cycle duration
     PrescaledTimer m_timer;
+    BoundFunctionSignalHook<ArchAVR_ADC> m_timer_hook;
 
     //Simulated device temperature value in deg Celsius
     double m_temperature;
@@ -173,7 +172,7 @@ private:
 
     void start_conversion_cycle();
     void reset_prescaler();
-    void timer_raised();
+    void timer_raised(const signal_data_t& sigdata, int hooktag);
 
     void read_analog_value();
     void write_digital_value();

@@ -1,7 +1,7 @@
 /*
  * sim_timer.h
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -212,7 +212,6 @@ public:
     };
 
     TimerCounter(long wrap, size_t comp_count);
-    ~TimerCounter();
 
     void init(CycleManager& cycle_manager, Logger& logger);
 
@@ -256,12 +255,6 @@ public:
 
 private:
 
-    class TimerHook;
-    friend class TimerHook;
-
-    class ExtTickHook;
-    friend class ExtTickHook;
-
     struct CompareUnit {
         long value = 0;
         bool enabled = false;
@@ -288,14 +281,14 @@ private:
     uint8_t m_next_event_type;
     //Signal management
     DataSignal m_signal;
-    TimerHook* m_timer_hook;
-    ExtTickHook* m_ext_hook;
+    BoundFunctionSignalHook<TimerCounter> m_timer_hook;
+    BoundFunctionSignalHook<TimerCounter> m_ext_hook;
     //Logging
     Logger* m_logger;
 
     long delay_to_event();
-    void timer_raised(const signal_data_t& sigdata);
-    void extclock_raised();
+    void timer_raised(const signal_data_t& sigdata, int);
+    void extclock_raised(const signal_data_t&, int);
     void add_tick();
     long ticks_to_event(long event);
     void process_ticks(long ticks, bool event_reached);
@@ -367,7 +360,7 @@ inline Signal& TimerCounter::signal()
 /// Getter for the external signal hook used for tick source
 inline SignalHook& TimerCounter::ext_tick_hook()
 {
-    return *reinterpret_cast<SignalHook*>(m_ext_hook);
+    return m_ext_hook;
 }
 
 /// Getter for the internal prescaler

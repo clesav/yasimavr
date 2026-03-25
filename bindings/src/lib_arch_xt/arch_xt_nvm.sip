@@ -68,7 +68,7 @@ struct ArchXT_NVMConfig {
 };
 
 
-class ArchXT_NVM : public Peripheral, public SignalHook /NoDefaultCtors/ {
+class ArchXT_NVM : public Peripheral /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_xt_nvm.h"
 %End
@@ -76,7 +76,5 @@ class ArchXT_NVM : public Peripheral, public SignalHook /NoDefaultCtors/ {
 public:
 
     ArchXT_NVM(const ArchXT_NVMConfig& /KeepReference/);
-
-    virtual void raised(const signal_data_t&, int);
 
 };

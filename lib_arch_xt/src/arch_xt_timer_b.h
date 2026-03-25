@@ -63,7 +63,7 @@ struct ArchXT_TimerBConfig {
    - Debug run override
    - Synchronize Update (SYNCUPD)
  */
-class AVR_ARCHXT_PUBLIC_API ArchXT_TimerB : public Peripheral, public SignalHook {
+class AVR_ARCHXT_PUBLIC_API ArchXT_TimerB : public Peripheral {
 
 public:
 
@@ -88,8 +88,6 @@ public:
     virtual uint8_t ioreg_peek_handler(reg_addr_t addr, uint8_t value) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
     virtual void sleep(bool on, SleepMode mode) override;
-    //Override of Hook callback
-    virtual void raised(const signal_data_t& sigdata, int hooktag) override;
 
 private:
 
@@ -116,6 +114,7 @@ private:
 
     //***** Timer management *****
     TimerCounter m_counter;
+    BoundFunctionSignalHook<ArchXT_TimerB> m_counter_hook;
 
     BoundFunctionSignalHook<ArchXT_TimerB> m_event_hook;
 
@@ -124,6 +123,7 @@ private:
     _PinDriver* m_pin_driver;
 
     void set_counter_state(State state);
+    void counter_raised(const signal_data_t& sigdata, int hooktag);
     void update_counter_top();
     void update_on_CCMP_read();
     void process_capture_event(unsigned char event_state);

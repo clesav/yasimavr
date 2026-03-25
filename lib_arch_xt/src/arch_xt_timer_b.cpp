@@ -97,6 +97,7 @@ ArchXT_TimerB::ArchXT_TimerB(int num, const CFG& config)
 ,m_output(0)
 ,m_intflag(false)
 ,m_counter(0x10000, 1)
+,m_counter_hook(*this, &ArchXT_TimerB::counter_raised)
 ,m_event_hook(*this, &ArchXT_TimerB::event_hook_raised)
 {
     m_pin_driver = new _PinDriver(id());
@@ -137,7 +138,7 @@ bool ArchXT_TimerB::init(Device& device)
                              m_config.iv_capt);
 
     m_counter.init(*device.cycle_manager(), logger());
-    m_counter.signal().connect(*this);
+    m_counter.signal().connect(m_counter_hook);
 
     status &= device.pin_manager().register_driver(*m_pin_driver);
 
@@ -340,7 +341,7 @@ void ArchXT_TimerB::update_on_CCMP_read()
 }
 
 
-void ArchXT_TimerB::raised(const signal_data_t& data, int hooktag)
+void ArchXT_TimerB::counter_raised(const signal_data_t& data, int)
 {
     if (data.sigid != TimerCounter::Signal_Event) return;
 

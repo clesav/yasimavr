@@ -51,6 +51,7 @@ ArchXT_ADC::ArchXT_ADC(int num, const CFG& config)
 ,m_config(config)
 ,m_state(ADC_Disabled)
 ,m_first(false)
+,m_timer_hook(*this, &ArchXT_ADC::timer_raised)
 ,m_temperature(25.0)
 ,m_latched_ch_mux(0)
 ,m_latched_ref_mux(0)
@@ -97,7 +98,7 @@ bool ArchXT_ADC::init(Device& device)
                                  m_config.iv_wincmp);
 
     m_timer.init(*device.cycle_manager(), logger());
-    m_timer.signal().connect(*this);
+    m_timer.signal().connect(m_timer_hook);
 
     return status;
 }
@@ -305,7 +306,7 @@ void ArchXT_ADC::read_analog_value()
  * First, we perform the actual analog read.
  * Second, we store it in the data register and raise the interrupt flag
  */
-void ArchXT_ADC::raised(const signal_data_t& sigdata, int)
+void ArchXT_ADC::timer_raised(const signal_data_t& sigdata, int)
 {
     if (sigdata.index != 1) return;
 

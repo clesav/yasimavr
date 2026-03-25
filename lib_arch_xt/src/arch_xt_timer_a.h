@@ -103,7 +103,7 @@ struct ArchXT_TimerAConfig {
 
   The model supports two versions, defined by the `version`attribute of ArchXT_TimerAConfig
  */
-class AVR_ARCHXT_PUBLIC_API ArchXT_TimerA : public Peripheral, public SignalHook {
+class AVR_ARCHXT_PUBLIC_API ArchXT_TimerA : public Peripheral {
 
 public:
 
@@ -127,8 +127,6 @@ public:
     virtual uint8_t ioreg_peek_handler(reg_addr_t addr, uint8_t value) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
     virtual void sleep(bool on, SleepMode mode) override;
-    //Override of Hook callback
-    virtual void raised(const signal_data_t& sigdata, int hooktag) override;
 
 private:
 
@@ -165,6 +163,7 @@ private:
     TimerCounter m_sgl_counter; //Main counter in Single mode
     TimerCounter m_lo_counter; //Low-byte counter in Split mode
     TimerCounter m_hi_counter; //High-byte counter in Split mode
+    BoundFunctionSignalHook<ArchXT_TimerA> m_counter_hook;
 
     uint8_t m_wgmode;
 
@@ -190,6 +189,7 @@ private:
     void set_compare_output(unsigned int index, int change);
     void update_compare_outputs(int change = 0);
 
+    void counter_raised(const signal_data_t& sigdata, int hooktag);
     void process_counter_single(const signal_data_t& sigdata);
     void process_counter_split(const signal_data_t& sigdata, bool low_cnt);
 

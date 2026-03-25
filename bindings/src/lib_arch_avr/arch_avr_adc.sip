@@ -69,7 +69,7 @@ struct ArchAVR_ADCConfig {
 };
 
 
-class ArchAVR_ADC : public Peripheral, public SignalHook /NoDefaultCtors/ {
+class ArchAVR_ADC : public Peripheral /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_avr_adc.h"
 %End
@@ -77,7 +77,5 @@ class ArchAVR_ADC : public Peripheral, public SignalHook /NoDefaultCtors/ {
 public:
 
     ArchAVR_ADC(int, const ArchAVR_ADCConfig& /KeepReference/);
-
-    virtual void raised(const signal_data_t&, int);
 
 };

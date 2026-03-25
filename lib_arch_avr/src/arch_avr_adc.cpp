@@ -41,6 +41,7 @@ ArchAVR_ADC::ArchAVR_ADC(int num, const CFG& config)
 ,m_config(config)
 ,m_state(ADC_Disabled)
 ,m_first(true)
+,m_timer_hook(*this, &ArchAVR_ADC::timer_raised)
 ,m_trigger(CFG::Trig_Manual)
 ,m_temperature(25.0)
 ,m_latched_ch_mux(0)
@@ -74,7 +75,7 @@ bool ArchAVR_ADC::init(Device& device)
                              m_config.int_vector);
 
     m_timer.init(*device.cycle_manager(), logger());
-    m_timer.signal().connect(*this);
+    m_timer.signal().connect(m_timer_hook);
 
     return status;
 }
@@ -288,7 +289,7 @@ void ArchAVR_ADC::read_analog_value()
 }
 
 
-void ArchAVR_ADC::raised(const signal_data_t& sigdata, int)
+void ArchAVR_ADC::timer_raised(const signal_data_t& sigdata, int)
 {
     if (sigdata.index != 1) return;
 

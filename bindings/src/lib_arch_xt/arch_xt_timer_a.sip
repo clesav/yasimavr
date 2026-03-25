@@ -71,7 +71,7 @@ struct ArchXT_TimerAConfig {
 };
 
 
-class ArchXT_TimerA : public Peripheral, public SignalHook /NoDefaultCtors/ {
+class ArchXT_TimerA : public Peripheral /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_xt_timer_a.h"
 %End
@@ -88,7 +88,5 @@ public:
     };
 
     ArchXT_TimerA(const ArchXT_TimerAConfig& /KeepReference/);
-
-    virtual void raised(const signal_data_t&, int);
 
 };
