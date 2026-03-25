@@ -202,24 +202,6 @@ void ArchXT_Fuses::configure_flash_sections()
 #define NVM_INDEX_INVALID   -2
 
 
-class ArchXT_NVM::Timer : public CycleTimer {
-
-public:
-
-    Timer(ArchXT_NVM& ctl) : m_ctl(ctl) {}
-
-    virtual cycle_count_t next(cycle_count_t when) override {
-        m_ctl.timer_next();
-        return 0;
-    }
-
-private:
-
-    ArchXT_NVM& m_ctl;
-
-};
-
-
 ArchXT_NVM::ArchXT_NVM(const ArchXT_NVMConfig& config)
 :Peripheral(AVR_IOCTL_NVM)
 ,m_config(config)
@@ -228,18 +210,16 @@ ArchXT_NVM::ArchXT_NVM(const ArchXT_NVMConfig& config)
 ,m_bufset(nullptr)
 ,m_mem_index(NVM_INDEX_NONE)
 ,m_page(0)
+,m_timer(*this, &ArchXT_NVM::timer_next)
 ,m_ee_intflag(false)
 ,m_section_manager(nullptr)
+,m_section_hook(*this, &ArchXT_NVM::section_raised)
 ,m_pending_bootlock(false)
-{
-    m_timer = new Timer(*this);
-}
+{}
 
 
 ArchXT_NVM::~ArchXT_NVM()
 {
-    delete m_timer;
-
     if (m_buffer)
         free(m_buffer);
     if (m_bufset)
@@ -273,6 +253,7 @@ bool ArchXT_NVM::init(Device& device)
     if (!device.ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_SECTIONS, &req))
         return false;
     m_section_manager = req.data.as_ptr<MemorySectionManager>();
+    m_section_manager->signal().connect(m_section_hook);
 
     return status;
 }
@@ -490,7 +471,7 @@ void ArchXT_NVM::execute_command(Command cmd)
             device()->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_HALT, &d);
         }
 
-        device()->cycle_manager()->delay(*m_timer, delay);
+        device()->cycle_manager()->delay(m_timer, delay);
     }
 }
 
@@ -578,7 +559,7 @@ void ArchXT_NVM::timer_next()
 }
 
 
-void ArchXT_NVM::raised(const signal_data_t& sigdata, int)
+void ArchXT_NVM::section_raised(const signal_data_t& sigdata, int)
 {
     //If there is a pending bootlock and the CPU is leaving the boot section
     if (m_pending_bootlock &&

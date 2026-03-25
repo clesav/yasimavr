@@ -124,7 +124,7 @@ struct ArchXT_NVMConfig {
     - AVR_CTLREQ_NVM_REQUEST : Used internally when the CPU writes to a data space address
     mapped to a NVM block. Used to redirect the write to the page buffer.
  */
-class AVR_ARCHXT_PUBLIC_API ArchXT_NVM : public Peripheral, public SignalHook {
+class AVR_ARCHXT_PUBLIC_API ArchXT_NVM : public Peripheral {
 
 public:
 
@@ -135,12 +135,8 @@ public:
     virtual void reset(int flags) override;
     virtual bool ctlreq(ctlreq_id_t req, ctlreq_data_t* data) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
-    virtual void raised(const signal_data_t& sigdata, int hooktag) override;
 
 private:
-
-    class Timer;
-    friend class Timer;
 
     enum Command {
         Cmd_Idle,
@@ -164,11 +160,12 @@ private:
     uint8_t* m_bufset;
     int m_mem_index;
     mem_addr_t m_page;
-    Timer* m_timer;
+    BoundFunctionCycleTimer<ArchXT_NVM> m_timer;
 
     InterruptFlag m_ee_intflag;
 
     MemorySectionManager* m_section_manager;
+    BoundFunctionSignalHook<ArchXT_NVM> m_section_hook;
     bool m_pending_bootlock;
 
     NonVolatileMemory* get_memory(int nvm_index);
@@ -177,6 +174,7 @@ private:
     void execute_command(Command cmd);
     unsigned int execute_page_command(Command cmd);
     void timer_next();
+    void section_raised(const signal_data_t& sigdata, int hooktag);
 
 };
 
