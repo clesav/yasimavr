@@ -113,7 +113,7 @@ def _get_port_builder():
 
 
 #========================================================================================
-#Portmuxconfiguration
+#Port mux configuration
 
 def _portmux_convertor(cfg, attr, yml_val, per_desc):
     if attr == 'mux_configs':
@@ -334,6 +334,14 @@ def _get_twi_builder():
 
 
 #========================================================================================
+#Watchdog timer configuration
+
+def _get_wdt_builder():
+    cfg_builder = PeripheralConfigBuilder(_archlib.ArchXT_WDTConfig)
+    return PeripheralBuilder(_archlib.ArchXT_WDT, cfg_builder)
+
+
+#========================================================================================
 #FUSES configuration
 
 def _get_fuses_builder():
@@ -392,6 +400,7 @@ class XT_DeviceBuilder(DeviceBuilder):
         'USART': _get_usart_builder,
         'SPI': _get_spi_builder,
         'TWI': _get_twi_builder,
+        'WDT': _get_wdt_builder,
         'FUSES': _get_fuses_builder,
         'USERROW_64': _get_userrow_builder,
         'USERROW_32': _get_userrow_builder

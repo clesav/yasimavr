@@ -27,14 +27,13 @@ struct ArchXT_WDTConfig {
 %End
 
     unsigned long clock_frequency;
-    UnsignedLongVector delays;
 
     reg_addr_t reg_base;
 
 };
 
 
-class ArchXT_WDT : public WatchdogTimer /NoDefaultCtors/ {
+class ArchXT_WDT : public Peripheral /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_xt_wdt.h"
 %End
@@ -42,9 +41,5 @@ class ArchXT_WDT : public WatchdogTimer /NoDefaultCtors/ {
 public:
 
     ArchXT_WDT(const ArchXT_WDTConfig& /KeepReference/);
-
-protected:
-
-    virtual void timeout();
 
 };

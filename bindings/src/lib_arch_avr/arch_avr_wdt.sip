@@ -27,7 +27,6 @@ struct ArchAVR_WDTConfig {
 %End
 
     unsigned long clock_frequency;
-    UnsignedLongVector delays;
 
     reg_addr_t        reg_wdt;
     regbit_compound_t rbc_delay;

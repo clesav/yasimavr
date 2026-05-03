@@ -1,6 +1,6 @@
 # test_avr_wdt.py
 #
-# Copyright 2024-2025 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2024-2026 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -44,7 +44,7 @@ def test_avr_watchdog_interrupt(bench):
     WDTCSR.WDIE = 1
     CPU.SREG.I = 0
     assert not WDTCSR.WDIF
-    bench.sim_advance(16000) #16ms
+    bench.sim_advance(16001) #16ms
     assert WDTCSR.WDIF
     assert WDTCSR.WDIE
     assert not MCUCSR.WDRF
@@ -101,7 +101,7 @@ def test_avr_watchdog_timeout(bench):
         WDTCSR.WDP = 0x00
         WDTCSR.WDIE = 1
 
-    bench.sim_advance(15001)
+    bench.sim_advance(16001)
     assert WDTCSR.WDIF
 
     bench.sim_advance(1)
@@ -109,5 +109,5 @@ def test_avr_watchdog_timeout(bench):
     assert not WDTCSR.WDIE
     assert WDTCSR.WDE
 
-    bench.sim_advance(16000)
+    bench.sim_advance(16001)
     assert MCUSR.WDRF
