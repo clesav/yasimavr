@@ -80,7 +80,6 @@ def _get_slpctrl_builder():
     return PeripheralBuilder(_corelib.SleepController, cfg_builder)
 
 
-
 #========================================================================================
 #Fuses controller configuration
 
@@ -398,15 +397,8 @@ def _get_usi_builder():
 #========================================================================================
 #Watchdog timer configuration
 
-def _wdt_convertor(cfg, attr, yml_val, per_desc):
-    if attr == 'delays':
-        cfg.delays = list(yml_val)
-    else:
-        raise Exception('Converter not implemented for ' + attr)
-
-
 def _get_wdt_builder():
-    cfg_builder = PeripheralConfigBuilder(_archlib.ArchAVR_WDTConfig, _wdt_convertor)
+    cfg_builder = PeripheralConfigBuilder(_archlib.ArchAVR_WDTConfig)
     return PeripheralBuilder(_archlib.ArchAVR_WDT, cfg_builder)
 
 

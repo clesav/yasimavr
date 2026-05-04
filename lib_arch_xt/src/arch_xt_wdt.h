@@ -1,7 +1,7 @@
 /*
  * arch_xt_wdt.h
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -25,7 +25,7 @@
 #define __YASIMAVR_XT_WDT_H__
 
 #include "arch_xt_globals.h"
-#include "ioctrl_common/sim_wdt.h"
+#include "core/sim_peripheral.h"
 
 YASIMAVR_BEGIN_NAMESPACE
 
@@ -39,8 +39,6 @@ struct ArchXT_WDTConfig {
 
     /// Frequency in Hertz of the clock used for the Watchdog Timer
     unsigned long clock_frequency;
-    /// Watchdog timer delays
-    std::vector<unsigned long> delays;
     /// Base address for the peripheral I/O registers
     reg_addr_t reg_base;
 
@@ -50,22 +48,27 @@ struct ArchXT_WDTConfig {
 /**
    \brief Implementation of a Watchdog Timer for XT core series
  */
-class AVR_ARCHXT_PUBLIC_API ArchXT_WDT : public WatchdogTimer {
+class AVR_ARCHXT_PUBLIC_API ArchXT_WDT : public Peripheral {
 
 public:
 
     explicit ArchXT_WDT(const ArchXT_WDTConfig& config);
 
     virtual bool init(Device& device) override;
+    virtual void reset(int flags) override;
+    virtual bool ctlreq(ctlreq_id_t req, ctlreq_data_t* data) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
-
-protected:
-
-    virtual void timeout() override;
 
 private:
 
     const ArchXT_WDTConfig& m_config;
+    BoundFunctionCycleTimer<ArchXT_WDT> m_wdt_timer;
+    BoundFunctionCycleTimer<ArchXT_WDT> m_wdr_sync_timer;
+    bool m_first_wdr;
+
+    std::tuple<cycle_count_t, cycle_count_t> calculate_delays(uint8_t reg_value);
+    void timeout();
+    void wdr_sync_timer_next();
 
 };
 

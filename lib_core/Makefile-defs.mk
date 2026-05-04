@@ -42,7 +42,6 @@ CPP_SRCS := \
 	src/ioctrl_common/sim_twi.cpp \
 	src/ioctrl_common/sim_uart.cpp \
 	src/ioctrl_common/sim_vref.cpp \
-	src/ioctrl_common/sim_wdt.cpp \
 	src/sim/sim_loop.o
 
 OBJS := \
@@ -69,7 +68,6 @@ OBJS := \
 	$(BUILD_DIR)/ioctrl_common/sim_twi.o \
 	$(BUILD_DIR)/ioctrl_common/sim_uart.o \
 	$(BUILD_DIR)/ioctrl_common/sim_vref.o \
-	$(BUILD_DIR)/ioctrl_common/sim_wdt.o \
 	$(BUILD_DIR)/sim/sim_loop.o
 
 CPP_DEPS := \
@@ -96,7 +94,6 @@ CPP_DEPS := \
 	$(BUILD_DIR)/ioctrl_common/sim_twi.d \
 	$(BUILD_DIR)/ioctrl_common/sim_uart.d \
 	$(BUILD_DIR)/ioctrl_common/sim_vref.d \
-	$(BUILD_DIR)/ioctrl_common/sim_wdt.d \
 	$(BUILD_DIR)/sim/sim_loop.d
 
 CPP_INCS := -I$(BUILD_DIR)

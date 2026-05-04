@@ -153,9 +153,9 @@ peripherals:
             iv_rtc: RTC_CNT
             iv_pit: RTC_PIT
 
-    # WDT: not ready
-        # file: ArchXT_timers.yml
-        # base: 0x0100
+    WDT:
+        file: ArchXT_timers.yml
+        base: 0x0100
 
     VREF:
         class: VREF_tiny0

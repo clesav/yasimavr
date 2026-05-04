@@ -1,6 +1,6 @@
 # YAML configuration file for AVR XT core architecture
 #
-# Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -418,7 +418,10 @@ WDT:
           offset: 0x01
           protected: CCP
           fields:
-            SYNCBUSY: { kind: BIT, pos: 0, readonly: yes }
+            SYNCBUSY: { kind: BIT, pos: 0, readonly: yes, supported: no }
             LOCK: { kind: BIT, pos: 7 }
+
+    config:
+        clock_frequency: 1024
 
 #========================================================================================

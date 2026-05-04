@@ -73,7 +73,6 @@ YASIMAVR_USING_NAMESPACE
 %Include ioctrl_common/twi.sip
 %Include ioctrl_common/uart.sip
 %Include ioctrl_common/vref.sip
-%Include ioctrl_common/wdt.sip
 
 //=======================================================================================
 
