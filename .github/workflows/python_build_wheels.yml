@@ -89,6 +89,9 @@ jobs:
     - uses: actions/checkout@v6
 
     - uses: actions/download-artifact@v8
+      with:
+        name: sdist
+        path: sdist
     
     - name: display files
       run: ls -R
