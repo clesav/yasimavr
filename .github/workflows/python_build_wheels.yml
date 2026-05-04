@@ -92,9 +92,6 @@ jobs:
       with:
         name: sdist
         path: sdist
-    
-    - name: display files
-      run: ls -R
 
     - name: Set up Python
       uses: actions/setup-python@v6
