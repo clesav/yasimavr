@@ -33,6 +33,20 @@ public:
 };
 
 
+struct ArchAVR_IntCtrlConfig {
+%TypeHeaderCode
+#include "arch_avr_misc.h"
+%End
+
+    unsigned int vector_count;
+    unsigned int vector_size;
+    reg_addr_t reg_control;
+    bitspec_t bs_ivsel;
+    bitspec_t bs_ivce;
+
+};
+
+
 class ArchAVR_IntCtrl : public InterruptController /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_avr_misc.h"
@@ -40,7 +54,7 @@ class ArchAVR_IntCtrl : public InterruptController /NoDefaultCtors/ {
 
 public:
 
-    ArchAVR_IntCtrl(unsigned int, unsigned int);
+    ArchAVR_IntCtrl(const ArchAVR_IntCtrlConfig& /KeepReference/);
 
 };
 

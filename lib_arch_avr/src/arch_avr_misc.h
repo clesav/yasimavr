@@ -50,26 +50,39 @@ public:
 
 
 //=======================================================================================
+
+struct ArchAVR_IntCtrlConfig {
+
+    unsigned int vector_count;
+    unsigned int vector_size;
+    reg_addr_t reg_control;
+    bitspec_t bs_ivsel;
+    bitspec_t bs_ivce;
+
+};
+
 /**
    \brief Implementation of a interrupt controller for AVR series
  */
-class AVR_ARCHAVR_PUBLIC_API ArchAVR_IntCtrl : public InterruptController, SignalHook {
+class AVR_ARCHAVR_PUBLIC_API ArchAVR_IntCtrl : public InterruptController {
 
 public:
 
-    ArchAVR_IntCtrl(unsigned int vector_count, unsigned int vector_size);
+    ArchAVR_IntCtrl(const ArchAVR_IntCtrlConfig& config);
 
     virtual bool init(Device& device) override;
-    virtual void raised(const signal_data_t& sigdata, int hooktag) override;
-
-protected:
-
-    virtual IRQ_t get_next_irq() const override;
+    void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data);
 
 private:
 
-    unsigned int m_vector_size;
+    const ArchAVR_IntCtrlConfig& m_config;
     MemorySectionManager* m_sections;
+    BoundFunctionCycleTimer<ArchAVR_IntCtrl> m_lock_timer;
+    BoundFunctionSignalHook<ArchAVR_IntCtrl> m_section_hook;
+
+    virtual IRQ_t get_next_irq() const override;
+    void lock_timeout();
+    void section_raised(const signal_data_t& sigdata, int hooktag);
 
 };
 

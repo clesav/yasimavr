@@ -68,6 +68,11 @@ CPUINT:
             IVCE: { kind: BIT, pos: 0 }
             IVSEL: { kind: BIT, pos: 1 }
 
+    config:
+        reg_control: MCUCR
+        bs_ivsel: MCUCR/IVSEL
+        bs_ivce: MCUCR/IVCE
+
 #========================================================================================
 FUSES_48:
     config:

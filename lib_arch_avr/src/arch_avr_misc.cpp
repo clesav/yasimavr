@@ -38,16 +38,20 @@ ArchAVR_VREF::ArchAVR_VREF(double band_gap)
 
 //=======================================================================================
 
-ArchAVR_IntCtrl::ArchAVR_IntCtrl(unsigned int vector_count, unsigned int vector_size)
-:InterruptController(vector_count)
-,m_vector_size(vector_size)
+ArchAVR_IntCtrl::ArchAVR_IntCtrl(const ArchAVR_IntCtrlConfig& config)
+:InterruptController(config.vector_count)
+,m_config(config)
 ,m_sections(nullptr)
+,m_lock_timer(*this, &ArchAVR_IntCtrl::lock_timeout)
+,m_section_hook(*this, &ArchAVR_IntCtrl::section_raised)
 {}
 
 
 bool ArchAVR_IntCtrl::init(Device& device)
 {
     bool status = InterruptController::init(device);
+
+    add_ioreg(m_config.reg_control, m_config.bs_ivce | m_config.bs_ivsel);
 
     //Obtain the pointer to the flash section manager
     ctlreq_data_t req;
@@ -56,9 +60,26 @@ bool ArchAVR_IntCtrl::init(Device& device)
     m_sections = req.data.as_ptr<MemorySectionManager>();
 
     if (m_sections)
-        m_sections->signal().connect(*this);
+        m_sections->signal().connect(m_section_hook);
 
     return status;
+}
+
+
+void ArchAVR_IntCtrl::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
+{
+    if (data.value & m_config.bs_ivce) {
+        logger().dbg("IVCE set, IVT change enabled.");
+        if (!m_lock_timer.scheduled())
+            device()->cycle_manager()->delay(m_lock_timer, 4);
+    }
+    else if (m_lock_timer.scheduled()) {
+        device()->cycle_manager()->cancel(m_lock_timer);
+        clear_ioreg(m_config.reg_control, m_config.bs_ivce);
+        update_irq();
+        device()->core().start_interrupt_inhibit(1);
+        logger().dbg("IVT set to %s section", (data.value & m_config.bs_ivsel) ? "Boot" : "App");
+    }
 }
 
 /**
@@ -72,8 +93,13 @@ InterruptController::IRQ_t ArchAVR_IntCtrl::get_next_irq() const
         return InterruptController::NO_INTERRUPT;
 
     for (int_vect_t i = 0; i < intr_count(); ++i) {
-        if (interrupt_raised(i))
-            return { i, i * m_vector_size, false };
+        if (interrupt_raised(i)) {
+            flash_addr_t vector_addr = i * m_config.vector_size;
+            //If IVSEL is set, move to the start of the boot section
+            if (test_ioreg(m_config.reg_control, m_config.bs_ivsel))
+                vector_addr += m_sections->section_start(ArchAVR_Device::Section_Boot) * m_sections->page_size();
+            return { i, vector_addr, false };
+        }
     }
 
     return InterruptController::NO_INTERRUPT;
@@ -83,10 +109,16 @@ InterruptController::IRQ_t ArchAVR_IntCtrl::get_next_irq() const
    Implementation of the signal hook. On a section change, the IRQs need to updated to take into account
    the access flag IntDisabled.
  */
-void ArchAVR_IntCtrl::raised(const signal_data_t& sigdata, int)
+void ArchAVR_IntCtrl::section_raised(const signal_data_t& sigdata, int)
 {
     if (sigdata.sigid == MemorySectionManager::Signal_Enter)
         update_irq();
+}
+
+
+void ArchAVR_IntCtrl::lock_timeout()
+{
+    clear_ioreg(m_config.reg_control, m_config.bs_ivce);
 }
 
 
