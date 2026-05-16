@@ -568,19 +568,21 @@ void ArchAVR_NVM::ee_timer_next()
 }
 
 
-void ArchAVR_NVM::interrupt_ack_handler(int_vect_t vector)
+bool ArchAVR_NVM::interrupt_ack_handler(int_vect_t vector)
 {
     if (vector == m_config.iv_spm_ready) {
-        //If the SPM is idle and the interrupt is still enabled, re-raise it
+        //If the SPM is idle and the interrupt is still enabled, keep it raised
         if (m_spm_state <= State_Pending && test_ioreg(m_config.reg_spm_ctrl, m_config.bs_spm_inten))
-            raise_interrupt(vector);
+            return false;
     }
 
     else if (vector == m_config.iv_ee_ready) {
-        //If the EEPROM is idle and the interrupt is still enabled, re-raise it
+        //If the EEPROM is idle and the interrupt is still enabled, keep it raised
         if (m_ee_state <= State_Pending && test_ioreg(m_config.rb_ee_inten))
-            raise_interrupt(vector);
+            return false;
     }
+
+    return true;
 }
 
 

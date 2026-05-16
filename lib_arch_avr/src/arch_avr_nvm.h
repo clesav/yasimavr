@@ -95,7 +95,7 @@ public:
     virtual void reset(int flags) override;
     virtual bool ctlreq(ctlreq_id_t req, ctlreq_data_t* data) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
-    virtual void interrupt_ack_handler(int_vect_t vector) override;
+    virtual bool interrupt_ack_handler(int_vect_t vector) override;
 
 private:
 

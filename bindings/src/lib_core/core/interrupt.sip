@@ -83,7 +83,7 @@ public:
     void raise_interrupt(int_vect_t) const;
     void cancel_interrupt(int_vect_t) const;
     bool interrupt_raised(int_vect_t) const;
-    virtual void interrupt_ack_handler(int_vect_t);
+    virtual bool interrupt_ack_handler(int_vect_t) = 0;
 
 };
 
@@ -125,7 +125,7 @@ public:
 private:
 
     virtual bool flag_raised() const final;
-    virtual void interrupt_ack_handler(int_vect_t) final;
+    virtual bool interrupt_ack_handler(int_vect_t) final;
     virtual uint8_t ioreg_read_handler(reg_addr_t, uint8_t) final;
     virtual uint8_t ioreg_peek_handler(reg_addr_t, uint8_t) final;
     virtual void ioreg_write_handler(reg_addr_t, const ioreg_write_t&) final;

@@ -109,13 +109,13 @@ def test_avr_intr_order(bench):
 
     qhook = QueuedSignalHook(bench.irq_sig)
     #Raise the PORTA (6), PORTD (20) and PORTC (24) interrupts
-    _set_irq_state(bench, 24, True)
+    _set_irq_state(bench, 23, True)
     _set_irq_state(bench, 20, True)
     _set_irq_state(bench, 3, True)
     qhook.clear()
     bench.sim_advance(1000)
     #Extract the aknowledgment signals and check the acknowledging order
-    assert _extract_acks(qhook) == [ 3, 20, 24 ]
+    assert _extract_acks(qhook) == [ 3, 20, 23 ]
 
 
 def test_avr_intr_reset_vector(bench):

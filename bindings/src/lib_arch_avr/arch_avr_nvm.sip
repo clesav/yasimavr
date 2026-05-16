@@ -61,6 +61,10 @@ public:
 
     ArchAVR_NVM(const ArchAVR_NVMConfig&);
 
+private:
+
+    virtual bool interrupt_ack_handler(int_vect_t);
+
 };
 
 
