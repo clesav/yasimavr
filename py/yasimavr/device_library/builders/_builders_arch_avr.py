@@ -35,15 +35,8 @@ from ._base import (PeripheralBuilder, PeripheralConfigBuilder,
 #Intctrl register configuration
 
 def _get_intctrl_builder():
-    def _get_intctrl_config(per_desc):
-        return (len(per_desc.device.interrupt_map.vectors),
-                per_desc.device.interrupt_map.vector_size)
-
-    class builder (PeripheralBuilder):
-        def _get_build_args(self, per_name, per_config):
-            return per_config
-
-    return builder(_archlib.ArchAVR_IntCtrl, _get_intctrl_config)
+    cfg_builder = PeripheralConfigBuilder(_archlib.ArchAVR_IntCtrlConfig)
+    return PeripheralBuilder(_archlib.ArchAVR_IntCtrl, cfg_builder)
 
 
 #========================================================================================

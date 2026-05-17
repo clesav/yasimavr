@@ -233,7 +233,14 @@ public:
     void raise_interrupt(int_vect_t vector) const;
     void cancel_interrupt(int_vect_t vector) const;
     bool interrupt_raised(int_vect_t vector) const;
-    virtual void interrupt_ack_handler(int_vect_t vector);
+
+    /**
+       Callback method called when a vector has been ACK'ed by the CPU.
+       (i.e. the CPU is about to jump to the corresponding vector table entry)
+       The returned boolean determines the behaviour once the CPU has jumped to the vector.
+       \return true if the interrupt should be cleared, false if it should stay raised
+    */
+    virtual bool interrupt_ack_handler(int_vect_t vector) = 0;
 
     //Disable copy semantics
     InterruptHandler(const InterruptHandler&) = delete;
@@ -266,8 +273,8 @@ public:
 
     bool raised() const;
 
-    //Override to cancel the interrupt on ACK if clear_on_ack is true
-    virtual void interrupt_ack_handler(int_vect_t vector) override;
+    //Override, returns the value of clear_on_ack
+    virtual bool interrupt_ack_handler(int_vect_t vector) override;
 
 protected:
 
@@ -331,7 +338,7 @@ private:
 
     virtual bool flag_raised() const override final;
     //Override to clear the flag on ACK if clear_on_ack is true
-    virtual void interrupt_ack_handler(int_vect_t vector) override final;
+    virtual bool interrupt_ack_handler(int_vect_t vector) override final;
 
     virtual uint8_t ioreg_read_handler(reg_addr_t addr, uint8_t value) override final;
     virtual uint8_t ioreg_peek_handler(reg_addr_t addr, uint8_t value) override final;

@@ -49,4 +49,8 @@ public:
 
     ArchAVR_WDT(const ArchAVR_WDTConfig& /KeepReference/);
 
+private:
+
+    virtual bool interrupt_ack_handler(int_vect_t);
+
 };

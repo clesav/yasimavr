@@ -166,6 +166,7 @@ void Device::reset(int reset_flag)
         per->reset(m_reset_flags);
 
     m_core.m_pc = reset_vector();
+    m_logger.dbg("Program Counter at reset = 0x%06x", m_core.m_pc);
 
     if (m_state >= State_Running && m_state < State_Done)
         m_state = (m_reset_flags & Reset_Halt) ? State_Halted : State_Running;

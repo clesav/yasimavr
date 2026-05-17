@@ -184,12 +184,13 @@ cycle_count_t ArchAVR_WDT::wdt_timeout(cycle_count_t when)
 }
 
 
-void ArchAVR_WDT::interrupt_ack_handler(int_vect_t vector)
+bool ArchAVR_WDT::interrupt_ack_handler(int_vect_t vector)
 {
     //Datasheet: "Executing the corresponding interrupt vector will clear WDIE and WDIF"
     clear_ioreg(m_config.reg_wdt, m_config.bs_int_flag);
     clear_ioreg(m_config.reg_wdt, m_config.bs_int_enable);
     reschedule_timer();
+    return true;
 }
 
 

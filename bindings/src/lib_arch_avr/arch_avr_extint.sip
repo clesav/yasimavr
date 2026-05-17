@@ -72,4 +72,8 @@ public:
 
     ArchAVR_ExtInt(const ArchAVR_ExtIntConfig& /KeepReference/);
 
+private:
+
+    virtual bool interrupt_ack_handler(int_vect_t);
+
 };

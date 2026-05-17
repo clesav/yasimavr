@@ -72,6 +72,7 @@ bool InterruptController::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
         }
         else {
 
+            logger().dbg("Registering vector %d", vector);
             InterruptHandler* t = data->data.as_ptr<InterruptHandler>();
             if (t) {
                 m_interrupts[vector].used = true;
@@ -133,10 +134,12 @@ void InterruptController::cpu_ack_irq()
 */
 void InterruptController::cpu_ack_irq(int_vect_t vector)
 {
-    m_interrupts[vector].raised = false;
-
+    bool clear = true;
     if (m_interrupts[vector].handler)
-        m_interrupts[vector].handler->interrupt_ack_handler(vector);
+        clear = m_interrupts[vector].handler->interrupt_ack_handler(vector);
+
+    if (clear)
+        m_interrupts[vector].raised = false;
 
     m_signal.raise(Signal_StateChange, State_Acknowledged, vector);
 }
@@ -233,14 +236,6 @@ bool InterruptHandler::interrupt_raised(int_vect_t vector) const
         return false;
 }
 
-/**
-   Callback method called when a vector has been ACK'ed by the CPU.
-   (i.e. the CPU is about to jump to the corresponding vector table entry)
-   \n The default implementation does nothing.
-*/
-void InterruptHandler::interrupt_ack_handler(int_vect_t vector)
-{}
-
 
 //========================================================================================
 
@@ -313,11 +308,10 @@ int AbstractInterruptFlag::update()
     }
 }
 
-void AbstractInterruptFlag::interrupt_ack_handler(int_vect_t vector)
+bool AbstractInterruptFlag::interrupt_ack_handler(int_vect_t)
 {
     //If the clear-on-ack is enabled, cancel the interrupt
-    if (m_clr_on_ack)
-        cancel_interrupt(m_vector);
+    return m_clr_on_ack;
 }
 
 
@@ -403,12 +397,13 @@ bool InterruptFlag::flag_raised() const
 }
 
 
-void InterruptFlag::interrupt_ack_handler(int_vect_t vector)
+bool InterruptFlag::interrupt_ack_handler(int_vect_t vector)
 {
-    AbstractInterruptFlag::interrupt_ack_handler(vector);
     //If the clear-on-ack is enabled, clear the flag field
     if (clear_on_ack())
         m_flag_reg->set(m_rm_flag.mask.clear_from(m_flag_reg->value()));
+
+    return AbstractInterruptFlag::interrupt_ack_handler(vector);
 }
 
 

@@ -142,7 +142,7 @@ void ArchAVR_ExtInt::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& d
 }
 
 
-void ArchAVR_ExtInt::interrupt_ack_handler(int_vect_t vector)
+bool ArchAVR_ExtInt::interrupt_ack_handler(int_vect_t vector)
 {
     //First, iterate over the extint vector to find the one just acked.
     //we need to check if the trigger condition is still present
@@ -156,10 +156,10 @@ void ArchAVR_ExtInt::interrupt_ack_handler(int_vect_t vector)
             bool enabled = test_ioreg(m_config.rb_extint_mask.bit(i));
             if (pinmode != ExtIntMode::Low || lvl || !enabled) {
                 clear_ioreg(m_config.rb_extint_flag.bit(i));
+                return true;
             } else {
-                raise_interrupt(vector);
+                return false;
             }
-            return;
         }
     }
 
@@ -167,9 +167,11 @@ void ArchAVR_ExtInt::interrupt_ack_handler(int_vect_t vector)
     for (unsigned int i = 0; i < m_config.pc_ints.size(); ++i) {
         if (vector == m_config.pc_ints[i].vector) {
             clear_ioreg(m_config.rb_pcint_flag.bit(i));
-            return;
+            return true;
         }
     }
+
+    return true;
 }
 
 
