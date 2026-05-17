@@ -72,6 +72,7 @@ bool InterruptController::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
         }
         else {
 
+            logger().dbg("Registering vector %d", vector);
             InterruptHandler* t = data->data.as_ptr<InterruptHandler>();
             if (t) {
                 m_interrupts[vector].used = true;
