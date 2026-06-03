@@ -8,10 +8,12 @@ lib_path = '../py/yasimavr/lib'
 core_mock_classes = [
     'AbstractSimLoop',
     'AsyncSimLoop',
+    'Core',
     'Device',
     'DeviceDebugProbe',
     'Signal',
     'SignalHook',
+    'Wire',
 ]
 
 
