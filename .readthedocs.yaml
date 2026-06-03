@@ -6,7 +6,7 @@ build:
     python: "3.12"
   jobs:
     pre_build:
-      - cd docs/source && doxygen
+      - cd docs && doxygen
       - cd docs && python make_mock_libs.py
       - cd docs && doxysphinx build source build source/dox/html
 
