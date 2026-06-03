@@ -5,8 +5,8 @@ Yet another simulator for Microchip AVR microcontrollers, inspired from simavr
 ------------------------------------------------------------------------------
 
 `yasimavr` is a simulator for AVR 8-bits microcontrollers.
-It is mainly aimed at the Mega0 and Mega1 series (ATmega80x-160x-320x-480x and others)
-with a possibility to work with the "classic" series. (ATMega48/88/168/328 and others)
+It is mainly aimed at the Mega0 and later XT series (ATmega80x-160x-320x-480x and others)
+with a possibility to work with older series. (ATMega48/88/168/328 and others)
 
 It is composed of 2 layers:
 
@@ -51,6 +51,7 @@ Supported Cores
 The package includes a predefined set of MCU models:
 
 * ATMegaxx8 series (ATMega48/88/168/328)
+* ATTinyx4 series (ATTiny24/44/84)
 * ATMega 0-series (ATMega808/809/1608/1609/3208/3209/4808/4809)
 * ATTiny 0-series (ATTiny202/204/402/404/406/804/806/807/1604/1606/1607)
 
