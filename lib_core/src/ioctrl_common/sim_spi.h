@@ -1,7 +1,7 @@
 /*
  * sim_spi.h
  *
- *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -42,9 +42,9 @@ YASIMAVR_BEGIN_NAMESPACE
  */
 
 /**
-   Request to transfer a byte bypassing . A byte is directly
+   Request to transfer a byte. A byte is directly
    dropped into the RX buffer and a byte popped from the TX buffer of the SPI interface
-   with bypassing the actual line shifting. This is meant for debugging purposes.
+   with bypassing the actual line bit shifting. This is meant for debugging purposes.
     - In argument, data is a 8-bits frame to be pushed to the RX buffer.
     - data is returned set to a 8-bits frame popped from the TX buffer.
  */
@@ -56,8 +56,19 @@ YASIMAVR_BEGIN_NAMESPACE
 
 //=======================================================================================
 
+/**
+   \ingroup api_spi
+   \brief Generic Serial Peripheral Interface definitions
+
+   Definition of enumerations, configuration structures and signal Ids used for
+   Serial Peripheral Interface models, common to all architectures.
+   \sa https://en.wikipedia.org/wiki/Serial_Peripheral_Interface
+ */
 namespace SPI {
 
+/**
+   Enum definition for the shifting modes
+ */
 enum SerialMode {
     Mode0 = 0,
     Mode1,
@@ -65,13 +76,17 @@ enum SerialMode {
     Mode3,
 };
 
-
+/**
+   Enum definition for the shifting bit orders
+ */
 enum BitOrder {
     MSBFirst,
     LSBFirst
 };
 
-
+/**
+   Enum definition for the wires used for a SPI bus
+ */
 enum Line {
     Clock = 0,
     MISO,
@@ -79,7 +94,13 @@ enum Line {
     Select,
 };
 
-
+/**
+   \brief An endpoint connected to a SPI bus.
+   Represents a device connected to a SPI bus model and acting as a host or client.
+   This is primarily intended to help simulate peripherals connected to the MCU model.
+   Note that this class only implements the logic require to shift bytes across the SPI bus
+   in all modes or bit orders.
+ */
 class AVR_CORE_PUBLIC_API EndPoint {
 
 public:
@@ -104,7 +125,17 @@ protected:
     bool active() const;
 
     virtual void frame_completed();
+
+    /**
+     * Virtual function called by the internal logic to write to the DATA OUT line
+     * \param level Line level true=HIGH, false=LOW
+     */
     virtual void write_data_output(bool level) = 0;
+
+    /**
+     * Virtual function called by the internal logic to read the DATA IN line
+     * \return level Line level true=HIGH, false=LOW
+     */
     virtual bool read_data_input() = 0;
 
     void set_shift_clock(bool state);
@@ -135,6 +166,10 @@ inline BitOrder EndPoint::bit_order() const
     return m_bit_order;
 }
 
+/**
+ * Return the content of the shift register.
+ * When called after a transfer, it contains the received byte.
+ */
 inline uint8_t EndPoint::shift_data() const
 {
     return m_shifter;
@@ -150,6 +185,7 @@ inline bool EndPoint::shift_clock() const
     return m_shift_clock;
 }
 
+///Returns true when a complete byte has been transferred/received
 inline bool EndPoint::complete_frame() const
 {
     return !m_step;

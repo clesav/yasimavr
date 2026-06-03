@@ -1,6 +1,6 @@
 # spi.py
 #
-# Copyright 2025 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2025-2026 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -19,7 +19,7 @@
 
 '''
 This module defines SPISimpleClient and SPISimpleHost which are simple
-instance of SPI devices that can be used for SPI parts simulation.
+instances of SPI devices that can be used for SPI parts simulation.
 '''
 
 import collections
@@ -60,16 +60,19 @@ class SPISimpleClient(SPI.EndPoint):
         self.set_bit_order(bitorder)
 
 
-    def _get_enabled(self):
+    @property
+    def enabled(self):
+        '''Enabling property
+        '''
         return self._enabled
 
+
+    @enabled.setter
     def _set_enabled(self, e):
         self._enabled = e
         if not e:
             self.set_active(False)
             self._update_miso()
-
-    enabled = property(_get_enabled, _set_enabled)
 
 
     def _clock_hook_raised(self, sigdata, _):
@@ -85,8 +88,9 @@ class SPISimpleClient(SPI.EndPoint):
             self._update_miso()
 
 
-    #Override of EndPoint
     def write_data_output(self, level):
+        '''Override of EndPoint
+        '''
         self._miso_level = level
         self._update_miso()
 
@@ -98,12 +102,15 @@ class SPISimpleClient(SPI.EndPoint):
             self._miso_line.set_state('Z')
 
 
-    #Override of EndPoint
     def read_data_input(self):
+        '''Override of EndPoint
+        '''
         return self._mosi_line.digital_state()
 
 
     def frame_completed(self):
+        '''Override of EndPoint
+        '''
         self._mosi_frame = self.shift_data()
 
 
@@ -121,34 +128,41 @@ class SPISimpleClient(SPI.EndPoint):
 
     @property
     def clock_line(self):
+        '''Wire object representing the SPI clock line
+        '''
         return self._clock_line
 
     @property
     def miso_line(self):
+        '''Wire object representing the SPI MISO line
+        '''
         return self._miso_line
 
     @property
     def mosi_line(self):
+        '''Wire object representing the SPI MOSI line
+        '''
         return self._mosi_line
 
     @property
     def select_line(self):
+        '''Wire object representing the SPI chip select line
+        '''
         return self._select_line
 
 
 class SPISimpleHost(SPI.EndPoint):
-    '''Simple implementation of a SPI host
-    It features a TX FIFO and a RX FIFO to queue frames
+    '''Simple implementation of a SPI host.
+    It features a TX FIFO and a RX FIFO to queue frames.
     Note that it doesn't manage the chip select line.
+
+    :param CycleManager cycle_manager: instance associated with the simulation loop
+    :param int bitdelay: duration of a bit in simulation cycles
+    :param SPI.SerialMode mode: SPI mode (one of SPI.SerialMode enum values)
+    :param SPI.BitOrder bitorder: Bit order mode (one of SPI.BitOrder enum values)
     '''
 
     def __init__(self, cycle_manager, bitdelay, mode=SPI.SerialMode.Mode0, bitorder=SPI.BitOrder.MSBFirst):
-        '''Initialisation of a SimpleHost
-        :param cycle_manager CycleManager instance associated with the simulation loop
-        :param bitdelay duration of a bit in simulation cycles
-        :param mode SPI mode (one of SPI.SerialMode enum values)
-        :param bitorder Bit order mode (one of SPI.BitOrder enum values)
-        '''
         super().__init__()
         self._cycle_manager = cycle_manager
         self.set_serial_mode(mode)
@@ -169,15 +183,17 @@ class SPISimpleHost(SPI.EndPoint):
         self._timer = _corelib.CallableCycleTimer(self._next_bit)
 
 
-    #Override of EndPoint
     def write_data_output(self, state):
+        '''Override of EndPoint
+        '''
         if state == _WireState.Floating:
             state = _WireState.Low
         self._mosi_line.set_state(state)
 
 
-    #Override of EndPoint
     def read_data_input(self):
+        '''Override of EndPoint
+        '''
         return self._miso_line.digital_state()
 
 
@@ -186,8 +202,9 @@ class SPISimpleHost(SPI.EndPoint):
         self._clock_line.set_state('H' if level else 'L')
 
 
-    #Override of EndPoint. Push the received frame into the RX buffer
     def frame_completed(self):
+        '''Override of EndPoint
+        '''
         self._miso_fifo.append(self.shift_data())
 
 
@@ -224,6 +241,8 @@ class SPISimpleHost(SPI.EndPoint):
         '''Start a transfer of a SPI frame
         If a transfer is already in progress, the frame is added to the
         TX FIFO buffer and transmitted after the current one.
+
+        :param int mosi_frame: 8-bits data frame to send
         '''
 
         if self.active():
@@ -252,10 +271,7 @@ class SPISimpleHost(SPI.EndPoint):
 
     def cancel(self):
         '''Cancel the current transfer.
-        If a transfer is already in progress, the frame is added to the
-        TX FIFO buffer and transmitted after the current one.
         '''
-
         if self.active():
             self._cycle_manager.cancel(self._timer)
             self.set_active(False)
@@ -277,12 +293,18 @@ class SPISimpleHost(SPI.EndPoint):
 
     @property
     def clock_line(self):
+        '''Wire object representing the SPI clock line
+        '''
         return self._clock_line
 
     @property
     def miso_line(self):
+        '''Wire object representing the SPI MISO line
+        '''
         return self._miso_line
 
     @property
     def mosi_line(self):
+        '''Return the last frame received.
+        '''
         return self._mosi_line

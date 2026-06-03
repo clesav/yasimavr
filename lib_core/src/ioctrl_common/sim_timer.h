@@ -197,15 +197,15 @@ public:
         Event_Compare = 0x08
     };
 
-    /// Signal Ids raised by this object.
+    /// %Signal Ids raised by this object.
     enum SignalId {
         /**
-           Signal raised on a overflow event, the data is a combination
+           %Signal raised on a overflow event, the data is a combination
            of EventType flags, indicating the type(s) of event.
          */
         Signal_Event,
         /**
-           Signal raised on a Compare Match event. The index indicates which channel.
+           %Signal raised on a Compare Match event. The index indicates which channel.
            No data is carried.
          */
         Signal_CompMatch,

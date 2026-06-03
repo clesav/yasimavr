@@ -80,8 +80,8 @@ private:
 
 /**
    Build a register.
-   \param core_reg set to true if the register is handled by the core. The effect
-   is to bypass read-only/use masks checks
+   \param initial_mask initial mask to set the bit used
+   \param initial_mode bitmode for the bits set in initial_mask
 */
 IORegister::IORegister(bitmask_t initial_mask, BitMode initial_mode)
 :m_value(0)
@@ -125,7 +125,12 @@ void IORegister::add_handler(IORegHandler& handler)
     }
 }
 
-
+/**
+   Add bits to be used in to this register.
+   \param mask bitmask with the bits to used
+   \param mode bitmode for the bits set in mask
+   \note bits already used are not changed even if they are set in mask
+ */
 void IORegister::add_bits(bitmask_t mask, BitMode mode)
 {
     mask &= ~m_use_mask;
@@ -138,7 +143,6 @@ void IORegister::add_bits(bitmask_t mask, BitMode mode)
 
 /**
    CPU read access to the register.
-   The handlers' read callbacks are called then the register value is returned.
  */
 uint8_t IORegister::cpu_read(reg_addr_t addr)
 {
@@ -150,9 +154,6 @@ uint8_t IORegister::cpu_read(reg_addr_t addr)
 
 /**
    CPU write access to the register.
-   The handlers' write callbacks are called.
-   \return true if the read-only rule has been violated, i.e. attempting to write
-   a read-only or unused bit with '1'.(temporary removed)
  */
 void IORegister::cpu_write(reg_addr_t addr, uint8_t value)
 {

@@ -1,6 +1,6 @@
 # twi.py
 #
-# Copyright 2022-2025 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2022-2026 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -31,6 +31,10 @@ __all__ = ['TWI', 'TWISimpleClient']
 
 class TWISimpleClient(TWI.Client):
     '''Simple TWI client used to emulate peripheral IC such as eeproms
+
+    :param int address: 7-bits TWI address for the client
+
+    .. note:: See example "uno_lcd" for a implementation of a TWI client 
     '''
 
     def __init__(self, address):
@@ -57,8 +61,9 @@ class TWISimpleClient(TWI.Client):
             self.line_state_changed(line, value)
 
 
-    #Client override
     def set_line_state(self, line, state):
+        '''TWI.Client override
+        '''
         if line == TWI.Line.Clock:
             self._scl_wire.set_state('U' if state else 'L')
         else:
@@ -67,11 +72,15 @@ class TWISimpleClient(TWI.Client):
 
     @property
     def scl_wire(self):
+        '''Wire object representing the SCL line
+        '''
         return self._scl_wire
 
 
     @property
     def sda_wire(self):
+        '''Wire object representing the SDA line
+        '''
         return self._sda_wire
 
 
@@ -80,7 +89,10 @@ class TWISimpleClient(TWI.Client):
         Should be reimplemented to process the provided data
         and return True for ACK or False for NACK.
         The handler is called once for each byte being written
-        by the host.'''
+        by the host.
+
+        :param int data: data byte received with the write request
+        '''
         return False
 
 
@@ -95,7 +107,7 @@ class TWISimpleClient(TWI.Client):
 
     @property
     def address(self):
-        '''Default address on the bus'''
+        '''Fixed address on the bus'''
         return self._address
 
 
@@ -106,17 +118,20 @@ class TWISimpleClient(TWI.Client):
 
     def address_match(self, addr_rw):
         '''Test the received address for match.
-        The default implementation returns True for the default address.
+        The default implementation returns True for the fixed address, given at initialisation time.
         It may be overriden to define different match requirements.
-        :param addr_rw : ADDR+RW byte as sent by the host
-        :return True to respond with ACK, False for NACK
+
+        :param int addr_rw: ADDR+RW byte as sent by the host
+        :return: True to respond with ACK, False for NACK
         '''
         return (addr_rw >> 1) == self._address
 
 
     def transfer_start(self, rw):
         '''Generic handler called once at the start of a packet transfer.
-        :param rw RW bit: 1 for Read (client->host), 0 for Write (host->client)
+        May be overriden by sub-classes for specific behaviour.
+
+        :param int rw: RW bit: 1 for Read (client->host), 0 for Write (host->client)
         '''
         pass
 
@@ -124,14 +139,18 @@ class TWISimpleClient(TWI.Client):
     def packet_end(self):
         '''Generic handler called once at the end of a packet, i.e. after
         data has been transferred and responded with a NACK.
+        May be overriden by sub-classes for specific behaviour.
         '''
         pass
 
 
     def transfer_stop(self, ok):
         '''Generic handler called once at the end of a transfer, i.e. when
-        detecting a STOP or a RESTART condition (ok is True), or when the
-        transfer is interrupted by a bus collision. (ok is False)
+        detecting a STOP or a RESTART condition, or when the
+        transfer is interrupted by a bus collision.
+        May be overriden by sub-classes for specific behaviour.
+
+        :param bool ok: True for a STOP or RETART condition, False for a bus collision.
         '''
         pass
 

@@ -1,6 +1,6 @@
 # uart.py
 #
-# Copyright 2022-2025 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2022-2026 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -36,6 +36,10 @@ __all__ = ['UART', 'UART_IO', 'RawUART']
 class UART_IO(io.RawIOBase):
     '''Reimplementation of io.RawIOBase that can connect to a device USART peripheral to exchange data with
     it as if writing to/reading from a file.
+
+    :param Device device: Simulation device model
+    :param int portnum: USART port index, i.e. 0 for USART0, 1 for USART1, etc.
+    :param str mode: file access mode. Valid values are "w", "r", "rw"
     '''
 
     def __init__(self, device, portnum, mode='rw'):
@@ -117,11 +121,16 @@ class UART_IO(io.RawIOBase):
 class RawUART(UART.USART):
     '''Simple reimplementation of a USART base class to allow
     the use of UART lines in simulation models.
-    #Being bitwise, it is compatible with bit banging interfaces and allow
+
+    Being bitwise, it is compatible with bit banging interfaces and it allows
     to visualise the traffic on the data lines.
+
+    :sa class UART.USART for more class members
+
+    :cpp:class: `UART.USART<UART::USART>`
     '''
 
-    def __init__(self, ):
+    def __init__(self):
         super().__init__()
 
         self._lineTXD = _corelib.Wire()
@@ -156,12 +165,21 @@ class RawUART(UART.USART):
 
 
     @property
-    def lineTXD(self): return self._lineTXD
+    def lineTXD(self):
+        '''Wire object representing the TXD line
+        '''
+        return self._lineTXD
 
 
     @property
-    def lineRXD(self): return self._lineRXD
+    def lineRXD(self):
+        '''Wire object representing the RXD line
+        '''
+        return self._lineRXD
 
 
     @property
-    def lineXCK(self): return self._lineXCK
+    def lineXCK(self):
+        '''Wire object representing the XCK line (used only in synchronous modes)
+        '''
+        return self._lineXCK

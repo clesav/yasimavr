@@ -130,8 +130,8 @@ class BitFieldAccessor(_FieldAccessor):
     def write(self, value):
         """Write the value for the field to the I/O register.
 
-        :param value integer (raw value), boolean (True or False) or
-        the 'one' or 'zero' values defined in the field descriptor.
+        :param int value: integer (raw value), boolean (True or False) or
+                          the 'one' or 'zero' values defined in the field descriptor.
         """
 
         if isinstance(value, int):
@@ -147,7 +147,7 @@ class BitFieldAccessor(_FieldAccessor):
     def read(self):
         """Read the value for the field from the I/O register.
 
-        :return the 'one' or 'zero' values defined in the field descriptor.
+        :return: the 'one' or 'zero' values defined in the field descriptor.
         """
         if self.read_raw():
             return self._field.one
@@ -200,7 +200,7 @@ class EnumFieldAccessor(_FieldAccessor):
     def write(self, value):
         """Write the value for the field to the I/O register.
 
-        :param value integer (raw value) or a string from one of the enumeration values
+        :param int value: integer (raw value) or a string from one of the enumeration values
         """
 
         #If the value is an int, we use it directly
@@ -271,19 +271,19 @@ class RegisterAccessor:
 
     @property
     def name(self):
-        """Getter for the register name
+        """Register name
         """
         return '%s.%s' % (self._per.name, self._reg_name)
 
     @property
     def address(self):
-        """Getter for the register address
+        """Register address
         """
         return self._addr
 
     @property
     def size(self):
-        """Getter for the register size
+        """Register size in bytes
         """
         return self._size
 
@@ -331,7 +331,7 @@ class RegisterAccessor:
     def write(self, value):
         """Write a value to the I/O register
 
-        :param value integer (for INT or RAW kinds) or bytes-like object (for ARRAY kind)
+        :param int_or_bytes value: integer (for INT or RAW kinds) or bytes-like object (for ARRAY kind)
 
         Raise an exception if the register is read-only or unsupported
         """
@@ -457,24 +457,24 @@ class PeripheralAccessor:
 
     @property
     def name(self):
-        """Getter for the peripheral name
+        """Peripheral name
         """
         return self._name
 
     @property
     def class_descriptor(self):
-        """Getter for the peripheral class descriptor
+        """Peripheral class descriptor
         """
         return self._per.per_class
 
     @property
     def base(self):
-        """Getter for the peripheral base address (when relevant)
+        """Peripheral base address (when relevant)
         """
         return self._per.reg_base
 
     def signal(self):
-        """Getter for the peripheral signal (or None if not used)
+        """Peripheral signal (or None if not used)
         """
         ok, d = self._probeIO.probe.device().ctlreq(self._per.ctl_id, _corelib.CTLREQ_GET_SIGNAL)
         if ok:
@@ -519,13 +519,13 @@ class CPURegisterAccessor:
 
     @property
     def name(self):
-        """Getter for the register name
+        """Register name
         """
         return 'CPU.' + self._name
 
     @property
     def size(self):
-        """Getter for the register size
+        """Register size
         """
         return 2 if self._name in ('PC', 'X', 'Y', 'Z') else 1
 
@@ -554,7 +554,7 @@ class CPURegisterAccessor:
 
     def write(self, value):
         """Write a value to the I/O register
-        :param value integer (8 or 16-bits depending on the register size)
+        :param int value: integer (8 or 16-bits depending on the register size)
         """
 
         if self._name == 'PC':
@@ -641,6 +641,7 @@ class DeviceAccessor:
         descriptor is obtained from the _descriptor_ field of the device model instance.
 
     :var dict pins: dictionary of the device model pins
+    :var dict nvms: dictionary of all non-volatile memories of the device model
     """
 
     def __init__(self, arg, descriptor=None):
@@ -688,7 +689,7 @@ class DeviceAccessor:
 
     @property
     def descriptor(self):
-        """Getter for the device descriptor
+        """Device descriptor object
         """
         return self._desc
 

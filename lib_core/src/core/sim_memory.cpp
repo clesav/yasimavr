@@ -54,9 +54,7 @@ NonVolatileMemory::NonVolatileMemory(size_t size)
     }
 }
 
-/**
-   Destroy a non-volatile memory.
- */
+
 NonVolatileMemory::~NonVolatileMemory()
 {
     if (m_size) {
@@ -76,10 +74,9 @@ NonVolatileMemory::NonVolatileMemory(const NonVolatileMemory& other)
 /**
    Return the unprogrammed/programmed state of the NVM into a buffer.
    Each byte in the buffer is set a value of 0 for "unprogrammed" and 1 for "programmed".
-   \param buf buffer to copy the NVM programmed state into
    \param base first address to be read
    \param len length of the area to be read, in bytes
-   \return length of data actually read
+   \return bytes indicating if the position is programmed (non-zero) or unprogrammed (zero)
  */
 bytes_view_t NonVolatileMemory::programmed(size_t base, size_t len) const
 {
@@ -121,7 +118,6 @@ void NonVolatileMemory::erase(size_t base, size_t len)
    in the buffer argument is non-zero.
    \param buf buffer for selecting the bytes that should be erased
    \param base first address to be erased
-   \param len length of the area to be erased, in bytes
  */
 void NonVolatileMemory::erase(const bytes_view_t& buf, size_t base)
 {
@@ -258,12 +254,12 @@ void NonVolatileMemory::spm_write(unsigned char v, size_t pos)
 /**
    Selectively write bytes to the NVM and set their state to programmed.
    \param buf data to be copied
-   \param buftag tag for the data in 'buf'.
+   \param bufset tag for the data in 'buf'.
    When a tag byte is non-zero, the corresponding byte in buf is copied into the NVM.
    \param base first address to be written
-   \param len length of data to write
    \note The writing of each byte is performed by a bitwise AND with the previous content of the byte.
-   \note If buftag is set to nullptr, all bytes in 'buf' are copied.
+   \note If bufset is empty, all bytes in 'buf' are copied.
+   \note bufset should be either empty or the same length as buf.
  */
 void NonVolatileMemory::spm_write(const bytes_view_t& buf, const bytes_view_t& bufset, size_t base)
 {

@@ -64,15 +64,15 @@ YASIMAVR_BEGIN_NAMESPACE
 //=======================================================================================
 /**
    \ingroup api_adc
-   \brief Generic ADC definitions
+   \brief Generic %ADC definitions
 
-   Definition of enumerations, configuration structures and signal Ids used for ADC models,
+   Definition of enumerations, configuration structures and signal Ids used for %ADC models,
    common to all architectures.
  */
 namespace ADC {
 
 /**
-   Enum definition for the ADC channel configuration
+   Enum definition for the %ADC channel configuration
  */
 enum Channel {
     /// Single-ended analog input
@@ -90,16 +90,16 @@ enum Channel {
 };
 
 /**
-   Structure for configuring one ADC channel
+   Structure for configuring one %ADC channel
  */
 struct channel_config_t : base_reg_config_t {
     /// Channel type
     Channel type;
-    /// Pin ID used for single-ended channels or as positive input for differential channels
+    /// %Pin ID used for single-ended channels or as positive input for differential channels.
     pin_id_t pin_p;
-    /// Pin ID used as negative input for differential channels, unused for other channel types
+    /// %Pin ID used as negative input for differential channels, unused for other channel types.
     pin_id_t pin_n;
-    /// Used for Channel_AcompRef, index of the ACP peripheral to get the reference value from
+    /// Used for Channel_AcompRef, index of the %ACP peripheral to get the reference value from.
     char per_num;
     /// Measurement gain applied to the voltage value. Must be non-zero.
     unsigned int gain;
@@ -108,7 +108,7 @@ struct channel_config_t : base_reg_config_t {
 enum SignalId {
     /// Raised at the start of a conversion
     Signal_ConversionStarted,
-    /// Raised just before the ADC is sampling the inputs. Last chance to set the analog values
+    /// Raised just before the %ADC is sampling the inputs. Last chance to set the analog values
     /// for it to be taken into account by the current conversion.
     Signal_AboutToSample,
     /// Raised when the conversion is complete and the CPU is notified that the conversion result is ready.

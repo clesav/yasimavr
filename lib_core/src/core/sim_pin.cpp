@@ -96,7 +96,7 @@ void Pin::update_pin_state()
 /**
    Construct a pin driver.
    \param id Driver ID, usually the same ID as the parent peripheral
-   \param pin_count number of pin driven by this driver
+   \param pin_count Number of pin driven by this driver
  */
 PinDriver::PinDriver(ctl_id_t id, pin_index_t pin_count)
 :m_id(id)
@@ -122,7 +122,7 @@ PinDriver::~PinDriver()
 
 /**
    Enable/disable the override for all the pins.
-   \param enabled enable/disable the driver
+   \param enabled Enable/disable the driver
  */
 void PinDriver::set_enabled(bool enabled)
 {
@@ -383,7 +383,7 @@ std::vector<pin_id_t> PinManager::current_mux_pins(ctl_id_t drv_id) const
 }
 
 /**
-   Activate a mux configuration for a pin driver.
+   Activate a mux configuration for all pins of a pin driver.
    \param drv_id ID of the driver
    \param mux_index index of the new configuration to activate. May be 0 i.e. no mux is activated.
  */
@@ -400,7 +400,12 @@ void PinManager::set_current_mux(ctl_id_t drv_id, mux_id_t mux_id)
         set_current_pin_mux(*drv_entry, pin_index, mux_id);
 }
 
-
+/**
+   Activate a mux configuration for one pin of a pin driver.
+   \param drv_id ID of the driver
+   \param pin_index Index of the pin
+   \param mux_index index of the new configuration to activate. May be 0 i.e. no mux is activated.
+ */
 void PinManager::set_current_mux(ctl_id_t drv_id, PinDriver::pin_index_t pin_index, mux_id_t mux_id)
 {
     auto it = m_drivers.find(drv_id);

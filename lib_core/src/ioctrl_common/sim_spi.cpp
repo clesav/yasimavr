@@ -1,7 +1,7 @@
 /*
  * sim_spi.cpp
  *
- *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -52,14 +52,19 @@ void EndPoint::set_bit_order(BitOrder bitorder)
     update_sdo();
 }
 
-
+/**
+ * Set the byte to be transmitted in the next transfer.
+ */
 void EndPoint::set_shift_data(uint8_t frame)
 {
     m_shifter = frame;
     update_sdo();
 }
 
-
+/**
+ * \brief Enable/disable the endpoint
+ * A disabled endpoint will ignore any clock change but still keeps track of them.
+ */
 void EndPoint::set_active(bool active)
 {
     if (active && !m_active)
@@ -85,7 +90,13 @@ void EndPoint::shift_and_sample()
         m_shifter = ((m_shifter >> 1) & 0x7F) | (sampler ? 0x80 : 0);
 }
 
-
+/**
+ * Upper layers should call this function to flip the clock line state.
+ * The logic will shift bit values to the Data IN/Out wires as appropriate
+ * according to the mode and bitorder selected.
+ * Does nothing if the clock state is unchanged or the endpoint is inactive.
+ * \param state new clock line state true=clock rise, false=clock fall
+ */
 void EndPoint::set_shift_clock(bool state)
 {
     if (state == m_shift_clock) return;
@@ -120,5 +131,9 @@ void EndPoint::set_shift_clock(bool state)
     }
 }
 
-
+/**
+ * Virtual callback function called on the last clock edge of a byte shift.
+ * Can be overriden by upper layers to signal when the transmission/reception
+ * of a byte has been completed. The base function does nothing.
+ */
 void EndPoint::frame_completed() {}
