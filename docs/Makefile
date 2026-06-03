@@ -1,6 +1,6 @@
 # Makefile for yasimavr documentation
 #
-# Copyright 2023 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2023-2026 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -44,16 +44,18 @@ endif
 all: sphinx_html_docs
 
 doxygen_docs: FORCE
-	-$(RM_DIR) dox
+	-cd source && $(RM_DIR) dox
 	@doxygen Doxyfile
 
-sphinx_html_docs: doxygen_docs
+doxysphinx_docs: doxygen_docs
+	@doxysphinx build source build source/dox/html
+
+sphinx_html_docs: doxygen_docs doxysphinx_docs
 	@python make_mock_libs.py
-	-cd source/cpp_api && $(RM_FILE) *.*
 	@sphinx-build -M html "source" "build"
 
 clean: FORCE
-	-$(RM_DIR) dox build
-	-cd source/cpp_api && $(RM_FILE) *.*
+	-$(RM_DIR) build
+	-cd source && $(RM_DIR) dox
 
 FORCE:

@@ -18,7 +18,7 @@ sys.path.append(os.path.abspath('../../py'))
 # -- Project information -----------------------------------------------------
 
 project = 'yasimavr'
-copyright = '2023-2024, C.Savergne'
+copyright = '2023-2026, C.Savergne'
 author = 'clesav'
 
 
@@ -29,29 +29,13 @@ author = 'clesav'
 # ones.
 extensions = [
     'breathe',
-    'exhale',
     'sphinx.ext.autodoc',
 ]
 
 breathe_projects = {
-    "yasimavr": "../dox/xml"
+    "yasimavr": "dox/xml"
 }
 breathe_default_project = "yasimavr"
-
-exhale_args = {
-    # These arguments are required
-    "containmentFolder":     "./cpp_api",
-    "rootFileName":          "cpp_api_root.rst",
-    "doxygenStripFromPath":  "..",
-    # Heavily encouraged optional argument (see docs)
-    "rootFileTitle":         "C++ API reference",
-    # Suggested optional arguments
-    "createTreeView":        True,
-    # TIP: if using the sphinx-bootstrap-theme, you need
-    # "treeViewIsBootstrap": True,
-    "exhaleExecutesDoxygen": False,
-    #"exhaleDoxygenStdin":    "INPUT = ../include"
-}
 
 # Tell sphinx what the primary language being documented is.
 primary_domain = 'py'
