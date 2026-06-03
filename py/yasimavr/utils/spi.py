@@ -68,7 +68,7 @@ class SPISimpleClient(SPI.EndPoint):
 
 
     @enabled.setter
-    def _set_enabled(self, e):
+    def enabled(self, e):
         self._enabled = e
         if not e:
             self.set_active(False)

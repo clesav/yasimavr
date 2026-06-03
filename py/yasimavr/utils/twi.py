@@ -112,7 +112,7 @@ class TWISimpleClient(TWI.Client):
 
 
     @address.setter
-    def set_address(self, address):
+    def address(self, address):
         self._address = int(address)
 
 
