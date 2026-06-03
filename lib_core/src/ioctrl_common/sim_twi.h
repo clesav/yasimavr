@@ -1,7 +1,7 @@
 /*
  * sim_twi.h
  *
- *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -35,13 +35,13 @@ YASIMAVR_BEGIN_NAMESPACE
    \file
    \defgroup api_twi Two Wire Interface framework
 
-    This code (tentatively) defines a simulation of a TWI (a.k.a. I2C or SMBus) implementation.
+    This code (tentatively) defines a simulation of a %TWI (a.k.a. I2C or SMBus) implementation.
 
     It supports multiple hosts/clients, arbitration and bus collision detections. Hoever,
     it is not multi-thread safe.
 
     It is implemented by 3 classes:
-     - EndPoint is an abstract interface defining a generic device connected to a TWI bus.
+     - EndPoint is an abstract interface defining a generic device connected to a %TWI bus.
      - Client : Basic state machine & transitions for a client side interface.
      - Host : Basic state machine & transitions for a host side interface.
 
@@ -73,19 +73,30 @@ YASIMAVR_BEGIN_NAMESPACE
 
 /**
    \ingroup api_twi
-   \brief Common enums and signal definitions for TWI classes
+   \brief Common enums and signal definitions for %TWI classes
    \sa EndPoint, Client, Host
  */
 namespace TWI {
 
+/**
+   Index definition for the lines used in a %TWI bus
+ */
 enum Line {
+    /// Index for the SCL line
     Line_Clock = 0,
-    Line_Data
+    /// Index for the SDA line
+	Line_Data
 };
 
+/**
+   Bus state values
+ */
 enum BusState {
-    Bus_Idle,
+    /// The bus is not in use
+    Bus_Idle = 0,
+    /// The bus is busy and owned by a host different from the current interface
     Bus_Busy,
+    /// The current interface (host only) owns the bus
     Bus_Owned
 };
 
@@ -181,8 +192,9 @@ enum SignalId {
 
 /**
    \ingroup api_twi
-   \brief An endpoint connected to a TWI bus.
-   Represents a device connected to a TWI bus model and acting as a host, a client or both.
+   \brief An endpoint connected to a %TWI bus.
+   Represents a device connected to a %TWI bus model and implements the basic level logic common
+   to a host and a client.
    \sa Client, Host
  */
 class AVR_CORE_PUBLIC_API EndPoint {
@@ -243,21 +255,21 @@ inline bool EndPoint::get_data_level() const
 
 /**
    \ingroup api_twi
-   \brief Base abstract definition for a TWI client.
-   \sa EndPoint, Host
-   This class implements the basic state machine to interface a TWI bus as a client.
+   \brief Base abstract definition for a %TWI client.
+   This class implements the basic state machine to interface a %TWI bus as a client.
    It is design to be controlled by a upper layer object (a controller). The interface
    notifies the controller of bus events (start, address, etc) via the signals and
    the controller shall use the API of this class to react accordingly.
+   \sa TWI, EndPoint, Host
  */
 class AVR_CORE_PUBLIC_API Client : public EndPoint, public CycleTimer {
 
 public:
 
     enum State {
-        /// Client disabled
+        /// %Client disabled
         State_Disabled = 0,
-        /// Client idle
+        /// %Client idle
         State_Idle,
         /// Receiving a Start condition
         State_Start,
@@ -365,21 +377,21 @@ inline Signal& Client::signal()
 
 /**
    \ingroup api_twi
-   \brief Base abstract definition for a TWI host.
-   \sa EndPoint, Client
-   This class implements the basic state machine to interface a TWI bus as a host.
+   \brief Base abstract definition for a %TWI host.
+   This class implements the basic state machine to interface a %TWI bus as a host.
    It is design to be controlled by a upper layer object (a controller). The interface
    notifies the controller of bus events (start, address, etc) via the signals and
    the controller shall use the API of this class to react accordingly.
+   \sa TWI, EndPoint, Client
  */
 class AVR_CORE_PUBLIC_API Host : public EndPoint, public CycleTimer {
 
 public:
 
     enum State {
-        /// Host disabled
+        /// %Host disabled
         State_Disabled = 0,
-        /// Host idle
+        /// %Host idle
         State_Idle,
         /// Sending a START condition
         State_Start,

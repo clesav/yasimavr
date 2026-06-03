@@ -214,7 +214,7 @@ inline bool InterruptController::interrupt_raised(int_vect_t vector) const
 /**
    \brief Abstract interface to a interrupt controller.
 
-   It allows to raise (or cancel) an single interrupt.
+   It allows to raise (or cancel) a single interrupt.
    The same handler can be used for several interrupts.
    \sa AVR_InterruptController
 */
@@ -257,7 +257,7 @@ private:
 /**
    \brief Abstract interrupt flag.
 
-   Abstract class that manages a interrupt flag corresponding to a interrupt vector
+   Abstract class that manages an interrupt flag corresponding to an interrupt vector.
    How the flag is raised or cleared is left to concrete sub-classes by overriding
    flag_raised().
 */
@@ -280,6 +280,10 @@ protected:
 
     bool clear_on_ack() const;
 
+    /**
+     * Abstract virtual function called when a flag update is required.
+     * \return true if the flag is raised, false if cleared.
+     */
     virtual bool flag_raised() const = 0;
 
 private:

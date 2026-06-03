@@ -1,7 +1,7 @@
 /*
  * sim_uart.h
  *
- *  Copyright 2022-2025 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -57,6 +57,10 @@ YASIMAVR_BEGIN_NAMESPACE
 
 //=======================================================================================
 
+/**
+   \ingroup api_uart
+   \brief Common enums and signal definitions for %UART classes
+ */
 namespace UART {
 
 enum SignalId {
@@ -89,6 +93,9 @@ enum ClockMode {
     Clock_Receiver,
 };
 
+/**
+   Index definition for the lines used in a %UART bus
+ */
 enum Line {
     Line_TXD,
     Line_RXD,
@@ -96,6 +103,9 @@ enum Line {
     Line_DIR,
 };
 
+/**
+   Parity mode definitions
+ */
 enum Parity {
     Parity_No,
     Parity_Odd,
@@ -105,7 +115,7 @@ enum Parity {
 
 /**
    \ingroup api_uart
-   \brief Generic model defining an universal synchronous/asynchronous serial interface a.k.a. USART
+   \brief Generic model defining an universal synchronous/asynchronous serial interface a.k.a. %USART
 
    \par Emitter
    The TX part is composed of a FIFO, whose front slot is the shift register
@@ -239,19 +249,19 @@ private:
 
 };
 
-/// Getter for the internal signal used for operation signaling.
+/// Internal signal used for operation signalling.
 inline Signal& USART::signal()
 {
     return m_signal;
 }
 
-/// Getter for the number of frames stored in the RX buffer.
+/// number of frames stored in the RX buffer.
 inline size_t USART::rx_available() const
 {
     return m_rx_buffer.size();
 }
 
-/// Getter for the no of frames waiting in the buffer to be emitted.
+/// Number of frames waiting in the buffer to be emitted.
 inline size_t USART::tx_pending() const
 {
     return m_tx_buffer.size() ? (m_tx_buffer.size() - 1) : 0;

@@ -120,6 +120,7 @@ struct bitmask_t {
 
     constexpr uint8_t operator&(uint8_t v) const { return mask & v; }
 
+    ///Returns the number of bits set in the mask
     constexpr unsigned int bitcount() const
     {
         unsigned int n = 0;
@@ -131,6 +132,7 @@ struct bitmask_t {
         return n;
     }
 
+    ///Returns the state of the bit i.
     constexpr bool bit(unsigned int i) const
     {
         return (mask >> i) & 1;
@@ -145,23 +147,33 @@ inline uint8_t& operator|=(uint8_t& v, const bitmask_t& m) { v |= m.mask; return
 inline uint8_t& operator&=(uint8_t& v, const bitmask_t& m) { v &= m.mask; return v; }
 inline uint8_t& operator^=(uint8_t& v, const bitmask_t& m) { v ^= m.mask; return v; }
 
+
 //=======================================================================================
 
+/**
+ * \brief Address + bit mask structure.
+ */
 struct regmask_t {
 
     reg_addr_t addr;
     bitmask_t mask;
 
+    /**
+     * if the two regmasks have the same address, returns a bitwise OR of the bitmasks.
+     * Otherwise returns an invalid object.
+     */
     constexpr regmask_t operator|(const regmask_t& other) const
     {
         return (addr == other.addr) ? regmask_t{ addr, mask | other.mask } : regmask_t();
     }
 
+    ///Returns true if the regmask_t objects have the same address
     constexpr bool operator==(reg_addr_t a) const
     {
         return a == addr;
     }
 
+    ///Returns true if the regmask_t objects have a different address
     constexpr bool operator!=(reg_addr_t a) const
     {
         return a != addr;
@@ -182,6 +194,7 @@ constexpr bool operator!=(reg_addr_t a, const regmask_t& rm)
 
 //=======================================================================================
 
+#ifndef __DOXYGEN__
 namespace _type_detail {
 
 class _spec_base_t {
@@ -261,11 +274,20 @@ protected:
 
 };
 } //namespace _type_detail
+#endif //__DOXYGEN__
 
 
 //=======================================================================================
 
+/**
+ * \brief bit spec structure. Represent a field in a I/O register.
+ * It works the same as bitmask_t except used bits must be consecutive
+ */
+#ifdef __DOXYGEN__
+class bitspec_t {
+#else
 class bitspec_t : public _type_detail::_spec_base_t {
+#endif
 
 public:
 
@@ -298,12 +320,35 @@ public:
         return m_mask | other.m_mask;
     }
 
+#ifdef __DOXYGEN__
+    ///Returns true if at least one bit set.
+    constexpr bool valid() const;
+    ///Transform the field value to its true representation and position in the 8-bits of the register
+    constexpr uint8_t shift_and_mask(uint8_t value) const;
+    ///Extract the field value and shift right by the LSB.
+    constexpr uint8_t extract(uint8_t reg) const;
+    constexpr uint8_t set_from(uint8_t reg) const;
+    constexpr uint8_t clear_from(uint8_t reg) const;
+    constexpr uint8_t replace(uint8_t reg, uint8_t value) const;
+    constexpr unsigned int bitcount() const;
+    constexpr uint8_t lsb() const;
+    constexpr uint8_t msb() const;
+    constexpr operator bitmask_t() const;
+    constexpr uint8_t operator&(uint8_t v) const;
+#endif
 };
 
 
 //=======================================================================================
 
+/**
+ * \brief Represents a field in a I/O register with address.
+ */
+#ifdef __DOXYGEN__
+class regbit_t {
+#else
 class regbit_t : public _type_detail::_spec_base_t {
+#endif
 
 public:
 
@@ -356,10 +401,28 @@ public:
         return a != addr;
     }
 
+#ifdef __DOXYGEN__
+    ///Returns true if at least one bit set.
+    constexpr bool valid() const;
+    ///Transform the field value to its true representation and position in the 8-bits of the register
+    constexpr uint8_t shift_and_mask(uint8_t value) const;
+    ///Extract the field value and shift right by the LSB.
+    constexpr uint8_t extract(uint8_t reg) const;
+    constexpr uint8_t set_from(uint8_t reg) const;
+    constexpr uint8_t clear_from(uint8_t reg) const;
+    constexpr uint8_t replace(uint8_t reg, uint8_t value) const;
+    constexpr unsigned int bitcount() const;
+    constexpr uint8_t lsb() const;
+    constexpr uint8_t msb() const;
+    constexpr operator bitmask_t() const;
+    constexpr uint8_t operator&(uint8_t v) const;
+#endif
+
 };
 
 
 //=======================================================================================
+
 /**
    regbit_compound_t allows to model a register field that is split in separate locations
    Under the hood, it is an array of regbit_t, each representing a piece of the field.
@@ -426,6 +489,9 @@ private:
 
 //=======================================================================================
 
+/**
+ * Polymorphic value wrapper mainly used with signals
+ */
 class AVR_CORE_PUBLIC_API vardata_t {
 
 public:
@@ -608,10 +674,7 @@ std::ostream& operator<<(std::ostream& o, const sim_id_t& id);
 
 YASIMAVR_END_NAMESPACE
 
-/**
-   \brief Instantiation of the hash template for the sim_id_t class so that it can
-   be used as a key in mapping containers such as std::map.
- */
+#ifndef __DOXYGEN__
 template<>
 struct std::hash<YASIMAVR_QUALIFIED_NAME(sim_id_t)>
 {
@@ -620,6 +683,6 @@ struct std::hash<YASIMAVR_QUALIFIED_NAME(sim_id_t)>
         return sid.m_id;
     }
 };
-
+#endif
 
 #endif //__YASIMAVR_TYPES_H__

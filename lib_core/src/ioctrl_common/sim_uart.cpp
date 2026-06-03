@@ -1,7 +1,7 @@
 /*
  * sim_uart.cpp
  *
- *  Copyright 2022-2025 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -451,19 +451,25 @@ uint16_t USART::read_rx() const
     return m_rx_buffer.size() ? (m_rx_buffer.front() & 0x0FFF) : 0;
 }
 
-
+/**
+ * Return whether the last received frame has a frame error, i.e. incorrect stop bits
+ */
 bool USART::has_frame_error() const
 {
     return m_rx_buffer.size() && (m_rx_buffer.front() & 0x4000);
 }
 
-
+/**
+ * Return whether the last received frame has a parity error
+ */
 bool USART::has_parity_error() const
 {
     return m_rx_buffer.size() && (m_rx_buffer.front() & 0x8000);
 }
 
-
+/**
+ * Return whether the RX fifo has overrun with the last received frame.
+ */
 bool USART::has_rx_overrun() const
 {
     return m_rx_buffer.size() && (m_rx_buffer.front() & 0x2000);

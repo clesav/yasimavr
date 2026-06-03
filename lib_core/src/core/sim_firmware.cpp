@@ -33,7 +33,7 @@ YASIMAVR_USING_NAMESPACE
 //=======================================================================================
 
 /**
-   Build a empty firmware
+   Build an empty firmware
  */
 Firmware::Firmware()
 :frequency(0)

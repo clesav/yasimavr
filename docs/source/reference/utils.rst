@@ -33,3 +33,35 @@ GDB Stub
 
 .. autoclass:: GDB_Stub
 
+
+SPI
+---
+
+.. automodule:: yasimavr.utils.spi
+
+.. autoclass:: SPISimpleClient
+   :members:
+
+.. autoclass:: SPISimpleHost
+   :members:
+
+
+TWI
+---
+
+.. automodule:: yasimavr.utils.twi
+
+.. autoclass:: TWISimpleClient
+   :members:
+
+
+UART
+----
+
+.. automodule:: yasimavr.utils.uart
+
+.. autoclass:: UART_IO
+
+.. autoclass:: RawUART
+   :members:
+

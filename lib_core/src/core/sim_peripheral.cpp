@@ -30,9 +30,6 @@ YASIMAVR_USING_NAMESPACE
 
 //=======================================================================================
 
-/**
-   Build a default peripheral.
-*/
 Peripheral::Peripheral(ctl_id_t id)
 :m_id(id)
 ,m_device(nullptr)
@@ -48,7 +45,7 @@ Peripheral::~Peripheral()
 }
 
 /**
-   \return the name of the peripheral (the id converted to 4 ASCII characters)
+   \brief The name of the peripheral
 */
 std::string Peripheral::name() const
 {
@@ -70,6 +67,7 @@ bool Peripheral::init(Device& device)
 /**
    Virtual method called when the device is reset. Note that resetting I/O registers is only
    necessary here if their reset value is not zero.
+   \param flags Reset flags (OR'ed combination of Device::ResetFlag enumeration values)
 */
 void Peripheral::reset(int)
 {}

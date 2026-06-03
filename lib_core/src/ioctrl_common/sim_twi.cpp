@@ -1,7 +1,7 @@
 /*
  * sim_twi.cpp
  *
- *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -43,9 +43,6 @@ enum StateFlag {
 
 //=======================================================================================
 
-/**
-   Construction of an end point.
- */
 EndPoint::EndPoint()
 :m_clock_drive(true)
 ,m_clock_level(true)
@@ -112,9 +109,7 @@ static const uint16_t ClientStateFlags[Client::State_Count] = {
 #define DEFER_DATA_HI   0x02
 #define DEFER_DATA_LO   0x04
 
-/**
-   Construct a client interface.
- */
+
 Client::Client()
 :m_state(State_Disabled)
 ,m_shifter(0)

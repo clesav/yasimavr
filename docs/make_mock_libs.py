@@ -8,20 +8,27 @@ lib_path = '../py/yasimavr/lib'
 core_mock_classes = [
     'AbstractSimLoop',
     'AsyncSimLoop',
+    'Core',
     'Device',
     'DeviceDebugProbe',
     'Signal',
     'SignalHook',
+    'SPI',
+    'TWI',
+    'UART',
+    'Wire',
 ]
 
 
 arch_avr_mock_classes = [
-    'ArchAVR_Device'
+    'ArchAVR_Core',
+    'ArchAVR_Device',
 ]
 
 
 arch_xt_mock_classes = [
-    'ArchXT_Device'
+    'ArchXT_Core',
+    'ArchXT_Device',
 ]
 
 

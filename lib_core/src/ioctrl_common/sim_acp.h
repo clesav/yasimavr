@@ -31,11 +31,12 @@ YASIMAVR_BEGIN_NAMESPACE
 
 
 //=======================================================================================
-/**
-   \brief Generic ACP definitions
 
-   Definition of enumerations, configuration structures and signal Ids used for ACP models,
-   common to all architectures.
+/**
+   \brief Generic Analog Comparator definitions
+
+   Definition of enumerations, configuration structures and signal Ids used for Analog
+   Comparator models, common to all architectures.
  */
 namespace ACP {
 
@@ -51,6 +52,9 @@ enum Channel {
     Channel_IntRef
 };
 
+/**
+   Configuration definition for one channel input
+ */
 struct channel_config_t : base_reg_config_t {
     /// Channel type
     Channel type;
@@ -58,6 +62,9 @@ struct channel_config_t : base_reg_config_t {
     pin_id_t pin;
 };
 
+/**
+   Signal IDs raised by Analog Comparator models
+ */
 enum SignalId {
     /// Raised when the output state of the comparator has change. The data is the new state.
     Signal_Output,

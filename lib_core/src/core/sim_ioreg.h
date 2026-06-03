@@ -118,9 +118,9 @@ class AVR_CORE_PUBLIC_API IORegister {
 public:
 
     enum BitMode {
-        RW,
-        RO,
-        Strobe,
+        RW, ///< Read&Write mode
+        RO, ///< Read only mode
+        Strobe, ///< Strobe mode
     };
 
     explicit IORegister(bitmask_t initial_mask = bitmask_t(), BitMode initial_mode = RW);
@@ -154,7 +154,7 @@ private:
     uint8_t m_flags;
     //Mask indicating which bits of the register are used
     bitmask_t m_use_mask;
-    //Mask indicating which bits of the register are read-only or strobe for the CPU
+    //Masks indicating which bits of the register are read-only or strobe for the CPU
     bitmask_t m_ro_mask;
     bitmask_t m_strobe_mask;
 

@@ -9,7 +9,6 @@ new core architectures, or new device/peripheral models.
    :maxdepth: 2
    :caption: Contents:
 
-   ../cpp_api/cpp_api_root
-   frameworks
+   ../dox/html/index.rst
    device_library
    utils

@@ -109,7 +109,7 @@ Reference (Descriptor structure)
 .. autoclass:: MemorySpaceDescriptor
 
 
-.. autoclass:: MemorySegmentDescriptor
+.. autoclass:: MemoryDescriptor
 
 
 Reference (Utility functions)
@@ -121,7 +121,10 @@ Reference (Utility functions)
 .. autofunction:: convert_to_regbit_compound
 
 
-.. autofunction:: convert_to_bitmask
+.. autofunction:: convert_to_regmask
+
+
+.. autofunction:: convert_to_bitspec
 
 
 Device Builders

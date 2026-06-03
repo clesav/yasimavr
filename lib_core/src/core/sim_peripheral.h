@@ -316,11 +316,22 @@ protected:
 
     Logger& logger();
 
+    /**
+     * \name IO Register creation
+     * Functions to create an IO Register and add *this* as a handler
+     */
+    ///@{
     void add_ioreg(const regmask_t& rm, IORegister::BitMode bitmode = IORegister::RW);
     void add_ioreg(const regbit_compound_t& rbc, IORegister::BitMode bitmode = IORegister::RW);
     void add_ioreg(reg_addr_t addr, IORegister::BitMode bitmode = IORegister::RW);
     void add_ioreg(reg_addr_t addr, bitmask_t mask, IORegister::BitMode bitmode = IORegister::RW);
+    ///@}
 
+    /**
+     * \name IO Register value manipulation
+     * Functions to read/write/set/clear the value of an IO Register
+     */
+    ///@{
     uint8_t read_ioreg(const regbit_t& rb) const;
     uint64_t read_ioreg(const regbit_compound_t& rbc) const;
     uint8_t read_ioreg(reg_addr_t addr) const;
@@ -346,6 +357,7 @@ protected:
     void clear_ioreg(const regbit_t& rb);
     void clear_ioreg(const regbit_compound_t& rbc);
     void clear_ioreg(reg_addr_t addr, const bitspec_t& bs);
+    ///@}
 
     bool register_interrupt(int_vect_t vector, InterruptHandler& handler) const;
 
@@ -371,6 +383,7 @@ inline Device *Peripheral::device() const
     return m_device;
 }
 
+/// Logging object associated with this peripheral
 inline Logger& Peripheral::logger()
 {
     return m_logger;

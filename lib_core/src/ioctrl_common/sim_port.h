@@ -38,7 +38,7 @@ YASIMAVR_BEGIN_NAMESPACE
    It implements a GPIO port controller for up to 8 pins.
    The exact number of pins is determined by the device configuration.
 
-   At initialization, the port will lookup all possible ports with the letter
+   At initialisation, the port will lookup all possible ports with the letter
    (e.g. port 'A' will lookup and control all pins named 'PAx' (x=0 to 7))
 
    CTLREQs supported:

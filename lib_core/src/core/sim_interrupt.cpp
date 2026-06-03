@@ -251,15 +251,13 @@ AbstractInterruptFlag::AbstractInterruptFlag(bool clear_on_ack)
 {}
 
 /**
-   Initialise an Interrupt Flag. Allocates the registers for the flag and the enable
-   register fields and register with the interrupt controller for a particular vector.
+   Initialise an Interrupt Flag. Register this flag with the interrupt controller
+   for a particular vector.
    \note If the vector is < 0, then no interrupt is registered. (can be used for future
    or unsupported features)
    \note Registering with the reset vector (vector 0) is an error.
-   \param rb_enable register location for the flag enable bits
-   \param rb_flag register location for the flag state bits
    \param vector interrupt vector index
-   \return true if allocations and registrations are successful, false otherwise
+   \return true if successful, false otherwise
 */
 bool AbstractInterruptFlag::init(Device& device, int_vect_t vector)
 {
@@ -282,12 +280,10 @@ bool AbstractInterruptFlag::init(Device& device, int_vect_t vector)
 }
 
 /**
-   Update the state of the interrupt flag according to the
-   value of the I/O registers.
-   This should be called whenever the flag registers are written.
-   Allocates the registers for the flag and the enable register fields.
+   Update the state of the interrupt flag.
    \return +1 if the interrupt has been raised as a result of the update,
-           -1 if it has been cleared, 0 if unchanged.
+           -1 if it has been cleared,
+           0 if unchanged.
 */
 int AbstractInterruptFlag::update()
 {
@@ -335,10 +331,10 @@ InterruptFlag::InterruptFlag(bool clear_on_ack)
    \note If the vector is < 0, then no interrupt is registered. (can be used for future
    or unsupported features)
    \note Registering with the reset vector (vector 0) is an error.
-   \param rb_enable register location for the flag enable bits
-   \param rb_flag register location for the flag state bits
+   \param rm_enable register location for the flag enable bits
+   \param rm_flag register location for the flag state bits
    \param vector interrupt vector index
-   \return true if allocations and registrations are successful, false otherwise
+   \return true if successful, false otherwise
 */
 bool InterruptFlag::init(Device& device,
                          const regmask_t& rm_enable,

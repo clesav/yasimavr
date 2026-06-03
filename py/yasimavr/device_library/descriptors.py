@@ -796,7 +796,7 @@ def _reduce_bitspecs(bitspecs, reg_size):
                 reduced_bitspecs[num_byte] = ExtendedBitSpec(lsb, msb)
             else:
                 if lsb != r_bs.msb + 1:
-                    raise ValueError("Bitspec combination must be contiguous")
+                    raise ValueError("Field combination must be contiguous")
                 r_bs.msb = msb
 
     #Filter out the bytes unused
@@ -838,6 +838,7 @@ def _reduce_bitmasks(bitspecs, reg_size):
 
 def convert_to_regbit(arg, per=None, dev=None, merge_bits=False):
     """Utility method that resolves a reg path and returns a regbit_t object.
+
     If the register could not be resolved, or if the result spans several bytes,
     a ValueError exception is raised.
 
@@ -849,9 +850,15 @@ def convert_to_regbit(arg, per=None, dev=None, merge_bits=False):
     ``per`` is required to resolve relative reg paths.
     If ``per`` is given, ``dev`` doesn't need to be.
 
+    The merge_bits parameter determines the behaviour in case multiple fields are parsed.
+    If set to False (default) a ValueError exception is raised. If set to True the fields
+    are merged into one single regbit object that is returned.
+    The function will raise an ValueError exception if the fields are not adjacent.
+
     :param str|int|list arg: reg path to convert
     :param PeripheralInstanceDescriptor per: used to resolve reg paths
     :param DeviceDescriptor dev: used to resolve reg paths
+    :param bool merge_bits:
     """
 
     if arg is None or arg == '':
@@ -914,11 +921,11 @@ def convert_to_regbit_compound(arg, per=None, dev=None):
 
 def convert_to_regmask(arg, per=None, dev=None):
     """Utility method that resolves a reg path and returns a regmask_t object.
-    The arguments are the same as convert_to_regbit()
-    The difference is that multiple fields of a unique register are allowed
-    and are combined into one single regmask_t object.
+    The arguments are the same as convert_to_regbit().
+    The difference is that multiple fields of a unique register are always allowed
+    and do not need to be adjacent.
 
-    :sa convert_to_regbit
+    See also :py:func:`convert_to_regbit`
     """
 
     if arg is None or arg == '':
@@ -948,7 +955,7 @@ def convert_to_bitspec(arg, per=None, dev=None, merge_bits=False):
     """Utility method that resolves a reg path and returns a bitspec_t object.
     The arguments are the same as convert_to_regbit()
 
-    :sa convert_to_regbit
+    See also :py:func:`convert_to_regbit`
     """
 
     if not arg:

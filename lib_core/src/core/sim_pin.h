@@ -120,7 +120,9 @@ inline void Pin::set_external_state(StateEnum state, double level)
 }
 
 /**
-   Set the state applied to the pin by the external circuit
+   Set the state applied to the pin by the external circuit.
+   Valid values for state are defined in Wire.
+   \sa Wire::char2state
  */
 inline void Pin::set_external_state(char state, double level)
 {
@@ -144,6 +146,7 @@ inline Pin::controls_t Pin::gpio_controls() const
    PinDriver is an interface that allows to override the controls of a MCU pin.
    It is usually used as a sub-object of a peripheral that, under some conditions,
    takes control of a GPIO.
+
    The PinDriver does not know which pins it controls. The driver only references pins by a
    arbitrary integer index (0 to N) that has meaning only for the driver.
 
