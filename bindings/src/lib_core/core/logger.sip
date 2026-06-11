@@ -1,7 +1,7 @@
 /*
  * logger.sip
  *
- *  Copyright 2022 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -29,8 +29,7 @@ class LogWriter {
 
 public:
 
-    virtual void write(cycle_count_t, int, ctl_id_t, const char*, std::va_list&)
-        [void (cycle_count_t, int, ctl_id_t, const char*, std::va_list)];
+    virtual void write(const char*) = 0;
 
     static LogWriter* default_writer();
 
@@ -79,26 +78,14 @@ public:
     void set_parent(Logger*);
     Logger* parent() const;
 
-    void log(int, const char*, ...);
+    void log(int, const char*);
 
-    void err(const char*, ...);
-    void wng(const char*, ...);
-    void dbg(const char*, ...);
-
-protected:
-
-    ctl_id_t id() const;
-
-    void filtered_write(int, const char*, std::va_list&)
-        [void (int, const char*, std::va_list)];
-
-    void write(int, ctl_id_t, const char*, std::va_list&)
-        [void (int, ctl_id_t, const char*, std::va_list)];
+    void err(const char*);
+    void wng(const char*);
+    void dbg(const char*);
 
 };
 
 
 Logger& global_logger();
 
-
-class std::va_list;
