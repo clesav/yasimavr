@@ -28,13 +28,43 @@ YASIMAVR_USING_NAMESPACE
 
 //=======================================================================================
 
-void LogWriter::write(cycle_count_t cycle,
-                          int level,
-                          ctl_id_t id,
-                          const char* format,
-                          std::va_list args)
+class StdOutLogWriter : public LogWriter {
+public:
+
+    virtual void write(const char* text) override final
+    {
+        fputs(text, stdout);
+        fputc('\n', stdout);
+        fflush(stdout);
+    }
+
+};
+
+
+static StdOutLogWriter s_default_writer;
+
+LogWriter* LogWriter::default_writer()
 {
-    std::FILE* f = stdout;
+    return &s_default_writer;
+}
+
+//=======================================================================================
+
+LogHandler::LogHandler()
+:m_cycle_manager(nullptr)
+,m_writer(&s_default_writer)
+{}
+
+void LogHandler::init(CycleManager& cycle_manager)
+{
+    m_cycle_manager = &cycle_manager;
+}
+
+void LogHandler::write(int level, ctl_id_t id, const char* format, std::va_list args)
+{
+    const char* MSG_FORMAT = "[%08lld] %s %s : ";
+
+    cycle_count_t cycle = m_cycle_manager ? m_cycle_manager->cycle() : 0;
 
     const char* slvl;
     switch (level) {
@@ -54,35 +84,16 @@ void LogWriter::write(cycle_count_t cycle,
 
     std::string sid = id.str();
 
-    fprintf(f, "[%08lld] %s %s : ", cycle, slvl, sid.c_str());
-    vfprintf(f, format, args);
-    fprintf(f, "\n");
-    fflush(f);
-}
+    size_t hdrsize = 18 + sid.length();
+    std::va_list args2;
+    va_copy(args2, args);
+    size_t msgsize = std::vsnprintf(nullptr, 0, format, args2);
+    va_end(args2);
+    std::vector<char> buf = std::vector<char>(hdrsize + msgsize + 1, '\0');
+    std::sprintf(buf.data(), MSG_FORMAT, cycle, slvl, sid.c_str());
+    std::vsnprintf(buf.data() + hdrsize, msgsize + 1, format, args);
 
-static LogWriter s_default_writer;
-
-LogWriter* LogWriter::default_writer()
-{
-    return &s_default_writer;
-}
-
-//=======================================================================================
-
-LogHandler::LogHandler()
-:m_cycle_manager(nullptr)
-,m_writer(&s_default_writer)
-{}
-
-void LogHandler::init(CycleManager& cycle_manager)
-{
-    m_cycle_manager = &cycle_manager;
-}
-
-void LogHandler::write(int lvl, ctl_id_t id, const char* fmt, std::va_list args)
-{
-    cycle_count_t c = m_cycle_manager ? m_cycle_manager->cycle() : 0;
-    m_writer->write(c, lvl, id, fmt, args);
+    m_writer->write(buf.data());
 }
 
 

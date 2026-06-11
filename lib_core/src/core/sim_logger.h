@@ -1,7 +1,7 @@
 /*
  * sim_logger.h
  *
- *  Copyright 2022 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -39,11 +39,7 @@ public:
 
     virtual ~LogWriter() = default;
 
-    virtual void write(cycle_count_t cycle,
-                       int level,
-                       ctl_id_t id,
-                       const char* format,
-                       std::va_list args);
+    virtual void write(const char* text) = 0;
 
     static LogWriter* default_writer();
 };
