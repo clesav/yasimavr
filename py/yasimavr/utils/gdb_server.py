@@ -1,6 +1,6 @@
 # gdb_server.py
 #
-# Copyright 2022-2024 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2022-2026 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -322,8 +322,8 @@ class GDB_Stub:
 
         elif cmdargs.startswith('Xfer:memory-map:read'):
             core_cfg = self._device.config().core
-            reply = mem_map_query_tpl.format(datalen = (core_cfg.dataend + 1),
-                                             flashlen = (core_cfg.flashend + 1))
+            reply = mem_map_query_tpl.format(datalen = core_cfg.datasize,
+                                             flashlen = core_cfg.flashsize)
             self.__send_reply('l' + reply)
 
         elif cmdargs.startswith('Xfer:exec-file:read'):
@@ -465,12 +465,12 @@ class GDB_Stub:
         buf = None
         with self._simloop:
             if content_addr < 0x800000: #flash area
-                if (content_addr + content_len - 1) <= core_cfg.flashend:
+                if content_addr + content_len <= core_cfg.flashsize:
                     buf = self._probe.read_flash(content_addr, content_len)
 
             elif content_addr < 0x810000: #Data & I/O register area
                 data_addr = content_addr - 0x800000
-                if (data_addr + content_len - 1) <= core_cfg.dataend:
+                if data_addr + content_len <= core_cfg.datasize:
                     buf = self._probe.read_data(data_addr, content_len)
                 elif data_addr == core_cfg.ramend + 1 and content_len == 2:
                     #Allow GDB to read a value just after end of stack.
@@ -508,7 +508,7 @@ class GDB_Stub:
         ok = False
         with self._simloop:
             if content_addr < 0x800000: #flash area
-                if (content_addr + content_len - 1) <= core_cfg.flashend:
+                if content_addr + content_len <= core_cfg.flashsize:
                     self._probe.write_flash(content_addr, buf)
                     ok = True
 
@@ -565,7 +565,7 @@ class GDB_Stub:
 
     def __handle_cmd_insert_breakpoints(self, cmdargs):
         args = cmdargs.split(',')
-        if args[0] == '0':
+        if args[0] in ('0', '1'):
             addr = int(args[1], 16) & 0xffffff
             self._probe.insert_breakpoint(addr)
             self.__send_reply('OK')
@@ -592,7 +592,7 @@ class GDB_Stub:
 
     def __handle_cmd_remove_breakpoints(self, cmdargs):
         args = cmdargs.split(',')
-        if args[0] == '0':
+        if args[0] in ('0', '1'):
             addr = int(args[1], 16) & 0xffffff
             self._probe.remove_breakpoint(addr)
             self.__send_reply('OK')
