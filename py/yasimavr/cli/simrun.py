@@ -1,6 +1,6 @@
 # simrun.py
 #
-# Copyright 2023-2024 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2023-2026 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -102,7 +102,7 @@ def _create_argparser():
 
     p.add_argument('firmware',
                    nargs='?',
-                   help='[Mandatory] ELF file containing the firmware to execute')
+                   help='ELF file containing the firmware to execute. Mandatory in standalone mode.')
 
     return p
 
@@ -175,9 +175,12 @@ def _print_model_list():
 def _load_firmware():
     global _firmware
 
-    _firmware = _corelib.Firmware.read_elf(_run_args.firmware)
-    if not _firmware:
-        raise Exception('Reading the firmware failed')
+    if _run_args.firmware is None:
+        _firmware = _corelib.Firmware()
+    else:
+        _firmware = _corelib.Firmware.read_elf(_run_args.firmware)
+        if not _firmware:
+            raise Exception('Reading the firmware failed')
 
     _firmware.frequency = _run_args.frequency
     if _run_args.analog is not None:
@@ -410,7 +413,7 @@ def main(args=None):
         _print_model_list()
         return
 
-    if _run_args.firmware is None:
+    if _run_args.gdb is None and _run_args.firmware is None:
         raise argparse.ArgumentError(None, 'No firmware provided')
 
     if _run_args.frequency is None:

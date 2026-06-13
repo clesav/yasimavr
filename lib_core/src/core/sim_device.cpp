@@ -240,8 +240,7 @@ bool Device::load_firmware(const Firmware& firmware)
 bool Device::program(const Firmware& firmware)
 {
     if (!firmware.has_memory(Firmware::Area_Flash)) {
-        m_logger.err("Firmware load: No program to load");
-        return false;
+        m_logger.wng("Firmware load: No program to load");
     }
     else if (firmware.load_memory(Firmware::Area_Flash, m_core.m_flash)) {
         m_logger.dbg("Loaded %d bytes of flash", firmware.memory_size(Firmware::Area_Flash));

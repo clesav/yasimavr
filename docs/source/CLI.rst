@@ -8,7 +8,8 @@ Synopsis
 
 *yasimavr* will load a firmware binaries into a model and run until the simulation stops and then exits.
 
-The minimum required arguments to provide are the firmware file [firmware], the MCU model [-m] and the frequency [-f].
+The minimum required arguments to provide are the MCU model [-m], the frequency [-f]
+and the firmware file [firmware] in standalone mode.
 
 GDB vs. Standalone Mode
 -----------------------
