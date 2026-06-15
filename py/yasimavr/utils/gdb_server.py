@@ -102,9 +102,12 @@ class GDB_Stub:
     If device is provided, the stub will create a simulation loop for it and dispose of it on shutdown.
     """
 
-    def __init__(self, conn_point, fw_source, simloop=None, device=None):
-        self._source = os.path.normpath(os.path.abspath(fw_source))
-        self._source = self._source.replace('\\', '/')
+    def __init__(self, conn_point, fw_source=None, simloop=None, device=None):
+        if fw_source is not None:
+            self._source = os.path.normpath(os.path.abspath(fw_source))
+            self._source = self._source.replace('\\', '/')
+        else:
+            self._source = ''
 
         if simloop is not None:
             self._simloop = simloop
