@@ -246,6 +246,14 @@ public:
     struct dummy_register_t {
         regmask_t reg;
         uint8_t reset;
+
+        dummy_register_t();
+        dummy_register_t(regmask_t, uint8_t = 0);
+        %MethodCode
+            sipCpp = new DummyController::dummy_register_t();
+            *sipCpp = { *a0, a1 };
+        %End
+
     };
 
     DummyController(ctl_id_t, const std::vector<DummyController::dummy_register_t>&);

@@ -247,7 +247,7 @@ void Core::cpu_write_gpreg(uint8_t reg, uint8_t value)
  */
 IORegister* Core::get_ioreg(reg_addr_t addr)
 {
-    if (!addr.valid())
+    if (!addr.valid() || (size_t) addr >= m_ioregs.size())
         return nullptr;
 
     IORegister* reg = m_ioregs[(short) addr];
@@ -338,9 +338,6 @@ void Core::cpu_write_ioreg(reg_addr_t reg_addr, uint8_t value)
 
     if (addr == m_reg_console) {
         if (value == '\n') {
-            char s[20];
-            sprintf(s, "[%llu] ", m_device->cycle());
-            m_console_buffer.insert(0, s);
             m_device->logger().log(Logger::Level_Output, m_console_buffer.c_str());
             m_console_buffer.clear();
         } else {

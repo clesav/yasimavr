@@ -248,6 +248,7 @@ public:
     SignalHook& ext_tick_hook();
 
     PrescaledTimer& prescaler();
+    const PrescaledTimer& prescaler() const;
 
     //no copy semantics
     //TimerCounter(const TimerCounter&) = delete;
@@ -365,6 +366,13 @@ inline SignalHook& TimerCounter::ext_tick_hook()
 
 /// Getter for the internal prescaler
 inline PrescaledTimer& TimerCounter::prescaler()
+{
+    return m_timer;
+}
+
+
+/// Getter for the internal prescaler
+inline const PrescaledTimer& TimerCounter::prescaler() const
 {
     return m_timer;
 }

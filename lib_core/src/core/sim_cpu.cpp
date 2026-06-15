@@ -551,7 +551,7 @@ cycle_count_t Core::run_instruction()
                     m_device->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_BREAK);
                 }   break;
                 case 0x95a8: { // WDR -- Watchdog Reset -- 1001 0101 1010 1000
-                    //STATE("wdr\n");
+                    TRACE_OP("wdr");
                     m_device->ctlreq(AVR_IOCTL_WDT, AVR_CTLREQ_WATCHDOG_RESET);
                 }   break;
                 case 0x95e8:    // SPM -- Store Program Memory -- 1001 0101 1110 1000
