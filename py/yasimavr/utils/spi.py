@@ -84,8 +84,17 @@ class SPISimpleClient(SPI.EndPoint):
     def _select_hook_raised(self, sigdata, _):
         if sigdata.sigid == _corelib.Wire.SignalId.DigitalChange:
             state = sigdata.data.as_uint()
-            self.set_active(self._enabled and not state)
+            new_active = self._enabled and not state
+            old_active = self.active()
+
+            if old_active and not new_active:
+                self.active_state_changed(False)
+
+            self.set_active(new_active)
             self._update_miso()
+
+            if new_active and not old_active:
+                self.active_state_changed(True)
 
 
     def write_data_output(self, level):
@@ -112,6 +121,7 @@ class SPISimpleClient(SPI.EndPoint):
         '''Override of EndPoint
         '''
         self._mosi_frame = self.shift_data()
+        self.transfer_ended()
 
 
     def set_miso_frame(self, frame):
@@ -149,6 +159,22 @@ class SPISimpleClient(SPI.EndPoint):
         '''Wire object representing the SPI chip select line
         '''
         return self._select_line
+
+
+    def active_state_changed(self, state):
+        '''Callback that can be overriden by sub-classes to be notified when
+        the client has been selected or deselected by the host via the select line.
+
+        :param bool state: True when selected, False when deselected
+        '''
+        pass
+
+
+    def transfer_ended(self):
+        '''Callback that can be overriden by sub-classes to be notified when
+        the transfer of one frame has completed.
+        '''
+        pass
 
 
 class SPISimpleHost(SPI.EndPoint):
@@ -305,6 +331,6 @@ class SPISimpleHost(SPI.EndPoint):
 
     @property
     def mosi_line(self):
-        '''Return the last frame received.
+        '''Wire object representing the SPI MOSI line
         '''
         return self._mosi_line

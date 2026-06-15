@@ -65,6 +65,14 @@ public:
     static Firmware* read_elf(const std::string&);
 
     void add_block(Area, const block_view_t&);
+    void add_block(Area, const bytes_view_t&, size_t = 0);
+    %MethodCode
+        Firmware::block_view_t b;
+        b.bytes = *a1;
+        b.base = a2;
+        sipCpp->add_block(a0, b);
+    %End
+
     bool has_memory(Area) const;
     size_t memory_size(Area) const;
     std::vector<Firmware::Area> memories() const;

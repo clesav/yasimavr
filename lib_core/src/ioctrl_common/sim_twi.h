@@ -85,7 +85,7 @@ enum Line {
     /// Index for the SCL line
     Line_Clock = 0,
     /// Index for the SDA line
-	Line_Data
+    Line_Data
 };
 
 /**

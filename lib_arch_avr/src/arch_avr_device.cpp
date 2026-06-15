@@ -207,18 +207,23 @@ bool ArchAVR_Device::program(const Firmware& firmware)
  */
 flash_addr_t ArchAVR_Device::reset_vector()
 {
-    flash_addr_t addr = 0x0000;
-
     //Ask the Fuse Controller for the value of BOOTRST
     //Don't use Device::ctlreq because it logs a warning if no fuse peripheral is attached which is useless log noise here.
     Peripheral* fuse_per = find_peripheral("FUSES");
     if (fuse_per) {
+        flash_addr_t addr = 0x0000;
         ctlreq_data_t reqdata = { .index = ArchAVR_Fuses::Fuse_BootRst };
         bool ok = fuse_per->ctlreq(AVR_CTLREQ_FUSE_VALUE, &reqdata);
         //if the BOOTRST fuse is zero, the reset vector is at the start of the Boot section. Otherwise keep the default value.
-        if (ok && reqdata.data.as_int() == 0)
-            addr = m_sections.section_start(Section_Boot) * m_sections.page_size();
+        if (ok) {
+            logger().dbg("Found a BOOTRST fuse, value = %d", reqdata.data.as_int());
+            if (reqdata.data.as_int() == 0)
+                addr = m_sections.section_start(Section_Boot) * m_sections.page_size();
+        }
+        return addr;
     }
 
-    return addr;
+    logger().dbg("No FUSE peripheral or no BOOTRST fuse, default value for reset address");
+
+    return 0x0000;
 }

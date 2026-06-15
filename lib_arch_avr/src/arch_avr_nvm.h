@@ -227,7 +227,7 @@ private:
     MemorySectionManager* m_sections;
 
     void configure_sections();
-    uint8_t read_fuse(const regmask_t& rm) const;
+    uint8_t read_fuse(const regbit_t& rb) const;
 
 };
 

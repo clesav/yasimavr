@@ -646,7 +646,7 @@ void TimerCounter::process_ticks(long ticks, bool event_reached)
     //If the TOP value has been reached
     if (m_next_event_type & Event_Top) {
         if (m_logger)
-            m_logger->dbg("Counter reaching TOP value");
+            m_logger->dbg("Counter reaching TOP");
 
         //If still counting up, wrap the counter
         //Annoying Special Case : TOP == BOTTOM, the counter must remain at 0
@@ -665,7 +665,7 @@ void TimerCounter::process_ticks(long ticks, bool event_reached)
     //If the BOTTOM value has been reached
     if (m_next_event_type & Event_Bottom) {
         if (m_logger)
-            m_logger->dbg("Counter reaching BOTTOM value");
+            m_logger->dbg("Counter reaching BOTTOM");
 
         //Check to avoid treating the Annoying Special Case twice
         if (m_top) {

@@ -353,8 +353,12 @@ void Device::add_ioreg_handler(reg_addr_t addr, IORegHandler& handler,
     if (addr != R_SREG && addr.valid()) {
         m_logger.dbg("Registering handler for I/O 0x%04X", addr);
         IORegister* reg = m_core.get_ioreg(addr);
-        reg->add_bits(bits, bitmode);
-        reg->add_handler(handler);
+        if (reg) {
+            reg->add_bits(bits, bitmode);
+            reg->add_handler(handler);
+        } else {
+            m_logger.err("Cannot register handler for I/O 0x%04X", addr);
+        }
     }
 }
 

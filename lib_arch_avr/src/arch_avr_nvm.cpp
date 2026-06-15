@@ -733,7 +733,7 @@ bool ArchAVR_Fuses::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
 }
 
 
-uint8_t ArchAVR_Fuses::read_fuse(const regmask_t& rm) const
+uint8_t ArchAVR_Fuses::read_fuse(const regbit_t& rb) const
 {
-    return rm.mask & (*m_fuses)[rm.addr];
+    return rb.extract((*m_fuses)[rb.addr]);
 }

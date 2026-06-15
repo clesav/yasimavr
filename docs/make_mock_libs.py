@@ -42,7 +42,7 @@ class _MockObject(type):
 
 
 def _make_mock_module(mod_name, class_list):
-    
+
     try:
         from yasimavr.lib import _mock_base
     except ImportError:
