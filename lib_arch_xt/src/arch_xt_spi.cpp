@@ -70,7 +70,7 @@ private:
 };
 
 
-class ArchXT_SPI::_Controller : public EndPoint, public CycleTimer {
+class ArchXT_SPI::_Controller : public EndPoint, private CycleTimer {
 
 
 public:
@@ -105,7 +105,7 @@ public:
     void set_selected(bool selected);
     inline bool selected() const { return m_selected; }
 
-    virtual cycle_count_t next(cycle_count_t when) override;
+    virtual void next(cycle_count_t when) override;
 
 protected:
 
@@ -117,7 +117,6 @@ private:
 
     ArchXT_SPI& m_peripheral;
     _PinDriver m_pin_driver;
-    CycleManager* m_cycle_manager;
     Logger* m_logger;
     cycle_count_t m_halfbitdelay;
     ControllerMode m_mode;
@@ -219,7 +218,6 @@ void ArchXT_SPI::_PinDriver::digital_state_changed(pin_index_t pin_index, bool d
 ArchXT_SPI::_Controller::_Controller(ArchXT_SPI& peripheral)
 :m_peripheral(peripheral)
 ,m_pin_driver(*this, peripheral.id())
-,m_cycle_manager(nullptr)
 ,m_logger(nullptr)
 ,m_halfbitdelay(1)
 ,m_mode(Mode_Disabled)
@@ -231,15 +229,14 @@ ArchXT_SPI::_Controller::_Controller(ArchXT_SPI& peripheral)
 
 void ArchXT_SPI::_Controller::init(CycleManager& cycle_manager, Logger& logger)
 {
-    m_cycle_manager = &cycle_manager;
+    CycleTimer::init(cycle_manager);
     m_logger = &logger;
 }
 
 
 void ArchXT_SPI::_Controller::reset()
 {
-    if (scheduled())
-        m_cycle_manager->cancel(*this);
+    cancel();
 
     set_mode(Mode_Disabled);
     set_active(false);
@@ -296,7 +293,7 @@ void ArchXT_SPI::_Controller::push_tx(uint8_t data, bool force_buffer)
     //In host mode, if the interface is inactive, the transfer can start
     if (m_mode == Mode_Host && !active()) {
         set_active(true);
-        m_cycle_manager->delay(*this, m_halfbitdelay);
+        delay(m_halfbitdelay);
 
         //If an RX frame is present in the shift register, it's lost.
         if (m_rx_buffer.size() == 3)
@@ -322,14 +319,16 @@ uint8_t  ArchXT_SPI::_Controller::peek_rx() const
 }
 
 
-cycle_count_t ArchXT_SPI::_Controller::next(cycle_count_t when)
+void ArchXT_SPI::_Controller::next(cycle_count_t)
 {
     //Toggle the clock line
     output_clock(!shift_clock());
 
     //If the frame is not complete, continue with it
-    if (!complete_frame())
-        return when + m_halfbitdelay;
+    if (!complete_frame()) {
+        delay(m_halfbitdelay);
+        return;
+    }
 
     //Signal the success of the transfer
     m_logger->dbg("Host frame transfer ended.");
@@ -338,12 +337,13 @@ cycle_count_t ArchXT_SPI::_Controller::next(cycle_count_t when)
     if (m_tx_buf_loaded) {
         set_shift_data(m_tx_buffer);
         m_tx_buf_loaded = false;
-        return when + m_halfbitdelay;
+        delay(m_halfbitdelay);
+        return;
     } else {
         //If not, deactivate the interface, return the clock line to idle state and stop the timer
         set_active(false);
         output_clock(serial_mode() >= Mode2);
-        return 0;
+        return;
     }
 }
 

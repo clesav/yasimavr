@@ -60,14 +60,17 @@ bool ArchXT_WDT::init(Device& device)
     //SYNCBUSY not implemented
     add_ioreg(REG_ADDR(STATUS), WDT_LOCK_bm);
 
+    m_wdt_timer.init(*device.cycle_manager());
+    m_wdr_sync_timer.init(*device.cycle_manager());
+
     return status;
 }
 
 
 void ArchXT_WDT::reset(int)
 {
-    device()->cycle_manager()->cancel(m_wdt_timer);
-    device()->cycle_manager()->cancel(m_wdr_sync_timer);
+    m_wdt_timer.cancel();
+    m_wdr_sync_timer.cancel();
     m_first_wdr = true;
 
     //Obtain the pointer to the fuse block in NVM
@@ -85,7 +88,7 @@ void ArchXT_WDT::reset(int)
     if (period_index) {
         SET_IOREG(STATUS, WDT_LOCK);
         auto [period, window] = calculate_delays(fuse_wdtcfg);
-        device()->cycle_manager()->delay(m_wdt_timer, period + window);
+        m_wdt_timer.delay(period + window);
     }
 }
 
@@ -99,7 +102,7 @@ bool ArchXT_WDT::ctlreq(ctlreq_id_t req, ctlreq_data_t*)
 {
     if (req == AVR_CTLREQ_WATCHDOG_RESET) {
         if (READ_IOREG_F(CTRLA, WDT_PERIOD) && !m_wdr_sync_timer.scheduled())
-            device()->cycle_manager()->delay(m_wdr_sync_timer, 3);
+            m_wdr_sync_timer.delay(3);
 
         return true;
     }
@@ -122,9 +125,9 @@ void ArchXT_WDT::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
         if (period) {
             if (!m_wdt_timer.scheduled())
                 m_first_wdr = true;
-            device()->cycle_manager()->delay(m_wdt_timer, period + window);
+            m_wdt_timer.delay(period + window);
         } else {
-            device()->cycle_manager()->cancel(m_wdt_timer);
+            m_wdt_timer.cancel();
         }
     }
 
@@ -169,7 +172,7 @@ void ArchXT_WDT::wdr_sync_timer_next()
     if (window && (m_wdt_timer.remaining_delay() > period) && !m_first_wdr) {
         timeout();
     } else {
-        device()->cycle_manager()->delay(m_wdt_timer, period + window);
+        m_wdt_timer.delay(period + window);
         m_first_wdr = false;
     }
 }

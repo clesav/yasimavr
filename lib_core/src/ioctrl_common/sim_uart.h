@@ -190,7 +190,6 @@ protected:
 
 private:
 
-    CycleManager* m_cycle_manager;
     Logger* m_logger;
 
     Signal m_signal;
@@ -241,9 +240,9 @@ private:
     void start_bitwise_rx();
     void shift_rx();
 
-    cycle_count_t clk_timer_next(cycle_count_t when);
-    cycle_count_t tx_timer_next(cycle_count_t when);
-    cycle_count_t rx_timer_next(cycle_count_t when);
+    void clk_timer_next();
+    void tx_timer_next();
+    void rx_timer_next();
 
     void process_clock_change(bool new_state);
 

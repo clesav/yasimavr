@@ -82,7 +82,7 @@ private:
 
     cycle_count_t calculate_delay();
     void reschedule_timer();
-    cycle_count_t wdt_timeout(cycle_count_t when);
+    void wdt_timeout();
     void lock_timeout();
 
 };

@@ -36,10 +36,9 @@ public:
 
     SPM_Timer(ArchAVR_NVM& ctl) : m_ctl(ctl) {}
 
-    virtual cycle_count_t next(cycle_count_t when) override
+    virtual void next(cycle_count_t) override
     {
         m_ctl.spm_timer_next();
-        return 0;
     }
 
 private:
@@ -55,10 +54,9 @@ public:
 
     EE_Timer(ArchAVR_NVM& ctl) : m_ctl(ctl) {}
 
-    virtual cycle_count_t next(cycle_count_t when) override
+    virtual void next(cycle_count_t) override
     {
         m_ctl.ee_timer_next();
-        return 0;
     }
 
 private:
@@ -128,6 +126,9 @@ bool ArchAVR_NVM::init(Device& device)
     status &= register_interrupt(m_config.iv_spm_ready, *this);
     status &= register_interrupt(m_config.iv_ee_ready, *this);
 
+    m_spm_timer->init(*device.cycle_manager());
+    m_ee_timer->init(*device.cycle_manager());
+
     //Obtain the pointer to the flash section manager
     ctlreq_data_t req;
     if (!device.ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_SECTIONS, &req))
@@ -143,7 +144,7 @@ void ArchAVR_NVM::reset(int)
     m_spm_state = State_Idle;
     clear_spm_buffer();
     m_halt = false;
-    device()->cycle_manager()->cancel(*m_spm_timer);
+    m_spm_timer->cancel();
 
     //A reset does not stop a EEPROM write, we need to restore the control bits
     if (m_ee_state == State_Write) {
@@ -151,7 +152,7 @@ void ArchAVR_NVM::reset(int)
         set_ioreg(m_config.rb_ee_write);
     } else {
         m_ee_state = State_Idle;
-        device()->cycle_manager()->cancel(*m_ee_timer);
+        m_ee_timer->cancel();
     }
 }
 
@@ -184,7 +185,7 @@ void ArchAVR_NVM::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
             if (enable) {
                 m_spm_state = State_Pending;
                 m_spm_command = cmd;
-                device()->cycle_manager()->delay(*m_spm_timer, 4);
+                m_spm_timer->delay(4);
                 if (m_spm_command & 0x200)
                     device()->core().set_direct_LPM_enabled(false);
 
@@ -204,7 +205,7 @@ void ArchAVR_NVM::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
         //and EEPE is zero.
         if (m_config.rb_ee_wren.extract(data.posedge()) && !test_ioreg(m_config.rb_ee_write) && m_ee_state == State_Idle) {
             m_ee_state = State_Pending;
-            device()->cycle_manager()->delay(*m_ee_timer, 4);
+            m_ee_timer->delay(4);
         } else {
             //In all other cases, EEMPE is not writeable so reinstate the former value.
             write_ioreg(m_config.rb_ee_wren, data.old);
@@ -444,8 +445,8 @@ int ArchAVR_NVM::process_NVM_write(NVM_request_t& req)
     }
 
     //Cancel/restart the timer
-    device()->cycle_manager()->cancel(*m_spm_timer);
-    device()->cycle_manager()->delay(*m_spm_timer, delay);
+    m_spm_timer->cancel();
+    m_spm_timer->delay(delay);
 
     if (m_spm_command == SPM_PageErase || m_spm_command == SPM_PageWrite) {
         m_spm_state = State_Write;
@@ -539,7 +540,7 @@ void ArchAVR_NVM::start_eeprom_command(uint8_t command)
         } break;
     }
 
-    device()->cycle_manager()->delay(*m_ee_timer, delay);
+    m_ee_timer->delay(delay);
 }
 
 

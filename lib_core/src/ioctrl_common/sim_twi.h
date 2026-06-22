@@ -262,7 +262,7 @@ inline bool EndPoint::get_data_level() const
    the controller shall use the API of this class to react accordingly.
    \sa TWI, EndPoint, Host
  */
-class AVR_CORE_PUBLIC_API Client : public EndPoint, public CycleTimer {
+class AVR_CORE_PUBLIC_API Client : public EndPoint, private CycleTimer {
 
 public:
 
@@ -314,8 +314,6 @@ public:
 
     Signal& signal();
 
-    virtual cycle_count_t next(cycle_count_t when) override;
-
 protected:
 
     virtual void clock_level_changed(bool level) override;
@@ -328,13 +326,13 @@ private:
     bool m_ack;
     int m_bitcount;
     bool m_hold;
-    CycleManager* m_cycle_manager;
     int m_deferred_drive;
     Signal m_signal;
 
     void set_state(State state);
     void defer_clock_release();
     void defer_data_drive(bool level);
+    virtual void next(cycle_count_t when) override;
 
 };
 
@@ -384,7 +382,7 @@ inline Signal& Client::signal()
    the controller shall use the API of this class to react accordingly.
    \sa TWI, EndPoint, Client
  */
-class AVR_CORE_PUBLIC_API Host : public EndPoint, public CycleTimer {
+class AVR_CORE_PUBLIC_API Host : public EndPoint, private CycleTimer {
 
 public:
 
@@ -420,7 +418,7 @@ public:
 
     Host();
 
-    void init(CycleManager& manager);
+    void init(CycleManager& cycle_manager);
 
     State state() const;
 
@@ -447,8 +445,6 @@ public:
 
     Signal& signal();
 
-    virtual cycle_count_t next(cycle_count_t when) override;
-
 protected:
 
     virtual void clock_level_changed(bool level) override;
@@ -465,7 +461,6 @@ private:
     bool m_ack;
     cycle_count_t m_step_delay;
     uint8_t m_pattern;
-    CycleManager* m_cycle_manager;
     bool m_hold;
     Signal m_signal;
 
@@ -474,6 +469,7 @@ private:
     void process_state_and_reschedule();
     bool process_state(bool inc_step);
     void transition_state();
+    virtual void next(cycle_count_t when) override;
 
 };
 

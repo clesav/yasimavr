@@ -1,7 +1,7 @@
 /*
  * sim_cycle_timer.h
  *
- *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -46,9 +46,17 @@ public:
     CycleTimer(const CycleTimer& other);
     virtual ~CycleTimer();
 
-    /// Returns true if this timer is scheduled with a manager.
-    inline bool scheduled() const { return !!m_manager; }
+    void init(CycleManager& manager);
 
+    inline CycleManager* manager() const { return m_manager; }
+
+    void delay(cycle_count_t count);
+    void cancel();
+    void pause();
+    void resume();
+
+    bool scheduled() const;
+    bool processing() const;
     bool paused() const;
 
     cycle_count_t remaining_delay() const;
@@ -60,14 +68,8 @@ public:
        The only guarantee is "called 'when' <= 'current cycle'", the implementations must account for this.
 
        \param when current 'when' cycle, at which the timer was scheduled
-       \return the next 'when' the timer requires to be called at.
-
-       \note The next 'when' can be in the 'past' (i.e. <= 'current cycle').
-       In this case, the timer will be called again within the same cycle with the given next 'when'.
-       The only constraint is that it must be greater than the previous 'when'.
-       If it's negative or zero, the timer is removed from the queue.
      */
-    virtual cycle_count_t next(cycle_count_t when) = 0;
+    virtual void next(cycle_count_t when) = 0;
 
     CycleTimer& operator=(const CycleTimer& other);
 
@@ -75,8 +77,9 @@ private:
 
     friend class CycleManager;
 
-    /// Pointer to the cycle manager when the timer is scheduled. Null when not scheduled.
     CycleManager* m_manager;
+    uint8_t m_state;
+    cycle_count_t m_when;
 
 };
 
@@ -86,37 +89,27 @@ class BoundFunctionCycleTimer : public CycleTimer {
 
 public:
 
-    using bound_full_fct_t = cycle_count_t(C::*)(cycle_count_t);
-    using bound_noret_fct_t = void(C::*)(cycle_count_t);
+    using bound_fct_t = void(C::*)(cycle_count_t);
     using bound_noarg_fct_t = void(C::*)(void);
 
-    constexpr BoundFunctionCycleTimer(C& _c, bound_full_fct_t _f) : CycleTimer(), c(_c), m(Full), f_full(_f) {}
-    constexpr BoundFunctionCycleTimer(C& _c, bound_noret_fct_t _f) : CycleTimer(), c(_c), m(NoRet), f_noret(_f) {}
-    constexpr BoundFunctionCycleTimer(C& _c, bound_noarg_fct_t _f) : CycleTimer(), c(_c), m(NoArg), f_noarg(_f) {}
+    constexpr BoundFunctionCycleTimer(C& _c, bound_fct_t _f) : CycleTimer(), c(_c), arg(true), f_arg(_f) {}
+    constexpr BoundFunctionCycleTimer(C& _c, bound_noarg_fct_t _f) : CycleTimer(), c(_c), arg(false), f_noarg(_f) {}
 
-    virtual cycle_count_t next(cycle_count_t when) override final
+    virtual void next(cycle_count_t when) override final
     {
-        if (m == Full) {
-            return (c.*f_full)(when);
-        } else if (m == NoRet) {
-            (c.*f_noret)(when);
-            return 0;
-        } else {
+        if (arg)
+            (c.*f_arg)(when);
+        else
             (c.*f_noarg)();
-            return 0;
-        }
     }
 
 private:
 
-    enum Mode { Full, NoRet, NoArg };
-
     C& c;
-    const Mode m;
+    bool arg;
 
     union {
-        const bound_full_fct_t f_full;
-        const bound_noret_fct_t f_noret;
+        const bound_fct_t f_arg;
         const bound_noarg_fct_t f_noarg;
     };
 
@@ -141,16 +134,6 @@ public:
     cycle_count_t cycle() const;
     void increment_cycle(cycle_count_t count);
 
-    void schedule(CycleTimer& timer, cycle_count_t when);
-
-    void delay(CycleTimer& timer, cycle_count_t d);
-
-    void cancel(CycleTimer& timer);
-
-    void pause(CycleTimer& timer);
-
-    void resume(CycleTimer& timer);
-
     void process_timers();
 
     cycle_count_t next_when() const;
@@ -163,22 +146,27 @@ private:
     friend class CycleTimer;
 
     //Structure holding information on a cycle timer when it's in the cycle queue
-    struct TimerSlot;
-    std::deque<TimerSlot*> m_timer_slots;
+    std::deque<CycleTimer*> m_timer_slots;
     cycle_count_t m_cycle;
+    bool m_processing;
+    cycle_count_t m_processed_when;
 
     //Utility method to add a timer in the cycle queue, conserving the order or 'when'
     //and paused timers last
-    void add_to_queue(TimerSlot* slot);
+    void add_to_queue(CycleTimer& timer);
 
     //Utility to remove a timer from the queue.
-    TimerSlot* pop_from_queue(CycleTimer& timer);
+    bool pop_from_queue(CycleTimer& timer);
 
     void copy_slot(const CycleTimer& src, CycleTimer& dst);
 
-    TimerSlot* get_slot(const CycleTimer& timer) const;
+    void delay(CycleTimer& timer, cycle_count_t count);
+    void cancel(CycleTimer& timer);
+    void pause(CycleTimer& timer);
+    void resume(CycleTimer& timer);
 
 };
+
 
 /// Returns the current cycle
 inline cycle_count_t CycleManager::cycle() const

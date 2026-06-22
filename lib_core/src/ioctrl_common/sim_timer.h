@@ -60,7 +60,7 @@ YASIMAVR_BEGIN_NAMESPACE
    Timers can be daisy-chained, so that the prescaler tick output of a timer feeds into the
    prescaler clock input of another.
  */
-class AVR_CORE_PUBLIC_API PrescaledTimer : public CycleTimer {
+class AVR_CORE_PUBLIC_API PrescaledTimer : private CycleTimer {
 
 public:
 
@@ -81,9 +81,9 @@ public:
 
     void set_paused(bool paused);
 
-    void update();
+    inline bool running() const { return scheduled() || processing(); }
 
-    virtual cycle_count_t next(cycle_count_t when) override;
+    void update();
 
     Signal& signal();
 
@@ -98,7 +98,6 @@ public:
 
 private:
 
-    CycleManager* m_cycle_manager;
     Logger* m_logger;
 
     //***** Prescaler management *****
@@ -124,9 +123,10 @@ private:
     void update_timer(cycle_count_t when);
     void process_cycles(cycle_count_t cycles);
 
-    cycle_count_t calculate_when(cycle_count_t when);
     cycle_count_t calculate_delay();
     cycle_count_t convert_ticks_to_cycles(cycle_count_t ticks);
+
+    virtual void next(cycle_count_t when) override;
 
 };
 

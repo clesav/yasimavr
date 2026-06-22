@@ -1,7 +1,7 @@
 /*
  * cycle_timer.sip
  *
- *  Copyright 2022-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2022-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -30,11 +30,21 @@ public:
 
     CycleTimer();
 
+    void init(CycleManager&);
+
+    CycleManager* manager() const;
+
+    void delay(cycle_count_t);
+    void cancel();
+    void pause();
+    void resume();
+
     bool scheduled() const;
+    bool processing() const;
     bool paused() const;
     cycle_count_t remaining_delay() const;
 
-    virtual cycle_count_t next(cycle_count_t when) = 0;
+    virtual void next(cycle_count_t) = 0;
 
 };
 
@@ -64,19 +74,15 @@ public:
         Py_DECREF(m_callback);
     }
 
-    virtual cycle_count_t next(cycle_count_t when) override final
+    virtual void next(cycle_count_t when) override final
     {
         //Ensure the GIL is held for the callback
         PyGILState_STATE pystate = PyGILState_Ensure();
         //Call the callback
         PyObject* py_res = PyObject_CallFunction(m_callback, "L", when);
-        //Conversion of the result to C++ domain
-        cycle_count_t res = PyLong_AsLongLong(py_res);
         Py_XDECREF(py_res);
         //Release the GIL
         PyGILState_Release(pystate);
-        //Return the result
-        return res;
     }
 
     CallableCycleTimer& operator=(const CallableCycleTimer& other)
@@ -99,7 +105,7 @@ public:
     CallableCycleTimer(SIP_PYCALLABLE);
     CallableCycleTimer(const CallableCycleTimer&);
 
-    virtual cycle_count_t next(cycle_count_t when) final;
+    virtual void next(cycle_count_t) final;
 
 };
 
@@ -116,11 +122,6 @@ public:
     cycle_count_t cycle() const;
     void increment_cycle(cycle_count_t);
 
-    void schedule(CycleTimer&, cycle_count_t);
-    void delay(CycleTimer&, cycle_count_t);
-    void cancel(CycleTimer&);
-    void pause(CycleTimer&);
-    void resume(CycleTimer&);
     void process_timers();
     cycle_count_t next_when() const;
 

@@ -105,7 +105,7 @@ protected:
 
 //=======================================================================================
 
-class Client : public EndPoint, public CycleTimer {
+class Client : public EndPoint {
 %TypeHeaderCode
 #include "ioctrl_common/sim_twi.h"
 %End
@@ -141,8 +141,6 @@ public:
     void start_data_rx();
     Signal& signal();
 
-    virtual cycle_count_t next(cycle_count_t);
-
 protected:
 
     virtual void clock_level_changed(bool);
@@ -153,7 +151,7 @@ protected:
 
 //=======================================================================================
 
-class Host : public EndPoint, public CycleTimer {
+class Host : public EndPoint {
 %TypeHeaderCode
 #include "ioctrl_common/sim_twi.h"
 %End
@@ -196,8 +194,6 @@ public:
     void start_data_rx();
     bool stop_transfer();
     Signal& signal();
-
-    virtual cycle_count_t next(cycle_count_t);
 
 protected:
 

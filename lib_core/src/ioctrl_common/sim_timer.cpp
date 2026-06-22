@@ -29,7 +29,7 @@ YASIMAVR_USING_NAMESPACE
 //=======================================================================================
 
 PrescaledTimer::PrescaledTimer()
-:m_cycle_manager(nullptr)
+:CycleTimer()
 ,m_logger(nullptr)
 ,m_ps_max(1)
 ,m_ps_factor(0)
@@ -53,7 +53,7 @@ PrescaledTimer::~PrescaledTimer()
 ///Initialise the timer, must be called once during initialisation phases
 void PrescaledTimer::init(CycleManager& cycle_manager, Logger& logger)
 {
-    m_cycle_manager = &cycle_manager;
+    CycleTimer::init(cycle_manager);
     m_logger = &logger;
 }
 
@@ -66,7 +66,7 @@ void PrescaledTimer::reset()
     m_paused = false;
     m_delay = 0;
     if (!m_updating)
-        m_cycle_manager->cancel(*this);
+        cancel();
 }
 
 /**
@@ -125,21 +125,21 @@ void PrescaledTimer::set_timer_delay(cycle_count_t delay)
  */
 void PrescaledTimer::reschedule()
 {
-    cycle_count_t when;
+    cycle_count_t d;
 
     if (m_parent_timer) {
         //Only the top timer in a chain needs be scheduled
         //with the cycle manager
-        when = 0;
+        d = 0;
         m_parent_timer->reschedule();
     } else {
-        when = calculate_when(m_cycle_manager->cycle());
+        d = calculate_delay();
     }
 
-    if (when > 0)
-        m_cycle_manager->schedule(*this, when);
+    if (d > 0)
+        delay(d);
     else if (scheduled())
-        m_cycle_manager->cancel(*this);
+        cancel();
 }
 
 
@@ -151,8 +151,8 @@ void PrescaledTimer::reschedule()
  */
 void PrescaledTimer::update()
 {
-    if (m_cycle_manager->cycle())
-        update(m_cycle_manager->cycle() - 1);
+    if (manager()->cycle())
+        update(manager()->cycle() - 1);
 }
 
 
@@ -246,12 +246,6 @@ void PrescaledTimer::process_cycles(cycle_count_t cycles)
  * the prescaler) of this timer or any of the chained timers.
  * If the timer has a parent, the parent prescaler is factored in.
  */
-cycle_count_t PrescaledTimer::calculate_when(cycle_count_t when)
-{
-    cycle_count_t delay = calculate_delay();
-    return (delay > 0) ? (when + delay) : 0;
-}
-
 cycle_count_t PrescaledTimer::calculate_delay()
 {
     cycle_count_t cycles = 0;
@@ -290,10 +284,10 @@ cycle_count_t PrescaledTimer::convert_ticks_to_cycles(cycle_count_t ticks)
 /*
  * Callback from the cycle timer processing. Update the counters and reschedule for the next timeout
  */
-cycle_count_t PrescaledTimer::next(cycle_count_t when)
+void PrescaledTimer::next(cycle_count_t when)
 {
     update(when);
-    return calculate_when(when);
+    delay(calculate_delay());
 }
 
 /**

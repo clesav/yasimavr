@@ -31,8 +31,7 @@ using namespace UART;
 //=======================================================================================
 
 USART::USART()
-:m_cycle_manager(nullptr)
-,m_logger(nullptr)
+:m_logger(nullptr)
 ,m_delay(2)
 ,m_clk_mode(Clock_Async)
 ,m_clk_timer(*this, &USART::clk_timer_next)
@@ -59,7 +58,9 @@ USART::USART()
  */
 void USART::init(CycleManager& cycle_manager, Logger* logger)
 {
-    m_cycle_manager = &cycle_manager;
+    m_clk_timer.init(cycle_manager);
+    m_tx_timer.init(cycle_manager);
+    m_rx_timer.init(cycle_manager);
     m_logger = logger;
 }
 
@@ -70,7 +71,7 @@ void USART::reset()
 {
     m_delay = 2;
     m_clk_mode = Clock_Async;
-    m_cycle_manager->cancel(m_clk_timer);
+    m_clk_timer.cancel();
     set_line_state(Line_XCK, false);
 
     m_databits = 8;
@@ -83,7 +84,7 @@ void USART::reset()
     m_tx_shifter = 0x0000;
     m_tx_buffer.clear();
     m_tx_shift_counter = 0;
-    m_cycle_manager->cancel(m_tx_timer);
+    m_tx_timer.cancel();
 
     set_line_state(Line_TXD, true);
     set_line_state(Line_DIR, false);
@@ -98,7 +99,7 @@ void USART::reset()
     m_rx_shift_counter = 0;
     m_rx_buffer.clear();
     m_rx_pending.clear();
-    m_cycle_manager->cancel(m_rx_timer);
+    m_rx_timer.cancel();
 
     m_paused = false;
 }
@@ -114,9 +115,9 @@ void USART::set_clock_mode(ClockMode mode)
 {
     m_clk_mode = mode;
     if (mode == Clock_Emitter) {
-        m_cycle_manager->delay(m_clk_timer, m_delay / 2);
+        m_clk_timer.delay(m_delay / 2);
     } else {
-        m_cycle_manager->cancel(m_clk_timer);
+        m_clk_timer.cancel();
         set_line_state(Line_XCK, false);
     }
 }
@@ -136,12 +137,12 @@ void USART::set_bit_delay(cycle_count_t delay)
       - toggle the clock line state
       - process the changes for the TX and RX stages
  */
-cycle_count_t USART::clk_timer_next(cycle_count_t when)
+void USART::clk_timer_next()
 {
     bool new_state = !get_line_state(Line_XCK);
     set_line_state(Line_XCK, new_state);
     process_clock_change(new_state);
-    return when + m_delay / 2;
+    m_clk_timer.delay(m_delay / 2);
 }
 
 /*
@@ -315,7 +316,7 @@ void USART::start_bitwise_tx()
 
     if (m_clk_mode == Clock_Async) {
         shift_tx();
-        m_cycle_manager->delay(m_tx_timer, m_delay);
+        m_tx_timer.delay(m_delay);
     }
 }
 
@@ -358,7 +359,7 @@ void USART::shift_tx()
 {
     if (m_tx_shift_counter == 1) {
         //The current frame transmission is complete, raise the signals
-    	if (m_logger) m_logger->dbg("TX complete");
+        if (m_logger) m_logger->dbg("TX complete");
         m_signal.raise(Signal_TX_Data, m_tx_buffer.front());
         m_signal.raise(Signal_TX_Complete, 1);
 
@@ -389,10 +390,11 @@ void USART::cancel_tx_pending()
 }
 
 
-cycle_count_t USART::tx_timer_next(cycle_count_t when)
+void USART::tx_timer_next()
 {
     shift_tx();
-    return m_tx_shift_counter ? (when + m_delay) : 0;
+    if (m_tx_shift_counter)
+        m_tx_timer.delay(m_delay);
 }
 
 
@@ -423,7 +425,7 @@ void USART::set_rx_enabled(bool enabled)
     if (!enabled) {
         if (m_rx_shift_counter) {
             m_signal.raise(Signal_RX_Complete, 0);
-            m_cycle_manager->cancel(m_rx_timer);
+            m_rx_timer.cancel();
             m_rx_shift_counter = 0;
         }
 
@@ -486,7 +488,7 @@ void USART::start_bitwise_rx()
 {
     //Check if we have frames pending reception in the buffer and discard those.
     if (m_rx_pending.size()) {
-        m_cycle_manager->cancel(m_rx_timer);
+        m_rx_timer.cancel();
         m_rx_pending.clear();
     }
 
@@ -510,7 +512,7 @@ void USART::start_bitwise_rx()
     //If asynchronous, we need our own clock.
     //The first delay is a 1.5 baud period in order to sample in the middle of the next bit.
     if (m_clk_mode == Clock_Async)
-        m_cycle_manager->delay(m_rx_timer, m_delay + m_delay / 2);
+        m_rx_timer.delay(m_delay + m_delay / 2);
 }
 
 /**
@@ -524,7 +526,7 @@ void USART::push_rx_frame(uint16_t frame)
     m_rx_pending.push_back(frame);
 
     if (!m_rx_timer.scheduled())
-        m_cycle_manager->delay(m_rx_timer, m_delay * framesize());
+        m_rx_timer.delay(m_delay * framesize());
 }
 
 
@@ -547,20 +549,20 @@ void USART::shift_rx()
 }
 
 
-cycle_count_t USART::rx_timer_next(cycle_count_t when)
+void USART::rx_timer_next()
 {
-    cycle_count_t next_when;
+    cycle_count_t next_delay;
 
     if (m_rx_shift_counter) {
 
         //Bitwise reception
         shift_rx();
         if (!m_rx_shift_counter)
-            next_when = 0;
+            next_delay = 0;
         else if (m_rx_shift_counter == 1)
-            next_when = when + m_delay / 2;
+            next_delay = m_delay / 2;
         else
-            next_when = when + m_delay;
+            next_delay = m_delay;
 
     } else {
 
@@ -578,11 +580,11 @@ cycle_count_t USART::rx_timer_next(cycle_count_t when)
             //Signal that we received a frame but discarded it
             m_signal.raise(Signal_RX_Complete, 0);
         }
-        next_when = m_rx_pending.size() ? (when + m_delay * framesize()) : 0;
+        next_delay = m_rx_pending.size() ? (m_delay * framesize()) : 0;
 
     }
 
-    return next_when;
+    m_rx_timer.delay(next_delay);
 }
 
 

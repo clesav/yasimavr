@@ -268,6 +268,7 @@ void ArchXT_NVM::reset(int)
     //Internals
     m_state = State_Idle;
     m_pending_bootlock = false;
+    m_timer.cancel();
 }
 
 
@@ -471,7 +472,7 @@ void ArchXT_NVM::execute_command(Command cmd)
             device()->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_HALT, &d);
         }
 
-        device()->cycle_manager()->delay(m_timer, delay);
+        m_timer.delay(delay);
     }
 }
 

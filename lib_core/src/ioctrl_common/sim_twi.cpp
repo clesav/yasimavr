@@ -116,7 +116,6 @@ Client::Client()
 ,m_ack(false)
 ,m_bitcount(0)
 ,m_hold(false)
-,m_cycle_manager(nullptr)
 ,m_deferred_drive(0)
 {}
 
@@ -125,7 +124,7 @@ Client::Client()
  */
 void Client::init(CycleManager& manager)
 {
-    m_cycle_manager = &manager;
+    CycleTimer::init(manager);
 }
 
 
@@ -135,7 +134,7 @@ void Client::set_state(State state)
     m_bitcount = 0;
 
     if (m_state == State_Disabled) {
-        m_cycle_manager->cancel(*this);
+        cancel();
         set_data_drive(true);
         set_clock_drive(true);
         m_hold = false;
@@ -155,7 +154,7 @@ void Client::set_enabled(bool enabled)
 {
     if (m_state != State_Disabled && !enabled)
         set_state(State_Disabled);
-    else if (m_state == State_Disabled && enabled && m_cycle_manager)
+    else if (m_state == State_Disabled && enabled)
         set_state(State_Idle);
 }
 
@@ -168,7 +167,7 @@ void Client::reset()
 
     m_hold = false;
 
-    m_cycle_manager->cancel(*this);
+    cancel();
     set_data_drive(true);
     set_clock_drive(true);
 
@@ -409,7 +408,7 @@ void Client::defer_clock_release()
 {
     m_deferred_drive |= DEFER_CLOCK_HI;
     if (!scheduled())
-        m_cycle_manager->delay(*this, 1);
+        delay(1);
 }
 
 
@@ -417,11 +416,11 @@ void Client::defer_data_drive(bool level)
 {
     m_deferred_drive = (m_deferred_drive & ~DEFER_DATA_MASK) | (level ? DEFER_DATA_HI : DEFER_DATA_LO);
     if (!scheduled())
-        m_cycle_manager->delay(*this, 1);
+        delay(1);
 }
 
 
-cycle_count_t Client::next(cycle_count_t when)
+void Client::next(cycle_count_t)
 {
     if (m_deferred_drive & DEFER_DATA_MASK) {
         set_data_drive((m_deferred_drive & DEFER_DATA_MASK) == DEFER_DATA_HI);
@@ -431,7 +430,8 @@ cycle_count_t Client::next(cycle_count_t when)
         m_deferred_drive &= ~DEFER_CLOCK_HI;
     }
 
-    return m_deferred_drive ? 1 : 0;
+    if (m_deferred_drive)
+        delay(1);
 }
 
 
@@ -472,7 +472,6 @@ Host::Host()
 ,m_ack(false)
 ,m_step_delay(1)
 ,m_pattern(0)
-,m_cycle_manager(nullptr)
 ,m_hold(false)
 {}
 
@@ -481,7 +480,7 @@ Host::Host()
  */
 void Host::init(CycleManager& manager)
 {
-    m_cycle_manager = &manager;
+    CycleTimer::init(manager);
 }
 
 
@@ -501,7 +500,7 @@ void Host::set_state(State state)
 void Host::set_enabled(bool enabled)
 {
     if (enabled) {
-        if (m_state == State_Disabled && m_cycle_manager)
+        if (m_state == State_Disabled && manager())
             set_state(State_Idle);
     } else {
         if (m_state != State_Disabled)
@@ -517,7 +516,7 @@ void Host::reset()
     if (m_state != State_Disabled) {
         set_data_drive(true);
         set_clock_drive(true);
-        m_cycle_manager->cancel(*this);
+        cancel();
     }
 
     if (m_flags & StateFlag_Active)
@@ -678,19 +677,20 @@ void Host::apply_pattern()
 }
 
 
-cycle_count_t Host::next(cycle_count_t when)
+void Host::next(cycle_count_t)
 {
     bool restart_timer = process_state(true);
-    return restart_timer ? (when + m_step_delay) : 0;
+    if (restart_timer)
+        delay(m_step_delay);
 }
 
 
 void Host::process_state_and_reschedule()
 {
-    if (!scheduled()) {
+    if (!processing()) {
         bool start_timer = process_state(false);
         if (start_timer)
-            m_cycle_manager->delay(*this, m_step_delay);
+            delay(m_step_delay);
     }
 }
 
