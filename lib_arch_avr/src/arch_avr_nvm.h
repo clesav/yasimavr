@@ -99,12 +99,6 @@ public:
 
 private:
 
-    class SPM_Timer;
-    friend class SPM_Timer;
-
-    class EE_Timer;
-    friend class EE_Timer;
-
     enum State {
         State_Idle = 0,
         State_Pending,
@@ -135,12 +129,12 @@ private:
     flash_addr_t m_spm_page_size;
     State m_spm_state;
     int m_spm_command;
-    SPM_Timer* m_spm_timer;
+    BoundFunctionCycleTimer<ArchAVR_NVM> m_spm_timer;
     bool m_halt;
 
     State m_ee_state;
     uint8_t m_ee_prog_mode;
-    EE_Timer* m_ee_timer;
+    BoundFunctionCycleTimer<ArchAVR_NVM> m_ee_timer;
 
     MemorySectionManager* m_section_manager;
 
