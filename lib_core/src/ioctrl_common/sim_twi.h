@@ -262,7 +262,7 @@ inline bool EndPoint::get_data_level() const
    the controller shall use the API of this class to react accordingly.
    \sa TWI, EndPoint, Host
  */
-class AVR_CORE_PUBLIC_API Client : public EndPoint, private CycleTimer {
+class AVR_CORE_PUBLIC_API Client : public EndPoint {
 
 public:
 
@@ -328,11 +328,12 @@ private:
     bool m_hold;
     int m_deferred_drive;
     Signal m_signal;
+    BoundFunctionCycleTimer<Client> m_timer;
 
     void set_state(State state);
     void defer_clock_release();
     void defer_data_drive(bool level);
-    virtual void next(cycle_count_t when) override;
+    void timer_next(cycle_count_t when);
 
 };
 
@@ -382,7 +383,7 @@ inline Signal& Client::signal()
    the controller shall use the API of this class to react accordingly.
    \sa TWI, EndPoint, Client
  */
-class AVR_CORE_PUBLIC_API Host : public EndPoint, private CycleTimer {
+class AVR_CORE_PUBLIC_API Host : public EndPoint {
 
 public:
 
@@ -463,13 +464,14 @@ private:
     uint8_t m_pattern;
     bool m_hold;
     Signal m_signal;
+    BoundFunctionCycleTimer<Host> m_timer;
 
     void set_state(State state);
     void apply_pattern();
     void process_state_and_reschedule();
     bool process_state(bool inc_step);
     void transition_state();
-    virtual void next(cycle_count_t when) override;
+    void timer_next(cycle_count_t when);
 
 };
 
