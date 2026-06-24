@@ -23,6 +23,7 @@
 
 #include "sim_cycle_timer.h"
 #include <algorithm>
+#include <cmath>
 #include <stdexcept>
 
 YASIMAVR_USING_NAMESPACE
@@ -37,11 +38,17 @@ YASIMAVR_USING_NAMESPACE
 #define STATE_PROCESSING 0x02
 // Indicated that the timer is paused
 #define STATE_PAUSED     0x04
+// Indicates that the timer's clock domain has no frequency, i.e. the source is turned off.
+#define STATE_NOCLOCK    0x08
+
+//Useful combination of the PAUSED and NOCLOCK flag indicating the timer can't be processed
+#define STATE_HALTED     (STATE_PAUSED | STATE_NOCLOCK)
 
 
 CycleTimer::CycleTimer()
 :m_manager(nullptr)
 ,m_state(0)
+,m_when_d(0.0)
 ,m_when(INVALID_CYCLE)
 {}
 
@@ -77,9 +84,10 @@ CycleTimer& CycleTimer::operator=(const CycleTimer& other)
  * Initialisation of the timer by assigning it a manager and a clock domain.
  * Must be called before any operation on the timer.
  */
-void CycleTimer::init(CycleManager& manager)
+void CycleTimer::init(CycleManager& manager, sim_id_t clock_domain)
 {
     m_manager = &manager;
+    m_clock_domain = clock_domain;
 }
 
 
@@ -174,6 +182,9 @@ cycle_count_t CycleTimer::remaining_delay() const
     if (!m_state)
         return INVALID_CYCLE;
 
+    if (m_state & STATE_NOCLOCK)
+        return m_when;
+
     cycle_count_t d;
     if (m_state & STATE_PAUSED)
         d = m_when;
@@ -182,7 +193,7 @@ cycle_count_t CycleTimer::remaining_delay() const
     else
         d = m_when - m_manager->m_cycle;
 
-    return d;
+    return std::ceil(d / m_manager->m_clock_domains.at(m_clock_domain).cycle_factor);
 }
 
 
@@ -192,7 +203,13 @@ CycleManager::CycleManager()
 :m_cycle(0)
 ,m_processing(false)
 ,m_processed_when(0)
-{}
+,m_post_process_clock_update(false)
+,m_ref_clk_freq(1.0)
+{
+    m_clock_sources[sim_id_t()] = clock_source_t{ 1.0 };
+    //ensure the reference domain always exists
+    m_clock_domains[ReferenceDomain] = clock_domain_t{ sim_id_t(), 1, 1, 1.0 };
+}
 
 
 CycleManager::~CycleManager()
@@ -212,6 +229,142 @@ void CycleManager::increment_cycle(cycle_count_t count)
 }
 
 
+/**
+ * Add a new clock source.
+ * \param id clock source ID
+ */
+void CycleManager::add_clock_source(sim_id_t id)
+{
+    m_clock_sources[id] = { 1.0 };
+    update_clocks();
+}
+
+/**
+ * Configure a clock source by setting its frequency.
+ * The source can be turned off by setting the frequency to zero.
+ * \param id clock source ID
+ * \param frequency new frequency. Can be >= 0
+ */
+void CycleManager::configure_clock_source(sim_id_t id, double frequency)
+{
+    if (frequency < 0.0)
+        frequency = 0.0;
+
+    m_clock_sources.at(id) = { frequency };
+
+    update_clocks();
+}
+
+/**
+ * Add a new clock domain
+ */
+void CycleManager::add_clock_domain(sim_id_t id)
+{
+    m_clock_domains[id] = clock_domain_t{ sim_id_t(), 1, 1, 1.0 };
+    update_clocks();
+}
+
+/**
+ * Configure a clock domain by selecting a source and setting prescaler factors
+ * \param id clock domain ID
+ * \param source clock source ID selected for this domain
+ * \param ps_div prescaler dividing factor
+ * \param ps_mul prescaler multiplying factor
+ */
+void CycleManager::configure_clock_domain(sim_id_t id, sim_id_t source, unsigned long ps_div, unsigned long ps_mul)
+{
+    if (!ps_div) ps_div = 1;
+
+    clock_domain_t& clkdom = m_clock_domains.at(id);
+    clkdom.src = source;
+    clkdom.ps_div = ps_div;
+    clkdom.ps_mul = ps_mul;
+
+    update_clocks();
+}
+
+/**
+ * Returns a clock domain frequency
+ */
+double CycleManager::domain_frequency(sim_id_t id) const
+{
+    auto& clkdom = m_clock_domains.at(id);
+    auto& clksrc = m_clock_sources.at(clkdom.src);
+    if (clksrc.frequency && clkdom.ps_mul)
+        return clksrc.frequency * (double)clkdom.ps_mul / (double)clkdom.ps_div;
+    else
+        return 0.0;
+}
+
+
+void CycleManager::update_clocks()
+{
+    //If the clock update is done during the processing of cycle timers, we need
+    //to wait until all timers have been processed, so just raise the flag here.
+    //The actual update will take place after the processing loop.
+    if (m_processing) {
+        m_post_process_clock_update = true;
+        return;
+    }
+
+    //The reference clock is the domain 0 after prescaling
+    clock_domain_t& refdom = m_clock_domains.at(ReferenceDomain);
+    clock_source_t& refsrc = m_clock_sources.at(refdom.src);
+    m_ref_clk_freq = (refsrc.frequency * (double)refdom.ps_mul) / (double)refdom.ps_div;
+
+    //For each other clock domain, calculate the cycle factor which is Freq(ref domain) / Freq(domain i)
+    //We keep a copy of the old cycle factor values
+    std::unordered_map<sim_id_t, double> old_cycle_factors;
+    for (auto& [dom_id, dom_cfg] : m_clock_domains) {
+        auto& clksrc = m_clock_sources.at(dom_cfg.src);
+        old_cycle_factors[dom_id] = dom_cfg.cycle_factor;
+        if (clksrc.frequency && dom_cfg.ps_mul)
+            dom_cfg.cycle_factor = (m_ref_clk_freq * (double)dom_cfg.ps_div) /
+                                  (clksrc.frequency * (double)dom_cfg.ps_mul);
+        else
+            dom_cfg.cycle_factor = 0.0;
+    }
+
+    if (!m_ref_clk_freq) return;
+
+    //Update all the cycle timers
+    for (auto t : m_timer_slots) {
+
+        //The following is pointless if the timer uses the reference domain
+        if (t->m_clock_domain != ReferenceDomain) {
+
+            double old_cycle_factor = old_cycle_factors.at(t->m_clock_domain);
+
+            double rem_dom_cycles;
+            if (t->m_state & STATE_NOCLOCK) {
+                rem_dom_cycles = t->m_when_d;
+            } else if (t->m_state & STATE_PAUSED) {
+                rem_dom_cycles = t->m_when_d / old_cycle_factor;
+            } else {
+                rem_dom_cycles = (t->m_when_d - m_cycle) / old_cycle_factor;
+            }
+
+            clock_domain_t& clkdom = m_clock_domains.at(t->m_clock_domain);
+            if (!clkdom.cycle_factor) {
+                t->m_state |= STATE_NOCLOCK;
+                t->m_when_d = rem_dom_cycles;
+            } else {
+                t->m_state &= ~STATE_NOCLOCK;
+                double rem_ref_cycles = rem_dom_cycles * clkdom.cycle_factor;
+                if (t->m_state & STATE_PAUSED) {
+                    t->m_when_d = rem_ref_cycles;
+                } else {
+                    t->m_when_d = m_cycle + rem_ref_cycles;
+                }
+            }
+
+            t->m_when = std::ceil(t->m_when_d);
+
+        }
+    }
+}
+
+
 void CycleManager::add_to_queue(CycleTimer& timer)
 {
     //Add a timer slot to the queue
@@ -220,7 +373,7 @@ void CycleManager::add_to_queue(CycleTimer& timer)
     //The inactive (i.e. paused) timers are placed after all the active timers.
     //Here, we use an insertion sort algorithm.
     for (auto it = m_timer_slots.begin(); it != m_timer_slots.end(); ++it) {
-        if ((timer.m_when < (*it)->m_when) || ((*it)->m_state & STATE_PAUSED)) {
+        if ((timer.m_when < (*it)->m_when) || ((*it)->m_state & STATE_HALTED)) {
             m_timer_slots.insert(it, &timer);
             return;
         }
@@ -249,8 +402,33 @@ void CycleManager::delay(CycleTimer& timer, cycle_count_t count)
         pop_from_queue(timer);
 
     timer.m_state &= ~STATE_PAUSED;
+
+    if (timer.m_clock_domain == ReferenceDomain) {
+
+        timer.m_when = ref_cycle + count;
+        timer.m_when_d = timer.m_when;
+
+    } else {
+
+        auto it = m_clock_domains.find(timer.m_clock_domain);
+        double domain_factor;
+        if (it != m_clock_domains.end())
+            domain_factor = it->second.cycle_factor;
+        else
+            domain_factor = 0.0;
+
+        if (domain_factor) {
+            timer.m_when_d = ref_cycle + count * domain_factor;
+            timer.m_when = std::ceil(timer.m_when_d);
+        } else {
+            timer.m_state |= STATE_NOCLOCK;
+            timer.m_when = count;
+            timer.m_when_d = count;
+        }
+
+    }
+
     timer.m_state |= STATE_SCHEDULED;
-    timer.m_when = ref_cycle + count;
 
     if (!(timer.m_state & STATE_PROCESSING))
         add_to_queue(timer);
@@ -260,7 +438,7 @@ void CycleManager::delay(CycleTimer& timer, cycle_count_t count)
 void CycleManager::cancel(CycleTimer& timer)
 {
     if (timer.m_state & STATE_PROCESSING) {
-        timer.m_state &= STATE_PROCESSING;
+        timer.m_state &= STATE_PROCESSING; //all other flags are cleared
     } else {
         pop_from_queue(timer);
         timer.m_state = 0;
@@ -280,10 +458,12 @@ void CycleManager::pause(CycleTimer& timer)
     if (!(timer.m_state & STATE_PROCESSING))
         pop_from_queue(timer);
 
-    if (!(timer.m_state & STATE_PAUSED)) {
-        timer.m_state |= STATE_PAUSED;
+    if (!(timer.m_state & STATE_NOCLOCK)) {
+        timer.m_when_d = (timer.m_when > m_cycle) ? (timer.m_when_d - m_cycle) : 0.0;
         timer.m_when = (timer.m_when > m_cycle) ? (timer.m_when - m_cycle) : 0;
     }
+
+    timer.m_state |= STATE_PAUSED;
 
     if (!(timer.m_state & STATE_PROCESSING))
         add_to_queue(timer);
@@ -295,10 +475,12 @@ void CycleManager::resume(CycleTimer& timer)
     if (!(timer.m_state & STATE_PROCESSING))
         pop_from_queue(timer);
 
-    if (timer.m_state & STATE_PAUSED) {
-        timer.m_state &= ~STATE_PAUSED;
+    if (!(timer.m_state & STATE_NOCLOCK)) {
+        timer.m_when_d = timer.m_when_d + m_cycle;
         timer.m_when = timer.m_when + m_cycle;
     }
+
+    timer.m_state &= ~STATE_PAUSED;
 
     if (!(timer.m_state & STATE_PROCESSING))
         add_to_queue(timer);
@@ -317,7 +499,7 @@ void CycleManager::process_timers()
         CycleTimer* t = m_timer_slots.front();
 
         //Paused timers are last in the queue. It means we have no more active timer.
-        if ((t->m_when > m_cycle) || (t->m_state & STATE_PAUSED)) break;
+        if ((t->m_when > m_cycle) || (t->m_state & STATE_HALTED)) break;
 
         //Remove the timer from the front of the queue
         m_timer_slots.pop_front();
@@ -336,6 +518,11 @@ void CycleManager::process_timers()
 
     m_processing = false;
 
+    if (m_post_process_clock_update) {
+        m_post_process_clock_update = false;
+        update_clocks();
+    }
+
 }
 
 /**
@@ -349,7 +536,7 @@ cycle_count_t CycleManager::next_when() const
         return INVALID_CYCLE;
 
     CycleTimer* t = m_timer_slots.front();
-    if (t->m_state & STATE_PAUSED)
+    if (t->m_state & STATE_HALTED)
         return INVALID_CYCLE;
     else
         return t->m_when;
@@ -358,7 +545,9 @@ cycle_count_t CycleManager::next_when() const
 
 void CycleManager::copy_slot(const CycleTimer& src, CycleTimer& dst)
 {
+    dst.m_clock_domain = src.m_clock_domain;
     dst.m_state = src.m_state;
+    dst.m_when_d = src.m_when_d;
     dst.m_when = src.m_when;
 
     if (dst.m_state)

@@ -26,6 +26,7 @@
 
 #include "sim_types.h"
 #include <deque>
+#include <unordered_map>
 
 YASIMAVR_BEGIN_NAMESPACE
 
@@ -46,7 +47,7 @@ public:
     CycleTimer(const CycleTimer& other);
     virtual ~CycleTimer();
 
-    void init(CycleManager& manager);
+    void init(CycleManager& manager, sim_id_t clock_domain = "CPU");
 
     inline CycleManager* manager() const { return m_manager; }
 
@@ -78,7 +79,9 @@ private:
     friend class CycleManager;
 
     CycleManager* m_manager;
+    sim_id_t m_clock_domain;
     uint8_t m_state;
+    double m_when_d;
     cycle_count_t m_when;
 
 };
@@ -128,8 +131,21 @@ class AVR_CORE_PUBLIC_API CycleManager {
 
 public:
 
+    static constexpr sim_id_t ReferenceDomain = "CPU";
+
     CycleManager();
     ~CycleManager();
+
+    void add_clock_source(sim_id_t id);
+    void configure_clock_source(sim_id_t id, double src_freq);
+
+    void add_clock_domain(sim_id_t id);
+    void configure_clock_domain(sim_id_t id, sim_id_t source,
+                                unsigned long ps_div, unsigned long ps_mul = 1);
+
+    double reference_frequency() const;
+    double source_frequency(sim_id_t id) const;
+    double domain_frequency(sim_id_t id) const;
 
     cycle_count_t cycle() const;
     void increment_cycle(cycle_count_t count);
@@ -150,6 +166,23 @@ private:
     cycle_count_t m_cycle;
     bool m_processing;
     cycle_count_t m_processed_when;
+    bool m_post_process_clock_update;
+    double m_ref_clk_freq;
+
+    struct clock_source_t {
+        double frequency;
+    };
+    std::unordered_map<sim_id_t, clock_source_t> m_clock_sources;
+
+    struct clock_domain_t {
+        sim_id_t src;
+        unsigned long ps_div;
+        unsigned long ps_mul;
+        double cycle_factor;
+    };
+    std::unordered_map<sim_id_t, clock_domain_t> m_clock_domains;
+
+    void update_clocks();
 
     //Utility method to add a timer in the cycle queue, conserving the order or 'when'
     //and paused timers last
@@ -172,6 +205,19 @@ private:
 inline cycle_count_t CycleManager::cycle() const
 {
     return m_cycle;
+}
+
+
+/// Returns the reference frequency, i.e. the frequency of the reference clock domain "CPU"
+inline double CycleManager::reference_frequency() const
+{
+    return m_ref_clk_freq;
+}
+
+/// Returns a clock source frequency
+inline double CycleManager::source_frequency(sim_id_t id) const
+{
+    return m_clock_sources.at(id).frequency;
 }
 
 
