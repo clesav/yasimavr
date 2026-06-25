@@ -67,7 +67,7 @@ public:
     PrescaledTimer();
     virtual ~PrescaledTimer();
 
-    void init(CycleManager& cycle_manager, Logger& logger);
+    void init(CycleManager& cycle_manager, Logger& logger, sim_id_t clock_domain = CycleManager::ReferenceDomain);
 
     void reset();
 
@@ -213,7 +213,7 @@ public:
 
     TimerCounter(long wrap, size_t comp_count);
 
-    void init(CycleManager& cycle_manager, Logger& logger);
+    void init(CycleManager& cycle_manager, Logger& logger, sim_id_t clock_domain = CycleManager::ReferenceDomain);
 
     void reset();
     void reschedule();

@@ -97,7 +97,6 @@ public:
     Device::State state() const;
     cycle_count_t cycle() const;
     SleepMode sleep_mode() const;
-    unsigned long frequency() const;
 
     void init(CycleManager&)
         [bool(CycleManager&)];

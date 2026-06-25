@@ -31,7 +31,7 @@ public:
     PrescaledTimer();
     virtual ~PrescaledTimer();
 
-    void init(CycleManager&, Logger&);
+    void init(CycleManager&, Logger&, sim_id_t = CycleManager::ReferenceDomain);
     void reset();
     void set_prescaler(unsigned long, unsigned long);
     unsigned long prescaler_factor() const;
@@ -86,7 +86,7 @@ public:
 
     TimerCounter(long, size_t);
 
-    void init(CycleManager&, Logger&);
+    void init(CycleManager&, Logger&, sim_id_t = CycleManager::ReferenceDomain);
 
     void reset();
     void reschedule();

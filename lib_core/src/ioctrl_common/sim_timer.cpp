@@ -51,9 +51,9 @@ PrescaledTimer::~PrescaledTimer()
 }
 
 ///Initialise the timer, must be called once during initialisation phases
-void PrescaledTimer::init(CycleManager& cycle_manager, Logger& logger)
+void PrescaledTimer::init(CycleManager& cycle_manager, Logger& logger, sim_id_t clock_domain)
 {
-    CycleTimer::init(cycle_manager);
+    CycleTimer::init(cycle_manager, clock_domain);
     m_logger = &logger;
 }
 
@@ -362,9 +362,9 @@ TimerCounter::TimerCounter(long wrap, size_t comp_count)
 /**
    Initialise the counter
  */
-void TimerCounter::init(CycleManager& cycle_manager, Logger& logger)
+void TimerCounter::init(CycleManager& cycle_manager, Logger& logger, sim_id_t clock_domain)
 {
-    m_timer.init(cycle_manager, logger);
+    m_timer.init(cycle_manager, logger, clock_domain);
     m_logger = &logger;
 }
 

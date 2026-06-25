@@ -248,7 +248,7 @@ def _serialize_device(device, dumper):
     dumper['Variant'] = device.config().name
     dumper['State'] = device.state()._name_
     dumper['Sleep mode'] = device.sleep_mode()._name_
-    dumper['Frequency (Hz)'] = device.frequency()
+    dumper['Main Frequency (Hz)'] = device.cycle_manager().reference_frequency() 
 
     dumper.inc_level('Options')
     for dev_option in corelib.Device.Option:

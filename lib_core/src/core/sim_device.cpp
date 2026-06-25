@@ -48,7 +48,6 @@ Device::Device(Core& core, const DeviceConfiguration& config)
 ,m_config(config)
 ,m_options(Option_InfiniteLoopDetect)
 ,m_state(State_Limbo)
-,m_frequency(0)
 ,m_sleep_mode(SleepMode::Active)
 ,m_debugger(nullptr)
 ,m_logger("DEV", m_log_handler)
@@ -197,13 +196,6 @@ bool Device::load_firmware(const Firmware& firmware)
 
     if (!program(firmware))
         return false;
-
-    //Stores the frequency. Compulsory.
-    if (!firmware.frequency) {
-        m_logger.err("Firmware load: MCU frequency not defined");
-        return false;
-    }
-    m_frequency = firmware.frequency;
 
     //Send the power supply voltage from the firmware to the VREF controller (if it exists)
     bool analog_ok = false;

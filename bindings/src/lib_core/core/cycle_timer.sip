@@ -30,7 +30,7 @@ public:
 
     CycleTimer();
 
-    void init(CycleManager&);
+    void init(CycleManager&, sim_id_t = CycleManager::ReferenceDomain);
 
     CycleManager* manager() const;
 
@@ -117,7 +117,19 @@ class CycleManager /NoDefaultCtors/ {
 
 public:
 
+    static const sim_id_t ReferenceDomain;
+
     CycleManager();
+
+    void add_clock_source(sim_id_t);
+    void configure_clock_source(sim_id_t, double);
+
+    void add_clock_domain(sim_id_t);
+    void configure_clock_domain(sim_id_t, sim_id_t, unsigned long, unsigned long=1);
+
+    double reference_frequency() const;
+    double source_frequency(sim_id_t) const;
+    double domain_frequency(sim_id_t) const;
 
     cycle_count_t cycle() const;
     void increment_cycle(cycle_count_t);

@@ -144,7 +144,6 @@ public:
     State state() const;
     cycle_count_t cycle() const;
     SleepMode sleep_mode() const; //Returns one of SleepMode enum values
-    unsigned long frequency() const;
 
     bool init(CycleManager& cycle_manager);
 
@@ -192,7 +191,6 @@ private:
     const DeviceConfiguration& m_config;
     int m_options;
     State m_state;
-    unsigned long m_frequency;
     SleepMode m_sleep_mode;
     DeviceDebugProbe* m_debugger;
     LogHandler m_log_handler;
@@ -229,11 +227,6 @@ inline Core& Device::core() const
 inline SleepMode Device::sleep_mode() const
 {
     return m_sleep_mode;
-}
-
-inline unsigned long Device::frequency() const
-{
-    return m_frequency;
 }
 
 inline void Device::set_state(State state)

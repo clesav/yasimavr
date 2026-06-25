@@ -114,7 +114,7 @@ void SimLoop::run(cycle_count_t nbcycles)
 {
     if (m_state == State_Done) return;
 
-    if (!m_fast_mode && device().frequency() == 0) {
+    if (!m_fast_mode && m_cycle_manager.reference_frequency() == 0) {
         logger().err("Cannot run in realtime mode, MCU frequency not set.");
         m_state = State_Done;
         return;
@@ -145,7 +145,7 @@ void SimLoop::run(cycle_count_t nbcycles)
             //to the system clock elapsed and if it's ahead by more than a threshold,
             //pause the loop for the time delta
             long long sim_deadline_us = ((m_cycle_manager.cycle() + cycle_delta - first_cycle) *
-                                          1000000L) / m_device.frequency();
+                                          1000000L) / m_cycle_manager.reference_frequency();
             long long curr_time_us = get_timestamp_usecs(clock_start);
             long long sleep_time_us = sim_deadline_us - curr_time_us;
             if (sleep_time_us > MIN_SLEEP_THRESHOLD) {
@@ -191,7 +191,7 @@ void AsyncSimLoop::run()
 {
     if (m_state == State_Done) return;
 
-    if (!m_fast_mode && device().frequency() == 0) {
+    if (!m_fast_mode && m_cycle_manager.reference_frequency() == 0) {
         logger().err("Cannot run in realtime mode, MCU frequency not set.");
         m_state = State_Done;
         return;
@@ -251,7 +251,7 @@ void AsyncSimLoop::run()
                 //to the system clock elapsed and if it's ahead by more than a threshold,
                 //pause the loop for a catch-up sleep
                 long long sim_deadline_us = ((m_cycle_manager.cycle() + cycle_delta - cycle_start)
-                                              * 1000000L) / m_device.frequency();
+                                              * 1000000L) / m_cycle_manager.reference_frequency();
                 long long curr_time_us = get_timestamp_usecs(clock_start);
                 long long sleep_time_us = sim_deadline_us - curr_time_us;
                 if (sleep_time_us > MIN_SLEEP_THRESHOLD) {
@@ -273,7 +273,7 @@ void AsyncSimLoop::run()
                         //at the start of the sleep (it is the current value stored in the cycle manager)
                         time_point clock_t1 = std::chrono::steady_clock::now();
                         int64_t time_delta_us = std::chrono::duration_cast<std::chrono::microseconds>(clock_t1 - clock_start).count();
-                        cycle_count_t cycle_corrected = cycle_start + time_delta_us * m_device.frequency() / 1000000L;
+                        cycle_count_t cycle_corrected = cycle_start + time_delta_us * m_cycle_manager.reference_frequency() / 1000000L;
                         cycle_count_t cycle_delta_corrected = cycle_corrected - m_cycle_manager.cycle();
 
                         //Constrain the corrected value to ensure the delta is at least 1 and at most
