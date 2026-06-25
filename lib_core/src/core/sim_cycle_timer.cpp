@@ -40,6 +40,8 @@ YASIMAVR_USING_NAMESPACE
 #define STATE_PAUSED     0x04
 // Indicates that the timer's clock domain has no frequency, i.e. the source is turned off.
 #define STATE_NOCLOCK    0x08
+// Indicates that the timer delay had been specified in seconds rather than cycles
+#define STATE_SECS       0x10
 
 //Useful combination of the PAUSED and NOCLOCK flag indicating the timer can't be processed
 #define STATE_HALTED     (STATE_PAUSED | STATE_NOCLOCK)
@@ -113,6 +115,23 @@ void CycleTimer::delay(cycle_count_t count)
         throw_uninitialised();
 
     m_manager->delay(*this, count);
+}
+
+/**
+   Schedule or reschedule a timer for call in 'delay' seconds
+   \param secs delay from the current cycle, in seconds
+ */
+void CycleTimer::delay_s(double secs)
+{
+    if (secs <= 0) {
+        cancel();
+        return;
+    }
+
+    if (!m_manager)
+        throw_uninitialised();
+
+    m_manager->delay_s(*this, secs);
 }
 
 
@@ -307,6 +326,8 @@ void CycleManager::update_clocks()
         return;
     }
 
+    double old_ref_freq = m_ref_clk_freq;
+
     //The reference clock is the domain 0 after prescaling
     clock_domain_t& refdom = m_clock_domains.at(ReferenceDomain);
     clock_source_t& refsrc = m_clock_sources.at(refdom.src);
@@ -325,13 +346,33 @@ void CycleManager::update_clocks()
             dom_cfg.cycle_factor = 0.0;
     }
 
+    //Sanity check, we shouldn't allow the reference frequency to be zero anyway
     if (!m_ref_clk_freq) return;
 
     //Update all the cycle timers
     for (auto t : m_timer_slots) {
 
+        if (t->m_state & STATE_SECS) {
+            //The following calculations aim at preserving the timer duration in seconds
+            //despite the change in reference frequency
+            double old_rem_delay;
+            if (t->m_state & STATE_PAUSED)
+                old_rem_delay = t->m_when_d;
+            else
+                old_rem_delay = t->m_when_d - m_cycle;
+
+            double new_rem_delay = old_rem_delay * old_ref_freq / m_ref_clk_freq;
+
+            if (t->m_state & STATE_PAUSED)
+                t->m_when_d = new_rem_delay;
+            else
+                t->m_when_d = m_cycle + new_rem_delay;
+
+            t->m_when = std::ceil(t->m_when_d);
+        }
+
         //The following is pointless if the timer uses the reference domain
-        if (t->m_clock_domain != ReferenceDomain) {
+        else if (t->m_clock_domain != ReferenceDomain) {
 
             double old_cycle_factor = old_cycle_factors.at(t->m_clock_domain);
 
@@ -359,7 +400,6 @@ void CycleManager::update_clocks()
             }
 
             t->m_when = std::ceil(t->m_when_d);
-
         }
     }
 }
@@ -429,6 +469,22 @@ void CycleManager::delay(CycleTimer& timer, cycle_count_t count)
     }
 
     timer.m_state |= STATE_SCHEDULED;
+
+    if (!(timer.m_state & STATE_PROCESSING))
+        add_to_queue(timer);
+}
+
+
+void CycleManager::delay_s(CycleTimer& timer, double secs)
+{
+    cycle_count_t ref_cycle = m_processing ? m_processed_when : m_cycle;
+
+    if (!(timer.m_state & STATE_PROCESSING))
+        pop_from_queue(timer);
+
+    timer.m_state = (timer.m_state & ~STATE_PAUSED) | STATE_SCHEDULED | STATE_SECS;
+    timer.m_when_d = ref_cycle + secs * m_ref_clk_freq;
+    timer.m_when = std::ceil(timer.m_when_d);
 
     if (!(timer.m_state & STATE_PROCESSING))
         add_to_queue(timer);

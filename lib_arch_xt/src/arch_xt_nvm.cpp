@@ -413,7 +413,7 @@ void ArchXT_NVM::write_nvm(NVM_request_t& nvm_req)
 
 void ArchXT_NVM::execute_command(Command cmd)
 {
-    cycle_count_t delay = 0;
+    cycle_count_t delay_cyc = 0;
     unsigned int delay_usecs = 0;
 
     CLEAR_IOREG(CTRLA, NVMCTRL_WRERROR);
@@ -426,7 +426,7 @@ void ArchXT_NVM::execute_command(Command cmd)
         //Clear the buffer and set the CPU halt (the delay is expressed in cycles)
         clear_buffer();
         m_state = State_Halting;
-        delay = m_config.buffer_erase_delay;
+        delay_cyc = m_config.buffer_erase_delay;
     }
 
     else if (cmd == Cmd_ChipErase) {
@@ -461,18 +461,18 @@ void ArchXT_NVM::execute_command(Command cmd)
         SET_IOREG(CTRLA, NVMCTRL_WRERROR);
     }
 
-    if (delay_usecs)
-        delay = (device()->frequency() * delay_usecs) / 1000000L;
-
     //Halt the core if required by the command and set the timer
     //to simulate the operation completion delay
-    if (delay) {
+    if (delay_cyc || delay_usecs) {
         if (m_state == State_Halting) {
             ctlreq_data_t d = { .data = 1 };
             device()->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_HALT, &d);
         }
 
-        m_timer.delay(delay);
+        if (delay_usecs)
+            m_timer.delay_s(delay_usecs / 1000000.0);
+        else
+            m_timer.delay(delay_cyc);
     }
 }
 

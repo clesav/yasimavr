@@ -52,6 +52,7 @@ public:
     inline CycleManager* manager() const { return m_manager; }
 
     void delay(cycle_count_t count);
+    void delay_s(double secs);
     void cancel();
     void pause();
     void resume();
@@ -194,6 +195,7 @@ private:
     void copy_slot(const CycleTimer& src, CycleTimer& dst);
 
     void delay(CycleTimer& timer, cycle_count_t count);
+    void delay_s(CycleTimer& timer, double secs);
     void cancel(CycleTimer& timer);
     void pause(CycleTimer& timer);
     void resume(CycleTimer& timer);

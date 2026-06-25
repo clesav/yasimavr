@@ -35,6 +35,7 @@ public:
     CycleManager* manager() const;
 
     void delay(cycle_count_t);
+    void delay_s(double);
     void cancel();
     void pause();
     void resume();
