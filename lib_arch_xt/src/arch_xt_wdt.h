@@ -38,7 +38,7 @@ YASIMAVR_BEGIN_NAMESPACE
 struct ArchXT_WDTConfig {
 
     /// Frequency in Hertz of the clock used for the Watchdog Timer
-    unsigned long clock_frequency;
+    double clock_frequency;
     /// Base address for the peripheral I/O registers
     reg_addr_t reg_base;
 
@@ -66,7 +66,7 @@ private:
     BoundFunctionCycleTimer<ArchXT_WDT> m_wdr_sync_timer;
     bool m_first_wdr;
 
-    std::tuple<cycle_count_t, cycle_count_t> calculate_delays(uint8_t reg_value);
+    std::tuple<long, long> calculate_delays(uint8_t reg_value);
     void timeout();
     void wdr_sync_timer_next();
 

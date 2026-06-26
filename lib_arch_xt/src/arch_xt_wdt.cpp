@@ -37,6 +37,8 @@ YASIMAVR_USING_NAMESPACE
 #define REG_OFS(reg) \
     offsetof(WDT_t, reg)
 
+static constexpr sim_id_t Clk_WDT = "CLKWDT";
+
 
 //=======================================================================================
 
@@ -57,11 +59,15 @@ bool ArchXT_WDT::init(Device& device)
     bool status = Peripheral::init(device);
 
     add_ioreg(REG_ADDR(CTRLA), WDT_PERIOD_gm | WDT_WINDOW_gm);
-    //SYNCBUSY not implemented
-    add_ioreg(REG_ADDR(STATUS), WDT_LOCK_bm);
+    add_ioreg(REG_ADDR(STATUS), WDT_LOCK_bm | WDT_SYNCBUSY_bm);
 
-    m_wdt_timer.init(*device.cycle_manager());
-    m_wdr_sync_timer.init(*device.cycle_manager());
+    device.cycle_manager()->add_clock_source(Clk_WDT);
+    device.cycle_manager()->configure_clock_source(Clk_WDT, m_config.clock_frequency);
+    device.cycle_manager()->add_clock_domain(Clk_WDT);
+    device.cycle_manager()->configure_clock_domain(Clk_WDT, Clk_WDT, 1);
+
+    m_wdt_timer.init(*device.cycle_manager(), Clk_WDT);
+    m_wdr_sync_timer.init(*device.cycle_manager(), Clk_WDT);
 
     return status;
 }
@@ -139,17 +145,15 @@ void ArchXT_WDT::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 }
 
 
-std::tuple<cycle_count_t, cycle_count_t> ArchXT_WDT::calculate_delays(uint8_t reg_value)
+std::tuple<long, long> ArchXT_WDT::calculate_delays(uint8_t reg_value)
 {
     uint8_t reg_period = EXTRACT_F(reg_value, WDT_PERIOD);
-    unsigned long p = (reg_period <= 11) ? 1 << (reg_period + 2) : 0;
-    cycle_count_t period = (device()->frequency() * p) / m_config.clock_frequency;
+    long p = (reg_period <= 11) ? 1 << (reg_period + 2) : 0;
 
     uint8_t reg_window = EXTRACT_F(reg_value, WDT_WINDOW);
-    unsigned long w = (reg_window <= 11) ? 1 << (reg_window + 2) : 0;
-    cycle_count_t window = (device()->frequency() * w) / m_config.clock_frequency;
+    long w = (reg_window <= 11) ? 1 << (reg_window + 2) : 0;
 
-    return std::tuple<cycle_count_t, cycle_count_t>(period, window);
+    return std::tuple<long, long>(p, w);
 }
 
 

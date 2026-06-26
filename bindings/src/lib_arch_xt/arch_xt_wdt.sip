@@ -26,7 +26,7 @@ struct ArchXT_WDTConfig {
 #include "arch_xt_wdt.h"
 %End
 
-    unsigned long clock_frequency;
+    double clock_frequency;
 
     reg_addr_t reg_base;
 
