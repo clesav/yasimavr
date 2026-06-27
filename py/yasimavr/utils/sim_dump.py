@@ -248,7 +248,7 @@ def _serialize_device(device, dumper):
     dumper['Variant'] = device.config().name
     dumper['State'] = device.state()._name_
     dumper['Sleep mode'] = device.sleep_mode()._name_
-    dumper['Main Frequency (Hz)'] = device.cycle_manager().reference_frequency() 
+    dumper['Main Frequency (Hz)'] = device.cycle_manager().reference_frequency()
 
     dumper.inc_level('Options')
     for dev_option in corelib.Device.Option:
@@ -271,13 +271,7 @@ def _serialize_simloop(simloop, dumper):
     dumper.inc_level('Simloop')
     dumper['State'] = simloop.state()._name_
     dumper['Simulated cycles'] = simloop.cycle()
-
-    if simloop.device().state()._name_ not in ('Limbo', 'Ready'):
-        t = simloop.cycle() / simloop.device().frequency()
-    else:
-        t = 0
-    dumper['Simulated time (secs)'] = t
-
+    dumper['Simulated time (secs)'] = simloop.cycle_manager().elapsed_time()
     dumper.dec_level()
 
     _serialize_device(simloop.device(), dumper)

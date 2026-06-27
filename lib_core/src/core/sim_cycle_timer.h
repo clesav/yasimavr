@@ -151,6 +151,8 @@ public:
     cycle_count_t cycle() const;
     void increment_cycle(cycle_count_t count);
 
+    double elapsed_time() const;
+
     void process_timers();
 
     cycle_count_t next_when() const;
@@ -169,6 +171,8 @@ private:
     cycle_count_t m_processed_when;
     bool m_post_process_clock_update;
     double m_ref_clk_freq;
+    cycle_count_t m_ref_cycle;
+    double m_ref_time;
 
     struct clock_source_t {
         double frequency;

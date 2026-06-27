@@ -1,6 +1,6 @@
 # vcd_recorder.py
 #
-# Copyright 2022-2024 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2022-2026 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -179,12 +179,11 @@ class VCD_Recorder:
 
     def __init__(self, simloop, file, **kwargs):
         self._simloop = simloop
-        self._ts_ratio = 100000000 / self._simloop.device().frequency()
 
         self._file = open(file, 'w')
 
         kwargs['timescale'] = '10ns'
-        kwargs['init_timestamp'] = self._ts_ratio * self._simloop.cycle()
+        kwargs['init_timestamp'] = self._simloop.cycle_manager().elapsed_time() * 1e8
         self._writer = vcd.VCDWriter(self._file, **kwargs)
 
         self._formatters = {}
@@ -281,7 +280,7 @@ class VCD_Recorder:
 
 
     def _change(self, var, value):
-        ts = self._ts_ratio * self._simloop.cycle()
+        ts = self._simloop.cycle_manager().elapsed_time() * 1e8
         self._writer.change(var, ts, value)
 
 
@@ -289,7 +288,7 @@ class VCD_Recorder:
         """Start or resume the recording.
         """
 
-        ts = self._ts_ratio * self._simloop.cycle()
+        ts = self._simloop.cycle_manager().elapsed_time() * 1e8
         self._writer.dump_on(ts)
 
 
@@ -297,7 +296,7 @@ class VCD_Recorder:
         """Pause the recording.
         """
 
-        ts = self._ts_ratio * self._simloop.cycle()
+        ts = self._simloop.cycle_manager().elapsed_time() * 1e8
         self._writer.dump_off(ts)
 
 
@@ -305,7 +304,7 @@ class VCD_Recorder:
         """Flush the recorded data into the destination file.
         """
 
-        ts = self._ts_ratio * self._simloop.cycle()
+        ts = self._simloop.cycle_manager().elapsed_time() * 1e8
         self._writer.flush(ts)
 
 
@@ -313,7 +312,10 @@ class VCD_Recorder:
         """Close the record. The recorder may not be used anymore afterwards.
         """
 
-        ts = self._ts_ratio * self._simloop.cycle()
+        ts = self._simloop.cycle_manager().elapsed_time() * 1e8
         self._writer.close(ts)
         self._file.close()
         self._formatters.clear()
+
+    def __del__(self):
+        self.close()

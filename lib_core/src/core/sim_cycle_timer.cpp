@@ -224,6 +224,8 @@ CycleManager::CycleManager()
 ,m_processed_when(0)
 ,m_post_process_clock_update(false)
 ,m_ref_clk_freq(1.0)
+,m_ref_cycle(0)
+,m_ref_time(0.0)
 {
     m_clock_sources[sim_id_t()] = clock_source_t{ 1.0 };
     //ensure the reference domain always exists
@@ -237,6 +239,15 @@ CycleManager::~CycleManager()
         t->m_state = 0;
         t->m_manager = nullptr;
     }
+}
+
+/**
+ * Returns the simulating elapsed time based on the current cycle, taking into account
+ * \return elapsed simulating time in seconds
+ */
+double CycleManager::elapsed_time() const
+{
+    return m_ref_time + (m_cycle - m_ref_cycle) / m_ref_clk_freq;
 }
 
 /**
@@ -332,6 +343,13 @@ void CycleManager::update_clocks()
     clock_domain_t& refdom = m_clock_domains.at(ReferenceDomain);
     clock_source_t& refsrc = m_clock_sources.at(refdom.src);
     m_ref_clk_freq = (refsrc.frequency * (double)refdom.ps_mul) / (double)refdom.ps_div;
+
+    //If the reference frequency is changed
+    if (m_ref_clk_freq != old_ref_freq) {
+        //Update the reference point cycles/time
+        m_ref_time += (m_cycle - m_ref_cycle) / old_ref_freq;
+        m_ref_cycle = m_cycle;
+    }
 
     //For each other clock domain, calculate the cycle factor which is Freq(ref domain) / Freq(domain i)
     //We keep a copy of the old cycle factor values

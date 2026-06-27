@@ -135,6 +135,8 @@ public:
     cycle_count_t cycle() const;
     void increment_cycle(cycle_count_t);
 
+    double elapsed_time() const;
+
     void process_timers();
     cycle_count_t next_when() const;
 
