@@ -204,6 +204,9 @@ typedef int ctlreq_id_t;
  */
 #define AVR_CTLREQ_SLEEP_PSEUDO     (AVR_CTLREQ_BASE + 2)
 
+//Request to set the external clock input frequency
+#define AVR_CTLREQ_CLK_SET_EXTCLK   (AVR_CTLREQ_BASE + 1)
+
 /// @}
 
 
@@ -237,6 +240,7 @@ struct NVM_request_t {
 struct ctlreq_data_t {
     vardata_t data;
     long long index;
+    sim_id_t id;
 };
 
 

@@ -683,10 +683,15 @@ void ArchAVR_Fuses::reset(int flags)
 bool ArchAVR_Fuses::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
 {
     if (req == AVR_CTLREQ_FUSE_VALUE) {
+        vardata_t res = -1;
         if (data->index == Fuse_BootRst && m_config.rb_bootrst.valid())
-            data->data = read_fuse(m_config.rb_bootrst);
-        else
-            data->data = -1;
+            res = read_fuse(m_config.rb_bootrst);
+        else if (data->index == Fuse_ClkSel && m_config.rb_clksel.valid())
+            res = read_fuse(m_config.rb_clksel);
+        else if (data->index == Fuse_ClkDiv8 && m_config.rb_clkdiv8.valid())
+            res = read_fuse(m_config.rb_clkdiv8);
+
+        data->data = res;
         return true;
     }
     return false;

@@ -180,6 +180,10 @@ struct ArchAVR_FusesConfig {
     regbit_t                         rb_bootsz;
     /// Regbit for the boot reset fuse bit
     regbit_t                         rb_bootrst;
+    /// Regbit for the Clock Selection fuse bits
+    regbit_t                         rb_clksel;
+    /// Regbit for the Clock x8 prescaling fuse bit
+    regbit_t                         rb_clkdiv8;
     /// Regbit for the boot part of the lockbits
     bitspec_t                        bs_bootlockbit;
     /// Regbit for the application part of the lockbits
@@ -204,6 +208,8 @@ public:
 
     enum Fuses {
         Fuse_BootRst,
+        Fuse_ClkSel,
+        Fuse_ClkDiv8,
     };
 
     explicit ArchAVR_Fuses(const ArchAVR_FusesConfig& config);

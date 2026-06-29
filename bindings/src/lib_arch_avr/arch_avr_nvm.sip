@@ -92,6 +92,8 @@ struct ArchAVR_FusesConfig {
 
     regbit_t     rb_bootsz;
     regbit_t     rb_bootrst;
+    regbit_t     rb_clksel;
+    regbit_t     rb_clkdiv8;
     bitspec_t    bs_bootlockbit;
     bitspec_t    bs_applockbit;
 
@@ -111,6 +113,8 @@ public:
 
     enum Fuses /BaseType=IntEnum/ {
         Fuse_BootRst         /PyName=BootRst/,
+        Fuse_ClkSel          /PyName=ClkSel/,
+        Fuse_ClkDiv8         /PyName=ClkDiv8/,
     };
 
     ArchAVR_Fuses(const ArchAVR_FusesConfig&);

@@ -90,6 +90,7 @@ const ctlreq_id_t CTLREQ_WATCHDOG_RESET   = AVR_CTLREQ_WATCHDOG_RESET;
 const ctlreq_id_t CTLREQ_NVM_REQUEST      = AVR_CTLREQ_NVM_REQUEST;
 const ctlreq_id_t CTLREQ_SLEEP_CALL       = AVR_CTLREQ_SLEEP_CALL;
 const ctlreq_id_t CTLREQ_SLEEP_PSEUDO     = AVR_CTLREQ_SLEEP_PSEUDO;
+const ctlreq_id_t CTLREQ_CLK_SET_EXTCLK   = AVR_CTLREQ_CLK_SET_EXTCLK;
 
 %End
 
@@ -136,6 +137,7 @@ const ctlreq_id_t CTLREQ_WATCHDOG_RESET;
 const ctlreq_id_t CTLREQ_NVM_REQUEST;
 const ctlreq_id_t CTLREQ_SLEEP_CALL;
 const ctlreq_id_t CTLREQ_SLEEP_PSEUDO;
+const ctlreq_id_t CTLREQ_CLK_SET_EXTCLK;
 
 
 struct NVM_request_t {
