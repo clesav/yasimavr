@@ -161,6 +161,7 @@ struct ctlreq_data_t {
 
     vardata_t data;
     long long index;
+    sim_id_t id;
 
 };
 
