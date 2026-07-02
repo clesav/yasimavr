@@ -25,6 +25,7 @@
 #define __YASIMAVR_CYCLE_TIMER_H__
 
 #include "sim_types.h"
+#include "sim_signal.h"
 #include <deque>
 #include <unordered_map>
 
@@ -134,6 +135,11 @@ public:
 
     static constexpr sim_id_t ReferenceDomain = "CPU";
 
+    enum SignalId {
+        /// Signal raised when the reference domain frequency has changed
+        Signal_RefFreq,
+    };
+
     CycleManager();
     ~CycleManager();
 
@@ -157,6 +163,10 @@ public:
 
     cycle_count_t next_when() const;
 
+    void set_direct_freq(double freq);
+
+    DataSignal& signal();
+
     CycleManager(const CycleManager&) = delete;
     CycleManager& operator=(const CycleManager&) = delete;
 
@@ -173,6 +183,8 @@ private:
     double m_ref_clk_freq;
     cycle_count_t m_ref_cycle;
     double m_ref_time;
+    double m_direct_freq;
+    DataSignal m_signal;
 
     struct clock_source_t {
         double frequency;
@@ -224,6 +236,12 @@ inline double CycleManager::reference_frequency() const
 inline double CycleManager::source_frequency(sim_id_t id) const
 {
     return m_clock_sources.at(id).frequency;
+}
+
+
+inline DataSignal& CycleManager::signal()
+{
+    return m_signal;
 }
 
 

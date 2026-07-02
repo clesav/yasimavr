@@ -53,6 +53,7 @@ Device::Device(Core& core, const DeviceConfiguration& config)
 ,m_logger("DEV", m_log_handler)
 ,m_pin_manager(convert_pin_ids(config.pins))
 ,m_cycle_manager(nullptr)
+,m_cycle_manager_hook(*this, &Device::freq_change_hook)
 ,m_reset_flags(0)
 {}
 
@@ -107,6 +108,7 @@ bool Device::init(CycleManager& cycle_manager)
         return false;
 
     m_cycle_manager = &cycle_manager;
+    cycle_manager.signal().connect(m_cycle_manager_hook);
 
     m_log_handler.init(cycle_manager);
 
@@ -196,6 +198,10 @@ bool Device::load_firmware(const Firmware& firmware)
 
     if (!program(firmware))
         return false;
+
+    //If the frequency field of the FW is set, use it to set the direct clock mode (legacy mode).
+    if (firmware.frequency > 0.0)
+        m_cycle_manager->set_direct_freq(firmware.frequency);
 
     //Send the power supply voltage from the firmware to the VREF controller (if it exists)
     bool analog_ok = false;
@@ -497,4 +503,16 @@ void Device::crash(uint16_t reason, const char* text)
     m_logger.err("MCU crash, reason (code=%d) : %s", reason, text);
     m_logger.wng("End of program at PC = 0x%04x", m_core.m_pc);
     m_state = State_Crashed;
+}
+
+
+void Device::freq_change_hook(const signal_data_t& sigdata, int)
+{
+    /*Called by changes of the reference frequency in the CycleManager
+     * if it's zero, set in crash state
+     */
+    if (sigdata.sigid == CycleManager::Signal_RefFreq) {
+        if (sigdata.data.as_double() == 0.0)
+            crash(CRASH_INVALID_CONFIG, "Main clock halted");
+    }
 }

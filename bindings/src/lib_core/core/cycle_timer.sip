@@ -120,6 +120,10 @@ public:
 
     static const sim_id_t ReferenceDomain;
 
+    enum SignalId /BaseType=IntEnum/ {
+        Signal_RefFreq    /PyName=RefFreq/,
+    };
+
     CycleManager();
 
     void add_clock_source(sim_id_t);
@@ -139,5 +143,9 @@ public:
 
     void process_timers();
     cycle_count_t next_when() const;
+
+    void set_direct_freq(double);
+
+    DataSignal& signal();
 
 };

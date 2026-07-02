@@ -226,6 +226,7 @@ CycleManager::CycleManager()
 ,m_ref_clk_freq(1.0)
 ,m_ref_cycle(0)
 ,m_ref_time(0.0)
+,m_direct_freq(0.0)
 {
     m_clock_sources[sim_id_t()] = clock_source_t{ 1.0 };
     //ensure the reference domain always exists
@@ -258,6 +259,25 @@ void CycleManager::increment_cycle(cycle_count_t count)
     m_cycle += count;
 }
 
+/**
+ * Set the direct frequency.
+ *
+ * In direct mode, the reference domain frequency is fixed by the freq argument, ignoring
+ * any source or prescaler setting.
+ *
+ * This is mainly meant for compatibility with existing scripts and examples.
+ *
+ * To turn off the direct mode, set the direct frequency to zero.
+ */
+void CycleManager::set_direct_freq(double freq)
+{
+    if (freq < 0.0)
+        freq = 0.0;
+
+    m_direct_freq = freq;
+
+    update_clocks();
+}
 
 /**
  * Add a new clock source.
@@ -339,16 +359,23 @@ void CycleManager::update_clocks()
 
     double old_ref_freq = m_ref_clk_freq;
 
-    //The reference clock is the domain 0 after prescaling
-    clock_domain_t& refdom = m_clock_domains.at(ReferenceDomain);
-    clock_source_t& refsrc = m_clock_sources.at(refdom.src);
-    m_ref_clk_freq = (refsrc.frequency * (double)refdom.ps_mul) / (double)refdom.ps_div;
+    if (m_direct_freq) {
+        m_ref_clk_freq = m_direct_freq;
+    } else {
+        //The reference clock is the domain 0 after prescaling
+        clock_domain_t& refdom = m_clock_domains.at(ReferenceDomain);
+        clock_source_t& refsrc = m_clock_sources.at(refdom.src);
+        m_ref_clk_freq = (refsrc.frequency * (double)refdom.ps_mul) / (double)refdom.ps_div;
+    }
 
     //If the reference frequency is changed
     if (m_ref_clk_freq != old_ref_freq) {
         //Update the reference point cycles/time
         m_ref_time += (m_cycle - m_ref_cycle) / old_ref_freq;
         m_ref_cycle = m_cycle;
+
+        //Signal the change
+        m_signal.raise(Signal_RefFreq, m_ref_clk_freq);
     }
 
     //For each other clock domain, calculate the cycle factor which is Freq(ref domain) / Freq(domain i)

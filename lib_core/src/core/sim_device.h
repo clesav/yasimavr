@@ -198,9 +198,11 @@ private:
     std::vector<Peripheral*> m_peripherals;
     PinManager m_pin_manager;
     CycleManager* m_cycle_manager;
+    BoundFunctionSignalHook<Device> m_cycle_manager_hook;
     int m_reset_flags;
 
     void set_state(State state);
+    void freq_change_hook(const signal_data_t& sigdata, int);
 
 };
 
