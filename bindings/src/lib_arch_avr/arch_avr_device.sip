@@ -82,11 +82,7 @@ public:
 
     SIP_PYOBJECT __str__();
     %MethodCode
-        sipRes = PyUnicode_FromFormat("Device(%s) [C=%lld, S=%d, F=%u]",
-                                      sipCpp->config().name,
-                                      sipCpp->cycle(),
-                                      sipCpp->state(),
-                                      sipCpp->frequency());
+        sipRes = PyUnicode_FromFormat("ArchAVR_Device(%s)", sipCpp->config().name.c_str());
     %End
 
 };

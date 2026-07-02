@@ -76,7 +76,7 @@ def test_xt_port_input(bench):
     pinA0.set_external_state('L')
     assert pinA0.state() == PinState.Low
     assert porta.IN == 0x00
-    
+
     pinA0.set_external_state('H')
     assert porta.IN == 0x01
 

@@ -185,7 +185,7 @@ def test_pin_driver():
         def __init__(self):
             super().__init__(0x10, 2)
             self.controls = corelib.Pin.controls_t()
-    
+
         def override_gpio(self, index, controls):
             return self.controls
 

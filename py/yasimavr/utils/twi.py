@@ -34,7 +34,7 @@ class TWISimpleClient(TWI.Client):
 
     :param int address: 7-bits TWI address for the client
 
-    .. note:: See example "uno_lcd" for a implementation of a TWI client 
+    .. note:: See example "uno_lcd" for a implementation of a TWI client
     '''
 
     def __init__(self, address):

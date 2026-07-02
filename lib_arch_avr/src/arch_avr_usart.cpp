@@ -366,7 +366,7 @@ void ArchAVR_USART::update_bitrate()
     else
         bit_delay = (brr + 1) << 4;
 
-    logger().dbg("Baud rate set to %d bps", (device()->frequency() / bit_delay));
+    logger().dbg("Baud rate set to %d bps", (device()->cycle_manager()->reference_frequency() / bit_delay));
 
     m_ctrl->set_bit_delay(bit_delay);
 }
