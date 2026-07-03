@@ -68,7 +68,7 @@ def test_fuses(firmware):
 
     b = blocks[0]
     assert b.base == 0
-    assert bytes(b.bytes) == bytes([0xAA, 0xD9, 0xFF])
+    assert bytes(b.bytes) == bytes([0x62, 0xD9, 0xAA])
 
 
 def test_memory_load(firmware):
