@@ -56,13 +56,13 @@ def _create_argparser():
         IX: optional, index to filter (default is no filter)
     for all trace types, VARNAME is an optional variable name""")
 
-    p.add_argument('-f', '--frequency',
-                   metavar='FREQ', type=int,
-                   help="[Mandatory] Set the clock frequency in Hertz for the MCU")
-
     p.add_argument('-m', '--mcu',
                    metavar='MCU',
                    help="[Mandatory] Set the MCU model")
+
+    p.add_argument('-f', '--frequency',
+                   metavar='FREQ', type=float, default=0.0,
+                   help="Force the CPU clock frequency to a fixed value in Hertz, regardless of clock settings")
 
     p.add_argument('--list-models',
                    action='store_true',
@@ -183,6 +183,7 @@ def _load_firmware():
             raise Exception('Reading the firmware failed')
 
     _firmware.frequency = _run_args.frequency
+
     if _run_args.analog is not None:
         _firmware.vcc = _run_args.analog
         if _run_args.reference is not None:
@@ -415,9 +416,6 @@ def main(args=None):
 
     if _run_args.gdb is None and _run_args.firmware is None:
         raise argparse.ArgumentError(None, 'No firmware provided')
-
-    if _run_args.frequency is None:
-        raise argparse.ArgumentError(None, 'No frequency provided')
 
     if _run_args.mcu is None:
         raise argparse.ArgumentError(None, 'No MCU model provided')
