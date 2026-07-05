@@ -98,6 +98,9 @@ peripherals:
     SLPCTRL:
         file: tiny24-44-84_controllers.yml
 
+    CLKCTRL:
+        file: tiny24-44-84_controllers.yml
+
     FUSES:
         file: tiny24-44-84_controllers.yml
 

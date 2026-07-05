@@ -26,7 +26,7 @@ struct ArchAVR_WDTConfig {
 #include "arch_avr_wdt.h"
 %End
 
-    unsigned long clock_frequency;
+    double clock_frequency;
 
     reg_addr_t        reg_wdt;
     regbit_compound_t rbc_delay;

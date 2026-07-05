@@ -76,8 +76,8 @@ public:
         Area        area;
     };
 
-    ///Main clock frequency in hertz, mandatory to run the simulation.
-    unsigned long frequency;
+    ///Fixed clock frequency in hertz
+    double frequency;
     ///Power supply voltage in volts. If not set, analog peripherals such as ADC are not usable.
     double vcc;
     ///Analog reference voltage in volts

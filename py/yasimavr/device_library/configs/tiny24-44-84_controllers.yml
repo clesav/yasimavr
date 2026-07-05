@@ -1,6 +1,6 @@
 # YAML configuration file for attiny24-44-84 variants
 #
-# Copyright 2025 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2025-2026 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -51,6 +51,29 @@ SLPCTRL:
         rb_enable: MCUCR/SE
 
 #========================================================================================
+CLKCTRL:
+    registers:
+        - name: CLKPR
+          address: 0x26
+          fields:
+            CLKPS: { kind: RAW, LSB: 0, MSB: 3 }
+            CLKPCE: { kind: BIT, pos: 7 }
+
+        - name: OSCCAL
+          address: 0x31
+          fields:
+            CAL: { kind: RAW, LSB: 0, MSB: 7, supported: no }
+
+    config:
+        rb_clkps: CLKPR/CLKPS
+        clk_configs:
+            IntHF: { ext: false, freq: 8e6, sel_lo: 0b0010, sel_hi: 0b0010 }
+            IntLF: { ext: false, freq 128e3, sel_lo: 0b0100, sel_hi: 0b0100 }
+            ExtXT: { ext: true, sel_lo: 0b1000, sel_hi: 0b1111 }
+            Ext32k: { ext: true, sel_lo: 0b0110, sel_hi: 0b0110 }
+            Ext: { ext: true, sel_lo: 0b0000, sel_hi: 0b0000 }
+
+#========================================================================================
 CPUINT:
     registers: {}
 
@@ -59,6 +82,8 @@ FUSES:
     config:
         #0:Fuse Low Byte , 1:Fuse High Byte , 2:Fuse Ext Byte
         boot_sizes: []
+        rb_clkdiv8: 0x00/7
+        rb_clksel: 0x00/0-3
 
 #========================================================================================
 NVMCTRL:

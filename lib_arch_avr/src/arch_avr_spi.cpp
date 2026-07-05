@@ -68,7 +68,7 @@ private:
 };
 
 
-class ArchAVR_SPI::_Controller : public EndPoint, public CycleTimer {
+class ArchAVR_SPI::_Controller : public EndPoint, private CycleTimer {
 
 
 public:
@@ -103,7 +103,7 @@ public:
     void set_selected(bool selected);
     inline bool selected() const { return m_selected; }
 
-    virtual cycle_count_t next(cycle_count_t when) override;
+    virtual void next(cycle_count_t when) override;
 
 protected:
 
@@ -115,7 +115,6 @@ private:
 
     ArchAVR_SPI& m_peripheral;
     _PinDriver m_pin_driver;
-    CycleManager* m_cycle_manager;
     Logger* m_logger;
     cycle_count_t m_halfbitdelay;
     ControllerMode m_mode;
@@ -221,7 +220,6 @@ void ArchAVR_SPI::_PinDriver::digital_state_changed(pin_index_t pin_index, bool 
 ArchAVR_SPI::_Controller::_Controller(ArchAVR_SPI& peripheral)
 :m_peripheral(peripheral)
 ,m_pin_driver(*this, peripheral.id())
-,m_cycle_manager(nullptr)
 ,m_logger(nullptr)
 ,m_halfbitdelay(1)
 ,m_mode(Mode_Disabled)
@@ -233,15 +231,14 @@ ArchAVR_SPI::_Controller::_Controller(ArchAVR_SPI& peripheral)
 
 void ArchAVR_SPI::_Controller::init(CycleManager& cycle_manager, Logger& logger)
 {
-    m_cycle_manager = &cycle_manager;
+    CycleTimer::init(cycle_manager);
     m_logger = &logger;
 }
 
 
 void ArchAVR_SPI::_Controller::reset()
 {
-    if (scheduled())
-        m_cycle_manager->cancel(*this);
+    cancel();
 
     set_mode(Mode_Disabled);
     set_active(false);
@@ -270,8 +267,8 @@ void ArchAVR_SPI::_Controller::set_mode(ControllerMode m)
 
     if (m_mode == Mode_Host)
         output_clock(serial_mode() >= Mode2);
-    else if (scheduled())
-        m_cycle_manager->cancel(*this);
+    else
+        cancel();
 
     set_active(false);
 
@@ -296,7 +293,7 @@ void ArchAVR_SPI::_Controller::push_tx(uint8_t data)
     //If this is the first transfer, we need to start the timer
     if (m_mode == Mode_Host && !active()) {
         set_active(true);
-        m_cycle_manager->delay(*this, m_halfbitdelay);
+        delay(m_halfbitdelay);
         m_logger->dbg("Host frame transfer started.");
     }
 }
@@ -315,20 +312,21 @@ uint8_t  ArchAVR_SPI::_Controller::peek_rx() const
 }
 
 
-cycle_count_t ArchAVR_SPI::_Controller::next(cycle_count_t when)
+void ArchAVR_SPI::_Controller::next(cycle_count_t when)
 {
     //Toggle the clock line
     output_clock(!shift_clock());
 
     //If the frame is not complete, continue with it
-    if (!complete_frame())
-        return when + m_halfbitdelay;
+    if (!complete_frame()) {
+        delay(m_halfbitdelay);
+        return;
+    }
 
     //Signal the success of the transfer
     m_logger->dbg("Host frame transfer ended.");
     set_active(false);
     output_clock(serial_mode() >= Mode2);
-    return 0;
 }
 
 

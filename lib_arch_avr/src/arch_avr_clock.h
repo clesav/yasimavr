@@ -1,7 +1,7 @@
 /*
- * arch_xt_wdt.h
+ * arch_avr_clock.h
  *
- *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -21,10 +21,10 @@
 
 //=======================================================================================
 
-#ifndef __YASIMAVR_XT_WDT_H__
-#define __YASIMAVR_XT_WDT_H__
+#ifndef __YASIMAVR_AVR_CLOCK_H__
+#define __YASIMAVR_AVR_CLOCK_H__
 
-#include "arch_xt_globals.h"
+#include "arch_avr_globals.h"
 #include "core/sim_peripheral.h"
 
 YASIMAVR_BEGIN_NAMESPACE
@@ -33,46 +33,48 @@ YASIMAVR_BEGIN_NAMESPACE
 //=======================================================================================
 
 /**
-   \brief Configuration structure for ArchXT_WDT
+   \brief Configuration structure for ArchAVR_ClkCtrl.
  */
-struct ArchXT_WDTConfig {
+struct ArchAVR_ClkCtrlConfig {
 
-    /// Frequency in Hertz of the clock used for the Watchdog Timer
-    double clock_frequency;
-    /// Base address for the peripheral I/O registers
-    reg_addr_t reg_base;
+    struct clk_config_t {
+        sim_id_t id;
+        bool ext;
+        double freq;
+        uint8_t sel_lo;
+        uint8_t sel_hi;
+    };
+
+    std::vector<clk_config_t> clk_configs;
+
+    regbit_t rb_clkps;
 
 };
 
 
 /**
-   \brief Implementation of a Watchdog Timer for XT core series
+   \brief Implementation of an ADC for AVR series
  */
-class AVR_ARCHXT_PUBLIC_API ArchXT_WDT : public Peripheral {
+class AVR_ARCHAVR_PUBLIC_API ArchAVR_ClkCtrl : public Peripheral {
 
 public:
 
-    explicit ArchXT_WDT(const ArchXT_WDTConfig& config);
+    ArchAVR_ClkCtrl(const ArchAVR_ClkCtrlConfig& config);
 
     virtual bool init(Device& device) override;
     virtual void reset(int flags) override;
     virtual bool ctlreq(ctlreq_id_t req, ctlreq_data_t* data) override;
-    virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
 
 private:
 
-    const ArchXT_WDTConfig& m_config;
-    BoundFunctionCycleTimer<ArchXT_WDT> m_wdt_timer;
-    BoundFunctionCycleTimer<ArchXT_WDT> m_wdr_sync_timer;
-    bool m_first_wdr;
+    const ArchAVR_ClkCtrlConfig& m_config;
 
-    std::tuple<long, long> calculate_delays(uint8_t reg_value);
-    void timeout();
-    void wdr_sync_timer_next();
+    bool read_fuse(int fuse, uint8_t* value);
+    void update_clocks();
 
 };
 
 
 YASIMAVR_END_NAMESPACE
 
-#endif //__YASIMAVR_XT_WDT_H__
+#endif //__YASIMAVR_AVR_CLOCK_H__

@@ -30,44 +30,6 @@ YASIMAVR_USING_NAMESPACE
 
 //=======================================================================================
 
-class ArchAVR_NVM::SPM_Timer : public CycleTimer {
-
-public:
-
-    SPM_Timer(ArchAVR_NVM& ctl) : m_ctl(ctl) {}
-
-    virtual cycle_count_t next(cycle_count_t when) override
-    {
-        m_ctl.spm_timer_next();
-        return 0;
-    }
-
-private:
-
-    ArchAVR_NVM& m_ctl;
-
-};
-
-
-class ArchAVR_NVM::EE_Timer : public CycleTimer {
-
-public:
-
-    EE_Timer(ArchAVR_NVM& ctl) : m_ctl(ctl) {}
-
-    virtual cycle_count_t next(cycle_count_t when) override
-    {
-        m_ctl.ee_timer_next();
-        return 0;
-    }
-
-private:
-
-    ArchAVR_NVM& m_ctl;
-
-};
-
-
 ArchAVR_NVM::ArchAVR_NVM(const ArchAVR_NVMConfig& config)
 :Peripheral(AVR_IOCTL_NVM)
 ,m_config(config)
@@ -76,15 +38,13 @@ ArchAVR_NVM::ArchAVR_NVM(const ArchAVR_NVMConfig& config)
 ,m_spm_page_size(0)
 ,m_spm_state(State_Idle)
 ,m_spm_command(0)
-,m_spm_timer(nullptr)
+,m_spm_timer(*this, &ArchAVR_NVM::spm_timer_next)
 ,m_halt(false)
 ,m_ee_state(State_Idle)
 ,m_ee_prog_mode(0)
+,m_ee_timer(*this, &ArchAVR_NVM::ee_timer_next)
 ,m_section_manager(nullptr)
-{
-    m_spm_timer = new SPM_Timer(*this);
-    m_ee_timer = new EE_Timer(*this);
-}
+{}
 
 
 ArchAVR_NVM::~ArchAVR_NVM()
@@ -93,9 +53,6 @@ ArchAVR_NVM::~ArchAVR_NVM()
         free(m_spm_buffer);
     if (m_spm_bufset)
         free(m_spm_bufset);
-
-    delete m_spm_timer;
-    delete m_ee_timer;
 }
 
 
@@ -128,6 +85,9 @@ bool ArchAVR_NVM::init(Device& device)
     status &= register_interrupt(m_config.iv_spm_ready, *this);
     status &= register_interrupt(m_config.iv_ee_ready, *this);
 
+    m_spm_timer.init(*device.cycle_manager());
+    m_ee_timer.init(*device.cycle_manager());
+
     //Obtain the pointer to the flash section manager
     ctlreq_data_t req;
     if (!device.ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_SECTIONS, &req))
@@ -143,7 +103,7 @@ void ArchAVR_NVM::reset(int)
     m_spm_state = State_Idle;
     clear_spm_buffer();
     m_halt = false;
-    device()->cycle_manager()->cancel(*m_spm_timer);
+    m_spm_timer.cancel();
 
     //A reset does not stop a EEPROM write, we need to restore the control bits
     if (m_ee_state == State_Write) {
@@ -151,7 +111,7 @@ void ArchAVR_NVM::reset(int)
         set_ioreg(m_config.rb_ee_write);
     } else {
         m_ee_state = State_Idle;
-        device()->cycle_manager()->cancel(*m_ee_timer);
+        m_ee_timer.cancel();
     }
 }
 
@@ -184,7 +144,7 @@ void ArchAVR_NVM::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
             if (enable) {
                 m_spm_state = State_Pending;
                 m_spm_command = cmd;
-                device()->cycle_manager()->delay(*m_spm_timer, 4);
+                m_spm_timer.delay(4);
                 if (m_spm_command & 0x200)
                     device()->core().set_direct_LPM_enabled(false);
 
@@ -204,7 +164,7 @@ void ArchAVR_NVM::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
         //and EEPE is zero.
         if (m_config.rb_ee_wren.extract(data.posedge()) && !test_ioreg(m_config.rb_ee_write) && m_ee_state == State_Idle) {
             m_ee_state = State_Pending;
-            device()->cycle_manager()->delay(*m_ee_timer, 4);
+            m_ee_timer.delay(4);
         } else {
             //In all other cases, EEMPE is not writeable so reinstate the former value.
             write_ioreg(m_config.rb_ee_wren, data.old);
@@ -404,7 +364,7 @@ int ArchAVR_NVM::process_NVM_write(NVM_request_t& req)
 
     if (m_spm_command == SPM_SigRead) return 0;
 
-    cycle_count_t delay = 0;
+    unsigned int delay_usecs = 0;
     flash_addr_t page_offset = spm_addr % m_spm_page_size;
 
     switch (m_spm_command) {
@@ -423,8 +383,8 @@ int ArchAVR_NVM::process_NVM_write(NVM_request_t& req)
             NonVolatileMemory* flash = get_nvm(ArchAVR_Core::NVM_Flash);
             flash_addr_t spm_page_start = spm_addr - page_offset;
             flash->erase(spm_page_start, m_spm_page_size);
-            delay = ((unsigned long long) device()->frequency() * m_config.spm_erase_delay) / 1000000ULL;
-            logger().dbg("SPM page erase starting on [0x%04x;0x%04x] (%d cycles)", spm_page_start, spm_page_start + m_spm_page_size - 1, delay);
+            delay_usecs = m_config.spm_erase_delay;
+            logger().dbg("SPM page erase starting on [0x%04x;0x%04x] (%d us)", spm_page_start, spm_page_start + m_spm_page_size - 1, delay_usecs);
         } break;
 
         case SPM_PageWrite: {
@@ -434,8 +394,8 @@ int ArchAVR_NVM::process_NVM_write(NVM_request_t& req)
                              { m_spm_bufset, m_spm_page_size },
                              spm_page_start);
             clear_spm_buffer();
-            delay = ((unsigned long long) device()->frequency() * m_config.spm_write_delay) / 1000000ULL;
-            logger().dbg("SPM page write starting on [0x%04x;0x%04x] (%d cycles)", spm_page_start, spm_page_start + m_spm_page_size - 1, delay);
+            delay_usecs = m_config.spm_write_delay;
+            logger().dbg("SPM page write starting on [0x%04x;0x%04x] (%d us)", spm_page_start, spm_page_start + m_spm_page_size - 1, delay_usecs);
         } break;
 
         case SPM_LockBits: {
@@ -444,8 +404,8 @@ int ArchAVR_NVM::process_NVM_write(NVM_request_t& req)
     }
 
     //Cancel/restart the timer
-    device()->cycle_manager()->cancel(*m_spm_timer);
-    device()->cycle_manager()->delay(*m_spm_timer, delay);
+    m_spm_timer.cancel();
+    m_spm_timer.delay_s(delay_usecs / 1000000.0);
 
     if (m_spm_command == SPM_PageErase || m_spm_command == SPM_PageWrite) {
         m_spm_state = State_Write;
@@ -508,7 +468,7 @@ void ArchAVR_NVM::start_eeprom_command(uint8_t command)
 
     size_t addr = read_ioreg(m_config.rbc_ee_addr);
 
-    cycle_count_t delay = 0;
+    unsigned int delay_usecs = 0;
 
     switch (command) {
         case EE_ModeRead: {
@@ -520,14 +480,14 @@ void ArchAVR_NVM::start_eeprom_command(uint8_t command)
         case EE_ModeErase: {
             m_ee_prog_mode = EE_ModeErase;
             eeprom->erase(addr, 1);
-            delay = ((unsigned long long) device()->frequency() * m_config.ee_erase_delay) / 1000000ULL;
+            delay_usecs = m_config.ee_erase_delay;
         } break;
 
         case EE_ModeWrite: {
             m_ee_prog_mode = EE_ModeWrite;
             uint8_t data = read_ioreg(m_config.reg_ee_data);
             eeprom->spm_write(data, addr);
-            delay = ((unsigned long long) device()->frequency() * m_config.ee_write_delay) / 1000000ULL;
+            delay_usecs = m_config.ee_write_delay;
         } break;
 
         case EE_ModeEraseWrite: {
@@ -535,11 +495,11 @@ void ArchAVR_NVM::start_eeprom_command(uint8_t command)
             uint8_t data = read_ioreg(m_config.reg_ee_data);
             eeprom->erase(addr, 1);
             eeprom->spm_write(data, addr);
-            delay = ((unsigned long long) device()->frequency() * m_config.ee_erase_write_delay) / 1000000ULL;
+            delay_usecs = m_config.ee_erase_write_delay;
         } break;
     }
 
-    device()->cycle_manager()->delay(*m_ee_timer, delay);
+    m_ee_timer.delay_s(delay_usecs / 1000000.0);
 }
 
 
@@ -723,10 +683,15 @@ void ArchAVR_Fuses::reset(int flags)
 bool ArchAVR_Fuses::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
 {
     if (req == AVR_CTLREQ_FUSE_VALUE) {
+        vardata_t res = -1;
         if (data->index == Fuse_BootRst && m_config.rb_bootrst.valid())
-            data->data = read_fuse(m_config.rb_bootrst);
-        else
-            data->data = -1;
+            res = read_fuse(m_config.rb_bootrst);
+        else if (data->index == Fuse_ClkSel && m_config.rb_clksel.valid())
+            res = read_fuse(m_config.rb_clksel);
+        else if (data->index == Fuse_ClkDiv8 && m_config.rb_clkdiv8.valid())
+            res = read_fuse(m_config.rb_clkdiv8);
+
+        data->data = res;
         return true;
     }
     return false;

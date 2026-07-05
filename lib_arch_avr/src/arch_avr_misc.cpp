@@ -62,6 +62,8 @@ bool ArchAVR_IntCtrl::init(Device& device)
     if (m_sections)
         m_sections->signal().connect(m_section_hook);
 
+    m_lock_timer.init(*device.cycle_manager());
+
     return status;
 }
 
@@ -71,10 +73,10 @@ void ArchAVR_IntCtrl::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& 
     if (data.value & m_config.bs_ivce) {
         logger().dbg("IVCE set, IVT change enabled.");
         if (!m_lock_timer.scheduled())
-            device()->cycle_manager()->delay(m_lock_timer, 4);
+            m_lock_timer.delay(4);
     }
     else if (m_lock_timer.scheduled()) {
-        device()->cycle_manager()->cancel(m_lock_timer);
+        m_lock_timer.cancel();
         clear_ioreg(m_config.reg_control, m_config.bs_ivce);
         update_irq();
         device()->core().start_interrupt_inhibit(1);

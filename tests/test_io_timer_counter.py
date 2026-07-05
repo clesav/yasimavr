@@ -132,8 +132,8 @@ def test_core_timer_chain(bch_2tmr):
     tmr_b.set_prescaler(3, 3)
     hook_b.set_timer_delay(12)
 
-    assert tmr_a.scheduled()
-    assert not tmr_b.scheduled()
+    assert tmr_a.running()
+    assert not tmr_b.running()
 
     bench.advance_cycle(121)
     tmr_a.update()
@@ -152,8 +152,8 @@ def test_core_timer_chain(bch_2tmr):
 
     hook_a.set_timer_delay(0)
 
-    assert tmr_a.scheduled()
-    assert not tmr_b.scheduled()
+    assert tmr_a.running()
+    assert not tmr_b.running()
 
 
 class _BaseBenchCounter(_BaseBench):

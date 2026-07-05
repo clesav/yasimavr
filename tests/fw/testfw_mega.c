@@ -1,7 +1,7 @@
 /*
  * test firmware
  *
- *  Copyright 2023 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2023-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -19,7 +19,7 @@
     along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define F_CPU 1000
+#define F_CPU 1000000
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
@@ -80,6 +80,6 @@ unsigned int static_int;
 
 char eeprom_data[] EEMEM = "EEPROM";
 
-FUSES = { 0xAA, 0xD9, 0xFF };
+FUSES = { 0x62, 0xD9, 0xAA };
 
 uint8_t lockbit LOCKMEM = 0xEF;

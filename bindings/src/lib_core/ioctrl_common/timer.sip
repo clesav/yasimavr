@@ -21,7 +21,7 @@
 
 //=======================================================================================
 
-class PrescaledTimer : public CycleTimer /NoDefaultCtors/ {
+class PrescaledTimer /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "ioctrl_common/sim_timer.h"
 %End
@@ -31,16 +31,15 @@ public:
     PrescaledTimer();
     virtual ~PrescaledTimer();
 
-    void init(CycleManager&, Logger&);
+    void init(CycleManager&, Logger&, sim_id_t = CycleManager::ReferenceDomain);
     void reset();
     void set_prescaler(unsigned long, unsigned long);
     unsigned long prescaler_factor() const;
     void set_paused(bool);
+    bool running() const;
     void set_timer_delay(cycle_count_t);
     cycle_count_t timer_delay() const;
     void update();
-
-    virtual cycle_count_t next(cycle_count_t);
 
     Signal& signal();
 
@@ -87,7 +86,7 @@ public:
 
     TimerCounter(long, size_t);
 
-    void init(CycleManager&, Logger&);
+    void init(CycleManager&, Logger&, sim_id_t = CycleManager::ReferenceDomain);
 
     void reset();
     void reschedule();

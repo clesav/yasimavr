@@ -1,6 +1,6 @@
 # YAML configuration file for AVR XT core architecture
 #
-# Copyright 2022-2024 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2022-2026 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -127,7 +127,8 @@ CLKCTRL:
                 kind: ENUM
                 LSB: 1
                 MSB: 4
-                values: [ 2, 4, 8, 16, 32, 64, 6, 10, 12, 24, 48 ]
+                values: { 0x00: DIV2, 0x01: DIV4, 0x02: DIV8, 0x03: DIV16, 0x04: DIV32, 0x05: DIV64,
+                          0x08: DIV6, 0x09: DIV10, 0x0A: DIV12, 0x0B: DIV24, 0x0C: DIV48 }
 
         - name: MCLKLOCK
           offset: 0x02
@@ -146,7 +147,7 @@ CLKCTRL:
         - name: OSC20MCTRLA
           offset: 0x10
           fields:
-            RUNSTDBY: { kind: BIT, pos: 1}
+            RUNSTDBY: { kind: BIT, pos: 1, supported: no}
 
         - name: OSC20MCALIBA
           offset: 0x11
@@ -165,15 +166,22 @@ CLKCTRL:
                 MSB: 3
             LOCK: { kind: BIT, pos: 7, one: locked, zero: unlocked, readonly: yes }
 
-    config:
-        regs:
-            - MCLKCTRLA
-            - [ MCLKCTRLB, 0x11 ]
-            - MCLKLOCK
-            - MCLKSTATUS
-            - OSC20MCTRLA
-            - OSC20MCALIBA
-            - OSC20MCALIBB
+        - name: OSC32KCTRLA
+          offset: 0x18
+          fields:
+            RUNSTDBY: { kind: BIT, pos: 1, supported: no}
+
+        - name: XOSC32KCTRLA
+          offset: 0x1C
+          fields:
+            ENABLE: { kind: BIT, pos: 0, one: enabled, zero: disabled }
+            RUNSTDBY: { kind: BIT, pos: 1, one: stable, zero: unstable, supported: no }
+            SEL: { kind: BIT, pos: 3, one: clock, zero: crystal }
+            CSUT:
+                kind: ENUM
+                LSB: 4
+                MSB: 5
+                values: { 0x00: 1K, 0x01: 16K, 0x02: 32K, 0x03: 64K }
 
 #========================================================================================
 NVMCTRL:

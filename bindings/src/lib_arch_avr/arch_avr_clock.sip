@@ -1,7 +1,7 @@
 /*
- * yasimavr-arch-xt.sip
+ * arch_avr_clock.sip
  *
- *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -21,32 +21,33 @@
 
 //=======================================================================================
 
-%Module(name=yasimavr.lib.arch_xt)
-
-%Import ../lib_core/yasimavr-core.sip
-
-%License "GPLv3 (see LICENSE file)"
-
-%DefaultEncoding(name = "UTF-8")
-
-%UnitPostIncludeCode
-#include "core/sim_globals.h"
-YASIMAVR_USING_NAMESPACE
+struct ArchAVR_ClkCtrlConfig {
+%TypeHeaderCode
+#include "arch_avr_clock.h"
 %End
 
-//=======================================================================================
+    struct clk_config_t {
+        sim_id_t id;
+        bool ext;
+        double freq;
+        uint8_t sel_lo;
+        uint8_t sel_hi;
+    };
 
-%Include arch_xt_acp.sip
-%Include arch_xt_adc.sip
-%Include arch_xt_clock.sip
-%Include arch_xt_device.sip
-%Include arch_xt_misc.sip
-%Include arch_xt_nvm.sip
-%Include arch_xt_port.sip
-%Include arch_xt_rtc.sip
-%Include arch_xt_spi.sip
-%Include arch_xt_timer_a.sip
-%Include arch_xt_timer_b.sip
-%Include arch_xt_twi.sip
-%Include arch_xt_usart.sip
-%Include arch_xt_wdt.sip
+    std::vector<ArchAVR_ClkCtrlConfig::clk_config_t> clk_configs;
+
+    regbit_t rb_clkps;
+
+};
+
+
+class ArchAVR_ClkCtrl : public Peripheral /NoDefaultCtors/ {
+%TypeHeaderCode
+#include "arch_avr_clock.h"
+%End
+
+public:
+
+    ArchAVR_ClkCtrl(const ArchAVR_ClkCtrlConfig& /KeepReference/);
+
+};

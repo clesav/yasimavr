@@ -1,7 +1,7 @@
 /*
  * sim_cycle_timer.h
  *
- *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -25,7 +25,9 @@
 #define __YASIMAVR_CYCLE_TIMER_H__
 
 #include "sim_types.h"
+#include "sim_signal.h"
 #include <deque>
+#include <unordered_map>
 
 YASIMAVR_BEGIN_NAMESPACE
 
@@ -46,9 +48,18 @@ public:
     CycleTimer(const CycleTimer& other);
     virtual ~CycleTimer();
 
-    /// Returns true if this timer is scheduled with a manager.
-    inline bool scheduled() const { return !!m_manager; }
+    void init(CycleManager& manager, sim_id_t clock_domain = "CPU");
 
+    inline CycleManager* manager() const { return m_manager; }
+
+    void delay(cycle_count_t count);
+    void delay_s(double secs);
+    void cancel();
+    void pause();
+    void resume();
+
+    bool scheduled() const;
+    bool processing() const;
     bool paused() const;
 
     cycle_count_t remaining_delay() const;
@@ -60,14 +71,8 @@ public:
        The only guarantee is "called 'when' <= 'current cycle'", the implementations must account for this.
 
        \param when current 'when' cycle, at which the timer was scheduled
-       \return the next 'when' the timer requires to be called at.
-
-       \note The next 'when' can be in the 'past' (i.e. <= 'current cycle').
-       In this case, the timer will be called again within the same cycle with the given next 'when'.
-       The only constraint is that it must be greater than the previous 'when'.
-       If it's negative or zero, the timer is removed from the queue.
      */
-    virtual cycle_count_t next(cycle_count_t when) = 0;
+    virtual void next(cycle_count_t when) = 0;
 
     CycleTimer& operator=(const CycleTimer& other);
 
@@ -75,8 +80,11 @@ private:
 
     friend class CycleManager;
 
-    /// Pointer to the cycle manager when the timer is scheduled. Null when not scheduled.
     CycleManager* m_manager;
+    sim_id_t m_clock_domain;
+    uint8_t m_state;
+    double m_when_d;
+    cycle_count_t m_when;
 
 };
 
@@ -86,37 +94,27 @@ class BoundFunctionCycleTimer : public CycleTimer {
 
 public:
 
-    using bound_full_fct_t = cycle_count_t(C::*)(cycle_count_t);
-    using bound_noret_fct_t = void(C::*)(cycle_count_t);
+    using bound_fct_t = void(C::*)(cycle_count_t);
     using bound_noarg_fct_t = void(C::*)(void);
 
-    constexpr BoundFunctionCycleTimer(C& _c, bound_full_fct_t _f) : CycleTimer(), c(_c), m(Full), f_full(_f) {}
-    constexpr BoundFunctionCycleTimer(C& _c, bound_noret_fct_t _f) : CycleTimer(), c(_c), m(NoRet), f_noret(_f) {}
-    constexpr BoundFunctionCycleTimer(C& _c, bound_noarg_fct_t _f) : CycleTimer(), c(_c), m(NoArg), f_noarg(_f) {}
+    constexpr BoundFunctionCycleTimer(C& _c, bound_fct_t _f) : CycleTimer(), c(_c), arg(true), f_arg(_f) {}
+    constexpr BoundFunctionCycleTimer(C& _c, bound_noarg_fct_t _f) : CycleTimer(), c(_c), arg(false), f_noarg(_f) {}
 
-    virtual cycle_count_t next(cycle_count_t when) override final
+    virtual void next(cycle_count_t when) override final
     {
-        if (m == Full) {
-            return (c.*f_full)(when);
-        } else if (m == NoRet) {
-            (c.*f_noret)(when);
-            return 0;
-        } else {
+        if (arg)
+            (c.*f_arg)(when);
+        else
             (c.*f_noarg)();
-            return 0;
-        }
     }
 
 private:
 
-    enum Mode { Full, NoRet, NoArg };
-
     C& c;
-    const Mode m;
+    bool arg;
 
     union {
-        const bound_full_fct_t f_full;
-        const bound_noret_fct_t f_noret;
+        const bound_fct_t f_arg;
         const bound_noarg_fct_t f_noarg;
     };
 
@@ -135,25 +133,39 @@ class AVR_CORE_PUBLIC_API CycleManager {
 
 public:
 
+    static constexpr sim_id_t ReferenceDomain = "CPU";
+
+    enum SignalId {
+        /// Signal raised when the reference domain frequency has changed
+        Signal_RefFreq,
+    };
+
     CycleManager();
     ~CycleManager();
+
+    void add_clock_source(sim_id_t id);
+    void configure_clock_source(sim_id_t id, double src_freq);
+
+    void add_clock_domain(sim_id_t id);
+    void configure_clock_domain(sim_id_t id, sim_id_t source,
+                                unsigned long ps_div, unsigned long ps_mul = 1);
+
+    double reference_frequency() const;
+    double source_frequency(sim_id_t id) const;
+    double domain_frequency(sim_id_t id) const;
 
     cycle_count_t cycle() const;
     void increment_cycle(cycle_count_t count);
 
-    void schedule(CycleTimer& timer, cycle_count_t when);
-
-    void delay(CycleTimer& timer, cycle_count_t d);
-
-    void cancel(CycleTimer& timer);
-
-    void pause(CycleTimer& timer);
-
-    void resume(CycleTimer& timer);
+    double elapsed_time() const;
 
     void process_timers();
 
     cycle_count_t next_when() const;
+
+    void set_direct_freq(double freq);
+
+    DataSignal& signal();
 
     CycleManager(const CycleManager&) = delete;
     CycleManager& operator=(const CycleManager&) = delete;
@@ -163,27 +175,73 @@ private:
     friend class CycleTimer;
 
     //Structure holding information on a cycle timer when it's in the cycle queue
-    struct TimerSlot;
-    std::deque<TimerSlot*> m_timer_slots;
+    std::deque<CycleTimer*> m_timer_slots;
     cycle_count_t m_cycle;
+    bool m_processing;
+    cycle_count_t m_processed_when;
+    bool m_post_process_clock_update;
+    double m_ref_clk_freq;
+    cycle_count_t m_ref_cycle;
+    double m_ref_time;
+    double m_direct_freq;
+    DataSignal m_signal;
+
+    struct clock_source_t {
+        double frequency;
+    };
+    std::unordered_map<sim_id_t, clock_source_t> m_clock_sources;
+
+    struct clock_domain_t {
+        sim_id_t src;
+        unsigned long ps_div;
+        unsigned long ps_mul;
+        double cycle_factor;
+    };
+    std::unordered_map<sim_id_t, clock_domain_t> m_clock_domains;
+
+    void update_clocks();
 
     //Utility method to add a timer in the cycle queue, conserving the order or 'when'
     //and paused timers last
-    void add_to_queue(TimerSlot* slot);
+    void add_to_queue(CycleTimer& timer);
 
     //Utility to remove a timer from the queue.
-    TimerSlot* pop_from_queue(CycleTimer& timer);
+    bool pop_from_queue(CycleTimer& timer);
 
     void copy_slot(const CycleTimer& src, CycleTimer& dst);
 
-    TimerSlot* get_slot(const CycleTimer& timer) const;
+    void delay(CycleTimer& timer, cycle_count_t count);
+    void delay_s(CycleTimer& timer, double secs);
+    void cancel(CycleTimer& timer);
+    void pause(CycleTimer& timer);
+    void resume(CycleTimer& timer);
 
 };
+
 
 /// Returns the current cycle
 inline cycle_count_t CycleManager::cycle() const
 {
     return m_cycle;
+}
+
+
+/// Returns the reference frequency, i.e. the frequency of the reference clock domain "CPU"
+inline double CycleManager::reference_frequency() const
+{
+    return m_ref_clk_freq;
+}
+
+/// Returns a clock source frequency
+inline double CycleManager::source_frequency(sim_id_t id) const
+{
+    return m_clock_sources.at(id).frequency;
+}
+
+
+inline DataSignal& CycleManager::signal()
+{
+    return m_signal;
 }
 
 

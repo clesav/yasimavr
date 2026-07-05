@@ -1,6 +1,6 @@
 # _test_bench_xt.py
 #
-# Copyright 2024 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2024-2026 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -29,7 +29,7 @@ TESTFW_M4809 = os.path.join(os.path.dirname(__file__), 'fw', 'testfw_atmega4809.
 
 class BenchXT:
 
-    def __init__(self, dev_model, path_fw):
+    def __init__(self, dev_model, fw=None, advance=True):
         if isinstance(dev_model, str):
             self.dev_model = load_device(dev_model)
         else:
@@ -41,18 +41,24 @@ class BenchXT:
         self.loop = corelib.SimLoop(self.dev_model)
         self.loop.set_fast_mode(True)
 
-        self.fw = corelib.Firmware.read_elf(path_fw)
-        self.fw.frequency = 1000
-        self.fw.vcc = 5.0
-        self.fw.aref = 5.0
-        self.dev_model.load_firmware(self.fw)
+        self.fw = None
+        if isinstance(fw, str):
+            self.fw = corelib.Firmware.read_elf(fw)
+            self.fw.frequency = 1000000
+            self.fw.vcc = 5.0
+            self.fw.aref = 5.0
+            self.dev_model.load_firmware(self.fw)
+        elif isinstance(fw, corelib.Firmware):
+            self.fw = fw
+            self.dev_model.load_firmware(self.fw)
 
         self.probe = corelib.DeviceDebugProbe(self.dev_model)
 
         self.dev = DeviceAccessor(self.probe)
 
         #execute enough cycles to ensure we're in the main loop
-        self.sim_advance(1000)
+        if self.fw is not None and advance:
+            self.sim_advance(1000)
 
 
     def sim_advance(self, nbcycles, expect_end=False):
@@ -65,5 +71,7 @@ class BenchXT:
                 break
 
 
-def bench_m4809():
-    return BenchXT('atmega4809', PATH_TEST_FW_M4809)
+def bench_m4809(fw=None, advance=True):
+    if fw is None:
+        fw = TESTFW_M4809
+    return BenchXT('atmega4809', fw, advance)

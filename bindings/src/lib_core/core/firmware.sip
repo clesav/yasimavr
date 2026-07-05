@@ -53,7 +53,7 @@ public:
         Area        area;
     };
 
-    unsigned long frequency;
+    double frequency;
     double vcc;
     double aref;
 

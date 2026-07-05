@@ -147,7 +147,7 @@ class InterruptMapDescriptor:
 
 
 class ExtendedBitSpec:
-    
+
     def __init__(self, *args):
         if len(args) == 0:
             self.lsb = self.msb = None

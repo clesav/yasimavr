@@ -60,6 +60,30 @@ SLPCTRL:
         rb_enable: SMCR/SE
 
 #========================================================================================
+CLKCTRL:
+    registers:
+        - name: CLKPR
+          address: 0x41
+          fields:
+            CLKPS: { kind: RAW, LSB: 0, MSB: 3 }
+            CLKPCE: { kind: BIT, pos: 7 }
+
+        - name: OSCCAL
+          address: 0x46
+          fields:
+            CAL: { kind: RAW, LSB: 0, MSB: 7, supported: no }
+
+    config:
+        rb_clkps: CLKPR/CLKPS
+        clk_configs:
+            IntHF: { ext: false, freq: 8e6, sel_lo: 0b0010, sel_hi: 0b0010 }
+            IntLF: { ext: false, freq 128e3, sel_lo: 0b0011, sel_hi: 0b0011 }
+            ExtXT: { ext: true, sel_lo: 0b0110, sel_hi: 0b1111 }
+            Ext32k: { ext: true, sel_lo: 0b0100, sel_hi: 0b0101 }
+            Ext: { ext: true, sel_lo: 0b000, sel_hi: 0b000 }
+
+
+#========================================================================================
 CPUINT:
     registers:
         - name: MCUCR
@@ -82,6 +106,8 @@ FUSES_48:
 FUSES_88_168:
     config:
         #0:Fuse Low Byte , 1:Fuse High Byte , 2:Fuse Ext Byte
+        rb_clkdiv8: 0x00/7
+        rb_clksel: 0x00/0-3
         rb_bootsz: 0x02/1-2
         rb_bootrst: 0x02/0
         bs_bootlockbit: 4-5
@@ -91,6 +117,8 @@ FUSES_88_168:
 FUSES_328:
     config:
         #0:Fuse Low Byte , 1:Fuse High Byte , 2:Fuse Ext Byte
+        rb_clkdiv8: 0x00/7
+        rb_clksel: 0x00/0-3
         rb_bootsz: 0x01/1-2
         rb_bootrst: 0x01/0
         bs_bootlockbit: 4-5

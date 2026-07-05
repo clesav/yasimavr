@@ -21,6 +21,7 @@
 CPP_SRCS := \
 	src/arch_avr_acp.cpp \
 	src/arch_avr_adc.cpp \
+	src/arch_avr_clock.cpp \
 	src/arch_avr_device.cpp \
 	src/arch_avr_extint.cpp \
 	src/arch_avr_misc.cpp \
@@ -36,6 +37,7 @@ CPP_SRCS := \
 OBJS := \
 	$(BUILD_DIR)/arch_avr_acp.o \
 	$(BUILD_DIR)/arch_avr_adc.o \
+	$(BUILD_DIR)/arch_avr_clock.o \
 	$(BUILD_DIR)/arch_avr_device.o \
 	$(BUILD_DIR)/arch_avr_extint.o \
 	$(BUILD_DIR)/arch_avr_misc.o \
@@ -51,6 +53,7 @@ OBJS := \
 CPP_DEPS := \
 	$(BUILD_DIR)/arch_avr_acp.d \
 	$(BUILD_DIR)/arch_avr_adc.d \
+	$(BUILD_DIR)/arch_avr_clock.d \
 	$(BUILD_DIR)/arch_avr_device.d \
 	$(BUILD_DIR)/arch_avr_extint.d \
 	$(BUILD_DIR)/arch_avr_misc.d \

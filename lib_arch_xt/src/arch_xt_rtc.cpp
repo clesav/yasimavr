@@ -50,6 +50,8 @@ enum RTC_Mode {
     PIT_Enabled = 0x02
 };
 
+static constexpr sim_id_t Clk_RTC = "CLKRTC";
+
 
 //=======================================================================================
 
@@ -125,8 +127,10 @@ bool ArchXT_RTC::init(Device& device)
                                  DEF_REGBIT_B(PITINTFLAGS, RTC_PI),
                                  m_config.iv_pit);
 
-    m_rtc_counter.init(*device.cycle_manager(), logger());
-    m_pit_counter.init(*device.cycle_manager(), logger());
+    device.cycle_manager()->add_clock_domain(Clk_RTC);
+
+    m_rtc_counter.init(*device.cycle_manager(), logger(), Clk_RTC);
+    m_pit_counter.init(*device.cycle_manager(), logger(), Clk_RTC);
 
     return status;
 }
@@ -266,30 +270,46 @@ void ArchXT_RTC::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 void ArchXT_RTC::configure_timers()
 {
     if (m_clk_mode) {
-        //Read and configure the clock source
-        uint8_t clk_mode_val = READ_IOREG_F(CLKSEL, RTC_CLKSEL);
-        auto clksel_cfg = find_reg_config_p<CFG::clksel_config_t>(m_config.clocks, clk_mode_val);
-        unsigned long clk_factor; //ratio (main MCU clock freq) / (RTC clock freq)
-        if (clksel_cfg && clksel_cfg->source == CFG::Clock_32kHz)
-            clk_factor = device()->frequency() / 32768;
-        else if (clksel_cfg && clksel_cfg->source == CFG::Clock_1kHz)
-            clk_factor = device()->frequency() / 1024;
-        else {
-            device()->crash(CRASH_INVALID_CONFIG, "Invalid RTC clock source");
-            return;
+        //Read and configure the clock source for RTC
+        uint8_t clk_mode = READ_IOREG_F_GC(CLKSEL, RTC_CLKSEL);
+        sim_id_t clk_source;
+        unsigned long ps_factor = 1;
+        switch (clk_mode) {
+        case RTC_CLKSEL_INT32K_gc:
+            clk_source = "ULP32K";
+            ps_factor = 1;
+            break;
+
+        case RTC_CLKSEL_INT1K_gc:
+            clk_source = "ULP32K";
+            ps_factor = 32;
+            break;
+
+        case RTC_CLKSEL_TOSC32K_gc:
+            clk_source = "EXT32K";
+            ps_factor = 1;
+            break;
+
+        default:
+            clk_source = "EXTCLK";
+            ps_factor = 1;
+            break;
         }
 
+        device()->cycle_manager()->configure_clock_domain(Clk_RTC, clk_source, ps_factor);
+
         //Read and configure the prescaler factor
-        const unsigned long ps_max = PRESCALER_MAX * clk_factor;
-        const unsigned long f = (1 << READ_IOREG_F(CTRLA, RTC_PRESCALER)) * clk_factor;
-        m_rtc_counter.prescaler().set_prescaler(ps_max, f);
-        m_pit_counter.prescaler().set_prescaler(ps_max, f);
+        unsigned long f = (1 << READ_IOREG_F(CTRLA, RTC_PRESCALER));
+        m_rtc_counter.prescaler().set_prescaler(PRESCALER_MAX, f);
+        m_pit_counter.prescaler().set_prescaler(PRESCALER_MAX, f);
 
         //Set the RTC and PIT counters mode
         m_rtc_counter.set_tick_source((m_clk_mode | RTC_Enabled) ? TimerCounter::Tick_Timer : TimerCounter::Tick_Stopped);
         m_pit_counter.set_tick_source((m_clk_mode | PIT_Enabled) ? TimerCounter::Tick_Timer : TimerCounter::Tick_Stopped);
 
     } else {
+
+        device()->cycle_manager()->configure_clock_domain(Clk_RTC, "ULP32K", 0);
 
         m_rtc_counter.prescaler().set_prescaler(PRESCALER_MAX, 0);
         m_rtc_counter.prescaler().set_prescaler(PRESCALER_MAX, 0);

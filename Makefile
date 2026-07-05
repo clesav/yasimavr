@@ -30,6 +30,7 @@ ifeq ($(detected_OS),Windows)
 	COPY_FILE := copy /y
 	LIB_PREFIX :=
 	LIB_EXT := dll
+	SET_VAR := set
 else
 	MAKE_DIR := mkdir -p
 	RM_FILE := rm
@@ -37,6 +38,7 @@ else
 	COPY_FILE := cp
 	LIB_PREFIX := lib
 	LIB_EXT := so
+	SET_VAR := export
 endif
 
 
@@ -150,10 +152,17 @@ py-bindings-debug: libs-debug
 py-bindings-clean: FORCE
 	-cd bindings && $(MAKE) clean
 
+
 docs: FORCE
 	-cd docs && $(MAKE)
 
 docs-clean: FORCE
 	-cd docs && $(MAKE) clean
+
+
+tests: FORCE
+	cd tests/fw && $(MAKE)
+	$(SET_VAR) PYTHONPATH=py && pytest tests
+
 
 FORCE:

@@ -29,6 +29,9 @@ YASIMAVR_USING_NAMESPACE
 
 //=======================================================================================
 
+static constexpr sim_id_t Clk_WDT = "CLKWDT";
+
+
 ArchAVR_WDT::ArchAVR_WDT(const ArchAVR_WDTConfig& config)
 :Peripheral(AVR_IOCTL_WDT)
 ,m_config(config)
@@ -45,14 +48,22 @@ bool ArchAVR_WDT::init(Device& device)
 
     status &= register_interrupt(m_config.iv_wdt, *this);
 
+    device.cycle_manager()->add_clock_source(Clk_WDT);
+    device.cycle_manager()->configure_clock_source(Clk_WDT, m_config.clock_frequency);
+    device.cycle_manager()->add_clock_domain(Clk_WDT);
+    device.cycle_manager()->configure_clock_domain(Clk_WDT, Clk_WDT, 1);
+
+    m_wdt_timer.init(*device.cycle_manager(), Clk_WDT);
+    m_lock_timer.init(*device.cycle_manager());
+
     return status;
 }
 
 
 void ArchAVR_WDT::reset(int flags)
 {
-    device()->cycle_manager()->cancel(m_wdt_timer);
-    device()->cycle_manager()->cancel(m_lock_timer);
+    m_wdt_timer.cancel();
+    m_lock_timer.cancel();
 
     //Check if the watchdog reset flag is set. If it is, WDE is forced to 1
     //and the watchdog timer is activated with default delay settings.
@@ -109,7 +120,7 @@ void ArchAVR_WDT::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
             reschedule_timer();
 
         if (data2.negedge() & m_config.bs_reset_enable) {
-            device()->cycle_manager()->cancel(m_wdt_timer);
+            m_wdt_timer.cancel();
             logger().dbg("Watchdog timer stopped");
         }
 
@@ -119,7 +130,7 @@ void ArchAVR_WDT::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
         //the unlock timed sequence
         //However, the unlocking only has effect on the next write
         if ((m_config.bs_chg_enable & reg_value) && (m_config.bs_reset_enable & reg_value)) {
-            device()->cycle_manager()->delay(m_lock_timer, 4);
+            m_lock_timer.delay(4);
             logger().dbg("Register unlocked");
         }
     }
@@ -133,24 +144,23 @@ void ArchAVR_WDT::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
 }
 
 
-cycle_count_t ArchAVR_WDT::calculate_delay()
+long ArchAVR_WDT::calculate_delay() const
 {
     uint8_t reg_value = read_ioreg(m_config.rbc_delay);
-    unsigned long ps_factor = (reg_value <= 9) ? 1 << (reg_value + 11) : 0;
-    cycle_count_t delay = (device()->frequency() * ps_factor) / m_config.clock_frequency;
+    long delay = (reg_value <= 9) ? 1 << (reg_value + 11) : 0;
     return delay;
 }
 
 
 void ArchAVR_WDT::reschedule_timer()
 {
-    cycle_count_t delay = calculate_delay();
-    device()->cycle_manager()->delay(m_wdt_timer, delay);
-    logger().dbg("Next timeout scheduled, PS factor = %lu", delay);
+    long delay = calculate_delay();
+    m_wdt_timer.delay(delay);
+    logger().dbg("Next timeout scheduled, delay = %ld", delay);
 }
 
 
-cycle_count_t ArchAVR_WDT::wdt_timeout(cycle_count_t when)
+void ArchAVR_WDT::wdt_timeout()
 {
     logger().dbg("timeout");
 
@@ -165,7 +175,7 @@ cycle_count_t ArchAVR_WDT::wdt_timeout(cycle_count_t when)
 
         //Reschedule the timer for the next interrupt/reset
         logger().dbg("Next timeout scheduled");
-        return when + calculate_delay();
+        m_wdt_timer.delay(calculate_delay());
     }
     //or else, WDE is set or WDIF is already raised so trigger the reset.
     //Don't call reset() itself because we want the current
@@ -177,10 +187,7 @@ cycle_count_t ArchAVR_WDT::wdt_timeout(cycle_count_t when)
         device()->ctlreq(AVR_IOCTL_CORE, AVR_CTLREQ_CORE_RESET, &reqdata);
 
         //No need to reschedule the timer, the reset handler will do it
-        return 0;
     }
-
-    return 0;
 }
 
 

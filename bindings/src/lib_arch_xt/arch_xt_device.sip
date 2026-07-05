@@ -77,4 +77,9 @@ public:
 
     ArchXT_Device(const ArchXT_DeviceConfig& /KeepReference/);
 
+    SIP_PYOBJECT __str__();
+    %MethodCode
+        sipRes = PyUnicode_FromFormat("ArchXT_Device(%s)", sipCpp->config().name.c_str());
+    %End
+
 };

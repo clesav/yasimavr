@@ -1,6 +1,6 @@
 # test_core_cycles.py
 #
-# Copyright 2024 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2024-2026 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -26,80 +26,124 @@ class _TestCycleTimer(corelib.CycleTimer):
     def __init__(self):
         super().__init__()
         self.called = -1
-        self.next_when = 0
 
     def next(self, when):
         self.called = when
-        return self.next_when
 
 
 def test_cycle_timer_getters():
     mgr = corelib.CycleManager()
     tmr = _TestCycleTimer()
 
+    assert tmr.manager() == None
+
+    tmr.init(mgr)
+    assert tmr.manager() == mgr
+
     assert not tmr.scheduled()
     assert not tmr.paused()
     assert tmr.remaining_delay() < 0
 
-    mgr.schedule(tmr, 10)
+    tmr.delay(10)
     assert tmr.scheduled()
     assert not tmr.paused()
     assert tmr.remaining_delay() == 10
     assert mgr.next_when() == 10
 
-    mgr.pause(tmr)
+    tmr.pause()
     assert tmr.scheduled()
     assert tmr.paused()
     assert tmr.remaining_delay() == 10
-    assert mgr.next_when() == -1
+    assert mgr.next_when() < 0
 
-    mgr.resume(tmr)
+    tmr.resume()
     assert tmr.scheduled()
     assert not tmr.paused()
     assert tmr.remaining_delay() == 10
     assert mgr.next_when() == 10
 
-    mgr.cancel(tmr)
+    tmr.cancel()
     assert not tmr.scheduled()
     assert not tmr.paused()
-    assert tmr.remaining_delay() == -1
+    assert tmr.remaining_delay() < 0
 
 
 def test_cycle_next_when():
     mgr = corelib.CycleManager()
     tmr = _TestCycleTimer()
+    tmr.init(mgr)
 
     assert mgr.next_when() == -1
 
-    mgr.schedule(tmr, 10)
+    tmr.delay(10)
     assert mgr.next_when() == 10
 
     mgr.increment_cycle(10)
     mgr.process_timers()
     assert mgr.next_when() == -1
+    assert tmr.called == 10
 
 
-def test_cycle_process():
+def test_cycle_ref_freq():
+    mgr = corelib.CycleManager()
+
+    assert mgr.reference_frequency() == 1.0
+
+    mgr.increment_cycle(10)
+    assert mgr.elapsed_time() == 10.0
+
+    mgr.configure_clock_source(0, 2.0)
+    mgr.increment_cycle(10)
+
+    assert mgr.reference_frequency() == 2.0
+    assert mgr.elapsed_time() == 15.0
+
+    mgr.configure_clock_source(0, 0.5)
+    mgr.increment_cycle(10)
+
+    assert mgr.reference_frequency() == 0.5
+    assert mgr.elapsed_time() == 35.0
+
+    mgr.set_direct_freq(2.0)
+    assert mgr.reference_frequency() == 2.0
+
+    mgr.set_direct_freq(0.0)
+    assert mgr.reference_frequency() == 0.5
+
+
+def test_cycle_delay_secs():
     mgr = corelib.CycleManager()
     tmr = _TestCycleTimer()
-    tmr.next_when = 20
-    mgr.schedule(tmr, 10)
+    tmr.init(mgr)
 
-    mgr.increment_cycle(5)
-    assert tmr.remaining_delay() == 5
-
-    mgr.increment_cycle(10)
-    assert tmr.scheduled()
-    assert tmr.remaining_delay() == 0
-
-    mgr.process_timers()
-    assert tmr.called == 10
-    assert mgr.next_when() == 20
-    assert tmr.scheduled()
-
-    tmr.next_when = 0
-    mgr.increment_cycle(10)
+    mgr.configure_clock_source(0, 2.0)
+    tmr.delay_s(10.0)
+    mgr.increment_cycle(20)
     mgr.process_timers()
     assert tmr.called == 20
-    assert mgr.next_when() == -1
-    assert not tmr.scheduled()
+
+
+def test_cycle_domain():
+    mgr = corelib.CycleManager()
+    tmr = _TestCycleTimer()
+    tmr.init(mgr, 1)
+    mgr.add_clock_domain(1)
+
+    tmr.delay(10)
+    assert tmr.remaining_delay() == 10
+
+    mgr.configure_clock_domain(1, 0, 2)
+    assert mgr.domain_frequency(1) == 0.5
+    assert mgr.next_when() == 20
+
+    mgr.configure_clock_domain(1, 0, 4)
+    assert mgr.domain_frequency(1) == 0.25
+    assert mgr.reference_frequency() == 1.0
+    assert mgr.next_when() == 40
+
+    mgr.increment_cycle(10)
+    assert tmr.remaining_delay() == 8
+
+    tmr.delay(15)
+    assert tmr.remaining_delay() == 15
+    assert mgr.next_when() == 70

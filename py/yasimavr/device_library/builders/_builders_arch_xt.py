@@ -74,7 +74,7 @@ def _get_slpctrl_builder():
 #CLK controller configuration
 
 def _get_clkctrl_builder():
-    return DummyPeripheralBuilder(_corelib.IOCTL_CLOCK)
+    return PeripheralBuilder(_archlib.ArchXT_ClkCtrl, base_config_builder)
 
 
 #========================================================================================

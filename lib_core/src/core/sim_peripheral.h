@@ -204,6 +204,9 @@ typedef int ctlreq_id_t;
  */
 #define AVR_CTLREQ_SLEEP_PSEUDO     (AVR_CTLREQ_BASE + 2)
 
+//Request to set the external clock input frequency
+#define AVR_CTLREQ_CLK_SET_EXTCLK   (AVR_CTLREQ_BASE + 1)
+
 /// @}
 
 
@@ -237,6 +240,7 @@ struct NVM_request_t {
 struct ctlreq_data_t {
     vardata_t data;
     long long index;
+    sim_id_t id;
 };
 
 
@@ -268,6 +272,16 @@ template<typename T>
 const T* find_reg_config_p(const std::vector<T>& v, uint64_t reg_value)
 {
     for (const T& cfg : v) {
+        if (cfg.reg_value == reg_value)
+            return &cfg;
+    }
+    return nullptr;
+}
+
+template<typename T, size_t N>
+const T* find_reg_config_p(const std::array<T, N>& a, uint64_t reg_value)
+{
+    for (const T& cfg : a) {
         if (cfg.reg_value == reg_value)
             return &cfg;
     }

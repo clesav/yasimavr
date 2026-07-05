@@ -99,12 +99,6 @@ public:
 
 private:
 
-    class SPM_Timer;
-    friend class SPM_Timer;
-
-    class EE_Timer;
-    friend class EE_Timer;
-
     enum State {
         State_Idle = 0,
         State_Pending,
@@ -135,12 +129,12 @@ private:
     flash_addr_t m_spm_page_size;
     State m_spm_state;
     int m_spm_command;
-    SPM_Timer* m_spm_timer;
+    BoundFunctionCycleTimer<ArchAVR_NVM> m_spm_timer;
     bool m_halt;
 
     State m_ee_state;
     uint8_t m_ee_prog_mode;
-    EE_Timer* m_ee_timer;
+    BoundFunctionCycleTimer<ArchAVR_NVM> m_ee_timer;
 
     MemorySectionManager* m_section_manager;
 
@@ -186,6 +180,10 @@ struct ArchAVR_FusesConfig {
     regbit_t                         rb_bootsz;
     /// Regbit for the boot reset fuse bit
     regbit_t                         rb_bootrst;
+    /// Regbit for the Clock Selection fuse bits
+    regbit_t                         rb_clksel;
+    /// Regbit for the Clock x8 prescaling fuse bit
+    regbit_t                         rb_clkdiv8;
     /// Regbit for the boot part of the lockbits
     bitspec_t                        bs_bootlockbit;
     /// Regbit for the application part of the lockbits
@@ -210,6 +208,8 @@ public:
 
     enum Fuses {
         Fuse_BootRst,
+        Fuse_ClkSel,
+        Fuse_ClkDiv8,
     };
 
     explicit ArchAVR_Fuses(const ArchAVR_FusesConfig& config);

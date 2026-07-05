@@ -74,6 +74,31 @@ def _get_slpctrl_builder():
 
 
 #========================================================================================
+#Clock controller configuration
+
+def _clkctrl_convertor(cfg, attr, yml_val, per_desc):
+    if attr == 'clk_configs':
+        py_src_cfgs = []
+        for src_id, yml_src_cfg in yml_val.items():
+            src_cfg = _archlib.ArchAVR_ClkCtrlConfig.clk_config_t()
+            src_cfg.id = src_id
+            src_cfg.freq = float(yml_src_cfg.get('freq', 0.0))
+            src_cfg.ext = bool(yml_src_cfg.get('ext', False)) and not src_cfg.freq
+            src_cfg.sel_lo = int(yml_src_cfg['sel_lo'])
+            src_cfg.sel_hi = int(yml_src_cfg['sel_hi'])
+            py_src_cfgs.append(src_cfg)
+
+        cfg.clk_configs = py_src_cfgs
+
+    else:
+        raise Exception('Converter not implemented for ' + attr)
+
+def _get_clkctrl_builder():
+    cfg_builder = PeripheralConfigBuilder(_archlib.ArchAVR_ClkCtrlConfig, _clkctrl_convertor)
+    return PeripheralBuilder(_archlib.ArchAVR_ClkCtrl, cfg_builder)
+
+
+#========================================================================================
 #Fuses controller configuration
 
 def _fuses_convertor(cfg, attr, yml_val, per_desc):
@@ -423,6 +448,7 @@ class AVR_DeviceBuilder(DeviceBuilder):
         'CPUINT': _get_intctrl_builder,
         'RSTCTRL': _get_rstctrl_builder,
         'SLPCTRL': _get_slpctrl_builder,
+        'CLKCTRL': _get_clkctrl_builder,
         'FUSES': _get_fuses_builder,
         'FUSES_48': _get_fuses_builder,
         'FUSES_88_168': _get_fuses_builder,

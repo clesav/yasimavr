@@ -1,7 +1,7 @@
 /*
- * arch_xt_wdt.h
+ * arch_xt_clock.h
  *
- *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -21,11 +21,12 @@
 
 //=======================================================================================
 
-#ifndef __YASIMAVR_XT_WDT_H__
-#define __YASIMAVR_XT_WDT_H__
+#ifndef __YASIMAVR_XT_CLK_H__
+#define __YASIMAVR_XT_CLK_H__
 
 #include "arch_xt_globals.h"
 #include "core/sim_peripheral.h"
+#include "core/sim_memory.h"
 
 YASIMAVR_BEGIN_NAMESPACE
 
@@ -33,46 +34,39 @@ YASIMAVR_BEGIN_NAMESPACE
 //=======================================================================================
 
 /**
-   \brief Configuration structure for ArchXT_WDT
+   \brief Implementation of a clock controller for XT core series.
+
+   Applicable for ATMega 0-series, ATTiny 0,1,2series
  */
-struct ArchXT_WDTConfig {
-
-    /// Frequency in Hertz of the clock used for the Watchdog Timer
-    double clock_frequency;
-    /// Base address for the peripheral I/O registers
-    reg_addr_t reg_base;
-
-};
-
-
-/**
-   \brief Implementation of a Watchdog Timer for XT core series
- */
-class AVR_ARCHXT_PUBLIC_API ArchXT_WDT : public Peripheral {
+class AVR_ARCHXT_PUBLIC_API ArchXT_ClkCtrl : public Peripheral {
 
 public:
 
-    explicit ArchXT_WDT(const ArchXT_WDTConfig& config);
+    static constexpr sim_id_t ClkSrc_Main = "OSC20M";
+    static constexpr sim_id_t ClkSrc_ULP32K = "ULP32K";
+    static constexpr sim_id_t ClkSrc_EXT32K = "EXT32K";
+    static constexpr sim_id_t ClkSrc_EXTCLK = "EXTCLK";
 
-    virtual bool init(Device& device) override;
+    explicit ArchXT_ClkCtrl(reg_addr_t reg_base);
+
+    virtual bool init(Device&) override;
     virtual void reset(int flags) override;
     virtual bool ctlreq(ctlreq_id_t req, ctlreq_data_t* data) override;
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
 
 private:
 
-    const ArchXT_WDTConfig& m_config;
-    BoundFunctionCycleTimer<ArchXT_WDT> m_wdt_timer;
-    BoundFunctionCycleTimer<ArchXT_WDT> m_wdr_sync_timer;
-    bool m_first_wdr;
+    const reg_addr_t m_reg_base;
+    NonVolatileMemory* m_fuses;
+    uint8_t m_active_main_sel;
+    double m_ext_cryst_freq;
+    double m_ext_clk_freq;
 
-    std::tuple<long, long> calculate_delays(uint8_t reg_value);
-    void timeout();
-    void wdr_sync_timer_next();
+    void update_clocks();
 
 };
 
 
 YASIMAVR_END_NAMESPACE
 
-#endif //__YASIMAVR_XT_WDT_H__
+#endif //__YASIMAVR_XT_CLK_H__

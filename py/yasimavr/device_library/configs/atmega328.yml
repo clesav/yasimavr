@@ -111,6 +111,9 @@ peripherals:
     SLPCTRL:
         file: mega48-88-168-328_controllers.yml
 
+    CLKCTRL:
+        file: mega48-88-168-328_controllers.yml
+
     FUSES:
         class: FUSES_328
         file: mega48-88-168-328_controllers.yml

@@ -1,7 +1,7 @@
 /*
  * yasimavr-arch-avr.sip
  *
- *  Copyright 2021-2025 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -38,6 +38,7 @@ YASIMAVR_USING_NAMESPACE
 
 %Include arch_avr_acp.sip
 %Include arch_avr_adc.sip
+%Include arch_avr_clock.sip
 %Include arch_avr_device.sip
 %Include arch_avr_extint.sip
 %Include arch_avr_misc.sip

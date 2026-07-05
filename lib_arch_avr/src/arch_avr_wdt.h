@@ -38,7 +38,7 @@ YASIMAVR_BEGIN_NAMESPACE
 struct ArchAVR_WDTConfig {
 
     /// Clock frequency used by the watchdog timer
-    unsigned long clock_frequency;
+    double clock_frequency;
     /// WDT configuration register address
     reg_addr_t reg_wdt;
     /// Regbit the delay select
@@ -80,9 +80,9 @@ private:
     BoundFunctionCycleTimer<ArchAVR_WDT> m_wdt_timer;
     BoundFunctionCycleTimer<ArchAVR_WDT> m_lock_timer;
 
-    cycle_count_t calculate_delay();
+    long calculate_delay() const;
     void reschedule_timer();
-    cycle_count_t wdt_timeout(cycle_count_t when);
+    void wdt_timeout();
     void lock_timeout();
 
 };

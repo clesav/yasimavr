@@ -1,7 +1,7 @@
 /*
  * test firmware
  *
- *  Copyright 2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2024-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -19,7 +19,7 @@
     along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define F_CPU 1000
+#define F_CPU 1000000
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
