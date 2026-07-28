@@ -1,6 +1,6 @@
 # dev_mega_0series.py
 #
-# Copyright 2023-2025 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2023-2026 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -57,6 +57,7 @@ class dev_mega_0series(XT_BaseDevice):
             'TCB0',
             'TCB1',
             'TCB2',
+            'WDT',
             'VREF',
             'ADC0',
             'ACP0',
