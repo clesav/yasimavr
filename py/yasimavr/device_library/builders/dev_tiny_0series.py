@@ -1,6 +1,6 @@
 # dev_tiny_0series.py
 #
-# Copyright 2024-2025 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2024-2026 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -48,6 +48,7 @@ class dev_tiny_0series(XT_BaseDevice):
             'RTC',
             'TCA0',
             'TCB0',
+            'WDT',
             'VREF',
             'ADC0',
             'ACP0',
