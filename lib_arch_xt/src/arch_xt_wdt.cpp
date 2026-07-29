@@ -148,10 +148,10 @@ void ArchXT_WDT::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 std::tuple<long, long> ArchXT_WDT::calculate_delays(uint8_t reg_value)
 {
     uint8_t reg_period = EXTRACT_F(reg_value, WDT_PERIOD);
-    long p = (reg_period <= 11) ? 1 << (reg_period + 2) : 0;
+    long p = (reg_period >= 1 && reg_period <= 11) ? 1L << (reg_period + 2) : 0;
 
     uint8_t reg_window = EXTRACT_F(reg_value, WDT_WINDOW);
-    long w = (reg_window <= 11) ? 1 << (reg_window + 2) : 0;
+    long w = (reg_window >= 1 && reg_window <= 11) ? 1L << (reg_window + 2) : 0;
 
     return std::tuple<long, long>(p, w);
 }
