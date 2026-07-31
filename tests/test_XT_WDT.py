@@ -72,7 +72,7 @@ def test_xt_watchdog_window(bench):
     bench.dev_model.ctlreq('WDT', CTLREQ_WATCHDOG_RESET)
     bench.sim_advance(3000)
 
-    #Check that the device has not been reset (the window is ignored for the first WDR) 
+    #Check that the device has not been reset (the window is ignored for the first WDR)
     assert MISCREG.GPIOR0 == 0xAA
     assert not RSTCTRL.RSTFR.WDRF
 
@@ -81,7 +81,7 @@ def test_xt_watchdog_window(bench):
     bench.dev_model.ctlreq('WDT', CTLREQ_WATCHDOG_RESET)
     bench.sim_advance(3000)
 
-    #Check that the device has not been reset (WDR within the window) 
+    #Check that the device has not been reset (WDR within the window)
     assert MISCREG.GPIOR0 == 0xAA
     assert not RSTCTRL.RSTFR.WDRF
 
@@ -90,6 +90,6 @@ def test_xt_watchdog_window(bench):
     bench.dev_model.ctlreq('WDT', CTLREQ_WATCHDOG_RESET)
     bench.sim_advance(3000)
 
-    #Check that the device has been reset (WDR too early) 
+    #Check that the device has been reset (WDR too early)
     assert MISCREG.GPIOR0 == 0x00
     assert RSTCTRL.RSTFR.WDRF
