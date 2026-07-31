@@ -53,6 +53,14 @@ class SimLoop : public AbstractSimLoop /NoDefaultCtors/ {
 public:
 
     SimLoop(Device&);
+    %MethodCode
+        sipCpp = new ::SimLoop(*a0);
+        if (sipCpp->state() == SimLoop::State_Done) {
+            PyErr_SetString(PyExc_Exception, "Device initialisation failed.");
+            delete sipCpp;
+            return SIP_NULLPTR;
+        }
+    %End
 
     void set_fast_mode(bool);
     void run(cycle_count_t = 0) /ReleaseGIL/;
@@ -68,6 +76,14 @@ class AsyncSimLoop : public AbstractSimLoop /NoDefaultCtors/ {
 public:
 
     AsyncSimLoop(Device&);
+    %MethodCode
+        sipCpp = new ::AsyncSimLoop(*a0);
+        if (sipCpp->state() == SimLoop::State_Done) {
+            PyErr_SetString(PyExc_Exception, "Device initialisation failed.");
+            delete sipCpp;
+            return SIP_NULLPTR;
+        }
+    %End
 
     void set_fast_mode(bool);
 

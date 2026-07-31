@@ -354,7 +354,13 @@ class DeviceBuilder:
         if VERBOSE:
             print('  Building peripheral', per_name)
 
-        per_descriptor = self._dev_descriptor.peripherals[per_name]
+        try:
+            per_descriptor = self._dev_descriptor.peripherals[per_name]
+        except KeyError:
+            if VERBOSE:
+                print('  No descriptor found for peripheral', per_name)
+            return
+
         per_class = per_descriptor.per_class
 
         if per_class in self._per_builders:
@@ -374,8 +380,13 @@ class DeviceBuilder:
         else:
             if VERBOSE:
                 print('    Building configuration for peripheral', per_name)
-            per_config = per_builder.config_builder(per_descriptor)
-            self._per_configs[per_name] = per_config
+
+            try:
+                per_config = per_builder.config_builder(per_descriptor)
+            except Exception as e:
+                raise Exception('Error building peripheral ' + per_name) from e
+            else:
+                self._per_configs[per_name] = per_config
 
         per_instance = per_builder.build(per_descriptor.name, per_config)
         device.attach_peripheral(per_instance)

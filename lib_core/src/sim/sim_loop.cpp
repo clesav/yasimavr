@@ -51,7 +51,10 @@ AbstractSimLoop::AbstractSimLoop(Device& device)
 ,m_logger("SIMLOOP")
 {
     m_logger.set_parent(&m_device.logger());
-    m_device.init(m_cycle_manager);
+    if (!m_device.init(m_cycle_manager)) {
+        m_logger.err("Device initialisation failed. The simloop cannot run");
+        m_state = State_Done;
+    }
 }
 
 cycle_count_t AbstractSimLoop::run_device(cycle_count_t final_cycle)
