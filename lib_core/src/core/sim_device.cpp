@@ -500,9 +500,11 @@ Pin* Device::find_pin(pin_id_t id)
  */
 void Device::crash(uint16_t reason, const char* text)
 {
-    m_logger.err("MCU crash, reason (code=%d) : %s", reason, text);
-    m_logger.wng("End of program at PC = 0x%04x", m_core.m_pc);
-    m_state = State_Crashed;
+    if (m_state < State_Crashed) {
+        m_logger.err("MCU crash, reason (code=%d) : %s", reason, text);
+        m_logger.wng("End of program at PC = 0x%04x", m_core.m_pc);
+        m_state = State_Crashed;
+    }
 }
 
 
