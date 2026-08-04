@@ -163,7 +163,7 @@ void SimLoop::run(cycle_count_t nbcycles)
 
     if (m_state < State_Done) {
         m_state = State_Stopped;
-        if (nbcycles > 0)
+        if (nbcycles > 0 && m_cycle_manager.cycle() <= final_cycle)
             m_cycle_manager.increment_cycle(final_cycle - m_cycle_manager.cycle() + 1);
     }
 
