@@ -22,8 +22,7 @@
 //=======================================================================================
 
 #include "arch_xt_spi.h"
-#include "arch_xt_io.h"
-#include "arch_xt_io_utils.h"
+#include "avr_io/io_spi.h"
 #include "ioctrl_common/sim_spi.h"
 #include "core/sim_device.h"
 

@@ -23,8 +23,7 @@
 
 #include "arch_xt_timer_a.h"
 #include "arch_xt_timer_b.h"
-#include "arch_xt_io.h"
-#include "arch_xt_io_utils.h"
+#include "avr_io/io_tca.h"
 #include "core/sim_device.h"
 #include "core/sim_sleep.h"
 

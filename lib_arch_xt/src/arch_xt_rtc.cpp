@@ -22,8 +22,7 @@
 //=======================================================================================
 
 #include "arch_xt_rtc.h"
-#include "arch_xt_io.h"
-#include "arch_xt_io_utils.h"
+#include "avr_io/io_rtc.h"
 #include "core/sim_device.h"
 #include "core/sim_sleep.h"
 

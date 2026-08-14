@@ -23,8 +23,8 @@
 
 #include "arch_xt_clock.h"
 #include "arch_xt_device.h"
-#include "arch_xt_io.h"
-#include "arch_xt_io_utils.h"
+#include "avr_io/io_clock.h"
+#include "avr_io/io_nvm.h"
 #include <array>
 
 YASIMAVR_USING_NAMESPACE
@@ -143,7 +143,7 @@ void ArchXT_ClkCtrl::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& d
             WRITE_IOREG(MCLKCTRLA, data.old);
 
         //If the current selection is an external source, prevent any change
-        if ((data.old & CLKCTRL_CLKSEL1_bm) && ((data.value ^ data.old) & CLKCTRL_CLKSEL_gm))
+        if ((data.old & CLKCTRL_CLKSEL_1_bm) && ((data.value ^ data.old) & CLKCTRL_CLKSEL_gm))
             WRITE_IOREG_F_GC(MCLKCTRLA, CLKCTRL_CLKSEL, data.old);
 
         update_clocks();
@@ -210,7 +210,7 @@ void ArchXT_ClkCtrl::update_clocks()
     //If a switch from internal to external clock is requested by writing CLKSEL, check
     //that the new clock is running before actually switching.
     uint8_t reg_main_sel = READ_IOREG_F_GC(MCLKCTRLA, CLKCTRL_CLKSEL);
-    if ((reg_main_sel & CLKCTRL_CLKSEL1_bm) && !(m_active_main_sel & CLKCTRL_CLKSEL1_bm)) {
+    if ((reg_main_sel & CLKCTRL_CLKSEL_1_bm) && !(m_active_main_sel & CLKCTRL_CLKSEL_1_bm)) {
         bool can_switch = (reg_main_sel == CLKCTRL_CLKSEL_XOSC32K_gc && ext_cryst_on) ||
                           (reg_main_sel == CLKCTRL_CLKSEL_EXTCLK_gc && m_ext_clk_freq);
         if (can_switch) {

@@ -22,8 +22,7 @@
 //=======================================================================================
 
 #include "arch_xt_usart.h"
-#include "arch_xt_io.h"
-#include "arch_xt_io_utils.h"
+#include "avr_io/io_usart.h"
 #include "core/sim_sleep.h"
 #include "core/sim_device.h"
 #include <ioctrl_common/sim_uart.h>

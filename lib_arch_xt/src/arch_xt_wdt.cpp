@@ -22,8 +22,8 @@
 //=======================================================================================
 
 #include "arch_xt_wdt.h"
-#include "arch_xt_io.h"
-#include "arch_xt_io_utils.h"
+#include "avr_io/io_nvm.h"
+#include "avr_io/io_wdt.h"
 #include "arch_xt_device.h"
 
 YASIMAVR_USING_NAMESPACE

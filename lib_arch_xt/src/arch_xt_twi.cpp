@@ -22,8 +22,7 @@
 //=======================================================================================
 
 #include "arch_xt_twi.h"
-#include "arch_xt_io.h"
-#include "arch_xt_io_utils.h"
+#include "avr_io/io_twi.h"
 #include "core/sim_device.h"
 #include "ioctrl_common/sim_twi.h"
 
