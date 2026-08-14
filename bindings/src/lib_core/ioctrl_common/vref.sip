@@ -1,7 +1,7 @@
 /*
  * vref.sip
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -26,7 +26,8 @@
 #include "ioctrl_common/sim_vref.h"
 
 const ctlreq_id_t CTLREQ_VREF_GET = AVR_CTLREQ_VREF_GET;
-const ctlreq_id_t CTLREQ_VREF_SET = AVR_CTLREQ_VREF_SET;
+const ctlreq_id_t CTLREQ_VREF_SET_REF = AVR_CTLREQ_VREF_SET_REF;
+const ctlreq_id_t CTLREQ_VREF_SET_MUX = AVR_CTLREQ_VREF_SET_MUX;
 
 %End
 
@@ -34,8 +35,8 @@ const ctlreq_id_t CTLREQ_VREF_SET = AVR_CTLREQ_VREF_SET;
 //=======================================================================================
 
 const ctlreq_id_t CTLREQ_VREF_GET;
-const ctlreq_id_t CTLREQ_VREF_SET;
-
+const ctlreq_id_t CTLREQ_VREF_SET_REF;
+const ctlreq_id_t CTLREQ_VREF_SET_MUX;
 
 class VREF : public Peripheral /NoDefaultCtors/ {
 %TypeHeaderCode
@@ -48,7 +49,8 @@ public:
         Source_VCC                  /PyName=VCC/,
         Source_AVCC                 /PyName=AVCC/,
         Source_AREF                 /PyName=AREF/,
-        Source_Internal             /PyName=Internal/,
+        Source_Bandgap              /PyName=Bandgap/,
+        Source_Mux                  /PyName=Mux/,
     };
 
     enum SignalId /BaseType=IntEnum/ {
@@ -57,13 +59,26 @@ public:
         Signal_VCCChange            /PyName=VCCChange/,
     };
 
-    VREF(unsigned int);
+    struct getset_t {
 
-    bool active() const;
+        Source source;
+        unsigned int channel;
+        double voltage;
+
+        getset_t(Source, unsigned int=0, double=-1.0);
+        %MethodCode
+            sipCpp = new VREF::getset_t();
+            *sipCpp = { a0, a1, a2 };
+        %End
+
+    };
+
+    VREF(unsigned int);
 
 protected:
 
-    void set_reference(unsigned int, Source, double=1.0);
+    void set_reference(unsigned int, Source, double);
+    void set_reference(unsigned int, Source);
     double reference(unsigned int) const;
 
 };

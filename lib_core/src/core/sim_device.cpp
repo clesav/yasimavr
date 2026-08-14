@@ -204,18 +204,20 @@ bool Device::load_firmware(const Firmware& firmware)
         m_cycle_manager->set_direct_freq(firmware.frequency);
 
     //Send the power supply voltage from the firmware to the VREF controller (if it exists)
-    bool analog_ok = false;
     if (firmware.vcc > 0.0) {
-        ctlreq_data_t reqdata = { .data = firmware.vcc, .index = VREF::Source_VCC, };
-        analog_ok = ctlreq(AVR_IOCTL_VREF, AVR_CTLREQ_VREF_SET, &reqdata);
+        VREF::getset_t vref_reqinfo = { .source = VREF::Source_VCC, .voltage = firmware.vcc };
+        ctlreq_data_t reqdata = { .data = &vref_reqinfo };
+        bool analog_ok = ctlreq(AVR_IOCTL_VREF, AVR_CTLREQ_VREF_SET_REF, &reqdata);
+
+        //Send the analog voltage reference from the firmware to the VREF controller
         if (analog_ok) {
-            //Send the analog voltage reference from the firmware to the VREF controller
-            reqdata.index = VREF::Source_AREF;
-            reqdata.data = firmware.aref;
-            ctlreq(AVR_IOCTL_VREF, AVR_CTLREQ_VREF_SET, &reqdata);
-        } else {
-            m_logger.err("Firmware load: Unable to set VCC, analog features are unusable.");
+            vref_reqinfo = VREF::getset_t{ .source = VREF::Source_AREF, .voltage = firmware.aref };
+            analog_ok = ctlreq(AVR_IOCTL_VREF, AVR_CTLREQ_VREF_SET_REF, &reqdata);
         }
+
+        if (!analog_ok)
+            m_logger.err("Firmware load: Unable to set VCC, analog features are unusable.");
+
     } else {
         m_logger.dbg("Firmware load: VCC not defined in the firmware, analog features are unusable.");
     }
