@@ -212,7 +212,7 @@ def _vref_convertor(cfg, attr, yml_val, per_desc):
                 elif chan_ref == 'AREF':
                     chan_ref_cfg.source = _corelib.VREF.Source.AREF
                 elif chan_ref is not None:
-                    chan_ref_cfg.source = _corelib.VREF.Source.Internal
+                    chan_ref_cfg.source = _corelib.VREF.Source.Bandgap
                     chan_ref_cfg.level = float(chan_ref)
 
                 ref_cfg_list.append(chan_ref_cfg)

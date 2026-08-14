@@ -76,10 +76,8 @@ void ArchXT_VREF::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
 
 void ArchXT_VREF::set_channel_reference(unsigned int index, uint8_t reg_value)
 {
-    typedef ArchXT_VREFConfig::reference_config_t vref_cfg_t;
-
     //Find the corresponding reference setting from the configuration
-    auto vref_cfg = find_reg_config_p<vref_cfg_t>(m_config.channels[index].references, reg_value);
+    auto vref_cfg = find_reg_config_p(m_config.channels[index].references, reg_value);
     //If it's a valid setting, update the reference
     if (vref_cfg)
         set_reference(index, vref_cfg->source, vref_cfg->level);

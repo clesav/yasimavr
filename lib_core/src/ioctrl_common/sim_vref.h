@@ -1,7 +1,7 @@
 /*
  * sim_vref.h
  *
- *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -44,19 +44,29 @@ YASIMAVR_BEGIN_NAMESPACE
 
 /**
    Request to interrogate the VREF controller and obtain a reference value.\n
-   The index shall be set to the required source (one of VREF::Source enum values)\n
-   For Internal references, data shall be set to the required channel, as an unsigned integer.\n
-   On return, data is set to the reference value as a double. Except for VCC, all values are relative to VCC.
+   `data` should point to a VREF::getset_t object, with `source` set to the required source (one of VREF::Source enum values)\n
+   For Bandgap or Mux references, `channel` shall be set to the required channel.\n
+   The voltage value is stored in `voltage`, as an absolute value in volts for VCC, and a relative value to VCC
+   for all others.
  */
 #define AVR_CTLREQ_VREF_GET             (AVR_CTLREQ_BASE + 1)
 
 /**
-   Request to set VCC or AREF reference values.\n
-   The index shall be set to the required source (one of VREF::Source enum values but only VCC and VREF are accepted)\n
-   data shall be set to the required value as a double.\n
-   VCC shall be an absolute value in Volts, AREF shall be relative to VCC and contrainted to the range [0; 1].
+   Request to set VCC, AREF or a bandgap reference values.\n
+   `data` should point to a VREF::getset_t object, with `source` set to the required source (one of VREF::Source enum values,
+   but only VCC, VREF or Bandgap are accepted)\n
+   For Bandgap, `channel` shall be set to the required channel.\n
+   `voltage` shall be set to the absolute value in volts.
  */
-#define AVR_CTLREQ_VREF_SET             (AVR_CTLREQ_BASE + 2)
+#define AVR_CTLREQ_VREF_SET_REF         (AVR_CTLREQ_BASE + 2)
+
+/**
+   Request to change the source of the mux for a given channel
+   `source` set to the required source (one of VREF::Source enum values, but only VCC, VREF or Bandgap are accepted)\n
+   For Bandgap, `channel` shall be set to the required channel.\n
+   `voltage` shall be set to the absolute value in volts.
+ */
+#define AVR_CTLREQ_VREF_SET_MUX         (AVR_CTLREQ_BASE + 3)
 
 /// @}
 /// @}
@@ -73,12 +83,13 @@ class AVR_CORE_PUBLIC_API VREF : public Peripheral {
 
 public:
 
-    /// Enumation value for the sources of voltage references
+    /// Enumeration value for the sources of voltage references
     enum Source {
         Source_VCC,             ///< VCC voltage value
         Source_AVCC,            ///< AVCC voltage value (always equal to VCC for now)
         Source_AREF,            ///< AREF voltage value
-        Source_Internal,        ///< Internal reference voltage value
+        Source_Bandgap,         ///< Internal reference voltage value
+        Source_Mux,             ///< Reference mux selection
     };
 
     enum SignalId {
@@ -88,7 +99,7 @@ public:
         Signal_ARefChange,
         /**
            Raised when an internal reference value is changed.
-           data carries the new value (relative to VCC) and index the reference index.
+           data carries the new value (relative to VCC) and index the reference channel.
          */
         Signal_IntRefChange,
         /**
@@ -98,15 +109,20 @@ public:
         Signal_VCCChange,
     };
 
+    struct getset_t {
+        Source source;
+        unsigned int channel = 0;
+        double voltage = -1.0;
+    };
+
     explicit VREF(unsigned int ref_count);
 
-    bool active() const;
-
-    virtual bool ctlreq(ctlreq_id_t req, ctlreq_data_t* data) override;
+    virtual bool ctlreq(ctlreq_id_t req, ctlreq_data_t* reqdata) override;
 
 protected:
 
-    void set_reference(unsigned int index, Source source, double voltage=1.0);
+    void set_reference(unsigned int index, Source source);
+    void set_reference(unsigned int index, Source source, double voltage);
     double reference(unsigned int index) const;
 
 private:
@@ -116,18 +132,13 @@ private:
     DataSignal m_signal;
 
     struct ref_t {
-        double value;
-        bool relative;
+        Source mux_source;
+        double bandgap_voltage;
     };
 
     std::vector<ref_t> m_references;
 
 };
-
-inline bool VREF::active() const
-{
-    return m_vcc;
-}
 
 
 YASIMAVR_END_NAMESPACE
