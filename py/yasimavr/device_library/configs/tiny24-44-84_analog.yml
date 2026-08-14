@@ -1,6 +1,6 @@
 # YAML configuration file for attiny24-44-84 variants
 #
-# Copyright 2025 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2025-2026 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -148,7 +148,7 @@ ADC:
         references:
             0: AVCC
             1: AREF
-            2: Internal
+            2: Bandgap
         clk_ps_factors: [ 2, 2, 4, 8, 16, 32, 128 ]
         triggers:
             0b000: FreeRunning

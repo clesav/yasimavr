@@ -151,7 +151,7 @@ ADC:
 
     config:
         references:
-            0 : Internal
+            0 : Mux
             1 : AVCC
             2 : AREF
         vref_channel: 0
