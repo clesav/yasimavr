@@ -28,7 +28,6 @@
 #include "core/sim_device.h"
 #include <cstring>
 
-
 YASIMAVR_USING_NAMESPACE
 
 

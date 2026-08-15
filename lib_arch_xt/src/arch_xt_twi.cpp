@@ -30,6 +30,7 @@ YASIMAVR_USING_NAMESPACE
 
 using namespace TWI;
 
+
 //=======================================================================================
 
 #define REG_ADDR(reg) \

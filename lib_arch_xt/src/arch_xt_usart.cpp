@@ -31,6 +31,7 @@ YASIMAVR_USING_NAMESPACE
 
 using namespace UART;
 
+
 //=======================================================================================
 
 class ArchXT_USART::_PinDriver : public PinDriver {
