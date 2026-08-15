@@ -21,11 +21,51 @@
 
 //=======================================================================================
 
-
 #ifndef __YASIMAVR_XT_IO_UTILS_H__
 #define __YASIMAVR_XT_IO_UTILS_H__
 
 #include <stddef.h>
+#include "core/sim_types.h"
+
+
+//=======================================================================================
+/*
+ * Definition adapted from avr/io_xxxx.h from avr-libc to make the AVR IO header extracts
+ * usable in yasim-avr
+ */
+
+#define _SFR_MEM8(v) (v)
+
+typedef uint8_t register8_t;
+typedef uint16_t register16_t;
+typedef uint32_t register32_t;
+
+#define _WORDREGISTER(regname)   \
+    union \
+    { \
+        register16_t regname; \
+        struct \
+        { \
+            register8_t regname ## L; \
+            register8_t regname ## H; \
+        }; \
+    }
+
+#define _DWORDREGISTER(regname)  \
+    union \
+    { \
+        register32_t regname; \
+        struct \
+        { \
+            register8_t regname ## 0; \
+            register8_t regname ## 1; \
+            register8_t regname ## 2; \
+            register8_t regname ## 3; \
+        }; \
+    }
+
+
+//=======================================================================================
 
 #define DEF_BITSPEC_F(field) \
     bitspec_t(field ## _gp + bitmask_t(field ## _gm).bitcount() - 1, field ## _gp)

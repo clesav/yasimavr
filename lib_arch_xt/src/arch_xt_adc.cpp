@@ -21,11 +21,9 @@
 
 //=======================================================================================
 
-
 #include "arch_xt_adc.h"
 #include "arch_xt_acp.h"
-#include "arch_xt_io.h"
-#include "arch_xt_io_utils.h"
+#include "avr_io/io_adc.h"
 #include "core/sim_sleep.h"
 
 YASIMAVR_USING_NAMESPACE

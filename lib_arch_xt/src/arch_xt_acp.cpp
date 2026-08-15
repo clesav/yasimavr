@@ -22,8 +22,7 @@
 //=======================================================================================
 
 #include "arch_xt_acp.h"
-#include "arch_xt_io.h"
-#include "arch_xt_io_utils.h"
+#include "avr_io/io_acp.h"
 #include "core/sim_sleep.h"
 #include "core/sim_device.h"
 
@@ -77,7 +76,7 @@ bool ArchXT_ACP::init(Device& device)
 
     add_ioreg(REG_ADDR(CTRLA));
     add_ioreg(REG_ADDR(MUXCTRLA), AC_INVERT_bm | AC_MUXPOS_gm | AC_MUXNEG_gm);
-    add_ioreg(REG_ADDR(DACREF), AC_DATA_gm);
+    add_ioreg(REG_ADDR(DACREF), AC_DACREF_gm);
     add_ioreg(REG_ADDR(INTCTRL), AC_CMP_bm);
     add_ioreg(REG_ADDR(STATUS), AC_STATE_bm, IORegister::RO);
     add_ioreg(REG_ADDR(STATUS), AC_CMP_bm, IORegister::Strobe);

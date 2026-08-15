@@ -22,9 +22,9 @@
 //=======================================================================================
 
 #include "arch_xt_misc.h"
+#include "avr_io/io_misc.h"
+#include "avr_io/io_vref.h"
 #include "arch_xt_device.h"
-#include "arch_xt_io.h"
-#include "arch_xt_io_utils.h"
 #include "core/sim_device.h"
 #include <cstring>
 

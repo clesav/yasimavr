@@ -23,8 +23,7 @@
 
 #include "arch_xt_nvm.h"
 #include "arch_xt_device.h"
-#include "arch_xt_io.h"
-#include "arch_xt_io_utils.h"
+#include "avr_io/io_nvm.h"
 #include "core/sim_device.h"
 #include "cstring"
 
@@ -52,7 +51,7 @@ bool ArchXT_USERROW::init(Device& device)
 
     //Allocate a register for each byte of the userrow block
     //And initialise it with the value contained in the userrow block
-    for (size_t i = 0; i < sizeof(USERROW_t); ++i) {
+    for (size_t i = 0; i < m_userrow->size(); ++i) {
         add_ioreg(m_reg_base + i);
         write_ioreg(m_reg_base + i, (*m_userrow)[i]);
     }

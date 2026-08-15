@@ -23,8 +23,7 @@
 
 #include "arch_xt_port.h"
 #include "arch_xt_device.h"
-#include "arch_xt_io.h"
-#include "arch_xt_io_utils.h"
+#include "avr_io/io_port.h"
 
 YASIMAVR_USING_NAMESPACE
 
