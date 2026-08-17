@@ -93,7 +93,8 @@ clean: lib-core-clean \
 	   lib-arch-xt-clean \
 	   py-bindings-clean \
 	   docs-clean \
-	   dist-clean
+	   dist-clean \
+	   pycache-clean
 	-$(RM_DIR) build
 	-$(RM_DIR) dist
 	-$(RM_DIR) yasimavr.egg-info
@@ -151,6 +152,15 @@ py-bindings-debug: libs-debug
 
 py-bindings-clean: FORCE
 	-cd bindings && $(MAKE) clean
+
+
+ifeq ($(detected_OS),Windows)
+pycache-clean: FORCE
+	for /d /r . %%d in (__pycache__) do @if exist "%%d" rd /s /q "%%d"
+else
+pycache-clean: FORCE
+	find . -type f -name '*.py[co]' -delete -o -type d -name __pycache__ -delete
+endif
 
 
 docs: FORCE
