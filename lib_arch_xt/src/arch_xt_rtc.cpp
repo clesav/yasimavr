@@ -118,12 +118,14 @@ bool ArchXT_RTC::init(Device& device)
     //PITDBGCTRL not supported
 
     status &= m_rtc_intflag.init(device,
-                                 { REG_ADDR(INTCTRL), RTC_CMP_bm | RTC_OVF_bm },
-                                 { REG_ADDR(INTFLAGS), RTC_CMP_bm | RTC_OVF_bm },
+                                 REG_ADDR(INTCTRL),
+                                 REG_ADDR(INTFLAGS),
+                                 RTC_CMP_bm | RTC_OVF_bm,
                                  m_config.iv_rtc);
     status &= m_pit_intflag.init(device,
-                                 DEF_REGBIT_B(PITINTCTRL, RTC_PI),
-                                 DEF_REGBIT_B(PITINTFLAGS, RTC_PI),
+                                 REG_ADDR(PITINTCTRL),
+                                 REG_ADDR(PITINTFLAGS),
+                                 RTC_PI_bm,
                                  m_config.iv_pit);
 
     device.cycle_manager()->add_clock_domain(Clk_RTC);

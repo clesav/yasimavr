@@ -124,16 +124,16 @@ bool ArchXT_TimerB::init(Device& device)
     add_ioreg(REG_ADDR(CCMPL));
     add_ioreg(REG_ADDR(CCMPH));
 
-    uint8_t iv_flags = TCB_CAPT_bm;
+    std::vector<bitmask_t> iv_flags = { TCB_CAPT_bm };
     if (m_config.options & CFG::OverflowFlag)
-        iv_flags |= TCB_OVF_bm;
+        iv_flags.push_back(TCB_OVF_bm);
 
-    add_ioreg(REG_ADDR(INTCTRL), iv_flags);
-    add_ioreg(REG_ADDR(INTFLAGS), iv_flags, IORegister::Strobe);
+    add_ioreg(REG_ADDR(INTCTRL), (bitmask_t) iv_flags);
+    add_ioreg(REG_ADDR(INTFLAGS), (bitmask_t) iv_flags, IORegister::Strobe);
 
     status &= m_intflag.init(device,
-                             { REG_ADDR(INTCTRL), iv_flags },
-                             { REG_ADDR(INTFLAGS), iv_flags },
+                             REG_ADDR(INTCTRL), iv_flags,
+                             REG_ADDR(INTFLAGS), iv_flags,
                              m_config.iv_capt);
 
     m_counter.init(*device.cycle_manager(), logger());
