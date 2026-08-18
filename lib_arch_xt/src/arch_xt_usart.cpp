@@ -244,8 +244,8 @@ bool ArchXT_USART::init(Device& device)
     //RXPLCTRL not implemented
 
     status &= m_rxc_intflag.init(device,
-                                 { REG_ADDR(CTRLA), USART_RXCIE_bm | USART_RXSIE_bm },
-                                 { REG_ADDR(STATUS), USART_RXCIF_bm | USART_RXSIF_bm },
+                                 REG_ADDR(CTRLA), { USART_RXCIE_bm, USART_RXSIE_bm },
+                                 REG_ADDR(STATUS), { USART_RXCIF_bm, USART_RXSIF_bm },
                                  m_config.iv_rxc);
     status &= m_txc_intflag.init(device,
                                  DEF_REGBIT_B(CTRLA, USART_TXCIE),

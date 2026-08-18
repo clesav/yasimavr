@@ -252,14 +252,14 @@ bool ArchXT_TWI::init(Device& device)
 
     status &= m_intflag_host.init(
         device,
-        { REG_ADDR(MCTRLA), TWI_WIEN_bm | TWI_RIEN_bm },
-        { REG_ADDR(MSTATUS), TWI_WIF_bm | TWI_RIF_bm },
+        REG_ADDR(MCTRLA), { TWI_WIEN_bm, TWI_RIEN_bm },
+        REG_ADDR(MSTATUS), { TWI_WIF_bm, TWI_RIF_bm },
         m_config.iv_host);
 
     status &= m_intflag_client.init(
         device,
-        { REG_ADDR(SCTRLA), TWI_APIEN_bm | TWI_DIEN_bm },
-        { REG_ADDR(SSTATUS), TWI_APIF_bm | TWI_DIF_bm },
+        REG_ADDR(SCTRLA), { TWI_APIEN_bm, TWI_DIEN_bm },
+        REG_ADDR(SSTATUS), { TWI_APIF_bm,TWI_DIF_bm },
         m_config.iv_client);
 
     m_host->init(*device.cycle_manager());

@@ -325,6 +325,24 @@ InterruptFlag::InterruptFlag(bool clear_on_ack)
 ,m_enable_reg(nullptr)
 {}
 
+
+bool InterruptFlag::_init(Device& device, reg_addr_t reg_enable, reg_addr_t reg_flag, int_vect_t vector)
+{
+    bool ok = AbstractInterruptFlag::init(device, vector);
+
+    //Obtain a pointer to the two registers flag and enable and register this as handler
+    //for the two registers
+    m_enable_reg = device.core().get_ioreg(reg_enable);
+    if (m_enable_reg)
+        m_enable_reg->add_handler(*this);
+
+    m_flag_reg = device.core().get_ioreg(reg_flag);
+    if (m_flag_reg)
+        m_flag_reg->add_handler(*this);
+
+    return m_flag_reg && m_enable_reg && ok;
+}
+
 /**
    Initialise an Interrupt Flag. Allocates the registers for the flag and the enable
    register fields and register with the interrupt controller for a particular vector.
@@ -341,21 +359,60 @@ bool InterruptFlag::init(Device& device,
                          const regmask_t& rm_flag,
                          int_vect_t vector)
 {
-    bool ok = AbstractInterruptFlag::init(device, vector);
+    if (rm_enable.mask.bitcount() > 1 || rm_flag.mask.bitcount() > 1) return false;
 
-    //Obtain a pointer to the two registers flag and enable and register this as handler
-    //for the two registers
+    bool ok = _init(device, rm_enable.addr, rm_flag.addr, vector);
+
     m_rm_enable = rm_enable;
-    m_enable_reg = device.core().get_ioreg(m_rm_enable.addr);
-    if (m_enable_reg)
-        m_enable_reg->add_handler(*this);
-
     m_rm_flag = rm_flag;
-    m_flag_reg = device.core().get_ioreg(m_rm_flag.addr);
-    if (m_flag_reg)
-        m_flag_reg->add_handler(*this);
+    m_flag_pairs.push_back({ rm_enable.mask, rm_flag.mask });
 
-    return m_flag_reg && m_enable_reg && ok;
+    return ok;
+}
+
+
+bool InterruptFlag::init(Device& device,
+                         reg_addr_t reg_enable, reg_addr_t reg_flag, bitmask_t mask,
+                         int_vect_t vector)
+{
+    bool ok = _init(device, reg_enable, reg_flag, vector);
+
+    m_rm_enable = { reg_enable, mask };
+    m_rm_flag = { reg_flag, mask };
+
+    for (int i = 0; i < 8; ++i) {
+        uint8_t bit = mask.mask & (1 << i);
+        if (bit)
+            m_flag_pairs.push_back({ bit , bit });
+    }
+
+    return ok;
+}
+
+
+bool InterruptFlag::init(Device& device,
+                         reg_addr_t reg_enable, const std::vector<bitmask_t>& enable_masks,
+                         reg_addr_t reg_flag, const std::vector<bitmask_t>& flag_masks,
+                         int_vect_t vector)
+{
+    if (enable_masks.size() != flag_masks.size()) return false;
+
+    bool ok = _init(device, reg_enable, reg_flag, vector);
+
+    bitmask_t e, f;
+    for (auto eit = enable_masks.begin(), fit = flag_masks.begin();
+         eit != enable_masks.end() && fit != flag_masks.end();
+         ++eit, ++fit)
+    {
+        e |= *eit;
+        f |= *fit;
+        m_flag_pairs.push_back({ *eit, *fit });
+    }
+
+    m_rm_enable = { reg_enable, e };
+    m_rm_flag = { reg_flag, f };
+
+    return ok;
 }
 
 /**
@@ -387,9 +444,11 @@ bool InterruptFlag::clear_flag(bitmask_t mask)
 
 bool InterruptFlag::flag_raised() const
 {
-    uint8_t en_mask = m_enable_reg->value() & m_rm_enable.mask;
-    uint8_t fl_mask = m_flag_reg->value() & m_rm_flag.mask;
-    return !!(en_mask & fl_mask);
+    for (auto [e, f] : m_flag_pairs) {
+        if ((m_enable_reg->value() & e) && (m_flag_reg->value() & f))
+            return true;
+    }
+    return false;
 }
 
 

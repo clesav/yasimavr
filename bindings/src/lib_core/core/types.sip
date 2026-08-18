@@ -130,6 +130,7 @@ struct bitmask_t {
     uint8_t mask;
 
     bitmask_t(uint8_t = 0);
+    bitmask_t(const std::vector<bitmask_t>&);
 
     uint8_t replace(uint8_t, uint8_t) const;
     uint8_t set_from(uint8_t) const;

@@ -327,7 +327,19 @@ public:
 
     explicit InterruptFlag(bool clear_on_ack = false);
 
-    bool init(Device& device, const regmask_t& rm_enable, const regmask_t& rm_flag, int_vect_t vector);
+    bool init(Device& device,
+              const regmask_t& rb_enable,
+              const regmask_t& rb_flag,
+              int_vect_t vector);
+
+    bool init(Device& device,
+              reg_addr_t reg_enable, reg_addr_t reg_flag, bitmask_t mask,
+              int_vect_t vector);
+
+    bool init(Device& device,
+              reg_addr_t reg_enable, const std::vector<bitmask_t>& enable_masks,
+              reg_addr_t reg_flag, const std::vector<bitmask_t>& flag_masks,
+              int_vect_t vector);
 
     bool set_flag(bitmask_t mask = 0xFF);
     bool clear_flag(bitmask_t mask = 0xFF);
@@ -336,9 +348,12 @@ private:
 
     regmask_t m_rm_enable;
     regmask_t m_rm_flag;
+    std::vector<std::pair<bitmask_t, bitmask_t>> m_flag_pairs;
 
     IORegister* m_flag_reg;
     IORegister* m_enable_reg;
+
+    bool _init(Device& device, reg_addr_t reg_enable, reg_addr_t reg_flag, int_vect_t vector);
 
     virtual bool flag_raised() const override final;
     //Override to clear the flag on ACK if clear_on_ack is true

@@ -89,6 +89,13 @@ struct bitmask_t {
 
     constexpr bitmask_t(uint8_t m = 0) : mask(m) {}
 
+    constexpr bitmask_t(const std::span<const bitmask_t>& bms)
+    {
+        mask = 0;
+        for (bitmask_t bm : bms)
+            mask |= bm.mask;
+    }
+
     constexpr uint8_t replace(uint8_t reg, uint8_t value) const
     {
         return (reg & ~mask) | (value & mask);

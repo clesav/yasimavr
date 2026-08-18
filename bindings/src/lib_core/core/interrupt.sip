@@ -119,6 +119,8 @@ public:
     InterruptFlag(bool = false);
 
     bool init(Device&, const regmask_t&, const regmask_t&, int_vect_t);
+    bool init(Device&, reg_addr_t, reg_addr_t, bitmask_t, int_vect_t);
+    bool init(Device&, reg_addr_t, const std::vector<bitmask_t>&, reg_addr_t, const std::vector<bitmask_t>&, int_vect_t);
     bool set_flag(bitmask_t = bitmask_t(0xFF));
     bool clear_flag(bitmask_t = bitmask_t(0xFF));
 
