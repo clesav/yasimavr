@@ -53,6 +53,11 @@ ctl_id_t IOCTL_ACP(char n)
     return AVR_IOCTL_ACP(n);
 }
 
+ctl_id_t IOCTL_DAC(char n)
+{
+    return AVR_IOCTL_DAC(n);
+}
+
 ctl_id_t IOCTL_TIMER(char t, char n)
 {
     return AVR_IOCTL_TIMER(t, n);
@@ -113,6 +118,7 @@ const ctl_id_t IOCTL_RTC;
 ctl_id_t IOCTL_PORT(char);
 ctl_id_t IOCTL_ADC(char);
 ctl_id_t IOCTL_ACP(char);
+ctl_id_t IOCTL_DAC(char);
 ctl_id_t IOCTL_TIMER(char, char);
 ctl_id_t IOCTL_UART(char);
 ctl_id_t IOCTL_SPI(char);
