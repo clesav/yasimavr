@@ -71,6 +71,8 @@ constexpr sim_id_t AVR_IOCTL_PORTMUX  = "PORTMUX";
 constexpr sim_id_t AVR_IOCTL_ADC(char c) { return sim_id_t("ADC") + c; }
 /** CTLID for the analog comparator: "ACPn", n=0,1,... */
 constexpr sim_id_t AVR_IOCTL_ACP(char c) { return sim_id_t("ACP") + c; }
+/** CTLID for the digital-to-analog converter: "DACn", n=0,1,... */
+constexpr sim_id_t AVR_IOCTL_DAC(char c) { return sim_id_t("DAC") + c; }
 /** CTLID for the timer/counter: "TCtn", t='A','B'; n=0,1,... */
 constexpr sim_id_t AVR_IOCTL_TIMER(char t, char c) { return (sim_id_t("TC") + t) + c; }
 /** CTLID for the EEPROM controller: "EEPROM" */
