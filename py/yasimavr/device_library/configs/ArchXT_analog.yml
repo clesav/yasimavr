@@ -263,6 +263,20 @@ ACP_tiny0:
             STATE: { kind: BIT, pos: 4, readonly: yes }
 
 #========================================================================================
+DAC:
+    registers:
+        - name: CTRLA
+          offset: 0x00
+          fields:
+            ENABLE: { kind: BIT, pos: 0, one: enabled, zero: disabled }
+            OUTEN: { kind: BIT, pos: 6, one: enabled, zero: disabled, supported: no }
+            RUNSTBY: { kind: BIT, pos: 7, one: enabled, zero: disabled }
+
+        - name: DATA
+          offset: 0x01
+          kind: INT
+
+#========================================================================================
 VREF_mega0:
     registers:
         - name: CTRLA

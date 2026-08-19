@@ -310,6 +310,14 @@ def _get_acp_builder():
 
 
 #========================================================================================
+#DAC management configuration
+
+def _get_dac_builder():
+    cfg_builder = PeripheralConfigBuilder(_archlib.ArchXT_DACConfig)
+    return IndexedPeripheralBuilder(_archlib.ArchXT_DAC, cfg_builder)
+
+
+#========================================================================================
 #USART management configuration
 
 def _get_usart_builder():
@@ -397,6 +405,7 @@ class XT_DeviceBuilder(DeviceBuilder):
         'ADC': _get_adc_builder,
         'ACP_mega0': _get_acp_builder,
         'ACP_tiny0': _get_acp_builder,
+        'DAC': _get_dac_builder,
         'USART': _get_usart_builder,
         'SPI': _get_spi_builder,
         'TWI': _get_twi_builder,
