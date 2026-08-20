@@ -48,6 +48,7 @@ YASIMAVR_USING_NAMESPACE
 %Include arch_xt_spi.sip
 %Include arch_xt_timer_a.sip
 %Include arch_xt_timer_b.sip
+%Include arch_xt_timer_d.sip
 %Include arch_xt_twi.sip
 %Include arch_xt_usart.sip
 %Include arch_xt_wdt.sip
