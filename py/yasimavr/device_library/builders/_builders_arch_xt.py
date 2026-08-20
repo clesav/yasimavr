@@ -165,7 +165,15 @@ def _get_tca_builder():
 
 def _get_tcb_builder():
     cfg_builder = PeripheralConfigBuilder(_archlib.ArchXT_TimerBConfig)
-    return IndexedPeripheralBuilder(_archlib.ArchXT_TimerB,cfg_builder)
+    return IndexedPeripheralBuilder(_archlib.ArchXT_TimerB, cfg_builder)
+
+
+#========================================================================================
+#TCD management configuration
+
+def _get_tcd_builder():
+    cfg_builder = PeripheralConfigBuilder(_archlib.ArchXT_TimerDConfig)
+    return IndexedPeripheralBuilder(_archlib.ArchXT_TimerD, cfg_builder)
 
 
 #========================================================================================
@@ -400,6 +408,7 @@ class XT_DeviceBuilder(DeviceBuilder):
         'RTC': _get_rtc_builder,
         'TCA': _get_tca_builder,
         'TCB': _get_tcb_builder,
+        'TCD': _get_tcd_builder,
         'VREF_mega0': _get_vref_builder,
         'VREF_tiny0': _get_vref_builder,
         'ADC': _get_adc_builder,

@@ -31,6 +31,7 @@ CPP_SRCS := \
 	src/arch_xt_spi.cpp \
 	src/arch_xt_timer_a.cpp \
 	src/arch_xt_timer_b.cpp \
+	src/arch_xt_timer_d.cpp \
 	src/arch_xt_twi.cpp \
 	src/arch_xt_usart.cpp \
 	src/arch_xt_wdt.cpp
@@ -48,6 +49,7 @@ OBJS := \
 	$(BUILD_DIR)/arch_xt_spi.o \
 	$(BUILD_DIR)/arch_xt_timer_a.o \
 	$(BUILD_DIR)/arch_xt_timer_b.o \
+	$(BUILD_DIR)/arch_xt_timer_d.o \
 	$(BUILD_DIR)/arch_xt_twi.o \
 	$(BUILD_DIR)/arch_xt_usart.o \
 	$(BUILD_DIR)/arch_xt_wdt.o
@@ -65,6 +67,7 @@ CPP_DEPS := \
 	$(BUILD_DIR)/arch_xt_spi.d \
 	$(BUILD_DIR)/arch_xt_timer_a.d \
 	$(BUILD_DIR)/arch_xt_timer_b.d \
+	$(BUILD_DIR)/arch_xt_timer_d.d \
 	$(BUILD_DIR)/arch_xt_twi.d \
 	$(BUILD_DIR)/arch_xt_usart.d \
 	$(BUILD_DIR)/arch_xt_wdt.d

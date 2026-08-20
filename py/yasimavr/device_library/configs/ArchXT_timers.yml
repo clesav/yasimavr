@@ -280,6 +280,145 @@ TCB:
           kind: INT
 
 #========================================================================================
+TCD:
+    registers:
+        - name: CTRLA
+          offset: 0x00
+          fields:
+            ENABLE: { kind: BIT, pos: 0, one: enabled, zero: disabled }
+            SYNCPRES:
+                kind: ENUM
+                LSB: 1
+                MSB: 2
+                values: [ DIV1, DIV2, DIV4, DIV8 ]
+            CNTPRES:
+                kind: ENUM
+                LSB: 3
+                MSB: 4
+                values: [ DIV1, DIV4, DIV32 ]
+            CLKPRES:
+                kind: ENUM
+                LSB: 5
+                MSB: 6
+                values: { 0x00: OSC20M, 0x02: EXTCLK, 0x03: SYSCLK }
+                supported: no
+
+        - name: CTRLB
+          offset: 0x01
+          fields:
+            WGMODE:
+                kind: ENUM
+                LSB: 0
+                MSB: 1
+                values: [ ONERAMP, TWORAMP, FOURRAMP, DS ]
+
+        - name: CTRLC
+          offset: 0x02
+          supported: no
+
+        - name: CTRLD
+          offset: 0x03
+          supported: no
+
+        - name: CTRLE
+          offset: 0x04
+          supported: no
+
+        - name: EVCTRLA
+          offset: 0x08
+          supported: no
+
+        - name: EVCTRLB
+          offset: 0x09
+          supported: no
+
+        - name: INTCTRL
+          offset: 0x0C
+          fields:
+            OVF: { kind: BIT, pos: 0 }
+            TRIGA: { kind: BIT, pos: 2, supported: no }
+            TRIGB: { kind: BIT, pos: 3, supported: no }
+
+        - name: INTFLAGS
+          offset: 0x0D
+          fields:
+            OVF: { kind: BIT, pos: 0 }
+            TRIGA: { kind: BIT, pos: 2, supported: no }
+            TRIGB: { kind: BIT, pos: 3, supported: no }
+
+        - name: STATUS
+          offset: 0x0E
+          fields:
+            ENRDY: { kind: BIT, pos: 0, readonly: yes }
+            CMDRDY: { kind: BIT, pos: 1, readonly: yes }
+            PWMACTA: { kind: BIT, pos: 6, supported: no}
+            PWMACTB: { kind: BIT, pos: 7, supported: no }
+
+        - name: INPUTCTRLA
+          offset: 0x10
+          supported: no
+
+        - name: INPUTCTRLB
+          offset: 0x11
+          supported: no
+
+        - name: FAULTCTRL
+          offset: 0x12
+          supported: no
+
+        - name: DLYCTRL
+          offset: 0x14
+          supported: no
+
+        - name: DLYVAL
+          offset: 0x15
+          supported: no
+
+        - name: DITCTRL
+          offset: 0x18
+          supported: no
+
+        - name: DITVAL
+          offset: 0x19
+          supported: no
+
+        - name: DBGCTRL
+          offset: 0x1E
+          supported: no
+
+        - name: CAPTUREA
+          offset: 0x22
+          size: 2
+          supported: no
+          readonly: yes
+
+        - name: CAPTUREB
+          offset: 0x24
+          size: 2
+          supported: no
+          readonly: yes
+
+        - name: CMPASET
+          offset: 0x28
+          size: 2
+          kind: INT
+
+        - name: CMPACLR
+          offset: 0x2A
+          size: 2
+          kind: INT
+
+        - name: CMPBSET
+          offset: 0x2C
+          size: 2
+          kind: INT
+
+        - name: CMPBCLR
+          offset: 0x2E
+          size: 2
+          kind: INT
+
+#========================================================================================
 RTC:
     registers:
         - name: CTRLA
