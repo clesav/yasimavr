@@ -28,9 +28,8 @@ ADC:
                 kind: ENUM
                 LSB: 0
                 MSB: 3
-                values:
-                    - [ ADC0, ADC1, ADC2, ADC3, ADC4, ADC5, ADC6, ADC7, TEMP ]
-                    - { 0xE: 1V1, 0xF:GND }
+                values: [ ADC0, ADC1, ADC2, ADC3, ADC4, ADC5, ADC6, ADC7, TEMP ]
+                values2: { 0xE: 1V1, 0xF:GND }
             ADLAR: { kind: BIT, pos: 5, one: left, zero: right }
             REFS:
                 kind: ENUM

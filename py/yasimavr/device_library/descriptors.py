@@ -273,14 +273,15 @@ class RegisterDescriptor:
 
         self.size = int(reg_config.get('size', 1))
 
-        self.kind = str(reg_config.get('kind', ''))
-
         self.fields = {}
         for field_name, field_config in dict(reg_config.get('fields', {})).items():
             f = RegisterFieldDescriptor(field_name, field_config, self.size * 8)
             self.fields[field_name] = f
             if f.alias:
                 self.fields[f.alias] = f
+
+        default_kind = '' if self.fields else 'RAW'
+        self.kind = str(reg_config.get('kind', default_kind))
 
         self.readonly = bool(reg_config.get('readonly', False))
         self.supported = bool(reg_config.get('supported', True))
@@ -723,7 +724,7 @@ def _parse_regpath(path_elements, per, dev):
 
         #Special case when the register has no field defined, most likely a raw register
         if not bitspec_list:
-            bitspec_list = [ExtendedBitSpec(0, 7)]
+            bitspec_list = [ExtendedBitSpec(0, 8 * reg_size - 1)]
 
         return reg_addr, reg_size, bitspec_list
 
