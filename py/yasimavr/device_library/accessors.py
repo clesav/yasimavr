@@ -114,7 +114,7 @@ class _FieldAccessor:
         return (rv & mask) >> bitspec.lsb
 
     def __str__(self):
-        return '%s.%s [%s]' % (self._reg.name, self._field.name, str(self.read()))
+        return '%s.%s [%s]' % (self._reg.name, self._field.name, repr(self))
 
     def __repr__(self):
         return str(self.read())
@@ -188,8 +188,8 @@ class RawFieldAccessor(IntFieldAccessor):
     an raw value. It's identical to IntFieldAccessor except it's printed in hexadecimal.
     """
 
-    def __str__(self):
-        return '%s.%s [%s]' % (self._reg.name, self._field.name, hex(self.read()))
+    def __repr__(self):
+        return hex(self.read())
 
 
 class EnumFieldAccessor(_FieldAccessor):
@@ -268,6 +268,10 @@ class RegisterAccessor:
             self._size = reg.size
 
         self._active = True
+
+    @property
+    def fields(self):
+        return { f_name: self._get_field_accessor(f_desc) for f_name, f_desc in self._reg.fields.items() }
 
     @property
     def name(self):
