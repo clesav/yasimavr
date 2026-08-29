@@ -114,5 +114,3 @@ ADC:
         rb_left_adj: ADMUX/ADLAR
         rb_bipolar: ""
         int_vector: ADC
-        temp_cal_25C: 0.0
-        temp_cal_coef: 1.0

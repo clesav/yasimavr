@@ -173,5 +173,3 @@ ADC:
         rb_left_adj: ADCSRB/ADLAR
         rb_bipolar: ADCSRB/BIN
         int_vector: ADC
-        temp_cal_25C: 0.0
-        temp_cal_coef: 1.0
