@@ -40,7 +40,7 @@ YASIMAVR_BEGIN_NAMESPACE
    \ingroup api_vref
    \brief Configuration structure for ArchXT_VREF.
  */
-struct ArchXT_VREFConfig {
+struct ArchXT_VREFConfig : public VREFConfig {
 
     /// Structure defining the source of a voltage reference
     struct reference_config_t : base_reg_config_t {
@@ -76,8 +76,6 @@ public:
     virtual void ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data) override;
 
 private:
-
-    const ArchXT_VREFConfig& m_config;
 
     void set_channel_reference(unsigned int index, uint8_t reg_value);
 
