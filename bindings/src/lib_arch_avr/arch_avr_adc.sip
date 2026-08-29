@@ -64,8 +64,6 @@ struct ArchAVR_ADCConfig {
 
     int_vect_t int_vector;
 
-    double temp_cal_25C;
-    double temp_cal_coef;
 };
 
 
