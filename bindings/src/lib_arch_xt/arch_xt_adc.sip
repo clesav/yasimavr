@@ -42,9 +42,6 @@ struct ArchXT_ADCConfig {
     int_vect_t iv_resready;
     int_vect_t iv_wincmp;
 
-    double temp_cal_25C;
-    double temp_cal_coef;
-
 };
 
 

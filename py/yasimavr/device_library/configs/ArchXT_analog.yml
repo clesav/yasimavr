@@ -160,9 +160,6 @@ ADC:
         init_delays: [ 0, 16, 32, 64, 128, 256 ]
         iv_resready: ADC0_RESRDY
         iv_wincmp: ADC0_WCOMP
-        #arbitrary values below
-        temp_cal_25C: 0.3
-        temp_cal_coef: 0.0011
 
 #========================================================================================
 ACP_mega0:
@@ -305,6 +302,9 @@ VREF_mega0:
             - rb_select: CTRLA/AC0REFSEL
               references: [ 0.55, 1.1, 2.5, 4.3, 1.5, null, null, AVCC ]
 
+        #arbitrary values below
+        temp_cal_25C: 0.3
+        temp_cal_coef: 0.0011
 
 VREF_tiny0:
     registers:
@@ -333,3 +333,7 @@ VREF_tiny0:
 
             - rb_select: CTRLA/DAC0REFSEL
               references: [ 0.55, 1.1, 2.5, 4.3, 1.5 ]
+
+        #arbitrary values below
+        temp_cal_25C: 0.3
+        temp_cal_coef: 0.0011

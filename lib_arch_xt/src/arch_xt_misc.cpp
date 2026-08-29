@@ -33,13 +33,15 @@ YASIMAVR_USING_NAMESPACE
 
 //=======================================================================================
 
+#define VREF_CFG \
+    (*static_cast<const ArchXT_VREFConfig*>(&m_config))
+
 #define VREF_REG_ADDR(reg) \
-    (m_config.reg_base + offsetof(VREF_t, reg))
+    (VREF_CFG.reg_base + offsetof(VREF_t, reg))
 
 
 ArchXT_VREF::ArchXT_VREF(const ArchXT_VREFConfig& config)
-:VREF(config.channels.size())
-,m_config(config)
+:VREF(config, config.channels.size())
 {}
 
 bool ArchXT_VREF::init(Device& device)
@@ -48,7 +50,7 @@ bool ArchXT_VREF::init(Device& device)
 
     add_ioreg(VREF_REG_ADDR(CTRLB));
 
-    for (auto channel: m_config.channels)
+    for (auto channel: VREF_CFG.channels)
         add_ioreg(channel.rb_select);
 
     return status;
@@ -57,15 +59,15 @@ bool ArchXT_VREF::init(Device& device)
 void ArchXT_VREF::reset(int)
 {
     //Set each reference channel to the reset value
-    for (unsigned int index = 0; index < m_config.channels.size(); ++index)
+    for (unsigned int index = 0; index < VREF_CFG.channels.size(); ++index)
         set_channel_reference(index, 0);
 }
 
 void ArchXT_VREF::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
     //Iterate over all the channels, and update if impacted by the register change
-    for (unsigned int ch_ix = 0; ch_ix < m_config.channels.size(); ++ch_ix) {
-        const ArchXT_VREFConfig::channel_t& ch = m_config.channels[ch_ix];
+    for (unsigned int ch_ix = 0; ch_ix < VREF_CFG.channels.size(); ++ch_ix) {
+        const ArchXT_VREFConfig::channel_t& ch = VREF_CFG.channels[ch_ix];
         if (addr == ch.rb_select.addr && ch.rb_select.extract(data.anyedge())) {
             //Extract the selection value for this channel
             uint8_t reg_value = ch.rb_select.extract(data.value);
@@ -77,7 +79,7 @@ void ArchXT_VREF::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
 void ArchXT_VREF::set_channel_reference(unsigned int index, uint8_t reg_value)
 {
     //Find the corresponding reference setting from the configuration
-    auto vref_cfg = find_reg_config_p(m_config.channels[index].references, reg_value);
+    auto vref_cfg = find_reg_config_p(VREF_CFG.channels[index].references, reg_value);
     //If it's a valid setting, update the reference
     if (vref_cfg)
         set_reference(index, vref_cfg->source, vref_cfg->level);

@@ -64,10 +64,6 @@ struct ArchXT_ADCConfig {
     int_vect_t iv_resready;
     /// Interrupt vector index for ADC_WINCMP
     int_vect_t iv_wincmp;
-    /// Temperature sensor calibration offset (in V at +25°C)
-    double temp_cal_25C;
-    /// Temperature sensor calibration linear coef (in V/°C)
-    double temp_cal_coef;
 
 };
 
@@ -81,8 +77,6 @@ struct ArchXT_ADCConfig {
 
    CTLREQs supported:
     - AVR_CTLREQ_GET_SIGNAL : returns a pointer to the instance signal
-    - AVR_CTLREQ_ADC_SET_TEMP : Sets the temperature reported by the internal sensor.
-    The reqdata should carry the temperature in Celsius as a double.
     - AVR_CTLREQ_ADC_TRIGGER : Allows other peripherals to trigger a conversion.
     The trigger only works when the ADC is enabled and idle, and the bit STARTEI is set.
  */
@@ -114,7 +108,6 @@ private:
     bool m_first;
     PrescaledTimer m_timer;
     BoundFunctionSignalHook<ArchXT_ADC> m_timer_hook;
-    double m_temperature;
     uint8_t m_latched_ch_mux;
     uint8_t m_latched_ref_mux;
     uint8_t m_accum_counter;

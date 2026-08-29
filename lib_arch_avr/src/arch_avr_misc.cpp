@@ -29,10 +29,10 @@ YASIMAVR_USING_NAMESPACE
 
 //=======================================================================================
 
-ArchAVR_VREF::ArchAVR_VREF(double band_gap)
-:VREF(1)
+ArchAVR_VREF::ArchAVR_VREF(const ArchAVR_VREFConfig& config)
+:VREF(config, 1)
 {
-    set_reference(0, Source_Bandgap, band_gap);
+    set_reference(0, Source_Bandgap, config.band_gap);
 }
 
 

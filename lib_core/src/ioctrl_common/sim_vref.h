@@ -68,11 +68,31 @@ YASIMAVR_BEGIN_NAMESPACE
  */
 #define AVR_CTLREQ_VREF_SET_MUX         (AVR_CTLREQ_BASE + 3)
 
+/**
+   Request to set the value reported by the simulated temperature sensor
+    - data set to the temperature value in °C (as a double)
+ */
+#define AVR_CTLREQ_VREF_SET_TEMP        (AVR_CTLREQ_BASE + 4)
+
 /// @}
 /// @}
 
 
 //=======================================================================================
+/**
+   \brief Configuration structure for a generic sleep mode controller.
+   \sa VREF
+ */
+struct VREFConfig {
+
+    /// Calibration value for the internal temperature sensor - offset in V at +25°C
+    double temp_cal_25C;
+    /// Calibration value for the internal temperature sensor - linear coefficient in V/°C
+    double temp_cal_coef;
+
+};
+
+
 /**
    \ingroup api_vref
    \brief Generic model for managing VREF for analog peripherals (ADC, analog comparator)
@@ -89,6 +109,7 @@ public:
         Source_AVCC,            ///< AVCC voltage value (always equal to VCC for now)
         Source_AREF,            ///< AREF voltage value
         Source_Bandgap,         ///< Internal reference voltage value
+        Source_Temperature,     ///< Temperature sensor
         Source_Mux,             ///< Reference mux selection
     };
 
@@ -107,6 +128,11 @@ public:
            data carries the new value (absolute)
          */
         Signal_VCCChange,
+        /**
+           Raised when the temperature sensor output has changed.
+           data carries the new value (relative to VCC)
+         */
+        Signal_TempChange,
     };
 
     struct getset_t {
@@ -115,7 +141,7 @@ public:
         double voltage = -1.0;
     };
 
-    explicit VREF(unsigned int ref_count);
+    VREF(const VREFConfig& config, unsigned int ref_count);
 
     virtual bool ctlreq(ctlreq_id_t req, ctlreq_data_t* reqdata) override;
 
@@ -125,11 +151,14 @@ protected:
     void set_reference(unsigned int index, Source source, double voltage);
     double reference(unsigned int index) const;
 
+    const VREFConfig& m_config;
+
 private:
 
     double m_vcc;
     double m_aref;
     DataSignal m_signal;
+    double m_temperature;
 
     struct ref_t {
         Source mux_source;
@@ -137,6 +166,8 @@ private:
     };
 
     std::vector<ref_t> m_references;
+
+    double temperature_reference() const;
 
 };
 

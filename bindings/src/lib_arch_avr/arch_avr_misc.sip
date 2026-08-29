@@ -21,6 +21,16 @@
 
 //=======================================================================================
 
+struct ArchAVR_VREFConfig : public VREFConfig {
+%TypeHeaderCode
+#include "arch_avr_misc.h"
+%End
+
+    double band_gap;
+
+};
+
+
 class ArchAVR_VREF : public VREF /NoDefaultCtors/ {
 %TypeHeaderCode
 #include "arch_avr_misc.h"
@@ -28,7 +38,7 @@ class ArchAVR_VREF : public VREF /NoDefaultCtors/ {
 
 public:
 
-    ArchAVR_VREF(double);
+    ArchAVR_VREF(const ArchAVR_VREFConfig& /KeepReference/);
 
 };
 

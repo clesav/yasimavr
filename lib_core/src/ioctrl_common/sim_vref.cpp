@@ -36,10 +36,12 @@ static inline double constraint(double v)
     return v;
 }
 
-VREF::VREF(unsigned int ref_count)
+VREF::VREF(const VREFConfig& config, unsigned int ref_count)
 :Peripheral(AVR_IOCTL_VREF)
+,m_config(config)
 ,m_vcc(0.0)
 ,m_aref(0.0)
+,m_temperature(25.0)
 ,m_references(ref_count)
 {
     ref_t r = ref_t{ Source_Bandgap, 0.0 };
@@ -49,6 +51,7 @@ VREF::VREF(unsigned int ref_count)
     //in the signal internal data map
     m_signal.set_data(Signal_VCCChange, 0.0);
     m_signal.set_data(Signal_ARefChange, 0.0);
+    m_signal.set_data(Signal_TempChange, 0.0);
 
     for (unsigned int i = 0; i < ref_count; ++i)
         m_signal.set_data(Signal_IntRefChange, 0.0, i);
@@ -79,6 +82,8 @@ bool VREF::ctlreq(ctlreq_id_t req, ctlreq_data_t* reqdata)
                 info->voltage = m_aref; break;
             case Source_Bandgap:
                 info->voltage = constraint(m_references.at(info->channel).bandgap_voltage / m_vcc); break;
+            case Source_Temperature:
+                info->voltage = temperature_reference(); break;
             case Source_Mux:
                 info->voltage = reference(info->channel); break;
         }
@@ -106,6 +111,8 @@ bool VREF::ctlreq(ctlreq_id_t req, ctlreq_data_t* reqdata)
                 //notify them all
                 for (unsigned int i = 0; i < m_references.size(); ++i)
                     m_signal.raise(Signal_IntRefChange, reference(i), i);
+
+                m_signal.raise(Signal_TempChange, temperature_reference());
             } break;
 
             case Source_AREF: {
@@ -141,6 +148,12 @@ bool VREF::ctlreq(ctlreq_id_t req, ctlreq_data_t* reqdata)
 
         m_signal.raise(Signal_IntRefChange, reference(info->channel), info->channel);
 
+        return true;
+    }
+
+    else if (req == AVR_CTLREQ_VREF_SET_TEMP) {
+        m_temperature = reqdata->data.as_double();
+        m_signal.raise(Signal_TempChange, temperature_reference());
         return true;
     }
 
@@ -202,7 +215,16 @@ double VREF::reference(unsigned int index) const
         case Source_Bandgap:
             return constraint(r.bandgap_voltage / m_vcc);
 
+        case Source_Temperature:
+            return temperature_reference();
+
         default:
             return 0.0;
     }
+}
+
+
+double VREF::temperature_reference() const
+{
+    return (m_config.temp_cal_coef * (m_temperature - 25.0) + m_config.temp_cal_25C) / m_vcc;
 }

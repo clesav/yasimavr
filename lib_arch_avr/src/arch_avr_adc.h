@@ -93,10 +93,6 @@ struct ArchAVR_ADCConfig {
     regbit_t rb_left_adj;
     /// Interrupt vector index
     int_vect_t int_vector;
-    /// Calibration value for the internal temperature sensor - offset in V at +25°C
-    double temp_cal_25C;
-    /// Calibration value for the internal temperature sensor - linear coefficient in V/°C
-    double temp_cal_coef;
 
 };
 
@@ -153,9 +149,6 @@ private:
     //Timer to simulate the conversion cycle duration
     PrescaledTimer m_timer;
     BoundFunctionSignalHook<ArchAVR_ADC> m_timer_hook;
-
-    //Simulated device temperature value in deg Celsius
-    double m_temperature;
 
     //Configuration values for the channel and reference latched at the start of a conversion
     uint8_t m_latched_ch_mux;

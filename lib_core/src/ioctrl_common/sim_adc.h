@@ -44,18 +44,12 @@ YASIMAVR_BEGIN_NAMESPACE
  */
 
 /**
-   Request to set the value reported by the simulated temperature sensor
-    - data set to the temperature value in °C (as a double)
- */
-#define AVR_CTLREQ_ADC_SET_TEMP         (AVR_CTLREQ_BASE + 1)
-
-/**
    Request to force trigger an ADC conversion. The request only has effect if
    the ADC must be enabled, idle (no conversion running) and configured
    to use an external trigger.
    No data used.
  */
-#define AVR_CTLREQ_ADC_TRIGGER          (AVR_CTLREQ_BASE + 2)
+#define AVR_CTLREQ_ADC_TRIGGER          (AVR_CTLREQ_BASE + 1)
 
 /// @}
 /// @}

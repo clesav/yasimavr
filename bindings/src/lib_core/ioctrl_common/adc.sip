@@ -25,12 +25,10 @@
 
 #include "ioctrl_common/sim_adc.h"
 
-const ctlreq_id_t CTLREQ_ADC_SET_TEMP = AVR_CTLREQ_ADC_SET_TEMP;
 const ctlreq_id_t CTLREQ_ADC_TRIGGER = AVR_CTLREQ_ADC_TRIGGER;
 
 %End
 
-const ctlreq_id_t CTLREQ_ADC_SET_TEMP;
 const ctlreq_id_t CTLREQ_ADC_TRIGGER;
 
 

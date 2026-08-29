@@ -50,7 +50,6 @@ ArchXT_ADC::ArchXT_ADC(int num, const CFG& config)
 ,m_state(ADC_Disabled)
 ,m_first(false)
 ,m_timer_hook(*this, &ArchXT_ADC::timer_raised)
-,m_temperature(25.0)
 ,m_latched_ch_mux(0)
 ,m_latched_ref_mux(0)
 ,m_accum_counter(0)
@@ -114,10 +113,6 @@ bool ArchXT_ADC::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
 {
     if (req == AVR_CTLREQ_GET_SIGNAL) {
         data->data = &m_signal;
-        return true;
-    }
-    else if (req == AVR_CTLREQ_ADC_SET_TEMP) {
-        m_temperature = data->data.as_double();
         return true;
     }
     else if (req == AVR_CTLREQ_ADC_TRIGGER) {
@@ -266,13 +261,10 @@ void ArchXT_ADC::read_analog_value()
         } break;
 
         case Channel_Temperature: {
-            double temp_volt = m_config.temp_cal_coef * (m_temperature - 25.0) + m_config.temp_cal_25C;
-            //The temperature measure obtained is in absolute voltage values.
-            //We need to make it relative to VCC
-            vref_reqinfo = VREF::getset_t{ .source = VREF::Source_VCC };
+            vref_reqinfo = VREF::getset_t{ .source = VREF::Source_Temperature };
             if (!device()->ctlreq(AVR_IOCTL_VREF, AVR_CTLREQ_VREF_GET, &vref_reqdata))
-                _crash("ADC: Unable to obtain the VCC voltage value");
-            raw_value = temp_volt / vref_reqinfo.voltage;
+                _crash("ADC: Unable to obtain the temperature value");
+            raw_value = vref_reqinfo.voltage;
         } break;
 
         case Channel_Zero:

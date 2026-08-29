@@ -366,12 +366,9 @@ def _get_acp_builder():
 #========================================================================================
 #Reference voltage configuration
 
-def _get_vref_bandgap(per_desc):
-    return per_desc.class_descriptor.config['bandgap']
-
-
 def _get_vref_builder():
-    return PeripheralBuilder(_archlib.ArchAVR_VREF, _get_vref_bandgap)
+    cfg_builder = PeripheralConfigBuilder(_archlib.ArchAVR_VREFConfig)
+    return PeripheralBuilder(_archlib.ArchAVR_VREF, cfg_builder)
 
 
 #========================================================================================

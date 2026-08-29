@@ -28,6 +28,7 @@
 const ctlreq_id_t CTLREQ_VREF_GET = AVR_CTLREQ_VREF_GET;
 const ctlreq_id_t CTLREQ_VREF_SET_REF = AVR_CTLREQ_VREF_SET_REF;
 const ctlreq_id_t CTLREQ_VREF_SET_MUX = AVR_CTLREQ_VREF_SET_MUX;
+const ctlreq_id_t CTLREQ_VREF_SET_TEMP = AVR_CTLREQ_VREF_SET_TEMP;
 
 %End
 
@@ -37,6 +38,19 @@ const ctlreq_id_t CTLREQ_VREF_SET_MUX = AVR_CTLREQ_VREF_SET_MUX;
 const ctlreq_id_t CTLREQ_VREF_GET;
 const ctlreq_id_t CTLREQ_VREF_SET_REF;
 const ctlreq_id_t CTLREQ_VREF_SET_MUX;
+const ctlreq_id_t CTLREQ_VREF_SET_TEMP;
+
+
+struct VREFConfig {
+%TypeHeaderCode
+#include "ioctrl_common/sim_vref.h"
+%End
+
+    double temp_cal_25C;
+    double temp_cal_coef;
+
+};
+
 
 class VREF : public Peripheral /NoDefaultCtors/ {
 %TypeHeaderCode
@@ -50,6 +64,7 @@ public:
         Source_AVCC                 /PyName=AVCC/,
         Source_AREF                 /PyName=AREF/,
         Source_Bandgap              /PyName=Bandgap/,
+        Source_Temperature          /PyName=Temperature/,
         Source_Mux                  /PyName=Mux/,
     };
 
@@ -57,6 +72,7 @@ public:
         Signal_ARefChange           /PyName=ARefChange/,
         Signal_IntRefChange         /PyName=IntRefChange/,
         Signal_VCCChange            /PyName=VCCChange/,
+        Signal_TempChange           /PyName=TempChange/,
     };
 
     struct getset_t {
@@ -73,7 +89,7 @@ public:
 
     };
 
-    VREF(unsigned int);
+    VREF(const VREFConfig&, unsigned int);
 
 protected:
 

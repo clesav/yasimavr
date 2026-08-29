@@ -33,6 +33,14 @@ YASIMAVR_BEGIN_NAMESPACE
 
 
 //=======================================================================================
+
+struct ArchAVR_VREFConfig : public VREFConfig {
+
+    double band_gap;
+
+};
+
+
 /**
    \ingroup api_vref
    \brief Implementation of a Voltage Reference controller for AVR series
@@ -44,7 +52,7 @@ class AVR_ARCHAVR_PUBLIC_API ArchAVR_VREF : public VREF {
 
 public:
 
-    explicit ArchAVR_VREF(double band_gap);
+    explicit ArchAVR_VREF(const ArchAVR_VREFConfig& config);
 
 };
 

@@ -35,7 +35,7 @@ const ctlreq_id_t CTLREQ_WRITE_SIGROW = AVR_CTLREQ_WRITE_SIGROW;
 const ctlreq_id_t CTLREQ_WRITE_SIGROW;
 
 
-struct ArchXT_VREFConfig {
+struct ArchXT_VREFConfig : public VREFConfig {
 %TypeHeaderCode
 #include "arch_xt_misc.h"
 %End
