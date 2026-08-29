@@ -119,7 +119,7 @@ class _Dumper:
 
 def _serialize_registers(probe, dumper):
 
-    RegData = collections.namedtuple('RegData', ('per', 'name', 'addr', 'size', 'value'))
+    RegData = collections.namedtuple('RegData', ('per', 'name', 'addr', 'size', 'value', 'fields'))
 
     hex_addr = lambda x : '0x%04x' % x
 
@@ -130,6 +130,12 @@ def _serialize_registers(probe, dumper):
             return reg_data.value
         else:
             return repr(reg_data.value)
+
+    def _fields_to_str(reg_data):
+        if reg_data.fields is None or not len(reg_data.fields):
+            return ''
+        else:
+            return '{' + ','.join(fname+ '=' + repr(fval) for fname, fval in reg_data.fields.items()) + '}'
 
     dumper.inc_level('I/O Registers')
 
@@ -155,13 +161,16 @@ def _serialize_registers(probe, dumper):
         for reg_name in reg_names:
             #Read the register values, but not as CPU to avoid triggering behaviour
             r = getattr(getattr(accessor, per_name), reg_name)
-            if r.allocated:
-                r.set_read_as_cpu(False)
-                v = r.read()
-            else:
-                v = '--' * r.size
+            with r:
+                if r.allocated:
+                    r.set_read_as_cpu(False)
+                    v = r.read()
+                    f = { f_name: f_acc.read() for f_name, f_acc in r.fields.items() }
+                else:
+                    v = '--' * r.size
+                    f = None
 
-            reg_data = RegData(per_name, reg_name, r.address, r.size, v)
+            reg_data = RegData(per_name, reg_name, r.address, r.size, v, f)
             reg_data_list.append(reg_data)
 
     #Dump the register list sorted by address
@@ -173,7 +182,10 @@ def _serialize_registers(probe, dumper):
             dumper[sa] = t
             dumper.dump_bytes('', r.value)
         else:
-            dumper[sa] = t + ' [' + _reg_value_to_str(r) + ']'
+            d = t + ' [' + _reg_value_to_str(r) + ']'
+            if r.fields:
+                d += ' ' + _fields_to_str(r)
+            dumper[sa] = d
 
     dumper.dec_level()
 
@@ -189,7 +201,10 @@ def _serialize_registers(probe, dumper):
             if isinstance(reg_data.value, bytes):
                 dumper.dump_bytes(reg_data.name, reg_data.value)
             else:
-                dumper[reg_data.name] = _reg_value_to_str(reg_data)
+                d = _reg_value_to_str(reg_data)
+                if reg_data.fields:
+                    d += ' ' + _fields_to_str(reg_data)
+                dumper[reg_data.name] = d
 
         dumper.dec_level()
 
