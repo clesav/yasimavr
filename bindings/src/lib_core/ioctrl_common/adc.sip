@@ -47,6 +47,7 @@ enum Channel {
     Channel_Temperature     /PyName=Temperature/,
     Channel_AcompRef        /PyName=AcompRef/,
     Channel_DAC             /PyName=DAC/,
+    Channel_VDDDiv10        /PyName=VDDDiv10/,
 };
 
 

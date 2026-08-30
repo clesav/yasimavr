@@ -84,6 +84,8 @@ enum Channel {
     Channel_AcompRef,
     /// DAC output
     Channel_DAC,
+    /// VCC/VDD divided by 10
+    Channel_VDDDiv10,
 };
 
 /**

@@ -21,6 +21,7 @@
 CPP_SRCS := \
 	src/arch_xt_acp.cpp \
 	src/arch_xt_adc.cpp \
+	src/arch_xt_adc2.cpp \
 	src/arch_xt_clock.cpp \
 	src/arch_xt_dac.cpp \
 	src/arch_xt_device.cpp \
@@ -39,6 +40,7 @@ CPP_SRCS := \
 OBJS := \
 	$(BUILD_DIR)/arch_xt_acp.o \
 	$(BUILD_DIR)/arch_xt_adc.o \
+	$(BUILD_DIR)/arch_xt_adc2.o \
 	$(BUILD_DIR)/arch_xt_clock.o \
 	$(BUILD_DIR)/arch_xt_dac.o \
 	$(BUILD_DIR)/arch_xt_device.o \
@@ -57,6 +59,7 @@ OBJS := \
 CPP_DEPS := \
 	$(BUILD_DIR)/arch_xt_acp.d \
 	$(BUILD_DIR)/arch_xt_adc.d \
+	$(BUILD_DIR)/arch_xt_adc2.d \
 	$(BUILD_DIR)/arch_xt_clock.d \
 	$(BUILD_DIR)/arch_xt_dac.d \
 	$(BUILD_DIR)/arch_xt_device.d \
