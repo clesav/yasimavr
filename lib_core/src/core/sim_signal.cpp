@@ -1,7 +1,7 @@
 /*
  * sim_signal.cpp
  *
- *  Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -22,7 +22,6 @@
 //=======================================================================================
 
 #include "sim_signal.h"
-#include <assert.h>
 
 YASIMAVR_USING_NAMESPACE
 
@@ -34,42 +33,86 @@ YASIMAVR_USING_NAMESPACE
  */
 SignalHook::SignalHook(const SignalHook& other)
 {
-    *this = other;
+    for (auto [tag, signal] : other.m_signals)
+        signal->connect(*this, tag);
 }
 
 
-/**
-   Generic destructor. Severs the connection with all signals.
- */
 SignalHook::~SignalHook()
 {
     //A temporary vector copy is required because m_signals is
     //modified by disconnect()
-    std::vector<Signal*> v = m_signals;
-    for (Signal* signal : v)
+    std::unordered_map<int, Signal*> v = m_signals;
+    for (auto [_, signal] : v)
         signal->disconnect(*this);
 }
 
 
-/**
-   Copy assignment ensuring the connection with signals is consistent.
- */
-SignalHook& SignalHook::operator=(const SignalHook& other)
+vardata_t SignalHook::data(int hooktag, int sigid, long long index) const
 {
-    for (Signal* signal : other.m_signals) {
-        std::vector<Signal::hook_slot_t> hook_slots = signal->m_hooks;
-        for (auto slot : hook_slots) {
-            if (slot.hook == &other)
-                signal->connect(*this, slot.tag);
-        }
-    }
-    return *this;
+    auto it = m_signals.find(hooktag);
+    if (it == m_signals.end())
+        return vardata_t();
+
+    if (!it->second->is_data_signal())
+        return vardata_t();
+
+    const DataSignal* s = dynamic_cast<const DataSignal*>(it->second);
+    return s->data(sigid, index);
 }
 
 
-/**
-   Build a signal.
- */
+bool SignalHook::has_data(int hooktag, int sigid, long long index) const
+{
+    auto it = m_signals.find(hooktag);
+    if (it == m_signals.end())
+        return false;
+
+    if (!it->second->is_data_signal())
+        return false;
+
+    const DataSignal* s = dynamic_cast<const DataSignal*>(it->second);
+    return s->has_data(sigid, index);
+}
+
+
+void SignalHook::add_filter(int hooktag, int sigid)
+{
+    auto it = m_filters.find(hooktag);
+    if (it == m_filters.end())
+        m_filters[hooktag] = { { sigid } };
+    else
+        it->second.push_back({ sigid });
+}
+
+
+void SignalHook::add_filter(int hooktag, int sigid, long long index)
+{
+    auto it = m_filters.find(hooktag);
+    if (it == m_filters.end())
+        m_filters[hooktag] = { { sigid, index } };
+    else
+        it->second.push_back({ sigid, index });
+}
+
+
+bool SignalHook::filter(int hooktag, int sigid, long long index) const
+{
+    auto it = m_filters.find(hooktag);
+    if (it == m_filters.end())
+        return true;
+
+    auto& fv = it->second;
+    for (auto& f : fv) {
+        if (sigid == f.sigid && (!f.index.has_value() || index == f.index.value()))
+           return true;
+    }
+    return false;
+}
+
+
+//=======================================================================================
+
 Signal::Signal()
 :m_busy(false)
 {}
@@ -86,37 +129,30 @@ Signal::Signal(const Signal& other)
 }
 
 
-/**
-   Destroy a signal.
-   Severs all the connections with hooks.
- */
 Signal::~Signal()
 {
-    std::vector<hook_slot_t> hook_slots = m_hooks;
-    for (auto& slot : hook_slots) {
-        int i = signal_index(*slot.hook);
-        slot.hook->m_signals.erase(slot.hook->m_signals.begin() + i);
-    }
+    for (auto& slot : m_hooks)
+        slot.hook->m_signals.erase(slot.tag);
 }
-
 
 /**
    Connect a hook to this signal.
-   \param hook hook to be connected. If the hook is already connected, the call
+   \param hook hook to be connected. If the hook is already connected with the same tag, the call
    has no effect.
    \param hooktag identifier given to the hook when calling it. It has only a meaning
    for the hook and is passed though by the signal when called.
-   \note The hootag can be useful when a single hook connects to several signals,
+   \note The hooktag can be useful when a single hook connects to several signals,
    in order to differentiate which one the raise comes from.
    \sa SignalHook::raised()
  */
 void Signal::connect(SignalHook& hook, int hooktag)
 {
-    if (hook_index(hook) == -1) {
-        hook_slot_t slot = { &hook, hooktag };
-        m_hooks.push_back(slot);
-        hook.m_signals.push_back(this);
+    for (auto& s : m_hooks) {
+        if (s.hook == &hook && s.tag == hooktag) return;
     }
+
+    m_hooks.push_back({ &hook, hooktag });
+    hook.m_signals[hooktag] = this;
 }
 
 
@@ -126,12 +162,10 @@ void Signal::connect(SignalHook& hook, int hooktag)
  */
 void Signal::disconnect(SignalHook& hook)
 {
-    int h_index = hook_index(hook);
-    if (h_index > -1) {
-        m_hooks.erase(m_hooks.begin() + h_index);
-        int sig_index = signal_index(hook);
-        hook.m_signals.erase(hook.m_signals.begin() + sig_index);
-    }
+    //Remove 'this' from the hook's signal map
+    std::erase_if(hook.m_signals, [&](const auto& p) -> bool { return p.second == this; });
+    //Remove the hook from the hook map
+    std::erase_if(m_hooks, [&](const hook_slot_t& slot) -> bool { return slot.hook == &hook; });
 }
 
 
@@ -145,8 +179,10 @@ void Signal::raise(const signal_data_t& sigdata)
     m_busy = true;
 
     //Notify the registered callbacks
-    for (auto& slot : m_hooks)
-        slot.hook->raised(sigdata, slot.tag);
+    for (auto& slot : m_hooks) {
+        if (slot.hook->filter(slot.tag, sigdata.sigid, sigdata.index))
+            slot.hook->raised(sigdata, slot.tag);
+    }
 
     m_busy = false;
 }
@@ -163,49 +199,9 @@ void Signal::raise(int sigid, const vardata_t& v, long long ix)
 }
 
 
-int Signal::hook_index(const SignalHook& hook) const
+bool Signal::is_data_signal() const
 {
-    int index = 0;
-    for (auto& slot : m_hooks) {
-        if (slot.hook == &hook)
-            return index;
-        index++;
-    }
-    return -1;
-}
-
-
-int Signal::signal_index(const SignalHook& hook) const
-{
-    int index = 0;
-    for (auto s : hook.m_signals) {
-        if (s == this)
-            return index;
-        index++;
-    }
-    return -1;
-}
-
-
-/**
-   Copy assignment ensuring the connection with hooks is consistent.
- */
-Signal& Signal::operator=(const Signal& other)
-{
-    assert(!m_busy);
-
-    //Disconnect from all current hooks
-    std::vector<hook_slot_t> hook_slots = m_hooks;
-    for (auto& slot : hook_slots) {
-        int i = signal_index(*slot.hook);
-        slot.hook->m_signals.erase(slot.hook->m_signals.begin() + i);
-    }
-
-    //Copy all connections
-    for (auto& slot : other.m_hooks)
-        connect(*slot.hook, slot.tag);
-
-    return *this;
+    return false;
 }
 
 
@@ -237,16 +233,6 @@ bool DataSignal::has_data(int sigid, long long index) const
 
 
 /**
-   Sets the data for a SIGID and index. Does not raise the signal.
- */
-void DataSignal::set_data(int sigid, const vardata_t& v, long long index)
-{
-    key_t k = { sigid, index };
-    m_data[k] = v;
-}
-
-
-/**
    Deletes all data stored by the signal.
  */
 void DataSignal::clear()
@@ -272,6 +258,12 @@ bool DataSignal::key_t::operator==(const key_t& other) const
 size_t DataSignal::keyhash_t::operator()(const key_t& k) const
 {
     return ((long long)k.sigid) ^ k.index;
+}
+
+
+bool DataSignal::is_data_signal() const
+{
+    return true;
 }
 
 
@@ -329,7 +321,7 @@ size_t DataSignalMux::add_mux(mux_item_t& item)
         item.signal->connect(*this, index);
         if (!index) {
             item.data = item.signal->data(item.sigid_filt, item.index_filt);
-            m_signal.set_data(0, item.data, 0);
+            m_signal.raise(0, item.data, 0);
         }
     }
     m_items.push_back(item);

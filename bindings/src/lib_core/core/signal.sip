@@ -40,6 +40,14 @@ class SignalHook {
 
 public:
 
+    void add_filter(int, int);
+    void add_filter(int, int, long long);
+
+    vardata_t data(int, int, long long = 0) const;
+    bool has_data(int, int, long long = 0) const;
+
+protected:
+
     virtual void raised(const signal_data_t&, int) = 0;
 
 };
@@ -73,6 +81,10 @@ public:
         sipCpp->raise(sigdata);
     %End
 
+private:
+
+    Signal& operator=(const Signal&);
+
 };
 
 
@@ -89,12 +101,6 @@ public:
 
     vardata_t data(int, long long = 0) const;
     bool has_data(int, long long = 0) const;
-    void set_data(int, SIP_PYOBJECT = nullptr, long long = 0);
-    %MethodCode
-        vardata_t v;
-        fill_vardata_with_pyobj(&v, a1, NULL);
-        sipCpp->set_data(a0, v, a2);
-    %End
 
     void clear();
 
@@ -110,6 +116,10 @@ public:
         sigdata.index = a2;
         sipCpp->raise(sigdata);
     %End
+
+private:
+
+    DataSignal& operator=(const DataSignal&);
 
 };
 
@@ -201,5 +211,9 @@ public:
     void set_selection(size_t);
     size_t selected_index() const;
     bool connected() const;
+
+private:
+
+    DataSignalMux& operator=(const DataSignalMux&);
 
 };

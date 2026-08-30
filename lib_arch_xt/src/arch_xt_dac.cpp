@@ -43,7 +43,7 @@ ArchXT_DAC::ArchXT_DAC(int num, const ArchXT_DACConfig& config)
 ,m_vref_hook(*this, &ArchXT_DAC::vref_sig_raised)
 ,m_sleeping(false)
 {
-    m_signal.set_data(Signal_Output, 0.0);
+    m_signal.raise(Signal_Output, 0.0);
 }
 
 
