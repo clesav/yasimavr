@@ -61,10 +61,8 @@ struct ArchAVR_ADCConfig {
     std::vector<trigger_config_t> triggers;
     /// Channel index for the internal voltage reference
     unsigned int vref_channel;
-    /// Register address for the result low byte
-    reg_addr_t reg_datal;
-    /// Register address for the result high byte
-    reg_addr_t reg_datah;
+    /// Regbit for the result
+    regbit_compound_t rbc_result;
     /// Regbit for the channel mux selection
     regbit_t rb_chan_mux;
     /// Regbit for the reference mux selection
@@ -88,7 +86,9 @@ struct ArchAVR_ADCConfig {
     /// Regbit for result left adjusting
     regbit_t rb_left_adj;
     /// Interrupt vector index
-    int_vect_t int_vector;
+    int_vect_t iv_adc;
+
+    unsigned int result_width;
 
 };
 
@@ -151,7 +151,7 @@ private:
     uint8_t m_latched_ref_mux;
 
     //Raw converted value
-    int16_t m_conv_value;
+    int32_t m_conv_value;
 
     //Signal raised at various steps of the conversion
     Signal m_signal;
@@ -164,7 +164,9 @@ private:
     void timer_raised(const signal_data_t& sigdata, int hooktag);
 
     void read_analog_value();
-    void write_digital_value();
+    void store_converted_value();
+
+    void timer_signal_raised(const signal_data_t& sigdata, int hooktag);
 
 };
 

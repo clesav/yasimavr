@@ -86,6 +86,9 @@ ADC:
             0x05: [ SingleEnded, PC5 ]
             0x06: [ SingleEnded, ADC6 ]
             0x07: [ SingleEnded, ADC7 ]
+            0x08: Temperature
+            0x0E: IntRef
+            0x0F: Zero
         references:
             0: AREF
             1: AVCC
@@ -100,8 +103,7 @@ ADC:
             0b101: External
             0b110: External
         vref_channel: 0
-        reg_datal: ADCL
-        reg_datah: ADCH
+        rbc_result: ADC
         rb_chan_mux: ADMUX/MUX
         rb_ref_mux: ADMUX/REFS
         rb_enable: ADCSRA/ADEN
@@ -113,4 +115,5 @@ ADC:
         rb_trig_mux: ADCSRB/ADTS
         rb_left_adj: ADMUX/ADLAR
         rb_bipolar: ""
-        int_vector: ADC
+        iv_adc: ADC
+        result_width: 10

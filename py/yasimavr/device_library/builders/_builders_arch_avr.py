@@ -302,7 +302,7 @@ def _adc_convertor(cfg, attr, yml_val, per_desc):
     elif attr == 'references':
         py_refs = []
         for reg_value, item in yml_val.items():
-            ref_cfg = _archlib.ArchAVR_ADCConfig.reference_config_t()
+            ref_cfg = _corelib.ADC.reference_config_t()
             ref_cfg.reg_value = reg_value
             ref_cfg.source = _corelib.VREF.Source[item]
             py_refs.append(ref_cfg)
@@ -321,9 +321,6 @@ def _adc_convertor(cfg, attr, yml_val, per_desc):
             py_triggers.append(trig_cfg)
 
         cfg.triggers = py_triggers
-
-    elif attr == 'int_vector':
-        cfg.int_vector = per_desc.device.interrupt_map.vectors.index(yml_val)
 
     else:
         raise Exception('Converter not implemented for ' + attr)
