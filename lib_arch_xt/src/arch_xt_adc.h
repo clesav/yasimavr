@@ -42,14 +42,10 @@ YASIMAVR_BEGIN_NAMESPACE
  */
 struct ArchXT_ADCConfig {
 
-    struct reference_config_t : base_reg_config_t {
-        VREF::Source source;
-    };
-
     /// List of the ADC channels
     std::vector<ADC::channel_config_t> channels;
     /// List of the voltage references
-    std::vector<reference_config_t> references;
+    std::vector<ADC::reference_config_t> references;
     /// Channel index for the voltage reference
     unsigned int vref_channel;
     /// List of the clock prescaler factors

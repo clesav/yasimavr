@@ -27,6 +27,7 @@
 #include "../core/sim_peripheral.h"
 #include "../core/sim_pin.h"
 #include "../core/sim_types.h"
+#include "sim_vref.h"
 
 YASIMAVR_BEGIN_NAMESPACE
 
@@ -98,6 +99,13 @@ struct channel_config_t : base_reg_config_t {
     /// Measurement gain applied to the voltage value. Must be non-zero.
     unsigned int gain;
 };
+
+
+struct reference_config_t: base_reg_config_t {
+    VREF::Source source;
+    double level;
+};
+
 
 enum SignalId {
     /// Raised at the start of a conversion

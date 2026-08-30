@@ -41,10 +41,6 @@ YASIMAVR_BEGIN_NAMESPACE
  */
 struct ArchAVR_ADCConfig {
 
-    struct reference_config_t : base_reg_config_t {
-        VREF::Source source;
-    };
-
     enum Trigger {
         Trig_Manual,
         Trig_FreeRunning,
@@ -58,7 +54,7 @@ struct ArchAVR_ADCConfig {
     /// List of the channels
     std::vector<ADC::channel_config_t> channels;
     /// List of the voltage references
-    std::vector<reference_config_t> references;
+    std::vector<ADC::reference_config_t> references;
     /// List of the prescaler factors for the ADC clock
     std::vector<unsigned long> clk_ps_factors;
     /// List of the autotrigger sources

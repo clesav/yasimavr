@@ -26,10 +26,6 @@ struct ArchAVR_ADCConfig {
 #include "arch_avr_adc.h"
 %End
 
-    struct reference_config_t : base_reg_config_t {
-        VREF::Source source;
-    };
-
     enum Trigger {
         Trig_Manual         /PyName=Manual/,
         Trig_FreeRunning    /PyName=FreeRunning/,

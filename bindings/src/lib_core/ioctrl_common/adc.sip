@@ -60,9 +60,16 @@ struct channel_config_t : base_reg_config_t {
 };
 
 
+struct reference_config_t : base_reg_config_t {
+    VREF::Source source;
+    double level;
+};
+
+
 enum SignalId /BaseType=IntEnum/ {
     Signal_ConversionStarted    /PyName=ConversionStarted/,
-    Signal_AboutToSample        /PyName=AboutToSample/,
+    Signal_AboutToSamplePin     /PyName=AboutToSamplePin/,
+    Signal_AboutToSampleTemp    /PyName=AboutToSampleTemp/,
     Signal_ConversionComplete   /PyName=ConversionComplete/,
 };
 

@@ -26,12 +26,8 @@ struct ArchXT_ADCConfig {
 #include "arch_xt_adc.h"
 %End
 
-    struct reference_config_t : base_reg_config_t {
-        VREF::Source source;
-    };
-
     std::vector<ADC::channel_config_t> channels;
-    std::vector<ArchXT_ADCConfig::reference_config_t> references;
+    std::vector<ADC::reference_config_t> references;
     unsigned int vref_channel;
     UnsignedLongVector clk_ps_factors;
     unsigned long clk_ps_max;
