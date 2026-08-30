@@ -1,6 +1,6 @@
 # test_core_signal.py
 #
-# Copyright 2023 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2023-2026 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -86,29 +86,11 @@ def test_datasignal_set_get():
 
     assert not sig.has_data(0)
 
-    sig.set_data(0, 1.0)
-
-    assert sig.has_data(0)
-    assert sig.data(0).value() == 1.0
-
-    assert not sig.has_data(1)
-
-    sig.set_data(0, 2.0, 1)
-    assert sig.data(0, 0).value() == 1.0
-    assert sig.data(0, 1).value() == 2.0
-
-
-def test_datasignal_raise():
-    sig = corelib.DataSignal()
-    hook = DictSignalHook(sig, 0)
-
-    sig.set_data(0, 1.0)
-    assert sig.has_data(0)
-    assert not hook.has_data(0)
-
     sig.raise_(0, 1.0)
     assert sig.has_data(0)
-    assert hook.has_data(0)
+    assert sig.data(0).value() == 1.0
+    assert not sig.has_data(1)
 
-    sigdata, _ = hook.pop(0)
-    assert sigdata.data.value() == 1.0
+    sig.raise_(0, 2.0, 1)
+    assert sig.data(0, 0).value() == 1.0
+    assert sig.data(0, 1).value() == 2.0

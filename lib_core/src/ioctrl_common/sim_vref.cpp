@@ -49,12 +49,12 @@ VREF::VREF(const VREFConfig& config, unsigned int ref_count)
 
     //Ensures there's a valid value at the start for each reference
     //in the signal internal data map
-    m_signal.set_data(Signal_VCCChange, 0.0);
-    m_signal.set_data(Signal_ARefChange, 0.0);
-    m_signal.set_data(Signal_TempChange, 0.0);
+    m_signal.raise(Signal_VCCChange, 0.0);
+    m_signal.raise(Signal_ARefChange, 0.0);
+    m_signal.raise(Signal_TempChange, 0.0);
 
     for (unsigned int i = 0; i < ref_count; ++i)
-        m_signal.set_data(Signal_IntRefChange, 0.0, i);
+        m_signal.raise(Signal_IntRefChange, 0.0, i);
 }
 
 

@@ -1,7 +1,7 @@
 /*
  * sim_signal.h
  *
- *  Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -25,9 +25,8 @@
 #define __YASIMAVR_SIGNAL_H__
 
 #include "sim_types.h"
-#include <stdint.h>
-#include <vector>
 #include <unordered_map>
+#include <optional>
 
 YASIMAVR_BEGIN_NAMESPACE
 
@@ -58,8 +57,15 @@ public:
 
     SignalHook() = default;
     SignalHook(const SignalHook&);
-    SignalHook(const SignalHook&&) = delete;
     virtual ~SignalHook();
+
+    void add_filter(int hooktag, int sigid);
+    void add_filter(int hooktag, int sigid, long long index);
+
+    vardata_t data(int hooktag, int sigid, long long index = 0) const;
+    bool has_data(int hooktag, int sigid, long long index = 0) const;
+
+    SignalHook& operator=(const SignalHook&) = delete;
 
     /**
        Pure virtual callback called during signal raises.
@@ -70,14 +76,19 @@ public:
      */
     virtual void raised(const signal_data_t& sigdata, int hooktag) = 0;
 
-    SignalHook& operator=(const SignalHook&);
-    SignalHook& operator=(const SignalHook&&) = delete;
-
 private:
 
     friend class Signal;
 
-    std::vector<Signal*> m_signals;
+    std::unordered_map<int, Signal*> m_signals;
+
+    struct filter_entry_t {
+        int sigid;
+        std::optional<long long> index;
+    };
+    std::unordered_map<int, std::vector<filter_entry_t>> m_filters;
+
+    bool filter(int hooktag, int sigid, long long index) const;
 
 };
 
@@ -109,12 +120,13 @@ public:
     virtual void raise(const signal_data_t& sigdata);
     void raise(int sigid = 0, const vardata_t& v = vardata_t(), long long index = 0);
 
-    Signal& operator=(const Signal&);
+    Signal& operator=(const Signal&) = delete;
     Signal& operator=(const Signal&&) = delete;
 
 private:
 
     friend class SignalHook;
+    friend class DataSignal;
 
     //Flag used to avoid nested raises
     bool m_busy;
@@ -126,8 +138,7 @@ private:
 
     std::vector<hook_slot_t> m_hooks;
 
-    int hook_index(const SignalHook& hook) const;
-    int signal_index(const SignalHook& hook) const;
+    virtual bool is_data_signal() const;
 
 };
 
@@ -140,7 +151,6 @@ public:
 
     vardata_t data(int sigid, long long index = 0) const;
     bool has_data(int sigid, long long index = 0) const;
-    void set_data(int sigid, const vardata_t& v, long long index = 0);
 
     void clear();
 
@@ -160,6 +170,8 @@ private:
     };
 
     std::unordered_map<key_t, vardata_t, keyhash_t> m_data;
+
+    virtual bool is_data_signal() const override;
 
 };
 

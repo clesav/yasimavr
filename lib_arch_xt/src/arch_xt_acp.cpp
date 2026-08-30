@@ -66,8 +66,8 @@ ArchXT_ACP::ArchXT_ACP(int num, const cfg_t& config)
 ,m_sleeping(false)
 ,m_hysteresis(0.0)
 {
-    m_signal.set_data(Signal_Output, 0);
-    m_signal.set_data(Signal_DAC, 0.0);
+    m_signal.raise(Signal_Output, 0);
+    m_signal.raise(Signal_DAC, 0.0);
 }
 
 bool ArchXT_ACP::init(Device& device)

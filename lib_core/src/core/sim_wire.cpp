@@ -1,7 +1,7 @@
 /*
  * sim_wire.cpp
  *
- *  Copyright 2024 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2024-2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -108,9 +108,9 @@ Wire::Wire()
 ,m_primary(nullptr)
 {
     //To ensure there is an initial persistent data stored in the signal
-    m_signal.set_data(Signal_StateChange, (int) State_Floating);
-    m_signal.set_data(Signal_DigitalChange, 0);
-    m_signal.set_data(Signal_VoltageChange, 0.5);
+    m_signal.raise(Signal_StateChange, (int) State_Floating);
+    m_signal.raise(Signal_DigitalChange, 0);
+    m_signal.raise(Signal_VoltageChange, 0.5);
 }
 
 /**
