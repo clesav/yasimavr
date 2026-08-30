@@ -80,8 +80,10 @@ enum Channel {
     Channel_IntRef,
     /// Internal temperature sensor voltage
     Channel_Temperature,
-    /// Analog comparator reference input (used on ATMega0 and ATMega1 series)
-    Channel_AcompRef
+    /// Analog comparator reference
+    Channel_AcompRef,
+    /// DAC output
+    Channel_DAC,
 };
 
 /**
@@ -94,7 +96,7 @@ struct channel_config_t : base_reg_config_t {
     pin_id_t pin_p;
     /// %Pin ID used as negative input for differential channels, unused for other channel types.
     pin_id_t pin_n;
-    /// Used for Channel_AcompRef, index of the %ACP peripheral to get the reference value from.
+    /// Used for Channel_AcompRef or Channel_DAC, index of the peripheral to get the value from.
     char per_num;
     /// Measurement gain applied to the voltage value. Must be non-zero.
     unsigned int gain;

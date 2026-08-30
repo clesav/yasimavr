@@ -39,12 +39,11 @@ using namespace ADC;
 #define REG_OFS(reg) \
     reg_addr_t(offsetof(ADC_t, reg))
 
-#define CFG ArchXT_ADCConfig
 
-static const uint32_t ADC_Prescaler_Max = 256;
+static const uint32_t PrescalerMax = 256;
 
 
-ArchXT_ADC::ArchXT_ADC(int num, const CFG& config)
+ArchXT_ADC::ArchXT_ADC(int num, const ArchXT_ADCConfig& config)
 :Peripheral(AVR_IOCTL_ADC(0x30 + num))
 ,m_config(config)
 ,m_state(ADC_Disabled)
@@ -59,6 +58,7 @@ ArchXT_ADC::ArchXT_ADC(int num, const CFG& config)
 ,m_res_intflag(false)
 ,m_cmp_intflag(false)
 {}
+
 
 bool ArchXT_ADC::init(Device& device)
 {
@@ -100,6 +100,7 @@ bool ArchXT_ADC::init(Device& device)
     return status;
 }
 
+
 void ArchXT_ADC::reset(int)
 {
     m_state = ADC_Disabled;
@@ -108,6 +109,7 @@ void ArchXT_ADC::reset(int)
     m_win_hithres = 0;
     m_timer.reset();
 }
+
 
 bool ArchXT_ADC::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
 {
@@ -135,6 +137,7 @@ uint8_t ArchXT_ADC::ioreg_read_handler(reg_addr_t addr, uint8_t value)
     return value;
 }
 
+
 void ArchXT_ADC::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
     reg_addr_t reg_ofs = addr - m_config.reg_base;
@@ -146,7 +149,11 @@ void ArchXT_ADC::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
         //Positive edge on the enable bit (CTRLA.ENABLE).
         //We reset the state and the prescaler
         if (data.posedge() & ADC_ENABLE_bm) {
-            m_state = ADC_Idle;
+            //Check that the main voltage is set. If not, the request crashes the device
+            VREF::getset_t reqinfo = { .source = VREF::Source_VCC };
+            ctlreq_data_t reqdata = { .data = &reqinfo };
+            if (device()->ctlreq(AVR_IOCTL_VREF, AVR_CTLREQ_VREF_GET, &reqdata))
+                m_state = ADC_Idle;
         }
         //Negative edge on the enable bit (CTRLA.ENABLE).
         //We disable the ADC, stop the cycle timer (if a conversion is running)
@@ -163,7 +170,6 @@ void ArchXT_ADC::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
             start_conversion_cycle();
     }
 }
-
 
 /*
  * Method that starts a conversion cycle
@@ -186,11 +192,11 @@ void ArchXT_ADC::start_conversion_cycle()
 
     //Reset, setup and start the prescaled timer
     m_timer.reset();
-    m_timer.set_prescaler(ADC_Prescaler_Max, 1);
+    m_timer.set_prescaler(PrescalerMax, 1);
     m_timer.set_timer_delay(ps_start_ticks);
 
     //Raise the signal
-    m_signal.raise(Signal_ConversionStarted, m_latched_ch_mux);
+    m_signal.raise(Signal_ConversionStarted);
 }
 
 /*
@@ -207,13 +213,13 @@ void ArchXT_ADC::read_analog_value()
     logger().dbg("Reading analog value");
 
     //Find the channel mux configuration
-    auto ch_config = find_reg_config_p<channel_config_t>(m_config.channels, m_latched_ch_mux);
+    auto ch_config = find_reg_config_p(m_config.channels, m_latched_ch_mux);
     if (!ch_config)
         _crash("ADC: Invalid channel configuration");
 
     //Find the reference voltage mux configuration and request the value from the VREF peripheral
     double vref = 0.0;
-    auto ref_config = find_reg_config_p<CFG::reference_config_t>(m_config.references, m_latched_ref_mux);
+    auto ref_config = find_reg_config_p(m_config.references, m_latched_ref_mux);
     if (!ref_config)
         _crash("ADC: Invalid reference configuration");
 
@@ -251,6 +257,7 @@ void ArchXT_ADC::read_analog_value()
 
         case Channel_IntRef: {
             vref_reqinfo = VREF::getset_t{ .source = VREF::Source_Mux, .channel = m_config.vref_channel };
+            vref_reqdata = ctlreq_data_t{ .data = &vref_reqinfo };
             if (!device()->ctlreq(AVR_IOCTL_VREF, AVR_CTLREQ_VREF_GET, &vref_reqdata))
                 _crash("ADC: Unable to obtain the internal reference voltage value");
             raw_value = vref_reqinfo.voltage;
@@ -263,12 +270,18 @@ void ArchXT_ADC::read_analog_value()
             raw_value = reqdata.data.as_double();
         } break;
 
+        case Channel_DAC: {
+            DataSignal* s = reinterpret_cast<DataSignal*>(get_signal(AVR_IOCTL_DAC(ch_config->per_num)));
+            if (!s)
+                _crash("ADC: Unable to obtain the DAC output");
+            raw_value = s->data(ArchXT_DAC::Signal_Output).as_double();
+        } break;
+
         case Channel_Temperature: {
             m_signal.raise(Signal_AboutToSampleTemp);
             vref_reqinfo = VREF::getset_t{ .source = VREF::Source_Temperature };
             vref_reqdata = ctlreq_data_t{ .data = &vref_reqinfo };
-            if (!device()->ctlreq(AVR_IOCTL_VREF, AVR_CTLREQ_VREF_GET, &vref_reqdata))
-                _crash("ADC: Unable to obtain the temperature value");
+            device()->ctlreq(AVR_IOCTL_VREF, AVR_CTLREQ_VREF_GET, &vref_reqdata);
             raw_value = vref_reqinfo.voltage;
         } break;
 
@@ -324,7 +337,7 @@ void ArchXT_ADC::timer_raised(const signal_data_t& sigdata, int)
         uint8_t ps_setting = READ_IOREG_F(CTRLC, ADC_PRESC);
         uint16_t ps_factor = m_config.clk_ps_factors[ps_setting];
         m_timer.reset();
-        m_timer.set_prescaler(ADC_Prescaler_Max, ps_factor);
+        m_timer.set_prescaler(PrescalerMax, ps_factor);
         m_timer.set_timer_delay(adc_ticks);
     }
 
@@ -340,9 +353,8 @@ void ArchXT_ADC::timer_raised(const signal_data_t& sigdata, int)
     }
 
     else if (m_state == ADC_PendingRaise) {
-
         //Raise the signal
-        m_signal.raise(Signal_ConversionComplete, m_latched_ch_mux);
+        m_signal.raise(Signal_ConversionComplete);
 
         //If we need to accumulate more samples, we return to PendingConversion state
         //and recall the cycle timer after the sampling delay
