@@ -232,6 +232,9 @@ void ArchAVR_ADC::read_analog_value()
         case Channel_SingleEnded: {
             Pin* p = device()->find_pin(ch_config->pin_p);
             if (!p) _crash("ADC: Invalid pin configuration");
+
+            m_signal.raise(Signal_AboutToSamplePin, p->id());
+
             raw_value = p->voltage();
         } break;
 
@@ -240,6 +243,10 @@ void ArchAVR_ADC::read_analog_value()
             if (!p) _crash("ADC: Invalid pin configuration");
             Pin* n = device()->find_pin(ch_config->pin_n);
             if (!n) _crash("ADC: Invalid pin configuration");
+
+            m_signal.raise(Signal_AboutToSamplePin, p->id());
+            m_signal.raise(Signal_AboutToSamplePin, n->id());
+
             raw_value = p->voltage() - n->voltage();
             bipolar = test_ioreg(m_config.rb_bipolar);
         } break;
@@ -252,6 +259,7 @@ void ArchAVR_ADC::read_analog_value()
         } break;
 
         case Channel_Temperature: {
+            m_signal.raise(Signal_AboutToSampleTemp);
             vref_reqinfo = VREF::getset_t{ .source = VREF::Source_Temperature };
             if (!device()->ctlreq(AVR_IOCTL_VREF, AVR_CTLREQ_VREF_GET, &vref_reqdata))
                 _crash("ADC: Unable to obtain the temperature value");
@@ -288,9 +296,6 @@ void ArchAVR_ADC::timer_raised(const signal_data_t& sigdata, int)
     if (sigdata.index != 1) return;
 
     if (m_state == ADC_PendingConversion) {
-        //Raise the signal
-        m_signal.raise(Signal_AboutToSample, m_latched_ch_mux);
-
         read_analog_value();
 
         m_state = ADC_PendingRaise;

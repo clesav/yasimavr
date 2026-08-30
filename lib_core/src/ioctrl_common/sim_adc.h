@@ -102,9 +102,12 @@ struct channel_config_t : base_reg_config_t {
 enum SignalId {
     /// Raised at the start of a conversion
     Signal_ConversionStarted,
-    /// Raised just before the %ADC is sampling the inputs. Last chance to set the analog values
+    /// Raised just before the %ADC is sampling a pin. Last chance to set the analog value
     /// for it to be taken into account by the current conversion.
-    Signal_AboutToSample,
+    Signal_AboutToSamplePin,
+    /// Raised just before the %ADC is sampling the temperature. Last chance to set the analog value
+    /// for it to be taken into account by the current conversion.
+    Signal_AboutToSampleTemp,
     /// Raised when the conversion is complete and the CPU is notified that the conversion result is ready.
     Signal_ConversionComplete,
 };
