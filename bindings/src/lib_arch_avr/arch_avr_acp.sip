@@ -26,14 +26,9 @@ struct ArchAVR_ACPConfig {
 #include "arch_avr_acp.h"
 %End
 
-    struct mux_config_t : base_reg_config_t {
-        pin_id_t pin;
-    };
-
-    std::vector<ArchAVR_ACPConfig::mux_config_t> mux_pins;
-
     pin_id_t pos_pin;
     pin_id_t neg_pin;
+    std::vector<ACP::channel_config_t> neg_channels;
 
     regbit_t rb_disable;
     regbit_t rb_mux_enable;

@@ -296,14 +296,13 @@ def _acp_convertor(cfg, attr, yml_val, per_desc):
         for reg_value, item in yml_val.items():
             chan_cfg = _corelib.ACP.channel_config_t()
             chan_cfg.reg_value = reg_value
-            if isinstance(item, list):
-                chan_type = item[0]
-                if len(item) >= 2:
-                    chan_cfg.pin = item[1]
-            else:
-                chan_type = item
+            chan_cfg.type = _corelib.ACP.Channel[item[0] if isinstance(item, list) else item]
 
-            chan_cfg.type = _corelib.ACP.Channel[chan_type]
+            if chan_cfg.type == _corelib.ACP.Channel.Pin:
+                chan_cfg.pin = item[1]
+            elif chan_cfg.type == _corelib.ACP.Channel.DAC:
+                chan_cfg.per_num = item[1]
+
             py_chans.append(chan_cfg)
 
         setattr(cfg, attr, py_chans)

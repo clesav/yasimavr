@@ -335,15 +335,21 @@ def _get_adc_builder():
 #ACP configuration
 
 def _acp_convertor(cfg, attr, yml_val, per_desc):
-    if attr == 'mux_pins':
-        py_pins = []
+    if attr == 'neg_channels':
+        py_chans = []
         for reg_value, item in yml_val.items():
-            mux_cfg = _archlib.ArchAVR_ACPConfig.mux_config_t()
-            mux_cfg.reg_value = reg_value
-            mux_cfg.pin = item
-            py_pins.append(mux_cfg)
+            chan_cfg = _corelib.ACP.channel_config_t()
+            chan_cfg.reg_value = reg_value
+            chan_cfg.type = _corelib.ACP.Channel[item[0] if isinstance(item, list) else item]
 
-        cfg.mux_pins = py_pins
+            if chan_cfg.type == _corelib.ACP.Channel.Pin:
+                chan_cfg.pin = item[1]
+            elif chan_cfg.type == _corelib.ACP.Channel.DAC:
+                chan_cfg.per_num = item[1]
+
+            py_chans.append(chan_cfg)
+
+        cfg.neg_channels = py_chans
 
     elif attr == 'pos_pin':
         cfg.pos_pin = yml_val

@@ -27,6 +27,7 @@
 #include "arch_avr_globals.h"
 #include "core/sim_pin.h"
 #include "core/sim_interrupt.h"
+#include "ioctrl_common/sim_acp.h"
 
 YASIMAVR_BEGIN_NAMESPACE
 
@@ -38,16 +39,12 @@ YASIMAVR_BEGIN_NAMESPACE
  */
 struct ArchAVR_ACPConfig {
 
-    struct mux_config_t : base_reg_config_t {
-        pin_id_t pin;
-    };
-
-    /// List of the mux options for the negative input
-    std::vector<mux_config_t> mux_pins;
     /// Positive input pin ID
     pin_id_t pos_pin;
     /// Negative input pin ID
     pin_id_t neg_pin;
+    /// List of the mux options for the negative input
+    std::vector<ACP::channel_config_t> neg_channels;
     /// Regbit for the disable bit (ACD)
     regbit_t rb_disable;
     /// Regbit for the mux enable bit (ACME)
@@ -68,6 +65,7 @@ struct ArchAVR_ACPConfig {
     regbit_t rb_int_flag;
     /// Vector index for the interrupt
     int_vect_t iv_cmp;
+
 };
 
 
@@ -97,15 +95,10 @@ private:
 
     const ArchAVR_ACPConfig& m_config;
     InterruptFlag m_intflag;
-    DataSignalMux m_pos_mux;
-    DataSignalMux m_neg_mux;
     BoundFunctionSignalHook<ArchAVR_ACP> m_input_hook;
-    Signal m_out_signal;
-    double m_pos_value;
-    double m_neg_value;
+    DataSignal m_out_signal;
 
-    void change_pos_channel();
-    void change_neg_channel();
+    double read_neg_channel() const;
     void input_raised(const signal_data_t& sigdata, int hooktag);
     void update_state();
 

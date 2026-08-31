@@ -34,14 +34,10 @@ using namespace ACP;
 //=======================================================================================
 
 enum {
-    HookTag_Pos = 0,
-    HookTag_Neg,
-
-    Mux_PosPin = 0,
-    Mux_IntRef,
-
-    Mux_NegPin = 0,
-    Mux_NegMuxPins,
+    HookTag_PosPin,
+    HookTag_NegPin,
+    HookTag_IntRef,
+    HookTag_NegMuxPins,
 };
 
 
@@ -50,8 +46,6 @@ ArchAVR_ACP::ArchAVR_ACP(int num, const ArchAVR_ACPConfig& config)
 ,m_config(config)
 ,m_intflag(true)
 ,m_input_hook(*this, &ArchAVR_ACP::input_raised)
-,m_pos_value(0.0)
-,m_neg_value(0.0)
 {}
 
 
@@ -79,7 +73,8 @@ bool ArchAVR_ACP::init(Device& device)
         logger().err("Positive input pin invalid");
         return false;
     }
-    m_pos_mux.add_mux(pos_pin->signal(), Pin::Signal_VoltageChange);
+    pos_pin->signal().connect(m_input_hook, HookTag_PosPin);
+    m_input_hook.add_filter(HookTag_PosPin, Pin::Signal_VoltageChange);
 
     //Find the negative input pin and add it to the negative input mux
     Pin* neg_pin = device.find_pin(m_config.neg_pin);
@@ -87,29 +82,49 @@ bool ArchAVR_ACP::init(Device& device)
         logger().err("Negative input pin invalid");
         return false;
     }
-    m_neg_mux.add_mux(neg_pin->signal(), Pin::Signal_VoltageChange);
+    pos_pin->signal().connect(m_input_hook, HookTag_NegPin);
+    m_input_hook.add_filter(HookTag_NegPin, Pin::Signal_VoltageChange);
 
-    //Find the signal from the voltage reference controller and add it to
-    //the positive input mux
-    DataSignal* vref_sig = dynamic_cast<DataSignal*>(get_signal(AVR_IOCTL_VREF));
+    //Connect to the VREF signal to receive VCC and intref changes, required for calculating
+    //the hysteresis and the internal DAC
+    Signal* vref_sig = get_signal(AVR_IOCTL_VREF);
     if (!vref_sig) {
-        logger().err("No voltage reference signal");
+        logger().err("No VREF peripheral found.");
         return false;
     }
-    m_pos_mux.add_mux(*vref_sig, VREF::Signal_IntRefChange);
+    vref_sig->connect(m_input_hook, HookTag_IntRef);
+    m_input_hook.add_filter(HookTag_IntRef, VREF::Signal_IntRefChange, 0);
 
-    //Connect the mux pins to the negative input mux
-    for (size_t i = 0; i < m_config.mux_pins.size(); ++i) {
-        Pin* pin = device.find_pin(m_config.mux_pins[i].pin);
-        if (!pin) {
-            logger().err("Negative mux pin invalid");
-            return false;
+    //Connect to the signals of the ADC mux
+    for (unsigned int i = 0; i < m_config.neg_channels.size(); ++i) {
+        auto& channel = m_config.neg_channels[i];
+        int tag = HookTag_NegMuxPins + i;
+        switch (channel.type) {
+
+            case Channel_Pin: {
+                Pin* pin = device.find_pin(channel.pin);
+                if (!pin) {
+                    logger().err("Pin %s not found.", channel.pin.str().c_str());
+                    return false;
+                }
+                pin->signal().connect(m_input_hook, tag);
+                m_input_hook.add_filter(tag, Pin::Signal_VoltageChange);
+            } break;
+
+            case Channel_IntRef: {
+                vref_sig->connect(m_input_hook, tag);
+                m_input_hook.add_filter(tag, VREF::Signal_IntRefChange, 0);
+            } break;
+
+            case Channel_Temperature: {
+                vref_sig->connect(m_input_hook, tag);
+                m_input_hook.add_filter(tag, VREF::Signal_TempChange);
+            } break;
+
+            default: break;
+
         }
-        m_neg_mux.add_mux(pin->signal(), Pin::Signal_VoltageChange);
     }
-
-    m_pos_mux.signal().connect(m_input_hook, HookTag_Pos);
-    m_neg_mux.signal().connect(m_input_hook, HookTag_Neg);
 
     return status;
 }
@@ -117,8 +132,6 @@ bool ArchAVR_ACP::init(Device& device)
 
 void ArchAVR_ACP::reset(int)
 {
-    change_pos_channel();
-    change_neg_channel();
     m_out_signal.raise(Signal_Output, (unsigned char) 0);
 }
 
@@ -146,38 +159,36 @@ void ArchAVR_ACP::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
         addr == m_config.rb_adc_enable ||
         addr == m_config.rb_mux) {
 
-        change_neg_channel();
         update_state();
     }
 
     if (addr == m_config.rb_bandgap_select) {
-        change_pos_channel();
         update_state();
     }
 }
 
 
-void ArchAVR_ACP::change_pos_channel()
+double ArchAVR_ACP::read_neg_channel() const
 {
-    if (test_ioreg(m_config.rb_bandgap_select))
-        m_pos_mux.set_selection(Mux_IntRef);
-    else
-        m_pos_mux.set_selection(Mux_PosPin);
-}
+    if (!test_ioreg(m_config.rb_mux_enable) || test_ioreg(m_config.rb_adc_enable))
+        return m_input_hook.data(HookTag_NegPin, Pin::Signal_VoltageChange).as_double();
 
+    int mux_index = find_reg_config<channel_config_t>(m_config.neg_channels, read_ioreg(m_config.rb_mux));
+    if (mux_index < 0)
+        return 0.0;
 
-void ArchAVR_ACP::change_neg_channel()
-{
-    if (test_ioreg(m_config.rb_mux_enable) && !test_ioreg(m_config.rb_adc_enable)) {
-        uint8_t mux_regval = read_ioreg(m_config.rb_mux);
-        int mux_index = find_reg_config<ArchAVR_ACPConfig::mux_config_t>(m_config.mux_pins, mux_regval);
-        if (mux_index < 0) {
-            device()->crash(CRASH_BAD_CTL_IO, "ACP: Invalid mux configuration");
-            return;
-        }
-        m_neg_mux.set_selection(Mux_NegMuxPins + mux_index);
-    } else {
-        m_neg_mux.set_selection(Mux_NegPin);
+    switch(m_config.neg_channels[mux_index].type) {
+        case Channel_Pin:
+            return m_input_hook.data(HookTag_NegMuxPins + mux_index, Pin::Signal_VoltageChange).as_double();
+
+        case Channel_IntRef:
+            return m_input_hook.data(HookTag_IntRef, VREF::Signal_IntRefChange, 0).as_double();
+
+        case Channel_Temperature:
+            return m_input_hook.data(HookTag_IntRef, VREF::Signal_TempChange).as_double();
+
+        default:
+            return 0.0;
     }
 }
 
@@ -190,7 +201,15 @@ void ArchAVR_ACP::update_state()
 
     bool old_state = test_ioreg(m_config.rb_output);
 
-    bool new_state = (m_pos_value > m_neg_value);
+    double pos;
+    if (test_ioreg(m_config.rb_bandgap_select))
+        pos = m_input_hook.data(HookTag_IntRef, VREF::Signal_IntRefChange, 0).as_double();
+    else
+        pos = m_input_hook.data(HookTag_PosPin, Pin::Signal_VoltageChange).as_double();
+
+    double neg = read_neg_channel();
+
+    bool new_state = (pos > neg);
 
     if (new_state ^ old_state) {
         write_ioreg(m_config.rb_output, new_state);
@@ -200,15 +219,7 @@ void ArchAVR_ACP::update_state()
 }
 
 
-/*
- * Hook callback, the hooktag determines if it's for the positive or the negative side
- */
 void ArchAVR_ACP::input_raised(const signal_data_t& sigdata, int hooktag)
 {
-    if (hooktag == HookTag_Pos)
-        m_pos_value = sigdata.data.as_double();
-    else
-        m_neg_value = sigdata.data.as_double();
-
     update_state();
 }

@@ -22,6 +22,7 @@
 //=======================================================================================
 
 #include "arch_xt_acp.h"
+#include "arch_xt_dac.h"
 #include "avr_io/io_acp.h"
 #include "core/sim_sleep.h"
 #include "core/sim_device.h"
@@ -39,15 +40,6 @@ using namespace ACP;
 #define REG_OFS(reg) \
     offsetof(AC_t, reg)
 
-typedef ArchXT_ACPConfig cfg_t;
-
-
-enum HookTag {
-    HookTag_VREF,
-    HookTag_PosMux,
-    HookTag_NegMux,
-};
-
 
 //Comparator hysteresis values in Volts
 //First row is for normal mode, second for low-power mode
@@ -57,18 +49,20 @@ const double Hysteresis[2][4] = {
 };
 
 
-ArchXT_ACP::ArchXT_ACP(int num, const cfg_t& config)
+ArchXT_ACP::ArchXT_ACP(int num, const ArchXT_ACPConfig& config)
 :Peripheral(AVR_IOCTL_ACP(0x30 + num))
 ,m_config(config)
 ,m_intflag(false)
-,m_vref_signal(nullptr)
-,m_hook(*this, &ArchXT_ACP::input_raised)
+,m_curr_pos_input(0)
+,m_curr_neg_input(0)
+,m_input_hook(*this, &ArchXT_ACP::input_raised)
 ,m_sleeping(false)
 ,m_hysteresis(0.0)
 {
     m_signal.raise(Signal_Output, 0);
-    m_signal.raise(Signal_DAC, 0.0);
+    m_signal.raise(Signal_AcompRefChange, 0.0);
 }
+
 
 bool ArchXT_ACP::init(Device& device)
 {
@@ -86,59 +80,73 @@ bool ArchXT_ACP::init(Device& device)
                              DEF_REGBIT_B(STATUS, AC_CMP),
                              m_config.iv_cmp);
 
-    m_vref_signal = dynamic_cast<DataSignal*>(get_signal(AVR_IOCTL_VREF));
-    if (m_vref_signal) {
-        m_vref_signal->connect(m_hook, HookTag_VREF);
-    } else {
+    //Connect to the VREF signal to receive VCC and intref changes, required for calculating
+    //the hysteresis and the internal DAC
+    Signal* vref_sig = get_signal(AVR_IOCTL_VREF);
+    if (!vref_sig) {
         logger().err("No VREF peripheral found.");
-        status = false;
+        return false;
     }
+    vref_sig->connect(m_input_hook, 0);
+    m_input_hook.add_filter(0, VREF::Signal_VCCChange);
+    m_input_hook.add_filter(0, VREF::Signal_IntRefChange, m_config.vref_channel);
 
-    status &= register_channels(m_pos_mux, m_config.pos_channels);
-    status &= register_channels(m_neg_mux, m_config.neg_channels);
-
-    m_pos_mux.signal().connect(m_hook, HookTag_PosMux);
-    m_neg_mux.signal().connect(m_hook, HookTag_NegMux);
+    status &= register_channels(m_config.pos_channels, vref_sig, true);
+    status &= register_channels(m_config.neg_channels, vref_sig, false);
 
     return status;
 }
 
-bool ArchXT_ACP::register_channels(DataSignalMux& mux, const std::vector<channel_config_t>& channels)
+
+bool ArchXT_ACP::register_channels(const std::vector<channel_config_t>& channels, Signal* vref_sig, bool pol)
 {
-    for (auto channel : channels) {
+    //Connect to the signal for each channel. The hook tag is the channel config index and goes this way:
+    //Positive side channels : indexes 1 .. N
+    //Negative side channels : indexes -1 .. -N
+    for (int ix = 0; ix < (int) channels.size(); ++ix) {
+        auto& channel = channels[ix];
+        int tag = pol ? (ix + 1) : (-ix - 1);
         switch(channel.type) {
             case Channel_Pin: {
                 Pin* pin = device()->find_pin(channel.pin);
-                if (pin) {
-                    mux.add_mux(pin->signal(), Pin::Signal_VoltageChange);
-                } else {
+                if (!pin) {
                     logger().err("Pin %s not found.", channel.pin.str().c_str());
                     return false;
                 }
+                pin->signal().connect(m_input_hook, tag);
+                m_input_hook.add_filter(tag, Pin::Signal_VoltageChange);
             } break;
 
-            case Channel_AcompRef:
-                mux.add_mux();
-                break;
+            //case Channel_IntRef: nothing to do
 
-            case Channel_IntRef:
-                mux.add_mux(*m_vref_signal, VREF::Signal_IntRefChange, m_config.vref_channel);
-                break;
+            case Channel_DAC: {
+                Signal* s = get_signal(AVR_IOCTL_DAC(channel.per_num));
+                if (!s) {
+                    logger().err("No DAC peripheral found.");
+                    return false;
+                }
+                s->connect(m_input_hook, tag);
+                m_input_hook.add_filter(tag, ArchXT_DAC::Signal_Output);
+            } break;
+
+            default: break;
         }
     }
 
     return true;
 }
 
+
 void ArchXT_ACP::reset(int)
 {
     m_sleeping = false;
-    m_pos_mux.set_selection(0);
-    m_neg_mux.set_selection(0);
+    m_curr_pos_input = 0;
+    m_curr_neg_input = 0;
     update_DAC();
     update_hysteresis();
     update_output();
 }
+
 
 bool ArchXT_ACP::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
 {
@@ -148,7 +156,7 @@ bool ArchXT_ACP::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
     }
 
     else if (req == AVR_CTLREQ_ACP_GET_DAC) {
-        data->data = m_signal.data(Signal_DAC);
+        data->data = m_signal.data(Signal_AcompRefChange);
         return true;
     }
 
@@ -168,21 +176,21 @@ void ArchXT_ACP::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
     else if (reg_ofs == REG_OFS(MUXCTRLA)) {
         //Update the selection for the positive input
         uint8_t pos_ch_regval = DEF_BITSPEC_F(AC_MUXPOS).extract(data.value);
-        int pos_ch_ix = find_reg_config<channel_config_t>(m_config.pos_channels, pos_ch_regval);
-        if (pos_ch_ix == -1) {
+        m_curr_pos_input = find_reg_config<channel_config_t>(m_config.pos_channels, pos_ch_regval);
+        if (m_curr_pos_input == -1) {
             device()->crash(CRASH_BAD_CTL_IO, "ACP: Invalid positive channel configuration");
             return;
         }
-        m_pos_mux.set_selection(pos_ch_ix);
 
         //Update the selection for the negative input
         uint8_t neg_ch_regval = DEF_BITSPEC_F(AC_MUXNEG).extract(data.value);
-        int neg_ch_ix = find_reg_config<channel_config_t>(m_config.neg_channels, neg_ch_regval);
-        if (neg_ch_ix == -1) {
+        m_curr_neg_input = find_reg_config<channel_config_t>(m_config.neg_channels, neg_ch_regval);
+        if (m_curr_neg_input == -1) {
             device()->crash(CRASH_BAD_CTL_IO, "ACP: Invalid negative channel configuration");
             return;
         }
-        m_neg_mux.set_selection(neg_ch_ix);
+
+        update_output();
     }
 
     else if (reg_ofs == REG_OFS(DACREF)) {
@@ -196,9 +204,9 @@ void ArchXT_ACP::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 */
 void ArchXT_ACP::update_DAC()
 {
-    vardata_t vref = m_vref_signal->data(VREF::Signal_IntRefChange, m_config.vref_channel);
+    vardata_t vref = m_input_hook.data(0, VREF::Signal_IntRefChange, m_config.vref_channel);
     double dac_value = vref.as_double() * READ_IOREG(DACREF) / 256.0;
-    m_signal.raise(Signal_DAC, dac_value);
+    m_signal.raise(Signal_AcompRefChange, dac_value);
 }
 
 
@@ -214,12 +222,34 @@ void ArchXT_ACP::update_hysteresis()
     double hyst_volt = Hysteresis[lp_mode_sel][hyst_mode_sel];
 
     //Convert to a value relative to VCC and store the value
-    vardata_t vcc = m_vref_signal->data(VREF::Source_VCC);
-    if (vcc.as_double())
-        m_hysteresis = hyst_volt / vcc.as_double();
-    else
-        device()->crash(CRASH_BAD_CTL_IO, "ACP: Invalid VCC value");
+    vardata_t vcc = m_input_hook.data(0, VREF::Source_VCC);
+    m_hysteresis = hyst_volt / vcc.as_double();
 }
+
+
+double ArchXT_ACP::read_channel(bool polarity)
+{
+    int index = polarity ? m_curr_pos_input : m_curr_neg_input;
+    int tag = polarity ? (index + 1) : (-index - 1);
+    auto& channel = polarity ? m_config.pos_channels[index] : m_config.neg_channels[index];
+    switch(channel.type) {
+        case Channel_Pin:
+            return m_input_hook.data(tag, Pin::Signal_VoltageChange).as_double();
+
+        case Channel_AcompRef:
+            return m_signal.data(Signal_AcompRefChange).as_double();
+
+        case Channel_IntRef:
+            return m_input_hook.data(0, VREF::Signal_IntRefChange, m_config.vref_channel).as_double();
+
+        case Channel_DAC:
+            return m_input_hook.data(tag, ArchXT_DAC::Signal_Output).as_double();
+
+        default:
+            return 0.0;
+    }
+}
+
 
 void ArchXT_ACP::update_output()
 {
@@ -234,17 +264,8 @@ void ArchXT_ACP::update_output()
     uint8_t new_state;
 
     if (enabled) {
-        double pos, neg;
-
-        if (m_pos_mux.connected())
-            pos = m_pos_mux.signal().data(0).as_double();
-        else
-            pos = m_signal.data(Signal_DAC).as_double();
-
-        if (m_neg_mux.connected())
-            neg = m_neg_mux.signal().data(0).as_double();
-        else
-            neg = m_signal.data(Signal_DAC).as_double();
+        double pos = read_channel(true);
+        double neg = read_channel(false);
 
         //Determine the new state by applying the hysteresis
         if (old_state && ((pos - neg) < -m_hysteresis))
@@ -291,17 +312,18 @@ void ArchXT_ACP::update_output()
 */
 void ArchXT_ACP::input_raised(const signal_data_t& sigdata, int hooktag)
 {
-    if (hooktag == HookTag_VREF) {
-        if (sigdata.sigid == VREF::Signal_IntRefChange && sigdata.index == m_config.vref_channel) {
-            update_DAC();
-            update_output();
-        }
-        else if (sigdata.sigid == VREF::Signal_VCCChange) {
+    //If the change comes from VREF
+    if (hooktag == 0) {
+        if (sigdata.sigid == VREF::Signal_VCCChange)
             update_hysteresis();
-            update_output();
-        }
+        else //IntRefChange
+            update_DAC();
+        update_output();
     }
-    else if (hooktag == HookTag_PosMux || hooktag == HookTag_NegMux) {
+
+    else if ((hooktag > 0 && (hooktag - 1) == m_curr_pos_input) ||
+             (hooktag < 0 && (-hooktag - 1) == m_curr_neg_input)) {
+
         update_output();
     }
 }

@@ -193,17 +193,18 @@ peripherals:
         register_map:
             ACSR: 0x30
         config:
+            rb_mux: ADC/ADMUX/MUX[0:2]
             pos_pin: PD6
             neg_pin: PD7
-            mux_pins:
-                0x00: PC0
-                0x01: PC1
-                0x02: PC2
-                0x03: PC3
-                0x04: PC4
-                0x05: PC5
-                0x06: ADC6
-                0x07: ADC7
+            neg_channels:
+                0x00: [Pin, PC0]
+                0x01: [Pin, PC1]
+                0x02: [Pin, PC2]
+                0x03: [Pin, PC3]
+                0x04: [Pin, PC4]
+                0x05: [Pin, PC5]
+                0x06: [Pin, ADC6]
+                0x07: [Pin, ADC7]
 
     VREF:
         file: avr_analog.yml
