@@ -357,7 +357,7 @@ ADC2:
         clk_ps_max: 64
 
 #========================================================================================
-ACP_mega0:
+ACP:
     registers:
         - name: CTRLA
           offset: 0x00
@@ -381,67 +381,18 @@ ACP_mega0:
           offset: 0x02
           fields:
             MUXNEG:
-                kind: ENUM
+                kind: RAW
                 LSB: 0
                 MSB: 1
-                values: [ AINN0, AINN1, AINN2, DACREF ]
             MUXPOS:
-                kind: ENUM
+                kind: RAW
                 LSB: 3
                 MSB: 4
-                values: [ AINP0, AINP1, AINP2, AINP3 ]
             INVERT: { kind: BIT, pos: 7, one: enabled, zero: disabled }
 
         - name: DACREF
           offset: 0x04
           kind: INT
-
-        - name: INTCTRL
-          offset: 0x06
-          fields:
-            CMP: { kind: BIT, pos: 0 }
-
-        - name: STATUS
-          offset: 0x07
-          fields:
-            CMP: { kind: BIT, pos: 0 }
-            STATE: { kind: BIT, pos: 4, readonly: yes }
-
-
-ACP_tiny0:
-    registers:
-        - name: CTRLA
-          offset: 0x00
-          fields:
-            ENABLE: { kind: BIT, pos: 0, one: enabled, zero: disabled }
-            HYSMODE:
-                kind: ENUM
-                LSB: 1
-                MSB: 2
-                values: [ NONE, SMALL, MEDIUM, LARGE ]
-            LPMODE: { kind: BIT, pos: 3, one: enabled, zero: disabled }
-            INTMODE:
-                kind: ENUM
-                LSB: 4
-                MSB: 5
-                values: { 0x00: BOTHEDGE, 0x02: NEGEDGE, 0x03: POSEDGE }
-            OUTEN: { kind: BIT, pos: 6, supported: no }
-            RUNSTDBY: { kind: BIT, pos: 7, one: enabled, zero: disabled }
-
-        - name: MUXCTRLA
-          offset: 0x02
-          fields:
-            MUXNEG:
-                kind: ENUM
-                LSB: 0
-                MSB: 1
-                values: [ AINN0, AINN1, VREF ]
-            MUXPOS:
-                kind: ENUM
-                LSB: 3
-                MSB: 4
-                values: [ AINP0, AINP1 ]
-            INVERT: { kind: BIT, pos: 7, one: enabled, zero: disabled }
 
         - name: INTCTRL
           offset: 0x06
