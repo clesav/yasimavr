@@ -26,7 +26,7 @@ This module applies to devices ATmega80x/160x/320x/480x
 from ...lib import core as _corelib
 from ...lib import arch_xt as _archlib
 from ._base import (PeripheralBuilder, PeripheralConfigBuilder,
-                    IndexedPeripheralBuilder, LetteredPeripheralBuilder, DummyPeripheralBuilder,
+                    IndexedPeripheralBuilder, LetteredPeripheralBuilder,
                     DeviceBuilder, DeviceBuildError,
                     get_core_attributes, convert_to_regbit)
 
@@ -447,6 +447,7 @@ class XT_DeviceBuilder(DeviceBuilder):
         'TCD': _get_tcd_builder,
         'VREF': _get_vref_builder,
         'ADC': _get_adc_builder,
+        'ADC2': _get_adc2_builder,
         'ACP': _get_acp_builder,
         'DAC': _get_dac_builder,
         'USART': _get_usart_builder,

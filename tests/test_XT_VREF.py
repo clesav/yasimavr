@@ -51,12 +51,18 @@ class Bench(BenchXT):
 
 @pytest.fixture
 def bench():
+    fw = corelib.Firmware.read_elf(TESTFW_M4809)
     dev_model = load_device('atmega4809')
-    b = Bench(dev_model, TESTFW_M4809)
+    b = Bench(dev_model, fw)
     return b
 
 
 def test_xt_vref_vcc(bench):
+    assert bench.req_getref('VCC') == 0.0
+    with pytest.raises(Exception):
+        bench.req_getref('AREF')
+
+    bench.req_setref('VCC', 0, 5.0)
     assert bench.req_getref('VCC') == 5.0
     assert bench.req_getref('AVCC') == 1.0
 
@@ -64,16 +70,17 @@ def test_xt_vref_vcc(bench):
     assert bench.req_getref('VCC') == 10.0
     assert bench.req_getref('AVCC') == 1.0
 
-    bench.req_setref('VCC', 0, 0.0)
     with pytest.raises(Exception):
-        bench.req_getref('AREF')
+        bench.req_setref('VCC', 0, 0.0)
 
-    bench.req_setref('VCC', 0, 5.0)
+    bench.req_setref('AREF', 0, 5.0)
     assert bench.req_getref('AREF') == 1.0
 
 
 def test_xt_vref_bandgap(bench):
     VREF = bench.dev.VREF
+
+    bench.req_setref('VCC', 0, 5.0)
 
     assert bench.req_getref('Mux', 0) == pytest.approx(0.11)
 
