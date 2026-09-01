@@ -469,66 +469,45 @@ DAC:
           kind: INT
 
 #========================================================================================
-VREF_mega0:
+VREF:
     registers:
         - name: CTRLA
           offset: 0x00
           fields:
             AC0REFSEL:
-                kind: ENUM
+                kind: RAW
                 LSB: 0
                 MSB: 2
-                values: [ 0V55, 1V1, 2V5, 4V3, 1V5 , null, null, AVCC ]
             ADC0REFSEL:
-                kind: ENUM
+                kind: RAW
                 LSB: 4
                 MSB: 6
-                values: [ 0V55, 1V1, 2V5, 4V3, 1V5 ]
 
         - name: CTRLB
           offset: 0x01
           supported: no
 
-    config:
-        channels:
-            - rb_select: CTRLA/ADC0REFSEL
-              references: [ 0.55, 1.1, 2.5, 4.3, 1.5 ]
-
-            - rb_select: CTRLA/AC0REFSEL
-              references: [ 0.55, 1.1, 2.5, 4.3, 1.5, null, null, AVCC ]
-
-        #arbitrary values below
-        temp_cal_25C: 0.3
-        temp_cal_coef: 0.0011
-
-VREF_tiny0:
-    registers:
-        - name: CTRLA
-          offset: 0x00
+        - name: CTRLC
+          offset: 0x02
           fields:
-            DAC0REFSEL:
-                kind: ENUM
+            AC1REFSEL:
+                kind: RAW
                 LSB: 0
                 MSB: 2
-                values: [ 0V55, 1V1, 2V5, 4V3, 1V5 ]
-            ADC0REFSEL:
-                kind: ENUM
+            ADC1REFSEL:
+                kind: RAW
                 LSB: 4
                 MSB: 6
-                values: [ 0V55, 1V1, 2V5, 4V3, 1V5 ]
 
-        - name: CTRLB
-          offset: 0x01
-          supported: no
+        - name: CTRLD
+          offset: 0x03
+          fields:
+            AC2REFSEL:
+                kind: RAW
+                LSB: 0
+                MSB: 2
 
     config:
-        channels:
-            - rb_select: CTRLA/ADC0REFSEL
-              references: [ 0.55, 1.1, 2.5, 4.3, 1.5 ]
-
-            - rb_select: CTRLA/DAC0REFSEL
-              references: [ 0.55, 1.1, 2.5, 4.3, 1.5 ]
-
         #arbitrary values below
         temp_cal_25C: 0.3
         temp_cal_coef: 0.0011

@@ -158,9 +158,16 @@ peripherals:
         base: 0x0100
 
     VREF:
-        class: VREF_tiny0
+        class: VREF
         file: ArchXT_analog.yml
         base: 0x00A0
+        config:
+            channels:
+                - rb_select: CTRLA/ADC0REFSEL
+                  references: [ 0.55, 1.1, 2.5, 4.3, 1.5 ]
+
+                - rb_select: CTRLA/AC0REFSEL
+                  references: [ 0.55, 1.1, 2.5, 4.3, 1.5 ]
 
     ADC0:
         class: ADC
