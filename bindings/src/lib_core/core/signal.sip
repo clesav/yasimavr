@@ -188,32 +188,3 @@ public:
     virtual void raised(const signal_data_t&, int) final;
 
 };
-
-
-class DataSignalMux : public SignalHook {
-%TypeHeaderCode
-#include "core/sim_signal.h"
-%End
-
-public:
-
-    DataSignalMux();
-
-    virtual void raised(const signal_data_t&, int);
-
-    size_t add_mux();
-    size_t add_mux(DataSignal&);
-    size_t add_mux(DataSignal&, int);
-    size_t add_mux(DataSignal&, int, long long);
-
-    DataSignal& signal();
-
-    void set_selection(size_t);
-    size_t selected_index() const;
-    bool connected() const;
-
-private:
-
-    DataSignalMux& operator=(const DataSignalMux&);
-
-};

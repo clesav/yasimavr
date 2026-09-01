@@ -116,11 +116,6 @@ bool ArchAVR_ACP::init(Device& device)
                 m_input_hook.add_filter(tag, VREF::Signal_IntRefChange, 0);
             } break;
 
-            case Channel_Temperature: {
-                vref_sig->connect(m_input_hook, tag);
-                m_input_hook.add_filter(tag, VREF::Signal_TempChange);
-            } break;
-
             default: break;
 
         }
@@ -183,9 +178,6 @@ double ArchAVR_ACP::read_neg_channel() const
 
         case Channel_IntRef:
             return m_input_hook.data(HookTag_IntRef, VREF::Signal_IntRefChange, 0).as_double();
-
-        case Channel_Temperature:
-            return m_input_hook.data(HookTag_IntRef, VREF::Signal_TempChange).as_double();
 
         default:
             return 0.0;

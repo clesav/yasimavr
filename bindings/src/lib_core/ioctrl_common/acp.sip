@@ -32,7 +32,6 @@ enum Channel {
     Channel_IntRef      /PyName=IntRef/,
     Channel_DAC         /PyName=DAC/,
     Channel_Zero        /PyName=Zero/,
-    Channel_Temperature /PyName=Temperature/,
 };
 
  struct channel_config_t : base_reg_config_t {

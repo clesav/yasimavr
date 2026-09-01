@@ -54,8 +54,6 @@ enum Channel {
     Channel_DAC,
     /// Ground reference channel
     Channel_Zero,
-    /// Internal temperature sensor voltage
-    Channel_Temperature,
 };
 
 /**

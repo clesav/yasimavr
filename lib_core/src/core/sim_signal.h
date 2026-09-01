@@ -67,6 +67,8 @@ public:
 
     SignalHook& operator=(const SignalHook&) = delete;
 
+protected:
+
     /**
        Pure virtual callback called during signal raises.
        \param sigdata Data structure passed on when raising a signal
@@ -174,63 +176,6 @@ private:
     virtual bool is_data_signal() const override;
 
 };
-
-
-//=======================================================================================
-
-class AVR_CORE_PUBLIC_API DataSignalMux : public SignalHook {
-
-public:
-
-    DataSignalMux();
-
-    virtual void raised(const signal_data_t& sigdata, int hooktag) override;
-
-    size_t add_mux();
-    size_t add_mux(DataSignal& signal);
-    size_t add_mux(DataSignal& signal, int sigid_filt);
-    size_t add_mux(DataSignal& signal, int sigid_filt, long long ix_filt);
-
-    DataSignal& signal();
-
-    void set_selection(size_t index);
-    size_t selected_index() const;
-    bool connected() const;
-
-private:
-
-    struct mux_item_t {
-        DataSignal* signal;
-        int sigid_filt;
-        long long index_filt;
-        uint8_t filt_mask;
-        vardata_t data;
-
-        bool match(const signal_data_t& sigdata) const;
-    };
-
-    std::vector<mux_item_t> m_items;
-    DataSignal m_signal;
-    size_t m_sel_index;
-
-    size_t add_mux(mux_item_t& item);
-
-};
-
-inline DataSignal& DataSignalMux::signal()
-{
-    return m_signal;
-}
-
-inline size_t DataSignalMux::selected_index() const
-{
-    return m_sel_index;
-}
-
-inline bool DataSignalMux::connected() const
-{
-    return (m_sel_index < m_items.size()) ? !!m_items[m_sel_index].signal : false;
-}
 
 
 //=======================================================================================

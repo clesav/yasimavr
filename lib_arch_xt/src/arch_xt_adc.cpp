@@ -23,6 +23,7 @@
 
 #include "arch_xt_adc.h"
 #include "arch_xt_acp.h"
+#include "arch_xt_dac.h"
 #include "avr_io/io_adc.h"
 #include "core/sim_sleep.h"
 
