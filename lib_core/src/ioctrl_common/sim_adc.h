@@ -27,6 +27,7 @@
 #include "../core/sim_peripheral.h"
 #include "../core/sim_pin.h"
 #include "../core/sim_types.h"
+#include "sim_vref.h"
 
 YASIMAVR_BEGIN_NAMESPACE
 
@@ -79,8 +80,12 @@ enum Channel {
     Channel_IntRef,
     /// Internal temperature sensor voltage
     Channel_Temperature,
-    /// Analog comparator reference input (used on ATMega0 and ATMega1 series)
-    Channel_AcompRef
+    /// Analog comparator reference
+    Channel_AcompRef,
+    /// DAC output
+    Channel_DAC,
+    /// VCC/VDD divided by 10
+    Channel_VDDDiv10,
 };
 
 /**
@@ -93,18 +98,28 @@ struct channel_config_t : base_reg_config_t {
     pin_id_t pin_p;
     /// %Pin ID used as negative input for differential channels, unused for other channel types.
     pin_id_t pin_n;
-    /// Used for Channel_AcompRef, index of the %ACP peripheral to get the reference value from.
+    /// Used for Channel_AcompRef or Channel_DAC, index of the peripheral to get the value from.
     char per_num;
     /// Measurement gain applied to the voltage value. Must be non-zero.
     unsigned int gain;
 };
 
+
+struct reference_config_t: base_reg_config_t {
+    VREF::Source source;
+    double level;
+};
+
+
 enum SignalId {
     /// Raised at the start of a conversion
     Signal_ConversionStarted,
-    /// Raised just before the %ADC is sampling the inputs. Last chance to set the analog values
+    /// Raised just before the %ADC is sampling a pin. Last chance to set the analog value
     /// for it to be taken into account by the current conversion.
-    Signal_AboutToSample,
+    Signal_AboutToSamplePin,
+    /// Raised just before the %ADC is sampling the temperature. Last chance to set the analog value
+    /// for it to be taken into account by the current conversion.
+    Signal_AboutToSampleTemp,
     /// Raised when the conversion is complete and the CPU is notified that the conversion result is ready.
     Signal_ConversionComplete,
 };

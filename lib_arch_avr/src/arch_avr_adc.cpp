@@ -23,6 +23,7 @@
 
 #include "arch_avr_adc.h"
 #include "core/sim_sleep.h"
+#include <cmath>
 
 YASIMAVR_USING_NAMESPACE
 
@@ -41,8 +42,8 @@ ArchAVR_ADC::ArchAVR_ADC(int num, const CFG& config)
 ,m_config(config)
 ,m_state(ADC_Disabled)
 ,m_first(true)
-,m_timer_hook(*this, &ArchAVR_ADC::timer_raised)
 ,m_trigger(CFG::Trig_Manual)
+,m_timer_hook(*this, &ArchAVR_ADC::timer_raised)
 ,m_latched_ch_mux(0)
 ,m_latched_ref_mux(0)
 ,m_conv_value(0)
@@ -54,8 +55,7 @@ bool ArchAVR_ADC::init(Device& device)
 {
     bool status = Peripheral::init(device);
 
-    add_ioreg(m_config.reg_datal);
-    add_ioreg(m_config.reg_datah);
+    add_ioreg(m_config.rbc_result);
     add_ioreg(m_config.rb_chan_mux);
     add_ioreg(m_config.rb_ref_mux);
     add_ioreg(m_config.rb_enable);
@@ -71,13 +71,14 @@ bool ArchAVR_ADC::init(Device& device)
     status &= m_intflag.init(device,
                              m_config.rb_int_enable,
                              m_config.rb_int_flag,
-                             m_config.int_vector);
+                             m_config.iv_adc);
 
     m_timer.init(*device.cycle_manager(), logger());
     m_timer.signal().connect(m_timer_hook);
 
     return status;
 }
+
 
 void ArchAVR_ADC::reset(int)
 {
@@ -87,6 +88,7 @@ void ArchAVR_ADC::reset(int)
     m_conv_value = 0;
     m_timer.reset();
 }
+
 
 bool ArchAVR_ADC::ctlreq(ctlreq_id_t req, ctlreq_data_t* data)
 {
@@ -117,15 +119,21 @@ uint8_t ArchAVR_ADC::ioreg_read_handler(reg_addr_t addr, uint8_t value)
     return value;
 }
 
+
 void ArchAVR_ADC::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data)
 {
     if (addr == m_config.rb_enable) {
         //Positive edge on the enable bit (ADEN).
         //We reset the state and the prescaler and reconnect the trigger
         if (m_config.rb_enable.extract(data.posedge())) {
-            m_state = ADC_Idle;
-            m_first = true;
-            reset_prescaler();
+            //Check that the main voltage is set. If not, crash the device
+            VREF::getset_t vref_reqinfo = VREF::getset_t{ .source = VREF::Source_VCC };
+            ctlreq_data_t vref_reqdata = { .data = &vref_reqinfo };
+            if (device()->ctlreq(AVR_IOCTL_VREF, AVR_CTLREQ_VREF_GET, &vref_reqdata)) {
+                m_state = ADC_Idle;
+                m_first = true;
+                reset_prescaler();
+            }
         }
         //Negative edge on the enable bit (ADEN).
         //We disable the ADC, stop the cycle timer (if a conversion is running) and discconnect the trigger
@@ -145,7 +153,7 @@ void ArchAVR_ADC::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
     if (addr == m_config.rb_auto_trig || addr == m_config.rb_trig_mux) {
         if (test_ioreg(m_config.rb_auto_trig)) {
             uint8_t trig_reg_value = read_ioreg(m_config.rb_trig_mux);
-            auto trig_cfg = find_reg_config_p<CFG::trigger_config_t>(m_config.triggers, trig_reg_value);
+            auto trig_cfg = find_reg_config_p(m_config.triggers, trig_reg_value);
             m_trigger = trig_cfg ? trig_cfg->trigger : CFG::Trig_Manual;
         } else {
             m_trigger = CFG::Trig_Manual;
@@ -153,7 +161,7 @@ void ArchAVR_ADC::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& data
     }
 
     if (addr == m_config.rb_left_adj)
-        write_digital_value();
+        store_converted_value();
 
 }
 
@@ -180,7 +188,8 @@ void ArchAVR_ADC::start_conversion_cycle()
 
     //Backup the channel and reference mux values (as per the datasheet)
     m_latched_ch_mux = read_ioreg(m_config.rb_chan_mux);
-    m_latched_ref_mux = read_ioreg(m_config.rb_ref_mux);
+    if (m_config.rb_ref_mux.valid())
+        m_latched_ref_mux = read_ioreg(m_config.rb_ref_mux);
 
     //Number of cycle to do the conversion, including the time waiting for the first ADC clock tick
     int adc_ticks = 1 + (m_first) ? 13 : 2;
@@ -206,21 +215,26 @@ void ArchAVR_ADC::read_analog_value()
     logger().dbg("Reading analog value");
 
     //Find the channel mux configuration
-    auto ch_config = find_reg_config_p<channel_config_t>(m_config.channels, m_latched_ch_mux);
+    auto ch_config = find_reg_config_p(m_config.channels, m_latched_ch_mux);
     if (!ch_config)
         _crash("ADC: Invalid channel configuration");
 
-    //Find the reference voltage mux configuration and request the value from the VREF peripheral
-    auto ref_config = find_reg_config_p<CFG::reference_config_t>(m_config.references, m_latched_ref_mux);
-    if(!ref_config)
-        _crash("ADC: Invalid reference configuration");
+    double vref;
+    if (m_config.rb_ref_mux.valid()) {
+        //Find the reference voltage mux configuration and request the value from the VREF peripheral
+        auto ref_config = find_reg_config_p(m_config.references, m_latched_ref_mux);
+        if(!ref_config)
+            _crash("ADC: Invalid reference configuration");
 
-    VREF::getset_t vref_reqinfo;
-    vref_reqinfo = VREF::getset_t{ .source = ref_config->source };
-    ctlreq_data_t vref_reqdata = { .data = &vref_reqinfo };
-    if (!device()->ctlreq(AVR_IOCTL_VREF, AVR_CTLREQ_VREF_GET, &vref_reqdata))
-        _crash("ADC: Unable to obtain the voltage reference");
-    double vref = vref_reqinfo.voltage;
+        VREF::getset_t vref_reqinfo = VREF::getset_t{ .source = ref_config->source };
+        ctlreq_data_t vref_reqdata = { .data = &vref_reqinfo };
+        if (!device()->ctlreq(AVR_IOCTL_VREF, AVR_CTLREQ_VREF_GET, &vref_reqdata))
+            _crash("ADC: Unable to obtain the voltage reference");
+        vref = vref_reqinfo.voltage;
+    } else {
+        //If the ADC has no ref mux, the reference is assumed to be VCC
+        vref = 1.0;
+    }
 
     //Obtain the raw analog value depending on the channel mux configuration
     //The raw value is in the interval [0.0; 1.0] (or [-1.0; +1.0] for bipolar)
@@ -232,6 +246,9 @@ void ArchAVR_ADC::read_analog_value()
         case Channel_SingleEnded: {
             Pin* p = device()->find_pin(ch_config->pin_p);
             if (!p) _crash("ADC: Invalid pin configuration");
+
+            m_signal.raise(Signal_AboutToSamplePin, p->id());
+
             raw_value = p->voltage();
         } break;
 
@@ -240,21 +257,27 @@ void ArchAVR_ADC::read_analog_value()
             if (!p) _crash("ADC: Invalid pin configuration");
             Pin* n = device()->find_pin(ch_config->pin_n);
             if (!n) _crash("ADC: Invalid pin configuration");
+
+            m_signal.raise(Signal_AboutToSamplePin, p->id());
+            m_signal.raise(Signal_AboutToSamplePin, n->id());
+
             raw_value = p->voltage() - n->voltage();
-            bipolar = test_ioreg(m_config.rb_bipolar);
+
+            bipolar = m_config.rb_bipolar.valid() && test_ioreg(m_config.rb_bipolar);
         } break;
 
         case Channel_IntRef: {
-            vref_reqinfo = VREF::getset_t{ .source = VREF::Source_Mux, .channel = m_config.vref_channel };
-            if (!device()->ctlreq(AVR_IOCTL_VREF, AVR_CTLREQ_VREF_GET, &vref_reqdata))
-                _crash("ADC: Unable to obtain the band gap voltage value");
+            VREF::getset_t vref_reqinfo = VREF::getset_t{ .source = VREF::Source_Mux, .channel = m_config.vref_channel };
+            ctlreq_data_t vref_reqdata = { .data = &vref_reqinfo };
+            device()->ctlreq(AVR_IOCTL_VREF, AVR_CTLREQ_VREF_GET, &vref_reqdata);
             raw_value = vref_reqinfo.voltage;
         } break;
 
         case Channel_Temperature: {
-            vref_reqinfo = VREF::getset_t{ .source = VREF::Source_Temperature };
-            if (!device()->ctlreq(AVR_IOCTL_VREF, AVR_CTLREQ_VREF_GET, &vref_reqdata))
-                _crash("ADC: Unable to obtain the temperature value");
+            m_signal.raise(Signal_AboutToSampleTemp);
+            VREF::getset_t vref_reqinfo = VREF::getset_t{ .source = VREF::Source_Temperature };
+            ctlreq_data_t vref_reqdata = { .data = &vref_reqinfo };
+            device()->ctlreq(AVR_IOCTL_VREF, AVR_CTLREQ_VREF_GET, &vref_reqdata);
             raw_value = vref_reqinfo.voltage;
         } break;
 
@@ -263,23 +286,31 @@ void ArchAVR_ADC::read_analog_value()
             raw_value = 0.0;
     }
 
-    //Clip the raw analog value to the interval [-VCC; +VCC]
+    //Applies the channel gain
+    raw_value *= ch_config->gain;
+    //Make the final value relative to VREF
+    raw_value /= vref;
+    //Constraint the raw analog value to the interval [-1.0; +1.0]
     if (raw_value < -1.0) raw_value = -1.0;
     if (raw_value > 1.0) raw_value = 1.0;
 
-    //Applies the channel configuration gain
-    raw_value *= ch_config->gain;
-
-    //Convert the raw value to a 10-bits integer value with respect to VREF
+    //Convert the raw value to an integer value with respect to bipolar/unipolar mode
+    int32_t int_range, int_min;
     if (bipolar) {
-        m_conv_value = int(raw_value * 512 / vref);
-        if (m_conv_value > 511) m_conv_value = 511;
-        if (m_conv_value < -512) m_conv_value = -512;
+        int_range = 1 << (m_config.result_width - 1);
+        int_min = -int_range;
     } else {
-        m_conv_value = int(raw_value * 1024 / vref);
-        if (m_conv_value > 1023) m_conv_value = 1023;
-        if (m_conv_value < 0) m_conv_value = 0;
+        int_range = 1 << m_config.result_width;
+        int_min = 0;
     }
+
+    int32_t int_result = lrint(raw_value * int_range);
+    if (int_result >= int_range)
+        int_result = int_range - 1;
+    if (int_result < int_min)
+        int_result = int_min;
+
+    m_conv_value = int_result;
 }
 
 
@@ -288,9 +319,6 @@ void ArchAVR_ADC::timer_raised(const signal_data_t& sigdata, int)
     if (sigdata.index != 1) return;
 
     if (m_state == ADC_PendingConversion) {
-        //Raise the signal
-        m_signal.raise(Signal_AboutToSample, m_latched_ch_mux);
-
         read_analog_value();
 
         m_state = ADC_PendingRaise;
@@ -298,22 +326,20 @@ void ArchAVR_ADC::timer_raised(const signal_data_t& sigdata, int)
         //The next time this cycle timer is called is when the conversion
         //is complete (13 ADC clock ticks)
         m_timer.set_timer_delay(13);
-
     }
 
     else if (m_state == ADC_PendingRaise) {
 
         //Raise the signal
-        m_signal.raise(Signal_ConversionComplete, m_latched_ch_mux);
+        m_signal.raise(Signal_ConversionComplete);
 
         //Store the converted value in the data register according to the adjusting
-        write_digital_value();
+        store_converted_value();
 
         m_state = ADC_Idle;
         m_first = false;
 
-        if (m_intflag.set_flag())
-            logger().dbg("Interrupt triggered");
+        m_intflag.set_flag();
 
         //If free running auto-trigger is enabled, start a new conversion cycle
         if (m_trigger == CFG::Trig_FreeRunning) {
@@ -327,21 +353,17 @@ void ArchAVR_ADC::timer_raised(const signal_data_t& sigdata, int)
  * Method that stores the converted value in the data registers according to the
  * left adjust settings
  */
-void ArchAVR_ADC::write_digital_value()
+void ArchAVR_ADC::store_converted_value()
 {
-    uint8_t sign = (m_conv_value < 0 ? 1 : 0);
-    uint16_t v = (m_conv_value < 0 ? -m_conv_value : m_conv_value);
-
-    uint16_t r;
-    if (test_ioreg(m_config.rb_left_adj))
-        r = (sign << 15) | (v << 5);
+    int32_t adj_result;
+    if (m_config.rb_left_adj.valid() && test_ioreg(m_config.rb_left_adj))
+        adj_result = m_conv_value << (m_config.rbc_result.bitcount() - m_config.result_width);
     else
-        r = (sign << 10) | v;
+        adj_result = m_conv_value;
 
-    logger().dbg("Converted value: 0x%04x", r);
+    logger().dbg("Converted value: 0x%04x", adj_result);
 
-    write_ioreg(m_config.reg_datah, r >> 8);
-    write_ioreg(m_config.reg_datal, r & 0x00FF);
+    write_ioreg(m_config.rbc_result, adj_result);
 }
 
 

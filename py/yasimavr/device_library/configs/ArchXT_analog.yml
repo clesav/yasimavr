@@ -19,6 +19,7 @@
 
 ---
 #========================================================================================
+#Class configuration for ADC mode 1 (as used in ATMega 0-series for example)
 ADC:
     registers:
         - name: CTRLA
@@ -161,8 +162,202 @@ ADC:
         iv_resready: ADC0_RESRDY
         iv_wincmp: ADC0_WCOMP
 
+
 #========================================================================================
-ACP_mega0:
+#Class configuration for ADC mode 2 (as used in ATTiny 2-series for example)
+ADC2:
+    registers:
+        - name: CTRLA
+          offset: 0x00
+          fields:
+            ENABLE: { kind: BIT, pos: 0, one: enabled, zero: disabled }
+            LOWLAT: { kind: BIT, pos: 5, one: enabled, zero: disabled }
+            RUNSTBY: { kind: BIT, pos: 7, one: enabled, zero: disabled }
+
+        - name: CTRLB
+          offset: 0x01
+          fields:
+            PRESC:
+                kind: ENUM
+                LSB: 0
+                MSB: 3
+                values: [ DIV2, DIV4, DIV6, DIV8, DIV10, DIV12, DIV14, DIV16,
+                          DIV20, DIV24, DIV28, DIV32, DIV40, DIV48, DIV56, DIV64 ]
+
+        - name: CTRLC
+          offset: 0x02
+          fields:
+            REFSEL:
+                kind: ENUM
+                LSB: 0
+                MSB: 2
+                values: { 0:VDD, 2:VREFA, 4:1024MV, 5:2048MV, 6:2500MV, 7:4096MV }
+            TIMEBASE:
+                kind: INT
+                LSB: 3
+                MSB: 7
+
+        - name: CTRLD
+          offset: 0x03
+          fields:
+            WINCM:
+                kind: ENUM
+                LSB: 0
+                MSB: 2
+                values: [ NONE, BELOW, ABOVE, INSIDE, OUTSIDE ]
+            WINSRC: { kind: BIT, pos: 3, one: SAMPLE, zero: RESULT }
+
+        - name: INTCTRL
+          offset: 0x04
+          fields:
+            RESRDY: { kind: BIT, pos: 0 }
+            SAMPRDY: { kind: BIT, pos: 1 }
+            WCMP: { kind: BIT, pos: 2 }
+            RESOVR: { kind: BIT, pos: 3 }
+            SAMPOVR: { kind: BIT, pos: 4 }
+            TRIGOVR: { kind: BIT, pos: 5 }
+
+        - name: INTFLAGS
+          offset: 0x05
+          fields:
+            RESRDY: { kind: BIT, pos: 0 }
+            SAMPRDY: { kind: BIT, pos: 1 }
+            WCMP: { kind: BIT, pos: 2 }
+            RESOVR: { kind: BIT, pos: 3 }
+            SAMPOVR: { kind: BIT, pos: 4 }
+            TRIGOVR: { kind: BIT, pos: 5 }
+
+        - name: STATUS
+          offset: 0x06
+          fields:
+            ADCBUSY: { kind: BIT, pos: 0, readonly: yes }
+
+        - name: DBGCTRL
+          offset: 0x07
+          supported: no
+
+        - name: CTRLE
+          offset: 0x08
+          fields:
+            SAMPDUR:
+                kind: INT
+
+        - name: CTRLF
+          offset: 0x09
+          fields:
+            SAMPNUM:
+                kind: ENUM
+                LSB: 0
+                MSB: 3
+                values: [ NONE, ACC2, ACC4, ACC8, ACC16, ACC32,
+                          ACC64, ACC128, ACC256, ACC512, ACC1024 ]
+            LEFTADJ: { kind: BIT, pos: 4, one: enabled, zero: disabled }
+            FREERUN: { kind: BIT, pos: 5, one: enabled, zero: disabled }
+
+        - name: COMMAND
+          offset: 0x0A
+          fields:
+            START:
+                kind: ENUM
+                LSB: 0
+                MSB: 2
+                values: [ STOP, IMMEDIATE, MUXPOS_WRITE, MUXNEG_WRITE, EVENT_TRIGGER ]
+            MODE:
+                kind: ENUM
+                LSB: 4
+                MSB: 6
+                values: [ SINGLE8BIT, SINGLE12BIT, SERIES, SERIES_SCALING, BURST, BURST_SCALING ]
+            DIFF: { kind: BIT, pos: 7, one: signed, zero: unsigned }
+
+        - name: PGACTRL
+          offset: 0x0B
+          fields:
+            PGAEN: { kind: BIT, pos: 0, one: enabled, zero: disabled }
+            ADCPGASAMPDUR:
+                kind: ENUM
+                LSB: 1
+                MSB: 2
+                values: [ 6CLK, 15CLK, 20CLK ]
+            PGABIASSEL:
+                kind: ENUM
+                LSB: 3
+                MSB: 4
+                values: [ 1X, 3_4X, 1_2X, 1_4X ]
+                supported: no
+            GAIN:
+                kind: ENUM
+                LSB: 5
+                MSB: 7
+                values: [ 1X, 2X, 4X, 8X, 16X ]
+
+        - name: MUXPOS
+          offset: 0x0C
+          fields:
+            MUXPOS:
+                kind: RAW
+                LSB: 0
+                MSB: 5
+            VIA:
+                kind: ENUM
+                LSB: 6
+                MSB: 7
+                values: { 0:DIRECT, 1:PGA }
+
+        - name: MUXNEG
+          offset: 0x0D
+          fields:
+            MUXNEG:
+                kind: RAW
+                LSB: 0
+                MSB: 5
+            VIA:
+                kind: ENUM
+                LSB: 6
+                MSB: 7
+                values: { 0:DIRECT, 1:PGA }
+
+        - name: RESULT
+          offset: 0x10
+          size: 4
+          kind: INT
+
+        - name: SAMPLE
+          offset: 0x14
+          size: 2
+          kind: INT
+
+        - name: TEMP
+          offset: 0x18
+          kind: INT
+          supported: no
+
+        - name: WINLT
+          offset: 0x1C
+          size: 2
+          kind: INT
+
+        - name: WINHT
+          offset: 0x1E
+          size: 2
+          kind: INT
+
+    config:
+        references:
+            0 : AVCC
+            2 : AREF
+            4 : 1.024
+            5 : 2.048
+            6 : 2.500
+            7 : 4.096
+        vref_channel: 0
+        clk_ps_factors: [ 2, 4, 6, 8,
+                          10, 12, 14, 16,
+                          20, 24, 28, 32,
+                          40, 48, 56, 64 ]
+        clk_ps_max: 64
+
+#========================================================================================
+ACP:
     registers:
         - name: CTRLA
           offset: 0x00
@@ -186,67 +381,18 @@ ACP_mega0:
           offset: 0x02
           fields:
             MUXNEG:
-                kind: ENUM
+                kind: RAW
                 LSB: 0
                 MSB: 1
-                values: [ AINN0, AINN1, AINN2, DACREF ]
             MUXPOS:
-                kind: ENUM
+                kind: RAW
                 LSB: 3
                 MSB: 4
-                values: [ AINP0, AINP1, AINP2, AINP3 ]
             INVERT: { kind: BIT, pos: 7, one: enabled, zero: disabled }
 
         - name: DACREF
           offset: 0x04
           kind: INT
-
-        - name: INTCTRL
-          offset: 0x06
-          fields:
-            CMP: { kind: BIT, pos: 0 }
-
-        - name: STATUS
-          offset: 0x07
-          fields:
-            CMP: { kind: BIT, pos: 0 }
-            STATE: { kind: BIT, pos: 4, readonly: yes }
-
-
-ACP_tiny0:
-    registers:
-        - name: CTRLA
-          offset: 0x00
-          fields:
-            ENABLE: { kind: BIT, pos: 0, one: enabled, zero: disabled }
-            HYSMODE:
-                kind: ENUM
-                LSB: 1
-                MSB: 2
-                values: [ NONE, SMALL, MEDIUM, LARGE ]
-            LPMODE: { kind: BIT, pos: 3, one: enabled, zero: disabled }
-            INTMODE:
-                kind: ENUM
-                LSB: 4
-                MSB: 5
-                values: { 0x00: BOTHEDGE, 0x02: NEGEDGE, 0x03: POSEDGE }
-            OUTEN: { kind: BIT, pos: 6, supported: no }
-            RUNSTDBY: { kind: BIT, pos: 7, one: enabled, zero: disabled }
-
-        - name: MUXCTRLA
-          offset: 0x02
-          fields:
-            MUXNEG:
-                kind: ENUM
-                LSB: 0
-                MSB: 1
-                values: [ AINN0, AINN1, VREF ]
-            MUXPOS:
-                kind: ENUM
-                LSB: 3
-                MSB: 4
-                values: [ AINP0, AINP1 ]
-            INVERT: { kind: BIT, pos: 7, one: enabled, zero: disabled }
 
         - name: INTCTRL
           offset: 0x06
@@ -274,66 +420,45 @@ DAC:
           kind: INT
 
 #========================================================================================
-VREF_mega0:
+VREF:
     registers:
         - name: CTRLA
           offset: 0x00
           fields:
             AC0REFSEL:
-                kind: ENUM
+                kind: RAW
                 LSB: 0
                 MSB: 2
-                values: [ 0V55, 1V1, 2V5, 4V3, 1V5 , null, null, AVCC ]
             ADC0REFSEL:
-                kind: ENUM
+                kind: RAW
                 LSB: 4
                 MSB: 6
-                values: [ 0V55, 1V1, 2V5, 4V3, 1V5 ]
 
         - name: CTRLB
           offset: 0x01
           supported: no
 
-    config:
-        channels:
-            - rb_select: CTRLA/ADC0REFSEL
-              references: [ 0.55, 1.1, 2.5, 4.3, 1.5 ]
-
-            - rb_select: CTRLA/AC0REFSEL
-              references: [ 0.55, 1.1, 2.5, 4.3, 1.5, null, null, AVCC ]
-
-        #arbitrary values below
-        temp_cal_25C: 0.3
-        temp_cal_coef: 0.0011
-
-VREF_tiny0:
-    registers:
-        - name: CTRLA
-          offset: 0x00
+        - name: CTRLC
+          offset: 0x02
           fields:
-            DAC0REFSEL:
-                kind: ENUM
+            AC1REFSEL:
+                kind: RAW
                 LSB: 0
                 MSB: 2
-                values: [ 0V55, 1V1, 2V5, 4V3, 1V5 ]
-            ADC0REFSEL:
-                kind: ENUM
+            ADC1REFSEL:
+                kind: RAW
                 LSB: 4
                 MSB: 6
-                values: [ 0V55, 1V1, 2V5, 4V3, 1V5 ]
 
-        - name: CTRLB
-          offset: 0x01
-          supported: no
+        - name: CTRLD
+          offset: 0x03
+          fields:
+            AC2REFSEL:
+                kind: RAW
+                LSB: 0
+                MSB: 2
 
     config:
-        channels:
-            - rb_select: CTRLA/ADC0REFSEL
-              references: [ 0.55, 1.1, 2.5, 4.3, 1.5 ]
-
-            - rb_select: CTRLA/DAC0REFSEL
-              references: [ 0.55, 1.1, 2.5, 4.3, 1.5 ]
-
         #arbitrary values below
         temp_cal_25C: 0.3
         temp_cal_coef: 0.0011

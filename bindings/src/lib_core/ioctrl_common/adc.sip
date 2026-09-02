@@ -46,23 +46,30 @@ enum Channel {
     Channel_IntRef          /PyName=IntRef/,
     Channel_Temperature     /PyName=Temperature/,
     Channel_AcompRef        /PyName=AcompRef/,
+    Channel_DAC             /PyName=DAC/,
+    Channel_VDDDiv10        /PyName=VDDDiv10/,
 };
 
 
 struct channel_config_t : base_reg_config_t {
-
     ADC::Channel type;
     pin_id_t pin_p;
     pin_id_t pin_n;
     char per_num;
     unsigned int gain;
+};
 
+
+struct reference_config_t : base_reg_config_t {
+    VREF::Source source;
+    double level;
 };
 
 
 enum SignalId /BaseType=IntEnum/ {
     Signal_ConversionStarted    /PyName=ConversionStarted/,
-    Signal_AboutToSample        /PyName=AboutToSample/,
+    Signal_AboutToSamplePin     /PyName=AboutToSamplePin/,
+    Signal_AboutToSampleTemp    /PyName=AboutToSampleTemp/,
     Signal_ConversionComplete   /PyName=ConversionComplete/,
 };
 

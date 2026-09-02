@@ -26,10 +26,6 @@ struct ArchAVR_ADCConfig {
 #include "arch_avr_adc.h"
 %End
 
-    struct reference_config_t : base_reg_config_t {
-        VREF::Source source;
-    };
-
     enum Trigger {
         Trig_Manual         /PyName=Manual/,
         Trig_FreeRunning    /PyName=FreeRunning/,
@@ -41,15 +37,13 @@ struct ArchAVR_ADCConfig {
     };
 
     std::vector<ADC::channel_config_t> channels;
-    std::vector<ArchAVR_ADCConfig::reference_config_t> references;
+    std::vector<ADC::reference_config_t> references;
     UnsignedLongVector clk_ps_factors;
     std::vector<ArchAVR_ADCConfig::trigger_config_t> triggers;
 
     unsigned int vref_channel;
 
-    reg_addr_t reg_datal;
-    reg_addr_t reg_datah;
-
+    regbit_compound_t rbc_result;
     regbit_t rb_chan_mux;
     regbit_t rb_ref_mux;
     regbit_t rb_enable;
@@ -62,8 +56,9 @@ struct ArchAVR_ADCConfig {
     regbit_t rb_bipolar;
     regbit_t rb_left_adj;
 
-    int_vect_t int_vector;
+    int_vect_t iv_adc;
 
+    unsigned int result_width;
 };
 
 

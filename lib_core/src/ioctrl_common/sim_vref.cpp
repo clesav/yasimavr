@@ -66,12 +66,12 @@ bool VREF::ctlreq(ctlreq_id_t req, ctlreq_data_t* reqdata)
     }
 
     else if (req == AVR_CTLREQ_VREF_GET) {
-        if (!m_vcc) {
+        getset_t* info = reqdata->data.as_ptr<getset_t>();
+
+        if (info->source != Source_VCC && !m_vcc) {
             device()->crash(CRASH_INVALID_CONFIG, "VREF not set for analog operations.");
             return false;
         }
-
-        getset_t* info = reqdata->data.as_ptr<getset_t>();
 
         switch (info->source) {
             case Source_VCC:
@@ -101,6 +101,12 @@ bool VREF::ctlreq(ctlreq_id_t req, ctlreq_data_t* reqdata)
 
         switch(info->source) {
             case Source_VCC: {
+                //Once set, we cannot reset VCC
+                if (m_vcc && info->voltage <= 0.0) {
+                    device()->crash(CRASH_INVALID_CONFIG, "Cannot reset VCC.");
+                    return false;
+                }
+
                 //Get the new VCC value and ensure it's not negative
                 m_vcc = info->voltage;
                 if (m_vcc < 0.0) m_vcc = 0.0;
@@ -123,7 +129,7 @@ bool VREF::ctlreq(ctlreq_id_t req, ctlreq_data_t* reqdata)
 
             case Source_Bandgap: {
                 m_references.at(info->channel).bandgap_voltage = info->voltage;
-                if (m_references.at(info->channel).mux_source == Source_Bandgap)
+                if (m_vcc && m_references.at(info->channel).mux_source == Source_Bandgap)
                     m_signal.raise(Signal_IntRefChange, reference(info->channel), info->channel);
             } break;
 
@@ -137,23 +143,22 @@ bool VREF::ctlreq(ctlreq_id_t req, ctlreq_data_t* reqdata)
     else if (req == AVR_CTLREQ_VREF_SET_MUX) {
         getset_t* info = reqdata->data.as_ptr<getset_t>();
 
-        if (!m_vcc) {
-            device()->crash(CRASH_INVALID_CONFIG, "VREF not set for analog operations.");
-            return false;
-        }
-
         m_references.at(info->channel).mux_source = info->source;
         if (info->source == Source_Bandgap && info->voltage >= 0.0)
             m_references.at(info->channel).bandgap_voltage = info->voltage;
 
-        m_signal.raise(Signal_IntRefChange, reference(info->channel), info->channel);
+        if (m_vcc)
+            m_signal.raise(Signal_IntRefChange, reference(info->channel), info->channel);
 
         return true;
     }
 
     else if (req == AVR_CTLREQ_VREF_SET_TEMP) {
         m_temperature = reqdata->data.as_double();
-        m_signal.raise(Signal_TempChange, temperature_reference());
+
+        if (m_vcc)
+            m_signal.raise(Signal_TempChange, temperature_reference());
+
         return true;
     }
 

@@ -49,7 +49,11 @@ enum Channel {
     /// Internal DAC voltage
     Channel_AcompRef,
     /// Internal reference voltage
-    Channel_IntRef
+    Channel_IntRef,
+    /// External DAC voltage
+    Channel_DAC,
+    /// Ground reference channel
+    Channel_Zero,
 };
 
 /**
@@ -60,6 +64,9 @@ struct channel_config_t : base_reg_config_t {
     Channel type;
     /// Pin ID used for external pin analog inputs
     pin_id_t pin;
+    /// Used for Channel_DAC, index of the peripheral to get the value from.
+    char per_num;
+
 };
 
 /**
@@ -70,7 +77,7 @@ enum SignalId {
     Signal_Output,
     /// Raised when the internal DAC value (if the peripheral has one) has changed. The data
     /// is the DAC voltage value
-    Signal_DAC
+    Signal_AcompRefChange
 };
 
 }; //namespace ACP

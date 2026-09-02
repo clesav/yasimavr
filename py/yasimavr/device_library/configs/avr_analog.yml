@@ -37,13 +37,13 @@ ACP:
             ACD: { kind: BIT, pos: 7, one: disabled, zero: enabled }
 
     config:
-        #mux_pins: #device specific
+        #neg_channels: #device specific
         #pos_pin: device specific
         #neg_pin: device specific
+        #rb_mux: device specific
         rb_disable: ACSR/ACD
         rb_mux_enable: ADC/ADCSRB/ACME
         rb_adc_enable: ADC/ADCSRA/ADEN
-        rb_mux: ADC/ADMUX/MUX[0:3]
         rb_bandgap_select: ACSR/ACBG
         rb_int_mode: ACSR/ACIS
         rb_output: ACSR/ACO

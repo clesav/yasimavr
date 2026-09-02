@@ -1,7 +1,7 @@
 /*
- * arch_xt_adc.sip
+ * arch_xt_adc2.sip
  *
- *  Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
+ *  Copyright 2026 Clement Savergne <csavergne@yahoo.com>
 
     This file is part of yasim-avr.
 
@@ -21,33 +21,46 @@
 
 //=======================================================================================
 
-struct ArchXT_ADCConfig {
+struct ArchXT_ADC2Config {
 %TypeHeaderCode
-#include "arch_xt_adc.h"
+#include "arch_xt_adc2.h"
 %End
 
-    std::vector<ADC::channel_config_t> channels;
+    enum Version {
+        V1,
+        V2,
+    };
+
+    struct conversion_config_t : base_reg_config_t {
+        uint8_t mode;
+    };
+
+    std::vector<ArchXT_ADC2Config::conversion_config_t> modes;
+    std::vector<ADC::channel_config_t> pos_channels;
+    std::vector<ADC::channel_config_t> neg_channels;
     std::vector<ADC::reference_config_t> references;
     unsigned int vref_channel;
     UnsignedLongVector clk_ps_factors;
     unsigned long clk_ps_max;
-    UnsignedLongVector init_delays;
 
     reg_addr_t reg_base;
 
+    int_vect_t iv_error;
+    int_vect_t iv_sampready;
     int_vect_t iv_resready;
-    int_vect_t iv_wincmp;
+
+    ArchXT_ADC2Config::Version version;
 
 };
 
 
-class ArchXT_ADC : public Peripheral /NoDefaultCtors/ {
+class ArchXT_ADC2 : public Peripheral /NoDefaultCtors/ {
 %TypeHeaderCode
-#include "arch_xt_adc.h"
+#include "arch_xt_adc2.h"
 %End
 
 public:
 
-    ArchXT_ADC(int, const ArchXT_ADCConfig& /KeepReference/);
+    ArchXT_ADC2(int, const ArchXT_ADC2Config& /KeepReference/);
 
 };

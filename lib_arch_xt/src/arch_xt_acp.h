@@ -93,17 +93,18 @@ private:
     const ArchXT_ACPConfig& m_config;
     InterruptFlag m_intflag;
     DataSignal m_signal;
-    //Pointer to the VREF signal to obtain ACP voltage reference updates
-    DataSignal* m_vref_signal;
-    DataSignalMux m_pos_mux;
-    DataSignalMux m_neg_mux;
-    BoundFunctionSignalHook<ArchXT_ACP> m_hook;
+    int m_curr_pos_input;
+    int m_curr_neg_input;
+    BoundFunctionSignalHook<ArchXT_ACP> m_input_hook;
     //Boolean indicating if the peripheral is disabled by the current sleep mode
     bool m_sleeping;
     //Hysteresis value
     double m_hysteresis;
 
-    bool register_channels(DataSignalMux& mux, const std::vector<ACP::channel_config_t>& channels);
+    bool register_channels(const std::vector<ACP::channel_config_t>& channels,
+                           Signal* vref_signal,
+                           bool polarity);
+    double read_channel(bool polarity);
     void input_raised(const signal_data_t& sigdata, int hooktag);
     void update_DAC();
     void update_hysteresis();

@@ -26,7 +26,7 @@ This module applies to devices ATmega80x/160x/320x/480x
 from ...lib import core as _corelib
 from ...lib import arch_xt as _archlib
 from ._base import (PeripheralBuilder, PeripheralConfigBuilder,
-                    IndexedPeripheralBuilder, LetteredPeripheralBuilder, DummyPeripheralBuilder,
+                    IndexedPeripheralBuilder, LetteredPeripheralBuilder,
                     DeviceBuilder, DeviceBuildError,
                     get_core_attributes, convert_to_regbit)
 
@@ -242,8 +242,8 @@ def _get_vref_builder():
 #========================================================================================
 #ADC management configuration
 
-def _adc_convertor(cfg, attr, yml_val, per_desc):
-    if attr == 'channels':
+def _generic_adc_convertor(cfg, attr, yml_val, per_desc):
+    if attr in ('channels', 'pos_channels', 'neg_channels'):
         py_chans = []
         for reg_value, item in yml_val.items():
             chan_cfg = _corelib.ADC.channel_config_t()
@@ -260,14 +260,21 @@ def _adc_convertor(cfg, attr, yml_val, per_desc):
             chan_cfg.type = _corelib.ADC.Channel[chan_type]
             py_chans.append(chan_cfg)
 
-        cfg.channels = py_chans
+        setattr(cfg, attr, py_chans)
 
     elif attr == 'references':
         py_refs = []
         for reg_value, item in yml_val.items():
-            ref_cfg = _archlib.ArchXT_ADCConfig.reference_config_t()
+            ref_cfg = _corelib.ADC.reference_config_t()
             ref_cfg.reg_value = reg_value
-            ref_cfg.source = _corelib.VREF.Source[item]
+
+            if isinstance(item, float):
+                ref_cfg.source = _corelib.VREF.Source.Bandgap
+                ref_cfg.level = item
+            else:
+                ref_cfg.source = _corelib.VREF.Source[item]
+                ref_cfg.level = -1.
+
             py_refs.append(ref_cfg)
 
         cfg.references = py_refs
@@ -282,9 +289,39 @@ def _adc_convertor(cfg, attr, yml_val, per_desc):
         raise Exception('Converter not implemented for ' + attr)
 
 
+def _adc_convertor(cfg, attr, yml_val, per_desc):
+    if attr == 'init_delays':
+        cfg.init_delays = yml_val
+
+    else:
+        _generic_adc_convertor(cfg, attr, yml_val, per_desc)
+
+
 def _get_adc_builder():
     cfg_builder = PeripheralConfigBuilder(_archlib.ArchXT_ADCConfig, _adc_convertor)
     return IndexedPeripheralBuilder(_archlib.ArchXT_ADC, cfg_builder)
+
+
+def _adc2_convertor(cfg, attr, yml_val, per_desc):
+    if attr == 'version':
+        cfg.version = _archlib.ArchXT_ADC2Config.Version[yml_val]
+
+    elif attr == 'modes':
+        py_conv_modes = []
+        for reg_value, item in yml_val.items():
+            ref_cfg = _archlib.ArchXT_ADC2Config.conversion_config_t()
+            ref_cfg.reg_value = reg_value
+            ref_cfg.mode = int(item)
+            py_conv_modes.append(ref_cfg)
+
+        cfg.modes = py_conv_modes
+
+    else:
+        _generic_adc_convertor(cfg, attr, yml_val, per_desc)
+
+def _get_adc2_builder():
+    cfg_builder = PeripheralConfigBuilder(_archlib.ArchXT_ADC2Config, _adc2_convertor)
+    return IndexedPeripheralBuilder(_archlib.ArchXT_ADC2, cfg_builder)
 
 
 #========================================================================================
@@ -296,14 +333,13 @@ def _acp_convertor(cfg, attr, yml_val, per_desc):
         for reg_value, item in yml_val.items():
             chan_cfg = _corelib.ACP.channel_config_t()
             chan_cfg.reg_value = reg_value
-            if isinstance(item, list):
-                chan_type = item[0]
-                if len(item) >= 2:
-                    chan_cfg.pin = item[1]
-            else:
-                chan_type = item
+            chan_cfg.type = _corelib.ACP.Channel[item[0] if isinstance(item, list) else item]
 
-            chan_cfg.type = _corelib.ACP.Channel[chan_type]
+            if chan_cfg.type == _corelib.ACP.Channel.Pin:
+                chan_cfg.pin = item[1]
+            elif chan_cfg.type == _corelib.ACP.Channel.DAC:
+                chan_cfg.per_num = item[1]
+
             py_chans.append(chan_cfg)
 
         setattr(cfg, attr, py_chans)
@@ -409,11 +445,10 @@ class XT_DeviceBuilder(DeviceBuilder):
         'TCA': _get_tca_builder,
         'TCB': _get_tcb_builder,
         'TCD': _get_tcd_builder,
-        'VREF_mega0': _get_vref_builder,
-        'VREF_tiny0': _get_vref_builder,
+        'VREF': _get_vref_builder,
         'ADC': _get_adc_builder,
-        'ACP_mega0': _get_acp_builder,
-        'ACP_tiny0': _get_acp_builder,
+        'ADC2': _get_adc2_builder,
+        'ACP': _get_acp_builder,
         'DAC': _get_dac_builder,
         'USART': _get_usart_builder,
         'SPI': _get_spi_builder,

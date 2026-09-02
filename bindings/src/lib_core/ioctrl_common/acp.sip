@@ -30,16 +30,19 @@ enum Channel {
     Channel_Pin         /PyName=Pin/,
     Channel_AcompRef    /PyName=AcompRef/,
     Channel_IntRef      /PyName=IntRef/,
+    Channel_DAC         /PyName=DAC/,
+    Channel_Zero        /PyName=Zero/,
 };
 
  struct channel_config_t : base_reg_config_t {
     ACP::Channel type;
     pin_id_t pin;
+    char per_num;
 };
 
 enum SignalId /BaseType=IntEnum/ {
-    Signal_Output       /PyName=Output/,
-    Signal_DAC          /PyName=DAC/,
+    Signal_Output             /PyName=Output/,
+    Signal_AcompRefChange     /PyName=AcompRefChange/,
 };
 
 }; //namespace ACP

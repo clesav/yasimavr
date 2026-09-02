@@ -38,6 +38,7 @@ YASIMAVR_USING_NAMESPACE
 
 %Include arch_xt_acp.sip
 %Include arch_xt_adc.sip
+%Include arch_xt_adc2.sip
 %Include arch_xt_clock.sip
 %Include arch_xt_dac.sip
 %Include arch_xt_device.sip

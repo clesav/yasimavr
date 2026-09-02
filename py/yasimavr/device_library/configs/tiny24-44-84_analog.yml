@@ -159,8 +159,7 @@ ADC:
             0b101: External
             0b110: External
         vref_channel: 0
-        reg_datal: ADCL
-        reg_datah: ADCH
+        rbc_result: ADC
         rb_chan_mux: ADMUX/MUX
         rb_ref_mux: ADMUX/REFS
         rb_enable: ADCSRA/ADEN
@@ -172,4 +171,5 @@ ADC:
         rb_trig_mux: ADCSRB/ADTS
         rb_left_adj: ADCSRB/ADLAR
         rb_bipolar: ADCSRB/BIN
-        int_vector: ADC
+        iv_adc: ADC
+        result_width: 10
