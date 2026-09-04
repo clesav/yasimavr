@@ -111,10 +111,12 @@ bool Device::init(CycleManager& cycle_manager)
     cycle_manager.signal().connect(m_cycle_manager_hook);
 
     m_log_handler.init(cycle_manager);
+    
+    const char* devname = m_config.name.c_str();
 
-    m_logger.dbg("Initialisation of %s core", m_config.name.c_str());
+    m_logger.dbg("Initialisation of %s core", devname);
     if (!m_core.init(*this)) {
-        m_logger.err("Initialisation of %s core failed.", m_config.name.c_str());
+        m_logger.err("Initialisation of %s core failed.", devname);
         return false;
     }
 
@@ -122,22 +124,20 @@ bool Device::init(CycleManager& cycle_manager)
         std::string per_name = per->id().str();
         m_logger.dbg("Initialisation of peripheral '%s'", per_name.c_str());
         if (!per->init(*this)) {
-            m_logger.err("Initialisation of peripheral '%s' of %s failed.",
-                         per_name.c_str(),
-                         m_config.name);
+            m_logger.err("Initialisation of peripheral '%s' of %s failed.", per_name.c_str(), devname);
             return false;
         }
     }
 
     if (!arch_init()) {
-        m_logger.err("Architecture initialisation stub failed.", m_config.name);
+        m_logger.err("Architecture initialisation stub for %s failed.", devname);
         return false;
     }
 
     m_state = State_Ready;
     reset();
 
-    m_logger.dbg("Initialisation of device '%s' complete", m_config.name.c_str());
+    m_logger.dbg("Initialisation of device '%s' complete", devname);
 
     return true;
 }
