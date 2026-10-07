@@ -1,6 +1,6 @@
 # YAML configuration file for attiny84 variant
 #
-# Copyright 2025-2026 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2026 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -18,7 +18,7 @@
 # along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
 
 ---
-name: attiny24
+name: attiny44
 
 architecture: AVR
 
@@ -26,14 +26,14 @@ memory:
     data:
         regfile: [0x000, 0x01F]
         io: [0x020, 0x05F]
-        ram: [0x060, 0x0DF]
+        ram: [0x060, 0x15F]
     ram:
-        size: 128
+        size: 256
     flash:
-        size: 2048
+        size: 4096
         page_size: 64
     eeprom:
-        size: 128
+        size: 256
 
 core:
     extended_addressing: no
@@ -44,7 +44,7 @@ fuses:
     factory_values: [ 0xFF, 0xDF, 0x62 ]
     lock_byte: 0xFF
 
-device_signature: [ 0x1E, 0x91, 0x0B ]
+device_signature: [ 0x1E, 0x92, 0x07 ]
 
 access:
     lsb_first_on_write: yes
@@ -83,7 +83,7 @@ interrupts:
 
 peripherals:
     CPU:
-        file: AVRe/avr_controllers.yml
+        file: AVR/avr_controllers.yml
         register_map:
             GPIOR0: 0x13
             GPIOR1: 0x14
@@ -93,7 +93,7 @@ peripherals:
         file: tiny24-44-84_controllers.yml
 
     RSTCTRL:
-        file: AVRe/avr_controllers.yml
+        file: AVR/avr_controllers.yml
 
     SLPCTRL:
         file: tiny24-44-84_controllers.yml
@@ -111,7 +111,7 @@ peripherals:
             iv_ee_ready: EE_READY
 
     MISC:
-        file: AVRe/avr_controllers.yml
+        file: AVR/avr_controllers.yml
 
     PORTA:
         class: PORT
@@ -127,7 +127,7 @@ peripherals:
         file: tiny24-44-84_interfaces.yml
 
     TC0:
-        file: AVRe/avr_timers.yml
+        file: AVR/avr_timers.yml
         ctl_id: TC_0
         register_map:
             TCCRA: 0x30
@@ -153,7 +153,7 @@ peripherals:
             TIFR: 0x0B
 
     WDT:
-        file: AVRe/avr_timers.yml
+        file: AVR/avr_timers.yml
         register_map:
             WDTCSR: 0x21
 
@@ -162,7 +162,7 @@ peripherals:
         ctl_id: ADC0
 
     ACP:
-        file: AVRe/avr_analog.yml
+        file: AVR/avr_analog.yml
         ctl_id: ACP0
         register_map:
             ACSR: 0x30
@@ -181,7 +181,7 @@ peripherals:
                 0x07: [Pin, PA7]
 
     VREF:
-        file: AVRe/avr_analog.yml
+        file: AVR/avr_analog.yml
 
     USI:
         file: tiny24-44-84_interfaces.yml

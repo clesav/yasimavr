@@ -42,16 +42,16 @@ dev_tiny_0series:
     - XT/attiny0-series/attiny1607
 
 dev_megaxx8:
-    - AVRe/atmega48-88-168-328/atmega48
-    - AVRe/atmega48-88-168-328/atmega48p
-    - AVRe/atmega48-88-168-328/atmega88
-    - AVRe/atmega48-88-168-328/atmega88p
-    - AVRe/atmega48-88-168-328/atmega168
-    - AVRe/atmega48-88-168-328/atmega168p
-    - AVRe/atmega48-88-168-328/atmega328
-    - AVRe/atmega48-88-168-328/atmega328p
+    - AVR/atmega48-88-168-328/atmega48
+    - AVR/atmega48-88-168-328/atmega48p
+    - AVR/atmega48-88-168-328/atmega88
+    - AVR/atmega48-88-168-328/atmega88p
+    - AVR/atmega48-88-168-328/atmega168
+    - AVR/atmega48-88-168-328/atmega168p
+    - AVR/atmega48-88-168-328/atmega328
+    - AVR/atmega48-88-168-328/atmega328p
 
 dev_tinyx4:
-    - AVRe/attiny24-44-84/attiny24
-    - AVRe/attiny24-44-84/attiny44
-    - AVRe/attiny24-44-84/attiny84
+    - AVR/attiny24-44-84/attiny24
+    - AVR/attiny24-44-84/attiny44
+    - AVR/attiny24-44-84/attiny84

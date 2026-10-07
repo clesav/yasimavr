@@ -1,4 +1,4 @@
-# YAML configuration file for atmega48 variant
+# YAML configuration file for atmega88 variant
 #
 # Copyright 2023-2026 Clement Savergne <csavergne@yahoo.com>
 #
@@ -18,7 +18,7 @@
 # along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
 
 ---
-name: atmega48
+name: atmega88
 
 architecture: AVR
 
@@ -26,14 +26,14 @@ memory:
     data:
         regfile: [0x000, 0x01F]
         io: [0x020, 0x0FF]
-        ram: [0x100, 0x2FF]
+        ram: [0x100, 0x4FF]
     ram:
-        size: 512
+        size: 1024
     flash:
-        size: 4096
+        size: 8192
         page_size: 64
     eeprom:
-        size: 256
+        size: 512
 
 core:
     extended_addressing: no
@@ -41,10 +41,10 @@ core:
 
 fuses:
     size: 3
-    factory_values: [ 0x62, 0xDF, 0xFF ]
+    factory_values: [ 0x62, 0xDF, 0xF9 ]
     lock_byte: 0xFF
 
-device_signature: [ 0x1E, 0x92, 0x05 ]
+device_signature: [ 0x1E, 0x93, 0x0A ]
 
 access:
     lsb_first_on_write: yes
@@ -96,7 +96,7 @@ interrupts:
 
 peripherals:
     CPU:
-        file: AVRe/avr_controllers.yml
+        file: AVR/avr_controllers.yml
         register_map:
             GPIOR0: 0x1E
             GPIOR1: 0x2A
@@ -106,7 +106,7 @@ peripherals:
         file: mega48-88-168-328_controllers.yml
 
     RSTCTRL:
-        file: AVRe/avr_controllers.yml
+        file: AVR/avr_controllers.yml
 
     SLPCTRL:
         file: mega48-88-168-328_controllers.yml
@@ -115,8 +115,11 @@ peripherals:
         file: mega48-88-168-328_controllers.yml
 
     FUSES:
-        class: FUSES_48
+        class: FUSES_88_168
         file: mega48-88-168-328_controllers.yml
+        config:
+            nrww_start: 96
+            boot_sizes: [ 32, 16, 8, 4 ]
 
     NVMCTRL:
         file: mega48-88-168-328_controllers.yml
@@ -125,7 +128,7 @@ peripherals:
             iv_ee_ready: EE_READY
 
     MISC:
-        file: AVRe/avr_controllers.yml
+        file: AVR/avr_controllers.yml
 
     PORTB:
         class: PORT
@@ -146,7 +149,7 @@ peripherals:
         file: mega48-88-168-328_interfaces.yml
 
     TC0:
-        file: AVRe/avr_timers.yml
+        file: AVR/avr_timers.yml
         ctl_id: TC_0
         register_map:
             TCCRA: 0x24
@@ -176,7 +179,7 @@ peripherals:
         ctl_id: TC_2
 
     WDT:
-        file: AVRe/avr_timers.yml
+        file: AVR/avr_timers.yml
         register_map:
             WDTCSR: 0x40
 
@@ -185,7 +188,7 @@ peripherals:
         ctl_id: ADC0
 
     ACP:
-        file: AVRe/avr_analog.yml
+        file: AVR/avr_analog.yml
         ctl_id: ACP0
         register_map:
             ACSR: 0x30
@@ -204,7 +207,7 @@ peripherals:
                 0x07: [Pin, ADC7]
 
     VREF:
-        file: AVRe/avr_analog.yml
+        file: AVR/avr_analog.yml
 
     USART:
         file: mega48-88-168-328_interfaces.yml
