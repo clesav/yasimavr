@@ -93,36 +93,36 @@ interrupts:
 
 peripherals:
     CPU:
-        file: ArchXT_controllers.yml
+        file: XT/ArchXT_controllers.yml
 
     CPUINT:
-        file: ArchXT_controllers.yml
+        file: XT/ArchXT_controllers.yml
         base: 0x0110
 
     SLPCTRL:
-        file: ArchXT_controllers.yml
+        file: XT/ArchXT_controllers.yml
         base: 0x0050
 
     RSTCTRL:
-        file: ArchXT_controllers.yml
+        file: XT/ArchXT_controllers.yml
         base: 0x0040
 
     CLKCTRL:
-        file: ArchXT_controllers.yml
+        file: XT/ArchXT_controllers.yml
         base: 0x0060
 
     NVMCTRL:
-        file: ArchXT_controllers.yml
+        file: XT/ArchXT_controllers.yml
         base: 0x1000
         config:
            iv_eeready: NVMCTRL_EE
 
     MISC:
-        file: ArchXT_controllers.yml
+        file: XT/ArchXT_controllers.yml
 
     PORTA:
         class: PORT
-        file: ArchXT_interfaces.yml
+        file: XT/ArchXT_interfaces.yml
         base: 0x0400
         config:
             reg_base_port: 0x0400
@@ -131,7 +131,7 @@ peripherals:
 
     TCA0:
         class: TCA
-        file: ArchXT_timers.yml
+        file: XT/ArchXT_timers.yml
         base: 0x0A00
         config:
             iv_ovf: TCA0_OVF
@@ -141,25 +141,25 @@ peripherals:
 
     TCB0:
         class: TCB
-        file: ArchXT_timers.yml
+        file: XT/ArchXT_timers.yml
         base: 0x0A40
         config:
             iv_capt: TCB0
 
     RTC:
-        file: ArchXT_timers.yml
+        file: XT/ArchXT_timers.yml
         base: 0x0140
         config:
             iv_rtc: RTC_CNT
             iv_pit: RTC_PIT
 
     WDT:
-        file: ArchXT_timers.yml
+        file: XT/ArchXT_timers.yml
         base: 0x0100
 
     VREF:
         class: VREF
-        file: ArchXT_analog.yml
+        file: XT/ArchXT_analog.yml
         base: 0x00A0
         config:
             channels:
@@ -171,7 +171,7 @@ peripherals:
 
     ADC0:
         class: ADC
-        file: ArchXT_analog.yml
+        file: XT/ArchXT_analog.yml
         base: 0x0600
         config:
             channels:
@@ -194,7 +194,7 @@ peripherals:
 
     ACP0:
         class: ACP
-        file: ArchXT_analog.yml
+        file: XT/ArchXT_analog.yml
         base: 0x0680
         config:
             pos_channels:
@@ -207,7 +207,7 @@ peripherals:
 
     USART0:
         class: USART
-        file: ArchXT_interfaces.yml
+        file: XT/ArchXT_interfaces.yml
         base: 0x0800
         config:
             iv_rxc: USART0_RXC
@@ -216,14 +216,14 @@ peripherals:
 
     SPI0:
         class: SPI
-        file: ArchXT_interfaces.yml
+        file: XT/ArchXT_interfaces.yml
         base: 0x0820
         config:
             iv_spi: SPI0
 
     TWI0:
         class: TWI
-        file: ArchXT_interfaces.yml
+        file: XT/ArchXT_interfaces.yml
         base: 0x0810
         config:
             iv_host: TWI0_TWIM
@@ -232,16 +232,16 @@ peripherals:
 
     PORTMUX:
         class: PORTMUX_tiny0
-        file: ArchXT_interfaces.yml
+        file: XT/ArchXT_interfaces.yml
         base: 0x0200
 
     FUSES:
-        file: ArchXT_controllers.yml
+        file: XT/ArchXT_controllers.yml
         base: 0x1280
 
     USERROW:
         class: USERROW_32
-        file: ArchXT_controllers.yml
+        file: XT/ArchXT_controllers.yml
         base: 0x1300
 
 iomux:
