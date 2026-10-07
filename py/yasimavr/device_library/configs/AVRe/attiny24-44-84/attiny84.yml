@@ -83,7 +83,7 @@ interrupts:
 
 peripherals:
     CPU:
-        file: avr_controllers.yml
+        file: AVRe/avr_controllers.yml
         register_map:
             GPIOR0: 0x13
             GPIOR1: 0x14
@@ -93,7 +93,7 @@ peripherals:
         file: tiny24-44-84_controllers.yml
 
     RSTCTRL:
-        file: avr_controllers.yml
+        file: AVRe/avr_controllers.yml
 
     SLPCTRL:
         file: tiny24-44-84_controllers.yml
@@ -111,7 +111,7 @@ peripherals:
             iv_ee_ready: EE_READY
 
     MISC:
-        file: avr_controllers.yml
+        file: AVRe/avr_controllers.yml
 
     PORTA:
         class: PORT
@@ -127,7 +127,7 @@ peripherals:
         file: tiny24-44-84_interfaces.yml
 
     TC0:
-        file: avr_timers.yml
+        file: AVRe/avr_timers.yml
         ctl_id: TC_0
         register_map:
             TCCRA: 0x30
@@ -153,7 +153,7 @@ peripherals:
             TIFR: 0x0B
 
     WDT:
-        file: avr_timers.yml
+        file: AVRe/avr_timers.yml
         register_map:
             WDTCSR: 0x21
 
@@ -162,7 +162,7 @@ peripherals:
         ctl_id: ADC0
 
     ACP:
-        file: avr_analog.yml
+        file: AVRe/avr_analog.yml
         ctl_id: ACP0
         register_map:
             ACSR: 0x30
@@ -181,7 +181,7 @@ peripherals:
                 0x07: [Pin, PA7]
 
     VREF:
-        file: avr_analog.yml
+        file: AVRe/avr_analog.yml
 
     USI:
         file: tiny24-44-84_interfaces.yml
