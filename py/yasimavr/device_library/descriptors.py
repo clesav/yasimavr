@@ -496,6 +496,20 @@ class DeviceDescriptor:
     _cache = weakref.WeakValueDictionary()
 
 
+    def __init__(self):
+        self.name = ''
+        self.device_signature = []
+        self.architecture = None
+        self.mem = None
+        self.core_attributes = {}
+        self.fuses = {}
+        self.access_config = {}
+        self.pins = []
+        self.interrupt_map = None
+        self.peripherals = {}
+        self.iomux = {}
+
+
     @classmethod
     def create_from_model(cls, model):
         """Instantiate a device descriptor from a pre-defined device model configuration.
@@ -552,13 +566,16 @@ class DeviceDescriptor:
         return desc
 
 
-    def _load_config(self, yml_cfg, repositories):
+    def _load_config(self, yml_cfg, repositories, level=0):
 
-        self.name = str(yml_cfg['name'])
-
-        self.device_signature = list(yml_cfg['device_signature'])
+        if not level:
+            self.name = str(yml_cfg['name'])
+            self.device_signature = list(yml_cfg['device_signature'])
 
         if 'aliasof' in yml_cfg:
+            if 'inherits' in yml_cfg:
+                raise DeviceConfigException('Error, found both aliasof and inherits', file=self.name)
+
             alias = str(yml_cfg['aliasof']).lower()
             fn = _find_config_file(alias + '.yml', repositories)
             if fn is None:
@@ -570,31 +587,65 @@ class DeviceDescriptor:
                 msg = 'Error reading the configuration file for ' + alias
                 raise DeviceConfigException(msg, file=fn) from exc
 
+        elif 'inherits' in yml_cfg:
+            inherit = str(yml_cfg['inherits']).lower()
+            yml_fp = _find_config_file(inherit + '.yml', repositories)
+            if yml_fp is None:
+                raise DeviceConfigException('No configuration found for upper config file ' + inherit, file=self.name)
+
+            try:
+                upper_yml_cfg = load_config_file(yml_fp)
+            except Exception as exc:
+                msg = 'Error reading the configuration file for ' + inherit
+                raise DeviceConfigException(msg, file=self.name) from exc
+
+            self._load_config(upper_yml_cfg, repositories, level + 1)
+
+        if 'architecture' in yml_cfg:
+            if self.architecture:
+                raise DeviceConfigException('Architecture set twice', file=self.name)
+
+            self.architecture = str(yml_cfg['architecture'])
+            if self.architecture not in Architectures:
+                raise DeviceConfigException('Unsupported architecture: ' + self.architecture, file=self.name)
+
+        if 'memory' in yml_cfg:
+            if self.mem:
+                raise DeviceConfigException('Memory map set twice', file=self.name)
+            self.mem = MemoryDescriptor(yml_cfg['memory'])
+
+        if 'core' in yml_cfg:
+            if self.core_attributes:
+                raise DeviceConfigException('Core attributes set twice', file=self.name)
+            self.core_attributes = dict(yml_cfg['core'])
+
+        if 'fuses' in yml_cfg:
+            if self.fuses:
+                raise DeviceConfigException('Fuses set twice', file=self.name)
+            self.fuses = dict(yml_cfg['fuses'])
+
+        if 'access' in yml_cfg:
+            if self.access_config:
+                raise DeviceConfigException('Access set twice', file=self.name)
+            self.access_config = dict(yml_cfg['access'])
+
+        if 'interrupts' in yml_cfg:
+            if self.interrupt_map:
+                raise DeviceConfigException('Interrupts set twice', file=self.name)
+            self.interrupt_map = InterruptMapDescriptor(dict(yml_cfg['interrupts']))
+
+        self.pins.extend(yml_cfg.get('pins', ()))
+
         dev_loader = _DeviceDescriptorLoader(yml_cfg, repositories)
-
-        self.architecture = str(yml_cfg['architecture'])
-        if self.architecture not in Architectures:
-            raise DeviceConfigException('Unsupported architecture: ' + self.architecture)
-
-        self.mem = MemoryDescriptor(yml_cfg['memory'])
-
-        self.core_attributes = dict(yml_cfg['core'])
-
-        self.fuses = dict(yml_cfg.get('fuses', {}))
-
-        self.access_config = dict(yml_cfg.get('access', {}))
-
-        self.pins = list(yml_cfg['pins'])
-
-        self.interrupt_map = InterruptMapDescriptor(dict(yml_cfg['interrupts']))
-
-        self.peripherals = {}
-        for per_name, f in dict(yml_cfg['peripherals']).items():
+        for per_name, f in dict(yml_cfg.get('peripherals', {})).items():
+            if per_name in self.peripherals:
+                raise DeviceConfigException('Peripheral %s set twice' % per_name, file=self.name)
             self.peripherals[per_name] = PeripheralInstanceDescriptor(per_name, dev_loader, f, self)
 
-        self.iomux = {}
         yml_iomux = dict(yml_cfg.get('iomux', {}))
         for drv_name, cfg in yml_iomux.items():
+            if drv_name in self.iomux:
+                raise DeviceConfigException('Pin driver %s set twice' % per_name, file=self.name)
             self.iomux[drv_name] = dict(cfg)
 
 
