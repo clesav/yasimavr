@@ -1,6 +1,6 @@
 # __init__.py
 #
-# Copyright 2021 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -22,42 +22,40 @@
 * I/O registry and memory direct access
 '''
 
-from .descriptors import DeviceDescriptor, LibraryModelDatabase, load_config_file
+from ._device_db import device_database
+from .descriptors import DeviceDescriptor
 from .accessors import DeviceAccessor
 import importlib
 import os.path
 
+
 _factory_cache = {}
 
 def load_device(dev_name, verbose=False):
-    low_dev_name = dev_name.lower()
+    base_dev_name = os.path.basename(dev_name).lower()
 
-    if low_dev_name in _factory_cache:
+    cache_entry = _factory_cache.get(base_dev_name, None)
+    if cache_entry is not None:
         if verbose:
             print('Using device factory from cache')
-        return _factory_cache[low_dev_name](low_dev_name)
+        dev_factory, dev_fullname = cache_entry
+        return dev_factory(dev_fullname)
 
     from .builders import _base
     _base.VERBOSE = verbose
 
-    device_db = load_config_file(LibraryModelDatabase)
-    for f, dev_list in device_db.items():
-        if low_dev_name in dev_list:
-            dev_factory = f
-            break
-    else:
-        raise Exception('No model found for ' + dev_name)
+    dev_factory_modname, full_dev_name = device_database.find_device_entry(base_dev_name)
 
-    mod_name = '.builders.' + dev_factory
+    mod_name = '.builders.' + dev_factory_modname
     if verbose:
         print('Loading device factory module', mod_name)
 
     dev_mod = importlib.import_module(mod_name, __package__)
     importlib.invalidate_caches()
 
-    factory = getattr(dev_mod, 'device_factory')
-    _factory_cache[low_dev_name] = factory
-    return factory(low_dev_name)
+    dev_factory = getattr(dev_mod, 'device_factory')
+    _factory_cache[base_dev_name] = (dev_factory, full_dev_name)
+    return dev_factory(full_dev_name)
 
 
 def load_device_from_config(dev_descriptor, dev_class=None, verbose=False):
@@ -102,12 +100,7 @@ def load_device_from_config(dev_descriptor, dev_class=None, verbose=False):
 
 
 def model_list():
-    device_db = load_config_file(LibraryModelDatabase)
-    models = []
-    for dev_list in device_db.values():
-        models.extend(dev_list)
-
-    return models
+    return device_database.model_list()
 
 
 __all__ = ['load_device',

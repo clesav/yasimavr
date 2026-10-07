@@ -31,19 +31,10 @@ import collections
 import re
 
 from ..lib import core as _corelib
-
-
-from yaml import load as _yaml_load
-try:
-    from yaml import CLoader as _YAMLLoader
-except ImportError:
-    from yaml import SafeLoader as _YAMLLoader
-
+from ._device_db import LibraryRepository, load_config_file, device_database
 
 Architectures = ['AVR', 'XT']
 
-LibraryRepository = os.path.join(os.path.dirname(__file__), 'configs')
-LibraryModelDatabase = os.path.join(LibraryRepository, 'devices.yml')
 
 #List of path which are searched for YAML configuration files
 #This can be altered by the user
@@ -60,13 +51,12 @@ def _find_config_file(fn, repositories):
     return None
 
 
-def load_config_file(fn):
-    with open(fn) as f:
-        return _yaml_load(f, _YAMLLoader)
-
-
 class DeviceConfigException(Exception):
-    pass
+
+    def __init__(self, message, *, file=None):
+        if file is not None:
+            message += f' [{file}]'
+        super().__init__(message)
 
 
 class DataSegmentDescriptor(collections.namedtuple('DataSegmentDescriptor', ['start', 'end'])):
@@ -518,13 +508,11 @@ class DeviceDescriptor:
         Note that device descriptor are cached and a previously instantiated descriptor may be returned.
         """
 
-        lower_model = model.lower()
+        lower_model = os.path.basename(model).lower()
         if lower_model in cls._cache:
             return cls._cache[lower_model]
 
-        fn = _find_config_file(lower_model + '.yml', ConfigRepositories)
-        if fn is None:
-            raise DeviceConfigException('No configuration found for variant ' + model)
+        fn = device_database.find_device_path(lower_model)
 
         try:
             yml_cfg = load_config_file(fn)
@@ -532,8 +520,10 @@ class DeviceDescriptor:
             msg = 'Error reading the configuration file for ' + model
             raise DeviceConfigException(msg) from exc
 
+        repositories = [os.path.dirname(fn)] + ConfigRepositories
+
         desc = cls()
-        desc._load_config(yml_cfg, ConfigRepositories)
+        desc._load_config(yml_cfg, repositories)
         cls._cache[lower_model] = desc
         return desc
 
@@ -555,7 +545,7 @@ class DeviceDescriptor:
             yml_cfg = load_config_file(filename)
         except Exception as exc:
             msg = 'Error reading the configuration file'
-            raise DeviceConfigException(msg) from exc
+            raise DeviceConfigException(msg, file=filename) from exc
 
         desc = cls()
         desc._load_config(yml_cfg, r)
@@ -570,14 +560,15 @@ class DeviceDescriptor:
 
         if 'aliasof' in yml_cfg:
             alias = str(yml_cfg['aliasof']).lower()
-            fn = _find_config_file(alias + '.yml', ConfigRepositories)
+            fn = _find_config_file(alias + '.yml', repositories)
             if fn is None:
-                raise DeviceConfigException('No configuration found for alias ' + alias)
+                raise DeviceConfigException('No configuration found for alias ' + alias, file=self.name)
+
             try:
                 yml_cfg = load_config_file(fn)
             except Exception as exc:
                 msg = 'Error reading the configuration file for ' + alias
-                raise DeviceConfigException(msg) from exc
+                raise DeviceConfigException(msg, file=fn) from exc
 
         dev_loader = _DeviceDescriptorLoader(yml_cfg, repositories)
 
