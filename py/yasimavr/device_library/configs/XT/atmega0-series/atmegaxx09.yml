@@ -1,0 +1,207 @@
+# YAML configuration file for atmegaxx09 models
+#
+# Copyright 2026 Clement Savergne <csavergne@yahoo.com>
+#
+# This file is part of yasim-avr.
+#
+# yasim-avr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# yasim-avr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
+
+
+#This file contains the common configuration keys for atmegaxx09 models
+#(atmega809/1609/3209/4809)
+
+
+---
+inherits: atmega-0series
+
+pins: [ PA0, PA1, PA2, PA3, PA4, PA5, PA6, PA7,
+        PB0, PB1, PB2, PB3, PB4, PB5,
+        PC0, PC1, PC2, PC3, PC4, PC5, PC6, PC7,
+        PD0, PD1, PD2, PD3, PD4, PD5, PD6, PD7,
+        PE0, PE1, PE2, PE3,
+        PF0, PF1, PF2, PF3, PF4, PF5, PF6 ]
+
+interrupts:
+    vector_size: 4
+
+    vectors:
+        - RESET
+        - CRCSCAN
+        - BOD
+        - RTC_CNT
+        - RTC_PIT
+        - CCL
+        - PORTA
+        - TCA0_OVF
+        - TCA0_HUNF
+        - TCA0_CMP0
+        - TCA0_CMP1
+        - TCA0_CMP2
+        - TCB0
+        - TCB1
+        - TWI0_TWIS
+        - TWI0_TWIM
+        - SPI0
+        - USART0_RXC
+        - USART0_DRE
+        - USART0_TXC
+        - PORTD
+        - AC0
+        - ADC0_RESRDY
+        - ADC0_WCOMP
+        - PORTC
+        - TCB2
+        - USART1_RXC
+        - USART1_DRE
+        - USART1_TXC
+        - PORTF
+        - NVMCTRL_EE
+        - USART2_RXC
+        - USART2_DRE
+        - USART2_TXC
+        - PORTB
+        - PORTE
+        - TCB3
+        - USART3_RXC
+        - USART3_DRE
+        - USART3_TXC
+
+    sleep_mask:
+        Idle:       [ 0xFF, 0xFF, 0xFF, 0xFF, 0xFF ]
+        Standby:    [ 0x7F, 0x70, 0xB2, 0xA7, 0x3C ]
+        PowerDown:  [ 0x77, 0x40, 0x10, 0x21, 0x0C ]
+
+peripherals:
+    PORTB:
+        class: PORT
+        file: XT/ArchXT_interfaces.yml
+        base: 0x0420
+        config:
+            reg_base_port: 0x0420
+            reg_base_vport: 0x0004
+            iv_port: PORTB
+
+    PORTE:
+        class: PORT
+        file: XT/ArchXT_interfaces.yml
+        base: 0x0480
+        config:
+            reg_base_port: 0x0480
+            reg_base_vport: 0x0010
+            iv_port: PORTE
+
+    ADC0:
+        class: ADC
+        file: XT/ArchXT_analog.yml
+        base: 0x0600
+        config:
+            channels:
+                0x00: [ SingleEnded, PD0 ]
+                0x01: [ SingleEnded, PD1 ]
+                0x02: [ SingleEnded, PD2 ]
+                0x03: [ SingleEnded, PD3 ]
+                0x04: [ SingleEnded, PD4 ]
+                0x05: [ SingleEnded, PD5 ]
+                0x06: [ SingleEnded, PD6 ]
+                0x07: [ SingleEnded, PD7 ]
+                0x08: [ SingleEnded, PE0 ]
+                0x09: [ SingleEnded, PE1 ]
+                0x0A: [ SingleEnded, PE2 ]
+                0x0B: [ SingleEnded, PE3 ]
+                0x0C: [ SingleEnded, PF2 ]
+                0x0D: [ SingleEnded, PF3 ]
+                0x0E: [ SingleEnded, PF4 ]
+                0x0F: [ SingleEnded, PF5 ]
+                0x1C: AcompRef
+                0x1E: Temperature
+                0x1F: Zero
+            vref_channel: 0
+
+    TCB3:
+        class: TCB
+        file: XT/ArchXT_timers.yml
+        base: 0x0AB0
+        config:
+            iv_capt: TCB3
+
+    USART3:
+        class: USART
+        file: XT/ArchXT_interfaces.yml
+        base: 0x0860
+        config:
+            iv_rxc: USART3_RXC
+            iv_txc: USART3_TXC
+            iv_txe: USART3_DRE
+
+iomux:
+    TCA0:
+        PA: [ PA0, PA1, PA2, PA3, PA4, PA5 ]
+        PB: [ PB0, PB1, PB2, PB3, PB4, PB5 ]
+        PC: [ PC0, PC1, PC2, PC3, PC4, PC5 ]
+        PD: [ PD0, PD1, PD2, PD3, PD4, PD5 ]
+        PE: [ PE0, PE1, PE2, PE3, "",  ""  ]
+        PF: [ PF0, PF1, PF2, PF3, PF4, PF5 ]
+
+    TCB0:
+        DFLT: [ PA2 ]
+        ALT1: [ PF4 ]
+
+    TCB1:
+        DFLT: [ PA3 ]
+        ALT1: [ PF5 ]
+
+    TCB2:
+        DFLT: [ PC0 ]
+        ALT1: [ PB4 ]
+
+    TCB3:
+        DFLT: [ PB5 ]
+        ALT1: [ PC1 ]
+
+    USART0:
+        #TXD, RXD, XCK, XDIR
+        DFLT: [ PA0, PA1, PA2, PA3 ]
+        ALT1: [ PA4, PA5, PA6, PA7 ]
+        NONE: [ "",  "",  "",  ""  ]
+
+    USART1:
+        #TXD, RXD, XCK, XDIR
+        DFLT: [ PC0, PC1, PC2, PC3 ]
+        ALT1: [ PC4, PC5, PC6, PC7 ]
+        NONE: [ "",  "",  "",  ""  ]
+
+    USART2:
+        #TXD, RXD, XCK, XDIR
+        DFLT: [ PF0, PF1, PF2, PF3 ]
+        ALT1: [ PF4, PF5, PF6, ""  ]
+        NONE: [ "",  "",  "",  ""  ]
+
+    USART3:
+        #TXD, RXD, XCK, XDIR
+        DFLT: [ PB0, PB1, PB2, PB3 ]
+        ALT1: [ PB4, PB5, "",  ""  ]
+        NONE: [ "",  "",  "",  ""  ]
+
+    SPI0:
+        #SCK, MISO, MOSI, CS
+        DFLT: [ PA6, PA5, PA4, PA7 ]
+        ALT1: [ PC2, PC1, PC0, PC3 ]
+        ALT2: [ PE2, PE1, PE0, PE3 ]
+        NONE: [ "",  "",  "",  ""  ]
+
+    TWI0:
+        #SCL, SDA, SSCL, SSDA
+        DFLT: [ PA3, PA2, PC3, PC2 ]
+        ALT1: [ PA3, PA2, PF3, PF2 ]
+        ALT2: [ PC3, PC2, PF3, PF2 ]
