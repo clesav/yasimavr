@@ -123,8 +123,8 @@ NVMCTRL:
 
     config:
         reg_spm_ctrl: SPMCSR
-        bm_spm_cmd: SPMCSR/PGERS|PGWRT|RFLB|CTPB|RSIG
-        bm_spm_enable: SPMCSR/SPMEN
+        bs_spm_cmd: SPMCSR/PGERS|PGWRT|RFLB|CTPB|RSIG
+        bs_spm_enable: SPMCSR/SPMEN
         rbc_ee_addr: [ EEAR/EEAR ]
         reg_ee_data: EEDR
         rb_ee_read: EECR/EERE
