@@ -1,0 +1,48 @@
+# YAML configuration file for atmega1609 model
+#
+# Copyright 2023-2026 Clement Savergne <csavergne@yahoo.com>
+#
+# This file is part of yasim-avr.
+#
+# yasim-avr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# yasim-avr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
+
+---
+name: atmega1609
+
+inherits: atmegaxx09
+
+memory:
+    data:
+        io: [0x000, 0x13FF]
+        eeprom: [0x1400, 0x14FF]
+        ram: [ 0x3800, 0x3FFF]
+        flash: [0x4000, 0x7FFF]
+    ram:
+        size: 2048
+    flash:
+        size: 16384
+        page_size: 64
+    eeprom:
+        size: 256
+        page_size: 32
+    userrow:
+        size: 32
+
+device_signature: [ 0x1E, 0x94, 0x26 ]
+
+peripherals:
+    USERROW:
+        class: USERROW_32
+        file: XT/ArchXT_controllers.yml
+        base: 0x1300

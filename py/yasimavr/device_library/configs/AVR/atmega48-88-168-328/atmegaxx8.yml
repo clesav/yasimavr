@@ -1,0 +1,172 @@
+# YAML file for atmegaxx8 models
+#
+# Copyright 2026 Clement Savergne <csavergne@yahoo.com>
+#
+# This file is part of yasim-avr.
+#
+# yasim-avr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# yasim-avr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
+
+
+#This file contains the common configuration keys for atmegaxx8 models
+#(atmega48/88/168/328)
+
+
+---
+architecture: AVR
+
+core:
+    extended_addressing: no
+    clear_GIE_on_int: yes
+
+access:
+    lsb_first_on_write: yes
+    lsb_first_on_read: no
+
+pins: [ PB0, PB1, PB2, PB3, PB4, PB5, PB6, PB7,
+        PC0, PC1, PC2, PC3, PC4, PC5,
+        PD0, PD1, PD2, PD3, PD4, PD5, PD6, PD7,
+        ADC6, ADC7 ]
+
+peripherals:
+    CPU:
+        file: AVR/avr_controllers.yml
+        register_map:
+            GPIOR0: 0x1E
+            GPIOR1: 0x2A
+            GPIOR2: 0x2B
+
+    CPUINT:
+        file: mega48-88-168-328_controllers.yml
+
+    RSTCTRL:
+        file: AVR/avr_controllers.yml
+
+    SLPCTRL:
+        file: mega48-88-168-328_controllers.yml
+
+    CLKCTRL:
+        file: mega48-88-168-328_controllers.yml
+
+    NVMCTRL:
+        file: mega48-88-168-328_controllers.yml
+        config:
+            iv_spm_ready: SPM_READY
+            iv_ee_ready: EE_READY
+
+    MISC:
+        file: AVR/avr_controllers.yml
+
+    PORTB:
+        class: PORT
+        file: mega48-88-168-328_interfaces.yml
+        base: 0x03
+
+    PORTC:
+        class: PORT
+        file: mega48-88-168-328_interfaces.yml
+        base: 0x06
+
+    PORTD:
+        class: PORT
+        file: mega48-88-168-328_interfaces.yml
+        base: 0x09
+
+    EXTINT:
+        file: mega48-88-168-328_interfaces.yml
+
+    TC0:
+        file: AVR/avr_timers.yml
+        ctl_id: TC_0
+        register_map:
+            TCCRA: 0x24
+            TCCRB: 0x25
+            TCNT: 0x26
+            OCRA: 0x27
+            OCRB: 0x28
+            TIMSK: 0x4E
+            TIFR: 0x15
+
+    TC1:
+        file: mega48-88-168-328_timers.yml
+        ctl_id: TC_1
+        register_map:
+            TCCRA: 0x60
+            TCCRB: 0x61
+            TCCRC: 0x62
+            TCNT: 0x64
+            OCRA: 0x68
+            OCRB: 0x6A
+            ICR: 0x66
+            TIMSK: 0x4F
+            TIFR: 0x16
+
+    TC2:
+        file: mega48-88-168-328_timers.yml
+        ctl_id: TC_2
+
+    WDT:
+        file: AVR/avr_timers.yml
+        register_map:
+            WDTCSR: 0x40
+
+    ADC:
+        file: mega48-88-168-328_analog.yml
+        ctl_id: ADC0
+
+    ACP:
+        file: AVR/avr_analog.yml
+        ctl_id: ACP0
+        register_map:
+            ACSR: 0x30
+        config:
+            rb_mux: ADC/ADMUX/MUX[0:2]
+            pos_pin: PD6
+            neg_pin: PD7
+            neg_channels:
+                0x00: [Pin, PC0]
+                0x01: [Pin, PC1]
+                0x02: [Pin, PC2]
+                0x03: [Pin, PC3]
+                0x04: [Pin, PC4]
+                0x05: [Pin, PC5]
+                0x06: [Pin, ADC6]
+                0x07: [Pin, ADC7]
+
+    VREF:
+        file: AVR/avr_analog.yml
+
+    USART:
+        file: mega48-88-168-328_interfaces.yml
+        ctl_id: USART0
+
+    SPI:
+       file: mega48-88-168-328_interfaces.yml
+       ctl_id: SPI0
+
+    TWI:
+       file: mega48-88-168-328_interfaces.yml
+       ctl_id: TWI0
+
+iomux:
+    USART:
+        #TXD, RXD, XCK
+        DFLT: [ PD1, PD0, PD4 ]
+
+    SPI:
+        #CLK, MISO, MOSI, CS
+        DFLT: [ PB5, PB4, PB3, PB2 ]
+
+    TWI:
+        #SCL, SDA
+        DFLT: [ PC5, PC4 ]

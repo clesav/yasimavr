@@ -103,30 +103,30 @@ interrupts:
 
 peripherals:
     CPU:
-        file: ArchXT_controllers.yml
+        file: XT/ArchXT_controllers.yml
 
     CPUINT:
-        file: ArchXT_controllers.yml
+        file: XT/ArchXT_controllers.yml
         base: 0x0110
         ctl_id: INTR
 
     SLPCTRL:
-        file: ArchXT_controllers.yml
+        file: XT/ArchXT_controllers.yml
         base: 0x0050
         ctl_id: SLP
 
     RSTCTRL:
-        file: ArchXT_controllers.yml
+        file: XT/ArchXT_controllers.yml
         base: 0x0040
         ctl_id: RST
 
     CLKCTRL:
-        file: ArchXT_controllers.yml
+        file: XT/ArchXT_controllers.yml
         base: 0x0060
         ctl_id: CLK
 
     NVMCTRL:
-        file: ArchXT_controllers.yml
+        file: XT/ArchXT_controllers.yml
         base: 0x1000
         ctl_id: NVM
         config:
@@ -135,11 +135,11 @@ peripherals:
            iv_eeready: NVMCTRL_EE
 
     MISC:
-        file: ArchXT_controllers.yml
+        file: XT/ArchXT_controllers.yml
 
     PORTA:
         class: PORT
-        file: ArchXT_interfaces.yml
+        file: XT/ArchXT_interfaces.yml
         base: 0x0400
         ctl_id: IOGA
         config:
@@ -149,7 +149,7 @@ peripherals:
 
     PORTB:
         class: PORT
-        file: ArchXT_interfaces.yml
+        file: XT/ArchXT_interfaces.yml
         base: 0x0420
         ctl_id: IOGB
         config:
@@ -159,7 +159,7 @@ peripherals:
 
     PORTC:
         class: PORT
-        file: ArchXT_interfaces.yml
+        file: XT/ArchXT_interfaces.yml
         base: 0x0440
         ctl_id: IOGC
         config:
@@ -169,7 +169,7 @@ peripherals:
 
     PORTD:
         class: PORT
-        file: ArchXT_interfaces.yml
+        file: XT/ArchXT_interfaces.yml
         base: 0x0460
         ctl_id: IOGD
         config:
@@ -179,7 +179,7 @@ peripherals:
 
     PORTE:
         class: PORT
-        file: ArchXT_interfaces.yml
+        file: XT/ArchXT_interfaces.yml
         base: 0x0480
         ctl_id: IOGE
         config:
@@ -189,7 +189,7 @@ peripherals:
 
     PORTF:
         class: PORT
-        file: ArchXT_interfaces.yml
+        file: XT/ArchXT_interfaces.yml
         base: 0x04A0
         ctl_id: IOGF
         config:
@@ -199,7 +199,7 @@ peripherals:
 
     PORTG:
         class: PORT
-        file: ArchXT_interfaces.yml
+        file: XT/ArchXT_interfaces.yml
         base: 0x04C0
         ctl_id: IOGG
         config:
@@ -209,7 +209,7 @@ peripherals:
 
     PORTH:
         class: PORT
-        file: ArchXT_interfaces.yml
+        file: XT/ArchXT_interfaces.yml
         base: 0x04E0
         ctl_id: IOGH
         config:
@@ -219,7 +219,7 @@ peripherals:
 
     PORTJ:
         class: PORT
-        file: ArchXT_interfaces.yml
+        file: XT/ArchXT_interfaces.yml
         base: 0x0500
         ctl_id: IOGJ
         config:
@@ -229,7 +229,7 @@ peripherals:
 
     PORTK:
         class: PORT
-        file: ArchXT_interfaces.yml
+        file: XT/ArchXT_interfaces.yml
         base: 0x0520
         ctl_id: IOGK
         config:
@@ -239,7 +239,7 @@ peripherals:
 
     PORTL:
         class: PORT
-        file: ArchXT_interfaces.yml
+        file: XT/ArchXT_interfaces.yml
         base: 0x0540
         ctl_id: IOGL
         config:
@@ -249,7 +249,7 @@ peripherals:
 
     PORTM:
         class: PORT
-        file: ArchXT_interfaces.yml
+        file: XT/ArchXT_interfaces.yml
         base: 0x0580
         ctl_id: IOGM
         config:
@@ -259,7 +259,7 @@ peripherals:
 
     PORTN:
         class: PORT
-        file: ArchXT_interfaces.yml
+        file: XT/ArchXT_interfaces.yml
         base: 0x05C0
         ctl_id: IOGN
         config:
@@ -269,7 +269,7 @@ peripherals:
 
     TCA0:
         class: TCA
-        file: ArchXT_timers.yml
+        file: XT/ArchXT_timers.yml
         base: 0x0A00
         config:
             iv_ovf: TCA0_OVF
@@ -279,68 +279,68 @@ peripherals:
 
     TCB0:
         class: TCB
-        file: ArchXT_timers.yml
+        file: XT/ArchXT_timers.yml
         base: 0x0A80
         config:
             iv_capt: TCB0
 
     TCB1:
         class: TCB
-        file: ArchXT_timers.yml
+        file: XT/ArchXT_timers.yml
         base: 0x0A90
         config:
             iv_capt: TCB1
 
     TCB2:
         class: TCB
-        file: ArchXT_timers.yml
+        file: XT/ArchXT_timers.yml
         base: 0x0AA0
         config:
             iv_capt: TCB2
 
     TCB3:
         class: TCB
-        file: ArchXT_timers.yml
+        file: XT/ArchXT_timers.yml
         base: 0x0AB0
         config:
             iv_capt: TCB3
 
     TCB4:
         class: TCB
-        file: ArchXT_timers.yml
+        file: XT/ArchXT_timers.yml
         base: 0x0AC0
         config:
             iv_capt: TCB4
 
     TCB5:
         class: TCB
-        file: ArchXT_timers.yml
+        file: XT/ArchXT_timers.yml
         base: 0x0AD0
         config:
             iv_capt: TCB5
 
     TCB6:
         class: TCB
-        file: ArchXT_timers.yml
+        file: XT/ArchXT_timers.yml
         base: 0x0AE0
         config:
             iv_capt: TCB6
 
     TCB7:
         class: TCB
-        file: ArchXT_timers.yml
+        file: XT/ArchXT_timers.yml
         base: 0x0AF0
         config:
             iv_capt: TCB7
 
     VREF:
         class: VREF_mega0
-        file: ArchXT_analog.yml
+        file: XT/ArchXT_analog.yml
         base: 0x00A0
 
     ADC0:
         class: ADC
-        file: ArchXT_analog.yml
+        file: XT/ArchXT_analog.yml
         base: 0x0600
         config:
             channels:
@@ -381,7 +381,7 @@ peripherals:
 
     USART0:
         class: USART
-        file: ArchXT_interfaces.yml
+        file: XT/ArchXT_interfaces.yml
         base: 0x0800
         ctl_id: UAX0
         config:
@@ -391,32 +391,32 @@ peripherals:
 
     SPI0:
         class: SPI
-        file: ArchXT_interfaces.yml
+        file: XT/ArchXT_interfaces.yml
         base: 0x08C0
         config:
             iv_spi: SPI0
 
     TWI0:
         class: TWI
-        file: ArchXT_interfaces.yml
+        file: XT/ArchXT_interfaces.yml
         base: 0x08A0
         config:
             iv_host: TWI0_TWIM
             iv_client: TWI0_TWIS
 
     PORTMUX:
-        file: ArchXT_interfaces.yml
+        file: XT/ArchXT_interfaces.yml
         base: 0x05E0
         ctl_id: IOMX
 
     FUSES:
-        file: ArchXT_controllers.yml
+        file: XT/ArchXT_controllers.yml
         base: 0x1280
         ctl_id: FUSE
 
     USERROW:
         class: USERROW_64
-        file: ArchXT_controllers.yml
+        file: XT/ArchXT_controllers.yml
         base: 0x1300
         ctl_id: UROW
 
