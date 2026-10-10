@@ -1,4 +1,4 @@
-# YAML configuration file for attiny807 variant
+# YAML configuration file for attiny807 model
 #
 # Copyright 2024-2026 Clement Savergne <csavergne@yahoo.com>
 #
@@ -20,7 +20,7 @@
 ---
 name: attiny807
 
-architecture: XT
+inherits: attiny-0series-lomem
 
 memory:
     data:
@@ -39,156 +39,13 @@ memory:
     userrow:
         size: 32
 
-core:
-    extended_addressing: no
-    clear_GIE_on_int: no
-
-fuses:
-    size: 11
-    factory_values: [ 0x00, 0x00, 0x02, 0x00, 0x00,
-                      0xF6, 0x07, 0x00, 0x00, 0x00,
-                      0xC5 ]
-
 device_signature: [ 0x1E, 0x93, 0x23 ]
-
-access:
-    lsb_first_on_write: yes
-    lsb_first_on_read: yes
 
 pins: [ PA0, PA1, PA2, PA3, PA4, PA5, PA6, PA7,
         PB0, PB1, PB2, PB3, PB4, PB5, PB6, PB7,
         PC0, PC1, PC2, PC3, PC4, PC5 ]
 
-interrupts:
-    vector_size: 2
-
-    vectors:
-        - RESET
-        - CRCSCAN
-        - BOD
-        - PORTA
-        - PORTB
-        - PORTC
-        - RTC_CNT
-        - RTC_PIT
-        - TCA0_OVF
-        - TCA0_HUNF
-        - TCA0_CMP0
-        - TCA0_CMP1
-        - TCA0_CMP2
-        - TCB0
-        - AC0
-        - ADC0_RESRDY
-        - ADC0_WCOMP
-        - TWI0_TWIS
-        - TWI0_TWIM
-        - SPI0
-        - USART0_RXC
-        - USART0_DRE
-        - USART0_TXC
-        - NVMCTRL_EE
-
-    sleep_mask:
-        Idle:       [ 0xFF, 0xFF, 0xFF ]
-        Standby:    [ 0xFF, 0xE0, 0x01 ]
-        PowerDown:  [ 0xBF, 0x00, 0x00 ]
-
-peripherals:
-    CPU:
-        file: XT/ArchXT_controllers.yml
-
-    CPUINT:
-        file: XT/ArchXT_controllers.yml
-        base: 0x0110
-
-    SLPCTRL:
-        file: XT/ArchXT_controllers.yml
-        base: 0x0050
-
-    RSTCTRL:
-        file: XT/ArchXT_controllers.yml
-        base: 0x0040
-
-    CLKCTRL:
-        file: XT/ArchXT_controllers.yml
-        base: 0x0060
-
-    NVMCTRL:
-        file: XT/ArchXT_controllers.yml
-        base: 0x1000
-        config:
-           iv_eeready: NVMCTRL_EE
-
-    MISC:
-        file: XT/ArchXT_controllers.yml
-
-    PORTA:
-        class: PORT
-        file: XT/ArchXT_interfaces.yml
-        base: 0x0400
-        config:
-            reg_base_port: 0x0400
-            reg_base_vport: 0x0000
-            iv_port: PORTA
-
-    PORTB:
-        class: PORT
-        file: XT/ArchXT_interfaces.yml
-        base: 0x0420
-        config:
-            reg_base_port: 0x0420
-            reg_base_vport: 0x0004
-            iv_port: PORTB
-
-    PORTC:
-        class: PORT
-        file: XT/ArchXT_interfaces.yml
-        base: 0x0440
-        config:
-            reg_base_port: 0x0440
-            reg_base_vport: 0x0008
-            iv_port: PORTC
-
-    TCA0:
-        class: TCA
-        file: XT/ArchXT_timers.yml
-        base: 0x0A00
-        config:
-            iv_ovf: TCA0_OVF
-            iv_hunf: TCA0_HUNF
-            ivs_cmp: [ TCA0_CMP0, TCA0_CMP1, TCA0_CMP2 ]
-            version: V1
-
-    TCB0:
-        class: TCB
-        file: XT/ArchXT_timers.yml
-        base: 0x0A40
-        config:
-            iv_capt: TCB0
-
-    RTC:
-        file: XT/ArchXT_timers.yml
-        base: 0x0140
-        config:
-            iv_rtc: RTC_CNT
-            iv_pit: RTC_PIT
-
-    WDT:
-        file: XT/ArchXT_timers.yml
-        base: 0x0100
-
-    VREF:
-        class: VREF
-        file: XT/ArchXT_analog.yml
-        base: 0x00A0
-        config:
-            channels:
-                - rb_select: CTRLA/ADC0REFSEL
-                  references: [ 0.55, 1.1, 2.5, 4.3, 1.5 ]
-
-                - rb_select: CTRLA/AC0REFSEL
-                  references: [ 0.55, 1.1, 2.5, 4.3, 1.5 ]
-
+peripheral:
     ADC0:
         class: ADC
         file: XT/ArchXT_analog.yml
@@ -227,45 +84,6 @@ peripherals:
             vref_channel: 1
             iv_cmp: AC0
 
-    USART0:
-        class: USART
-        file: XT/ArchXT_interfaces.yml
-        base: 0x0800
-        config:
-            iv_rxc: USART0_RXC
-            iv_txc: USART0_TXC
-            iv_txe: USART0_DRE
-
-    SPI0:
-        class: SPI
-        file: XT/ArchXT_interfaces.yml
-        base: 0x0820
-        config:
-            iv_spi: SPI0
-
-    TWI0:
-        class: TWI
-        file: XT/ArchXT_interfaces.yml
-        base: 0x0810
-        config:
-            iv_host: TWI0_TWIM
-            iv_client: TWI0_TWIS
-            dual_ctrl: false
-
-    PORTMUX:
-        class: PORTMUX_tiny0
-        file: XT/ArchXT_interfaces.yml
-        base: 0x0200
-
-    FUSES:
-        file: XT/ArchXT_controllers.yml
-        base: 0x1280
-
-    USERROW:
-        class: USERROW_32
-        file: XT/ArchXT_controllers.yml
-        base: 0x1300
-
 iomux:
     TCA0:
         DLFT: [ PB0, PB1, PB2, PA3, PA4, PA5 ]
@@ -286,4 +104,5 @@ iomux:
         ALT:  [ PC0, PC1, PC2, PC3 ]
 
     TWI0:
+        #SCK, SDA
         DFLT: [ PB0, PB1 ]
