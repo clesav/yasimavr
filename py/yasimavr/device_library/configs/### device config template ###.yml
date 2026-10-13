@@ -1,6 +1,6 @@
 # Template of a YAML configuration file for a device variant
 #
-# Copyright 2021-2024 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2021-2026 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -26,35 +26,40 @@ name: Atmel AVR ATMegaxxxx
 #file is ignored and the configuration for atmegayyyy is loaded instead.
 aliasof: atmegayyyy
 
+#If this entry is present, the specified file is loaded and its entries merged
+#into this file. The file path may be relative to either the current file or
+#the library repositories
+inherits: file_x.yml
+
+#Note: The keys 'aliasof' and 'inherits' are mutually exclusive.
+#If both are present, an error is raised
+
 #Architecture used
 #Supported values are defined in descriptors.py
 architecture: XT
 
 #Definition of the memory map
 memory:
-    #Each section defines a memory address space.
-    #Each address space is made of several segments delimited
-    #by two entries: xxxSTART and xxxEND.
-    #xxxSTART is optional, the default value is zero.
+
+    #Definition of the segments composing the Data Space
+    #Each segment is given by the data space address range in hexadecimal
     #The supported segments are:
-    #   - REGSTART/REGEND : General purpose Rxx registers
-    #   - IOSTART/IOEND : I/O registers
-    #   - RAMSTART/RAMEND : volatile RAM
-    #   - FLASHSTART/FLASHEND : flash memory
-    #   - EEPROMSTART/EEPROMEND : eeprom memory
-    #Additional fields:
-    #   - MEMEND : optional, indicating the top address of the space
-    #              by default, it is determined from the segments
-    space1:
-        seg1START: 0x1111
-        seg1END : 0x2222
-        seg2START: 0x3333
-        seg2END: 0x4444
-    space2:
-        seg1START: 0x12
-        seg1END : 0x34
-        seg2START: 0x56
-        seg2END: 0x78
+    #   - regfile : General purpose Rxx registers
+    #   - io : I/O registers
+    #   - ram : volatile RAM
+    #   - flash : flash memory mapped into data space
+    #   - eeprom : eeprom memory
+    data:
+        segment1 : [0x0000, 0x1111]
+        segment2 : [0x1111, 0x2222]
+
+    #Definition of the total size and page size (where applicable) for the various
+    #memories, in bytes:
+    ram:
+        size: 1024
+    flash:
+        size: 65536
+        page_size: 256
 
 #Definition of core attributes, see definition in sim_config.h
 core:
@@ -97,10 +102,14 @@ interrupts:
     #For each valid sleep mode, it defines a bitset of one bit per vector,
     #indicating with 1 if the associated interrupt will wake up
     #(or not with 0) the device
+    #Example:
     sleep_mask:
-        Idle:       [ 0xFF, 0xFF, 0xFF ]
-        Standby:    [ 0x55, 0x55, 0x55 ]
-        PowerDown:  [ 0x01, 0x00, 0x00 ]
+        #All vectors active in Idle
+        Idle:       [ 0xFF ]
+        #Vectors RESET, Vector2, Vector4, Vector6 actives in Standby
+        Standby:    [ 0x55 ]
+        #Only the vector RESET is active in PowerDown
+        PowerDown:  [ 0x01 ]
 
 #Definition of each peripheral in the device
 peripherals:
@@ -112,15 +121,24 @@ peripherals:
         #File defines the YAML configuration file
         #that contains the peripheral definition and configuration
         file: per_config.yml
+        #ID of the peripheral in the simulation model
+        ctl_id
         #Base address of the peripheral
         #Only necessary if the peripheral has registers
         #defined with a relative offset
         base: 0x1111
-        #Class that defines the variant-specific configuration
+        #Definition of addresses for the registers of the peripheral
+        #Used when registers are defined by an absolute address
+        register_map:
+            TCCRA: 0x30
+            TCCRB: 0x33
+            TCNT: 0x32
+        #Defines the variant-specific configuration
         #of the device
         config:
             #Example of a definition of a interrupt vector
             iv_a: Vector1
+
 
     PER_NAME2:
         class: PER_CLASS

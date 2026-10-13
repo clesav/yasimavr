@@ -1,0 +1,72 @@
+# YAML configuration file for attiny-1series low mem
+#
+# Copyright 2026 Clement Savergne <csavergne@yahoo.com>
+#
+# This file is part of yasim-avr.
+#
+# yasim-avr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# yasim-avr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
+
+
+#This file contains the common configuration keys for attiny-1series models
+#with flash mem <= 8kb and single word IVT
+
+
+---
+inherits: attiny-1series
+
+interrupts:
+    vector_size: 2
+
+    vectors:
+        - RESET
+        - CRCSCAN
+        - BOD
+        - PORTA
+        - PORTB
+        - PORTC
+        - RTC_CNT
+        - RTC_PIT
+        - TCA0_OVF
+        - TCA0_HUNF
+        - TCA0_CMP0
+        - TCA0_CMP1
+        - TCA0_CMP2
+        - TCB0
+        - TCD0_OVF
+        - TCD0_TRIG
+        - AC0
+        - ADC0_RESRDY
+        - ADC0_WCOMP
+        - TWI0_TWIS
+        - TWI0_TWIM
+        - SPI0
+        - USART0_RXC
+        - USART0_DRE
+        - USART0_TXC
+        - NVMCTRL_EE
+
+    sleep_mask:
+        Idle:       [ 0xFF, 0xFF, 0xFF, 0x03 ]
+        Standby:    [ 0xFF, 0x20, 0x4E, 0x00 ]
+        PowerDown:  [ 0xBF, 0x00, 0x08, 0x00 ]
+
+peripherals:
+    PORTB:
+        class: PORT
+        file: XT/ArchXT_interfaces.yml
+        base: 0x0420
+        config:
+            reg_base_port: 0x0420
+            reg_base_vport: 0x0004
+            iv_port: PORTB
