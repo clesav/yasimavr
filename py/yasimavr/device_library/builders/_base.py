@@ -449,7 +449,9 @@ class DeviceBuilder:
         drv_id = device._descriptor_.peripherals[drv_name].ctl_id
         for mux_id, mux_cfg in drv_mux_configs.items():
             if mux_cfg:
-                result = device.pin_manager().add_mux_config(drv_id, mux_cfg, mux_id)
+                #Find the pins from the mux config that are not valid and replace them
+                mux_cfg_sanitized = [ (pid if pid in device._descriptor_.pins else '') for pid in mux_cfg ]
+                result = device.pin_manager().add_mux_config(drv_id, mux_cfg_sanitized, mux_id)
                 if not result:
                     raise Exception('Attaching pin driver failed: ' + drv_name)
 

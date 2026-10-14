@@ -28,7 +28,7 @@ from ...lib import arch_xt as _archlib
 from ._base import (PeripheralBuilder, PeripheralConfigBuilder,
                     IndexedPeripheralBuilder, LetteredPeripheralBuilder,
                     DeviceBuilder, DeviceBuildError,
-                    get_core_attributes, convert_to_regbit)
+                    get_core_attributes, convert_to_regbit, VERBOSE)
 
 
 def base_config_builder(per_descriptor):
@@ -173,7 +173,7 @@ def _get_tcb_builder():
 
 def _get_tcd_builder():
     cfg_builder = PeripheralConfigBuilder(_archlib.ArchXT_TimerDConfig)
-    return IndexedPeripheralBuilder(_archlib.ArchXT_TimerD, cfg_builder)
+    return PeripheralBuilder(_archlib.ArchXT_TimerD, cfg_builder)
 
 
 #========================================================================================
@@ -250,10 +250,25 @@ def _generic_adc_convertor(cfg, attr, yml_val, per_desc):
             chan_cfg.reg_value = reg_value
             if isinstance(item, list):
                 chan_type = item[0]
+
                 if len(item) >= 2:
-                    chan_cfg.pin_p = item[1]
+                    pin_id = item[1]
+                    if pin_id in per_desc.device.pins:
+                        chan_cfg.pin_p = pin_id
+                    else:
+                        chan_type = 'Zero'
+                        if VERBOSE:
+                            print(f'### Unknown pin in ADC config: {pin_id}, ignored')
+
                 if len(item) >= 3:
-                    chan_cfg.pin_n = item[2]
+                    pin_id = item[2]
+                    if pin_id in per_desc.device.pins:
+                        chan_cfg.pin_n = pin_id
+                    else:
+                        chan_type = 'Zero'
+                        if VERBOSE:
+                            print(f'### Unknown pin in ADC config: {pin_id}, ignored')
+
             else:
                 chan_type = item
 
@@ -336,9 +351,16 @@ def _acp_convertor(cfg, attr, yml_val, per_desc):
             chan_cfg.type = _corelib.ACP.Channel[item[0] if isinstance(item, list) else item]
 
             if chan_cfg.type == _corelib.ACP.Channel.Pin:
-                chan_cfg.pin = item[1]
+                pin_id = item[1]
+                if pin_id in per_desc.device.pins:
+                    chan_cfg.pin = pin_id
+                else:
+                    chan_cfg.type = _corelib.ACP.Channel.Zero
+                    if VERBOSE:
+                        print(f'### Unknown pin in ACP config: {pin_id}, ignored')
+
             elif chan_cfg.type == _corelib.ACP.Channel.DAC:
-                chan_cfg.per_num = item[1]
+                chan_cfg.per_num = str(item[1])
 
             py_chans.append(chan_cfg)
 
@@ -440,7 +462,7 @@ class XT_DeviceBuilder(DeviceBuilder):
         'MISC': _get_misc_builder,
         'PORT': _get_port_builder,
         'PORTMUX_mega0': _get_portmux_builder,
-        'PORTMUX_tiny0': _get_portmux_builder,
+        'PORTMUX_tiny': _get_portmux_builder,
         'RTC': _get_rtc_builder,
         'TCA': _get_tca_builder,
         'TCB': _get_tcb_builder,
