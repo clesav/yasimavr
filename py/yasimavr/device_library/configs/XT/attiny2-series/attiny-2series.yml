@@ -1,0 +1,290 @@
+# YAML configuration file for attiny-2series models
+#
+# Copyright 2026 Clement Savergne <csavergne@yahoo.com>
+#
+# This file is part of yasim-avr.
+#
+# yasim-avr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# yasim-avr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
+
+
+#This file contains the common configuration keys for attiny-2series models
+#(attiny424/426/427/824/826/827/1624/1626/1627/3224/3226/3227)
+
+
+
+---
+architecture: XT
+
+core:
+    extended_addressing: no
+    clear_GIE_on_int: no
+
+fuses:
+    size: 11
+    factory_values: [ 0x00, 0x00, 0x7E, 0x00,
+                      0x00, 0xF6, 0xFF, 0x00,
+                      0x00, 0x00, 0xC5 ]
+
+access:
+    lsb_first_on_write: yes
+    lsb_first_on_read: yes
+
+peripherals:
+    CPU:
+        file: XT/ArchXT_controllers.yml
+
+    CPUINT:
+        file: XT/ArchXT_controllers.yml
+        base: 0x0110
+
+    SLPCTRL:
+        file: XT/ArchXT_controllers.yml
+        base: 0x0050
+
+    RSTCTRL:
+        file: XT/ArchXT_controllers.yml
+        base: 0x0040
+
+    CLKCTRL:
+        file: XT/ArchXT_controllers.yml
+        base: 0x0060
+
+    NVMCTRL:
+        file: XT/ArchXT_controllers.yml
+        base: 0x1000
+        config:
+           iv_eeready: NVMCTRL_EE
+
+    MISC:
+        file: XT/ArchXT_controllers.yml
+
+    PORTA:
+        class: PORT
+        file: XT/ArchXT_interfaces.yml
+        base: 0x0400
+        config:
+            reg_base_port: 0x0400
+            reg_base_vport: 0x0000
+            iv_port: PORTA
+
+    PORTB:
+        class: PORT
+        file: XT/ArchXT_interfaces.yml
+        base: 0x0420
+        config:
+            reg_base_port: 0x0420
+            reg_base_vport: 0x0004
+            iv_port: PORTB
+
+    TCA0:
+        class: TCA
+        file: XT/ArchXT_timers.yml
+        base: 0x0A00
+        config:
+            iv_ovf: TCA0_OVF
+            iv_hunf: TCA0_HUNF
+            ivs_cmp: [ TCA0_CMP0, TCA0_CMP1, TCA0_CMP2 ]
+            version: V1
+
+    TCB0:
+        class: TCB
+        file: XT/ArchXT_timers.yml
+        base: 0x0A80
+        config:
+            iv_capt: TCB0
+
+    TCB1:
+        class: TCB
+        file: XT/ArchXT_timers.yml
+        base: 0x0A90
+        config:
+            iv_capt: TCB1
+
+    RTC:
+        file: XT/ArchXT_timers.yml
+        base: 0x0140
+        config:
+            iv_rtc: RTC_CNT
+            iv_pit: RTC_PIT
+
+    WDT:
+        file: XT/ArchXT_timers.yml
+        base: 0x0100
+
+    VREF:
+        class: VREF
+        file: XT/ArchXT_analog.yml
+        base: 0x00A0
+        config:
+            channels:
+                - rb_select: CTRLA/AC0REFSEL
+                  references: [ 1.024, 2.048, 2.5, 4.096, AVCC ]
+
+    ADC0:
+        class: ADC2
+        file: XT/ArchXT_analog.yml
+        base: 0x0600
+        config:
+            version: V1
+            modes:
+                0x00: 0b0000  #Single 8-bit
+                0x01: 0b0001  #Single 12-bit
+                0x02: 0b0011  #Series Accumulation
+                0x03: 0b1011  #Series Accumulation with Scaling
+                0x04: 0b0111  #Burst Accumulation
+                0x05: 0b1111  #Burst Accumulation with Scaling
+            pos_channels:
+                0x00: Zero
+                0x01: [ SingleEnded, PA1 ]
+                0x02: [ SingleEnded, PA2 ]
+                0x03: [ SingleEnded, PA3 ]
+                0x04: [ SingleEnded, PA4 ]
+                0x05: [ SingleEnded, PA5 ]
+                0x06: [ SingleEnded, PA6 ]
+                0x07: [ SingleEnded, PA7 ]
+                0x08: [ SingleEnded, PB5 ]
+                0x09: [ SingleEnded, PB4 ]
+                0x0A: [ SingleEnded, PB1 ]
+                0x0B: [ SingleEnded, PB0 ]
+                0x0C: [ SingleEnded, PC0 ]
+                0x0D: [ SingleEnded, PC1 ]
+                0x0E: [ SingleEnded, PC2 ]
+                0x0F: [ SingleEnded, PC3 ]
+                0x30: Zero
+                0x31: VDDDiv10
+                0x32: Temperature
+                0x33: AcompRef
+            neg_channels:
+                0x00: Zero
+                0x01: [ SingleEnded, PA1 ]
+                0x02: [ SingleEnded, PA2 ]
+                0x03: [ SingleEnded, PA3 ]
+                0x04: [ SingleEnded, PA4 ]
+                0x05: [ SingleEnded, PA5 ]
+                0x06: [ SingleEnded, PA6 ]
+                0x07: [ SingleEnded, PA7 ]
+                0x30: Zero
+                0x31: VDDDiv10
+                0x33: AcompRef
+            iv_error: ADC0_ERROR
+            iv_resready: ADC0_RESRDY
+            iv_sampready: ADC0_SMPRDY
+
+    ACP0:
+        class: ACP
+        file: XT/ArchXT_analog.yml
+        base: 0x0680
+        config:
+            pos_channels:
+                0x0: [ Pin, PA7 ]
+                0x1: [ Pin, PB5 ]
+                0x2: [ Pin, PB1 ]
+                0x3: [ Pin, PB6 ]
+            neg_channels:
+                0x0: [ Pin, PA6 ]
+                0x1: [ Pin, PB4 ]
+                0x2: [ Pin, PB0 ]
+                0x3: [ AcompRef ]
+            vref_channel: 0
+            iv_cmp: AC0
+
+    USART0:
+        class: USART
+        file: XT/ArchXT_interfaces.yml
+        base: 0x0800
+        config:
+            iv_rxc: USART0_RXC
+            iv_txc: USART0_TXC
+            iv_txe: USART0_DRE
+
+    USART1:
+        class: USART
+        file: XT/ArchXT_interfaces.yml
+        base: 0x0820
+        config:
+            iv_rxc: USART1_RXC
+            iv_txc: USART1_TXC
+            iv_txe: USART1_DRE
+
+    SPI0:
+        class: SPI
+        file: XT/ArchXT_interfaces.yml
+        base: 0x08C0
+        config:
+            iv_spi: SPI0
+
+    TWI0:
+        class: TWI
+        file: XT/ArchXT_interfaces.yml
+        base: 0x08A0
+        config:
+            iv_host: TWI0_TWIM
+            iv_client: TWI0_TWIS
+            dual_ctrl: false
+
+    PORTMUX:
+        class: PORTMUX_tiny
+        file: XT/ArchXT_interfaces.yml
+        base: 0x05E0
+
+    FUSES:
+        file: XT/ArchXT_controllers.yml
+        base: 0x1280
+
+iomux:
+    TCA00:
+        DFLT: [ PB0 ]
+        ALT : [ PB3 ]
+
+    TCA01:
+        DFLT: [ PB1 ]
+        ALT : [ PB4 ]
+
+    TCA02:
+        DFLT: [ PB2 ]
+        ALT : [ PB5 ]
+
+    TCA03:
+        DFLT: [ PA3 ]
+        ALT : [ PC3 ]
+
+    TCA04:
+        DFLT: [ PA4 ]
+        ALT : [ PC4 ]
+
+    TCA05:
+        DFLT: [ PA5 ]
+        ALT : [ PC5 ]
+
+    TCB0:
+        DFLT: [ PA5 ]
+        ALT : [ PC0 ]
+
+    TCB1:
+        DFLT: [ PA3 ]
+        ALT : [ PC4 ]
+
+    USART0:
+        #TXD, RXD, XCK, XDIR
+        DFLT: [ PB2, PB3, PB1, PB0 ]
+        ALT : [ PA1, PA2, PA3, PA4 ]
+
+    SPI0:
+        #SCK, MISO, MOSI, CS
+        DFLT: [ PA3, PA2, PA1, PA4 ]
+        ALT : [ PC0, PC1, PC2, PC3 ]
+
+    TWI0:
+        #SCL, SDA
+        DFLT: [ PB0, PB1 ]
