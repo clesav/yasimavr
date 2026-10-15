@@ -1,0 +1,61 @@
+# YAML configuration file for attiny3227 model
+#
+# Copyright 2026 Clement Savergne <csavergne@yahoo.com>
+#
+# This file is part of yasim-avr.
+#
+# yasim-avr is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# yasim-avr is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with yasim-avr.  If not, see <http://www.gnu.org/licenses/>.
+
+---
+name: attiny3227
+
+inherits: attiny-2series-himem
+
+memory:
+    data:
+        io: [0x000, 0x13FF]
+        eeprom: [0x1400, 0x14FF]
+        ram: [ 0x3400, 0x3FFF]
+        flash: [0x8000, 0xFFFF]
+    ram:
+        size: 3072
+    flash:
+        size: 32768
+        page_size: 128
+    eeprom:
+        size: 256
+        page_size: 64
+    userrow:
+        size: 64
+
+device_signature: [ 0x1E, 0x95, 0x26 ]
+
+pins: [ PA0, PA1, PA2, PA3, PA4, PA5, PA6, PA7,
+        PB0, PB1, PB2, PB3, PB4, PB5, PB6, PB7,
+        PC0, PC1, PC2, PC3, PC4, PC5 ]
+
+peripherals:
+    PORTC:
+        class: PORT
+        file: XT/ArchXT_interfaces.yml
+        base: 0x0440
+        config:
+            reg_base_port: 0x0440
+            reg_base_vport: 0x0008
+            iv_port: PORTC
+
+    USERROW:
+        class: USERROW_64
+        file: XT/ArchXT_controllers.yml
+        base: 0x1300
