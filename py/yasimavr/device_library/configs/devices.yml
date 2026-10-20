@@ -57,6 +57,20 @@ dev_tiny_1series:
     - XT/attiny1-series/attiny3216
     - XT/attiny1-series/attiny3217
 
+dev_tiny_2series:
+    - XT/attiny2-series/attiny424
+    - XT/attiny2-series/attiny426
+    - XT/attiny2-series/attiny427
+    - XT/attiny2-series/attiny824
+    - XT/attiny2-series/attiny826
+    - XT/attiny2-series/attiny827
+    - XT/attiny2-series/attiny1624
+    - XT/attiny2-series/attiny1626
+    - XT/attiny2-series/attiny1627
+    - XT/attiny2-series/attiny3224
+    - XT/attiny2-series/attiny3226
+    - XT/attiny2-series/attiny3227
+
 dev_megaxx8:
     - AVR/atmega48-88-168-328/atmega48
     - AVR/atmega48-88-168-328/atmega48p
