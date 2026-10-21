@@ -1,5 +1,6 @@
+============
 Key Concepts
-==================
+============
 
 This page is mainly to try and explain some of the concepts underlying *yasimavr* internals and behaviour.
 

@@ -1,10 +1,11 @@
+=========================
 Device Library Management
 =========================
 
 Introduction
 ------------
 
-The device library provides the means for loading and configuring a simulation model for a particular MCU model or variant.
+The device library package provides the means for loading and configuring a simulation model for a particular MCU model or variant.
 The information is also used for accessing the device internals in a 'pythonic' and human-readable way, mainly for testing and debugging purposes.
 The device library for yasimavr is built around 3 categories of classes/objects :
 
@@ -22,6 +23,21 @@ The list of pre-defined models can be obtained in command line by executing ``py
 .. note::
    Using the device library to instantiate a simulation model is not compulsory, it only makes it more convenient for commonly used device models.
    It is possible to build and configure a model from scratch using the C++ API classes if one feels like it...
+
+
+Top Level API
+-------------
+
+.. automodule:: yasimavr.device_library
+
+
+.. autofunction:: load_device
+
+
+.. autofunction:: load_device_from_config
+
+
+.. autofunction:: model_list
 
 
 Device Descriptor

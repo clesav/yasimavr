@@ -8,8 +8,7 @@ Synopsis
 
 *yasimavr* will load a firmware binaries into a model and run until the simulation stops and then exits.
 
-The minimum required arguments to provide are the MCU model [-m], the frequency [-f]
-and the firmware file [firmware] in standalone mode.
+The minimum required arguments to provide are the MCU model [-m], and the firmware file [firmware] in standalone mode.
 
 GDB vs. Standalone Mode
 -----------------------
@@ -41,7 +40,15 @@ Firmware file (in ELF binary format) to load into the MCU simulation model.
 
 .. option:: -f,--frequency FREQ
 
-Set the MCU clock frequency in Hertz. Required for yasimavr to run a simulation.
+Fixed MCU clock frequency in Hertz.
+
+By default, the MCU clock frequency will be calculated using the simulated fuses and/or clock controller
+settings set by I/O registers and specific to the MCU model.
+If this option is set to a non-zero value, the MCU clock frequency will be fixed to this value regardless
+of any clock settings.
+
+Note that this option affects only the clock used by the CPU and for time keeping. Any
+MCU peripheral using a separate timebase (example: Watchdog Timer) is unaffected.
 
 .. option:: -m,--mcu MODEL
 

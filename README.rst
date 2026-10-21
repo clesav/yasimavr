@@ -1,12 +1,11 @@
-yasimavr
-========
+What is it ?
+------------
 
-Yet another simulator for Microchip AVR microcontrollers, inspired from simavr
-------------------------------------------------------------------------------
 
-`yasimavr` is a simulator for AVR 8-bits microcontrollers.
-It is mainly aimed at the Mega0 and later XT series (ATmega80x-160x-320x-480x and others)
-with a possibility to work with older series. (ATMega48/88/168/328 and others)
+**yasimavr** - *Yet another simulator for Microchip AVR microcontrollers* - is a simulator
+for AVR 8-bits microcontrollers.
+It is mainly aimed at the Mega0 and later XT core series
+with a possibility to work with older series. (ATMega48/88/168/328 for example)
 
 It is composed of 2 layers:
 
@@ -20,12 +19,12 @@ Prerequisites:
 **************
 
 * Python (>=3.9) and PIP
-* For Linux distributions, libelf is required: (for example: ``sudo apt-get install libelf-dev``)
+* For Linux distributions, libelf-dev is required: (for example: ``sudo apt-get install libelf-dev``)
 
 Install:
 ********
 
-* execute: ``pip install yasimavr``
+* execute: :code:`pip install yasimavr`
 
 The python bindings for the C++ librairies are built with the SIP tool from RiverbankComputing
 (https://www.riverbankcomputing.com)
@@ -37,14 +36,6 @@ Quite a few ideas in this software - and even big chunks of code - originate fro
 (https://github.com/buserror/simavr)
 Big thanks to the simavr authors for this great tool !
 
-Supported IOs
---------------
-
-* GPIO
-* SPI
-* TWI
-* USART
-
 Supported Cores
 ---------------
 
@@ -54,6 +45,8 @@ The package includes a predefined set of MCU models:
 * ATTinyx4 series (ATTiny24/44/84)
 * ATMega 0-series (ATMega808/809/1608/1609/3208/3209/4808/4809)
 * ATTiny 0-series (ATTiny202/204/402/404/406/804/806/807/1604/1606/1607)
+* ATTiny 1-series (ATTiny212/214/412/414/416/814/816/817/1614/1616/1617/3216/3217)
+* ATTiny 2-series (ATTiny424/426/427/824/826/827/1624/1626/1627/3226/3227)
 
 Other device models can be easily simulated by creating a YAML config file.
 A template is provided, and the example `atgiga4809` shows how to load and use a customised device configuration.
@@ -77,9 +70,15 @@ How to use
 
 It also supports direct command line use:
 
-* python -m yasimavr [options] [firmware]
+.. code-block::
 
-For the list of command line options, execute python -m yasimavr -h
+    python -m yasimavr [options] [firmware]
+
+For the list of command line options:
+
+.. code-block::
+
+    python -m yasimavr -h
 
 Some simple script examples are available here:
 https://github.com/clesav/yasimavr/tree/main/examples
