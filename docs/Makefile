@@ -44,18 +44,15 @@ endif
 all: sphinx_html_docs
 
 doxygen_docs: FORCE
-	-cd source && $(RM_DIR) dox
+	-@$(MAKE_DIR) build
+	-cd build && $(RM_DIR) dox
 	@doxygen Doxyfile
 
-doxysphinx_docs: doxygen_docs
-	@doxysphinx build source build source/dox/html
-
-sphinx_html_docs: doxygen_docs doxysphinx_docs
-	@python make_mock_libs.py
-	@sphinx-build -M html "source" "build"
+sphinx_html_docs: doxygen_docs
+	-cd build && $(MAKE_DIR) sphinx
+	sphinx-build -b html -E -v source build/sphinx
 
 clean: FORCE
 	-$(RM_DIR) build
-	-cd source && $(RM_DIR) dox
 
 FORCE:
