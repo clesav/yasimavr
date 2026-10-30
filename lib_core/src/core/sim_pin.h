@@ -153,8 +153,6 @@ inline Pin::controls_t Pin::gpio_controls() const
    To operate, a driver must be registered with the PinManager object during the device initialisation
    phase. They are referenced by their ID, which must be unique. It is usually the same ID as the corresponding
    peripheral.
-
-   \sa Pin, PinManager
  */
 class AVR_CORE_PUBLIC_API PinDriver {
 
@@ -210,12 +208,10 @@ private:
    Class managing a set of pins and the mux configurations between the pin drivers and the
    pins.
 
-   The mux configuration are identified by a ID, with 0 a reserved value. This ID must be unique for a
+   The mux configurations are identified by a ID, with 0 a reserved value. This ID must be unique for a
    particular driver.
    A default mux ID is provided by the static constant default_mux_id which can be used for drivers that have
    only one mux config.
-
-   \sa Pin, PinDriver
  */
 class AVR_CORE_PUBLIC_API PinManager {
 
@@ -228,12 +224,12 @@ public:
     ~PinManager();
 
     bool register_driver(PinDriver& drv);
-    bool add_mux_config(ctl_id_t drv, const std::vector<pin_id_t>& pins, mux_id_t mux_id = default_mux_id);
+    bool add_mux_config(ctl_id_t drv_id, const std::vector<pin_id_t>& pin_ids, mux_id_t mux_id = default_mux_id);
 
-    void set_current_mux(ctl_id_t drv, mux_id_t index);
-    void set_current_mux(ctl_id_t drv, PinDriver::pin_index_t, mux_id_t index);
-    mux_id_t current_mux(ctl_id_t drv, PinDriver::pin_index_t pin_index) const;
-    std::vector<pin_id_t> current_mux_pins(ctl_id_t drv) const;
+    void set_current_mux(ctl_id_t drv_id, mux_id_t mux_id);
+    void set_current_mux(ctl_id_t drv_id, PinDriver::pin_index_t pin_index, mux_id_t mux_id);
+    mux_id_t current_mux(ctl_id_t drv_id, PinDriver::pin_index_t pin_index) const;
+    std::vector<pin_id_t> current_mux_pins(ctl_id_t drv_id) const;
 
     Pin* pin(pin_id_t pin_id) const;
 

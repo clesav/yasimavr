@@ -30,12 +30,15 @@ YASIMAVR_USING_NAMESPACE
 
 //=======================================================================================
 
+/**
+ * Construction of a peripheral
+ * <param id ID for the peripheral. It must be unique among the peripherals.
+ */
 Peripheral::Peripheral(ctl_id_t id)
 :m_id(id)
 ,m_device(nullptr)
 ,m_logger(id)
-{
-}
+{}
 
 
 Peripheral::~Peripheral()
@@ -45,7 +48,7 @@ Peripheral::~Peripheral()
 }
 
 /**
-   \brief The name of the peripheral
+   \brief The name of the peripheral, derived from the ID
 */
 std::string Peripheral::name() const
 {

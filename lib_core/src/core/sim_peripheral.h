@@ -37,21 +37,6 @@ enum class SleepMode;
 
 
 //=======================================================================================
-/**
-   \file
-   \defgroup core_peripheral Peripheral base framework
-   @{
- */
-
-/**
-   \name Peripheral identifier definition
-
-   All peripherals are uniquely identified by a 32-bits integer which is actually
-   composed of 4 characters.
-   This section defines the identifiers for the usual peripherals.
-   \sa Peripheral
-   @{
-*/
 
 /** CTLID for the core: "CORE" */
 constexpr sim_id_t AVR_IOCTL_CORE     = "CORE";
@@ -94,18 +79,8 @@ constexpr sim_id_t AVR_IOCTL_SPI(char c) { return sim_id_t("SPI") + c; }
 /** CTLID for the TWI interface: "TWIn" */
 constexpr sim_id_t AVR_IOCTL_TWI(char c) { return sim_id_t("TWI") + c; }
 
-///@}
 
 //=======================================================================================
-
-/**
-   \name Controller requests definition
-   Definition of common and builtin CTLREQs
-   \sa Device::ctlreq
-   \sa ctlreq_data_t
-   @{
- */
-
 
 /**
    CTLREQ identifier type
@@ -120,20 +95,20 @@ typedef int ctlreq_id_t;
 #define AVR_CTLREQ_BASE             0x100
 
 /**
-   Common request identifier used to obtain a pointer to a particular signal
-    - data.index should contain the identifier of the signal
-    - data.p is returned pointing to the signal
+   Common request identifier used to obtain a pointer to a particular signal.
+   - index should contain the identifier of the signal (if relevant)
+   - data is returned as a pointer to a Signal object
  */
 #define AVR_CTLREQ_GET_SIGNAL       0
 
 /**
-   Request sent by the CPU to the core when a BREAK instruction is executed, no data provided.
+   Request sent by the CPU to the core when a BREAK instruction is executed.
  */
 #define AVR_CTLREQ_CORE_BREAK       (AVR_CTLREQ_BASE + 1)
 
 /**
    Request sent by the Sleep Controller to the core to enter a sleep mode
-    - data.u contains the sleep mode enum value
+   - data contains the sleep mode enum value
  */
 #define AVR_CTLREQ_CORE_SLEEP       (AVR_CTLREQ_BASE + 2)
 
@@ -149,67 +124,70 @@ typedef int ctlreq_id_t;
 
 /**
    Request sent to the core to crash.
-    - data.index is the reason code,
-    - data.p is the optional reason string
+   - index is the reason code,
+   - data must be a optional pointer to a string (containing the reason of the crash)
  */
 #define AVR_CTLREQ_CORE_CRASH       (AVR_CTLREQ_BASE + 5)
 
 /**
    Request sent to the core to trigger a MCU reset.
-    - data.u is the corresponding ResetFlag enum value
+   - data is the corresponding ResetFlag enum value
  */
 #define AVR_CTLREQ_CORE_RESET       (AVR_CTLREQ_BASE + 6)
 
 /**
    Request sent to the core to query the latest cause of reset.
-    - data.u is set to the ResetFlag enum value
+   - data is set to the ResetFlag enum value
  */
 #define AVR_CTLREQ_CORE_RESET_FLAG  (AVR_CTLREQ_BASE + 7)
 
 /**
    Request sent to the core to query the pointer to a NVM block
-    - data.index indicates which block with one of the AVR_NVM enum values
+   - index indicates which block with one of the AVR_NVM enum values
  */
 #define AVR_CTLREQ_CORE_NVM         (AVR_CTLREQ_BASE + 8)
 
 /**
    Request to halt the CPU, used during a SPM instruction.
-   a non-zero data.u enables the halt, data.u == 0 disables the halt.
+   data must be a integer: non-zero enables the halt, zero disables the halt.
  */
 #define AVR_CTLREQ_CORE_HALT        (AVR_CTLREQ_BASE + 9)
 
 /**
    Request to get the section manager.
-   data.p is returned pointing to the instance of MemorySectionManager.
+   data is returned as a pointer to the instance of MemorySectionManager.
  */
 #define AVR_CTLREQ_CORE_SECTIONS    (AVR_CTLREQ_BASE + 10)
 
 /**
-   Request sent by the CPU to the watchdog when executing a WDR instruction, no data provided
+   Request sent by the CPU to the watchdog when executing a WDR instruction.
  */
 #define AVR_CTLREQ_WATCHDOG_RESET   (AVR_CTLREQ_BASE + 1)
 
 /**
    Request sent by the CPU to the NVM controller when executing a SPM instruction,
    or a LPM instruction if the LPM direct mode is disabled with the core.
-    - data.p points to a NVM_request_t structure filled with the instruction information
+   The details of the operation must be provided by a NVM_request_t object.
+   This object is filled by the NVM controller with the relevant data/result.
+   \sa NVM_request_t
  */
 #define AVR_CTLREQ_NVM_REQUEST      (AVR_CTLREQ_BASE + 1)
 
 /**
-   Request sent by the CPU to the Sleep Controller when executing a SLEEP instruction, no data provided
+   Request sent by the CPU to the Sleep Controller when executing a SLEEP instruction.
  */
 #define AVR_CTLREQ_SLEEP_CALL       (AVR_CTLREQ_BASE + 1)
 
 /**
-   Request sent by the CPU to the Sleep Controller when executing a "RJMP .-2" instruction, no data provided
+   Request sent by the CPU to the Sleep Controller when executing a "RJMP .-2" instruction.
  */
 #define AVR_CTLREQ_SLEEP_PSEUDO     (AVR_CTLREQ_BASE + 2)
 
-//Request to set the external clock input frequency
+/**
+ * Request to set the external clock input frequency
+ * - data is the new frequency as double in Hertz, or 0 to disable
+ */
 #define AVR_CTLREQ_CLK_SET_EXTCLK   (AVR_CTLREQ_BASE + 1)
-
-/// @}
 
 
 /**
@@ -247,13 +225,6 @@ struct ctlreq_data_t {
 
 
 //=======================================================================================
-/**
-   \name Register field lookup
-   The structure base_reg_config_t and the functions find_reg_config() are useful for
-   configuration that maps a register field value to a set of parameters.
-   (see the timer classes for examples)
-   @{
- */
 
 struct base_reg_config_t {
     uint64_t reg_value;
@@ -290,13 +261,9 @@ const T* find_reg_config_p(const std::array<T, N>& a, uint64_t reg_value)
     return nullptr;
 }
 
-/// @}
-/// @}
-
 
 //=======================================================================================
 /**
-   \ingroup core_peripheral
    \brief Abstract class defining a framework for MCU peripherals.
  */
 class AVR_CORE_PUBLIC_API Peripheral: public IORegHandler {
@@ -495,7 +462,7 @@ inline void Peripheral::clear_ioreg(reg_addr_t addr, const bitspec_t& bs)
 /**
    \brief Generic dummy peripheral.
 
-   It does nothing but adding I/O registers.
+   It does nothing but allocate I/O registers.
  */
 
 class AVR_CORE_PUBLIC_API DummyController : public Peripheral {

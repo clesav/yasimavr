@@ -39,13 +39,13 @@ EndPoint::EndPoint()
 ,m_shift_clock(false)
 {}
 
-
+/// Sets the current serial mode setting
 void EndPoint::set_serial_mode(SerialMode mode)
 {
     m_serial_mode = mode;
 }
 
-
+/// Sets the current bit order settings
 void EndPoint::set_bit_order(BitOrder bitorder)
 {
     m_bit_order = bitorder;
@@ -53,7 +53,7 @@ void EndPoint::set_bit_order(BitOrder bitorder)
 }
 
 /**
- * Set the byte to be transmitted in the next transfer.
+   Set the byte to be transmitted in the next transfer.
  */
 void EndPoint::set_shift_data(uint8_t frame)
 {
@@ -62,8 +62,8 @@ void EndPoint::set_shift_data(uint8_t frame)
 }
 
 /**
- * \brief Enable/disable the endpoint
- * A disabled endpoint will ignore any clock change but still keeps track of them.
+   \brief Enable/disable the endpoint
+   A disabled endpoint will ignore any clock change but still keeps track of them.
  */
 void EndPoint::set_active(bool active)
 {
@@ -91,11 +91,11 @@ void EndPoint::shift_and_sample()
 }
 
 /**
- * Upper layers should call this function to flip the clock line state.
- * The logic will shift bit values to the Data IN/Out wires as appropriate
- * according to the mode and bitorder selected.
- * Does nothing if the clock state is unchanged or the endpoint is inactive.
- * \param state new clock line state true=clock rise, false=clock fall
+   Upper layers should call this function to flip the clock line state.
+   The logic will shift bit values to the Data IN/Out wires as appropriate
+   according to the mode and bitorder selected.
+   Does nothing if the clock state is unchanged or the endpoint is inactive.
+   \param state new clock line state true=clock rise, false=clock fall
  */
 void EndPoint::set_shift_clock(bool state)
 {
@@ -132,8 +132,8 @@ void EndPoint::set_shift_clock(bool state)
 }
 
 /**
- * Virtual callback function called on the last clock edge of a byte shift.
- * Can be overriden by upper layers to signal when the transmission/reception
- * of a byte has been completed. The base function does nothing.
+   Virtual callback function called on the last clock edge of a byte shift.
+   Can be overriden by upper layers to signal when the transmission/reception
+   of a byte has been completed. The base function does nothing.
  */
 void EndPoint::frame_completed() {}

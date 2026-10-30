@@ -38,22 +38,20 @@ class InterruptHandler;
  * CTLREQ definitions
 */
 
-//AVR_CTLREQ_GET_SIGNAL :
-//    The signal returned is raised when an interrupt is raised
-//    the index is set to the vector index
-//    the value 'u' is set to the interrupt state (IntrState_Raised)
+/**
+   Request used by peripherals to register an interrupt vector
+   - index shall be the interrupt vector index
+   - data shall be a pointer to the corresponding InterruptHandler object
 
-//Request sent to by any peripheral to register an interrupt vector
-//The index shall be the interrupt vector index
-//The value 'p' shall be the corresponding InterruptHandler object
-//Notes:
-//   . a vector can only be registered once
-//   . the vector 0 cannot be registered
+  \note A vector can only be registered once. The vector 0 cannot be registered.
+ */
 #define AVR_CTLREQ_INTR_REGISTER    (AVR_CTLREQ_BASE + 1)
 
-//Request sent to raise or clear artificially any interrupt
-//The index shall be the interrupt vector index
-//The value 'u' shall be 1 for raising the interrupt, 0 for clearing it.
+/**
+ * Request sent to raise or clear artificially any interrupt
+   - index shall be the interrupt vector index
+   - data shall be 1 for raising the interrupt, 0 for clearing it.
+ */
 #define AVR_CTLREQ_INTR_RAISE       (AVR_CTLREQ_BASE + 2)
 
 #define AVR_INTERRUPT_NONE          -1
@@ -69,8 +67,6 @@ class InterruptHandler;
    controls the raise (or cancellation) of the interrupt.
 
    The arbitration of priorities between vectors is left to concrete sub-classes.
-
-   \sa AVR_InterruptHandler
 */
 class AVR_CORE_PUBLIC_API InterruptController : public Peripheral {
 
@@ -79,7 +75,11 @@ class AVR_CORE_PUBLIC_API InterruptController : public Peripheral {
 public:
 
     enum SignalId {
-        /// Signal ID for indicating that the state of an interrupt has changed. index is the vector index.
+        /**
+           ID indicating that the state of an interrupt has changed.
+           - index is the vector index.
+           - data is the new state, one of the State enum values
+         */
         Signal_StateChange
     };
 
@@ -216,7 +216,6 @@ inline bool InterruptController::interrupt_raised(int_vect_t vector) const
 
    It allows to raise (or cancel) a single interrupt.
    The same handler can be used for several interrupts.
-   \sa AVR_InterruptController
 */
 class AVR_CORE_PUBLIC_API InterruptHandler {
 
@@ -299,7 +298,7 @@ inline bool AbstractInterruptFlag::raised() const
     return interrupt_raised(m_vector);
 }
 
-/// Returns the raised state of the interrupt flag
+/// Returns the clear-on-ack configuration
 inline bool AbstractInterruptFlag::clear_on_ack() const
 {
     return m_clr_on_ack;
@@ -328,8 +327,8 @@ public:
     explicit InterruptFlag(bool clear_on_ack = false);
 
     bool init(Device& device,
-              const regmask_t& rb_enable,
-              const regmask_t& rb_flag,
+              const regmask_t& rm_enable,
+              const regmask_t& rm_flag,
               int_vect_t vector);
 
     bool init(Device& device,

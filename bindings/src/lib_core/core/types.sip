@@ -114,6 +114,12 @@ public:
     return sipGetState(sipTransferObj);
 %End
 
+%Docstring
+\dox:prepend
+In Python, reg_addr_t implements the rich comparison operators and a transparent conversion
+to/from integers.
+%End
+
 };
 
 
@@ -619,6 +625,11 @@ public:
     }
 
     return sipGetState(sipTransferObj);
+%End
+
+%Docstring
+\dox:prepend
+In Python, `sim_id_t` implements a transparent conversion to/from integers.
 %End
 
 };

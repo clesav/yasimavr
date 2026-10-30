@@ -34,16 +34,6 @@ YASIMAVR_BEGIN_NAMESPACE
 
 
 //=======================================================================================
-/**
-   \file
-   \defgroup api_uart Universal Asynchronous Serial Interface framework
-   @{
- */
-
-/**
-   \name Controller requests definition for USART
-   @{
- */
 
 /**
    adds frame to the underlying RX buffer, bypassing the bus logic. For debugging purpose.
@@ -51,14 +41,9 @@ YASIMAVR_BEGIN_NAMESPACE
 #define AVR_CTLREQ_USART_BYTES        (AVR_CTLREQ_BASE + 1)
 
 
-/// @}
-/// @}
-
-
 //=======================================================================================
 
 /**
-   \ingroup api_uart
    \brief Common enums and signal definitions for %UART classes
  */
 namespace UART {
@@ -114,7 +99,6 @@ enum Parity {
 
 
 /**
-   \ingroup api_uart
    \brief Generic model defining an universal synchronous/asynchronous serial interface a.k.a. %USART
 
    \par Emitter

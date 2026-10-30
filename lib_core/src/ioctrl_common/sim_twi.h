@@ -31,33 +31,6 @@ YASIMAVR_BEGIN_NAMESPACE
 
 
 //=======================================================================================
-/**
-   \file
-   \defgroup api_twi Two Wire Interface framework
-
-    This code (tentatively) defines a simulation of a %TWI (a.k.a. I2C or SMBus) implementation.
-
-    It supports multiple hosts/clients, arbitration and bus collision detections. Hoever,
-    it is not multi-thread safe.
-
-    It is implemented by 3 classes:
-     - EndPoint is an abstract interface defining a generic device connected to a %TWI bus.
-     - Client : Basic state machine & transitions for a client side interface.
-     - Host : Basic state machine & transitions for a host side interface.
-
-    These classes are abstract, the way classes access the SCL and SDA line must be defined by
-    reimplementation by overriding `set_line_state()` and using `line_state_changed()`.
-
-    Client and Host are designed to be controlled by an upper level object (a controller).
-    The controller gets notified or events on the bus by signalling, and shall use the interface API
-    to react accordingly.
-   @{
- */
-
-/**
-   \name Controller requests definition for SPI
-   @{
- */
 
  /**
    Request to inject a TWI bus error.
@@ -65,16 +38,11 @@ YASIMAVR_BEGIN_NAMESPACE
  */
 #define AVR_CTLREQ_TWI_BUS_ERROR     (AVR_CTLREQ_BASE + 1)
 
-/// @}
-/// @}
-
 
 //=======================================================================================
 
 /**
-   \ingroup api_twi
    \brief Common enums and signal definitions for %TWI classes
-   \sa EndPoint, Client, Host
  */
 namespace TWI {
 
@@ -191,11 +159,9 @@ enum SignalId {
 
 
 /**
-   \ingroup api_twi
    \brief An endpoint connected to a %TWI bus.
    Represents a device connected to a %TWI bus model and implements the basic level logic common
    to a host and a client.
-   \sa Client, Host
  */
 class AVR_CORE_PUBLIC_API EndPoint {
 
@@ -254,13 +220,11 @@ inline bool EndPoint::get_data_level() const
 //=======================================================================================
 
 /**
-   \ingroup api_twi
    \brief Base abstract definition for a %TWI client.
    This class implements the basic state machine to interface a %TWI bus as a client.
    It is design to be controlled by a upper layer object (a controller). The interface
    notifies the controller of bus events (start, address, etc) via the signals and
    the controller shall use the API of this class to react accordingly.
-   \sa TWI, EndPoint, Host
  */
 class AVR_CORE_PUBLIC_API Client : public EndPoint {
 
@@ -375,13 +339,11 @@ inline Signal& Client::signal()
 //=======================================================================================
 
 /**
-   \ingroup api_twi
    \brief Base abstract definition for a %TWI host.
    This class implements the basic state machine to interface a %TWI bus as a host.
    It is design to be controlled by a upper layer object (a controller). The interface
    notifies the controller of bus events (start, address, etc) via the signals and
    the controller shall use the API of this class to react accordingly.
-   \sa TWI, EndPoint, Client
  */
 class AVR_CORE_PUBLIC_API Host : public EndPoint {
 

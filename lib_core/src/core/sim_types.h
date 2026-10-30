@@ -38,8 +38,11 @@ YASIMAVR_BEGIN_NAMESPACE
 //That leaves 63 bits to count cycles, which at a MCU frequency of 20MHz
 //represent more than 14000 simulated years
 typedef long long        cycle_count_t;
+//Integer type representing an address in Data Space
 typedef unsigned long    mem_addr_t;
+//Integer type representing an address in Program Space
 typedef unsigned long    flash_addr_t;
+//Integer type representing interrupt vector indexes
 typedef short            int_vect_t;
 
 

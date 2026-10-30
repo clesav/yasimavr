@@ -349,11 +349,10 @@ void Core::cpu_write_ioreg(reg_addr_t reg_addr, uint8_t value)
     IORegister* ioreg = m_ioregs[addr];
     if (ioreg) {
         ioreg->cpu_write(addr, value);
-    } else {
-        if (!m_device->test_option(Device::Option_IgnoreBadCpuIO)) {
-            m_device->logger().wng("CPU writing to an unregistered I/O address: %04x", addr);
-            m_device->crash(CRASH_BAD_CPU_IO, "Invalid CPU register write");
-        }
+    }
+    else if (!m_device->test_option(Device::Option_IgnoreBadCpuIO)) {
+        m_device->logger().wng("CPU writing to an unregistered I/O address: %04x", addr);
+        m_device->crash(CRASH_BAD_CPU_IO, "Invalid CPU register write");
     }
 }
 
@@ -394,11 +393,12 @@ uint8_t Core::ioctl_read_ioreg(reg_addr_t reg_addr)
     IORegister* ioreg = m_ioregs[addr];
     if (ioreg) {
         return ioreg->ioctl_read(addr);
-    } else {
+    }
+    else if (!m_device->test_option(Device::Option_IgnoreBadCpuIO)) {
         m_device->logger().err("CTL reading an invalid register: %04x", addr);
         m_device->crash(CRASH_BAD_CTL_IO, "Invalid CTL register read");
-        return 0;
     }
+    return 0;
 }
 
 /**

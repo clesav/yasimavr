@@ -51,7 +51,14 @@ public:
     void erase(const bytes_view_t&, size_t);
 
     int read(size_t) const;
-    SIP_PYOBJECT read(size_t, size_t) const /TypeHint="bytes"/;
+    SIP_PYOBJECT read(size_t pos, size_t len) const /TypeHint="bytes"/;
+    %Docstring
+        Read a block of NVM bytes
+
+        :param pos: address of the first byte to read
+        :param len: size of the block to read
+        :return: a Python bytes object containing a copy of the nvm block
+    %End
     %MethodCode
         if (a1) {
             bytes_view_t b = sipCpp->view(a0, a1);

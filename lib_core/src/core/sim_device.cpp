@@ -74,7 +74,6 @@ void Device::erase_peripherals()
 
 /**
    Set or clear a device option.
-   \sa Device::Option
  */
 void Device::set_option(Option option, bool value)
 {
@@ -86,7 +85,6 @@ void Device::set_option(Option option, bool value)
 
 /**
    Returns whether a device option is set.
-   \sa Device::Option
  */
 bool Device::test_option(Option option) const
 {
@@ -111,7 +109,7 @@ bool Device::init(CycleManager& cycle_manager)
     cycle_manager.signal().connect(m_cycle_manager_hook);
 
     m_log_handler.init(cycle_manager);
-    
+
     const char* devname = m_config.name.c_str();
 
     m_logger.dbg("Initialisation of %s core", devname);

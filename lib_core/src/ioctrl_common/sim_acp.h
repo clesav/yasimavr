@@ -41,7 +41,7 @@ YASIMAVR_BEGIN_NAMESPACE
 namespace ACP {
 
 /**
-   Enum definition for the ACP channel configuration
+   Enum definition for the %ACP channel configuration
  */
 enum Channel {
     /// External pin analog input
@@ -62,21 +62,26 @@ enum Channel {
 struct channel_config_t : base_reg_config_t {
     /// Channel type
     Channel type;
-    /// Pin ID used for external pin analog inputs
+    /// %Pin ID used for external pin analog inputs
     pin_id_t pin;
-    /// Used for Channel_DAC, index of the peripheral to get the value from.
+    /// Used for Channel::DAC, index of the peripheral to get the value from.
     char per_num;
 
 };
 
 /**
-   Signal IDs raised by Analog Comparator models
+   %Signal IDs raised by Analog Comparator models
  */
 enum SignalId {
-    /// Raised when the output state of the comparator has change. The data is the new state.
+    /**
+       Raised when the output state of the comparator has change.
+       - data is the new state.
+     */
     Signal_Output,
-    /// Raised when the internal DAC value (if the peripheral has one) has changed. The data
-    /// is the DAC voltage value
+    /**
+       Raised when the internal DAC value (if the peripheral has one) has changed.
+       - data is the DAC voltage value.
+     */
     Signal_AcompRefChange
 };
 

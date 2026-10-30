@@ -385,7 +385,7 @@ std::vector<pin_id_t> PinManager::current_mux_pins(ctl_id_t drv_id) const
 /**
    Activate a mux configuration for all pins of a pin driver.
    \param drv_id ID of the driver
-   \param mux_index index of the new configuration to activate. May be 0 i.e. no mux is activated.
+   \param mux_id index of the new configuration to activate. May be 0 i.e. no mux is activated.
  */
 void PinManager::set_current_mux(ctl_id_t drv_id, mux_id_t mux_id)
 {
@@ -404,7 +404,7 @@ void PinManager::set_current_mux(ctl_id_t drv_id, mux_id_t mux_id)
    Activate a mux configuration for one pin of a pin driver.
    \param drv_id ID of the driver
    \param pin_index Index of the pin
-   \param mux_index index of the new configuration to activate. May be 0 i.e. no mux is activated.
+   \param mux_id index of the new configuration to activate. May be 0 i.e. no mux is activated.
  */
 void PinManager::set_current_mux(ctl_id_t drv_id, PinDriver::pin_index_t pin_index, mux_id_t mux_id)
 {
@@ -506,7 +506,7 @@ bool PinManager::driver_enabled(const PinDriver& drv, PinDriver::pin_index_t pin
 
 /**
    Return a pointer to a Pin object
-   \param drv_id ID of the pin
+   \param pin_id ID of the pin
  */
 Pin* PinManager::pin(pin_id_t pin_id) const
 {
