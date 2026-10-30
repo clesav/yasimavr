@@ -1,6 +1,6 @@
 # arch_AVR.py
 #
-# Copyright 2023 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2023-2026 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -22,5 +22,5 @@ This module regroups the classes required to build a custom device model
 based on the AVR architecture.
 '''
 
-from .builders._builders_arch_avr import AVR_BaseDevice
+from .builders._builders_arch_avr import AVR_BaseDevice, AVR_DeviceBuilder
 from ..lib.arch_avr import *

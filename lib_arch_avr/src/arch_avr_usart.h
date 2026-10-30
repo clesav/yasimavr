@@ -33,13 +33,12 @@ YASIMAVR_BEGIN_NAMESPACE
 //=======================================================================================
 
 /**
-   \ingroup api_uart
    \brief Configuration structure for ArchAVR_USART
  */
 struct ArchAVR_USARTConfig {
 
-    regbit_compound_t rbc_rx_data;  ///< Data register address
-    regbit_compound_t rbc_tx_data;
+    regbit_compound_t rbc_rx_data;  ///< RX data register field
+    regbit_compound_t rbc_tx_data;  ///< TX data register field
 
     regbit_t rb_rx_enable;          ///< RX enable bit
     regbit_t rb_tx_enable;          ///< TX enable bit
@@ -53,37 +52,31 @@ struct ArchAVR_USARTConfig {
     regbit_t rb_baud_2x;            ///< double bitrate bit
     regbit_compound_t rbc_baud;     ///< bitrate register (1 or 2 bytes)
 
-    regbit_t rb_ferr;
-    regbit_t rb_overrun;
-    regbit_t rb_perr;
-    regbit_compound_t rbc_chsize;
-    regbit_t rb_clock_mode;
-    regbit_t rb_parity;
-    regbit_t rb_stopbits;
+    regbit_t rb_ferr;               ///< Frame Error bit
+    regbit_t rb_overrun;            ///< Data Overrun bit
+    regbit_t rb_perr;               ///< Parity Error bit
+    regbit_compound_t rbc_chsize;   ///< Character Size field
+    regbit_t rb_clock_mode;         ///< Clock mode field
+    regbit_t rb_parity;             ///< Parity selection field
+    regbit_t rb_stopbits;           /// Stopbits selection field
 
-    int_vect_t iv_rxc;          ///< RXC interrupt vector
-    int_vect_t iv_txc;          ///< TXC interrupt vector
-    int_vect_t iv_txe;          ///< TXE (DRE) interrupt vector
+    int_vect_t iv_rxc;              ///< Index of the RXC interrupt vector
+    int_vect_t iv_txc;              ///< Index of the TXC interrupt vector
+    int_vect_t iv_txe;              ///< Index of the TXE (DRE) interrupt vector
 
 };
 
 
 /**
-   \ingroup api_uart
    \brief Implementation of a USART interface for AVR series
 
-   Supported features:
-    - 8-bits frames only, regardless of the frame size setting
-    - stop bits and parity settings have no effect
-    - synchronous, SPI and MPCM modes are not supported
-    - RXC, TXC, UDRE interrupts are supported
-    - Error flags are not supported
+   __Limitations__ :
+   - %SPI and MPCM modes are not supported
 
-    CTLREQs supported:
-     - AVR_CTLREQ_GET_SIGNAL : returns in data.p the signal of the underlying
-        UART (see sim_uart.h)
-     - AVR_CTLREQ_UART_ENDPOINT : returns in data.p the endpoint to use in order to transmit
-        data in and out (see sim_uart.h)
+   __CTLREQs supported__ :
+   - AVR_CTLREQ_GET_SIGNAL : returns the signal of the underlying
+     USART object
+   - AVR_CTLREQ_USART_BYTES
  */
 class AVR_ARCHAVR_PUBLIC_API ArchAVR_USART : public Peripheral {
 

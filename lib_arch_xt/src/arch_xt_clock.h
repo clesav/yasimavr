@@ -36,7 +36,15 @@ YASIMAVR_BEGIN_NAMESPACE
 /**
    \brief Implementation of a clock controller for XT core series.
 
-   Applicable for ATMega 0-series, ATTiny 0,1,2series
+   __Limitations__:
+   - The write-protection by CCP mechanism for I/O registers is not supported.
+   - Calibration settings have no effect.
+   - Clock start up time settings have no effect.
+   - RUNSTDBY for oscillators has no effect.
+
+   __CTLREQs supported__ :
+   - AVR_CTLREQ_CLK_SET_EXTCLK
+
  */
 class AVR_ARCHXT_PUBLIC_API ArchXT_ClkCtrl : public Peripheral {
 

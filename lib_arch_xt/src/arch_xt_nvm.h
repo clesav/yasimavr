@@ -63,8 +63,8 @@ private:
    \brief Implementation of a fuse NVM peripheral for XT series
 
    This controller:
-    - allows access to the fuse NVM block from the I/O address space.
-    - configures the NVM sections during initialisation from reading the fuse values.
+   - allows access to the fuse NVM block from the I/O address space.
+   - configures the NVM sections during initialisation from reading the fuse values.
  */
 class AVR_ARCHXT_PUBLIC_API ArchXT_Fuses : public Peripheral {
 
@@ -115,14 +115,14 @@ struct ArchXT_NVMConfig {
 };
 
 /**
-   \brief Implementation of a NVM controller for Mega0/Mega1 series
+   \brief Implementation of a NVM controller for XT core series
 
-   Limitations:
-    - The Configuration Change Protection for SPM registers has no effect
+   __Limitations__ :
+   - The Configuration Change Protection for SPM registers has no effect
 
-   CTLREQs supported:
-    - AVR_CTLREQ_NVM_REQUEST : Used internally when the CPU writes to a data space address
-    mapped to a NVM block. Used to redirect the write to the page buffer.
+   __CTLREQs supported__ :
+   - AVR_CTLREQ_NVM_REQUEST : Used internally when the CPU writes to a data space address
+     mapped to a NVM block. Used to redirect the write to the page buffer.
  */
 class AVR_ARCHXT_PUBLIC_API ArchXT_NVM : public Peripheral {
 

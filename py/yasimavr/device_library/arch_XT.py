@@ -1,6 +1,6 @@
 # arch_XT.py
 #
-# Copyright 2023 Clement Savergne <csavergne@yahoo.com>
+# Copyright 2023-2026 Clement Savergne <csavergne@yahoo.com>
 #
 # This file is part of yasim-avr.
 #
@@ -22,5 +22,5 @@ This module regroups the classes required to build a custom device model
 based on the XT architecture.
 '''
 
-from .builders._builders_arch_xt import XT_BaseDevice
+from .builders._builders_arch_xt import XT_BaseDevice, XT_DeviceBuilder
 from ..lib.arch_xt import *

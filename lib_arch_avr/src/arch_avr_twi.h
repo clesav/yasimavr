@@ -33,35 +33,53 @@ YASIMAVR_BEGIN_NAMESPACE
 
 //=======================================================================================
 /**
-   \ingroup api_twi
    \brief Configuration structure for ArchAVR_TWI
  */
 struct ArchAVR_TWIConfig {
 
+    /// Array of clock prescaler settings
     std::vector<unsigned long> ps_factors;
-
+    /// Address for the control register (TWCR)
     reg_addr_t    reg_ctrl;
+    /// Bitspec for the TWEN register bit
     bitspec_t     bs_enable;
+    /// Bitspec for the TWSTA register bit
     bitspec_t     bs_start;
+    /// Bitspec for the TWSTO register bit
     bitspec_t     bs_stop;
+    /// Bitspec for the TWIE register bit
     bitspec_t     bs_int_enable;
+    /// Bitspec for the TWINT register bit
     bitspec_t     bs_int_flag;
+    /// Bitspec for the TWEA register bit
     bitspec_t     bs_ack_enable;
-
+    /// Address for the bitrate register (TWBR)
     reg_addr_t  reg_bitrate;
+    /// Regbit for the status register field
     regbit_t    rb_status;
+    /// Regbit for the prescaler register field
     regbit_t    rb_prescaler;
+    /// Address for the data register (TWDR)
     reg_addr_t  reg_data;
+    /// Regbit for the bus address register field
     regbit_t    rb_addr;
+    /// Regbit for the general call register bits
     regbit_t    rb_gencall_enable;
+    /// Regbit for the bus address mask register field
     regbit_t    rb_addr_mask;
+    /// Index of the interrupt vector
     int_vect_t  iv_twi;
 
 };
 
 /**
-   \ingroup api_twi
-   \brief Implementation of a TWI model for the AVR series
+   \brief Implementation of a %TWI model for the AVR series
+
+   __CTLREQs supported__ :
+   - AVR_CTLREQ_GET_SIGNAL: returns the signal of the underlying %TWI interface - for debug purpose
+     - data.index:
+       - if =0, returns the signal of the host side.
+       - if !=0, returns the signal of the client side
  */
 class AVR_ARCHAVR_PUBLIC_API ArchAVR_TWI : public Peripheral {
 

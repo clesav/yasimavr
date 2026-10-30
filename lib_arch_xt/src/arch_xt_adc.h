@@ -21,7 +21,6 @@
 
 //=======================================================================================
 
-
 #ifndef __YASIMAVR_XT_ADC_H__
 #define __YASIMAVR_XT_ADC_H__
 
@@ -37,12 +36,11 @@ YASIMAVR_BEGIN_NAMESPACE
 //=======================================================================================
 
 /**
-   \ingroup api_adc
    \brief Configuration structure for ArchXT_ADC.
  */
 struct ArchXT_ADCConfig {
 
-    /// List of the ADC channels
+    /// List of the channels
     std::vector<ADC::channel_config_t> channels;
     /// List of the voltage references
     std::vector<ADC::reference_config_t> references;
@@ -50,7 +48,7 @@ struct ArchXT_ADCConfig {
     unsigned int vref_channel;
     /// List of the clock prescaler factors
     std::vector<unsigned long> clk_ps_factors;
-    /// Wrapping value for the ADC clock prescaler
+    /// Wrapping value for the clock prescaler
     unsigned long clk_ps_max;
     /// List of conversion delay values
     std::vector<unsigned long> init_delays;
@@ -64,17 +62,16 @@ struct ArchXT_ADCConfig {
 };
 
 /**
-   \ingroup api_adc
-   \brief Implementation of an ADC for XT series
+   \brief Implementation of an %ADC for XT series
 
-   Limitations:
-    - Sampling cap and duty cycle settings have no effect
-    - No Debug Run override
+   __Limitations__ :
+   - Sampling cap and duty cycle settings have no effect
+   - DBGRUN is not supported
 
-   CTLREQs supported:
-    - AVR_CTLREQ_GET_SIGNAL : returns a pointer to the instance signal
-    - AVR_CTLREQ_ADC_TRIGGER : Allows other peripherals to trigger a conversion.
-    The trigger only works when the ADC is enabled and idle, and the bit STARTEI is set.
+   __CTLREQs supported__ :
+   - AVR_CTLREQ_GET_SIGNAL : returns a pointer to the instance signal
+   - AVR_CTLREQ_ADC_TRIGGER : starts a conversion.
+     The trigger only works when the %ADC is enabled and idle, and the bit STARTEI is set.
  */
 class AVR_ARCHXT_PUBLIC_API ArchXT_ADC : public Peripheral {
 

@@ -423,7 +423,7 @@ def _get_wdt_builder():
 #========================================================================================
 
 class AVR_BaseDevice(_archlib.ArchAVR_Device):
-    """Specialisation of BaseDevicer for the device models using the AVR architecture.
+    """Specialisation of BaseDevice for the device models using the AVR architecture.
     """
 
     _NVMs_ = { 'Flash': _corelib.Core.NVM.Flash,

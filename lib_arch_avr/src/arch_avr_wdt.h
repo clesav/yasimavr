@@ -41,7 +41,7 @@ struct ArchAVR_WDTConfig {
     double clock_frequency;
     /// WDT configuration register address
     reg_addr_t reg_wdt;
-    /// Regbit the delay select
+    /// Regbit for the delay select
     regbit_compound_t rbc_delay;
     /// Bitspec for the Change Enable bit
     bitspec_t bs_chg_enable;
@@ -53,7 +53,7 @@ struct ArchAVR_WDTConfig {
     bitspec_t bs_int_flag;
     /// Regbit for the reset flag
     regbit_t rb_reset_flag;
-    /// Interrupt vector index
+    /// Index of the interrupt vector
     int_vect_t iv_wdt;
 
 };
@@ -61,6 +61,9 @@ struct ArchAVR_WDTConfig {
 
 /**
    \brief Implementation of a Watchdog Timer for AVR series
+
+   __Limitations__:
+   - The register synchronisation delay between clock domains is not implemented.
  */
 class AVR_ARCHAVR_PUBLIC_API ArchAVR_WDT : public Peripheral, public InterruptHandler {
 

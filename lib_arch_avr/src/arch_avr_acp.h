@@ -72,13 +72,11 @@ struct ArchAVR_ACPConfig {
 /**
    \brief Implementation of an Analog Comparator for AVR series
 
-   \sa ACP
+   __Limitations__ :
+   - Analog Comparator Input Capture is not implemented.
 
-   Limitations:
-    - Analog Comparator Input Capture is not implemented.
-
-   CTLREQs supported:
-    - AVR_CTLREQ_GET_SIGNAL : returns a pointer to the instance signal
+   __CTLREQs supported__ :
+   - AVR_CTLREQ_GET_SIGNAL : returns a pointer to the instance signal
  */
 class AVR_ARCHAVR_PUBLIC_API ArchAVR_ACP : public Peripheral {
 

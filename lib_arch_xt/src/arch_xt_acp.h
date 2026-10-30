@@ -35,11 +35,14 @@ YASIMAVR_BEGIN_NAMESPACE
 
 
 //=======================================================================================
-/**
+/*
    Definition of CTLREQ codes for ACP
  */
 
-//Request to obtain the DAC output value
+/**
+   Request to obtain the output of the peripheral internal DAC, when available,
+   data is returned with the voltage value as double.
+ */
 #define AVR_CTLREQ_ACP_GET_DAC         (AVR_CTLREQ_BASE + 1)
 
 
@@ -66,15 +69,12 @@ struct ArchXT_ACPConfig {
 /**
    \brief Implementation of an Analog Comparator for XT core series
 
-   \sa ACP
+   __Limitations__ :
+   - Output on a pin is not supported
 
-   Limitations:
-    - Pin output
-    - No Debug Run override
-
-   CTLREQs supported:
-    - AVR_CTLREQ_GET_SIGNAL : returns a pointer to the instance signal
-    - AVR_CTLREQ_ACP_GET_DAC : returns the output value of the internal DAC.
+   __CTLREQs supported__ :
+   - AVR_CTLREQ_GET_SIGNAL : returns a pointer to the instance signal
+   - AVR_CTLREQ_ACP_GET_DAC
  */
 class AVR_ARCHXT_PUBLIC_API ArchXT_ACP : public Peripheral {
 

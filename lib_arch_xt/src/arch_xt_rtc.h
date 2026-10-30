@@ -69,11 +69,10 @@ struct ArchXT_RTCConfig {
 
    Includes a Periodic Interrupt Timer system
 
-   Unsupported features:
-     - External clock source
-     - Crystal error correction
-     - Events outputs
-     - Synchronization Busy flags
+   __Limitations__ :
+   - Crystal error correction is not supported
+   - The register synchronisation delay between clock domains is not implemented.
+     Therefore, the SYNCBUSY flags already read 0.
  */
 class AVR_ARCHXT_PUBLIC_API ArchXT_RTC : public Peripheral {
 

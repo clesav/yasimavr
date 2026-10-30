@@ -33,7 +33,6 @@ YASIMAVR_BEGIN_NAMESPACE
 //=======================================================================================
 
 /**
-   \ingroup api_twi
    \brief Configuration structure for ArchXT_TWI
  */
 struct ArchXT_TWIConfig {
@@ -50,26 +49,21 @@ struct ArchXT_TWIConfig {
 };
 
 /**
-   \ingroup api_twi
-   \brief Implementation of a Two Wire Interface for XT core series
+   \brief Implementation of a Two %Wire Interface for XT core series
 
-   Unsupported features:
-    - SDA Setup time
-    - DBGRUN
-    - Bus timeout
-    - SMBus compatibility
-    - Fast mode
-    - Quick Command
+   __Limitations__ :
+   - SDA Setup/Hold times settings have no effect
+   - DBGRUN is not supported
+   - Bus timeout is not supported
+   - Fast mode / Fast mode plus settings have no effect
+   - Quick Command is not supported
 
-   CTLREQs supported:
-    - AVR_CTLREQ_TWI_BUS_ERROR : Trigger a bus error
-            data.index : if =0, trigger a bus error in the host and client sides, if enabled
-                         if !=0, trigger a bus error for the client side only, if enabled
-    - AVR_CTLREQ_GET_SIGNAL: returns the signal of the underlying TWI interface; for debug purpose
-            data.index : if =0, returns the signal of the host side
-                         if !=0, returns the signal of the client side
-
-   \sa TWI, TWIEndPoint
+   __CTLREQs supported__ :
+   - AVR_CTLREQ_TWI_BUS_ERROR
+   - AVR_CTLREQ_GET_SIGNAL: returns the signal of the underlying %TWI interface - for debug purpose
+     - data.index:
+       - if =0, returns the signal of the host side.
+       - if !=0, returns the signal of the client side
  */
 class AVR_ARCHXT_PUBLIC_API ArchXT_TWI : public Peripheral {
 

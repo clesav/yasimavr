@@ -33,7 +33,6 @@ YASIMAVR_BEGIN_NAMESPACE
 //=======================================================================================
 
 /**
-   \ingroup api_usi
    \brief Configuration structure for ArchAVR_USI
  */
 struct ArchAVR_USIConfig {
@@ -58,10 +57,7 @@ struct ArchAVR_USIConfig {
 
 
 /**
-   \ingroup api_usi
    \brief Implementation of a Universal Serial Interface for AVR series
-
-   Unsupported features:
  */
 class AVR_ARCHAVR_PUBLIC_API ArchAVR_USI : public Peripheral {
 
@@ -88,8 +84,6 @@ private:
 
     InterruptFlag m_ovf_intflag;
     InterruptFlag m_start_intflag;
-
-    DataSignal m_signal;
 
     BoundFunctionSignalHook<ArchAVR_USI> m_timer_hook;
 

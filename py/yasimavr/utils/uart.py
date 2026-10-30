@@ -34,8 +34,12 @@ __all__ = ['UART', 'UART_IO', 'RawUART']
 
 
 class UART_IO(io.RawIOBase):
-    '''Reimplementation of io.RawIOBase that can connect to a device USART peripheral to exchange data with
-    it as if writing to/reading from a file.
+    '''Reimplementation of io.RawIOBase that can connect to a device's
+    USART peripheral to exchange data with it as if writing to/reading from a file.
+
+    :note: | Using this class will only work if the device's USART peripheral is configured
+           | with a character size of 8 bits or less. However, any setting for
+           | parity/stopbits/baud will be ignored.
 
     :param Device device: Simulation device model
     :param int portnum: USART port index, i.e. 0 for USART0, 1 for USART1, etc.
@@ -71,6 +75,14 @@ class UART_IO(io.RawIOBase):
 
 
     def write(self, data):
+        '''Sends data to the MCU
+
+        :param int/bytes/bytearray/list data: data to be send. Must be an integer in byte range (0-255),
+                                              a list of integers in byte range or a bytes/bytearray object.
+        :raise IOError: if the I/O object is not writable, or the MCU model reported an error.
+        :raise TypeError: if the data is invalid type
+        '''
+
         if 'w' not in self._mode:
             raise IOError('Invalid mode')
 
@@ -89,6 +101,13 @@ class UART_IO(io.RawIOBase):
 
 
     def readinto(self, b):
+        '''Stores received data from the MCU into an object
+
+        :param bytearray/list b: object to store the data into.
+        :return: the number of bytes stored.
+        :raise IOError: if the I/O object is not readable.
+        '''
+
         if 'r' not in self._mode:
             raise IOError('Invalid mode')
 
@@ -124,10 +143,6 @@ class RawUART(UART.USART):
 
     Being bitwise, it is compatible with bit banging interfaces and it allows
     to visualise the traffic on the data lines.
-
-    :sa class UART.USART for more class members
-
-    :cpp:class: `UART.USART<UART::USART>`
     '''
 
     def __init__(self):

@@ -84,7 +84,7 @@ void ArchAVR_IntCtrl::ioreg_write_handler(reg_addr_t addr, const ioreg_write_t& 
     }
 }
 
-/**
+/*
    Implementation of the interrupt arbitration as per the AVR series.
    The lowest vectors have higher priority.
  */
@@ -107,7 +107,7 @@ InterruptController::IRQ_t ArchAVR_IntCtrl::get_next_irq() const
     return InterruptController::NO_INTERRUPT;
 }
 
-/**
+/*
    Implementation of the signal hook. On a section change, the IRQs need to updated to take into account
    the access flag IntDisabled.
  */

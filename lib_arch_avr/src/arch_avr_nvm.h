@@ -40,18 +40,30 @@ YASIMAVR_BEGIN_NAMESPACE
  */
 struct ArchAVR_NVMConfig {
 
+    /// Address for the SPMCR register
     reg_addr_t        reg_spm_ctrl;
+    /// Bitspec for the SPM command bits (PGWRT, BLBSET, RWWSRE, SIGRD, PGERS)
     bitspec_t         bs_spm_cmd;
+    /// Bitspec for the SPMEN register bit
     bitspec_t         bs_spm_enable;
+    /// Bitspec for the SPMIE register bit
     bitspec_t         bs_spm_inten;
+    /// Bitspec for the RWWSB register bit
     bitspec_t         bs_spm_rww_busy;
 
+    /// Regbit for the EEPROM address register
     regbit_compound_t rbc_ee_addr;
+    /// Regbit for the EEPROM data register
     reg_addr_t        reg_ee_data;
+    /// Regbit for the EERE register bit
     regbit_t          rb_ee_read;
+    /// Regbit for the EEPE register bit
     regbit_t          rb_ee_write;
+    /// Regbit for the EEMPE register bit
     regbit_t          rb_ee_wren;
+    /// Regbit for the EERIE register bit
     regbit_t          rb_ee_inten;
+    /// Regbit for the EEPM register field
     regbit_t          rb_ee_mode;
 
     /// Flash/EEPROM page write operation delay in usecs
@@ -77,12 +89,9 @@ struct ArchAVR_NVMConfig {
 /**
    \brief Implementation of a NVM controller for AVR series
 
-   Limitations:
-    - The Configuration Change Protection for SPM registers has no effect
-
-   CTLREQs supported:
-    - AVR_CTLREQ_NVM_REQUEST : Used internally when the CPU writes to a data space address
-    mapped to a NVM block. Used to redirect the write to the page buffer.
+   __CTLREQs supported__ :
+   - AVR_CTLREQ_NVM_REQUEST : Used internally when the CPU writes to a data space address
+     mapped to a NVM block. Used to redirect the write to the page buffer.
  */
 class AVR_ARCHAVR_PUBLIC_API ArchAVR_NVM : public Peripheral, public InterruptHandler {
 
@@ -152,19 +161,12 @@ private:
 //=======================================================================================
 
 /**
-   \file
-   \name Controller requests definition for ArchAVR_Fuses
-   @{
- */
-
-/**
    Request to obtain the value of a fuse.
 
    index should be one of ArchAVR_Fuses::Fuses enum values
+   The value of the fuse is returned in data as an integer.
  */
 #define AVR_CTLREQ_FUSE_VALUE          (AVR_CTLREQ_BASE + 1)
-
-/// @}
 
 
 /**
@@ -199,13 +201,15 @@ struct ArchAVR_FusesConfig {
 /**
    \brief Implementation of a fuse NVM peripheral for AVR series
 
-   The purpose of this controller is to use the values of the fuses to configure the section
-   access control flags on a device reset.
+   This controller:
+   - allows other peripherals to obtain the value of a fuse via a request.
+   - configures the NVM sections during initialisation from reading the fuse values.
  */
 class AVR_ARCHAVR_PUBLIC_API ArchAVR_Fuses : public Peripheral {
 
 public:
 
+    ///Enumeration to be used with AVR_CTLREQ_FUSE_VALUE
     enum Fuses {
         Fuse_BootRst,
         Fuse_ClkSel,

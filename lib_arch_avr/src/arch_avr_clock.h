@@ -53,7 +53,14 @@ struct ArchAVR_ClkCtrlConfig {
 
 
 /**
-   \brief Implementation of an ADC for AVR series
+   \brief Implementation of an clock controller for AVR core series
+
+   __Limitations__:
+   - Calibration settings are not supported.
+   - Clock start up time settings have no effect.
+
+   __CTLREQs supported__ :
+   - AVR_CTLREQ_CLK_SET_EXTCLK
  */
 class AVR_ARCHAVR_PUBLIC_API ArchAVR_ClkCtrl : public Peripheral {
 

@@ -76,14 +76,30 @@ struct ArchAVR_ExtIntConfig {
 
 /**
    \brief Implementation of a model for a External Interrupts peripheral for AVR series
+
+    CTLREQs supported:
+    - AVR_CTLREQ_GET_SIGNAL : returns a pointer to the instance signal
  */
 class AVR_ARCHAVR_PUBLIC_API ArchAVR_ExtInt : public Peripheral,
                                              public InterruptHandler {
 
 public:
 
+    /// signal ids raised by the controller
     enum SignalId {
+        /**
+           Raised when an external interrupt condition is triggered.
+           - index is the pin number (0 to 7)
+           - data is an integer representing the pin state change:
+             Bit 0 is the new state (0=Low, 1=High), bit 1 is the old state.
+         */
         Signal_ExtInt,
+        /**
+           Raised when a pin change interrupt condition is triggered.
+           - index is the pin number (0 to 7)
+           - data is an integer representing the pin state change:
+             Bit 0 is the new state (0=Low, 1=High), bit 1 is the old state.
+         */
         Signal_PinChange
     };
 
