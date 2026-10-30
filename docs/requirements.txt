@@ -3,5 +3,3 @@ sphinx-rtd-theme==3.1.0
 sphinxcontrib-applehelp==2.0.0
 sphinxcontrib-serializinghtml==2.0.0
 doxysip==0.2
-pyYAML==6.0.2
-pyvcd==0.4.1

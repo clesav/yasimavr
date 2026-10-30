@@ -32,9 +32,13 @@ extensions = [
     'doxysip',
 ]
 
-autodoc_mock_imports = ['yasimavr.lib.core',
-                        'yasimavr.lib.arch_avr',
-                        'yasimavr.lib.arch_xt']
+autodoc_mock_imports = [
+    'yasimavr.lib.core',
+    'yasimavr.lib.arch_avr',
+    'yasimavr.lib.arch_xt',
+    'vcd',
+    'yaml'
+]
 
 sip_toml_project = "../../bindings"
 sip_doxygen_project = "../build/dox/xml"
