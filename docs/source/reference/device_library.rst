@@ -150,16 +150,16 @@ Device Builders
     :members:
 
 
-.. autoclass:: yasimavr.device_library.builders._builders_arch_avr.AVR_DeviceBuilder
+.. autoclass:: yasimavr.device_library.arch_AVR.AVR_DeviceBuilder
 
 
-.. autoclass:: yasimavr.device_library.builders._builders_arch_avr.AVR_BaseDevice
+.. autoclass:: yasimavr.device_library.arch_AVR.AVR_BaseDevice
 
 
-.. autoclass:: yasimavr.device_library.builders._builders_arch_xt.XT_DeviceBuilder
+.. autoclass:: yasimavr.device_library.arch_XT.XT_DeviceBuilder
 
 
-.. autoclass:: yasimavr.device_library.builders._builders_arch_xt.XT_BaseDevice
+.. autoclass:: yasimavr.device_library.arch_XT.XT_BaseDevice
 
 
 Accessors

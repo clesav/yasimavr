@@ -13,6 +13,7 @@ Documentation
    introduction
    CLI
    concepts
+   sim_models
    reference/reference
    examples/examples
    IDE_integration

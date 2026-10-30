@@ -1,3 +1,4 @@
+==================
 Command Line Usage
 ==================
 
@@ -9,6 +10,7 @@ Synopsis
 *yasimavr* will load a firmware binaries into a model and run until the simulation stops and then exits.
 
 The minimum required arguments to provide are the MCU model [-m], and the firmware file [firmware] in standalone mode.
+
 
 GDB vs. Standalone Mode
 -----------------------
@@ -28,6 +30,7 @@ In GDB mode, *yasimavr* will :
 * Open a socket and listen for GDB connection.
 * Once a GDB connection is open, run the simulation cycles as instructed by the GDB front end.
 * When GDB closes the connection, if enabled, dump the final model state in a text file and exit.
+
 
 Options
 -------

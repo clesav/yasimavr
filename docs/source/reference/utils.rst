@@ -1,3 +1,4 @@
+================
 Python Utilities
 ================
 
@@ -25,8 +26,8 @@ Simulation State Dump
 .. autofunction:: sim_dump
 
 
-GDB Stub
---------
+GDB Server
+----------
 
 .. automodule:: yasimavr.utils.gdb_server
 
@@ -61,7 +62,13 @@ UART
 .. automodule:: yasimavr.utils.uart
 
 .. autoclass:: UART_IO
+   :members: write, readinto
+
+.. seealso::
+   For the full list of members, refer to the Python standard documentation for io.RawIOBase.
 
 .. autoclass:: RawUART
    :members:
 
+.. seealso::
+   For the full list of members, see :py:class:`yasimavr.lib.core.UART.USART`.

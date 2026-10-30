@@ -5,6 +5,8 @@ Key Concepts
 This page is mainly to try and explain some of the concepts underlying *yasimavr* internals and behaviour.
 
 
+.. _signal_concept:
+
 Signals/Hooks
 -------------
 
@@ -43,6 +45,8 @@ The class DataSignal defined in *yasimavr.lib.core* add an extra feature on top 
 
 It allows a signal consumer both to interrogate what is the current state of a specific signal ID and also to get notified when that state changes.
 
+
+.. _ctlreq_concept:
 
 Peripheral Control Requests (CTLREQ)
 ------------------------------------
