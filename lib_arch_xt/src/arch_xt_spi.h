@@ -33,7 +33,6 @@ YASIMAVR_BEGIN_NAMESPACE
 //=======================================================================================
 
 /**
-   \ingroup api_spi
    \brief Configuration structure for ArchXT_SPI.
  */
 struct ArchXT_SPIConfig {
@@ -47,10 +46,11 @@ struct ArchXT_SPIConfig {
 
 
 /**
-   \ingroup api_spi
    \brief Implementation of a Serial Peripheral Interface controller for the XT core series
 
-    for supported CTLREQs, see sim_spi.h
+   __CTLREQs supported__ :
+   - AVR_CTLREQ_SPI_TRANSFER
+
  */
 class AVR_ARCHXT_PUBLIC_API ArchXT_SPI : public Peripheral {
 

@@ -37,7 +37,6 @@ YASIMAVR_BEGIN_NAMESPACE
 //=======================================================================================
 
 /**
-   \ingroup api_vref
    \brief Configuration structure for ArchXT_VREF.
  */
 struct ArchXT_VREFConfig : public VREFConfig {
@@ -53,7 +52,7 @@ struct ArchXT_VREFConfig : public VREFConfig {
         std::vector<reference_config_t> references;
     };
 
-    /// Configuration for the VREF channels
+    /// Configuration for the channels
     std::vector<channel_t> channels;
     /// Base address for the peripheral I/O registers
     reg_addr_t reg_base;
@@ -62,8 +61,11 @@ struct ArchXT_VREFConfig : public VREFConfig {
 
 
 /**
-   \ingroup api_vref
    \brief Implementation of a voltage reference controller for XT core series.
+
+   __CTLREQs supported__ :
+   - AVR_CTLREQ_GET_SIGNAL : returns a pointer to the instance signal
+   - AVR_CTLREQ_ACP_GET_DAC
  */
 class AVR_ARCHXT_PUBLIC_API ArchXT_VREF : public VREF {
 
@@ -100,6 +102,10 @@ struct ArchXT_IntCtrlConfig {
 
 /**
    \brief Implementation of a Interrupt Controller for XT core series
+
+   __Limitations__:
+   - The write-protection by CCP mechanism for I/O registers is not supported.
+   - Interrupt handling delays by the core is not implemented
  */
 class AVR_ARCHXT_PUBLIC_API ArchXT_IntCtrl : public InterruptController {
 
@@ -185,16 +191,16 @@ struct ArchXT_MiscConfig {
    \brief Implementation of a controller for misc registers for XT core series
 
    This controller implements miscellaneous registers:
-     - General purpose registers
-     - Signature row
-     - Device ID
-     - Revision ID
-     - Calibration registers
-     - Serial number
-     - Configuration Control Protection (no effect)
+   - General purpose registers
+   - Signature row
+   - %Device ID
+   - Revision ID
+   - Calibration registers
+   - Serial number
+   - Configuration Control Protection (no effect)
 
-   CTLREQs supported:
-    - AVR_CTLREQ_WRITE_SIGROW : writes data to the signature row
+   __CTLREQs supported__ :
+   - AVR_CTLREQ_WRITE_SIGROW : writes data to the signature row
  */
 class AVR_ARCHXT_PUBLIC_API ArchXT_MiscRegCtrl : public Peripheral {
 

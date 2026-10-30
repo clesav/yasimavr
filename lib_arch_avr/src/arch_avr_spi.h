@@ -32,37 +32,42 @@ YASIMAVR_BEGIN_NAMESPACE
 
 //=======================================================================================
 /**
-   \ingroup api_spi
    \brief Configuration structure for ArchAVR_SPI
  */
 struct ArchAVR_SPIConfig {
 
+    /// Address for the data register
     reg_addr_t reg_data;
-
+    /// Regbit for the SPE register bit
     regbit_t rb_enable;
+    /// Regbit for the SPIE register bit
     regbit_t rb_int_enable;
+    /// Regbit for the SPIF register flag
     regbit_t rb_int_flag;
+    /// Regbit for the master/slave mode (MSTR) register bit
     regbit_t rb_mode;
+    /// Regbit for the CPOL register bit
     regbit_t rb_cpol;
+    /// Regbit for the CPHA register bit
     regbit_t rb_cpha;
+    /// Regbit for the DORD register bit
     regbit_t rb_dord;
+    /// Regbit for the clock rate selection register field
     regbit_t rb_clock;
+    /// Regbit for the x2 clock (SPI2X) register bit
     regbit_t rb_clock2x;
+    /// Regbit for the WCOL register flag
     regbit_t rb_wcol;
-
+    /// Index of the %SPI interrupt vector
     int_vect_t iv_spi;
 
 };
 
 /**
-   \ingroup api_spi
-   \brief Implementation of a SPI interface for AVR series
-   Features:
-    - Host/client mode
-    - data order, phase and polarity settings have no effect
-    - write collision flag not supported
+   \brief Implementation of a Serial %Peripheral Interface interface for AVR series
 
-    \sa sim_spi.h
+   __CTLREQs supported__ :
+   - AVR_CTLREQ_SPI_TRANSFER
  */
 class AVR_ARCHAVR_PUBLIC_API ArchAVR_SPI : public Peripheral {
 

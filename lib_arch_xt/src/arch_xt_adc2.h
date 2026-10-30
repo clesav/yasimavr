@@ -36,7 +36,6 @@ YASIMAVR_BEGIN_NAMESPACE
 //=======================================================================================
 
 /**
-   \ingroup api_adc
    \brief Configuration structure for ArchXT_ADC2.
  */
 struct ArchXT_ADC2Config {
@@ -62,9 +61,9 @@ struct ArchXT_ADC2Config {
 
     /// List of the conversion modes
     std::vector<conversion_config_t> modes;
-    /// List of the ADC channels (positive polarity)
+    /// List of the channels (positive polarity)
     std::vector<ADC::channel_config_t> pos_channels;
-    /// List of the ADC channels (negative polarity)
+    /// List of the channels (negative polarity)
     std::vector<ADC::channel_config_t> neg_channels;
     /// List of the voltage references
     std::vector<ADC::reference_config_t> references;
@@ -72,7 +71,7 @@ struct ArchXT_ADC2Config {
     unsigned int vref_channel;
     /// List of the clock prescaler factors
     std::vector<unsigned long> clk_ps_factors;
-    /// Wrapping value for the ADC clock prescaler
+    /// Wrapping value for the clock prescaler
     unsigned long clk_ps_max;
     /// Base address for the peripheral I/O registers
     reg_addr_t reg_base;
@@ -82,25 +81,24 @@ struct ArchXT_ADC2Config {
     int_vect_t iv_sampready;
     /// Interrupt vector index for ADC_WINCMP
     int_vect_t iv_resready;
-    /// Temperature sensor calibration offset (in V at +25°C)
-    double temp_cal_25C;
-    /// Temperature sensor calibration linear coef (in V/°C)
-    double temp_cal_coef;
     /// Model version
     Version version;
 
 };
 
 /**
-   \ingroup api_adc
-   \brief Implementation of an ADC model 2 for XT series
+   \brief Implementation of an %ADC model type 2 for XT series
 
-   Limitations: TBC
+   __Limitations__ :
+   - The TIMEBASE setting has no effect
+   - DBGRUN is not supported
+   - PGA bias selection has no effect
+   - The TEMPORARY register is not supported
 
-   CTLREQs supported:
-    - AVR_CTLREQ_GET_SIGNAL : returns a pointer to the instance signal
-    - AVR_CTLREQ_ADC_TRIGGER : Allows other peripherals to trigger a conversion.
-    The trigger only works when the ADC is enabled and idle, and START is set to EVENNT TRIGGER.
+   __CTLREQs supported__ :
+   - AVR_CTLREQ_GET_SIGNAL : returns a pointer to the instance signal
+   - AVR_CTLREQ_ADC_TRIGGER : starts a conversion.
+     The trigger only works when the peripheral is enabled and idle, and START is set to EVENT TRIGGER.
  */
 class AVR_ARCHXT_PUBLIC_API ArchXT_ADC2 : public Peripheral {
 

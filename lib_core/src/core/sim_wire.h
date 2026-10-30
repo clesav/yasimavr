@@ -49,15 +49,13 @@ YASIMAVR_BEGIN_NAMESPACE
    common resolved state is High.
 
    As for the rest of the library, analog voltage levels are relative to VCC, hence limited to the range [0.0, 1.0].
-
-   \sa Pin
  */
 class AVR_CORE_PUBLIC_API Wire {
 
 public:
 
     /**
-       Pin state enum.
+       %Wire state enum.
        All the possible logical/analog electrical states that the wire can take.
      */
     enum StateEnum {
@@ -148,26 +146,25 @@ public:
 
 
     /**
-       Signal IDs raised by the pin.
-       For all signals, the index is set to the pin ID.
+       %Signal IDs raised by the wire object.
      */
     enum SignalId {
         /**
-          Signal raised for any change of the resolved state.
-          data is set to the new state (one of State enum values)
+          Raised for any change of the resolved state.
+          data is set to the new state (one of State enumeration values).
          */
         Signal_StateChange = 0,
 
         /**
-          Signal raised for any change of the resolved digital state.
+          Raised for any change of the resolved digital state.
           data is set to the new digital state (0 or 1).
          */
         Signal_DigitalChange,
 
         /**
-           Signal raised for any change to the analog value, including
+           Raised for any change to the analog value, including
            when induced by a digital state change.
-           data is set to the analog value (double, in range [0;1])
+           data is set to the analog value (double, in the range [0;1]).
          */
         Signal_VoltageChange,
     };
@@ -248,7 +245,6 @@ inline void Wire::set_state(StateEnum state, double level)
 
 /**
    Set the state of the wire using a charcode
-   \sa char2state
    \param state new Wire state
    \param level voltage level (only for the Analog state)
  */

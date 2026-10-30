@@ -47,6 +47,12 @@ struct ArchXT_WDTConfig {
 
 /**
    \brief Implementation of a Watchdog Timer for XT core series
+
+   __Limitations__:
+   - The write-protection by CCP mechanism for I/O registers is not supported.
+   - The register synchronisation delay between clock domains is not implemented.
+     Therefore, the SYNCBUSY flag already reads 0.
+     However, the 3 WDT clock cycles delay from a WDR instruction is simulated.
  */
 class AVR_ARCHXT_PUBLIC_API ArchXT_WDT : public Peripheral {
 

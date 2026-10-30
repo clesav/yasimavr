@@ -27,6 +27,8 @@
 
 %DefaultEncoding(name = "UTF-8")
 
+%DefaultDocstringFormat "deindented"
+
 typedef unsigned long long      uint64_t;
 typedef long long               int64_t;
 typedef unsigned int            uint32_t;

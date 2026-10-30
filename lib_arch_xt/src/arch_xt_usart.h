@@ -33,7 +33,6 @@ YASIMAVR_BEGIN_NAMESPACE
 //=======================================================================================
 
 /**
-   \ingroup api_uart
    \brief Configuration structure for ArchXT_USART.
  */
 struct ArchXT_USARTConfig {
@@ -50,17 +49,17 @@ struct ArchXT_USARTConfig {
 };
 
 /**
-   \ingroup api_uart
    \brief Implementation of a USART interface for XT core series
 
-   Limitations:
-    - MSPI, MPCM or IRCOM modes are not supported
-    - Auto-baud not supported
+   __Limitations__ :
+   - MSPI, MPCM or IRCOM modes are not supported
+   - Auto-baud is not supported
+   - DBGRUN is not supported
 
-   CTLREQs supported:
-    - AVR_CTLREQ_GET_SIGNAL : returns in data.p the signal of the underlying
-      USART object (see sim_uart.h)
-    - AVR_CTLREQ_USART_BYTES
+   __CTLREQs supported__ :
+   - AVR_CTLREQ_GET_SIGNAL : returns the signal of the underlying
+     USART object
+   - AVR_CTLREQ_USART_BYTES
  */
 class AVR_ARCHXT_PUBLIC_API ArchXT_USART : public Peripheral {
 

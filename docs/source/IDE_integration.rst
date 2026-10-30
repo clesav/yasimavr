@@ -1,8 +1,10 @@
+===============
 IDE Integration
 ===============
 
+
 PlatformIO
-**********
+----------
 
 https://platformio.org/
 
@@ -11,7 +13,7 @@ https://platformio.org/
 
 
 Examples
---------
+********
 
 Example of *platformio.ini* to debug a firmware for Arduino Uno, using *yasimavr* in command line :
 

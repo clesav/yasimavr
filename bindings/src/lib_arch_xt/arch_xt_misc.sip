@@ -90,6 +90,10 @@ public:
 
     ArchXT_IntCtrl(const ArchXT_IntCtrlConfig& /KeepReference/);
 
+private:
+
+    virtual IRQ_t get_next_irq() const;
+
 };
 
 

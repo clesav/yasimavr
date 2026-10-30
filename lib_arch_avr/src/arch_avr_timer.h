@@ -35,13 +35,6 @@ YASIMAVR_BEGIN_NAMESPACE
 //=======================================================================================
 
 /**
-   \file
-   \name Controller requests definition for ArchAVR_Timer
-   @{
- */
-
-/**
-   \ingroup api_timer
    Request to obtain a pointer to the SignalHook entry point for external clock ticks
  */
 #define AVR_CTLREQ_TMR_GET_EXTCLK_HOOK        (AVR_CTLREQ_BASE + 1)
@@ -51,11 +44,8 @@ YASIMAVR_BEGIN_NAMESPACE
  */
 #define AVR_CTLREQ_TMR_GET_CAPT_HOOK          (AVR_CTLREQ_BASE + 2)
 
-/// @}
-
 
 /**
-   \ingroup api_timer
    \brief Configuration structure for ArchAVR_Timer.
  */
 struct ArchAVR_TimerConfig {
@@ -214,7 +204,6 @@ struct ArchAVR_TimerConfig {
 
 
 /**
-   \ingroup api_timer
    \brief Timer/Counter model for AVR series
 
    Implementation of a 8bits/16bits Timer/Counter for AVR series
@@ -225,28 +214,33 @@ struct ArchAVR_TimerConfig {
    It has a number of Output Compare channels, each defined by a OC_config_t structure.
    Each OC channel behaviour is defined by a set of Compare Output Mode (COM) values.
 
-   Unsupported features:
-        - Asynchronous operations
+   __Limitations__ :
+   - Asynchronous operations are not supported
+
+   __CTLREQs supported__ :
+   - AVR_CTLREQ_GET_SIGNAL: returns the pointer to the signal of the timer
+   - AVR_CTLREQ_TMR_GET_EXTCLK_HOOK
+   - AVR_CTLREQ_TMR_GET_CAPT_HOOK
  */
 class AVR_ARCHAVR_PUBLIC_API ArchAVR_Timer : public Peripheral {
 
 public:
 
     enum SignalId {
-        /// Raised on a overflow event, no data is carried
+        /// Raised on a overflow event
         Signal_OVF,
         /**
-           Raised on a Compare Match event. The index indicates which channel
-           (0='A', 1='B', ...), no data is carried.
+           Raised on a Compare Match event.
+           - Index indicates which channel (0='A', 1='B', ...)
          */
         Signal_CompMatch,
         /**
            Raised with the Compare Output state.
-           The index indicates which channel (0='A', 1='B', ...)
-           The data is the state (0 or 1) or invalid data if the channel is disabled.
+           - Index indicates which channel (0='A', 1='B', ...)
+           - Data is the state (0=Low, 1=High, Invalid=disabled)
          */
         Signal_CompOutput,
-        /// Raised on a Input Capture event, no data is carried.
+        /// Raised on a Input Capture event
         Signal_Capt
     };
 

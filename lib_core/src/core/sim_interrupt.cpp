@@ -32,6 +32,7 @@ YASIMAVR_USING_NAMESPACE
 
 /**
    Construct the controller with the given vector table size
+   \param vector_count number of interrupt vectors managed by the controller
 */
 InterruptController::InterruptController(unsigned int vector_count)
 :Peripheral(AVR_IOCTL_INTR)
@@ -131,6 +132,7 @@ void InterruptController::cpu_ack_irq()
    the vector address in the flash.
    \n The base implementation calls the ACK handler of the vector and
    raise the signal with the "Acknowledged" state.
+   \param vector index of the acknowledged vector
 */
 void InterruptController::cpu_ack_irq(int_vect_t vector)
 {
@@ -346,9 +348,7 @@ bool InterruptFlag::_init(Device& device, reg_addr_t reg_enable, reg_addr_t reg_
 /**
    Initialise an Interrupt Flag. Allocates the registers for the flag and the enable
    register fields and register with the interrupt controller for a particular vector.
-   \note If the vector is < 0, then no interrupt is registered. (can be used for future
-   or unsupported features)
-   \note Registering with the reset vector (vector 0) is an error.
+   \param device main device model
    \param rm_enable register location for the flag enable bits
    \param rm_flag register location for the flag state bits
    \param vector interrupt vector index
@@ -370,7 +370,20 @@ bool InterruptFlag::init(Device& device,
     return ok;
 }
 
+/**
+   Initialise an Interrupt Flag. Allocates the registers for the flag and the enable
+   register fields and register with the interrupt controller for a particular vector.
 
+   This overload is to be used when the positions of the enable and flags bits
+   are the same in two different registers.
+
+   \param device main device model
+   \param reg_enable address of the register for the flag enable bits
+   \param reg_flag address of the register for the flag state bits
+   \param mask bitmask for both enable and flag bits
+   \param vector interrupt vector index
+   \return true if successful, false otherwise
+*/
 bool InterruptFlag::init(Device& device,
                          reg_addr_t reg_enable, reg_addr_t reg_flag, bitmask_t mask,
                          int_vect_t vector)
@@ -389,7 +402,23 @@ bool InterruptFlag::init(Device& device,
     return ok;
 }
 
+/**
+   Initialise an Interrupt Flag. Allocates the registers for the flag and the enable
+   register fields and register with the interrupt controller for a particular vector.
 
+   This overload is to be used for complex layouts of enable and flag bits.
+
+   Two lists of bitmasks are provided and work by pair: enable_masks[0] enables the flags
+   for flag_masks[0], enable_masks[1] for flag_masks[1] etc.
+
+   \param device main device model
+   \param reg_enable address of the register for the flag enable bits
+   \param enable_masks list of bitmasks for the enable_bits
+   \param reg_flag address of the register for the flag state bits
+   \param flag_masks list of bitmasks for the flag bits
+   \param vector interrupt vector index
+   \return true if successful, false otherwise
+*/
 bool InterruptFlag::init(Device& device,
                          reg_addr_t reg_enable, const std::vector<bitmask_t>& enable_masks,
                          reg_addr_t reg_flag, const std::vector<bitmask_t>& flag_masks,

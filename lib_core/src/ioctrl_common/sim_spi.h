@@ -30,16 +30,6 @@ YASIMAVR_BEGIN_NAMESPACE
 
 
 //=======================================================================================
-/**
-   \file
-   \defgroup api_spi Serial Peripheral Interface framework
-   @{
- */
-
-/**
-   \name Controller requests definition for SPI
-   @{
- */
 
 /**
    Request to transfer a byte. A byte is directly
@@ -50,14 +40,10 @@ YASIMAVR_BEGIN_NAMESPACE
  */
 #define AVR_CTLREQ_SPI_TRANSFER         (AVR_CTLREQ_BASE + 1)
 
-/// @}
-/// @}
-
 
 //=======================================================================================
 
 /**
-   \ingroup api_spi
    \brief Generic Serial Peripheral Interface definitions
 
    Definition of enumerations, configuration structures and signal Ids used for
@@ -85,7 +71,7 @@ enum BitOrder {
 };
 
 /**
-   Enum definition for the wires used for a SPI bus
+   Enum definition for the wires used for a %SPI bus
  */
 enum Line {
     Clock = 0,
@@ -95,10 +81,10 @@ enum Line {
 };
 
 /**
-   \brief An endpoint connected to a SPI bus.
-   Represents a device connected to a SPI bus model and acting as a host or client.
+   \brief An endpoint connected to a %SPI bus.
+   Represents a device connected to a %SPI bus model and acting as a host or client.
    This is primarily intended to help simulate peripherals connected to the MCU model.
-   Note that this class only implements the logic require to shift bytes across the SPI bus
+   Note that this class only implements the logic require to shift bytes across the %SPI bus
    in all modes or bit orders.
  */
 class AVR_CORE_PUBLIC_API EndPoint {
@@ -156,11 +142,13 @@ private:
 
 };
 
+/// Returns the current serial mode setting
 inline SerialMode EndPoint::serial_mode() const
 {
     return m_serial_mode;
 }
 
+/// Returns the current bit order setting
 inline BitOrder EndPoint::bit_order() const
 {
     return m_bit_order;
@@ -175,17 +163,19 @@ inline uint8_t EndPoint::shift_data() const
     return m_shifter;
 }
 
+/// Returns the current state (active/inactive)
 inline bool EndPoint::active() const
 {
     return m_active;
 }
 
+/// Returns the state of the shift clock line
 inline bool EndPoint::shift_clock() const
 {
     return m_shift_clock;
 }
 
-///Returns true when a complete byte has been transferred/received
+/// Returns true when a complete byte has been transferred/received
 inline bool EndPoint::complete_frame() const
 {
     return !m_step;

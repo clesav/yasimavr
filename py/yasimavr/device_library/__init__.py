@@ -32,6 +32,17 @@ import os.path
 _factory_cache = {}
 
 def load_device(dev_name, verbose=False):
+    '''Top-level access function to the device library
+    This function instantiate a MCU simulation model from the builtin library.
+
+    :param str dev_name: name of the model to load. use :py:func:`model_list`
+                         to list the supported value. The value is case-insensitive.
+    :param bool verbose: (Optional) if true, prints some debugging messages to the
+                         console during the model build phase.
+    :return: a new Device (:py:class:`yasimavr.lib.core.Device`) instance built but
+             not initialised (requires a simulation loop)
+    '''
+
     base_dev_name = os.path.basename(dev_name).lower()
 
     cache_entry = _factory_cache.get(base_dev_name, None)
@@ -59,6 +70,28 @@ def load_device(dev_name, verbose=False):
 
 
 def load_device_from_config(dev_descriptor, dev_class=None, verbose=False):
+    '''Top-level access function to instantiate a MCU simulation model
+    from a :py:class:`yasimavr.device_library.descriptors.DeviceDescriptor` object.
+
+    The device is instantiated from a base class that depends on the device architecture
+    parameter:
+
+    - `AVR` architecture : the base class will be :py:class:`AVR_BaseDevice`.
+
+    - `XT` architecture: the base class will be py:class:`XT_BaseDevice`.
+
+    A custom base class may be specified but it *must* be a sub-class of
+    the right architecture base class. (for ex. a custom base class for a XT device must inherit
+    from XT_BaseDevice)
+
+    :param DeviceDescription dev_descriptor: object to load the model from.
+    :param class dev_class: Base device class to instantiate
+    :param bool verbose: (Optional) if true, prints some debugging messages to the
+                         console during the model build phase.
+    :return: a new Device (:py:class:`yasimavr.lib.core.Device`) instance built but
+             not initialised (requires a simulation loop)
+    '''
+
     from .builders import _base
     _base.VERBOSE = verbose
 
@@ -100,6 +133,10 @@ def load_device_from_config(dev_descriptor, dev_class=None, verbose=False):
 
 
 def model_list():
+    '''Returns a list of all supported MCU builtin model names.
+    The returned values may be used with :py:func:`load_device`
+    '''
+
     return device_database.model_list()
 
 

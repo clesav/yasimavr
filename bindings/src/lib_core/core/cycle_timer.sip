@@ -55,6 +55,22 @@ class CallableCycleTimer : public CycleTimer {
 #include "core/sim_cycle_timer.h"
 %End
 
+%Docstring
+Overrides `CycleTimer` to call a Python callable object on a timeout
+The same arguments as for CycleTimer::next() are provided to `callable`.
+
+`callable` can be any Python callable object (i.e. defines the __call__ special method)
+
+.. code-block:: py
+   :caption: Example
+
+   def python_timeout(when):
+       print("Timeout")
+
+   timer = CallableCycleTimer(python_timeout)
+   timer.delay(10)
+%End
+
 %TypeCode
 class CallableCycleTimer : public CycleTimer {
 
@@ -103,7 +119,7 @@ private:
 
 public:
 
-    CallableCycleTimer(SIP_PYCALLABLE);
+    CallableCycleTimer(SIP_PYCALLABLE callable);
     CallableCycleTimer(const CallableCycleTimer&);
 
     virtual void next(cycle_count_t) final;

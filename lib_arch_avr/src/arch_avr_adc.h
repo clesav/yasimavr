@@ -36,17 +36,18 @@ YASIMAVR_BEGIN_NAMESPACE
 //=======================================================================================
 
 /**
-   \ingroup api_adc
    \brief Configuration structure for ArchAVR_ADC.
  */
 struct ArchAVR_ADCConfig {
 
+    /// Enumeration to be used with triggers
     enum Trigger {
         Trig_Manual,
         Trig_FreeRunning,
         Trig_External,
     };
 
+    /// Structure representing a trigger selection
     struct trigger_config_t : base_reg_config_t {
         Trigger trigger;
     };
@@ -87,27 +88,24 @@ struct ArchAVR_ADCConfig {
     regbit_t rb_left_adj;
     /// Interrupt vector index
     int_vect_t iv_adc;
-
+    /// Width of the result in bits
     unsigned int result_width;
 
 };
 
 
 /**
-   \ingroup api_adc
-   \brief Implementation of an ADC for AVR series
+   \brief Implementation of an Analog-to-Digital Converter for AVR series
 
-   Limitations:
-    - No automatic start on ADR Noise Reduction sleep mode
-    - No digital input disabling
+   __Limitations__ :
+   - No automatic start on ADR Noise Reduction sleep mode
+   - No digital input disabling
 
-   CTLREQs supported:
-    - AVR_CTLREQ_GET_SIGNAL : returns a pointer to the instance signal
-    - AVR_CTLREQ_ADC_SET_TEMP : Sets the temperature reported by the internal sensor.
-    The reqdata should carry the temperature in Celsius as a double.
-    - AVR_CTLREQ_ADC_TRIGGER : Allows other peripherals to trigger a conversion.
-    The trigger only works when the ADC is enabled and idle, auto-trigger is enabled and
-    an external trigger source is selected.
+   __CTLREQs supported__ :
+   - AVR_CTLREQ_GET_SIGNAL : returns a pointer to the instance signal
+   - AVR_CTLREQ_ADC_TRIGGER : starts a conversion.
+     The trigger only works when the %ADC is enabled and idle, auto-trigger is enabled and
+     an external trigger source is selected.
  */
 class AVR_ARCHAVR_PUBLIC_API ArchAVR_ADC : public Peripheral {
 

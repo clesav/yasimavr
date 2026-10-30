@@ -65,7 +65,7 @@ struct breakpoint_t {
 };
 
 
-class Core /Abstract/ {
+class Core /Abstract, NoDefaultCtors/ {
 %TypeHeaderCode
 #include "core/sim_core.h"
 %End

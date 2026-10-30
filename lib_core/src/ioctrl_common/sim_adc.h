@@ -98,15 +98,19 @@ struct channel_config_t : base_reg_config_t {
     pin_id_t pin_p;
     /// %Pin ID used as negative input for differential channels, unused for other channel types.
     pin_id_t pin_n;
-    /// Used for Channel_AcompRef or Channel_DAC, index of the peripheral to get the value from.
+    /// Used for Channel::AcompRef or Channel::DAC, index of the peripheral to get the value from (ex: '0' for AC0/DAC0)
     char per_num;
     /// Measurement gain applied to the voltage value. Must be non-zero.
     unsigned int gain;
 };
 
-
+/**
+   Structure used to configure one reference source (when the %ADC controls its own reference)
+ */
 struct reference_config_t: base_reg_config_t {
+    ///Reference source
     VREF::Source source;
+    ///Reference voltage value (used with Bandgap)
     double level;
 };
 
@@ -114,11 +118,19 @@ struct reference_config_t: base_reg_config_t {
 enum SignalId {
     /// Raised at the start of a conversion
     Signal_ConversionStarted,
-    /// Raised just before the %ADC is sampling a pin. Last chance to set the analog value
-    /// for it to be taken into account by the current conversion.
+    /**
+       Raised just before the %ADC samples a pin. Last chance to set the analog value
+       for it to be taken into account by the current conversion.
+       - id is the pin ID
+       \note For differential channels, this signal is raised twice in a row, once for
+       the positive input, once for the negative input.
+     */
+    ///
     Signal_AboutToSamplePin,
-    /// Raised just before the %ADC is sampling the temperature. Last chance to set the analog value
-    /// for it to be taken into account by the current conversion.
+    /**
+       Raised just before the %ADC samples the temperature. Last chance to set the analog value
+       for it to be taken into account by the current conversion.
+     */
     Signal_AboutToSampleTemp,
     /// Raised when the conversion is complete and the CPU is notified that the conversion result is ready.
     Signal_ConversionComplete,

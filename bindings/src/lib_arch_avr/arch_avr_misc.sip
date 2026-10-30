@@ -66,6 +66,10 @@ public:
 
     ArchAVR_IntCtrl(const ArchAVR_IntCtrlConfig& /KeepReference/);
 
+private:
+
+    virtual IRQ_t get_next_irq() const;
+
 };
 
 

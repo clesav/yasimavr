@@ -47,17 +47,18 @@ struct ArchXT_DACConfig {
 /**
    \brief Implementation of an Digital-to-Analog Converter for XT core series
 
-   Limitations:
-    - No Pin output
+   __Limitations__ :
+   - Output on a pin is not supported
 
-   CTLREQs supported:
-    - AVR_CTLREQ_GET_SIGNAL : returns a pointer to the instance signal
+   __CTLREQs supported__ :
+   - AVR_CTLREQ_GET_SIGNAL : returns a pointer to the instance signal
  */
 class AVR_ARCHXT_PUBLIC_API ArchXT_DAC : public Peripheral {
 
 public:
 
     enum SignalId {
+        ///Signal raised when the output voltage is changed. data is the voltage value.
         Signal_Output
     };
 

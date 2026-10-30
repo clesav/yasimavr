@@ -12,7 +12,7 @@ The steps to modify the default settings and compile are :
  - Download the source distribution from GitHub (https://github.com/clesav/yasimavr/releases) or from PyPÏ (https://pypi.org/project/yasimavr/)
  - Edit the file setup.py to change the default compilation settions (look for the global variable YASIMAVR_COMPILE_OPTIONS)
  - Compile using python-build (https://pypi.org/project/build/)
- 
+
 
 ..Note:
    The binaries for the python libraries are built with the default settings for all the options below.

@@ -28,14 +28,20 @@ author = 'clesav'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'breathe',
     'sphinx.ext.autodoc',
+    'doxysip',
 ]
 
-breathe_projects = {
-    "yasimavr": "dox/xml"
-}
-breathe_default_project = "yasimavr"
+autodoc_mock_imports = [
+    'yasimavr.lib.core',
+    'yasimavr.lib.arch_avr',
+    'yasimavr.lib.arch_xt',
+    'vcd',
+    'yaml'
+]
+
+sip_toml_project = "../../bindings"
+sip_doxygen_project = "../build/dox/xml"
 
 # Tell sphinx what the primary language being documented is.
 primary_domain = 'py'

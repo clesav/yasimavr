@@ -39,22 +39,6 @@ YASIMAVR_BEGIN_NAMESPACE
  */
 struct ArchXT_RTCConfig {
 
-    enum RTC_ClockSource {
-        Clock_32kHz,
-        Clock_1kHz
-    };
-
-    /**
-       \brief Configuration structure for each supported source clock
-       \param reg_value the register field value for this source
-       \param source RTC_ClockSource enum value
-     */
-    struct clksel_config_t : base_reg_config_t {
-        RTC_ClockSource source;
-    };
-
-    /// Clock source configurations
-    std::vector<clksel_config_t> clocks;
     /// Base address for the peripheral I/O registers
     reg_addr_t reg_base;
     /// Interrupt vector index for RTC
@@ -69,11 +53,10 @@ struct ArchXT_RTCConfig {
 
    Includes a Periodic Interrupt Timer system
 
-   Unsupported features:
-     - External clock source
-     - Crystal error correction
-     - Events outputs
-     - Synchronization Busy flags
+   __Limitations__ :
+   - Crystal error correction is not supported
+   - The register synchronisation delay between clock domains is not implemented.
+     Therefore, the SYNCBUSY flags already read 0.
  */
 class AVR_ARCHXT_PUBLIC_API ArchXT_RTC : public Peripheral {
 

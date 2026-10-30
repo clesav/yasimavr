@@ -179,23 +179,8 @@ def _get_tcd_builder():
 #========================================================================================
 #RTC management configuration
 
-def _rtc_convertor(cfg, attr, yml_val, per_desc):
-    if attr == 'clocks':
-        py_clocks = []
-        for yml_clk in yml_val:
-            clksel_cfg = _archlib.ArchXT_RTCConfig.clksel_config_t()
-            clksel_cfg.reg_value = yml_clk[0]
-            clksel_cfg.source = _archlib.ArchXT_RTCConfig.RTC_ClockSource[yml_clk[1]]
-            py_clocks.append(clksel_cfg)
-
-        cfg.clocks = py_clocks
-
-    else:
-        raise Exception('Converter not implemented for ' + attr)
-
-
 def _get_rtc_builder():
-    cfg_builder = PeripheralConfigBuilder(_archlib.ArchXT_RTCConfig, _rtc_convertor)
+    cfg_builder = PeripheralConfigBuilder(_archlib.ArchXT_RTCConfig)
     return PeripheralBuilder(_archlib.ArchXT_RTC, cfg_builder)
 
 

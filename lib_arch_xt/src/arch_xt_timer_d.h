@@ -35,7 +35,6 @@ YASIMAVR_BEGIN_NAMESPACE
 //=======================================================================================
 
 /**
-   \ingroup api_timer
    \brief Configuration structure for ArchXT_TimerD.
  */
 struct ArchXT_TimerDConfig {
@@ -48,10 +47,9 @@ struct ArchXT_TimerDConfig {
 };
 
 /**
-   \ingroup api_timer
    \brief Implementation of a Timer/Counter type D for the XT core series.
 
-   Basic model limited to generating an overflow interrupt periodically.
+   This is a basic model limited to generating an overflow interrupt periodically.
  */
 class AVR_ARCHXT_PUBLIC_API ArchXT_TimerD : public Peripheral {
 

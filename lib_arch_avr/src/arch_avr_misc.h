@@ -34,15 +34,18 @@ YASIMAVR_BEGIN_NAMESPACE
 
 //=======================================================================================
 
+/**
+   \brief Configuration structure for ArchAVR_VREF
+ */
 struct ArchAVR_VREFConfig : public VREFConfig {
 
+    /// Voltage value (absolute) of the band gap
     double band_gap;
 
 };
 
 
 /**
-   \ingroup api_vref
    \brief Implementation of a Voltage Reference controller for AVR series
 
    It supports only one fixed reference.
@@ -59,18 +62,29 @@ public:
 
 //=======================================================================================
 
+/**
+   \brief Configuration structure for ArchAVR_IntCtrl
+ */
 struct ArchAVR_IntCtrlConfig {
 
+    /// Number of interrupt vectors
     unsigned int vector_count;
+    /// Size of each interrupt vector in bytes
     unsigned int vector_size;
+    /// I/O Address for the interrupt control register
     reg_addr_t reg_control;
+    /// Bitspec for the IVSEL register bit
     bitspec_t bs_ivsel;
+    /// Bitspec for the IVCE register bit
     bitspec_t bs_ivce;
 
 };
 
 /**
    \brief Implementation of a interrupt controller for AVR series
+
+   __Limitations__:
+   - Interrupt handling delays by the core is not implemented
  */
 class AVR_ARCHAVR_PUBLIC_API ArchAVR_IntCtrl : public InterruptController {
 

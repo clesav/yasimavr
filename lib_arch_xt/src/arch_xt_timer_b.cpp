@@ -486,7 +486,6 @@ void ArchXT_TimerB::raise_capture_flag()
     logger().dbg("Capture flag raised");
 }
 
-
 /*
  * Update the Compare Output value.
  * If the output is enabled (bit CCMPEN in CTRLB register), raise the signal

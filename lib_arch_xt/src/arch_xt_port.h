@@ -47,10 +47,11 @@ struct ArchXT_PortConfig {
 };
 
 /**
- * \brief Implementation of a GPIO port controller for XT core series, based on the generic
- * Port class.
- *
- * The Slewrate limit is unsupported.
+   \brief Implementation of a GPIO port controller for XT core series, based on the generic
+   %Port class.
+
+   __Limitations__ :
+   - Slew rate settings are not supported
  */
 class AVR_ARCHXT_PUBLIC_API ArchXT_Port : public Port {
 

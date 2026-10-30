@@ -129,6 +129,25 @@ class CallableSignalHook : public SignalHook {
 #include "core/sim_signal.h"
 %End
 
+%Docstring
+Overrides `Hook` to call a Python callable object whenever a signal
+the hook is connected to is raised.
+The same arguments as for SignalHook::raised() are provided to `callable`.
+
+`callable` can be any Python callable object (i.e. defines the __call__ special method)
+
+.. code-block:: py
+   :caption: Example
+
+   def python_hook(sigdata, hooktag):
+       print("Signal raised")
+
+   signal = Signal()
+   hook = CallableSignalHook(python_hook)
+   signal.connect(hook)
+   signal.raise_()
+%End
+
 %TypeCode
 class CallableSignalHook : public SignalHook {
 
@@ -185,6 +204,6 @@ public:
     CallableSignalHook(SIP_PYCALLABLE);
     CallableSignalHook(const CallableSignalHook&);
 
-    virtual void raised(const signal_data_t&, int) final;
+    virtual void raised(const signal_data_t& sigdata, int hooktag) final;
 
 };

@@ -105,13 +105,12 @@ public:
 
         /**
            By default the device will crash on the following CPU I/O access errors:
-              - Reading from a unallocated register,
-              - Writing to a unallocated register,
-              - Changing the value of a read-only field,
-              - Writing a '1' to an unused bit.
+              - Reading from an invalid/off-range address or an unallocated register,
+              - Writing to an invalid/off-range address or an unallocated register,
 
-           If this option is set, these errors will be ignored.
-           \sa Core::cpu_read_ioreg, Core::cpu_write_ioreg
+           If this option is set:
+              - Reading from an unallocated register will succeed and return 0x00,
+              - Writing to an unallocated register will have no effect.
          */
         Option_IgnoreBadCpuIO       = 0x02,
 

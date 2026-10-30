@@ -36,9 +36,13 @@ YASIMAVR_BEGIN_NAMESPACE
  */
 struct ArchAVR_PortConfig {
 
+    /// Name of the port (A,B,C,...)
     char name;
+    /// Address of the PORT register
     reg_addr_t reg_port;
+    /// Address of the IN register
     reg_addr_t reg_pin;
+    /// Address of the DIR register
     reg_addr_t reg_dir;
 
 };

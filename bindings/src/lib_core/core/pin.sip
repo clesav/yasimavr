@@ -21,7 +21,7 @@
 
 //=======================================================================================
 
-typedef sim_id_t pin_id_t /NoTypeName/;
+typedef sim_id_t pin_id_t;
 
 
 class Pin : public Wire /NoDefaultCtors/ {
