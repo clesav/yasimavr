@@ -145,9 +145,9 @@ struct bitmask_t {
     bitmask_t __and__(const bitmask_t&) const;
     bitmask_t __xor__(const bitmask_t&) const;
     bitmask_t __invert__() const;
-    void __ior__(const bitmask_t&);
-    void __iand__(const bitmask_t&);
-    void __ixor__(const bitmask_t&);
+    bitmask_t& __ior__(const bitmask_t&);
+    bitmask_t& __iand__(const bitmask_t&);
+    bitmask_t& __ixor__(const bitmask_t&);
     uint8_t __and__(uint8_t) const;
     unsigned int bitcount() const;
     bool bit(unsigned int) const;
@@ -590,8 +590,8 @@ public:
     %End
 
     bool __eq__(const sim_id_t&) const;
-    sim_id_t __add__(char c) const;
-    sim_id_t __iadd__(char c);
+    sim_id_t __add__(char) const;
+    sim_id_t& __iadd__(char);
 
 //Ensures a seamless conversion from a Python integer or a string
 %ConvertToTypeCode

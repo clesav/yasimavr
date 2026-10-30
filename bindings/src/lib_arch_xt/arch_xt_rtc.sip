@@ -26,16 +26,6 @@ struct ArchXT_RTCConfig {
 #include "arch_xt_rtc.h"
 %End
 
-    enum RTC_ClockSource {
-        Clock_32kHz,
-        Clock_1kHz
-    };
-
-    struct clksel_config_t : base_reg_config_t {
-        RTC_ClockSource source;
-    };
-
-    std::vector<ArchXT_RTCConfig::clksel_config_t> clocks;
     reg_addr_t reg_base;
     int_vect_t iv_rtc;
     int_vect_t iv_pit;

@@ -38,7 +38,7 @@ const ctlreq_id_t CTLREQ_INTR_RAISE;
 const int_vect_t INTERRUPT_NONE;
 
 
-class InterruptController : public Peripheral /Abstract/ {
+class InterruptController : public Peripheral /Abstract, NoDefaultCtors/ {
 %TypeHeaderCode
 #include "core/sim_interrupt.h"
 %End
@@ -67,6 +67,15 @@ public:
     static const IRQ_t NO_INTERRUPT;
 
     InterruptController(unsigned int);
+
+protected:
+
+    bool interrupt_raised(int_vect_t) const;
+    int_vect_t intr_count() const;
+    void set_interrupt_raised(int_vect_t, bool);
+
+    virtual void cpu_ack_irq(int_vect_t);
+    virtual IRQ_t get_next_irq() const = 0;
 
 };
 
