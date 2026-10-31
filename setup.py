@@ -45,6 +45,8 @@ from sipbuild.pyproject import PyProject
 import sipbuild
 import sipbuild.module as sip_module
 from sipbuild.version import SIP_VERSION
+if SIP_VERSION >= 0x060f00:
+    from sipbuild.sip_module_configuration import SipModuleConfiguration
 
 #Necessary in virtual building environment, to import from bindings.project
 p = os.path.dirname(__file__)
@@ -114,10 +116,19 @@ def _copy_siplib_sources(sip_mod_fq_name, target_dir):
         abi_major = sip_module.get_latest_version()
         abi_minor = sip_module.get_latest_version(abi_major)
         siplib_sources = sip_module.copy_nonshared_sources((abi_major, abi_minor), target_dir)
-    else: #SIP_VERSION >= 6.15.0
+    elif SIP_VERSION < 0x061000: #SIP_VERSION < 6.16.0
         abi_major = sipbuild.py_versions.DEFAULT_ABI_MAJOR
         abi_minor = sip_module.get_latest_version(abi_major)
-        siplib_sources = sip_module.copy_nonshared_sources((abi_major, abi_minor), sip_mod_fq_name, target_dir)
+        siplib_sources = sip_module.copy_nonshared_sources((abi_major, abi_minor),
+                                                           sip_mod_fq_name,
+                                                           target_dir)
+    else: #SIP_VERSION >= 6.16.0
+        abi_major = sipbuild.py_versions.DEFAULT_ABI_MAJOR
+        abi_minor = sip_module.get_latest_version(abi_major)
+        siplib_sources = sip_module.copy_nonshared_sources((abi_major, abi_minor),
+                                                           sip_mod_fq_name,
+                                                           SipModuleConfiguration(0),
+                                                           target_dir)
 
     return siplib_sources
 
@@ -309,7 +320,7 @@ class yasimavr_build_ext(build_ext):
         else: #6.15.0 <= SIP_VERSION
             sip_module.module(sip_mod_fq_name,
                               abi_version=None,
-                              sip_module_configuration=None,
+                              sip_module_configuration=SipModuleConfiguration(0),
                               project=None,
                               sdist=False,
                               setup_cfg=True,

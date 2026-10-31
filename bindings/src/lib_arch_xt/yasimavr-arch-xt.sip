@@ -23,6 +23,8 @@
 
 %Module(name=yasimavr.lib.arch_xt)
 
+%MinimumABIVersion(version="13")
+
 %Import ../lib_core/yasimavr-core.sip
 
 %License "GPLv3 (see LICENSE file)"

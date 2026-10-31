@@ -23,6 +23,8 @@
 
 %Module(name=yasimavr.lib.core)
 
+%MinimumABIVersion(version="13")
+
 %License "GPLv3 (see LICENSE file)"
 
 %DefaultEncoding(name = "UTF-8")
