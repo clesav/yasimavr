@@ -293,9 +293,9 @@ class yasimavr_build_ext(build_ext):
             # if self.extra_link_args is not None:
                 # lib.extra_link_args = lib.extra_link_args + self.extra_link_args.split()
 
-        #=====================================================================
+        #======================================================================
         #Create the SIP extension module to build
-        #=====================================================================
+        #======================================================================
 
         #Purge the temporary source directory
         siplib_temp = os.path.join(self.build_temp, 'siplib')
@@ -332,7 +332,7 @@ class yasimavr_build_ext(build_ext):
         siplib_extension = Extension(sip_mod_fq_name, sources = siplib_sources)
         self.distribution.ext_modules.append(siplib_extension)
 
-        #=====================================================================
+        #======================================================================
         #Generate the SIP bindings source code and add to the extensions to build
         ##=====================================================================
 
@@ -353,14 +353,14 @@ class yasimavr_build_ext(build_ext):
         #Add on-the-fly the binding extension modules to be built
         self.distribution.ext_modules.extend(sip_project.builder.ext_modules)
 
-        #=====================================================================
+        #======================================================================
         #Re-finalize the setup
         ##=====================================================================
         self.finalize_options()
 
-        #=====================================================================
+        #======================================================================
         #Copy the PEP484 files
-        #=====================================================================
+        #======================================================================
         for ext in sip_project.builder.ext_modules:
             if ext.pyi_file:
                 ext_path = self.get_ext_fullpath(ext.name)

@@ -23,7 +23,7 @@
 
 %Module(name=yasimavr.lib.core)
 
-%MinimumABIVersion(version="13")
+%MinimumABIVersion(version="13.0")
 
 %License "GPLv3 (see LICENSE file)"
 

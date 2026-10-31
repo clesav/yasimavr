@@ -23,7 +23,7 @@
 
 %Module(name=yasimavr.lib.arch_xt)
 
-%MinimumABIVersion(version="13")
+%MinimumABIVersion(version="13.0")
 
 %Import ../lib_core/yasimavr-core.sip
 

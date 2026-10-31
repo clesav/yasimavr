@@ -128,3 +128,4 @@ jobs:
         uses: actions/upload-artifact/merge@v4
         with:
           name: dist
+          delete-merged: true
