@@ -37,7 +37,7 @@ import shutil
 import sys
 import dataclasses
 
-from setuptools import setup, Extension
+from setuptools import setup, Extension, find_namespace_packages
 from setuptools.extension import Library
 from setuptools.command.build_ext import build_ext
 
@@ -358,24 +358,32 @@ class yasimavr_build_ext(build_ext):
                 pyi_path = os.path.join(ext_dir, os.path.basename(ext.pyi_file))
                 self.copy_file(ext.pyi_file, pyi_path)
 
-        #=====================================================================
-        #Copy the header files in the include folder
-        ##=====================================================================
-        include_dir = os.path.dirname(self.get_ext_fullpath(NAME + '.include._'))
-        for lib in LIBRARIES.values():
-            hdr_list = lib.get_headers()
-            for hdr in hdr_list:
-                hdr_path = os.path.relpath(hdr, lib.src_path)
-                hdr_pkg_path = os.path.join(include_dir, lib.name, hdr_path)
-                self.mkpath(os.path.dirname(hdr_pkg_path))
-                self.copy_file(hdr, hdr_pkg_path)
-
-        #=====================================================================
+        #======================================================================
         #run
         ##=====================================================================
         super().run()
 
+#==============================================================================
+#Definition of the sub-packages
+#==============================================================================
+packages = [
+    "yasimavr",
+    "yasimavr.lib",
+    "yasimavr.utils",
+    "yasimavr.utils.parts",
+    "yasimavr.cli",
+    "yasimavr.device_library",
+    "yasimavr.device_library.builders",
+    "yasimavr.device_library.configs",
+]
+#Add the device config directories as namespace packages. Done by automatic
+#discovery to avoid listing all of them 
+packages.extend('yasimavr.device_library.configs.' + p
+                 for p in find_namespace_packages('py/yasimavr/device_library/configs'))
 
+#==============================================================================
+#setup call
+#==============================================================================
 setup(
     name = NAME,
     version = VERSION_STR,
@@ -395,15 +403,7 @@ setup(
     platforms = "Any",
     install_requires = ["pyYAML", "pyvcd"],
 
-    packages = [
-        "yasimavr",
-        "yasimavr.lib",
-        "yasimavr.utils",
-        "yasimavr.device_library",
-        "yasimavr.device_library.builders",
-        "yasimavr.device_library.configs",
-        "yasimavr.cli"
-    ],
+    packages = packages,
     package_dir = {"yasimavr" : "py/yasimavr"},
     include_package_data = True,
 

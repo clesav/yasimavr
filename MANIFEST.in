@@ -18,6 +18,9 @@ global-exclude bindings/src/*.toml
 #Device configuration files, are part of the wheel
 recursive-include py/yasimavr/device_library *.yml
 
+#Remove automatic test scripts
+prune tests
+
 #Version management
 include VERSION
 include lib_core/make_version_source.py
