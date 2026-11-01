@@ -29,7 +29,7 @@
  * Helper function for importing data from a fixed-length
  * Python object that supports the Sequence protocol
  */
-inline int convert_to_fixed_array(void *data, const char *format, size_t len, PyObject* obj)
+inline int convert_to_fixed_array(void *data, const char *format, Py_ssize_t len, PyObject* obj)
 {
     if (!PySequence_Check(obj) || (PySequence_Size(obj) != len)) {
         PyErr_Format(PyExc_TypeError, "obj must be a sequence of length %d", len);
@@ -56,7 +56,7 @@ inline int convert_to_fixed_array(void *data, const char *format, size_t len, Py
 
 
 template<typename ItemType>
-int convert_to_fixed_array(sipTypeDef* type_def, ItemType* data, size_t len, PyObject* obj)
+int convert_to_fixed_array(sipTypeDef* type_def, ItemType* data, Py_ssize_t len, PyObject* obj)
 {
     if (!PySequence_Check(obj) || (PySequence_Size(obj) != len)) {
         PyErr_Format(PyExc_TypeError, "Value must be a sequence of length %d", len);
@@ -85,14 +85,14 @@ int convert_to_fixed_array(sipTypeDef* type_def, ItemType* data, size_t len, PyO
 }
 
 
-inline PyObject* convert_from_fixed_array(void* data, const char *format, size_t len)
+inline PyObject* convert_from_fixed_array(void* data, const char *format, Py_ssize_t len)
 {
     return sipConvertToArray(data, format, len, 0);
 }
 
 
 template<typename ItemType>
-PyObject* convert_from_fixed_array(const sipTypeDef* type_def, ItemType* data, size_t len)
+PyObject* convert_from_fixed_array(const sipTypeDef* type_def, ItemType* data, Py_ssize_t len)
 {
     PyObject* tuple = PyTuple_New(len);
     if (PyErr_Occurred())

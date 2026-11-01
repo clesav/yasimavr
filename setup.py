@@ -37,7 +37,7 @@ import shutil
 import sys
 import dataclasses
 
-from setuptools import setup, Extension
+from setuptools import setup, Extension, find_namespace_packages
 from setuptools.extension import Library
 from setuptools.command.build_ext import build_ext
 
@@ -45,6 +45,8 @@ from sipbuild.pyproject import PyProject
 import sipbuild
 import sipbuild.module as sip_module
 from sipbuild.version import SIP_VERSION
+if SIP_VERSION >= 0x060f00:
+    from sipbuild.sip_module_configuration import SipModuleConfiguration
 
 #Necessary in virtual building environment, to import from bindings.project
 p = os.path.dirname(__file__)
@@ -114,10 +116,19 @@ def _copy_siplib_sources(sip_mod_fq_name, target_dir):
         abi_major = sip_module.get_latest_version()
         abi_minor = sip_module.get_latest_version(abi_major)
         siplib_sources = sip_module.copy_nonshared_sources((abi_major, abi_minor), target_dir)
-    else: #SIP_VERSION >= 6.15.0
+    elif SIP_VERSION < 0x061000: #SIP_VERSION < 6.16.0
         abi_major = sipbuild.py_versions.DEFAULT_ABI_MAJOR
         abi_minor = sip_module.get_latest_version(abi_major)
-        siplib_sources = sip_module.copy_nonshared_sources((abi_major, abi_minor), sip_mod_fq_name, target_dir)
+        siplib_sources = sip_module.copy_nonshared_sources((abi_major, abi_minor),
+                                                           sip_mod_fq_name,
+                                                           target_dir)
+    else: #SIP_VERSION >= 6.16.0
+        abi_major = sipbuild.py_versions.DEFAULT_ABI_MAJOR
+        abi_minor = sip_module.get_latest_version(abi_major)
+        siplib_sources = sip_module.copy_nonshared_sources((abi_major, abi_minor),
+                                                           sip_mod_fq_name,
+                                                           SipModuleConfiguration(0),
+                                                           target_dir)
 
     return siplib_sources
 
@@ -282,9 +293,9 @@ class yasimavr_build_ext(build_ext):
             # if self.extra_link_args is not None:
                 # lib.extra_link_args = lib.extra_link_args + self.extra_link_args.split()
 
-        #=====================================================================
+        #======================================================================
         #Create the SIP extension module to build
-        #=====================================================================
+        #======================================================================
 
         #Purge the temporary source directory
         siplib_temp = os.path.join(self.build_temp, 'siplib')
@@ -309,7 +320,7 @@ class yasimavr_build_ext(build_ext):
         else: #6.15.0 <= SIP_VERSION
             sip_module.module(sip_mod_fq_name,
                               abi_version=None,
-                              sip_module_configuration=None,
+                              sip_module_configuration=SipModuleConfiguration(0),
                               project=None,
                               sdist=False,
                               setup_cfg=True,
@@ -321,7 +332,7 @@ class yasimavr_build_ext(build_ext):
         siplib_extension = Extension(sip_mod_fq_name, sources = siplib_sources)
         self.distribution.ext_modules.append(siplib_extension)
 
-        #=====================================================================
+        #======================================================================
         #Generate the SIP bindings source code and add to the extensions to build
         ##=====================================================================
 
@@ -342,14 +353,14 @@ class yasimavr_build_ext(build_ext):
         #Add on-the-fly the binding extension modules to be built
         self.distribution.ext_modules.extend(sip_project.builder.ext_modules)
 
-        #=====================================================================
+        #======================================================================
         #Re-finalize the setup
         ##=====================================================================
         self.finalize_options()
 
-        #=====================================================================
+        #======================================================================
         #Copy the PEP484 files
-        #=====================================================================
+        #======================================================================
         for ext in sip_project.builder.ext_modules:
             if ext.pyi_file:
                 ext_path = self.get_ext_fullpath(ext.name)
@@ -358,24 +369,32 @@ class yasimavr_build_ext(build_ext):
                 pyi_path = os.path.join(ext_dir, os.path.basename(ext.pyi_file))
                 self.copy_file(ext.pyi_file, pyi_path)
 
-        #=====================================================================
-        #Copy the header files in the include folder
-        ##=====================================================================
-        include_dir = os.path.dirname(self.get_ext_fullpath(NAME + '.include._'))
-        for lib in LIBRARIES.values():
-            hdr_list = lib.get_headers()
-            for hdr in hdr_list:
-                hdr_path = os.path.relpath(hdr, lib.src_path)
-                hdr_pkg_path = os.path.join(include_dir, lib.name, hdr_path)
-                self.mkpath(os.path.dirname(hdr_pkg_path))
-                self.copy_file(hdr, hdr_pkg_path)
-
-        #=====================================================================
+        #======================================================================
         #run
         ##=====================================================================
         super().run()
 
+#==============================================================================
+#Definition of the sub-packages
+#==============================================================================
+packages = [
+    "yasimavr",
+    "yasimavr.lib",
+    "yasimavr.utils",
+    "yasimavr.utils.parts",
+    "yasimavr.cli",
+    "yasimavr.device_library",
+    "yasimavr.device_library.builders",
+    "yasimavr.device_library.configs",
+]
+#Add the device config directories as namespace packages. Done by automatic
+#discovery to avoid listing all of them 
+packages.extend('yasimavr.device_library.configs.' + p
+                 for p in find_namespace_packages('py/yasimavr/device_library/configs'))
 
+#==============================================================================
+#setup call
+#==============================================================================
 setup(
     name = NAME,
     version = VERSION_STR,
@@ -395,15 +414,7 @@ setup(
     platforms = "Any",
     install_requires = ["pyYAML", "pyvcd"],
 
-    packages = [
-        "yasimavr",
-        "yasimavr.lib",
-        "yasimavr.utils",
-        "yasimavr.device_library",
-        "yasimavr.device_library.builders",
-        "yasimavr.device_library.configs",
-        "yasimavr.cli"
-    ],
+    packages = packages,
     package_dir = {"yasimavr" : "py/yasimavr"},
     include_package_data = True,
 
