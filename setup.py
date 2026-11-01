@@ -1,6 +1,6 @@
 NAME = "yasimavr"
 DESCRIPTION = "Yet Another SIMulator for AVR"
-LICENSE = "GPLv3"
+LICENSE = "GPLv3 AND Apache-2.0"
 AUTHOR = "C. Savergne"
 AUTHOR_EMAIL = "csavergne@yahoo.com"
 URL = "https://github.com/clesav/yasimavr"
@@ -404,7 +404,7 @@ setup(
     author = AUTHOR,
     author_email = AUTHOR_EMAIL,
     license = LICENSE,
-    license_files = ["LICENSE"],
+    license_files = ["LICENSE", "LICENSE-APACHE"],
     url = URL,
     classifiers = CLASSIFIERS,
     keywords = KEYWORDS,
